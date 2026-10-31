@@ -1,6 +1,6 @@
 import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";

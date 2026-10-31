@@ -38,7 +38,7 @@ pub mod standards {
 }
 //#endregion 🧩️Modules
 
-use semio_s_artifact_lowpoly_lowpoly_model::{snapshot::LowpolyObject, snapshot::LowpolyPaintLayer, snapshot::LowpolySnapshot};
+use semio_s_artifact_lowpoly_lowpoly_model::snapshot::{LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::{MutationDiff, Patchable};
 

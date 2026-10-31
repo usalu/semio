@@ -1,33 +1,35 @@
 {
   "schedules": {
     "sch-walls": {
-      "category": "Wall",
-      "columns": [
-        {
-          "key": {
-            "Field": {
-              "field": "Name"
-            }
-          },
-          "total": false
-        },
-        {
-          "key": {
-            "Field": {
-              "field": "Length"
-            }
-          },
-          "total": true
-        }
-      ],
       "entry": "Created",
-      "filter": [],
-      "group": [],
-      "itemize": true,
-      "name": "Walls",
-      "phases": [],
-      "sort": [],
-      "storeys": []
+      "value": {
+        "category": "Wall",
+        "columns": [
+          {
+            "key": {
+              "Field": {
+                "field": "Name"
+              }
+            },
+            "total": false
+          },
+          {
+            "key": {
+              "Field": {
+                "field": "Length"
+              }
+            },
+            "total": true
+          }
+        ],
+        "filter": [],
+        "group": [],
+        "itemize": true,
+        "name": "Walls",
+        "phases": [],
+        "sort": [],
+        "storeys": []
+      }
     }
   }
 }

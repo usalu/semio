@@ -1,0 +1,92 @@
+{
+  "cases": [
+    {
+      "name": "empty parent",
+      "names": [],
+      "state": "empty"
+    },
+    {
+      "name": "ordinary files",
+      "names": [
+        "notes.txt",
+        "package.json"
+      ],
+      "state": "empty"
+    },
+    {
+      "name": "endpoint directory is opaque",
+      "names": [
+        "node_modules",
+        "package.json"
+      ],
+      "state": "empty"
+    },
+    {
+      "name": "unqualified names are foreign",
+      "names": [
+        ".pbad",
+        ".pgggggggg",
+        ".daaaaaaa"
+      ],
+      "state": "empty"
+    },
+    {
+      "name": "protocol capsule",
+      "names": [
+        ".paaaaaaaa",
+        "node_modules"
+      ],
+      "state": "present"
+    },
+    {
+      "name": "durable journal",
+      "names": [
+        ".daaaaaaaa",
+        "node_modules"
+      ],
+      "state": "present"
+    },
+    {
+      "name": "capsule and journal",
+      "names": [
+        ".p0123abcd",
+        ".d0123abcd"
+      ],
+      "state": "present"
+    }
+  ],
+  "selections": [
+    {
+      "name": "all parents empty",
+      "parents": [
+        [],
+        [
+          "package"
+        ]
+      ],
+      "state": "empty"
+    },
+    {
+      "name": "capsule in later parent",
+      "parents": [
+        [
+          "ordinary"
+        ],
+        [
+          ".p0123abcd"
+        ]
+      ],
+      "state": "present"
+    },
+    {
+      "name": "journal in later parent",
+      "parents": [
+        [],
+        [
+          ".d0123abcd"
+        ]
+      ],
+      "state": "present"
+    }
+  ]
+}

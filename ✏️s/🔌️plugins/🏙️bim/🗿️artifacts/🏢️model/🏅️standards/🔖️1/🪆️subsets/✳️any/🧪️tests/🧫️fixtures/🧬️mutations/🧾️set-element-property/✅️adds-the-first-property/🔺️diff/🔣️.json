@@ -1,14 +1,16 @@
 {
   "properties": {
     "c-1": {
-      "Pset_ColumnCommon": {
-        "LoadBearing": {
-          "Boolean": {
-            "value": true
+      "entry": "Created",
+      "value": {
+        "Pset_ColumnCommon": {
+          "LoadBearing": {
+            "Boolean": {
+              "value": true
+            }
           }
         }
-      },
-      "entry": "Created"
+      }
     }
   }
 }

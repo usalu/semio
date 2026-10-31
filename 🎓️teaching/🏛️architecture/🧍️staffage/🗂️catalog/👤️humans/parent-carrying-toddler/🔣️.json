@@ -1,0 +1,4548 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "parent-carrying-toddler",
+    "category": "humans",
+    "title": {
+      "en": "Parent carrying a toddler",
+      "de": "Elternteil trägt ein Kleinkind"
+    },
+    "summary": {
+      "en": "A 1.70 m parent in wool coat, scarf, beanie and boots carrying a 24-month toddler (12.2 kg) in a padded overall on the hip: the toddler is a second living body with its own breathing; standing, a walking cycle with planted feet, hoisting and settling; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
+      "de": "Ein 1,70 m großes Elternteil in Wollmantel, Schal, Mütze und Stiefeln trägt ein 24 Monate altes Kleinkind (12,2 kg) im gefütterten Overall auf der Hüfte: Das Kleinkind ist ein zweiter lebender Körper mit eigener Atmung; Stehen, ein Gehzyklus mit festen Füßen, Hochnehmen und Zurechtsetzen; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+    },
+    "tags": [
+      "human",
+      "parent",
+      "child",
+      "toddler",
+      "carrying",
+      "passenger",
+      "walking"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker NW-H2",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (segment mass fractions and centre-of-mass positions, male and female)."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble (1 clo = 0.155 m2K/W; garment clo values here are authored estimates guided by its tables)."
+        },
+        {
+          "id": "ainsworth-2011",
+          "citation": "Ainsworth, B. E. et al. (2011). 2011 Compendium of Physical Activities: a second update of codes and MET values. Medicine and Science in Sports and Exercise 43(8), 1575-1581 (activity classes; MET values are mapped to thermal met as an estimate)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiratory heat loss, skin wettedness)."
+        },
+        {
+          "id": "gagge-1971",
+          "citation": "Gagge, A. P., Stolwijk, J. A. J., Nishi, Y. (1971). An effective temperature scale based on a simple model of human physiological regulatory response. ASHRAE Transactions 77(1), 247-262 (two-node model; set points 36.8 and 34.1 degrees Celsius, skin blood flow limits 6.3 and 90 L/(m2 h) after the common implementation)."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39 (sinusoidal breathing flow; opening areas and jet angles used here are authored estimates guided by it)."
+        },
+        {
+          "id": "hoeppe-1981",
+          "citation": "Hoeppe, P. (1981). Temperatures of expired air under varying climatic conditions. International Journal of Biometeorology 25, 127-132 (expired air temperature; the 34 degrees Celsius and 95 % used here are authored estimates)."
+        },
+        {
+          "id": "mifflin-1990",
+          "citation": "Mifflin, M. D. et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition 51, 241-247."
+        },
+        {
+          "id": "incropera-2011",
+          "citation": "Incropera, F. P., DeWitt, D. P. et al. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley (convection correlations, material properties)."
+        },
+        {
+          "id": "winter-2009",
+          "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley (anthropometric tables, joint ranges, gait kinematics)."
+        },
+        {
+          "id": "who-2006",
+          "citation": "WHO Multicentre Growth Reference Study Group (2006). WHO Child Growth Standards: length/height-for-age, weight-for-age (24 months: median about 87 cm length and 12 kg). Breathing rates and tidal volumes of the toddler are authored estimates."
+        },
+        {
+          "id": "schofield-1985",
+          "citation": "Schofield, W. N. (1985). Predicting basal metabolic rate, new standards and review of previous work. Human Nutrition: Clinical Nutrition 39C (Suppl. 1), 5-41 (basal metabolism of children by weight and height; the 33 W of the toddler is an authored estimate guided by it)."
+        }
+      ],
+      "notes": {
+        "en": "Newly authored for semio.staffage/v2: the toddler is a passenger (second body, own regions and respiration) carried on the near hip; the walking gait is generated by inverse kinematics for the left foot with the right foot half a cycle later and planted by the engine.",
+        "de": "Neu erstellt für semio.staffage/v2: Das Kleinkind ist ein Passagier (zweiter Körper, eigene Regionen und Atmung) auf der nahen Hüfte; der Gang ist per inverser Kinematik für den linken Fuß erzeugt, der rechte folgt einen halben Zyklus später und wird von der Engine geplant."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.73,
+      "widthM": 0.607,
+      "depthM": 0.45,
+      "massKg": 78.2
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "knit-hat",
+        "title": {
+          "en": "Wool knit (hat, scarf, mittens)",
+          "de": "Wollstrick (Mütze, Schal, Fäustlinge)"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "wool",
+        "title": {
+          "en": "Wool coat cloth",
+          "de": "Wollmantelstoff"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "denim",
+        "title": {
+          "en": "Denim jeans",
+          "de": "Jeansstoff"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leather",
+        "title": {
+          "en": "Leather ankle boot",
+          "de": "Lederstiefelette"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "leather-glove",
+        "title": {
+          "en": "Leather glove",
+          "de": "Lederhandschuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "padded-suit",
+        "title": {
+          "en": "Padded toddler overall (polyester fill)",
+          "de": "Gefütterter Kleinkind-Overall (Polyesterfüllung)"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.65,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "Rubber toddler boot",
+          "de": "Gummistiefel für Kleinkinder"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.0966,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 8.23,
+            "comX": 0.0483,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.0966,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4444,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 19.866,
+            "comX": 0.2029,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4444,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2608,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 4.409,
+            "comX": 0.1304,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4155,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.2995,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.683,
+            "comX": 0.1729,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.2995,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2608,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.911,
+            "comX": 0.1193,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linke Hand"
+          },
+          "x": 0.2608,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1739,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.37,
+            "comX": 0.087,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4155,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.2995,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.683,
+            "comX": 0.1729,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.2995,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2608,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.911,
+            "comX": 0.1193,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechte Hand"
+          },
+          "x": 0.2608,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1739,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.37,
+            "comX": 0.087,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4153,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.755,
+            "comX": 0.1701,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4153,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4056,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.175,
+            "comX": 0.1809,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.4056,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2125,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.851,
+            "comX": 0.1062,
+            "comY": -0.042,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1255,
+          "y": -0.0772,
+          "angleDeg": 0,
+          "lengthM": 0.0889,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4153,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.755,
+            "comX": 0.1701,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4153,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4056,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.175,
+            "comX": 0.1809,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.4056,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2125,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.851,
+            "comX": 0.1062,
+            "comY": -0.042,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1255,
+          "y": -0.0772,
+          "angleDeg": 0,
+          "lengthM": 0.0889,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "toddler-torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Toddler trunk",
+            "de": "Rumpf des Kleinkinds"
+          },
+          "x": 0.105,
+          "y": -0.15,
+          "angleDeg": -14,
+          "lengthM": 0.27,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 5.49,
+            "comX": 0.135,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-head",
+          "parent": "toddler-torso",
+          "title": {
+            "en": "Toddler head and neck",
+            "de": "Kopf und Hals des Kleinkinds"
+          },
+          "x": 0.27,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.19,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 40
+          },
+          "mass": {
+            "kg": 1.83,
+            "comX": 0.095,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-arm-n",
+          "parent": "toddler-torso",
+          "title": {
+            "en": "Toddler near arm",
+            "de": "Naher Arm des Kleinkinds"
+          },
+          "x": 0.24,
+          "y": 0,
+          "angleDeg": 84,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 120
+          },
+          "mass": {
+            "kg": 0.61,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-arm-f",
+          "parent": "toddler-torso",
+          "title": {
+            "en": "Toddler far arm",
+            "de": "Ferner Arm des Kleinkinds"
+          },
+          "x": 0.24,
+          "y": 0,
+          "angleDeg": -150,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 120
+          },
+          "mass": {
+            "kg": 0.61,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-thigh-n",
+          "parent": "toddler-torso",
+          "title": {
+            "en": "Toddler near thigh",
+            "de": "Nahes Bein, Oberschenkel des Kleinkinds"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -78,
+          "lengthM": 0.13,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.976,
+            "comX": 0.065,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-shank-n",
+          "parent": "toddler-thigh-n",
+          "title": {
+            "en": "Toddler near shank and foot",
+            "de": "Nahes Bein, Unterschenkel und Fuß des Kleinkinds"
+          },
+          "x": 0.13,
+          "y": 0,
+          "angleDeg": -62,
+          "lengthM": 0.14,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 0.854,
+            "comX": 0.07,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-thigh-f",
+          "parent": "toddler-torso",
+          "title": {
+            "en": "Toddler far thigh",
+            "de": "Fernes Bein, Oberschenkel des Kleinkinds"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -84,
+          "lengthM": 0.13,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.976,
+            "comX": 0.065,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        },
+        {
+          "id": "toddler-shank-f",
+          "parent": "toddler-thigh-f",
+          "title": {
+            "en": "Toddler far shank and foot",
+            "de": "Fernes Bein, Unterschenkel und Fuß des Kleinkinds"
+          },
+          "x": 0.13,
+          "y": 0,
+          "angleDeg": -62,
+          "lengthM": 0.14,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 0.854,
+            "comX": 0.07,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "who-2006"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.1255,
+        "y": -0.0772,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linke Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.093,
+        "footprintWidthM": 0.084,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.029,
+        "y": -0.0772,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.065,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.1255,
+        "y": -0.0772,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechte Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.093,
+        "footprintWidthM": 0.084,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.029,
+        "y": -0.0772,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.065,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.0725,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.0725,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1093,
+        "y": -0.0859,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth",
+          "de": "Mund"
+        }
+      },
+      {
+        "id": "nostrils",
+        "bone": "head",
+        "x": 0.1354,
+        "y": -0.0953,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils",
+          "de": "Nasenlöcher"
+        }
+      },
+      {
+        "id": "crown",
+        "bone": "head",
+        "x": 0.2686,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Crown of the head (plume source)",
+          "de": "Scheitel (Fahnenquelle)"
+        }
+      },
+      {
+        "id": "toddler-mouth",
+        "bone": "toddler-head",
+        "x": 0.075,
+        "y": -0.062,
+        "kind": "emitter",
+        "title": {
+          "en": "Toddler mouth",
+          "de": "Mund des Kleinkinds"
+        }
+      },
+      {
+        "id": "toddler-nostrils",
+        "bone": "toddler-head",
+        "x": 0.092,
+        "y": -0.07,
+        "kind": "emitter",
+        "title": {
+          "en": "Toddler nostrils",
+          "de": "Nasenlöcher des Kleinkinds"
+        }
+      },
+      {
+        "id": "toddler-crown",
+        "bone": "toddler-head",
+        "x": 0.185,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Toddler crown (plume source)",
+          "de": "Scheitel des Kleinkinds (Fahnenquelle)"
+        }
+      },
+      {
+        "id": "toddler-seat",
+        "bone": "toddler-torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Toddler seat on the hip",
+          "de": "Sitzfläche des Kleinkinds auf der Hüfte"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.09 C 0.04 0.1043 0.1033 0.0892 0.15 0.087 C 0.1967 0.0848 0.2358 0.0812 0.28 0.077 C 0.3242 0.0728 0.3908 0.0747 0.4153 0.062 C 0.4399 0.0493 0.4273 0.0213 0.4273 0.001 C 0.4273 -0.0193 0.4399 -0.0473 0.4153 -0.06 C 0.3908 -0.0727 0.3242 -0.0708 0.28 -0.075 C 0.2358 -0.0792 0.1967 -0.0828 0.15 -0.085 C 0.1033 -0.0872 0.04 -0.1023 0.0 -0.088 C -0.04 -0.0737 -0.09 -0.0287 -0.09 0.001 C -0.09 0.0307 -0.04 0.0757 0.0 0.09 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.062 C 0.0233 0.072 0.0767 0.0613 0.12 0.06 C 0.1633 0.0587 0.2141 0.0557 0.26 0.054 C 0.3059 0.0523 0.3717 0.059 0.3956 0.05 C 0.4196 0.041 0.4036 0.0167 0.4036 0.0 C 0.4036 -0.0167 0.4196 -0.0408 0.3956 -0.05 C 0.3717 -0.0592 0.3059 -0.0523 0.26 -0.055 C 0.2141 -0.0577 0.1633 -0.0648 0.12 -0.066 C 0.0767 -0.0672 0.0233 -0.073 0.0 -0.062 C -0.0233 -0.051 -0.02 -0.0207 -0.02 0.0 C -0.02 0.0207 -0.0233 0.052 0.0 0.062 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.058 -0.0772 C -0.0587 -0.0515 -0.0617 -0.0229 -0.06 0.0 C -0.0583 0.0229 -0.0613 0.048 -0.048 0.06 C -0.0347 0.072 -0.003 0.0753 0.02 0.072 C 0.043 0.0687 0.0683 0.0533 0.09 0.04 C 0.1117 0.0267 0.1308 0.0047 0.15 -0.008 C 0.1692 -0.0207 0.193 -0.0245 0.205 -0.036 C 0.217 -0.0475 0.2163 -0.0635 0.222 -0.0772 C 0.1287 -0.0772 0.0353 -0.0772 -0.058 -0.0772 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.044 C 0.0283 0.0523 0.0901 0.05 0.14 0.05 C 0.1899 0.05 0.2713 0.0523 0.2995 0.044 C 0.3278 0.0357 0.3095 0.0147 0.3095 0.0 C 0.3095 -0.0147 0.3278 -0.0357 0.2995 -0.044 C 0.2713 -0.0523 0.1899 -0.05 0.14 -0.05 C 0.0901 -0.05 0.0283 -0.0523 0.0 -0.044 C -0.0283 -0.0357 -0.03 -0.0147 -0.03 0.0 C -0.03 0.0147 -0.0283 0.0357 0.0 0.044 Z",
+              "region": "coat-sleeves",
+              "material": "wool"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0782 0.0427 0.12 0.041 C 0.1618 0.0393 0.2157 0.0352 0.2508 0.035 C 0.2859 0.0348 0.3035 0.0415 0.3308 0.04 C 0.3581 0.0385 0.3987 0.0325 0.4147 0.026 C 0.4307 0.0195 0.4267 0.0093 0.4267 0.001 C 0.4267 -0.0073 0.4307 -0.0175 0.4147 -0.024 C 0.3987 -0.0305 0.3581 -0.0362 0.3308 -0.038 C 0.3035 -0.0398 0.2859 -0.0345 0.2508 -0.035 C 0.2157 -0.0355 0.1618 -0.0393 0.12 -0.041 C 0.0782 -0.0427 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "regions": [
+                "coat-sleeves",
+                "gloves"
+              ],
+              "material": "wool"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.09 C 0.04 0.1043 0.1033 0.0892 0.15 0.087 C 0.1967 0.0848 0.2358 0.0812 0.28 0.077 C 0.3242 0.0728 0.3908 0.0747 0.4153 0.062 C 0.4399 0.0493 0.4273 0.0213 0.4273 0.001 C 0.4273 -0.0193 0.4399 -0.0473 0.4153 -0.06 C 0.3908 -0.0727 0.3242 -0.0708 0.28 -0.075 C 0.2358 -0.0792 0.1967 -0.0828 0.15 -0.085 C 0.1033 -0.0872 0.04 -0.1023 0.0 -0.088 C -0.04 -0.0737 -0.09 -0.0287 -0.09 0.001 C -0.09 0.0307 -0.04 0.0757 0.0 0.09 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.062 C 0.0233 0.072 0.0767 0.0613 0.12 0.06 C 0.1633 0.0587 0.2141 0.0557 0.26 0.054 C 0.3059 0.0523 0.3717 0.059 0.3956 0.05 C 0.4196 0.041 0.4036 0.0167 0.4036 0.0 C 0.4036 -0.0167 0.4196 -0.0408 0.3956 -0.05 C 0.3717 -0.0592 0.3059 -0.0523 0.26 -0.055 C 0.2141 -0.0577 0.1633 -0.0648 0.12 -0.066 C 0.0767 -0.0672 0.0233 -0.073 0.0 -0.062 C -0.0233 -0.051 -0.02 -0.0207 -0.02 0.0 C -0.02 0.0207 -0.0233 0.052 0.0 0.062 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.058 -0.0772 C -0.0587 -0.0515 -0.0617 -0.0229 -0.06 0.0 C -0.0583 0.0229 -0.0613 0.048 -0.048 0.06 C -0.0347 0.072 -0.003 0.0753 0.02 0.072 C 0.043 0.0687 0.0683 0.0533 0.09 0.04 C 0.1117 0.0267 0.1308 0.0047 0.15 -0.008 C 0.1692 -0.0207 0.193 -0.0245 0.205 -0.036 C 0.217 -0.0475 0.2163 -0.0635 0.222 -0.0772 C 0.1287 -0.0772 0.0353 -0.0772 -0.058 -0.0772 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.044 C 0.0283 0.0523 0.0901 0.05 0.14 0.05 C 0.1899 0.05 0.2713 0.0523 0.2995 0.044 C 0.3278 0.0357 0.3095 0.0147 0.3095 0.0 C 0.3095 -0.0147 0.3278 -0.0357 0.2995 -0.044 C 0.2713 -0.0523 0.1899 -0.05 0.14 -0.05 C 0.0901 -0.05 0.0283 -0.0523 0.0 -0.044 C -0.0283 -0.0357 -0.03 -0.0147 -0.03 0.0 C -0.03 0.0147 -0.0283 0.0357 0.0 0.044 Z",
+              "region": "coat-sleeves",
+              "material": "wool"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.22,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0782 0.0427 0.12 0.041 C 0.1618 0.0393 0.2157 0.0352 0.2508 0.035 C 0.2859 0.0348 0.3035 0.0415 0.3308 0.04 C 0.3581 0.0385 0.3987 0.0325 0.4147 0.026 C 0.4307 0.0195 0.4267 0.0093 0.4267 0.001 C 0.4267 -0.0073 0.4307 -0.0175 0.4147 -0.024 C 0.3987 -0.0305 0.3581 -0.0362 0.3308 -0.038 C 0.3035 -0.0398 0.2859 -0.0345 0.2508 -0.035 C 0.2157 -0.0355 0.1618 -0.0393 0.12 -0.041 C 0.0782 -0.0427 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "regions": [
+                "coat-sleeves",
+                "gloves"
+              ],
+              "material": "wool"
+            },
+            {
+              "id": "coat-skirt",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.16 -0.14 L 0.16 0.136 L -0.31 0.15 L -0.31 -0.175 Z",
+              "region": "coat-torso",
+              "material": "wool"
+            },
+            {
+              "id": "coat",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.126 C 0.04 0.1267 0.08 0.1283 0.12 0.128 C 0.16 0.1277 0.2033 0.1237 0.24 0.124 C 0.2767 0.1243 0.3117 0.132 0.34 0.13 C 0.3683 0.128 0.3959 0.1213 0.41 0.112 C 0.4241 0.1027 0.4145 0.0817 0.4244 0.074 C 0.4343 0.0663 0.4619 0.089 0.4694 0.066 C 0.4769 0.043 0.4769 -0.0413 0.4694 -0.064 C 0.4619 -0.0867 0.4343 -0.064 0.4244 -0.07 C 0.4145 -0.076 0.4241 -0.0907 0.41 -0.1 C 0.3959 -0.1093 0.3683 -0.1223 0.34 -0.126 C 0.3117 -0.1297 0.2767 -0.1227 0.24 -0.122 C 0.2033 -0.1213 0.16 -0.1223 0.12 -0.122 C 0.08 -0.1217 0.04 -0.1207 0.0 -0.12 C 0.0 -0.038 0.0 0.044 0.0 0.126 Z",
+              "region": "coat-torso",
+              "material": "wool"
+            },
+            {
+              "id": "scarf",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M 0.38 -0.1 C 0.3967 -0.1017 0.415 -0.1092 0.43 -0.105 C 0.445 -0.1008 0.4625 -0.0975 0.47 -0.075 C 0.4775 -0.0525 0.48 0.0042 0.475 0.03 C 0.47 0.0558 0.4542 0.0703 0.44 0.08 C 0.4258 0.0897 0.4067 0.0853 0.39 0.088 C 0.3867 0.0253 0.3833 -0.0373 0.38 -0.1 Z",
+              "region": "scarf",
+              "material": "knit-hat"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0486 C 0.007 0.0641 0.0272 0.0445 0.042 0.0467 C 0.0568 0.0489 0.0724 0.0551 0.0887 0.0616 C 0.1051 0.0682 0.1214 0.0822 0.1401 0.0859 C 0.1588 0.0897 0.184 0.089 0.2008 0.0841 C 0.2176 0.0791 0.231 0.0685 0.241 0.056 C 0.251 0.0436 0.259 0.0257 0.2606 0.0093 C 0.2622 -0.007 0.2564 -0.028 0.2503 -0.042 C 0.2443 -0.056 0.2332 -0.0682 0.2242 -0.0747 C 0.2151 -0.0813 0.2046 -0.0797 0.1962 -0.0813 C 0.1877 -0.0828 0.1803 -0.0824 0.1737 -0.0841 C 0.1672 -0.0858 0.1622 -0.0886 0.1569 -0.0915 C 0.1516 -0.0945 0.1465 -0.1021 0.142 -0.1018 C 0.1375 -0.1015 0.1336 -0.0923 0.1298 -0.0897 C 0.1261 -0.087 0.1228 -0.0869 0.1196 -0.0859 C 0.1163 -0.085 0.1133 -0.0847 0.1102 -0.0841 C 0.1071 -0.0834 0.1062 -0.0822 0.1009 -0.0822 C 0.0956 -0.0822 0.0847 -0.0862 0.0785 -0.0841 C 0.0722 -0.0819 0.0673 -0.0763 0.0635 -0.0691 C 0.0598 -0.062 0.061 -0.0448 0.056 -0.0411 C 0.0511 -0.0374 0.043 -0.0458 0.0336 -0.0467 C 0.0243 -0.0476 0.0056 -0.0626 0.0 -0.0467 C -0.0056 -0.0308 -0.007 0.033 0.0 0.0486 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "beanie",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M 0.2 -0.093 C 0.2167 -0.0897 0.2367 -0.0918 0.25 -0.083 C 0.2633 -0.0742 0.272 -0.0558 0.28 -0.04 C 0.288 -0.0242 0.2983 -0.0073 0.298 0.012 C 0.2977 0.0313 0.29 0.0607 0.278 0.076 C 0.266 0.0913 0.2448 0.0993 0.226 0.104 C 0.2072 0.1087 0.1823 0.107 0.165 0.104 C 0.1477 0.101 0.1363 0.092 0.122 0.086 C 0.148 0.0263 0.174 -0.0333 0.2 -0.093 Z",
+              "region": "beanie",
+              "material": "knit-hat"
+            },
+            {
+              "id": "eye",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.1737,
+              "cy": -0.0757,
+              "rx": 0.006,
+              "ry": 0.0075,
+              "region": "face"
+            },
+            {
+              "id": "ear",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.1382,
+              "cy": 0.016,
+              "rx": 0.0243,
+              "ry": 0.013,
+              "region": "face"
+            },
+            {
+              "id": "toddler-suit",
+              "bone": "toddler-torso",
+              "role": "body",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.08 C 0.0175 0.0942 0.0367 0.0843 0.06 0.086 C 0.0833 0.0877 0.1133 0.0902 0.14 0.09 C 0.1667 0.0898 0.1967 0.0908 0.22 0.085 C 0.2433 0.0792 0.27 0.0783 0.28 0.055 C 0.29 0.0317 0.29 -0.0333 0.28 -0.055 C 0.27 -0.0767 0.2433 -0.0702 0.22 -0.075 C 0.1967 -0.0798 0.1667 -0.0828 0.14 -0.084 C 0.1133 -0.0852 0.0833 -0.083 0.06 -0.082 C 0.0367 -0.081 0.0175 -0.0918 0.0 -0.078 C -0.0175 -0.0642 -0.045 -0.0253 -0.045 0.001 C -0.045 0.0273 -0.0175 0.0658 0.0 0.08 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-head",
+              "bone": "toddler-head",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0447 C 0.0051 0.0591 0.0198 0.041 0.0306 0.043 C 0.0414 0.045 0.0527 0.0507 0.0646 0.0568 C 0.0765 0.0628 0.0884 0.0757 0.102 0.0791 C 0.1156 0.0826 0.134 0.082 0.1462 0.0774 C 0.1584 0.0728 0.1682 0.0631 0.1754 0.0516 C 0.1827 0.0401 0.1886 0.0236 0.1897 0.0086 C 0.1909 -0.0064 0.1867 -0.0258 0.1822 -0.0387 C 0.1778 -0.0516 0.1698 -0.0628 0.1632 -0.0688 C 0.1566 -0.0748 0.1489 -0.0734 0.1428 -0.0748 C 0.1367 -0.0763 0.1312 -0.0758 0.1265 -0.0774 C 0.1217 -0.079 0.1181 -0.0816 0.1142 -0.0843 C 0.1104 -0.087 0.1066 -0.094 0.1034 -0.0937 C 0.1001 -0.0935 0.0972 -0.085 0.0945 -0.0826 C 0.0918 -0.0801 0.0894 -0.08 0.087 -0.0791 C 0.0847 -0.0783 0.0825 -0.078 0.0802 -0.0774 C 0.078 -0.0768 0.0773 -0.0757 0.0734 -0.0757 C 0.0696 -0.0757 0.0617 -0.0794 0.0571 -0.0774 C 0.0526 -0.0754 0.049 -0.0702 0.0462 -0.0636 C 0.0435 -0.057 0.0444 -0.0413 0.0408 -0.0378 C 0.0372 -0.0344 0.0313 -0.0421 0.0245 -0.043 C 0.0177 -0.0439 0.0041 -0.0576 0.0 -0.043 C -0.0041 -0.0284 -0.0051 0.0304 0.0 0.0447 Z",
+              "region": "toddler-face",
+              "material": "skin"
+            },
+            {
+              "id": "toddler-hat",
+              "bone": "toddler-head",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.13 -0.075 C 0.1427 -0.0733 0.1577 -0.0775 0.168 -0.07 C 0.1783 -0.0625 0.1867 -0.0437 0.192 -0.03 C 0.1973 -0.0163 0.201 -0.0038 0.2 0.012 C 0.199 0.0278 0.1943 0.0533 0.186 0.065 C 0.1777 0.0767 0.1635 0.0795 0.15 0.082 C 0.1365 0.0845 0.12 0.0807 0.105 0.08 C 0.1093 0.06 0.1142 0.04 0.118 0.02 C 0.1218 0.0 0.126 -0.0242 0.128 -0.04 C 0.13 -0.0558 0.1293 -0.0633 0.13 -0.075 Z",
+              "region": "toddler-hat",
+              "material": "knit-hat"
+            },
+            {
+              "id": "toddler-thigh-n",
+              "bone": "toddler-thigh-n",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.046 C 0.0167 0.0535 0.0483 0.0458 0.07 0.045 C 0.0917 0.0442 0.118 0.0485 0.13 0.041 C 0.142 0.0335 0.142 0.0137 0.142 0.0 C 0.142 -0.0137 0.142 -0.0335 0.13 -0.041 C 0.118 -0.0485 0.0917 -0.0442 0.07 -0.045 C 0.0483 -0.0458 0.0167 -0.0535 0.0 -0.046 C -0.0167 -0.0385 -0.03 -0.0153 -0.03 0.0 C -0.03 0.0153 -0.0167 0.0385 0.0 0.046 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-shank-n",
+              "bone": "toddler-shank-n",
+              "role": "body",
+              "z": 4.41,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.042 C 0.02 0.0483 0.0833 0.0513 0.1 0.038 C 0.1167 0.0247 0.1167 -0.0247 0.1 -0.038 C 0.0833 -0.0513 0.02 -0.0483 0.0 -0.042 C -0.02 -0.0357 -0.02 -0.014 -0.02 0.0 C -0.02 0.014 -0.02 0.0357 0.0 0.042 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-boot-n",
+              "bone": "toddler-shank-n",
+              "role": "body",
+              "z": 4.42,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.1 -0.036 C 0.1 -0.0113 0.0933 0.0247 0.1 0.038 C 0.1067 0.0513 0.13 0.035 0.14 0.044 C 0.15 0.053 0.15 0.0827 0.16 0.092 C 0.17 0.1013 0.192 0.1053 0.2 0.1 C 0.208 0.0947 0.2053 0.0733 0.208 0.06 C 0.2073 0.028 0.2067 -0.004 0.206 -0.036 C 0.1707 -0.036 0.1353 -0.036 0.1 -0.036 Z",
+              "region": "toddler-boots",
+              "material": "rubber"
+            },
+            {
+              "id": "toddler-arm-n",
+              "bone": "toddler-arm-n",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.035 C 0.03 0.0405 0.0717 0.034 0.1 0.033 C 0.1283 0.032 0.1508 0.0295 0.17 0.029 C 0.1892 0.0285 0.2033 0.0348 0.215 0.03 C 0.2267 0.0252 0.24 0.01 0.24 0.0 C 0.24 -0.01 0.2267 -0.0252 0.215 -0.03 C 0.2033 -0.0348 0.1892 -0.0285 0.17 -0.029 C 0.1508 -0.0295 0.1283 -0.032 0.1 -0.033 C 0.0717 -0.034 0.03 -0.0405 0.0 -0.035 C -0.03 -0.0295 -0.08 -0.0117 -0.08 0.0 C -0.08 0.0117 -0.03 0.0295 0.0 0.035 Z",
+              "regions": [
+                "toddler-suit",
+                "toddler-mittens"
+              ],
+              "material": "padded-suit"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Parent with face profile, ear and eye under the beanie, coat, separate scarf and skirt, sleeves and forearm-with-glove forms, jeans and boots; toddler with padded body, face profile, hat, near leg with rubber boot and near arm with mitten.",
+            "de": "Elternteil mit Gesichtsprofil, Ohr und Auge unter der Mütze, Mantel, getrenntem Schal und Schoß, Ärmeln und Unterarm-mit-Handschuh-Formen, Jeans und Stiefeln; Kleinkind mit gepolstertem Körper, Gesichtsprofil, Mütze, nahem Bein mit Gummistiefel und nahem Arm mit Fäustling."
+          },
+          "retained": {
+            "en": "The scarf as its own form and the eye and ear lines; real parent height 1.73 m.",
+            "de": "Der Schal als eigene Form sowie Augen- und Ohrlinie; reale Elternhöhe 1,73 m."
+          },
+          "merged": {
+            "en": "Glove into the forearm form, mitten into the toddler's arm form; pelvis into coat skirt and thighs; the toddler's far limbs are hidden behind the near ones.",
+            "de": "Handschuh in der Unterarmform, Fäustling in der Armform des Kleinkinds; Becken in Mantelschoß und Oberschenkeln; die fernen Gliedmaßen des Kleinkinds sind hinter den nahen verdeckt."
+          },
+          "omitted": {
+            "en": "Eyelashes, mouth, stitching, fabric folds, laces (below 0.1 mm paper).",
+            "de": "Wimpern, Mund, Nähte, Stofffalten, Schnürung (unter 0,1 mm Papier)."
+          },
+          "thinElements": {
+            "en": "No feature is thickened; the eye is 0.012 m wide (0.24 mm).",
+            "de": "Nichts wird verdickt; das Auge ist 0,012 m breit (0,24 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "0.25 mm silhouettes, 0.18 mm detail lines.",
+            "de": "0,25-mm-Silhouetten, 0,18-mm-Detaillinien."
+          },
+          "overlays": {
+            "en": "Every region is its own form or part of a named merged form.",
+            "de": "Jede Region ist eine eigene Form oder Teil einer benannten zusammengefassten Form."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.2,
+          "detail": 0.13,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.3
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.095 C 0.04 0.1095 0.1033 0.0908 0.15 0.088 C 0.1967 0.0852 0.2358 0.0822 0.28 0.078 C 0.3242 0.0738 0.3908 0.0758 0.4153 0.063 C 0.4399 0.0502 0.4273 0.0217 0.4273 0.001 C 0.4273 -0.0197 0.4399 -0.0482 0.4153 -0.061 C 0.3908 -0.0738 0.3242 -0.0718 0.28 -0.076 C 0.2358 -0.0802 0.1967 -0.0832 0.15 -0.086 C 0.1033 -0.0888 0.04 -0.1075 0.0 -0.093 C -0.04 -0.0785 -0.09 -0.0303 -0.09 0.001 C -0.09 0.0323 -0.04 0.0805 0.0 0.095 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.063 C 0.0233 0.0732 0.0767 0.0623 0.12 0.061 C 0.1633 0.0597 0.2141 0.0567 0.26 0.055 C 0.3059 0.0533 0.3717 0.0602 0.3956 0.051 C 0.4196 0.0418 0.4036 0.017 0.4036 0.0 C 0.4036 -0.017 0.4196 -0.0417 0.3956 -0.051 C 0.3717 -0.0603 0.3059 -0.0533 0.26 -0.056 C 0.2141 -0.0587 0.1633 -0.0658 0.12 -0.067 C 0.0767 -0.0682 0.0233 -0.0742 0.0 -0.063 C -0.0233 -0.0518 -0.02 -0.021 -0.02 0.0 C -0.02 0.021 -0.0233 0.0528 0.0 0.063 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.058 -0.0772 C -0.0587 -0.0515 -0.0617 -0.0229 -0.06 0.0 C -0.0583 0.0229 -0.0613 0.048 -0.048 0.06 C -0.0347 0.072 -0.003 0.0753 0.02 0.072 C 0.043 0.0687 0.0683 0.0533 0.09 0.04 C 0.1117 0.0267 0.1308 0.0047 0.15 -0.008 C 0.1692 -0.0207 0.193 -0.0245 0.205 -0.036 C 0.217 -0.0475 0.2163 -0.0635 0.222 -0.0772 C 0.1287 -0.0772 0.0353 -0.0772 -0.058 -0.0772 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.044 C 0.0283 0.0525 0.0901 0.0508 0.14 0.051 C 0.1899 0.0512 0.2713 0.0535 0.2995 0.045 C 0.3278 0.0365 0.3095 0.015 0.3095 0.0 C 0.3095 -0.015 0.3278 -0.0365 0.2995 -0.045 C 0.2713 -0.0535 0.1899 -0.0512 0.14 -0.051 C 0.0901 -0.0508 0.0283 -0.0525 0.0 -0.044 C -0.0283 -0.0355 -0.03 -0.0147 -0.03 0.0 C -0.03 0.0147 -0.0283 0.0355 0.0 0.044 Z",
+              "region": "coat-sleeves",
+              "material": "wool"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.046 C 0.022 0.053 0.0782 0.0437 0.12 0.042 C 0.1618 0.0403 0.2157 0.0363 0.2508 0.036 C 0.2859 0.0357 0.3035 0.0417 0.3308 0.04 C 0.3581 0.0383 0.3987 0.0325 0.4147 0.026 C 0.4307 0.0195 0.4267 0.0093 0.4267 0.001 C 0.4267 -0.0073 0.4307 -0.0175 0.4147 -0.024 C 0.3987 -0.0305 0.3581 -0.036 0.3308 -0.038 C 0.3035 -0.04 0.2859 -0.0353 0.2508 -0.036 C 0.2157 -0.0367 0.1618 -0.0403 0.12 -0.042 C 0.0782 -0.0437 0.022 -0.053 0.0 -0.046 C -0.022 -0.039 -0.012 -0.0153 -0.012 0.0 C -0.012 0.0153 -0.022 0.039 0.0 0.046 Z",
+              "regions": [
+                "coat-sleeves",
+                "gloves"
+              ],
+              "material": "wool"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.095 C 0.04 0.1095 0.1033 0.0908 0.15 0.088 C 0.1967 0.0852 0.2358 0.0822 0.28 0.078 C 0.3242 0.0738 0.3908 0.0758 0.4153 0.063 C 0.4399 0.0502 0.4273 0.0217 0.4273 0.001 C 0.4273 -0.0197 0.4399 -0.0482 0.4153 -0.061 C 0.3908 -0.0738 0.3242 -0.0718 0.28 -0.076 C 0.2358 -0.0802 0.1967 -0.0832 0.15 -0.086 C 0.1033 -0.0888 0.04 -0.1075 0.0 -0.093 C -0.04 -0.0785 -0.09 -0.0303 -0.09 0.001 C -0.09 0.0323 -0.04 0.0805 0.0 0.095 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.063 C 0.0233 0.0732 0.0767 0.0623 0.12 0.061 C 0.1633 0.0597 0.2141 0.0567 0.26 0.055 C 0.3059 0.0533 0.3717 0.0602 0.3956 0.051 C 0.4196 0.0418 0.4036 0.017 0.4036 0.0 C 0.4036 -0.017 0.4196 -0.0417 0.3956 -0.051 C 0.3717 -0.0603 0.3059 -0.0533 0.26 -0.056 C 0.2141 -0.0587 0.1633 -0.0658 0.12 -0.067 C 0.0767 -0.0682 0.0233 -0.0742 0.0 -0.063 C -0.0233 -0.0518 -0.02 -0.021 -0.02 0.0 C -0.02 0.021 -0.0233 0.0528 0.0 0.063 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.058 -0.0772 C -0.0587 -0.0515 -0.0617 -0.0229 -0.06 0.0 C -0.0583 0.0229 -0.0613 0.048 -0.048 0.06 C -0.0347 0.072 -0.003 0.0753 0.02 0.072 C 0.043 0.0687 0.0683 0.0533 0.09 0.04 C 0.1117 0.0267 0.1308 0.0047 0.15 -0.008 C 0.1692 -0.0207 0.193 -0.0245 0.205 -0.036 C 0.217 -0.0475 0.2163 -0.0635 0.222 -0.0772 C 0.1287 -0.0772 0.0353 -0.0772 -0.058 -0.0772 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.044 C 0.0283 0.0525 0.0901 0.0508 0.14 0.051 C 0.1899 0.0512 0.2713 0.0535 0.2995 0.045 C 0.3278 0.0365 0.3095 0.015 0.3095 0.0 C 0.3095 -0.015 0.3278 -0.0365 0.2995 -0.045 C 0.2713 -0.0535 0.1899 -0.0512 0.14 -0.051 C 0.0901 -0.0508 0.0283 -0.0525 0.0 -0.044 C -0.0283 -0.0355 -0.03 -0.0147 -0.03 0.0 C -0.03 0.0147 -0.0283 0.0355 0.0 0.044 Z",
+              "region": "coat-sleeves",
+              "material": "wool"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.22,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.046 C 0.022 0.053 0.0782 0.0437 0.12 0.042 C 0.1618 0.0403 0.2157 0.0363 0.2508 0.036 C 0.2859 0.0357 0.3035 0.0417 0.3308 0.04 C 0.3581 0.0383 0.3987 0.0325 0.4147 0.026 C 0.4307 0.0195 0.4267 0.0093 0.4267 0.001 C 0.4267 -0.0073 0.4307 -0.0175 0.4147 -0.024 C 0.3987 -0.0305 0.3581 -0.036 0.3308 -0.038 C 0.3035 -0.04 0.2859 -0.0353 0.2508 -0.036 C 0.2157 -0.0367 0.1618 -0.0403 0.12 -0.042 C 0.0782 -0.0437 0.022 -0.053 0.0 -0.046 C -0.022 -0.039 -0.012 -0.0153 -0.012 0.0 C -0.012 0.0153 -0.022 0.039 0.0 0.046 Z",
+              "regions": [
+                "coat-sleeves",
+                "gloves"
+              ],
+              "material": "wool"
+            },
+            {
+              "id": "coat-skirt",
+              "bone": "pelvis",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.16 -0.14 L 0.16 0.136 L -0.31 0.15 L -0.31 -0.16 Z",
+              "region": "coat-torso",
+              "material": "wool"
+            },
+            {
+              "id": "coat",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.126 C 0.04 0.1267 0.08 0.1283 0.12 0.128 C 0.16 0.1277 0.2033 0.1237 0.24 0.124 C 0.2767 0.1243 0.3117 0.132 0.34 0.13 C 0.3683 0.128 0.3959 0.1213 0.41 0.112 C 0.4241 0.1027 0.4145 0.0817 0.4244 0.074 C 0.4343 0.0663 0.4619 0.089 0.4694 0.066 C 0.4769 0.043 0.4769 -0.0413 0.4694 -0.064 C 0.4619 -0.0867 0.4343 -0.064 0.4244 -0.07 C 0.4145 -0.076 0.4241 -0.0907 0.41 -0.1 C 0.3959 -0.1093 0.3683 -0.1223 0.34 -0.126 C 0.3117 -0.1297 0.2767 -0.1227 0.24 -0.122 C 0.2033 -0.1213 0.16 -0.1223 0.12 -0.122 C 0.08 -0.1217 0.04 -0.1207 0.0 -0.12 C 0.0 -0.038 0.0 0.044 0.0 0.126 Z",
+              "regions": [
+                "coat-torso",
+                "scarf"
+              ],
+              "material": "wool"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0486 C 0.007 0.0641 0.0272 0.0445 0.042 0.0467 C 0.0568 0.0489 0.0724 0.0551 0.0887 0.0616 C 0.1051 0.0682 0.1214 0.0822 0.1401 0.0859 C 0.1588 0.0897 0.184 0.089 0.2008 0.0841 C 0.2176 0.0791 0.231 0.0685 0.241 0.056 C 0.251 0.0436 0.259 0.0257 0.2606 0.0093 C 0.2622 -0.007 0.2564 -0.028 0.2503 -0.042 C 0.2443 -0.056 0.2332 -0.0682 0.2242 -0.0747 C 0.2151 -0.0813 0.2046 -0.0797 0.1962 -0.0813 C 0.1877 -0.0828 0.1803 -0.0824 0.1737 -0.0841 C 0.1672 -0.0858 0.1622 -0.0886 0.1569 -0.0915 C 0.1516 -0.0945 0.1465 -0.1021 0.142 -0.1018 C 0.1375 -0.1015 0.1336 -0.0923 0.1298 -0.0897 C 0.1261 -0.087 0.1228 -0.0869 0.1196 -0.0859 C 0.1163 -0.085 0.1133 -0.0847 0.1102 -0.0841 C 0.1071 -0.0834 0.1062 -0.0822 0.1009 -0.0822 C 0.0956 -0.0822 0.0847 -0.0862 0.0785 -0.0841 C 0.0722 -0.0819 0.0673 -0.0763 0.0635 -0.0691 C 0.0598 -0.062 0.061 -0.0448 0.056 -0.0411 C 0.0511 -0.0374 0.043 -0.0458 0.0336 -0.0467 C 0.0243 -0.0476 0.0056 -0.0626 0.0 -0.0467 C -0.0056 -0.0308 -0.007 0.033 0.0 0.0486 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "beanie",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M 0.2 -0.093 C 0.2167 -0.0897 0.2367 -0.0918 0.25 -0.083 C 0.2633 -0.0742 0.272 -0.0558 0.28 -0.04 C 0.288 -0.0242 0.2983 -0.0073 0.298 0.012 C 0.2977 0.0313 0.29 0.0607 0.278 0.076 C 0.266 0.0913 0.2448 0.0993 0.226 0.104 C 0.2072 0.1087 0.1823 0.107 0.165 0.104 C 0.1477 0.101 0.1363 0.092 0.122 0.086 C 0.148 0.0263 0.174 -0.0333 0.2 -0.093 Z",
+              "region": "beanie",
+              "material": "knit-hat"
+            },
+            {
+              "id": "toddler-suit",
+              "bone": "toddler-torso",
+              "role": "body",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.082 C 0.0275 0.0968 0.0833 0.0893 0.12 0.09 C 0.1567 0.0907 0.1933 0.0917 0.22 0.086 C 0.2467 0.0803 0.27 0.0797 0.28 0.056 C 0.29 0.0323 0.29 -0.034 0.28 -0.056 C 0.27 -0.078 0.2467 -0.0712 0.22 -0.076 C 0.1933 -0.0808 0.1567 -0.0843 0.12 -0.085 C 0.0833 -0.0857 0.0275 -0.0943 0.0 -0.08 C -0.0275 -0.0657 -0.045 -0.026 -0.045 0.001 C -0.045 0.028 -0.0275 0.0672 0.0 0.082 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-head",
+              "bone": "toddler-head",
+              "role": "body",
+              "z": 4.6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0447 C 0.0051 0.0591 0.0198 0.041 0.0306 0.043 C 0.0414 0.045 0.0527 0.0507 0.0646 0.0568 C 0.0765 0.0628 0.0884 0.0757 0.102 0.0791 C 0.1156 0.0826 0.134 0.082 0.1462 0.0774 C 0.1584 0.0728 0.1682 0.0631 0.1754 0.0516 C 0.1827 0.0401 0.1886 0.0236 0.1897 0.0086 C 0.1909 -0.0064 0.1867 -0.0258 0.1822 -0.0387 C 0.1778 -0.0516 0.1698 -0.0628 0.1632 -0.0688 C 0.1566 -0.0748 0.1489 -0.0734 0.1428 -0.0748 C 0.1367 -0.0763 0.1312 -0.0758 0.1265 -0.0774 C 0.1217 -0.079 0.1181 -0.0816 0.1142 -0.0843 C 0.1104 -0.087 0.1066 -0.094 0.1034 -0.0937 C 0.1001 -0.0935 0.0972 -0.085 0.0945 -0.0826 C 0.0918 -0.0801 0.0894 -0.08 0.087 -0.0791 C 0.0847 -0.0783 0.0825 -0.078 0.0802 -0.0774 C 0.078 -0.0768 0.0773 -0.0757 0.0734 -0.0757 C 0.0696 -0.0757 0.0617 -0.0794 0.0571 -0.0774 C 0.0526 -0.0754 0.049 -0.0702 0.0462 -0.0636 C 0.0435 -0.057 0.0444 -0.0413 0.0408 -0.0378 C 0.0372 -0.0344 0.0313 -0.0421 0.0245 -0.043 C 0.0177 -0.0439 0.0041 -0.0576 0.0 -0.043 C -0.0041 -0.0284 -0.0051 0.0304 0.0 0.0447 Z",
+              "region": "toddler-face",
+              "material": "skin"
+            },
+            {
+              "id": "toddler-hat",
+              "bone": "toddler-head",
+              "role": "body",
+              "z": 4.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.13 -0.075 C 0.1427 -0.0733 0.1577 -0.0775 0.168 -0.07 C 0.1783 -0.0625 0.1867 -0.0437 0.192 -0.03 C 0.1973 -0.0163 0.201 -0.0038 0.2 0.012 C 0.199 0.0278 0.1943 0.0533 0.186 0.065 C 0.1777 0.0767 0.1635 0.0795 0.15 0.082 C 0.1365 0.0845 0.12 0.0807 0.105 0.08 C 0.1093 0.06 0.1142 0.04 0.118 0.02 C 0.1218 0.0 0.126 -0.0242 0.128 -0.04 C 0.13 -0.0558 0.1293 -0.0633 0.13 -0.075 Z",
+              "region": "toddler-hat",
+              "material": "knit-hat"
+            },
+            {
+              "id": "toddler-thigh-n",
+              "bone": "toddler-thigh-n",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.047 C 0.0267 0.054 0.1063 0.0498 0.13 0.042 C 0.1537 0.0342 0.142 0.014 0.142 0.0 C 0.142 -0.014 0.1537 -0.0342 0.13 -0.042 C 0.1063 -0.0498 0.0267 -0.054 0.0 -0.047 C -0.0267 -0.04 -0.03 -0.0157 -0.03 0.0 C -0.03 0.0157 -0.0267 0.04 0.0 0.047 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-shank-n",
+              "bone": "toddler-shank-n",
+              "role": "body",
+              "z": 4.41,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.042 C 0.02 0.0483 0.0833 0.0513 0.1 0.038 C 0.1167 0.0247 0.1167 -0.0247 0.1 -0.038 C 0.0833 -0.0513 0.02 -0.0483 0.0 -0.042 C -0.02 -0.0357 -0.02 -0.014 -0.02 0.0 C -0.02 0.014 -0.02 0.0357 0.0 0.042 Z",
+              "region": "toddler-suit",
+              "material": "padded-suit"
+            },
+            {
+              "id": "toddler-boot-n",
+              "bone": "toddler-shank-n",
+              "role": "body",
+              "z": 4.42,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.1 -0.036 C 0.1 -0.0113 0.0933 0.0247 0.1 0.038 C 0.1067 0.0513 0.13 0.035 0.14 0.044 C 0.15 0.053 0.15 0.0827 0.16 0.092 C 0.17 0.1013 0.192 0.1053 0.2 0.1 C 0.208 0.0947 0.2053 0.0733 0.208 0.06 C 0.2073 0.028 0.2067 -0.004 0.206 -0.036 C 0.1707 -0.036 0.1353 -0.036 0.1 -0.036 Z",
+              "region": "toddler-boots",
+              "material": "rubber"
+            },
+            {
+              "id": "toddler-arm-n",
+              "bone": "toddler-arm-n",
+              "role": "body",
+              "z": 4.9,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.0 0.036 C 0.0333 0.0415 0.0917 0.034 0.12 0.033 C 0.1483 0.032 0.1542 0.0305 0.17 0.03 C 0.1858 0.0295 0.2033 0.035 0.215 0.03 C 0.2267 0.025 0.24 0.01 0.24 0.0 C 0.24 -0.01 0.2267 -0.025 0.215 -0.03 C 0.2033 -0.035 0.1858 -0.0295 0.17 -0.03 C 0.1542 -0.0305 0.1483 -0.032 0.12 -0.033 C 0.0917 -0.034 0.0333 -0.0415 0.0 -0.036 C -0.0333 -0.0305 -0.08 -0.012 -0.08 0.0 C -0.08 0.012 -0.0333 0.0305 0.0 0.036 Z",
+              "regions": [
+                "toddler-suit",
+                "toddler-mittens"
+              ],
+              "material": "padded-suit"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Parent as head with beanie and face profile, coat with a separate skirt (the scarf is part of the coat form), sleeve and a forearm-with-glove form per arm, jeans legs in thigh and shank and boots; the toddler as padded trunk, head with hat, near leg with boot and near arm with mitten reaching to the parent's neck.",
+            "de": "Elternteil aus Kopf mit Mütze und Gesichtsprofil, Mantel mit getrenntem Schoß (der Schal gehört zur Mantelform), Ärmel und einer Unterarm-mit-Handschuh-Form je Arm, Jeansbeinen aus Ober- und Unterschenkel und Stiefeln; das Kleinkind als gepolsterter Rumpf, Kopf mit Mütze, nahes Bein mit Stiefel und naher Arm mit Fäustling bis zum Hals der Eltern."
+          },
+          "retained": {
+            "en": "The carried second body with its three contacts (seat on the forearm, arm round the neck, legs in front of the parent); coat skirt, both boots; real parent height 1.73 m.",
+            "de": "Der getragene zweite Körper mit seinen drei Kontakten (Sitz auf dem Unterarm, Arm um den Hals, Beine vor den Eltern); Mantelschoß, beide Stiefel; reale Elternhöhe 1,73 m."
+          },
+          "merged": {
+            "en": "Scarf into the coat form; glove into the forearm form; mitten into the toddler's arm form; pelvis into coat skirt and thighs. The toddler's far leg and far arm are hidden behind the near ones and are not drawn.",
+            "de": "Schal in der Mantelform; Handschuh in der Unterarmform; Fäustling in der Armform des Kleinkinds; Becken in Mantelschoß und Oberschenkeln. Das ferne Bein und der ferne Arm des Kleinkinds sind hinter den nahen verdeckt und werden nicht gezeichnet."
+          },
+          "omitted": {
+            "en": "Eyes, ear, mouth, seams, laces, buttons, hat pompom, thumbs.",
+            "de": "Augen, Ohr, Mund, Nähte, Schnürung, Knöpfe, Mützenbommel, Daumen."
+          },
+          "thinElements": {
+            "en": "The toddler's arm is 0.07 m (0.7 mm); the glove end tapers like the real hand; nothing is thickened.",
+            "de": "Der Arm des Kleinkinds ist 0,07 m (0,7 mm) breit; das Handschuhende läuft wie die echte Hand spitz zu; nichts wird verdickt."
+          },
+          "hatching": {
+            "en": "None; tones carry the materials.",
+            "de": "Keine; Töne tragen die Materialien."
+          },
+          "styles": {
+            "en": "0.20 mm outlines; tones separate the parent's coat, jeans, boots and skin from the toddler's overall.",
+            "de": "0,20-mm-Konturen; Töne trennen Mantel, Jeans, Stiefel und Haut der Eltern vom Overall des Kleinkinds."
+          },
+          "overlays": {
+            "en": "Merged forms list their regions: coat (coat, scarf), forearm forms (sleeve, glove), toddler arm (overall, mitten); every other region is its own form and the toddler's regions sit on the toddler's forms.",
+            "de": "Zusammengefasste Formen nennen ihre Regionen: Mantel (Mantel, Schal), Unterarmformen (Ärmel, Handschuh), Arm des Kleinkinds (Overall, Fäustling); jede andere Region ist eine eigene Form, die Regionen des Kleinkinds liegen auf dessen Formen."
+          }
+        }
+      },
+      "200": {
+        "status": "unavailable",
+        "denominator": 200,
+        "reason": {
+          "en": "At 1:200 the two bodies overlap along the hip, chest and arms: the gaps between the toddler's head, thighs and boots and the parent's coat, arm and thigh are 0.07 to 0.15 m, below the 0.15 mm (0.03 m) minimum white gap plus line width, so they print as blots; the drawing cannot keep both persons readable without merging them.",
+          "de": "Bei 1:200 überlagern sich die beiden Körper an Hüfte, Brust und Armen: Die Abstände zwischen Kopf, Oberschenkeln und Stiefeln des Kleinkinds und Mantel, Arm und Oberschenkel der Eltern betragen 0,07 bis 0,15 m und liegen unter der Mindestlücke von 0,15 mm (0,03 m) zuzüglich Linienbreite, sie drucken daher als Flecken; ohne Zusammenfassen bleiben beide Personen nicht lesbar."
+        },
+        "limitingFeature": {
+          "en": "Gaps between the carried toddler and the parent",
+          "de": "Abstände zwischen getragenem Kleinkind und Elternteil"
+        },
+        "limitingSizeM": 0.075,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 0.87 m toddler is 1.7 mm high and its arms, boots and mittens (0.06 to 0.08 m) are below the 0.2 mm feature limit; merging the two bodies into one form would lose the carried second person that this asset is about.",
+          "de": "Bei 1:500 ist das 0,87 m große Kleinkind 1,7 mm hoch, seine Arme, Stiefel und Fäustlinge (0,06 bis 0,08 m) liegen unter der Mindestbreite von 0,2 mm; ein Zusammenfassen beider Körper zu einer Form würde die getragene zweite Person verlieren, um die es bei diesem Asset geht."
+        },
+        "limitingFeature": {
+          "en": "Toddler arm and boot width",
+          "de": "Breite von Arm und Stiefel des Kleinkinds"
+        },
+        "limitingSizeM": 0.07,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "standing-carry",
+        "title": {
+          "en": "Standing with the toddler on the hip",
+          "de": "Stehen mit dem Kleinkind auf der Hüfte"
+        },
+        "description": {
+          "en": "Upright stance, the near arm cradles the toddler's seat, the far arm hangs; the toddler looks ahead and holds the parent's shoulder.",
+          "de": "Aufrechter Stand, der nahe Arm trägt das Gesäß des Kleinkinds, der ferne Arm hängt; das Kleinkind schaut nach vorn und hält sich an der Schulter fest."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.641
+          },
+          "forearm-l": {
+            "angleDeg": 0.212
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -2
+          },
+          "forearm-r": {
+            "angleDeg": 18
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 8.668
+          },
+          "shank-l": {
+            "angleDeg": -13.276
+          },
+          "foot-l": {
+            "angleDeg": 4.608
+          },
+          "thigh-r": {
+            "angleDeg": 7.856
+          },
+          "shank-r": {
+            "angleDeg": -13.767
+          },
+          "foot-r": {
+            "angleDeg": 5.911
+          },
+          "toddler-torso": {
+            "angleDeg": 0
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 0
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 0
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 1.4,
+          "breathing": "rest",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "heel-strike-l",
+        "title": {
+          "en": "Heel strike, left",
+          "de": "Fersenaufsatz links"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.000 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.000 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -1
+          },
+          "forearm-r": {
+            "angleDeg": 18
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 46.661
+          },
+          "shank-l": {
+            "angleDeg": -51.192
+          },
+          "foot-l": {
+            "angleDeg": 18.532
+          },
+          "thigh-r": {
+            "angleDeg": 17.508
+          },
+          "shank-r": {
+            "angleDeg": -63.235
+          },
+          "foot-r": {
+            "angleDeg": 38.502
+          },
+          "toddler-torso": {
+            "angleDeg": 0
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 0
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 0
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-1",
+        "title": {
+          "en": "Walking, phase 0.125",
+          "de": "Gehen, Phase 0.125"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.125 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.125 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -13.728
+          },
+          "forearm-r": {
+            "angleDeg": 23.091
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 38.392
+          },
+          "shank-l": {
+            "angleDeg": -52.197
+          },
+          "foot-l": {
+            "angleDeg": 16.515
+          },
+          "thigh-r": {
+            "angleDeg": 5.82
+          },
+          "shank-r": {
+            "angleDeg": -56.079
+          },
+          "foot-r": {
+            "angleDeg": 18.772
+          },
+          "toddler-torso": {
+            "angleDeg": 1.5
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 7.071
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": -7.071
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "midstance-l",
+        "title": {
+          "en": "Midstance, left",
+          "de": "Mittlere Standphase links"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.250 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.250 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -19
+          },
+          "forearm-r": {
+            "angleDeg": 25.2
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 30.076
+          },
+          "shank-l": {
+            "angleDeg": -52.676
+          },
+          "foot-l": {
+            "angleDeg": 22.6
+          },
+          "thigh-r": {
+            "angleDeg": 28.477
+          },
+          "shank-r": {
+            "angleDeg": -82.092
+          },
+          "foot-r": {
+            "angleDeg": 34.957
+          },
+          "toddler-torso": {
+            "angleDeg": 0
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 10
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": -10
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-3",
+        "title": {
+          "en": "Walking, phase 0.375",
+          "de": "Gehen, Phase 0.375"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.375 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.375 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -13.728
+          },
+          "forearm-r": {
+            "angleDeg": 23.091
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 21.585
+          },
+          "shank-l": {
+            "angleDeg": -52.666
+          },
+          "foot-l": {
+            "angleDeg": 31.081
+          },
+          "thigh-r": {
+            "angleDeg": 50.954
+          },
+          "shank-r": {
+            "angleDeg": -77.985
+          },
+          "foot-r": {
+            "angleDeg": 21.201
+          },
+          "toddler-torso": {
+            "angleDeg": -1.5
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 7.071
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": -7.071
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-4",
+        "title": {
+          "en": "Walking, phase 0.500",
+          "de": "Gehen, Phase 0.500"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.500 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.500 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -1
+          },
+          "forearm-r": {
+            "angleDeg": 18
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 17.508
+          },
+          "shank-l": {
+            "angleDeg": -63.235
+          },
+          "foot-l": {
+            "angleDeg": 38.502
+          },
+          "thigh-r": {
+            "angleDeg": 46.661
+          },
+          "shank-r": {
+            "angleDeg": -51.192
+          },
+          "foot-r": {
+            "angleDeg": 18.532
+          },
+          "toddler-torso": {
+            "angleDeg": 0
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 0
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 0
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l",
+          "heel-r"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-5",
+        "title": {
+          "en": "Walking, phase 0.625",
+          "de": "Gehen, Phase 0.625"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.625 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.625 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": 11.728
+          },
+          "forearm-r": {
+            "angleDeg": 23.091
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 5.82
+          },
+          "shank-l": {
+            "angleDeg": -56.079
+          },
+          "foot-l": {
+            "angleDeg": 18.772
+          },
+          "thigh-r": {
+            "angleDeg": 38.392
+          },
+          "shank-r": {
+            "angleDeg": -52.197
+          },
+          "foot-r": {
+            "angleDeg": 16.515
+          },
+          "toddler-torso": {
+            "angleDeg": 1.5
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": -7.071
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 7.071
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-6",
+        "title": {
+          "en": "Walking, phase 0.750",
+          "de": "Gehen, Phase 0.750"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.750 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.750 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": 17
+          },
+          "forearm-r": {
+            "angleDeg": 25.2
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 28.477
+          },
+          "shank-l": {
+            "angleDeg": -82.092
+          },
+          "foot-l": {
+            "angleDeg": 34.957
+          },
+          "thigh-r": {
+            "angleDeg": 30.076
+          },
+          "shank-r": {
+            "angleDeg": -52.676
+          },
+          "foot-r": {
+            "angleDeg": 22.6
+          },
+          "toddler-torso": {
+            "angleDeg": 0
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": -10
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 10
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-7",
+        "title": {
+          "en": "Walking, phase 0.875",
+          "de": "Gehen, Phase 0.875"
+        },
+        "description": {
+          "en": "Walking while carrying: gait phase 0.875 of the left foot with the right foot half a cycle later; the toddler bobs on the hip.",
+          "de": "Gehen mit Last: Gangphase 0.875 des linken Fußes, der rechte Fuß folgt einen halben Zyklus später; das Kleinkind wippt auf der Hüfte."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 1
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.937
+          },
+          "forearm-l": {
+            "angleDeg": 0.213
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": 11.728
+          },
+          "forearm-r": {
+            "angleDeg": 23.091
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 50.954
+          },
+          "shank-l": {
+            "angleDeg": -77.985
+          },
+          "foot-l": {
+            "angleDeg": 21.201
+          },
+          "thigh-r": {
+            "angleDeg": 21.585
+          },
+          "shank-r": {
+            "angleDeg": -52.666
+          },
+          "foot-r": {
+            "angleDeg": 31.081
+          },
+          "toddler-torso": {
+            "angleDeg": -1.5
+          },
+          "toddler-head": {
+            "angleDeg": 0
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": -7.071
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 7.071
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 2.8,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.2,
+              "breathing": "rest"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "hoisting",
+        "title": {
+          "en": "Hoisting the toddler up",
+          "de": "Das Kleinkind höher nehmen"
+        },
+        "description": {
+          "en": "Knees bent and trunk leaning back while the near arm lifts the toddler higher on the hip.",
+          "de": "Knie gebeugt und Rumpf zurückgelehnt, während der nahe Arm das Kleinkind höher auf die Hüfte hebt."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 8
+          },
+          "head": {
+            "angleDeg": -2
+          },
+          "upper-arm-l": {
+            "angleDeg": 12.799
+          },
+          "forearm-l": {
+            "angleDeg": 3.297
+          },
+          "hand-l": {
+            "angleDeg": 10
+          },
+          "upper-arm-r": {
+            "angleDeg": -2
+          },
+          "forearm-r": {
+            "angleDeg": 14
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 30.397
+          },
+          "shank-l": {
+            "angleDeg": -50.609
+          },
+          "foot-l": {
+            "angleDeg": 20.212
+          },
+          "thigh-r": {
+            "angleDeg": 29.444
+          },
+          "shank-r": {
+            "angleDeg": -51.02
+          },
+          "foot-r": {
+            "angleDeg": 21.576
+          },
+          "toddler-torso": {
+            "angleDeg": 6
+          },
+          "toddler-head": {
+            "angleDeg": 5
+          },
+          "toddler-arm-n": {
+            "angleDeg": 0
+          },
+          "toddler-arm-f": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-n": {
+            "angleDeg": 0
+          },
+          "toddler-shank-n": {
+            "angleDeg": 0
+          },
+          "toddler-thigh-f": {
+            "angleDeg": 0
+          },
+          "toddler-shank-f": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3,
+          "breathing": "walk",
+          "passengers": {
+            "toddler": {
+              "activityMet": 1.6,
+              "breathing": "fuss"
+            }
+          },
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "beanie": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "scarf": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "coat-torso": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "coat-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "boots": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.09,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 8
+              }
+            },
+            "toddler-face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-suit": {
+              "exposedFraction": 0.85,
+              "sunlitFraction": 0.15,
+              "contact": {
+                "fraction": 0.15,
+                "tempC": 30
+              }
+            },
+            "toddler-mittens": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "toddler-boots": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            }
+          },
+          "emitters": {
+            "plume": 0.5,
+            "toddler-plume": 0.4
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "walk-carrying",
+        "title": {
+          "en": "Walking with the toddler",
+          "de": "Gehen mit dem Kleinkind"
+        },
+        "description": {
+          "en": "Walking cycle of 1.0 s (about 0.95 m/s, step 0.47 m) with the toddler on the hip: the feet are planted while in contact, the far arm swings less than without a load and the toddler bobs and swings its legs.",
+          "de": "Gehzyklus von 1,0 s (etwa 0,95 m/s, Schritt 0,47 m) mit dem Kleinkind auf der Hüfte: Die Füße gleiten im Kontakt nicht, der ferne Arm schwingt weniger als ohne Last und das Kleinkind wippt und schwingt die Beine."
+        },
+        "durationS": 1,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 0.9496,
+        "keys": [
+          {
+            "t": 0,
+            "pose": "heel-strike-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.125,
+            "pose": "walk-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.25,
+            "pose": "midstance-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.375,
+            "pose": "walk-3",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5,
+            "pose": "walk-4",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.625,
+            "pose": "walk-5",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.75,
+            "pose": "walk-6",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.875,
+            "pose": "walk-7",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 0.36
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0.06,
+            "toS": 0.62
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0.5,
+            "toS": 0.86
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0.56,
+            "toS": 1
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 0.12
+          }
+        ],
+        "phases": [
+          {
+            "id": "stance-l",
+            "fromS": 0,
+            "toS": 0.5,
+            "title": {
+              "en": "Left stance",
+              "de": "Linke Standphase"
+            }
+          },
+          {
+            "id": "stance-r",
+            "fromS": 0.5,
+            "toS": 1,
+            "title": {
+              "en": "Right stance",
+              "de": "Rechte Standphase"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Left heel strike",
+              "de": "Linker Fersenaufsatz"
+            },
+            "target": "heel-l"
+          },
+          {
+            "t": 0.5,
+            "kind": "contact-on",
+            "title": {
+              "en": "Right heel strike",
+              "de": "Rechter Fersenaufsatz"
+            },
+            "target": "heel-r"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "shift-toddler",
+        "title": {
+          "en": "Hoisting and settling the toddler",
+          "de": "Das Kleinkind hochnehmen und zurechtsetzen"
+        },
+        "description": {
+          "en": "Non-looping 3 s: the parent bends the knees, leans back and hoists the toddler higher on the hip, then stands again; the toddler fusses briefly and settles.",
+          "de": "Nicht wiederholte Folge von 3 s: Die Eltern beugen die Knie, lehnen sich zurück und nehmen das Kleinkind höher auf die Hüfte, dann stehen sie wieder; das Kleinkind quengelt kurz und beruhigt sich."
+        },
+        "durationS": 3,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "standing-carry",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.9,
+            "pose": "hoisting",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "hoisting",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.6,
+            "pose": "standing-carry",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 3
+          }
+        ],
+        "phases": [
+          {
+            "id": "bend",
+            "fromS": 0,
+            "toS": 0.9,
+            "title": {
+              "en": "Bending and leaning back",
+              "de": "Beugen und Zurücklehnen"
+            }
+          },
+          {
+            "id": "hoist",
+            "fromS": 0.9,
+            "toS": 1.5,
+            "title": {
+              "en": "Hoisting",
+              "de": "Hochnehmen"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 1.5,
+            "toS": 3,
+            "title": {
+              "en": "Settling",
+              "de": "Zurechtsetzen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.2,
+            "kind": "load-on",
+            "title": {
+              "en": "The toddler's seat is lifted",
+              "de": "Das Gesäß des Kleinkinds wird gehoben"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.9,
+                "v": 1
+              },
+              {
+                "t": 2.4,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 9,
+        "meanRadiantTempC": 10,
+        "skyTempC": 0,
+        "groundTempC": 8,
+        "relativeHumidity": 0.7,
+        "windMS": 2,
+        "windDirectionDeg": 180,
+        "solarWM2": 200,
+        "diffuseFraction": 0.6,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.4,
+      "body": {
+        "species": "human",
+        "massKg": 66,
+        "skinAreaM2": 1.765,
+        "basalMetabolismW": 67.4,
+        "metWM2": 58.15,
+        "coreSetPointC": 36.8,
+        "skinSetPointC": 34.1,
+        "sweating": true,
+        "panting": false,
+        "maxSkinBloodFlowLM2H": 90,
+        "minSkinBloodFlowLM2H": 6.3,
+        "source": "authored-estimate",
+        "reference": "gagge-1971"
+      },
+      "respiration": {
+        "noseEmitter": "nose-breath",
+        "mouthEmitter": "mouth-breath",
+        "exhaledTempC": 34,
+        "exhaledRelativeHumidity": 0.95,
+        "patterns": [
+          {
+            "id": "rest",
+            "title": {
+              "en": "Resting breathing",
+              "de": "Ruheatmung"
+            },
+            "rateBpm": 14,
+            "tidalVolumeL": 0.5,
+            "inhaleFraction": 0.38,
+            "pauseAfterInhaleFraction": 0.04,
+            "exhaleFraction": 0.45,
+            "pauseAfterExhaleFraction": 0.13,
+            "route": "nose",
+            "source": "authored-estimate",
+            "reference": "gupta-2010"
+          },
+          {
+            "id": "walk",
+            "title": {
+              "en": "Walking with a load",
+              "de": "Gehen mit Last"
+            },
+            "rateBpm": 20,
+            "tidalVolumeL": 1,
+            "inhaleFraction": 0.42,
+            "pauseAfterInhaleFraction": 0.02,
+            "exhaleFraction": 0.5,
+            "pauseAfterExhaleFraction": 0.06,
+            "route": "nose-and-mouth",
+            "source": "authored-estimate",
+            "reference": "ainsworth-2011"
+          }
+        ],
+        "motion": [
+          {
+            "bone": "torso",
+            "angleDeg": 1.2,
+            "dy": 0.004
+          },
+          {
+            "bone": "pelvis",
+            "angleDeg": 0.5,
+            "dy": 0.003
+          }
+        ],
+        "source": "authored-estimate",
+        "reference": "hoeppe-1981"
+      },
+      "passengers": [
+        {
+          "id": "toddler",
+          "title": {
+            "en": "Toddler (24 months) carried on the hip",
+            "de": "Kleinkind (24 Monate) auf der Hüfte getragen"
+          },
+          "physiology": {
+            "species": "human",
+            "massKg": 12.2,
+            "skinAreaM2": 0.528,
+            "basalMetabolismW": 33,
+            "metWM2": 58.15,
+            "coreSetPointC": 37,
+            "skinSetPointC": 34,
+            "sweating": true,
+            "panting": false,
+            "maxSkinBloodFlowLM2H": 70,
+            "minSkinBloodFlowLM2H": 6.3,
+            "source": "authored-estimate",
+            "reference": "schofield-1985"
+          },
+          "respiration": {
+            "noseEmitter": "toddler-nose-breath",
+            "mouthEmitter": "toddler-mouth-breath",
+            "exhaledTempC": 34,
+            "exhaledRelativeHumidity": 0.95,
+            "patterns": [
+              {
+                "id": "rest",
+                "title": {
+                  "en": "Toddler at rest",
+                  "de": "Kleinkind in Ruhe"
+                },
+                "rateBpm": 26,
+                "tidalVolumeL": 0.09,
+                "inhaleFraction": 0.4,
+                "pauseAfterInhaleFraction": 0.05,
+                "exhaleFraction": 0.45,
+                "pauseAfterExhaleFraction": 0.1,
+                "route": "nose",
+                "source": "authored-estimate",
+                "reference": "who-2006"
+              },
+              {
+                "id": "fuss",
+                "title": {
+                  "en": "Toddler fussing",
+                  "de": "Kleinkind quengelt"
+                },
+                "rateBpm": 38,
+                "tidalVolumeL": 0.11,
+                "inhaleFraction": 0.38,
+                "pauseAfterInhaleFraction": 0.02,
+                "exhaleFraction": 0.58,
+                "pauseAfterExhaleFraction": 0.02,
+                "route": "mouth",
+                "source": "authored-estimate",
+                "reference": "who-2006"
+              }
+            ],
+            "motion": [
+              {
+                "bone": "toddler-torso",
+                "angleDeg": 2.5,
+                "dy": 0.002
+              }
+            ],
+            "source": "authored-estimate",
+            "reference": "who-2006"
+          }
+        }
+      ],
+      "operating": [],
+      "regions": [
+        {
+          "id": "face",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.0706,
+          "characteristicLengthM": 0.15,
+          "geometry": "sphere",
+          "skyViewFactor": 0.45,
+          "layers": [],
+          "heatCapacityJM2K": 15000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.06,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "beanie",
+          "title": {
+            "en": "Knit beanie with hair",
+            "de": "Strickmütze mit Haar"
+          },
+          "kind": "hair",
+          "model": "body",
+          "material": "knit-hat",
+          "areaM2": 0.0777,
+          "characteristicLengthM": 0.16,
+          "geometry": "sphere",
+          "skyViewFactor": 0.55,
+          "layers": [
+            {
+              "id": "beanie-air",
+              "title": {
+                "en": "Hair and air under the beanie",
+                "de": "Haar und Luft unter der Mütze"
+              },
+              "kind": "air-gap",
+              "material": "knit-hat",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "beanie",
+              "title": {
+                "en": "Knit beanie (0.15 clo)",
+                "de": "Strickmütze (0,15 clo)"
+              },
+              "kind": "clothing",
+              "material": "knit-hat",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.0256,
+              "vapourResistanceM2PaW": 4.08,
+              "heatCapacityJM2K": 600,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "scarf",
+          "title": {
+            "en": "Knitted scarf",
+            "de": "Strickschal"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "knit-hat",
+          "areaM2": 0.0794,
+          "characteristicLengthM": 0.1,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "scarf",
+              "title": {
+                "en": "Wool scarf (0.3 clo)",
+                "de": "Wollschal (0,3 clo)"
+              },
+              "kind": "clothing",
+              "material": "knit-hat",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.0698,
+              "vapourResistanceM2PaW": 11.13,
+              "heatCapacityJM2K": 900,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.01,
+            "skinFraction": 0.03
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "coat-torso",
+          "title": {
+            "en": "Wool coat, trunk and skirt",
+            "de": "Wollmantel, Rumpf und Schoß"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "wool",
+          "areaM2": 0.7572,
+          "characteristicLengthM": 0.35,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "torso-air",
+              "title": {
+                "en": "Air between skin and sweater",
+                "de": "Luft zwischen Haut und Pullover"
+              },
+              "kind": "air-gap",
+              "material": "wool",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sweater",
+              "title": {
+                "en": "Knit sweater (0.30 clo)",
+                "de": "Strickpullover (0,30 clo)"
+              },
+              "kind": "clothing",
+              "material": "wool",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0605,
+              "vapourResistanceM2PaW": 9.65,
+              "heatCapacityJM2K": 700,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "coat",
+              "title": {
+                "en": "Wool coat (0.40 clo)",
+                "de": "Wollmantel (0,40 clo)"
+              },
+              "kind": "clothing",
+              "material": "wool",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.0806,
+              "vapourResistanceM2PaW": 12.85,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 20000,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.38,
+            "skinFraction": 0.33
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "coat-sleeves",
+          "title": {
+            "en": "Coat and sweater sleeves",
+            "de": "Mantel- und Pulloverärmel"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "wool",
+          "areaM2": 0.3212,
+          "characteristicLengthM": 0.09,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sleeve-air",
+              "title": {
+                "en": "Air in the sleeve",
+                "de": "Luft im Ärmel"
+              },
+              "kind": "air-gap",
+              "material": "wool",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sleeve",
+              "title": {
+                "en": "Sweater and coat sleeve (0.55 clo)",
+                "de": "Pullover- und Mantelärmel (0,55 clo)"
+              },
+              "kind": "clothing",
+              "material": "wool",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.1108,
+              "vapourResistanceM2PaW": 17.67,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 16000,
+          "body": {
+            "segment": "arm",
+            "metabolicShare": 0.08,
+            "skinFraction": 0.14
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "gloves",
+          "title": {
+            "en": "Leather gloves",
+            "de": "Lederhandschuhe"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "leather-glove",
+          "areaM2": 0.0971,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "glove",
+              "title": {
+                "en": "Lined leather glove (0.2 clo)",
+                "de": "Gefütterter Lederhandschuh (0,2 clo)"
+              },
+              "kind": "clothing",
+              "material": "leather-glove",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0341,
+              "vapourResistanceM2PaW": 5.44,
+              "heatCapacityJM2K": 700,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "body": {
+            "segment": "hand",
+            "metabolicShare": 0.02,
+            "skinFraction": 0.05
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "jeans",
+          "title": {
+            "en": "Denim jeans",
+            "de": "Jeans"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "denim",
+          "areaM2": 0.6128,
+          "characteristicLengthM": 0.12,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.35,
+          "layers": [
+            {
+              "id": "leg-air",
+              "title": {
+                "en": "Air between skin and jeans",
+                "de": "Luft zwischen Haut und Jeans"
+              },
+              "kind": "air-gap",
+              "material": "denim",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "denim",
+              "title": {
+                "en": "Denim (0.26 clo)",
+                "de": "Jeansstoff (0,26 clo)"
+              },
+              "kind": "clothing",
+              "material": "denim",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.0451,
+              "vapourResistanceM2PaW": 7.19,
+              "heatCapacityJM2K": 550,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 18000,
+          "body": {
+            "segment": "leg",
+            "metabolicShare": 0.34,
+            "skinFraction": 0.31
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "boots",
+          "title": {
+            "en": "Leather ankle boots with socks",
+            "de": "Lederstiefeletten mit Socken"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "leather",
+          "areaM2": 0.1059,
+          "characteristicLengthM": 0.12,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.25,
+          "layers": [
+            {
+              "id": "sock",
+              "title": {
+                "en": "Wool sock (0.1 clo)",
+                "de": "Wollsocke (0,1 clo)"
+              },
+              "kind": "clothing",
+              "material": "leather",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0155,
+              "vapourResistanceM2PaW": 2.47,
+              "heatCapacityJM2K": 400,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot-air",
+              "title": {
+                "en": "Air in the boot",
+                "de": "Luft im Stiefel"
+              },
+              "kind": "air-gap",
+              "material": "leather",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.035,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot",
+              "title": {
+                "en": "Leather upper (0.1 clo)",
+                "de": "Lederschaft (0,1 clo)"
+              },
+              "kind": "shell",
+              "material": "leather",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.03,
+              "vapourResistanceM2PaW": 4.78,
+              "heatCapacityJM2K": 1100,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 8000,
+          "body": {
+            "segment": "foot",
+            "metabolicShare": 0.07,
+            "skinFraction": 0.06
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "toddler-face",
+          "title": {
+            "en": "Toddler face and neck",
+            "de": "Gesicht und Hals des Kleinkinds"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.0317,
+          "characteristicLengthM": 0.08,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 12000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.1,
+            "skinFraction": 0.06,
+            "subject": "toddler"
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "toddler-hat",
+          "title": {
+            "en": "Toddler knit hat with hair",
+            "de": "Strickmütze des Kleinkinds mit Haar"
+          },
+          "kind": "hair",
+          "model": "body",
+          "material": "knit-hat",
+          "areaM2": 0.0412,
+          "characteristicLengthM": 0.09,
+          "geometry": "sphere",
+          "skyViewFactor": 0.55,
+          "layers": [
+            {
+              "id": "hat-air",
+              "title": {
+                "en": "Hair and air under the hat",
+                "de": "Haar und Luft unter der Mütze"
+              },
+              "kind": "air-gap",
+              "material": "knit-hat",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "hat",
+              "title": {
+                "en": "Knit hat (0.3 clo)",
+                "de": "Strickmütze (0,3 clo)"
+              },
+              "kind": "clothing",
+              "material": "knit-hat",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.0605,
+              "vapourResistanceM2PaW": 9.65,
+              "heatCapacityJM2K": 700,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3500,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.05,
+            "skinFraction": 0.06,
+            "subject": "toddler"
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "toddler-suit",
+          "title": {
+            "en": "Padded overall, trunk, arms and legs",
+            "de": "Gefütterter Overall, Rumpf, Arme und Beine"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "padded-suit",
+          "areaM2": 0.5816,
+          "characteristicLengthM": 0.12,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "suit-air",
+              "title": {
+                "en": "Air under the overall",
+                "de": "Luft unter dem Overall"
+              },
+              "kind": "air-gap",
+              "material": "padded-suit",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.035,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "suit",
+              "title": {
+                "en": "Padded overall over a body suit (0.9 clo)",
+                "de": "Gefütterter Overall über Body (0,9 clo)"
+              },
+              "kind": "clothing",
+              "material": "padded-suit",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.2023,
+              "vapourResistanceM2PaW": 32.26,
+              "heatCapacityJM2K": 1800,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 12000,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.75,
+            "skinFraction": 0.76,
+            "subject": "toddler"
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "toddler-mittens",
+          "title": {
+            "en": "Toddler mittens",
+            "de": "Fäustlinge des Kleinkinds"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "knit-hat",
+          "areaM2": 0.0343,
+          "characteristicLengthM": 0.04,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "mitten",
+              "title": {
+                "en": "Knit mitten (0.3 clo)",
+                "de": "Strickfäustling (0,3 clo)"
+              },
+              "kind": "clothing",
+              "material": "knit-hat",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.0605,
+              "vapourResistanceM2PaW": 9.65,
+              "heatCapacityJM2K": 500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "body": {
+            "segment": "hand",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.05,
+            "subject": "toddler"
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "toddler-boots",
+          "title": {
+            "en": "Toddler rubber boots with socks",
+            "de": "Gummistiefel des Kleinkinds mit Socken"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "rubber",
+          "areaM2": 0.0369,
+          "characteristicLengthM": 0.08,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.25,
+          "layers": [
+            {
+              "id": "sock",
+              "title": {
+                "en": "Wool sock (0.15 clo)",
+                "de": "Wollsocke (0,15 clo)"
+              },
+              "kind": "clothing",
+              "material": "rubber",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.0233,
+              "vapourResistanceM2PaW": 3.72,
+              "heatCapacityJM2K": 400,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot-air",
+              "title": {
+                "en": "Air in the boot",
+                "de": "Luft im Stiefel"
+              },
+              "kind": "air-gap",
+              "material": "rubber",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot",
+              "title": {
+                "en": "Rubber boot shell",
+                "de": "Gummischaft"
+              },
+              "kind": "shell",
+              "material": "rubber",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.012,
+              "vapourResistanceM2PaW": 1.91,
+              "heatCapacityJM2K": 1500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "body": {
+            "segment": "foot",
+            "metabolicShare": 0.06,
+            "skinFraction": 0.07,
+            "subject": "toddler"
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "nose-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Nostril jet",
+            "de": "Nasenstrahl"
+          },
+          "anchor": "nostrils",
+          "directionDeg": -150,
+          "diameterM": 0.0095,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "mouth-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Mouth jet",
+            "de": "Mundstrahl"
+          },
+          "anchor": "mouth",
+          "directionDeg": -100,
+          "diameterM": 0.0124,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "toddler-nose-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Toddler nostril jet",
+            "de": "Nasenstrahl des Kleinkinds"
+          },
+          "anchor": "toddler-nostrils",
+          "directionDeg": -150,
+          "diameterM": 0.0055,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "toddler-mouth-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Toddler mouth jet",
+            "de": "Mundstrahl des Kleinkinds"
+          },
+          "anchor": "toddler-mouth",
+          "directionDeg": -100,
+          "diameterM": 0.0075,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "plume",
+          "kind": "plume",
+          "title": {
+            "en": "Rising warm air above the body",
+            "de": "Aufsteigende Warmluft über dem Körper"
+          },
+          "anchor": "crown",
+          "directionDeg": 0,
+          "diameterM": 0.35,
+          "region": "coat-torso",
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        },
+        {
+          "id": "toddler-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Warm air above the toddler",
+            "de": "Warmluft über dem Kleinkind"
+          },
+          "anchor": "toddler-crown",
+          "directionDeg": 0,
+          "diameterM": 0.2,
+          "region": "toddler-suit",
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "DuBois skin area 1.74 m2 for the parent (1.70 m, 66 kg) and 0.52 m2 for the toddler (0.865 m, 12.2 kg; DuBois is less accurate for small children). Parent: sweater under a wool coat (0.70 clo trunk, 0.55 clo sleeves), jeans, boots, scarf, beanie and gloves; toddler: padded overall (0.9 clo), knit hat, mittens and rubber boots. Garment values are authored estimates guided by ISO 9920 (1 clo = 0.155 m2K/W).",
+          "de": "DuBois-Hautfläche 1,74 m2 für das Elternteil (1,70 m, 66 kg) und 0,52 m2 für das Kleinkind (0,865 m, 12,2 kg; DuBois ist bei kleinen Kindern ungenauer). Elternteil: Pullover unter Wollmantel (0,70 clo Rumpf, 0,55 clo Ärmel), Jeans, Stiefel, Schal, Mütze und Handschuhe; Kleinkind: gefütterter Overall (0,9 clo), Strickmütze, Fäustlinge und Gummistiefel. Die Kleidungswerte sind Autorenschätzungen nach ISO 9920 (1 clo = 0,155 m2K/W)."
+        },
+        {
+          "en": "Toddler: 24 months, median 12.2 kg and 0.865 m after the WHO growth standards 2006; basal metabolism 33 W after the Schofield equations (authored estimate); respiration 26 per minute at rest with 0.09 L tidal volume (about 7 mL/kg) and 38 per minute with 0.11 L when fussing. The toddler is a passenger with its own physiology, regions and breath emitters; its heat is not part of the parent's balance.",
+          "de": "Kleinkind: 24 Monate, Median 12,2 kg und 0,865 m nach den WHO-Wachstumsstandards 2006; Grundumsatz 33 W nach den Schofield-Gleichungen (Autorenschätzung); Atmung 26 pro Minute in Ruhe mit 0,09 L Atemzugvolumen (etwa 7 mL/kg) und 38 pro Minute mit 0,11 L beim Quengeln. Das Kleinkind ist ein Passagier mit eigener Physiologie, eigenen Regionen und Atem-Emittern; seine Wärme gehört nicht zur Bilanz des Elternteils."
+        },
+        {
+          "en": "Parent: 1.4 met standing, 2.8 met walking with the load (about 4 km/h; Compendium of Physical Activities, walking with a child carried about 3 to 4 METs); first respiration pattern (rest) is the reference of the chest motion. Contact of 15 % of the coat and overall with the other body at 30 degrees Celsius.",
+          "de": "Elternteil: 1,4 met im Stehen, 2,8 met beim Gehen mit Last (etwa 4 km/h; Compendium of Physical Activities, Gehen mit getragenem Kind etwa 3 bis 4 MET); das erste Atemmuster (Ruhe) ist die Referenz der Brustbewegung. Kontakt von 15 % des Mantels und des Overalls mit dem anderen Körper bei 30 Grad Celsius."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Inertial model: segment masses as point masses at de Leva centres, the toddler's bones carry 12.2 kg on the parent's pelvis; heel and ball contacts are unilateral supports.",
+          "de": "Trägheitsmodell: Segmentmassen als Punktmassen in den Schwerpunkten nach de Leva, die Knochen des Kleinkinds tragen 12,2 kg am Becken des Elternteils; Fersen- und Ballenkontakte sind einseitige Auflager."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "standing-carry",
+      "defaultClip": "walk-carrying",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

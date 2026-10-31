@@ -1,8 +1,10 @@
 {
   "sites": {
     "site-1": {
-      "boundary": [],
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "boundary": []
+      }
     }
   }
 }

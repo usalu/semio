@@ -89,6 +89,9 @@
       "{workspaceRoot}/bun.lock",
       "{workspaceRoot}/🎓️teaching/bun.lock",
       "{workspaceRoot}/🎓️teaching/package.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/**/package.json",
       "{workspaceRoot}/🧰️framework/**/tsconfig.json"
     ],
@@ -99,7 +102,12 @@
       "{workspaceRoot}/🎓️teaching/🛂️proctor/🔨️modules/🗄️storage/🦀️.rs"
     ],
     "proctorCargoManifests": [
-      { "input": "cargoToolchain", "projects": ["@teaching/proctor"] },
+      {
+        "input": "cargoToolchain",
+        "projects": [
+          "@teaching/proctor"
+        ]
+      },
       "{workspaceRoot}/Cargo.toml",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/🎓️teaching/Cargo.toml",
@@ -608,7 +616,9 @@
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate",
-        "@teaching/proctor:build"
+        "@teaching/proctor:build",
+        "@teaching/architecture-course:build-parametrization-en",
+        "@teaching/architecture-course:build-parametrization-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",

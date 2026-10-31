@@ -4,15 +4,15 @@
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { dispatchOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
-import { runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
+import { runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory } from "../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
+import { schemaCompilerEnvironmentV1 } from "./🎚️mode/🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔖️SchemaScript
@@ -129,7 +129,7 @@ export class SchemaScript extends Script {
     };
     try {
       if (options.command === "check") {
-        const check = checkParsers({ root: this.root, signal: controller.signal, onProgress });
+        const check = checkParsers({ root: this.root, signal: controller.signal, onProgress, scopes: args.includes("--under") ? [options.under] : undefined });
         process.stdout.write(renderParserCheck(check));
         if (!check.ok) process.exitCode = 1;
         return;
@@ -222,7 +222,7 @@ export class SchemaScript extends Script {
     return withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),async store=>{
       const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"registry-")),output=requireNativeStoragePathV1(store.root,join(directory,"entries.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
       const {loadProductionSchemaEntriesV1}=await import("../../🔍️discovery/📤️schema-registry/🟦️.ts"),{runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");let text="";
-      try{await store.recheck();const dump=await loadProductionSchemaEntriesV1({produce:async()=>{await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","run","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--bin","schema-export-entries","--","--out",output],this.root,"schema:registry-production",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:scriptInvocationEnvironment(this.invocation,store.environment)});await store.recheck();text=readFileSync(output,"utf8");return text;}},JSON.parse(readFileSync(join(module,"🔣️.json"),"utf8")));
+      try{await store.recheck();const dump=await loadProductionSchemaEntriesV1({produce:async()=>{await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","run","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--bin","schema-export-entries","--","--out",output],this.root,"schema:registry-production",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:schemaCompilerEnvironmentV1(scriptInvocationEnvironment(this.invocation,store.environment),(this.invocation.capabilities as {buildMode?:unknown}).buildMode)});await store.recheck();text=readFileSync(output,"utf8");return text;}},JSON.parse(readFileSync(join(module,"🔣️.json"),"utf8")));
         if(name){const {withRepositoryBuildReportV1}=await import("../../🏗️build/📊️reporting/🟦️.ts");await withRepositoryBuildReportV1(this.root,name,JSON.parse(text),this.invocation,async artifact=>{console.log(artifact.path);});}return dump;
       }finally{rmSync(directory,{recursive:true,force:true});}
     });
@@ -234,26 +234,22 @@ export class SchemaScript extends Script {
     await runVitest(this.root,[],join(this.root,SCHEMA_ORACLE_VITEST_CONFIG));
   }
 
-  /**
-   * ▶️ Runs one registered `semio-framework-schema` test binary with the environment variable that makes it
-   * write its JSON report, and answers where that report landed. `--out <path>` redirects it; otherwise it
-   * lands on the binary's declared `tracked` home, or — when the report is evidence rather than a contract,
-   * the exit status being the gate — on a scratch file.
-   */
-  private rustReport({ test, variable, tracked }: { readonly test: string; readonly variable: string; readonly tracked?: string }, args: string[]): string {
-    const outIndex = args.indexOf("--out");
-    const target = outIndex >= 0 ? args[outIndex + 1] : tracked;
-    if (outIndex >= 0 && !target) throw new Error(`[schema] --out requires a path.`);
-    const path = target ? (isAbsolute(target) ? target : join(this.root, target)) : join(tmpdir(), `semio-${test}-${process.pid}.json`);
-    mkdirSync(dirname(path), { recursive: true });
-    runCmd("cargo", ["test", "-p", SCHEMA_RUST_CRATE, "--test", test], { cwd: this.root, env: { ...process.env, [variable]: path } });
-    return path;
-  }
-
-  /** 🔨️ The repo-wide gate: every schema module compiles against the owned draft-07 validator. */
-  private compile(args: string[]): void {
-    const report = this.rustReport(SCHEMA_MODULE_COMPILE_TEST, args);
-    console.log(`[schema compile] cargo test -p ${SCHEMA_RUST_CRATE} --test ${SCHEMA_MODULE_COMPILE_TEST.test} passed; report at ${report}`);
+  /** 🏗️ Runs the genuine module compilation producer with the incoming authority and publishes its owned report. */
+  private async compile(args:string[]):Promise<void>{
+    const index=args.indexOf("--out"),name=index>=0?args[index+1]:"schema-module-compile.json";if(!name)throw Error("[schema compile] --out requires a report name");
+    const {repositoryBuildReportNameV1,withRepositoryBuildReportV1}=await import("../../🏗️build/📊️reporting/🟦️.ts");repositoryBuildReportNameV1(name);
+    const {withRepositoryCacheStoreV1}=await import("../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
+    await withRepositoryCacheStoreV1(this.root,"diagnostics",this.invocation,createIssuedResourceControlV1(this.invocation,"cache:store-entry",0),async store=>{
+      const {requireNativeStoragePathV1}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"),base=requireNativeStoragePathV1(store.root,join(store.root,"tmp"));mkdirSync(base,{recursive:true});const directory=mkdtempSync(join(base,"schema-compile-")),output=requireNativeStoragePathV1(store.root,join(directory,"report.json")),module=join(this.root,"🧰️framework/🔨️modules/🧬️schema");
+      const {runOwnedCommand}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts"),{scriptInvocationEnvironment,scriptInvocationBudget}=await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+      try{
+        await store.recheck();
+        await runOwnedCommand(process.execPath,[join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts"),"relay","test","--locked","--manifest-path",join(module,"📦️packages/🦀️rust/Cargo.toml"),"-p",SCHEMA_RUST_CRATE,"--test",SCHEMA_MODULE_COMPILE_TEST.test],this.root,"schema:module-compile",scriptInvocationBudget(this.invocation,buildBudgetMs()),{signal:this.invocation.control.signal,env:schemaCompilerEnvironmentV1(scriptInvocationEnvironment(this.invocation,{...store.environment,[SCHEMA_MODULE_COMPILE_TEST.variable]:output}),(this.invocation.capabilities as {buildMode?:unknown}).buildMode)});
+        await store.recheck();
+        const report=JSON.parse(readFileSync(output,"utf8"));
+        await withRepositoryBuildReportV1(this.root,name,report,this.invocation,async artifact=>{console.log("[schema compile] native module report: "+artifact.path);});
+      }finally{rmSync(directory,{recursive:true,force:true});}
+    });
   }
 
   /** 📋️ Produces and verifies current registry entries once from the clean native binary. */
@@ -269,7 +265,9 @@ export class SchemaScript extends Script {
   private async test(rest: string[]): Promise<void> {
     const tracked = this.readCatalog();
     if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run repo ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
-    const harness = runCmdStatus(runtimeExecutableV1(), [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });
+    let harness=1;
+    try{harness=runCmdStatus(runtimeExecutableV1(), [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });}
+    catch(error){if(this.invocation.control.signal.aborted)throw error;console.error(error);}
     let oracle=0;
     try{await this.oracle();}catch(error){console.error(error);oracle=1;}
     console.log(`[schema test] harness exit=${harness}, draft-07 oracle exit=${oracle}`);

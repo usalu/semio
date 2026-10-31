@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "valid",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "digest",
+      "mutation": "digest",
+      "accepted": false
+    },
+    {
+      "id": "module",
+      "mutation": "module",
+      "accepted": false
+    },
+    {
+      "id": "undeclared",
+      "mutation": "import",
+      "accepted": false
+    }
+  ],
+  "args": [
+    "observe",
+    "owned-directory"
+  ],
+  "expected": {
+    "identity": true,
+    "loader": true,
+    "snapshot": null,
+    "args": [
+      "observe",
+      "owned-directory"
+    ]
+  },
+  "helper": {
+    "entry": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📜️script.ts",
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 33554432,
+    "actions": [
+      "allocate",
+      "activate",
+      "inactive",
+      "deactivate",
+      "inactive"
+    ],
+    "outputs": [
+      "",
+      "",
+      "attached\n",
+      "",
+      ""
+    ]
+  },
+  "interactive": {
+    "answer": 42
+  },
+  "environments": [
+    {
+      "id": "bun",
+      "value": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+      },
+      "accepted": true
+    },
+    {
+      "id": "node-addon",
+      "value": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "SEMIO_RUNTIME_NATIVE_ADDON": "/owned/core.node"
+      },
+      "accepted": true
+    },
+    {
+      "id": "node-provider",
+      "value": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "SEMIO_RUNTIME_NATIVE_PROVIDER": "/owned/provider.cjs"
+      },
+      "accepted": true
+    },
+    {
+      "id": "opposite-keys",
+      "value": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "SEMIO_RUNTIME_NATIVE_ADDON": "/owned/core.node",
+        "SEMIO_RUNTIME_NATIVE_PROVIDER": "/owned/provider.cjs"
+      },
+      "accepted": false
+    },
+    {
+      "id": "ambient-path",
+      "value": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "PATH": "/unrelated"
+      },
+      "accepted": false
+    }
+  ]
+}

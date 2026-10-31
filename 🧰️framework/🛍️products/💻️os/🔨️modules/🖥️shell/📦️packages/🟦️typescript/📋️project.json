@@ -16,9 +16,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -29,13 +35,36 @@
         "default",
         "^default",
         "testEnv",
-        "reads"
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml"
       ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🔬️rust-package-commands/🧪️tests/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🔬️rust-package-commands/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust/Cargo.toml"
+            ]
+          }
+        }
       }
     }
   }

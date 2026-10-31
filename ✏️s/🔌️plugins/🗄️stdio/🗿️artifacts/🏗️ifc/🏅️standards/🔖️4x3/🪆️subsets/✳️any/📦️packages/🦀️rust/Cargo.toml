@@ -55,3 +55,9 @@ semio-framework-async-macros = { workspace = true }
 
 serde_json = { workspace = true }
 
+
+[dependencies.semio-s-artifact-stdio-ifc-declarations]
+path = "../../../../../../📚️catalog/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc4x3-add2-catalog]
+path = "../../🧬️schema/📚️catalog/📦️packages/🦀️rust"

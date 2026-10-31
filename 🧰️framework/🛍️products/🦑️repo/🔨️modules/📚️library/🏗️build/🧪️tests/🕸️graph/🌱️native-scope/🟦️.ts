@@ -7,7 +7,7 @@ import schema from"../../../🧬️schema/🚪️admission.json";
 import fixture from"../../🧫️fixtures/🕸️graph/🔣️.json";
 import{evaluateExtractedFunctionV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import{readProcessTestTableV1}from"../../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🟦️.ts";
-const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
+const require=createRequire(import.meta.url),Ajv=require("ajv").default;
 type NativeDiscoveryRow={id:string;targets:string[];inputNames:string[];caret:boolean;observation:"compile"|"freshness";nativeCalls:number;preparation:string[];dependencies:string[];inputGroups:Record<string,string[]>;packageDependency?:boolean;matchedData?:string[];runtimeImport?:boolean;rejectSelfGenerated?:boolean;upgradeNative?:boolean};
 
 

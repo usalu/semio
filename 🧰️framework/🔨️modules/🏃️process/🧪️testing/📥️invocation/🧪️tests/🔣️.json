@@ -64,5 +64,12 @@
       "name": "early",
       "status": 1
     }
+  ],
+  "callbackOrder": [
+    "callback-first",
+    "sandbox-created",
+    "sandbox-released",
+    "callback-second",
+    "cleanup"
   ]
 }

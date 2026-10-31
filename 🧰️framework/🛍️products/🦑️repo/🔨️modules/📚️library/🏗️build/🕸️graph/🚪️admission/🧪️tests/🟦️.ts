@@ -5,7 +5,7 @@ import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/
 import selectionSchema from "../../../🧬️schema/🚪️selection.json" with {type:"json"};
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fixture from "./🔣️.json" with {type:"json"};
 import schema from "../../../🧬️schema/🚪️admission.json" with {type:"json"};
 import {buildInvocationGraphSelectionV1,buildGraphScopeKeyV1,buildSourceDemandV1,buildSourceContractGroupsV1,closeBuildOwnerAdmissionV1,readBuildOwnerRegistryV1,readBuildGraphSelectionV1} from "../🟦️.ts";

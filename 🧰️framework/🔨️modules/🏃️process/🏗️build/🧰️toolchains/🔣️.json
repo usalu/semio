@@ -611,5 +611,170 @@
         "de": "Das Archiv enthält eine Spezialdatei: {path}."
       }
     }
+  },
+  "cargo": {
+    "cargo-nextest": {
+      "version": "0.9.140",
+      "release": "https://github.com/nextest-rs/nextest/releases/download/cargo-nextest-0.9.140",
+      "versionArguments": [
+        "--version"
+      ],
+      "distributions": [
+        {
+          "host": "darwin-arm64",
+          "archive": "cargo-nextest-0.9.140-universal-apple-darwin.tar.gz",
+          "format": "tar.gz",
+          "bytes": 16532534,
+          "sha256": "58e0a722f9444078fab447783f322acf15a2a771ba785b3fbbe8bacda31c3df9",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest"
+          ]
+        },
+        {
+          "host": "darwin-x64",
+          "archive": "cargo-nextest-0.9.140-universal-apple-darwin.tar.gz",
+          "format": "tar.gz",
+          "bytes": 16532534,
+          "sha256": "58e0a722f9444078fab447783f322acf15a2a771ba785b3fbbe8bacda31c3df9",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest"
+          ]
+        },
+        {
+          "host": "linux-arm64",
+          "archive": "cargo-nextest-0.9.140-aarch64-unknown-linux-musl.tar.gz",
+          "format": "tar.gz",
+          "bytes": 8956011,
+          "sha256": "81fe08bda065ae74fa9092c444d797c31e12c245080bfb9f4dc207e21def4b98",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest"
+          ]
+        },
+        {
+          "host": "linux-x64",
+          "archive": "cargo-nextest-0.9.140-x86_64-unknown-linux-musl.tar.gz",
+          "format": "tar.gz",
+          "bytes": 9605767,
+          "sha256": "bc2a998567816eef7b087b920036f49fb89aa2a8a603f6a3d84098be160b62c5",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest"
+          ]
+        },
+        {
+          "host": "win32-arm64",
+          "archive": "cargo-nextest-0.9.140-aarch64-pc-windows-msvc.zip",
+          "format": "zip",
+          "bytes": 7184681,
+          "sha256": "814ec3759f3abdcfcf7486785ff521de3b4f7b5dd04997a9b363141cb5f44d66",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest.exe"
+          ]
+        },
+        {
+          "host": "win32-x64",
+          "archive": "cargo-nextest-0.9.140-x86_64-pc-windows-msvc.zip",
+          "format": "zip",
+          "bytes": 7485219,
+          "sha256": "ec39698dfe5bcfffb7d5da037f226bc1670584ba247123f4e684a0f224fe828d",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-nextest.exe"
+          ]
+        }
+      ]
+    },
+    "cargo-llvm-cov": {
+      "version": "0.8.7",
+      "release": "https://github.com/taiki-e/cargo-llvm-cov/releases/download/v0.8.7",
+      "versionArguments": [
+        "llvm-cov",
+        "--version"
+      ],
+      "distributions": [
+        {
+          "host": "darwin-arm64",
+          "archive": "cargo-llvm-cov-aarch64-apple-darwin.tar.gz",
+          "format": "tar.gz",
+          "bytes": 1524696,
+          "sha256": "3efee732ed7e9a653e20d96c930e0ec799901289cce90f46bb20f627e2c0d2e9",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov"
+          ]
+        },
+        {
+          "host": "darwin-x64",
+          "archive": "cargo-llvm-cov-x86_64-apple-darwin.tar.gz",
+          "format": "tar.gz",
+          "bytes": 1658412,
+          "sha256": "288ce0cb976207a9a1ad5af4d7ec9a06c9af116727066fb2287df8d9d1026be9",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov"
+          ]
+        },
+        {
+          "host": "linux-arm64",
+          "archive": "cargo-llvm-cov-aarch64-unknown-linux-musl.tar.gz",
+          "format": "tar.gz",
+          "bytes": 1674945,
+          "sha256": "b7bb2ad514166f3b19fc06874c577eefde0010e5ac571f9ae33ff45cd19a4785",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov"
+          ]
+        },
+        {
+          "host": "linux-x64",
+          "archive": "cargo-llvm-cov-x86_64-unknown-linux-musl.tar.gz",
+          "format": "tar.gz",
+          "bytes": 1826821,
+          "sha256": "967b5cc996c29d8baa52bbb4595ef1f53af35255af8e2036ddbc6468d7b523c7",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov"
+          ]
+        },
+        {
+          "host": "win32-arm64",
+          "archive": "cargo-llvm-cov-aarch64-pc-windows-msvc.zip",
+          "format": "zip",
+          "bytes": 1446976,
+          "sha256": "a9788b36bb9155aec611d9a9dfd0f42dc66914b43d89de3e6c82a968b16e0870",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov.exe"
+          ]
+        },
+        {
+          "host": "win32-x64",
+          "archive": "cargo-llvm-cov-x86_64-pc-windows-msvc.zip",
+          "format": "zip",
+          "bytes": 1593206,
+          "sha256": "582ef094174b2c419fba356e561209c2b612513b3609c66cdbdbde1d75e132dc",
+          "prefix": "",
+          "binaryDirectory": ".",
+          "binaries": [
+            "cargo-llvm-cov.exe"
+          ]
+        }
+      ]
+    }
   }
 }

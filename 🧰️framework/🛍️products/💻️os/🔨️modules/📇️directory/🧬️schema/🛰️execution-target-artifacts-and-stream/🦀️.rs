@@ -1,6 +1,7 @@
 //! 🛰️ Execution target, artifacts and stream of the directory schema: the execution target lease fields and status codes, the descriptor digest validation, the artifact frontier, checkpoint and retention records, the invite and document views and the directory stream message. See [`super`].
 
 use super::*;
+use super::views_and_document_open::valid_document_open_text;
 
 //#region 🔖️Views
 //#region 🪪️ExecutionTargetLease

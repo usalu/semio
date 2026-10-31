@@ -1,7 +1,7 @@
 /** 🥞️ One level of the nested overview: the design system's `LayeredOverview` fed with the archive's pages, so a deeper page opens while the grid before it stays visible and live behind the glass.
  *
  * The reference experience of the course site is reused as is — glass veil, pointer parallax, hover reveal, swipe on phones, Escape to the parent. This module only supplies what the archive decides:
- * the cards, the grid they stand on, the layout mode (strip, or swipe where the grid does not fit), the one pointer shared by every nested grid, and the address as the single source of the opened page.
+ * the cards, the grid they stand on, the layout mode (a scrolling card grid on desktop and tablet, swipe on a phone), the one pointer shared by every nested grid, and the address as the single source of the opened page.
  * Only the deepest grid handles input; the grids behind it stay live and inert.
  *
  * @see ../../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx — the element
@@ -89,8 +89,8 @@ export function rowMajorCells(ids: readonly string[], columns: number): Readonly
   return Object.fromEntries(ids.map((id, index) => [id, { column: index % columns, row: Math.floor(index / columns) }]));
 }
 
-/** 🔳️ The CSS track list of `weights`. */
-export const tracks = (weights: readonly number[]): string => weights.map((weight) => `minmax(0, ${weight}fr)`).join(" ");
+/** 🔳️ The CSS track list of `weights`, each at least `minPx` when that floor is set. */
+export const tracks = (weights: readonly number[], minPx = 0): string => weights.map((weight) => `minmax(${minPx > 0 ? `${minPx}px` : "0"}, ${weight}fr)`).join(" ");
 
 /** 🥞️ The props of one {@link Level}. */
 export type LevelProps = {

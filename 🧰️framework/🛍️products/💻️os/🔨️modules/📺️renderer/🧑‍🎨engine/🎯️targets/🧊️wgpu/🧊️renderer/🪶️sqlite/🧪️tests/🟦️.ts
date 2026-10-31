@@ -1,7 +1,7 @@
 import {existsSync as testingSchemaExists} from "node:fs";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import AjvDraft7 from "ajv";
 import {readFileSync} from "node:fs";
 import fixture from "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🔣️.json";
@@ -9,14 +9,13 @@ import identityFixture from "../../../../../🧪️tests/🧫️fixtures/🧊️
 import { storeNativeIdentitySchema as identitySchema } from "@semio-tech/framework-os/modules/store/testing/fixtures";
 import { ioBindingsFixture as bindingFixture, ioBindingsSchema as bindingSchema, ioBindingsCatalogFixture as catalogFixture, ioBindingsCatalogSchema as catalogSchema } from "@semio-tech/framework-os/modules/io/testing/fixtures";
 import componentReceiptSchema from "@semio-tech/framework-plugin/describe/component-receipt/schema.json";
-import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json";
 import {catalogBindingKey,proposeCatalogBindings,type ArtifactCatalogBinding} from "@semio-tech/framework-os/modules/io/bindings/catalog";
 import {SOCKET_PROBE_NATIVE_DIALECT,socketProbeToSqliteDatabase as project,socketProbeFromSqliteDatabase as restore} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "@semio-tech/framework-sqlite-snapshot-rs/index";
 import { retainedCloneWireSchemaUrl } from "@semio-tech/value-rs/testing/fixtures";
 const large=fixture.large.unit.repeat(fixture.large.repetitions);
 test("native_socket_sqlite_snapshot_original_catalog_declarations_preserve_owner_and_capability",()=>{
- const validate=new Ajv({strict:true,allErrors:true}).addMetaSchema(draft07MetaSchema).addSchema(componentReceiptSchema).compile(catalogSchema);
+ const validate=new Ajv({strict:true,allErrors:true}).addSchema(componentReceiptSchema).compile(catalogSchema);
  const rows=catalogFixture.cases.map(entry=>entry.row as ArtifactCatalogBinding);
  for(const row of rows){expect(validate(row)).toBe(true);for(const field of catalogSchema.required){const changed:Record<string,unknown>={...row};delete changed[field];expect(validate(changed)).toBe(false);}expect(validate({...row,extra:1})).toBe(false);}
  const linked=rows[0]!,unlinked=rows[1]!,hosted=rows[2]!,otherWindow=rows[3]!;

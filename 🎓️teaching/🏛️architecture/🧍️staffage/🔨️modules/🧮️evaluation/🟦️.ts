@@ -1,18 +1,22 @@
 /** 🧮️ Evaluation of an asset at a query: the single deterministic state every view, analysis and export derives from.
  *
- * `evaluate(asset, query)` samples the pose, clip or transition, solves the rig, flattens every shape to world rings (curves to 0.5 mm), places anchors, converts loads to world forces
+ * `evaluate(asset, query, selector)` takes the geometry from the selected representation (the authored drawing for a scale, or a named symbol; without a selector no geometry is
+ * placed) and everything physical (bones, anchors, contacts, loads, thermal inputs, respiration, kinematics) from the asset alone, so it is identical for every selector. It samples the pose, clip or transition, solves the rig, flattens every shape to world rings (curves to 0.5 mm), places anchors, converts loads to world forces
  * (distributed loads to eight equivalent resultants per bone segment, scaled by `load:<id>` tracks), binds the thermal inputs and derives segment accelerations and the centre-of-mass
  * velocity by central differences of the evaluated clip with h = 1/240 s. Equal inputs yield bit-identical outputs.
  *
- * Plan shapes are drawn in the plan plane (x, depth); they follow their bone only by the bone's x travel from rest. Bounds cover the elevation shapes except the role `ground`.
+ * Plan shapes are drawn in the plan plane (x, depth); they follow their bone only by the bone's x travel from rest. `bounds` is the extent of the selected elevation geometry except the role `ground` (the drawn extent; the rig extent is {@link rigBounds}), and of the rig when nothing is drawn.
+ * Clip queries live on the absolute timeline: the pose wraps, `cycle` counts the loops, planted root advance and respiration continue.
  *
  * @see ../../🧬️schema/🟦️.ts — `Asset`, `Shape`
  * @see ../🔗️contracts/🟦️.ts — `EvaluatedState`, `EvaluationQuery`
  * @see https://www.w3.org/TR/SVG11/paths.html — the path grammar
  */
-import type { Anchor, Asset, AppliedLoad, Bone, Shape, Slug, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import type { Affine, EvaluatedBone, EvaluatedShape, EvaluatedState, EvaluationQuery, Point, WorldForce } from "../🔗️contracts/🟦️.ts";
-import { PLANT_HZ, clipOf, poseOf, sampleClip, samplePose, transition, wrapTime } from "../🎞️animation/🟦️.ts";
+import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Affine, EvaluatedBone, EvaluatedShape, EvaluatedState, EvaluationQuery, Point, RepresentationSelector, RespirationState, WorldForce } from "../🔗️contracts/🟦️.ts";
+import { PLANT_HZ, clipOf, cycleOf, poseOf, sampleClip, samplePose, transition, wrapTime } from "../🎞️animation/🟦️.ts";
+import { respirationOffsets, respirationState } from "../💨️transport/🫁️respiration/🟦️.ts";
+import { RepresentationError, pickRepresentation } from "../🖨️representation/🧭️pick/🟦️.ts";
 import type { Sample } from "../🎞️animation/🟦️.ts";
 import { apply, effectiveOffset, rotationRad, sinCosDeg, solveRig } from "../🦴️rig/🟦️.ts";
 
@@ -309,10 +313,11 @@ function restWorld(asset: Asset): Record<Slug, Affine> {
   return rest;
 }
 
-function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint): EvaluatedShape {
+function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint, identity: boolean): EvaluatedShape {
   const matrix = world[shape.bone];
   if (matrix === undefined) throw new Error(`shape "${shape.id}" of asset "${asset.id}" is bound to unknown bone "${shape.bone}"`);
   const flat = flattenGeometry(shape);
+  if (identity) return { shape, rings: flat.rings, closed: flat.closed };
   const dx = viewpoint === "plan" ? matrix[4] - restWorld(asset)[shape.bone]![4] : 0;
   const rings = flat.rings.map((ring) => ring.map((p) => (viewpoint === "plan" ? { x: p.x + dx, y: p.y } : apply(matrix, p.x, p.y))));
   return { shape, rings, closed: flat.closed };
@@ -411,20 +416,69 @@ function kinematics(asset: Asset, timeline: Timeline | null, timeS: number): Eva
 }
 //#endregion ⚙️Kinematics
 
-/** 🧮️ The state of the asset at the query: the pose, the clip at a time (wrapped or clamped) or the transition between two poses. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the wrapped or clamped clip time (0 for poses). Throws clear errors for unknown poses, clips, anchors, bones or loads without placement. */
-export function evaluate(asset: Asset, query: EvaluationQuery): EvaluatedState {
-  let sample: Sample;
-  let timeline: Timeline | null = null;
-  if (query.kind === "pose") sample = samplePose(asset, poseOf(asset, query.pose));
-  else if (query.kind === "clip") {
-    const clip = clipOf(asset, query.clip);
-    sample = sampleClip(asset, clip, query.timeS);
-    timeline = { sampleAt: (t) => sampleClip(asset, clip, t), loop: clip.loop, durationS: clip.durationS };
-  } else {
-    const clip = transition(asset, query.from, query.to, query.durationS);
-    sample = sampleClip(asset, clip, query.timeS);
-    timeline = { sampleAt: (t) => sampleClip(asset, clip, t), loop: false, durationS: clip.durationS };
+type Geometry = { readonly representation: EvaluatedState["representation"]; readonly elevation: readonly Shape[]; readonly plan: readonly Shape[]; readonly paper: boolean; readonly paperUnits?: boolean };
+
+function geometryOf(asset: Asset, selector: RepresentationSelector | undefined): Geometry {
+  if (selector === undefined) return { representation: { kind: "none" }, elevation: [], plan: [], paper: false };
+  if (selector.kind === "symbol") {
+    const symbol = asset.symbols.find((candidate) => candidate.id === selector.symbol);
+    if (symbol === undefined) throw new Error(`asset "${asset.id}" has no symbol "${selector.symbol}"; symbols: ${asset.symbols.map((s) => s.id).join(", ")}`);
+    return { representation: { kind: "symbol", symbol: symbol.id }, elevation: symbol.geometry.elevation, plan: symbol.geometry.plan ?? [], paper: true, paperUnits: symbol.units === "paper-mm" };
   }
+  const picked = pickRepresentation(asset, selector.scale.denominator);
+  if (picked.kind === "unavailable") throw new RepresentationError(picked, asset.id);
+  const { representation } = picked;
+  return { representation: { kind: "scale", denominator: picked.denominator, requested: picked.requested, exact: picked.exact }, elevation: representation.geometry.elevation, plan: representation.geometry.plan ?? [], paper: false };
+}
+
+type Extent = { minX: number; minY: number; maxX: number; maxY: number };
+
+function extentOf(points: readonly Point[]): Extent {
+  const e: Extent = { minX: Number.POSITIVE_INFINITY, minY: Number.POSITIVE_INFINITY, maxX: Number.NEGATIVE_INFINITY, maxY: Number.NEGATIVE_INFINITY };
+  for (const p of points) {
+    if (p.x < e.minX) e.minX = p.x;
+    if (p.x > e.maxX) e.maxX = p.x;
+    if (p.y < e.minY) e.minY = p.y;
+    if (p.y > e.maxY) e.maxY = p.y;
+  }
+  return e;
+}
+
+/** 🦴️ The extent of the rig itself (bone origins, tips and anchors): physical, identical for every representation. */
+export function rigBounds(state: Pick<EvaluatedState, "bones" | "anchors">): EvaluatedState["bounds"] {
+  const e = extentOf([...Object.values(state.bones).flatMap((bone) => [bone.origin, bone.tip]), ...Object.values(state.anchors).map((anchor) => anchor.at)]);
+  return Number.isFinite(e.minX) ? e : { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+}
+
+function withRespiration(asset: Asset, query: EvaluationQuery, sample: Sample): { readonly sample: Sample; readonly respiration: RespirationState | null } {
+  const respiration = asset.thermal.respiration === undefined ? null : respirationState(asset, query);
+  const extra: Readonly<Record<Slug, BoneOffset>> = respiration === null ? {} : respirationOffsets(asset, respiration);
+  const ids = Object.keys(extra);
+  if (ids.length === 0) return { sample, respiration };
+  const offsets = { ...sample.offsets };
+  for (const id of ids) {
+    const base = offsets[id];
+    const add = extra[id]!;
+    if (base !== undefined) offsets[id] = { angleDeg: base.angleDeg + (add.angleDeg ?? 0), dx: base.dx + (add.dx ?? 0), dy: base.dy + (add.dy ?? 0) };
+  }
+  return { sample: { ...sample, offsets }, respiration };
+}
+
+function sampleQuery(asset: Asset, query: EvaluationQuery): { readonly sample: Sample; readonly timeline: Timeline | null } {
+  if (query.kind === "pose") return { sample: samplePose(asset, poseOf(asset, query.pose)), timeline: null };
+  if (query.kind === "clip") {
+    const clip = clipOf(asset, query.clip);
+    return { sample: sampleClip(asset, clip, query.timeS), timeline: { sampleAt: (t) => sampleClip(asset, clip, t), loop: clip.loop, durationS: clip.durationS } };
+  }
+  const clip = transition(asset, query.from, query.to, query.durationS);
+  return { sample: sampleClip(asset, clip, query.timeS), timeline: { sampleAt: (t) => sampleClip(asset, clip, t), loop: false, durationS: clip.durationS } };
+}
+
+/** 🧮️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the wrapped or clamped clip time (the query's own time for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
+export function evaluate(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
+  const geometry = geometryOf(asset, selector);
+  const { sample: pure, timeline } = sampleQuery(asset, query);
+  const { sample, respiration } = withRespiration(asset, query, pure);
   const world = solveRig(asset.rig, sample.offsets, sample.root);
   const bones: Record<Slug, EvaluatedBone> = {};
   for (const bone of asset.rig.bones) {
@@ -433,8 +487,8 @@ export function evaluate(asset: Asset, query: EvaluationQuery): EvaluatedState {
     bones[bone.id] = { id: bone.id, world: matrix, origin: apply(matrix, 0, 0), tip: apply(matrix, bone.lengthM, 0), angleRad: rotationRad(matrix), offset: effective };
   }
   const shapes: Record<Viewpoint, EvaluatedShape[]> = {
-    elevation: asset.geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation")),
-    plan: (asset.geometry.plan ?? []).map((shape) => placeShape(asset, shape, world, "plan")),
+    elevation: geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation", geometry.paper)),
+    plan: geometry.plan.map((shape) => placeShape(asset, shape, world, "plan", geometry.paper)),
   };
   const anchors: Record<Slug, { anchor: Anchor; at: Point }> = {};
   for (const anchor of asset.anchors) anchors[anchor.id] = { anchor, at: apply(world[anchor.bone]!, anchor.x, anchor.y) };
@@ -443,22 +497,14 @@ export function evaluate(asset: Asset, query: EvaluationQuery): EvaluatedState {
     const scale = sample.loadScales[load.id] ?? 1;
     if (scale !== 0) loads.push(...worldForces(asset, load, scale, world));
   }
-  let minX = Number.POSITIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  const include = (p: Point): void => {
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
-  };
-  for (const evaluated of shapes.elevation) if (evaluated.shape.role !== "ground") for (const ring of evaluated.rings) ring.forEach(include);
-  if (minX === Number.POSITIVE_INFINITY) for (const bone of Object.values(bones)) [bone.origin, bone.tip].forEach(include);
+  const drawn = geometry.paperUnits === true ? [] : shapes.elevation.filter((evaluated) => evaluated.shape.role !== "ground").flatMap((evaluated) => evaluated.rings.flat());
+  const extent = extentOf(drawn);
+  const base = { bones, anchors };
+  const bounds = Number.isFinite(extent.minX) ? extent : rigBounds(base);
   return {
     asset,
     query,
-    timeS: sample.timeS,
+    timeS: query.kind === "pose" ? (query.timeS ?? 0) : sample.timeS,
     frame: sample.frame,
     phase: sample.phase,
     bones,
@@ -467,7 +513,10 @@ export function evaluate(asset: Asset, query: EvaluationQuery): EvaluatedState {
     contacts: sample.contacts,
     loads,
     thermal: sample.thermal,
-    bounds: { minX, minY, maxX, maxY },
-    kinematics: kinematics(asset, timeline, query.kind === "pose" ? 0 : query.timeS),
+    respiration,
+    cycle: query.kind === "clip" ? cycleOf(query.timeS, clipOf(asset, query.clip).durationS, clipOf(asset, query.clip).loop) : 0,
+    representation: geometry.representation,
+    bounds,
+    kinematics: kinematics(asset, timeline, query.kind === "pose" ? (query.timeS ?? 0) : query.timeS),
   };
 }

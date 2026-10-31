@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-ifc2x3-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Typed retained IFC catalog declarations."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../data.rs"
+
+[dependencies.semio-s-artifact-stdio-ifc-declarations]
+path = "../../../../../../../../📚️catalog/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-00]
+path = "../../🧩️components/🏢️entities/00/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-01]
+path = "../../🧩️components/🏢️entities/01/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-02]
+path = "../../🧩️components/🏢️entities/02/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-03]
+path = "../../🧩️components/🏢️entities/03/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-04]
+path = "../../🧩️components/🏢️entities/04/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-05]
+path = "../../🧩️components/🏢️entities/05/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-entities-06]
+path = "../../🧩️components/🏢️entities/06/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-types-00]
+path = "../../🧩️components/🔀️types/00/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-functions-00]
+path = "../../🧩️components/⚙️functions/00/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc2x3-catalog-rules-00]
+path = "../../🧩️components/⚖️rules/00/📦️packages/🦀️rust"
+

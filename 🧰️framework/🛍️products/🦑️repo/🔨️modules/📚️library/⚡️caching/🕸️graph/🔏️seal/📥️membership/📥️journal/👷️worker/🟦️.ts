@@ -1,3 +1,7 @@
+import{isOpaqueSourcePathV1}from"../../../../../🔍️discovery/📂️source/🟦️.ts";
+import{createRepositoryWorkspaceWatcherV1}from"../../../../🏁️startup/🚦️service/👁️workspace/🟦️.ts";
+import{repositoryCachePartitionRootV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import workspaceWatchPin from"../../../../../../🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json" with{type:"json"};
 import {withNxDaemonJournalReaderV1,type NxDaemonJournalDeploymentV1} from "../../../../🏁️startup/🚦️service/🟦️.ts";
 import {requireNxGraphNativeDirectoryV1} from "../../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import witnessSchema from "../../../../../🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json" with {type:"json"};
@@ -48,14 +52,16 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
   const cancel = () => { void close().catch(error=>parentPort?.postMessage({type:"refused",reason:String(error)})); };
   port.once("close", cancel); port.on("message", message => { if (message?.type === "stop") cancel(); });
   try {
-  const policy = await repositoryFilesystemJournalPolicyV1(options.root), excluded = (path: string) => policy.roots.some(root => path === root || path.startsWith(root + "/")) || path.split("/").some(part => policy.names.includes(part));
-  const control: FilesystemJournalControlV1 = { signal: lifetime.signal, remainingMilliseconds: () => null, publish: async progress => { parentPort?.postMessage({ type: "progress", progress }); }, yieldContinuation: () => new Promise(resolve => setImmediate(resolve)) };
+  const policy = await repositoryFilesystemJournalPolicyV1(options.root), excluded = (path: string) => isOpaqueSourcePathV1(path) || policy.roots.some(root => path === root || path.startsWith(root + "/")) || path.split("/").some(part => policy.names.includes(part));
+  const control: FilesystemJournalControlV1 = { signal: AbortSignal.any([original.control.signal,lifetime.signal]), remainingMilliseconds: () => null, publish: async progress => { parentPort?.postMessage({ type: "progress", progress }); }, yieldContinuation: () => new Promise(resolve => setImmediate(resolve)) };
+  control.signal.addEventListener("abort",cancel,{once:true});control.signal.throwIfAborted();
   original.control.signal.throwIfAborted();lifetime.signal.throwIfAborted();
-  const { Watcher, WorkspaceContext } = sdk.native(), transport = sdk.socketTransport(), framing = sdk.socketFraming();
+  const { WorkspaceContext } = sdk.native(), transport = sdk.socketTransport(), framing = sdk.socketFraming();
   await mkdir(options.directory, { recursive: true });
   for (let path = options.directory; ; path = dirname(path)) { const status = await lstat(path); if (!status.isDirectory() || status.isSymbolicLink()) throw new Error("Original journal worker directory ancestry required"); if (dirname(path) === path) break; }
   let native: any, refusal: unknown;
-  watcher = new Watcher(options.root, [...policy.roots.map(root => "!/" + root + "/**"), ...policy.names.map(name => "!**/" + name + "/**")], false);
+  const binary=join(repositoryCachePartitionRootV1(options.repositoryRoot,"tools"),"repo-watch",workspaceWatchPin.sources[0]!.sha256.slice(0,16),process.platform==="win32"?"semio-repo-watch.exe":"semio-repo-watch");
+  watcher = await createRepositoryWorkspaceWatcherV1(options.root,policy,join(options.root,".nx",options.generation+"-j"+threadId,"f"),binary,control);
   const receive = (error: unknown, events: readonly FilesystemJournalChangeV1[]) => {
     if (error) refusal = error;
     const invalid = events.some(event => !event || typeof event.path !== "string" || !["create", "update", "delete"].includes(event.type));
@@ -68,7 +74,7 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
   native = new WorkspaceContext(options.root, requireNxGraphNativeDirectoryV1(options.root,process.env));
   journal = await createRepositoryFilesystemJournalV1(options.root, {
     watch(callback) { subscribers.add(callback); callback(refusal, pending.splice(0)); return () => { subscribers.delete(callback); }; },
-    async flush() { await control.yieldContinuation(); if (refusal) throw refusal; const events = watcher.forceFlushPending(); if (events.some((event: FilesystemJournalChangeV1) => !event || typeof event.path !== "string" || !["create", "update", "delete"].includes(event.type))) throw new Error("Native journal worker flush refused"); return events.filter((event: FilesystemJournalChangeV1) => !excluded(event.path)); },
+    async flush() { await control.yieldContinuation(); if (refusal) throw refusal; const events = await watcher.forceFlushPending(); if (events.some((event: FilesystemJournalChangeV1) => !event || typeof event.path !== "string" || !["create", "update", "delete"].includes(event.type))) throw new Error("Native journal worker flush refused"); return events.filter((event: FilesystemJournalChangeV1) => !excluded(event.path)); },
     async census() { requireNxGraphNativeDirectoryV1(options.root,process.env);return native.allFileData().map((row: { file: string }) => row.file); },
     async admittedPaths(paths) { requireNxGraphNativeDirectoryV1(options.root,process.env);native.incrementalUpdate([...paths], []);return native.glob([...paths]); },
     isGlobalIdentity: isGlobalGraphIdentityPathV1

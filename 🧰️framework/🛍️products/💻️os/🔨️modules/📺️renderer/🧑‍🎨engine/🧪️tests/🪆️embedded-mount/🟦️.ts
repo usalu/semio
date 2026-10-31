@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
@@ -81,7 +82,7 @@ const cleanups: (() => void | Promise<void>)[] = [];
 
 describe("boot execution capabilities", () => {
   it("waits for the owner status while retaining operation identity", () => {
-    const validate = new Ajv({ strict: true }).compile(serviceStatusSchema);
+    const validate = new AjvDraft07({ strict: true }).compile(serviceStatusSchema);
     expect(validate(serviceStatusFixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...serviceStatusFixture, phase: "idle" })).toBe(false);
     const row = serviceStatusFixture;

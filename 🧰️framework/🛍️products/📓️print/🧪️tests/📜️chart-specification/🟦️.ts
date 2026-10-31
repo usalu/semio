@@ -1,5 +1,5 @@
 /** 📜️ Neutral chart admission vectors checked against the independent JSON Schema validator. */
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { admitVizChartSpecification, validateVizChartSpecification } from "@semio-tech/print-viz-inference/validation";
 import type { VizAuthoredChartSpecification } from "../../🧬️schema/📸️snapshot/🟦️.ts";

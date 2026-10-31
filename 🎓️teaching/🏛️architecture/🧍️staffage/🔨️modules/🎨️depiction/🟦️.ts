@@ -1,30 +1,36 @@
 /** 🎨️ Depiction: one {@link EvaluatedState} becomes any of seven synchronized paper-space views ({@link depict}) or a CAD model-space scene ({@link modelScene}).
  *
- * Paper space is millimetres, y down. The scene size is the asset bounds (ground line, plumes, arrows, diagrams, annotations when shown) × `mmPerMetre`
+ * Paper space is millimetres, y down. The scene size is the drawn extent (ground line, plumes, arrows, diagrams, annotations when shown) × `mmPerMetre`
  * plus margins; `metadata.origin` is where the model origin landed, so a model point `(x, y)` sits at paper `(origin.xMm + x·k, origin.yMm − y·k)` with
  * `k = mmPerMetre`. Every view paints the same prepared rings (identical `fill` item commands per shape id, relative to the origin); line views add
  * role-weighted outlines with hidden lines removed, solid views add tones, analytic views add legends with unit, sign convention and interpretation.
  * Analytic views use `options.theme` (default light).
  *
- * @see ./🧩️shapes/🟦️.ts — level of detail, z order, hidden lines
+ * The drawing is the individually authored representation the state was evaluated with: {@link depict} resolves it under `options.profile` and throws a
+ * `RepresentationError` carrying the resolution when the requested scale is unavailable or unsuitable for the profile; it never draws an empty or substituted scene.
+ * Structural views (forces, moments) draw on bones and are independent of the representation.
+ *
+ * @see ./🧩️shapes/🟦️.ts — pens, hatches, z order, hidden lines
  * @see ../📤️export/🖼️svg/🟦️.ts — SVG serialisation
  * @see ../🔗️contracts/🟦️.ts — {@link DepictionOptions}, {@link DrawingScene}, {@link ModelScene}
  */
 import type { Language, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import { VIEWS, type DepictionOptions, type DrawingScene, type EvaluatedState, type ModelLayer, type ModelScene, type Point, type StructuralResult, type ThermalField, type View } from "../🔗️contracts/🟦️.ts";
-import { LABEL_TEXT_MM, lineWeightMm, lodFor, mmPerMetre } from "../📐️units/🟦️.ts";
+import { VIEWS, type DepictionOptions, type DrawingScene, type EvaluatedState, type Legend, type ModelLayer, type ModelScene, type Point, type RepresentationResolution, type StructuralResult, type ThermalField, type TransportField, type View } from "../🔗️contracts/🟦️.ts";
+import { LABEL_TEXT_MM, mmPerMetre } from "../📐️units/🟦️.ts";
+import { DEFAULT_PRINT_PROFILE, requireDrawable, resolveRepresentation, resolveSymbol } from "../🖨️representation/🟦️.ts";
 import { solveStructure } from "../🏗️structure/🟦️.ts";
-import { solveThermal } from "../🌡️thermal/🟦️.ts";
+import { solveThermalAt } from "../🌡️thermal/🟦️.ts";
+import { solveTransport } from "../💨️transport/🟦️.ts";
 import { dimensionLine, legendBlock, scaleBar, titleBlock } from "./🏷️annotations/🟦️.ts";
 import { Canvas, type Ctx, Labels, labelBudget } from "./🧱️canvas/🟦️.ts";
 import { type DiagramKind, diagramPolygons, forceList, forcesView, momentsView, peakOf } from "./🏗️structural-view/🟦️.ts";
 import { type Theme, THEMES, toneColour, tx } from "./🖍️palette/🟦️.ts";
-import { type AnalyticView, type Prepared, type Style, drawShapes, outlineRuns, prepare } from "./🧩️shapes/🟦️.ts";
+import { type AnalyticView, type Prepared, type Source, type Style, drawShapes, outlineRuns, prepare, sourceOf } from "./🧩️shapes/🟦️.ts";
 import { arrowOutline, commandsOf } from "./📐️geometry/🟦️.ts";
 import { thermalView } from "./🌡️thermal-view/🟦️.ts";
+import { transportView } from "./💨️transport-view/🟦️.ts";
 
 const GROUND_OVERHANG_M = 0.3;
-const CAD_PEN_SCALE = { denominator: 100 } as const;
 const VIEW_TITLES = {
   "dark-line": tx("Line drawing, dark", "Strichzeichnung, dunkel"),
   "dark-solid": tx("Solid, dark", "Vollton, dunkel"),
@@ -35,12 +41,14 @@ const VIEW_TITLES = {
   moments: tx("Moments", "Momente"),
 } as const satisfies Record<View, ReturnType<typeof tx>>;
 
-/** 🎛️ Sensible options for a view at a scale denominator; the language has no default and must be named. */
+/** 🎛️ Sensible options for a view at a scale denominator under the default print profile, drawing the representation authored for that scale; the language has no default and must be named. */
 export function defaultDepictionOptions(view: View, language: Language, denominator = 100, viewpoint: Viewpoint = "elevation", theme?: Theme): DepictionOptions {
   return {
     view,
     viewpoint,
     scale: { denominator },
+    profile: DEFAULT_PRINT_PROFILE,
+    representation: { kind: "scale", scale: { denominator } },
     language,
     transparent: false,
     marginMm: 5,
@@ -48,59 +56,89 @@ export function defaultDepictionOptions(view: View, language: Language, denomina
     thermalQuantity: "surface-temperature",
     forceQuantity: "axial",
     diagrams: { axial: false, shear: false, moment: true, freeBody: true },
-    range: { mode: "auto" },
+    range: { mode: "shared" },
     patterns: false,
+    transport: [],
     ...(theme ? { theme } : {}),
   };
 }
 
 /** 🧮️ The analyses the analytic views read; absent ones are solved on demand. */
-export type Analysis = { readonly thermal?: ThermalField; readonly structure?: StructuralResult };
+export type Analysis = { readonly thermal?: ThermalField; readonly structure?: StructuralResult; readonly transport?: TransportField };
 
 function themeOf(view: View, chosen: Theme | undefined): Theme {
   return view === "dark-line" || view === "dark-solid" ? "dark" : view === "light-line" || view === "light-solid" ? "light" : (chosen ?? "light");
 }
 
-function baseStyle(view: View, theme: Theme, scaleDenominator: number): (p: Prepared) => Style {
+function baseStyle(view: View, theme: Theme, detailed: boolean): (p: Prepared) => Style {
   const line = view.endsWith("-line");
   const background = THEMES[theme].background;
   return (p) => {
     const glaze = p.shape.role === "glazing";
     if (line) return { fill: glaze ? null : { color: background }, outlineMm: null };
-    return { fill: { color: toneColour(theme, p.shape.tone), ...(glaze ? { opacity: 0.45 } : {}) }, outlineMm: scaleDenominator <= 100 ? p.weightMm * 0.5 : null };
+    return { fill: { color: toneColour(theme, p.shape.tone), ...(glaze ? { opacity: 0.45 } : {}) }, outlineMm: detailed ? p.weightMm * 0.5 : null };
   };
 }
 
-/** 🎨️ Depicts a state in one of the seven views at the option's scale. Deterministic in `(state, options, analysis)`. */
+function checkState(state: EvaluatedState, options: DepictionOptions, resolution: Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }>): void {
+  const mine = state.representation;
+  const fail = (): never => {
+    throw new Error(`the state of "${state.asset.id}" was evaluated with a different representation than the options ask for; evaluate(asset, query, options.representation)`);
+  };
+  if (resolution.kind === "symbol") {
+    if (mine.kind !== "symbol" || mine.symbol !== resolution.symbol.id) fail();
+  } else if (mine.kind !== "scale" || mine.denominator !== resolution.denominator || mine.requested !== resolution.requested) fail();
+}
+
+/** 🧭️ The representation a depiction of the state under the options draws; throws `RepresentationError` when the scale is unavailable or unsuitable for the profile. */
+export function resolveDepiction(asset: EvaluatedState["asset"], options: DepictionOptions): Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }> {
+  const resolution = options.representation.kind === "symbol" ? resolveSymbol(asset, options.representation.symbol, options.scale.denominator) : resolveRepresentation(asset, options.scale, options.profile);
+  return requireDrawable(resolution, asset.id);
+}
+
+/** 🎨️ Depicts a state in one of the seven views at the option's scale. Deterministic in `(state, options, analysis)`; throws `RepresentationError` for an unavailable or unsuitable scale. */
 export function depict(state: EvaluatedState, options: DepictionOptions, analysis: Analysis = {}): DrawingScene {
+  const resolution = resolveDepiction(state.asset, options);
+  checkState(state, options, resolution);
   const k = mmPerMetre(options.scale);
-  const lod = lodFor(options.scale);
   const theme = themeOf(options.view, options.theme);
   const colours = THEMES[theme];
   const ctx: Ctx = { state, options, language: options.language, k, theme, colours, paper: (p: Point) => ({ x: p.x * k, y: -p.y * k }), labels: new Labels() };
   const canvas = new Canvas();
-  const shapes = prepare(state, options.viewpoint, options.scale, lod, k);
+  const source = sourceOf(state);
+  const shapes = prepare(state, options.viewpoint, source, k);
   const b = state.bounds;
-  for (const corner of [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }]) canvas.reach(ctx.paper(corner));
+  const metric = !source.paperUnits;
+  if (metric) for (const corner of [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }]) canvas.reach(ctx.paper(corner));
+  for (const p of shapes) {
+    canvas.reach({ x: p.box.minX, y: p.box.minY });
+    canvas.reach({ x: p.box.maxX, y: p.box.maxY });
+  }
 
-  if (options.annotations.ground && options.viewpoint === "elevation") {
-    const weight = lineWeightMm(options.scale, "ground") ?? 0.35;
-    canvas.path("ground", "ground:line", commandsOf([ctx.paper({ x: b.minX - GROUND_OVERHANG_M, y: 0 }), ctx.paper({ x: b.maxX + GROUND_OVERHANG_M, y: 0 })], false), { stroke: { color: colours.ink, widthMm: weight, cap: "butt" } });
+  if (options.annotations.ground && options.viewpoint === "elevation" && metric) {
+    canvas.path("ground", "ground:line", commandsOf([ctx.paper({ x: b.minX - GROUND_OVERHANG_M, y: 0 }), ctx.paper({ x: b.maxX + GROUND_OVERHANG_M, y: 0 })], false), { stroke: { color: colours.ink, widthMm: source.pens.ground, cap: "butt" } });
   }
 
   const analytic: AnalyticView | null =
-    options.view === "thermal" ? thermalView(ctx, shapes, analysis.thermal ?? solveThermal(state, options.environment))
+    options.view === "thermal" ? thermalView(ctx, shapes, analysis.thermal ?? solveThermalAt(state.asset, state.query, options.environmentTimeline ?? options.environment))
     : options.view === "forces" ? forcesView(ctx, shapes, analysis.structure ?? solveStructure(state))
     : options.view === "moments" ? momentsView(ctx, shapes, analysis.structure ?? solveStructure(state))
     : null;
 
-  drawShapes(canvas, ctx, shapes, analytic ? analytic.styleOf : baseStyle(options.view, theme, options.scale.denominator), options.view.endsWith("-line"));
+  drawShapes(canvas, ctx, shapes, analytic ? analytic.styleOf : baseStyle(options.view, theme, options.scale.denominator <= 100), options.view.endsWith("-line"));
   analytic?.overlay(canvas);
-  if (options.annotations.dimensions) dimensionLine(canvas, ctx);
+  const legendsOfTransport: Legend[] = [];
+  if (options.transport.length > 0) {
+    const field = analysis.transport ?? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment ?? state.asset.thermal.environment);
+    const overlay = transportView(ctx, field, options.transport, options.range);
+    overlay.overlay(canvas);
+    legendsOfTransport.push(...overlay.legends);
+  }
+  if (options.annotations.dimensions && metric) dimensionLine(canvas, ctx);
   const column = (canvas.box?.maxX ?? 0) + 4;
   const budget = labelBudget(options.scale.denominator);
   const omitted = ctx.labels.flush(canvas, "annotations", column, LABEL_TEXT_MM, colours.ink, 0.1, budget) + (analytic?.inset?.(canvas) ?? 0);
-  const legends = (analytic?.legends ?? []).map((l, i) => (i === 0 && omitted > 0 ? { ...l, interpretation: { en: `${l.interpretation.en} ${omitted} further values in the inspector.`, de: `${l.interpretation.de} ${omitted} weitere Werte im Inspektor.` } } : l));
+  const legends = [...(analytic?.legends ?? []), ...legendsOfTransport].map((l, i) => (i === 0 && omitted > 0 ? { ...l, interpretation: { en: `${l.interpretation.en} ${omitted} further values in the inspector.`, de: `${l.interpretation.de} ${omitted} weitere Werte im Inspektor.` } } : l));
   const box = canvas.box;
   if (box !== null) {
     let y = box.maxY + 5;
@@ -117,13 +155,14 @@ export function depict(state: EvaluatedState, options: DepictionOptions, analysi
     background: options.transparent ? null : colours.background,
     layers: done.layers,
     legends,
-    metadata: { asset: state.asset.id, title: state.asset.title, query: state.query, timeS: state.timeS, view: options.view, viewpoint: options.viewpoint, scale: options.scale, paperUnits: "mm", modelUnits: "m", mmPerMetre: k, origin: { xMm: done.origin.x, yMm: done.origin.y } },
+    metadata: { asset: state.asset.id, title: state.asset.title, query: state.query, timeS: state.timeS, view: options.view, viewpoint: options.viewpoint, scale: options.scale, resolution: resolution.kind, representation: state.representation, profile: options.profile.id, paperUnits: "mm", modelUnits: "m", mmPerMetre: k, origin: { xMm: done.origin.x, yMm: done.origin.y } },
   };
 }
 
 /** 🖼️ Depicts a state in all seven views, solving each analysis at most once. */
 export function depictAll(state: EvaluatedState, options: Omit<DepictionOptions, "view">, analysis: Analysis = {}): Record<View, DrawingScene> {
-  const solved: Analysis = { thermal: analysis.thermal ?? solveThermal(state, options.environment), structure: analysis.structure ?? solveStructure(state) };
+  const transport = analysis.transport ?? (options.transport.length > 0 ? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment ?? state.asset.thermal.environment) : undefined);
+  const solved: Analysis = { thermal: analysis.thermal ?? solveThermalAt(state.asset, state.query, options.environmentTimeline ?? options.environment), structure: analysis.structure ?? solveStructure(state), ...(transport ? { transport } : {}) };
   return Object.fromEntries(VIEWS.map((view) => [view, depict(state, { ...options, view }, solved)])) as Record<View, DrawingScene>;
 }
 
@@ -135,10 +174,11 @@ const CAD_LAYERS = {
   ground: { name: "GROUND", aci: 3 },
 } as const;
 
-/** 📐️ The CAD model-space scene in metres: hidden-line-cleaned outlines on STAFFAGE-BODY/-DETAIL/-TEXTURE/-GLAZING and GROUND with ACI colours and the lineweights (1/100 mm) of the 1:100 pen table; optional ANALYSIS-ARROWS and ANALYSIS-DIAGRAM layers from a structural result. */
+/** 📐️ The CAD model-space scene in metres: hidden-line-cleaned outlines on STAFFAGE-BODY/-DETAIL/-TEXTURE/-GLAZING and GROUND with ACI colours and the lineweights (1/100 mm) of the pens of the representation the state was evaluated with; optional ANALYSIS-ARROWS and ANALYSIS-DIAGRAM layers from a structural result. Paper-unit symbols have no model extent and yield no outlines. */
 export function modelScene(state: EvaluatedState, options: { readonly viewpoint: Viewpoint; readonly analysis?: Analysis; readonly diagrams?: readonly DiagramKind[] }): ModelScene {
   const millimetres = 1000;
-  const shapes = prepare(state, options.viewpoint, CAD_PEN_SCALE, 3, millimetres);
+  const source: Source = sourceOf(state);
+  const shapes = source.paperUnits ? [] : prepare(state, options.viewpoint, source, millimetres);
   const toModel = (p: { readonly x: number; readonly y: number }): Point => ({ x: p.x / millimetres, y: -p.y / millimetres });
   const polylines = new Map<keyof typeof CAD_LAYERS, ModelLayer["polylines"][number][]>();
   for (const { p, run } of outlineRuns(shapes, true)) {
@@ -147,11 +187,11 @@ export function modelScene(state: EvaluatedState, options: { readonly viewpoint:
     polylines.set(p.shape.role, list);
   }
   const b = state.bounds;
-  if (options.viewpoint === "elevation") polylines.set("ground", [...(polylines.get("ground") ?? []), { points: [{ x: b.minX - GROUND_OVERHANG_M, y: 0 }, { x: b.maxX + GROUND_OVERHANG_M, y: 0 }], closed: false }]);
+  if (options.viewpoint === "elevation" && !source.paperUnits) polylines.set("ground", [...(polylines.get("ground") ?? []), { points: [{ x: b.minX - GROUND_OVERHANG_M, y: 0 }, { x: b.maxX + GROUND_OVERHANG_M, y: 0 }], closed: false }]);
   const layers: ModelLayer[] = (Object.keys(CAD_LAYERS) as (keyof typeof CAD_LAYERS)[]).flatMap((role) => {
     const list = polylines.get(role);
     if (!list?.length) return [];
-    return [{ name: CAD_LAYERS[role].name, aci: CAD_LAYERS[role].aci, lineweight: Math.round((lineWeightMm(CAD_PEN_SCALE, role) ?? 0.13) * 100), polylines: list, texts: [] }];
+    return [{ name: CAD_LAYERS[role].name, aci: CAD_LAYERS[role].aci, lineweight: Math.round((source.pens[role] ?? source.pens.body) * 100), polylines: list, texts: [] }];
   });
   const result = options.analysis?.structure;
   if (result) {
@@ -173,5 +213,5 @@ export function modelScene(state: EvaluatedState, options: { readonly viewpoint:
     });
     if (diagrams.length) layers.push({ name: "ANALYSIS-DIAGRAM", aci: 5, lineweight: 18, polylines: diagrams, texts: [] });
   }
-  return { units: "m", asset: state.asset.id, timeS: state.timeS, layers };
+  return { units: "m", asset: state.asset.id, timeS: state.timeS, representation: state.representation, layers };
 }

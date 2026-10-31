@@ -1,0 +1,22 @@
+[
+  {
+    "name": "none",
+    "fail": "none"
+  },
+  {
+    "name": "compile",
+    "fail": "compile"
+  },
+  {
+    "name": "body",
+    "fail": "body"
+  },
+  {
+    "name": "compiler",
+    "fail": "compiler"
+  },
+  {
+    "name": "native",
+    "fail": "native"
+  }
+]

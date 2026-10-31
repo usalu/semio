@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "id": "async",
+      "kind": "async"
+    },
+    {
+      "id": "forward-original",
+      "kind": "argument",
+      "callee": "scriptInvocationEnvironment",
+      "index": 0,
+      "expected": "this.invocation"
+    },
+    {
+      "id": "owned-store",
+      "kind": "argument",
+      "callee": "withRepositoryCacheStoreV1",
+      "index": 2,
+      "expected": "this.invocation"
+    },
+    {
+      "id": "issued-phase",
+      "kind": "argument",
+      "callee": "createIssuedResourceControlV1",
+      "index": 0,
+      "expected": "this.invocation"
+    },
+    {
+      "id": "selected-mode",
+      "kind": "call",
+      "callee": "schemaCompilerEnvironmentV1"
+    },
+    {
+      "id": "owned-cancellation",
+      "kind": "cancel",
+      "callee": "runOwnedCommand",
+      "expected": "this.invocation.control.signal"
+    },
+    {
+      "id": "owned-scratch",
+      "kind": "call",
+      "callee": "requireNativeStoragePathV1"
+    },
+    {
+      "id": "cleanup",
+      "kind": "call",
+      "callee": "rmSync"
+    },
+    {
+      "id": "owned-report",
+      "kind": "call",
+      "callee": "withRepositoryBuildReportV1"
+    },
+    {
+      "id": "default-report",
+      "kind": "default-report"
+    },
+    {
+      "id": "harness-failure-reaches-oracle",
+      "kind": "harness-guard"
+    },
+    {
+      "id": "harness-cancellation-remains-cancelled",
+      "kind": "cancellation-refusal"
+    },
+    {
+      "id": "parser-explicit-scope",
+      "kind": "parser-scope",
+      "expected": "[options.under]"
+    },
+    {
+      "id": "parser-default-scopes",
+      "kind": "parser-default",
+      "expected": "undefined"
+    }
+  ]
+}

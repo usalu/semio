@@ -45,7 +45,7 @@
       ]
     }
   ],
-  "manifest": "[package]\nname=\"semio-framework-os-kernel\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[workspace]\n[features]\nmutation-testing=[]\n",
+  "manifest": "cargo-features = [\"trim-paths\"]\n[package]\nname=\"semio-framework-os-kernel\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[workspace]\n[features]\nmutation-testing=[]\n",
   "source": "#[cfg(test)] mod os_store { mod component { mod tests { #[test] fn owned_selection() { assert_eq!(u32::MAX, 4294967295); } } } }\n",
   "integration": "#[test] fn integration_selection() { assert_eq!(std::mem::size_of::<u32>(),4); }\n",
   "config": "[profile.default]\nretries=0\n[profile.fundamental]\n[profile.quick]\n[profile.long]\n"

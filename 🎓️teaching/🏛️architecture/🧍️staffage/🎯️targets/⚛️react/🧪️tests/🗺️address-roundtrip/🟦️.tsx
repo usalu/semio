@@ -30,7 +30,7 @@ describe("routes", () => {
 });
 
 describe("viewer state", () => {
-  const state: ViewerState = { ...DEFAULT_VIEWER, view: "thermal", scale: 50, selection: { kind: "clip", clip: "walk" }, timeS: 1.25, zoom: 2.5, pan: { xMm: 12, yMm: -4 }, background: "transparent", theme: "dark", thermalQuantity: "net-flux", range: { mode: "fixed", min: -50, max: 120 }, patterns: true, diagrams: { axial: true, shear: false, moment: false, freeBody: true }, environment: { airTempC: -5, relativeHumidity: 0.4, windMS: 6.5 } };
+  const state: ViewerState = { ...DEFAULT_VIEWER, view: "thermal", scale: 50, selection: { kind: "clip", clip: "walk" }, timeS: 1.25, zoom: 2.5, pan: { xMm: 12, yMm: -4 }, background: "transparent", theme: "dark", thermalQuantity: "net-radiative-flux", range: { mode: "fixed", min: -50, max: 120 }, patterns: true, diagrams: { axial: true, shear: false, moment: false, freeBody: true }, environment: { airTempC: -5, relativeHumidity: 0.4, windMS: 6.5 } };
 
   it("round-trips every parameter", () => {
     const params = viewerToParams(state);

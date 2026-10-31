@@ -2,7 +2,9 @@
   "ceilings": {
     "ce-living": {
       "entry": "Patched",
-      "holes": []
+      "value": {
+        "holes": []
+      }
     }
   }
 }

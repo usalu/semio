@@ -27,16 +27,7 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
-      },
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/**/*",
-        "!{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/**/dist/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*",
-        "{workspaceRoot}/bun.lock"
-      ]
+      }
     },
     "check": {
       "executor": "repo:script",
@@ -62,6 +53,15 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
       }
     }
   }

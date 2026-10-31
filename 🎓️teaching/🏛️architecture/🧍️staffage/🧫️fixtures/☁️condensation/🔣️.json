@@ -1,0 +1,352 @@
+{
+ "id": "condensation",
+ "oracle": "CoolProp HAPropsSI (humid air, IAPWS-95 water) and PropsSI (saturated liquid enthalpy) with scipy brentq on the saturation adjustment of the mixing line",
+ "tolerances": {
+  "tempK": 0.15,
+  "condensateGKg": 0.03,
+  "saturationRel": 0.002,
+  "enthalpyRel": 0.004
+ },
+ "exhaled": {
+  "tempC": 34,
+  "relativeHumidity": 0.95
+ },
+ "pressurePa": 101325,
+ "ambients": [
+  {
+   "tempC": 0,
+   "relativeHumidity": 0.8
+  },
+  {
+   "tempC": 5,
+   "relativeHumidity": 0.8
+  },
+  {
+   "tempC": 10,
+   "relativeHumidity": 0.6
+  },
+  {
+   "tempC": 20,
+   "relativeHumidity": 0.5
+  }
+ ],
+ "fractions": [
+  0.05,
+  0.1,
+  0.2,
+  0.3,
+  0.5,
+  0.8,
+  1.0
+ ],
+ "expected": {
+  "mixing": [
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.05,
+    "tempC": 2.070275388672087,
+    "liquid": 0.00011483500714041476,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.1,
+    "tempC": 4.998027908474512,
+    "liquid": 0.0005854413220617747,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.2,
+    "tempC": 10.135896154579143,
+    "liquid": 0.0012567694156738474,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.3,
+    "tempC": 14.49014100800099,
+    "liquid": 0.001629531170268813,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.5,
+    "tempC": 21.491747541473387,
+    "liquid": 0.0017150039940731047,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.8,
+    "tempC": 29.24037203803516,
+    "liquid": 0.000762781147844914,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 0,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 1.0,
+    "tempC": 33.99999999999909,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9500000000000486,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.05,
+    "tempC": 6.521379661895651,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9546051398494237,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.1,
+    "tempC": 8.58354895427334,
+    "liquid": 0.0002255447480711461,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.2,
+    "tempC": 12.85265530092596,
+    "liquid": 0.0007527695999417754,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.3,
+    "tempC": 16.54216962674019,
+    "liquid": 0.001059342468260607,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.5,
+    "tempC": 22.625367902987932,
+    "liquid": 0.0011734140741283122,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 0.8,
+    "tempC": 29.572911806254808,
+    "liquid": 0.0004960668509627411,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 5,
+    "ambientRelativeHumidity": 0.8,
+    "fraction": 1.0,
+    "tempC": 33.99999999999909,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9500000000000486,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.05,
+    "tempC": 11.258164603419743,
+    "liquid": 0.0,
+    "relativeHumidity": 0.7205140103553961,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.1,
+    "tempC": 12.510051426619498,
+    "liquid": 0.0,
+    "relativeHumidity": 0.8180694019434157,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.2,
+    "tempC": 14.995069076510845,
+    "liquid": 0.0,
+    "relativeHumidity": 0.957427358466943,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.3,
+    "tempC": 17.86736912932838,
+    "liquid": 0.0001729229827940621,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.5,
+    "tempC": 23.37821682970872,
+    "liquid": 0.0004589132987374879,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 0.8,
+    "tempC": 29.80029458095032,
+    "liquid": 0.00017836138830716608,
+    "relativeHumidity": 1.0,
+    "saturated": true
+   },
+   {
+    "ambientTempC": 10,
+    "ambientRelativeHumidity": 0.6,
+    "fraction": 1.0,
+    "tempC": 33.99999999999909,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9500000000000486,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.05,
+    "tempC": 20.729988174949938,
+    "liquid": 0.0,
+    "relativeHumidity": 0.5605071155628368,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.1,
+    "tempC": 21.456741161216883,
+    "liquid": 0.0,
+    "relativeHumidity": 0.6146625639230883,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.2,
+    "tempC": 22.900588195823786,
+    "liquid": 0.0,
+    "relativeHumidity": 0.7060475969943736,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.3,
+    "tempC": 24.331638789984765,
+    "liquid": 0.0,
+    "relativeHumidity": 0.7779741019143176,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.5,
+    "tempC": 27.155772034149493,
+    "liquid": 0.0,
+    "relativeHumidity": 0.8757339398062822,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 0.8,
+    "tempC": 31.29875460274758,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9413504476096494,
+    "saturated": false
+   },
+   {
+    "ambientTempC": 20,
+    "ambientRelativeHumidity": 0.5,
+    "fraction": 1.0,
+    "tempC": 33.99999999999909,
+    "liquid": 0.0,
+    "relativeHumidity": 0.9500000000000486,
+    "saturated": false
+   }
+  ],
+  "saturation": [
+   {
+    "tempC": 0.5,
+    "humidityRatio": 0.003930858640582489,
+    "enthalpy": 10333.257724501898
+   },
+   {
+    "tempC": 5,
+    "humidityRatio": 0.005424654108935192,
+    "enthalpy": 18639.66013715101
+   },
+   {
+    "tempC": 10,
+    "humidityRatio": 0.007662649152912059,
+    "enthalpy": 29354.502080723512
+   },
+   {
+    "tempC": 20,
+    "humidityRatio": 0.014760495260628845,
+    "enthalpy": 57559.16662526705
+   },
+   {
+    "tempC": 34,
+    "humidityRatio": 0.03466305813244795,
+    "enthalpy": 123014.64732735351
+   },
+   {
+    "tempC": 40,
+    "humidityRatio": 0.0491444930709272,
+    "enthalpy": 166688.0209400138
+   }
+  ],
+  "ambient": [
+   {
+    "tempC": 0,
+    "humidityRatio": 0.003028336875167161,
+    "enthalpy": 7570.863741089517
+   },
+   {
+    "tempC": 5,
+    "humidityRatio": 0.0043321661870485756,
+    "enthalpy": 15898.993818974819
+   },
+   {
+    "tempC": 10,
+    "humidityRatio": 0.004575042836902369,
+    "enthalpy": 21580.30699220426
+   },
+   {
+    "tempC": 20,
+    "humidityRatio": 0.007293697701974733,
+    "enthalpy": 38622.838923867734
+   }
+  ]
+ }
+}

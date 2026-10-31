@@ -2,24 +2,28 @@
   "openings": {
     "o-window": {
       "entry": "Patched",
-      "offset": 3.0
+      "value": {
+        "offset": 3
+      }
     }
   },
   "walls": {
     "w-south": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 8.0,
-            "y": 0.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 0.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 8,
+              "y": 0
+            },
+            "start": {
+              "x": 0,
+              "y": 0
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

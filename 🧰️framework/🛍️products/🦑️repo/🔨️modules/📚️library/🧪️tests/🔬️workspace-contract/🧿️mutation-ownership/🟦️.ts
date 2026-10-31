@@ -41,7 +41,7 @@ describe("mutation metadata facts", () => {
 
 describe("schema scope catalog", () => {
     const casesPath = join(contractRoot, "../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean>; grantExamples?: { input: unknown; expected: boolean }[] }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; diagnosticPaths?: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean>; schemaCompile?: Record<string, boolean>; grantExamples?: { input: unknown; expected: boolean }[]; typescriptExports?: Record<string, Record<string, boolean>> }[] };
     const authority = JSON.parse(readFileSync(join(contractRoot, "../../🧬️schema/🧬️schema-scope-catalog/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     const admitScope = ajv.compile(authority);
@@ -67,12 +67,18 @@ describe("schema scope catalog", () => {
           try { new Ajv({ strict: true, strictTypes: false }).compile(schemaFile(row.files, path)); } catch { accepted = false; }
           expect(accepted, row.id).toBe(expected);
         }
+        for (const [path, declarations] of Object.entries(row.typescriptExports ?? {})) {
+          const ts = await import("typescript"), source = ts.createSourceFile(path, String(row.files[path] ?? ""), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+          const names = new Set(source.statements.flatMap(statement => ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isEnumDeclaration(statement) || ts.isFunctionDeclaration(statement) ? statement.name ? [statement.name.text] : [] : []));
+          for (const [name, present] of Object.entries(declarations)) expect(names.has(name), row.id + ": " + path + "/" + name).toBe(present);
+        }
         for (const example of row.grantExamples ?? []) expect(admitGrant(example.input), JSON.stringify(admitGrant.errors)).toBe(example.expected);
         const inventory = inventorySchemaScopes(root, taxonomy);
         const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: scope.exports, dependsOn: [...scope.dependsOn] }]));
         for (const scope of Object.values(scopes)) expect(admitScope(scope), JSON.stringify(admitScope.errors)).toBe(true);
         expect({ case: row.id, scopes }).toEqual({ case: row.id, scopes: row.expected.scopes });
         expect({ case: row.id, codes: inventory.diagnostics.map(({ code }) => code).sort() }).toEqual({ case: row.id, codes: [...row.expected.diagnosticCodes].sort() });
+        if (row.expected.diagnosticPaths) expect(inventory.diagnostics.map(({ path }) => path).sort()).toEqual([...row.expected.diagnosticPaths].sort());
         expect({ case: row.id, paths: inventory.placement.map(({ path }) => path).sort() }).toEqual({ case: row.id, paths: [...row.expected.placementPaths].sort() });
         expect(renderSchemaCatalog(inventory.catalog)).toBe(renderSchemaCatalog(inventorySchemaScopes(root, taxonomy).catalog));
       } finally {

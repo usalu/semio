@@ -1,3 +1,5 @@
+import { JSDOM } from "jsdom";
+import taskTopics from "../../../🧫️fixtures/🐾️pet-contexts/📋️task-topics/🔣️.json";
 /** 🔸️ The hand topics tests of the 🐾️ pet companions suite. */
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { type ReactElement } from "react";
@@ -75,15 +77,28 @@ export function registerHandTopicsTests(): void {
       }
       expect([...document.querySelectorAll(COURSE_PET_PROPS)].filter((element) => element.closest("[data-layered-card]") !== null)).toEqual([]);
 
-      rerender(home({ screen: "home", page: "heating" }));
-      const page = document.querySelector<HTMLElement>('[data-page="quiz:heating"]')!;
-      const rows = [...page.querySelectorAll<HTMLElement>(COURSE_PET_PROPS)];
-      expect(rows.map((row) => [row.tagName, row.dataset.petProp, row.closest<HTMLElement>("[data-card]")?.dataset.card])).toEqual([
-        ["LI", "heating/u-values", "course-tasks"],
-        ["LI", "heating/heating-load-and-demand", "course-tasks"],
-      ]);
-      expect(rows.map((row) => row.textContent)).toEqual([expect.stringContaining("U-values"), expect.stringContaining("Heating load")]);
-      expect(page.querySelector("[data-pet-topic]")).toBeNull();
+      expect({version:taskTopics.version,markerTag:taskTopics.markerTag,rowTag:taskTopics.rowTag,listTag:taskTopics.listTag,card:taskTopics.card,props:taskTopics.rows.map(row=>row.prop),cases:taskTopics.cases}).toEqual({version:1,markerTag:"DIV",rowTag:"LI",listTag:"OL",card:"course-tasks",props:["heating/u-values","heating/heating-load-and-demand"],cases:[{id:"open",locked:false},{id:"first-task-locked",locked:true}]});
+      for (const vector of taskTopics.cases) {
+        const state = homeAt({ screen: "home", page: "heating" });
+        const course = vector.locked ? { ...state.course!, unlocks: { ...state.course!.unlocks, [taskTopics.rows[0]!.prop]: null } } : state.course;
+        rerender(<HomeScreen session={idleSession()} state={{ ...state, course }} text={courseText("en")} locale="en" preferences={PREFERENCES} onPreferences={() => undefined} />);
+        const page = [...document.querySelectorAll<HTMLElement>("[data-page]")].find((row) => row.dataset.page === "quiz:heating")!;
+        const list = page.querySelector<HTMLOListElement>("[data-card=course-tasks] ol[role=list]")!;
+        const rows = [...page.querySelectorAll<HTMLElement>(COURSE_PET_PROPS)];
+        expect(rows.map((row) => [row.tagName, row.dataset.petProp, row.closest<HTMLElement>("[data-card]")?.dataset.card])).toEqual(taskTopics.rows.map((row) => [taskTopics.markerTag, row.prop, taskTopics.card]));
+        expect(list.tagName).toBe(taskTopics.listTag);
+        expect(within(list).getAllByRole("listitem")).toEqual([...list.children]);
+        expect([...list.children].map((row) => row.tagName)).toEqual(taskTopics.rows.map(() => taskTopics.rowTag));
+        expect(rows.map((row) => row.closest("li")?.parentElement === list)).toEqual(taskTopics.rows.map(() => true));
+        expect(rows.map((row) => row.closest("li")?.hasAttribute("data-pet-prop"))).toEqual(taskTopics.rows.map(() => false));
+        expect(rows.map((row) => row.textContent)).toEqual(taskTopics.rows.map((row) => expect.stringContaining(row.label)));
+        for (const [index, row] of rows.entries()) expect(row.closest("[inert][aria-hidden=true]") !== null).toBe(vector.locked && index === 0);
+        const oracle = new JSDOM(page.outerHTML);
+        try {
+          expect([...oracle.window.document.querySelectorAll<HTMLElement>(COURSE_PET_PROPS)].map((row) => [row.tagName, row.dataset.petProp, row.closest("li")?.tagName, row.closest("li")?.parentElement?.tagName])).toEqual(taskTopics.rows.map((row) => [taskTopics.markerTag, row.prop, taskTopics.rowTag, taskTopics.listTag]));
+        } finally { oracle.window.close(); }
+        expect(page.querySelector("[data-pet-topic]")).toBeNull();
+      }
     });
 
     it("marks the items of a run that are no table rows with `<quiz>/<task>/<item>` — a classification's chips, a matching's item rows (never its cards), a sorting's rows — and nothing else of the run", () => {

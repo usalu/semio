@@ -7,7 +7,7 @@ import {dirname,join,relative,sep} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {createHash} from "node:crypto";
 import {brotliCompressSync,brotliDecompressSync} from "node:zlib";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import schema from "../🏊️pool/🧬️schema/🔣️.json";

@@ -1,0 +1,36 @@
+{
+  "title": "Staffage React Render Lag",
+  "emoji": "⚡",
+  "status": "closed",
+  "description": "Eliminate UI, rendering, animation, and catalog loading lag in the Staffage React target.",
+  "summary": "Cut catalog, clock, and depiction work that was rebuilding the React tree and re-solving every animation frame.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "00e53246-f038-418c-8344-ee404655614e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-30 06:41:15",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Eliminate UI, rendering, animation, and catalog loading lag in the Staffage React target."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 07:02:33",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "Cut catalog, clock, and depiction work that was rebuilding the React tree and re-solving every animation frame.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🎨️.css"
+        }
+      ]
+    }
+  ]
+}

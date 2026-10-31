@@ -1,0 +1,18 @@
+[
+  {
+    "challenge": "easy",
+    "points": 100
+  },
+  {
+    "challenge": "medium",
+    "points": 200
+  },
+  {
+    "challenge": "hard",
+    "points": 300
+  },
+  {
+    "challenge": "expert",
+    "points": 400
+  }
+]

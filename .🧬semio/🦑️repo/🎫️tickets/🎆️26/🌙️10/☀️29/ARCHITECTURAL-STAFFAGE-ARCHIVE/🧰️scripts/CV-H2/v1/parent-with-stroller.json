@@ -1,0 +1,4328 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "parent-with-stroller",
+    "category": "humans",
+    "title": {
+      "en": "Parent with Stroller",
+      "de": "Elternteil mit Kinderwagen"
+    },
+    "summary": {
+      "en": "A parent in a jacket and jeans pushes a stroller with a toddler: the stroller is a wheeled sub-assembly attached at the hands with its own wheel contacts; clips for the steady push-walk, stopping to check the child and tilting up at a kerb.",
+      "de": "Ein Elternteil in Jacke und Jeans schiebt einen Kinderwagen mit Kleinkind: der Kinderwagen ist eine an den Händen befestigte Baugruppe auf Rädern mit eigenen Radkontakten; Clips für das gleichmäßige Schieben, das Anhalten zur Kontrolle des Kindes und das Ankippen am Bordstein."
+    },
+    "tags": [
+      "human",
+      "parent",
+      "stroller",
+      "pram",
+      "wheels",
+      "child",
+      "walking",
+      "sub-assembly"
+    ],
+    "provenance": {
+      "author": "Semio staffage humans-b content worker",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (male segment mass fractions and centre-of-mass positions)."
+        },
+        {
+          "id": "winter-2009",
+          "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, segment lengths and masses."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-8996-2021",
+          "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate (activity classes and met values)."
+        },
+        {
+          "id": "ainsworth-2011",
+          "citation": "Ainsworth, B. E. et al. (2011). 2011 Compendium of Physical Activities. Medicine and Science in Sports and Exercise 43(8), 1575-1581."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiration, skin wettedness)."
+        },
+        {
+          "id": "en-1888",
+          "citation": "EN 1888-1:2018 Child care articles, wheeled child conveyances, pushchairs and prams (typical mass 8-12 kg, handle height 0.95-1.1 m)."
+        },
+        {
+          "id": "bohannon-1997",
+          "citation": "Bohannon, R. W. (1997). Comfortable and maximum walking speed of adults aged 20-79 years. Age and Ageing 26, 15-19."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, actions on structures, general actions (densities, self-weight, imposed loads)."
+        }
+      ],
+      "notes": {
+        "en": "Walking key frames by planted-foot inverse kinematics; the stroller keeps level on its own wheels because the stroller bone counter-rotates the hand; the wheels roll without slip (one turn of the rear wheel and two of the front wheel per stride).",
+        "de": "Geh-Schlüsselbilder aus Inverskinematik mit festen Standfüßen; der Kinderwagen bleibt auf seinen Rädern waagerecht, weil der Wagenknochen die Handdrehung ausgleicht; die Räder rollen schlupffrei (eine Umdrehung des Hinterrads und zwei des Vorderrads pro Doppelschritt)."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.75,
+      "widthM": 1.7,
+      "depthM": 0.6,
+      "massKg": 89.4
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "cotton-clothing",
+        "title": {
+          "en": "Cotton clothing",
+          "de": "Baumwollkleidung"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.5,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leather-shoe",
+        "title": {
+          "en": "Shoe",
+          "de": "Schuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Hair",
+          "de": "Haar"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "Rubber and plastic",
+          "de": "Gummi und Kunststoff"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.2,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "aluminium",
+        "title": {
+          "en": "Anodised aluminium tube",
+          "de": "Eloxiertes Aluminiumrohr"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "source": "literature",
+        "reference": "en-1991-1-1"
+      },
+      {
+        "id": "stroller-textile",
+        "title": {
+          "en": "Polyester stroller fabric",
+          "de": "Polyester-Kinderwagenstoff"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 1380,
+        "conductivityWmK": 0.2,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.0994,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 7.596,
+            "comX": 0.0497,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.0994,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4574,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 21.957,
+            "comX": 0.2088,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4574,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2685,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 4.719,
+            "comX": 0.1342,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4276,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3082,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.843,
+            "comX": 0.1779,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3082,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2685,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.102,
+            "comX": 0.1228,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.2685,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.179,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.415,
+            "comX": 0.0895,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4276,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.629,
+            "comX": 0.1751,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4276,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4176,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 2.944,
+            "comX": 0.1862,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.4176,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2188,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 0.932,
+            "comX": 0.1094,
+            "comY": -0.0398,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1293,
+          "y": -0.0795,
+          "angleDeg": 0,
+          "lengthM": 0.0875,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4276,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3082,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.843,
+            "comX": 0.1779,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3082,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2685,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.102,
+            "comX": 0.1228,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.2685,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.179,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.415,
+            "comX": 0.0895,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4276,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.629,
+            "comX": 0.1751,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4276,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4176,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 2.944,
+            "comX": 0.1862,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.4176,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2188,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 0.932,
+            "comX": 0.1094,
+            "comY": -0.0398,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1293,
+          "y": -0.0795,
+          "angleDeg": 0,
+          "lengthM": 0.0875,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "stroller",
+          "parent": "hand-r",
+          "title": {
+            "en": "Stroller frame with push bar",
+            "de": "Kinderwagenrahmen mit Schiebebügel"
+          },
+          "x": 0.0746,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.85,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 8,
+            "comX": 0.45,
+            "comY": -0.55,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1888"
+          }
+        },
+        {
+          "id": "stroller-hood",
+          "parent": "stroller",
+          "title": {
+            "en": "Folding hood",
+            "de": "Faltverdeck"
+          },
+          "x": 0.18,
+          "y": -0.12,
+          "angleDeg": 0,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -5,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6,
+            "comX": 0.22,
+            "comY": 0.08,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1888"
+          }
+        },
+        {
+          "id": "wheel-rear",
+          "parent": "stroller",
+          "title": {
+            "en": "Rear wheel pair",
+            "de": "Hinteres Radpaar"
+          },
+          "x": 0.28,
+          "y": -0.8408,
+          "angleDeg": 0,
+          "lengthM": 0.1592,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 1.8,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1888"
+          }
+        },
+        {
+          "id": "wheel-front",
+          "parent": "stroller",
+          "title": {
+            "en": "Front wheel pair",
+            "de": "Vorderes Radpaar"
+          },
+          "x": 0.8,
+          "y": -0.9204,
+          "angleDeg": 0,
+          "lengthM": 0.0796,
+          "joint": {
+            "type": "revolute"
+          },
+          "mass": {
+            "kg": 1,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1888"
+          }
+        },
+        {
+          "id": "child",
+          "parent": "stroller",
+          "title": {
+            "en": "Seated toddler",
+            "de": "Sitzendes Kleinkind"
+          },
+          "x": 0.32,
+          "y": -0.46,
+          "angleDeg": 0,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 10,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.1293,
+        "y": -0.0795,
+        "kind": "contact",
+        "title": {
+          "en": "Left sole",
+          "de": "Linke Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1989,
+        "footprintWidthM": 0.0994,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.1293,
+        "y": -0.0795,
+        "kind": "contact",
+        "title": {
+          "en": "Right sole",
+          "de": "Rechte Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1989,
+        "footprintWidthM": 0.0994,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0298,
+        "y": -0.0795,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0795,
+        "footprintWidthM": 0.0795,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0298,
+        "y": -0.0795,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0795,
+        "footprintWidthM": 0.0795,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1134,
+        "y": -0.0945,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth and nose",
+          "de": "Mund und Nase"
+        }
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.0746,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.0746,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "wheel-rear",
+        "bone": "stroller",
+        "x": 0.28,
+        "y": -1,
+        "kind": "contact",
+        "title": {
+          "en": "Rear wheel contact patch",
+          "de": "Aufstandsfläche hinteres Rad"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.02
+      },
+      {
+        "id": "wheel-front",
+        "bone": "stroller",
+        "x": 0.8,
+        "y": -1,
+        "kind": "contact",
+        "title": {
+          "en": "Front wheel contact patch",
+          "de": "Aufstandsfläche vorderes Rad"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.04,
+        "frictionCoefficient": 0.02
+      },
+      {
+        "id": "child-mouth",
+        "bone": "child",
+        "x": 0.16,
+        "y": -0.095,
+        "kind": "emitter",
+        "title": {
+          "en": "Toddler's mouth",
+          "de": "Mund des Kleinkinds"
+        }
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M 0.0 0.0438 L 0.0746 0.039 C 0.0994 0.0643 0.1293 0.0974 0.1889 0.0955 C 0.2436 0.0926 0.2744 0.039 0.2705 -0.0146 C 0.2665 -0.0633 0.2366 -0.0857 0.2038 -0.0867 L 0.1869 -0.0896 C 0.177 -0.0935 0.1611 -0.1052 0.1482 -0.115 C 0.1402 -0.1091 0.1372 -0.0974 0.1332 -0.0916 C 0.1233 -0.0955 0.1153 -0.0916 0.1094 -0.0857 C 0.1014 -0.0896 0.0915 -0.0857 0.0875 -0.078 C 0.0795 -0.0604 0.0756 -0.0438 0.0716 -0.0331 C 0.0497 -0.0409 0.0219 -0.0487 0.0 -0.0507 Z",
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "hair",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5.4,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "path",
+          "d": "M 0.2068 -0.0877 C 0.2466 -0.0916 0.2814 -0.0507 0.2794 -0.0049 C 0.2774 0.0604 0.2406 0.1052 0.1849 0.1023 C 0.1491 0.1091 0.1173 0.1267 0.0845 0.1364 C 0.0597 0.1462 0.0517 0.1169 0.0746 0.0974 C 0.0945 0.0828 0.1114 0.0585 0.1491 0.0507 C 0.1949 0.0448 0.2247 0.0078 0.2287 -0.039 C 0.2297 -0.0643 0.2247 -0.0819 0.2068 -0.0877 Z",
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "hair-strands",
+          "bone": "head",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.22,
+          "kind": "poly",
+          "points": [
+            [
+              0.2337,
+              0.0731
+            ],
+            [
+              0.2605,
+              0.0292
+            ],
+            [
+              0.2665,
+              -0.0195
+            ]
+          ],
+          "closed": false,
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.177,
+          "cy": -0.0585,
+          "rx": 0.0055,
+          "ry": 0.0073,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "brow",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1929,
+              -0.0448
+            ],
+            [
+              0.1959,
+              -0.078
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "ear",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.7,
+          "kind": "ellipse",
+          "cx": 0.1571,
+          "cy": 0.0195,
+          "rx": 0.0239,
+          "ry": 0.0117,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "mouth-line",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1114,
+              -0.0731
+            ],
+            [
+              0.1094,
+              -0.0877
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "pelvis",
+          "bone": "pelvis",
+          "role": "body",
+          "lod": 0,
+          "z": 3.05,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "path",
+          "d": "M -0.0945 -0.0896 C -0.0853 -0.0939 -0.0605 -0.1101 -0.0398 -0.115 C -0.0191 -0.1199 0.0066 -0.1192 0.0298 -0.1189 C 0.053 -0.1186 0.0878 -0.114 0.0994 -0.113 L 0.0994 0.1072 C 0.0878 0.1101 0.053 0.1207 0.0298 0.1247 C 0.0066 0.1288 -0.0191 0.1345 -0.0398 0.1315 C -0.0605 0.1286 -0.0853 0.1112 -0.0945 0.1072 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "upper-arm-l",
+          "bone": "upper-arm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.4,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.0447 0.0206 C -0.0389 0.0248 -0.0174 0.0416 -0.0099 0.0458 C -0.0025 0.05 -0.0149 0.0455 0.0 0.0458 C 0.0149 0.0461 0.0464 0.0487 0.0795 0.0477 C 0.1127 0.0468 0.1607 0.0419 0.1989 0.04 C 0.237 0.038 0.29 0.0367 0.3082 0.0361 L 0.3082 -0.0331 C 0.29 -0.0338 0.237 -0.0352 0.1989 -0.037 C 0.1607 -0.0388 0.1127 -0.0426 0.0795 -0.0438 C 0.0464 -0.0451 0.0149 -0.0447 0.0 -0.0448 C -0.0149 -0.045 -0.0025 -0.0489 -0.0099 -0.0448 C -0.0174 -0.0407 -0.0389 -0.0243 -0.0447 -0.0202 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "forearm-l",
+          "bone": "forearm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.42000000000000004,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.005 0.039 C -0.0041 0.039 -0.0141 0.0385 0.0 0.039 C 0.0141 0.0395 0.0497 0.043 0.0795 0.0419 C 0.1094 0.0408 0.1475 0.0348 0.179 0.0322 C 0.2105 0.0296 0.2519 0.029 0.2685 0.0263 C 0.285 0.0236 0.2768 0.0175 0.2784 0.0158 L 0.2784 -0.0146 C 0.2768 -0.0162 0.285 -0.0221 0.2685 -0.0244 C 0.2519 -0.0266 0.2105 -0.0263 0.179 -0.0283 C 0.1475 -0.0302 0.1094 -0.0346 0.0795 -0.0361 C 0.0497 -0.0375 0.0141 -0.0369 0.0 -0.037 C -0.0141 -0.0372 -0.0041 -0.037 -0.005 -0.037 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "cuff-l",
+          "bone": "forearm-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.43000000000000005,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2436,
+              0.0273
+            ],
+            [
+              0.2436,
+              -0.0253
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.45,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M -0.0141 -0.0283 C 0.0283 -0.033 0.0707 -0.032 0.0989 -0.0292 L 0.1517 -0.0283 C 0.1639 -0.0283 0.1639 -0.0141 0.1517 -0.0141 L 0.1291 -0.0138 L 0.1649 -0.0149 C 0.1771 -0.0149 0.1771 0.0008 0.1649 0.0008 L 0.1291 0.0011 L 0.1724 0 C 0.1847 0 0.1847 0.016 0.1724 0.016 L 0.1291 0.0164 L 0.1658 0.0155 C 0.1781 0.0155 0.1781 0.0306 0.1658 0.0306 C 0.1225 0.032 0.0565 0.0358 0 0.0386 L -0.0141 0.0349 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 2,
+          "z": 0.47,
+          "filled": true,
+          "tone": 0.8148,
+          "kind": "path",
+          "d": "M -0.0038 0.0226 C 0.0245 0.0471 0.0622 0.0678 0.0923 0.0773 C 0.1027 0.0801 0.1102 0.0707 0.1027 0.0612 C 0.0867 0.0471 0.0659 0.0377 0.0433 0.0207 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-0",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              -0.0144
+            ],
+            [
+              0.1291,
+              -0.0144
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-1",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              0.0003
+            ],
+            [
+              0.1291,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-2",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              0.0158
+            ],
+            [
+              0.1291,
+              0.0158
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "path",
+          "d": "M 0.0 0.0955 C 0.0116 0.0955 0.0414 0.0968 0.0696 0.0955 C 0.0978 0.0942 0.1326 0.0916 0.169 0.0877 C 0.2055 0.0838 0.2536 0.0767 0.2884 0.0721 C 0.3232 0.0676 0.3546 0.063 0.3778 0.0604 C 0.401 0.0578 0.4173 0.0609 0.4276 0.0565 C 0.4378 0.0521 0.4375 0.0377 0.4395 0.0339 L 0.4395 -0.0339 C 0.4375 -0.0377 0.4378 -0.0521 0.4276 -0.0565 C 0.4173 -0.0609 0.401 -0.0575 0.3778 -0.0604 C 0.3546 -0.0633 0.3232 -0.0684 0.2884 -0.0741 C 0.2536 -0.0797 0.2055 -0.0893 0.169 -0.0945 C 0.1326 -0.0997 0.0978 -0.1035 0.0696 -0.1052 C 0.0414 -0.107 0.0116 -0.1052 0.0 -0.1052 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-l",
+          "bone": "shank-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.02,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "path",
+          "d": "M -0.0099 0.0585 C -0.0083 0.0585 -0.0166 0.0594 0.0 0.0585 C 0.0166 0.0575 0.0563 0.0546 0.0895 0.0526 C 0.1226 0.0507 0.1607 0.0489 0.1989 0.0468 C 0.237 0.0447 0.285 0.0416 0.3182 0.04 C 0.3513 0.0383 0.3828 0.0398 0.3977 0.0368 C 0.4126 0.0339 0.406 0.0246 0.4077 0.0221 L 0.4077 -0.024 C 0.406 -0.0266 0.4126 -0.036 0.3977 -0.04 C 0.3828 -0.0439 0.3513 -0.043 0.3182 -0.0477 C 0.285 -0.0525 0.237 -0.0638 0.1989 -0.0682 C 0.1607 -0.0726 0.1226 -0.0757 0.0895 -0.0741 C 0.0563 -0.0724 0.0166 -0.0611 0.0 -0.0585 C -0.0166 -0.0559 -0.0083 -0.0585 -0.0099 -0.0585 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-l",
+          "bone": "shank-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3828,
+              0.039
+            ],
+            [
+              0.3828,
+              -0.0429
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-l",
+          "bone": "foot-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M 0.1293 -0.0795 L -0.0597 -0.0795 C -0.0656 -0.0447 -0.0616 -0.005 -0.0517 0.0298 L 0.0348 0.0298 C 0.0563 0.0143 0.0888 -0.0026 0.1293 -0.0235 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-l",
+          "bone": "toe-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M 0 0.056 C 0.0064 0.0526 0.013 0.0492 0.0198 0.0457 C 0.0596 0.0298 0.0875 0.0218 0.0875 0.0099 C 0.0875 0.0019 0.0815 0 0.0696 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-l",
+          "bone": "foot-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0607,
+              -0.0597
+            ],
+            [
+              0.1293,
+              -0.0597
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-l",
+          "bone": "toe-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0198
+            ],
+            [
+              0.0855,
+              0.0198
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "upper-arm-r",
+          "bone": "upper-arm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.0447 0.0206 C -0.0389 0.0248 -0.0174 0.0416 -0.0099 0.0458 C -0.0025 0.05 -0.0149 0.0455 0.0 0.0458 C 0.0149 0.0461 0.0464 0.0487 0.0795 0.0477 C 0.1127 0.0468 0.1607 0.0419 0.1989 0.04 C 0.237 0.038 0.29 0.0367 0.3082 0.0361 L 0.3082 -0.0331 C 0.29 -0.0338 0.237 -0.0352 0.1989 -0.037 C 0.1607 -0.0388 0.1127 -0.0426 0.0795 -0.0438 C 0.0464 -0.0451 0.0149 -0.0447 0.0 -0.0448 C -0.0149 -0.045 -0.0025 -0.0489 -0.0099 -0.0448 C -0.0174 -0.0407 -0.0389 -0.0243 -0.0447 -0.0202 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "forearm-r",
+          "bone": "forearm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.02,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.005 0.039 C -0.0041 0.039 -0.0141 0.0385 0.0 0.039 C 0.0141 0.0395 0.0497 0.043 0.0795 0.0419 C 0.1094 0.0408 0.1475 0.0348 0.179 0.0322 C 0.2105 0.0296 0.2519 0.029 0.2685 0.0263 C 0.285 0.0236 0.2768 0.0175 0.2784 0.0158 L 0.2784 -0.0146 C 0.2768 -0.0162 0.285 -0.0221 0.2685 -0.0244 C 0.2519 -0.0266 0.2105 -0.0263 0.179 -0.0283 C 0.1475 -0.0302 0.1094 -0.0346 0.0795 -0.0361 C 0.0497 -0.0375 0.0141 -0.0369 0.0 -0.037 C -0.0141 -0.0372 -0.0041 -0.037 -0.005 -0.037 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "cuff-r",
+          "bone": "forearm-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.03,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2436,
+              0.0273
+            ],
+            [
+              0.2436,
+              -0.0253
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M -0.0141 -0.0283 C 0.0283 -0.033 0.0707 -0.032 0.0989 -0.0292 L 0.1517 -0.0283 C 0.1639 -0.0283 0.1639 -0.0141 0.1517 -0.0141 L 0.1291 -0.0138 L 0.1649 -0.0149 C 0.1771 -0.0149 0.1771 0.0008 0.1649 0.0008 L 0.1291 0.0011 L 0.1724 0 C 0.1847 0 0.1847 0.016 0.1724 0.016 L 0.1291 0.0164 L 0.1658 0.0155 C 0.1781 0.0155 0.1781 0.0306 0.1658 0.0306 C 0.1225 0.032 0.0565 0.0358 0 0.0386 L -0.0141 0.0349 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 2,
+          "z": 6.22,
+          "filled": true,
+          "tone": 0.8148,
+          "kind": "path",
+          "d": "M -0.0038 0.0226 C 0.0245 0.0471 0.0622 0.0678 0.0923 0.0773 C 0.1027 0.0801 0.1102 0.0707 0.1027 0.0612 C 0.0867 0.0471 0.0659 0.0377 0.0433 0.0207 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-0",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              -0.0144
+            ],
+            [
+              0.1291,
+              -0.0144
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-1",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              0.0003
+            ],
+            [
+              0.1291,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-2",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0707,
+              0.0158
+            ],
+            [
+              0.1291,
+              0.0158
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "path",
+          "d": "M 0.0 0.0955 C 0.0116 0.0955 0.0414 0.0968 0.0696 0.0955 C 0.0978 0.0942 0.1326 0.0916 0.169 0.0877 C 0.2055 0.0838 0.2536 0.0767 0.2884 0.0721 C 0.3232 0.0676 0.3546 0.063 0.3778 0.0604 C 0.401 0.0578 0.4173 0.0609 0.4276 0.0565 C 0.4378 0.0521 0.4375 0.0377 0.4395 0.0339 L 0.4395 -0.0339 C 0.4375 -0.0377 0.4378 -0.0521 0.4276 -0.0565 C 0.4173 -0.0609 0.401 -0.0575 0.3778 -0.0604 C 0.3546 -0.0633 0.3232 -0.0684 0.2884 -0.0741 C 0.2536 -0.0797 0.2055 -0.0893 0.169 -0.0945 C 0.1326 -0.0997 0.0978 -0.1035 0.0696 -0.1052 C 0.0414 -0.107 0.0116 -0.1052 0.0 -0.1052 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-r",
+          "bone": "shank-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.02,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "path",
+          "d": "M -0.0099 0.0585 C -0.0083 0.0585 -0.0166 0.0594 0.0 0.0585 C 0.0166 0.0575 0.0563 0.0546 0.0895 0.0526 C 0.1226 0.0507 0.1607 0.0489 0.1989 0.0468 C 0.237 0.0447 0.285 0.0416 0.3182 0.04 C 0.3513 0.0383 0.3828 0.0398 0.3977 0.0368 C 0.4126 0.0339 0.406 0.0246 0.4077 0.0221 L 0.4077 -0.024 C 0.406 -0.0266 0.4126 -0.036 0.3977 -0.04 C 0.3828 -0.0439 0.3513 -0.043 0.3182 -0.0477 C 0.285 -0.0525 0.237 -0.0638 0.1989 -0.0682 C 0.1607 -0.0726 0.1226 -0.0757 0.0895 -0.0741 C 0.0563 -0.0724 0.0166 -0.0611 0.0 -0.0585 C -0.0166 -0.0559 -0.0083 -0.0585 -0.0099 -0.0585 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-r",
+          "bone": "shank-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3828,
+              0.039
+            ],
+            [
+              0.3828,
+              -0.0429
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-r",
+          "bone": "foot-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M 0.1293 -0.0795 L -0.0597 -0.0795 C -0.0656 -0.0447 -0.0616 -0.005 -0.0517 0.0298 L 0.0348 0.0298 C 0.0563 0.0143 0.0888 -0.0026 0.1293 -0.0235 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-r",
+          "bone": "toe-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M 0 0.056 C 0.0064 0.0526 0.013 0.0492 0.0198 0.0457 C 0.0596 0.0298 0.0875 0.0218 0.0875 0.0099 C 0.0875 0.0019 0.0815 0 0.0696 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-r",
+          "bone": "foot-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0607,
+              -0.0597
+            ],
+            [
+              0.1293,
+              -0.0597
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-r",
+          "bone": "toe-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0198
+            ],
+            [
+              0.0855,
+              0.0198
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "torso",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.1392 -0.1052 C -0.1259 -0.1052 -0.0895 -0.1035 -0.0597 -0.1052 C -0.0298 -0.107 0.0066 -0.1132 0.0398 -0.116 C 0.0729 -0.1187 0.1061 -0.1199 0.1392 -0.1218 C 0.1723 -0.1238 0.2088 -0.1257 0.2386 -0.1277 C 0.2685 -0.1296 0.2917 -0.1356 0.3182 -0.1335 C 0.3447 -0.1314 0.3778 -0.1236 0.3977 -0.115 C 0.4176 -0.1064 0.4276 -0.0916 0.4375 -0.0819 C 0.4474 -0.0721 0.4541 -0.0607 0.4574 -0.0565 L 0.4574 0.0643 C 0.4541 0.0698 0.4474 0.0874 0.4375 0.0974 C 0.4276 0.1075 0.4176 0.1199 0.3977 0.1247 C 0.3778 0.1296 0.3447 0.1277 0.3182 0.1267 C 0.2917 0.1257 0.2685 0.1215 0.2386 0.1189 C 0.2088 0.1163 0.1723 0.1134 0.1392 0.1111 C 0.1061 0.1088 0.0729 0.1065 0.0398 0.1052 C 0.0066 0.1039 -0.0298 0.1036 -0.0597 0.1033 C -0.0895 0.103 -0.1259 0.1033 -0.1392 0.1033 Z",
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "jacket-hem",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.1392,
+              -0.1023
+            ],
+            [
+              -0.1392,
+              0.1013
+            ]
+          ],
+          "closed": false,
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "jacket-zip",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0994,
+              -0.1091
+            ],
+            [
+              0.1989,
+              -0.1228
+            ],
+            [
+              0.4276,
+              -0.0974
+            ]
+          ],
+          "closed": false,
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "jacket-collar",
+          "bone": "torso",
+          "role": "body",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.34,
+          "kind": "path",
+          "d": "M 0.3977 -0.0682 C 0.4574 -0.0877 0.4972 -0.0585 0.4972 0.0 C 0.4972 0.0585 0.4574 0.0974 0.3977 0.0974 Z",
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "scarf",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 4.8,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M 0.0 -0.0585 C 0.0398 -0.0682 0.0696 -0.0585 0.0795 -0.0292 L 0.0746 0.0487 C 0.0497 0.078 0.0099 0.0682 0.0 0.0585 Z",
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "jeans-seam",
+          "bone": "thigh-r",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              -0.1013
+            ],
+            [
+              0.2784,
+              -0.0731
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "sneaker-stripe-r",
+          "bone": "foot-r",
+          "role": "texture",
+          "lod": 3,
+          "z": 2.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0099,
+              -0.0696
+            ],
+            [
+              0.0696,
+              0.0199
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "handle-grip",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "capsule",
+          "x0": -0.05,
+          "y0": 0,
+          "x1": 0.05,
+          "y1": 0,
+          "r0": 0.017,
+          "r1": 0.017,
+          "region": "stroller-frame",
+          "material": "rubber"
+        },
+        {
+          "id": "push-bar",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "capsule",
+          "x0": 0.03,
+          "y0": -0.01,
+          "x1": 0.22,
+          "y1": -0.58,
+          "r0": 0.012,
+          "r1": 0.012,
+          "region": "stroller-frame",
+          "material": "aluminium"
+        },
+        {
+          "id": "chassis-rail",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "capsule",
+          "x0": 0.22,
+          "y0": -0.58,
+          "x1": 0.79,
+          "y1": -0.62,
+          "r0": 0.013,
+          "r1": 0.013,
+          "region": "stroller-frame",
+          "material": "aluminium"
+        },
+        {
+          "id": "rear-strut",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "capsule",
+          "x0": 0.24,
+          "y0": -0.58,
+          "x1": 0.28,
+          "y1": -0.8408,
+          "r0": 0.011,
+          "r1": 0.011,
+          "region": "stroller-frame",
+          "material": "aluminium"
+        },
+        {
+          "id": "front-fork",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "capsule",
+          "x0": 0.77,
+          "y0": -0.62,
+          "x1": 0.8,
+          "y1": -0.9204,
+          "r0": 0.01,
+          "r1": 0.01,
+          "region": "stroller-frame",
+          "material": "aluminium"
+        },
+        {
+          "id": "footrest",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 1,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "capsule",
+          "x0": 0.6,
+          "y0": -0.62,
+          "x1": 0.74,
+          "y1": -0.67,
+          "r0": 0.008,
+          "r1": 0.008,
+          "region": "stroller-frame",
+          "material": "aluminium"
+        },
+        {
+          "id": "seat-fabric",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 0,
+          "z": 4.2,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "path",
+          "d": "M 0.19 -0.58 L 0.17 -0.14 L 0.23 -0.12 C 0.25 -0.3 0.27 -0.44 0.3 -0.49 L 0.64 -0.5 L 0.66 -0.56 L 0.3 -0.58 Z",
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "seat-seam",
+          "bone": "stroller",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.25,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.21,
+              -0.2
+            ],
+            [
+              0.24,
+              -0.45
+            ],
+            [
+              0.62,
+              -0.51
+            ]
+          ],
+          "closed": false,
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "basket",
+          "bone": "stroller",
+          "role": "body",
+          "lod": 1,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M 0.3 -0.7 L 0.68 -0.7 L 0.64 -0.8 L 0.34 -0.8 Z",
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "basket-mesh",
+          "bone": "stroller",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.15,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.36,
+              -0.72
+            ],
+            [
+              0.38,
+              -0.78
+            ],
+            [
+              0.44,
+              -0.72
+            ],
+            [
+              0.46,
+              -0.78
+            ],
+            [
+              0.52,
+              -0.72
+            ],
+            [
+              0.54,
+              -0.78
+            ],
+            [
+              0.6,
+              -0.72
+            ],
+            [
+              0.62,
+              -0.78
+            ]
+          ],
+          "closed": false,
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "child-body",
+          "bone": "child",
+          "role": "body",
+          "lod": 0,
+          "z": 4.6,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0.02,
+          "x1": -0.02,
+          "y1": 0.26,
+          "r0": 0.075,
+          "r1": 0.065,
+          "region": "child-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "child-legs",
+          "bone": "child",
+          "role": "body",
+          "lod": 0,
+          "z": 4.7,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M 0.0 0.0 L 0.3 0.02 C 0.34 0.02 0.35 -0.04 0.32 -0.06 L 0.3 -0.12 L 0.26 -0.11 L 0.28 -0.045 L 0.0 -0.075 Z",
+          "region": "child-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "child-head",
+          "bone": "child",
+          "role": "body",
+          "lod": 0,
+          "z": 4.8,
+          "filled": true,
+          "tone": 0.88,
+          "kind": "ellipse",
+          "cx": -0.01,
+          "cy": 0.34,
+          "rx": 0.075,
+          "ry": 0.08,
+          "region": "child-skin",
+          "material": "skin"
+        },
+        {
+          "id": "child-hat",
+          "bone": "child",
+          "role": "body",
+          "lod": 1,
+          "z": 4.9,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.085 0.34 C -0.085 0.43 0.06 0.44 0.075 0.355 L 0.085 0.345 C 0.08 0.4 0.05 0.42 -0.01 0.42 C -0.07 0.42 -0.09 0.39 -0.085 0.34 Z",
+          "region": "child-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "child-eye",
+          "bone": "child",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.95,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.035,
+          "cy": 0.345,
+          "rx": 0.006,
+          "ry": 0.006,
+          "region": "child-skin",
+          "material": "skin"
+        },
+        {
+          "id": "child-arm",
+          "bone": "child",
+          "role": "body",
+          "lod": 1,
+          "z": 4.85,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0.2,
+          "x1": 0.17,
+          "y1": 0.08,
+          "r0": 0.022,
+          "r1": 0.018,
+          "region": "child-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hood",
+          "bone": "stroller-hood",
+          "role": "body",
+          "lod": 0,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0.0 0.0 C 0.02 0.15 0.22 0.24 0.38 0.12 C 0.44 0.07 0.47 0.0 0.46 -0.06 L 0.4 -0.06 C 0.38 0.0 0.3 0.06 0.2 0.07 C 0.1 0.07 0.03 0.04 0.0 0.0 Z",
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "hood-rib",
+          "bone": "stroller-hood",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.25,
+          "filled": false,
+          "tone": 0.8,
+          "kind": "poly",
+          "points": [
+            [
+              0.01,
+              0.03
+            ],
+            [
+              0.12,
+              0.17
+            ],
+            [
+              0.28,
+              0.18
+            ],
+            [
+              0.4,
+              0.05
+            ]
+          ],
+          "closed": false,
+          "region": "stroller-fabric",
+          "material": "stroller-textile"
+        },
+        {
+          "id": "tyre-rear",
+          "bone": "wheel-rear",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.1592,
+          "ry": 0.1592,
+          "region": "tyres",
+          "material": "rubber"
+        },
+        {
+          "id": "rim-rear",
+          "bone": "wheel-rear",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.75,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.1146,
+          "ry": 0.1146,
+          "region": "tyres",
+          "material": "rubber"
+        },
+        {
+          "id": "spokes-rear",
+          "bone": "wheel-rear",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.06,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.1146,
+              0
+            ],
+            [
+              -0.1146,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0.1146
+            ],
+            [
+              0,
+              -0.1146
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0.0812,
+              0.0812
+            ],
+            [
+              -0.0812,
+              -0.0812
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              -0.0812,
+              0.0812
+            ],
+            [
+              0.0812,
+              -0.0812
+            ]
+          ],
+          "closed": false,
+          "region": "tyres",
+          "material": "rubber"
+        },
+        {
+          "id": "tyre-front",
+          "bone": "wheel-front",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.0796,
+          "ry": 0.0796,
+          "region": "tyres",
+          "material": "rubber"
+        },
+        {
+          "id": "rim-front",
+          "bone": "wheel-front",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.75,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.0525,
+          "ry": 0.0525,
+          "region": "tyres",
+          "material": "rubber"
+        },
+        {
+          "id": "spokes-front",
+          "bone": "wheel-front",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.06,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0525,
+              0
+            ],
+            [
+              -0.0525,
+              0
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0.0525
+            ],
+            [
+              0,
+              -0.0525
+            ]
+          ],
+          "closed": false,
+          "region": "tyres",
+          "material": "rubber"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "pushing-stroller",
+        "title": {
+          "en": "Pushing the stroller",
+          "de": "Kinderwagen schieben"
+        },
+        "description": {
+          "en": "Upright with a slight forward lean, both hands on the push bar, midstance of a steady push-walk; the stroller rolls on its four wheels.",
+          "de": "Aufrecht mit leichter Vorlage, beide Hände am Schiebebügel, mittlere Standphase beim gleichmäßigen Schieben; der Kinderwagen rollt auf vier Rädern."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 9.09
+          },
+          "shank-l": {
+            "angleDeg": -22.49
+          },
+          "foot-l": {
+            "angleDeg": 13.4
+          },
+          "thigh-r": {
+            "angleDeg": -6.49
+          },
+          "shank-r": {
+            "angleDeg": -34.24
+          },
+          "foot-r": {
+            "angleDeg": -1.94
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 34.28
+          },
+          "forearm-l": {
+            "angleDeg": 33.49
+          },
+          "hand-l": {
+            "angleDeg": 15.23
+          },
+          "upper-arm-r": {
+            "angleDeg": 34.28
+          },
+          "forearm-r": {
+            "angleDeg": 33.49
+          },
+          "hand-r": {
+            "angleDeg": 15.23
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -72
+          },
+          "wheel-front": {
+            "angleDeg": -144
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 29.26
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.908
+        }
+      },
+      {
+        "id": "pausing-with-stroller",
+        "title": {
+          "en": "Pausing with the stroller",
+          "de": "Mit dem Kinderwagen anhalten"
+        },
+        "description": {
+          "en": "Standing still with both hands on the push bar and a glance at the child.",
+          "de": "Stehen mit beiden Händen am Schiebebügel und einem Blick zum Kind."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": -4
+          },
+          "upper-arm-l": {
+            "angleDeg": 50.11
+          },
+          "forearm-l": {
+            "angleDeg": 0.21
+          },
+          "hand-l": {
+            "angleDeg": 32.67
+          },
+          "upper-arm-r": {
+            "angleDeg": 50.11
+          },
+          "forearm-r": {
+            "angleDeg": 0.21
+          },
+          "hand-r": {
+            "angleDeg": 32.67
+          },
+          "stroller": {
+            "angleDeg": 15.01
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": 0
+          },
+          "wheel-front": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 1.5,
+          "emitters": {
+            "breath": 0.5,
+            "child-breath": 0.6
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "checking-child",
+        "title": {
+          "en": "Checking the child",
+          "de": "Nach dem Kind sehen"
+        },
+        "description": {
+          "en": "Stooping over the stroller with the hood folded back, one hand on the bar and one on the blanket.",
+          "de": "Über den Kinderwagen gebeugt, Verdeck zurückgeklappt, eine Hand am Bügel, eine an der Decke."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 14
+          },
+          "shank-l": {
+            "angleDeg": -20
+          },
+          "foot-l": {
+            "angleDeg": 8
+          },
+          "thigh-r": {
+            "angleDeg": 10
+          },
+          "shank-r": {
+            "angleDeg": -16
+          },
+          "foot-r": {
+            "angleDeg": 6
+          },
+          "torso": {
+            "angleDeg": -32
+          },
+          "head": {
+            "angleDeg": 38
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 74.64
+          },
+          "forearm-l": {
+            "angleDeg": 0.15
+          },
+          "hand-l": {
+            "angleDeg": 7.21
+          },
+          "upper-arm-r": {
+            "angleDeg": 24.21
+          },
+          "forearm-r": {
+            "angleDeg": 86.35
+          },
+          "hand-r": {
+            "angleDeg": -3.55
+          },
+          "stroller": {
+            "angleDeg": 14.99
+          },
+          "stroller-hood": {
+            "angleDeg": 95
+          },
+          "wheel-rear": {
+            "angleDeg": 0
+          },
+          "wheel-front": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0.0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.2,
+          "emitters": {
+            "breath": 0.6,
+            "child-breath": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "kerb-tilt",
+        "title": {
+          "en": "Tilting up at the kerb",
+          "de": "Am Bordstein ankippen"
+        },
+        "description": {
+          "en": "The bar is pushed down so the front wheels lift by 12 cm above the kerb; only the rear wheels touch the ground.",
+          "de": "Der Bügel wird heruntergedrückt, sodass sich die Vorderräder 12 cm über den Bordstein heben; nur die Hinterräder berühren den Boden."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -4
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 40.88
+          },
+          "forearm-l": {
+            "angleDeg": 0.19
+          },
+          "hand-l": {
+            "angleDeg": 37.94
+          },
+          "upper-arm-r": {
+            "angleDeg": 40.88
+          },
+          "forearm-r": {
+            "angleDeg": 0.19
+          },
+          "hand-r": {
+            "angleDeg": 37.94
+          },
+          "stroller": {
+            "angleDeg": 28.99
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": 0
+          },
+          "wheel-front": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r",
+          "wheel-rear"
+        ],
+        "thermal": {
+          "activityMet": 3,
+          "emitters": {
+            "breath": 0.8,
+            "child-breath": 0.6
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "push-heel-strike-l",
+        "title": {
+          "en": "Pushing: Heel strike, left",
+          "de": "Schieben: Fersenkontakt links"
+        },
+        "description": {
+          "en": "Left heel strike; the right foot is still on its toes behind (double support).",
+          "de": "Linker Fersenkontakt; der rechte Fuß steht noch hinten auf dem Ballen (Doppelstütz)."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 26.07
+          },
+          "shank-l": {
+            "angleDeg": -28.43
+          },
+          "foot-l": {
+            "angleDeg": 2.36
+          },
+          "thigh-r": {
+            "angleDeg": -4
+          },
+          "shank-r": {
+            "angleDeg": -33.9
+          },
+          "foot-r": {
+            "angleDeg": 14.2
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 30.79
+          },
+          "forearm-l": {
+            "angleDeg": 45.29
+          },
+          "hand-l": {
+            "angleDeg": 6.92
+          },
+          "upper-arm-r": {
+            "angleDeg": 30.79
+          },
+          "forearm-r": {
+            "angleDeg": 45.29
+          },
+          "hand-r": {
+            "angleDeg": 6.92
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": 0
+          },
+          "wheel-front": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 23.9
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8808
+        },
+        "key": true
+      },
+      {
+        "id": "push-toe-off-r",
+        "title": {
+          "en": "Pushing: Toe-off, right",
+          "de": "Schieben: Abdruck rechts"
+        },
+        "description": {
+          "en": "Right toe-off ends double support; the right leg starts to swing.",
+          "de": "Rechter Abdruck beendet die Doppelstützphase; das rechte Bein beginnt zu schwingen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 20.22
+          },
+          "shank-l": {
+            "angleDeg": -30.84
+          },
+          "foot-l": {
+            "angleDeg": 10.63
+          },
+          "thigh-r": {
+            "angleDeg": -19.62
+          },
+          "shank-r": {
+            "angleDeg": -12.8
+          },
+          "foot-r": {
+            "angleDeg": -3.24
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 31.9
+          },
+          "forearm-l": {
+            "angleDeg": 41.21
+          },
+          "hand-l": {
+            "angleDeg": 9.88
+          },
+          "upper-arm-r": {
+            "angleDeg": 31.9
+          },
+          "forearm-r": {
+            "angleDeg": 41.21
+          },
+          "hand-r": {
+            "angleDeg": 9.88
+          },
+          "stroller": {
+            "angleDeg": 15.01
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -36
+          },
+          "wheel-front": {
+            "angleDeg": -72
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 38.48
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8912
+        },
+        "key": true
+      },
+      {
+        "id": "push-midstance-l",
+        "title": {
+          "en": "Pushing: Midstance, left",
+          "de": "Schieben: Mittlere Standphase links"
+        },
+        "description": {
+          "en": "Body vertically over the left foot, highest hip position; right leg swings through.",
+          "de": "Körper senkrecht über dem linken Fuß, höchste Hüftlage; das rechte Bein schwingt durch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 9.09
+          },
+          "shank-l": {
+            "angleDeg": -22.49
+          },
+          "foot-l": {
+            "angleDeg": 13.4
+          },
+          "thigh-r": {
+            "angleDeg": -6.49
+          },
+          "shank-r": {
+            "angleDeg": -34.24
+          },
+          "foot-r": {
+            "angleDeg": -1.94
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 34.28
+          },
+          "forearm-l": {
+            "angleDeg": 33.49
+          },
+          "hand-l": {
+            "angleDeg": 15.23
+          },
+          "upper-arm-r": {
+            "angleDeg": 34.28
+          },
+          "forearm-r": {
+            "angleDeg": 33.49
+          },
+          "hand-r": {
+            "angleDeg": 15.23
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -72
+          },
+          "wheel-front": {
+            "angleDeg": -144
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 29.26
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.908
+        },
+        "key": true
+      },
+      {
+        "id": "push-heel-off-l",
+        "title": {
+          "en": "Pushing: Heel-off, left",
+          "de": "Schieben: Fersenabhebung links"
+        },
+        "description": {
+          "en": "Left heel leaves the ground while the right leg reaches forward.",
+          "de": "Linke Ferse löst sich vom Boden, während das rechte Bein nach vorn greift."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -1.73
+          },
+          "shank-l": {
+            "angleDeg": -14.45
+          },
+          "foot-l": {
+            "angleDeg": 16.18
+          },
+          "thigh-r": {
+            "angleDeg": 20
+          },
+          "shank-r": {
+            "angleDeg": -55.86
+          },
+          "foot-r": {
+            "angleDeg": 0.59
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 34.28
+          },
+          "forearm-l": {
+            "angleDeg": 33.49
+          },
+          "hand-l": {
+            "angleDeg": 15.23
+          },
+          "upper-arm-r": {
+            "angleDeg": 34.28
+          },
+          "forearm-r": {
+            "angleDeg": 33.49
+          },
+          "hand-r": {
+            "angleDeg": 15.23
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -108
+          },
+          "wheel-front": {
+            "angleDeg": -216
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 16.7
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.908
+        },
+        "key": true
+      },
+      {
+        "id": "push-late-swing-r",
+        "title": {
+          "en": "Pushing: Late swing, right",
+          "de": "Schieben: Späte Schwungphase rechts"
+        },
+        "description": {
+          "en": "Right foot descends to the ground ahead of the body.",
+          "de": "Rechter Fuß senkt sich vor dem Körper zum Boden."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -2.2
+          },
+          "shank-l": {
+            "angleDeg": -26.41
+          },
+          "foot-l": {
+            "angleDeg": 20.32
+          },
+          "thigh-r": {
+            "angleDeg": 32.74
+          },
+          "shank-r": {
+            "angleDeg": -47.6
+          },
+          "foot-r": {
+            "angleDeg": 2.3
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 31.9
+          },
+          "forearm-l": {
+            "angleDeg": 41.21
+          },
+          "hand-l": {
+            "angleDeg": 9.88
+          },
+          "upper-arm-r": {
+            "angleDeg": 31.9
+          },
+          "forearm-r": {
+            "angleDeg": 41.21
+          },
+          "hand-r": {
+            "angleDeg": 9.88
+          },
+          "stroller": {
+            "angleDeg": 15.01
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -144
+          },
+          "wheel-front": {
+            "angleDeg": -288
+          },
+          "toe-l": {
+            "angleDeg": 8.45
+          },
+          "toe-r": {
+            "angleDeg": 0.0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8912
+        },
+        "key": true
+      },
+      {
+        "id": "push-heel-strike-r",
+        "title": {
+          "en": "Pushing: Heel strike, right",
+          "de": "Schieben: Fersenkontakt rechts"
+        },
+        "description": {
+          "en": "Right heel strike; the left foot is still on its toes behind (double support).",
+          "de": "Rechter Fersenkontakt; der linke Fuß steht noch hinten auf dem Ballen (Doppelstütz)."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -4
+          },
+          "shank-l": {
+            "angleDeg": -33.9
+          },
+          "foot-l": {
+            "angleDeg": 14.2
+          },
+          "thigh-r": {
+            "angleDeg": 26.07
+          },
+          "shank-r": {
+            "angleDeg": -28.43
+          },
+          "foot-r": {
+            "angleDeg": 2.36
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 30.79
+          },
+          "forearm-l": {
+            "angleDeg": 45.29
+          },
+          "hand-l": {
+            "angleDeg": 6.92
+          },
+          "upper-arm-r": {
+            "angleDeg": 30.79
+          },
+          "forearm-r": {
+            "angleDeg": 45.29
+          },
+          "hand-r": {
+            "angleDeg": 6.92
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -180
+          },
+          "wheel-front": {
+            "angleDeg": -360
+          },
+          "toe-l": {
+            "angleDeg": 23.9
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r",
+          "contact-l",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8808
+        },
+        "key": true
+      },
+      {
+        "id": "push-toe-off-l",
+        "title": {
+          "en": "Pushing: Toe-off, left",
+          "de": "Schieben: Abdruck links"
+        },
+        "description": {
+          "en": "Left toe-off ends double support; the left leg starts to swing.",
+          "de": "Linker Abdruck beendet die Doppelstützphase; das linke Bein beginnt zu schwingen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -19.62
+          },
+          "shank-l": {
+            "angleDeg": -12.8
+          },
+          "foot-l": {
+            "angleDeg": -3.24
+          },
+          "thigh-r": {
+            "angleDeg": 20.22
+          },
+          "shank-r": {
+            "angleDeg": -30.84
+          },
+          "foot-r": {
+            "angleDeg": 10.63
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 31.9
+          },
+          "forearm-l": {
+            "angleDeg": 41.21
+          },
+          "hand-l": {
+            "angleDeg": 9.88
+          },
+          "upper-arm-r": {
+            "angleDeg": 31.9
+          },
+          "forearm-r": {
+            "angleDeg": 41.21
+          },
+          "hand-r": {
+            "angleDeg": 9.88
+          },
+          "stroller": {
+            "angleDeg": 15.01
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -216
+          },
+          "wheel-front": {
+            "angleDeg": -432
+          },
+          "toe-l": {
+            "angleDeg": 38.48
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8912
+        },
+        "key": true
+      },
+      {
+        "id": "push-midstance-r",
+        "title": {
+          "en": "Pushing: Midstance, right",
+          "de": "Schieben: Mittlere Standphase rechts"
+        },
+        "description": {
+          "en": "Body vertically over the right foot; left leg swings through.",
+          "de": "Körper senkrecht über dem rechten Fuß; das linke Bein schwingt durch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -6.49
+          },
+          "shank-l": {
+            "angleDeg": -34.24
+          },
+          "foot-l": {
+            "angleDeg": -1.94
+          },
+          "thigh-r": {
+            "angleDeg": 9.09
+          },
+          "shank-r": {
+            "angleDeg": -22.49
+          },
+          "foot-r": {
+            "angleDeg": 13.4
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 34.28
+          },
+          "forearm-l": {
+            "angleDeg": 33.49
+          },
+          "hand-l": {
+            "angleDeg": 15.23
+          },
+          "upper-arm-r": {
+            "angleDeg": 34.28
+          },
+          "forearm-r": {
+            "angleDeg": 33.49
+          },
+          "hand-r": {
+            "angleDeg": 15.23
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -252
+          },
+          "wheel-front": {
+            "angleDeg": -504
+          },
+          "toe-l": {
+            "angleDeg": 29.26
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.908
+        },
+        "key": true
+      },
+      {
+        "id": "push-heel-off-r",
+        "title": {
+          "en": "Pushing: Heel-off, right",
+          "de": "Schieben: Fersenabhebung rechts"
+        },
+        "description": {
+          "en": "Right heel leaves the ground while the left leg reaches forward.",
+          "de": "Rechte Ferse löst sich vom Boden, während das linke Bein nach vorn greift."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 20
+          },
+          "shank-l": {
+            "angleDeg": -55.86
+          },
+          "foot-l": {
+            "angleDeg": 0.59
+          },
+          "thigh-r": {
+            "angleDeg": -1.73
+          },
+          "shank-r": {
+            "angleDeg": -14.45
+          },
+          "foot-r": {
+            "angleDeg": 16.18
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 34.28
+          },
+          "forearm-l": {
+            "angleDeg": 33.49
+          },
+          "hand-l": {
+            "angleDeg": 15.23
+          },
+          "upper-arm-r": {
+            "angleDeg": 34.28
+          },
+          "forearm-r": {
+            "angleDeg": 33.49
+          },
+          "hand-r": {
+            "angleDeg": 15.23
+          },
+          "stroller": {
+            "angleDeg": 15
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -288
+          },
+          "wheel-front": {
+            "angleDeg": -576
+          },
+          "toe-l": {
+            "angleDeg": 16.7
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.908
+        },
+        "key": true
+      },
+      {
+        "id": "push-late-swing-l",
+        "title": {
+          "en": "Pushing: Late swing, left",
+          "de": "Schieben: Späte Schwungphase links"
+        },
+        "description": {
+          "en": "Left foot descends to the ground ahead of the body.",
+          "de": "Linker Fuß senkt sich vor dem Körper zum Boden."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 32.74
+          },
+          "shank-l": {
+            "angleDeg": -47.6
+          },
+          "foot-l": {
+            "angleDeg": 2.3
+          },
+          "thigh-r": {
+            "angleDeg": -2.2
+          },
+          "shank-r": {
+            "angleDeg": -26.41
+          },
+          "foot-r": {
+            "angleDeg": 20.32
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 8
+          },
+          "upper-arm-l": {
+            "angleDeg": 31.9
+          },
+          "forearm-l": {
+            "angleDeg": 41.21
+          },
+          "hand-l": {
+            "angleDeg": 9.88
+          },
+          "upper-arm-r": {
+            "angleDeg": 31.9
+          },
+          "forearm-r": {
+            "angleDeg": 41.21
+          },
+          "hand-r": {
+            "angleDeg": 9.88
+          },
+          "stroller": {
+            "angleDeg": 15.01
+          },
+          "stroller-hood": {
+            "angleDeg": 0
+          },
+          "wheel-rear": {
+            "angleDeg": -324
+          },
+          "wheel-front": {
+            "angleDeg": -648
+          },
+          "toe-l": {
+            "angleDeg": 0.0
+          },
+          "toe-r": {
+            "angleDeg": 8.45
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r",
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "activityMet": 2.6,
+          "emitters": {
+            "breath": 0.7,
+            "child-breath": 0.6
+          }
+        },
+        "loads": [],
+        "root": {
+          "y": 0.8912
+        },
+        "key": true
+      }
+    ],
+    "clips": [
+      {
+        "id": "push-walk",
+        "title": {
+          "en": "Pushing the stroller",
+          "de": "Kinderwagen schieben"
+        },
+        "description": {
+          "en": "Steady walk at 1.1 m/s: planted feet, the stroller rolls on four wheels with its wheels turning without slip (rear wheel one turn, front wheel two turns per stride), hands stay on the push bar.",
+          "de": "Gleichmäßiges Gehen mit 1,1 m/s: Füße gleiten nicht, der Kinderwagen rollt auf vier Rädern, die Räder drehen schlupffrei (hinten eine, vorn zwei Umdrehungen pro Doppelschritt), die Hände bleiben am Schiebebügel."
+        },
+        "durationS": 0.9,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 0.99986792,
+        "keys": [
+          {
+            "t": 0,
+            "pose": "push-heel-strike-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.09,
+            "pose": "push-toe-off-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.18,
+            "pose": "push-midstance-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.27,
+            "pose": "push-heel-off-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.36,
+            "pose": "push-late-swing-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.45,
+            "pose": "push-heel-strike-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.54,
+            "pose": "push-toe-off-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.63,
+            "pose": "push-midstance-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.72,
+            "pose": "push-heel-off-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.81,
+            "pose": "push-late-swing-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.9,
+            "pose": "push-heel-strike-l",
+            "ease": "smooth",
+            "bones": {
+              "wheel-rear": {
+                "angleDeg": -360
+              },
+              "wheel-front": {
+                "angleDeg": -720
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 0.09000000000000001
+          },
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 0.27
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 0.54
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0.45,
+            "toS": 0.7200000000000001
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0.45,
+            "toS": 0.9
+          }
+        ],
+        "phases": [
+          {
+            "id": "double-support-1",
+            "fromS": 0,
+            "toS": 0.09000000000000001,
+            "title": {
+              "en": "Double support, left heel strike",
+              "de": "Doppelstütz, linker Fersenkontakt"
+            }
+          },
+          {
+            "id": "left-single",
+            "fromS": 0.09000000000000001,
+            "toS": 0.45,
+            "title": {
+              "en": "Left single support",
+              "de": "Linke Einzelstütz"
+            }
+          },
+          {
+            "id": "double-support-2",
+            "fromS": 0.45,
+            "toS": 0.54,
+            "title": {
+              "en": "Double support, right heel strike",
+              "de": "Doppelstütz, rechter Fersenkontakt"
+            }
+          },
+          {
+            "id": "right-single",
+            "fromS": 0.54,
+            "toS": 0.9,
+            "title": {
+              "en": "Right single support",
+              "de": "Rechte Einzelstütz"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Left heel strike",
+              "de": "Linker Fersenkontakt"
+            },
+            "target": "heel-l"
+          },
+          {
+            "t": 0.45,
+            "kind": "contact-on",
+            "title": {
+              "en": "Right heel strike",
+              "de": "Rechter Fersenkontakt"
+            },
+            "target": "heel-r"
+          },
+          {
+            "t": 0.09000000000000001,
+            "kind": "contact-off",
+            "title": {
+              "en": "Right toe-off",
+              "de": "Rechter Abdruck"
+            },
+            "target": "contact-r"
+          },
+          {
+            "t": 0.54,
+            "kind": "contact-off",
+            "title": {
+              "en": "Left toe-off",
+              "de": "Linker Abdruck"
+            },
+            "target": "contact-l"
+          },
+          {
+            "t": 0,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.45,
+                "v": 1
+              },
+              {
+                "t": 0.9,
+                "v": 0.6
+              }
+            ]
+          },
+          {
+            "target": "emitter:child-breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.45,
+                "v": 0.7
+              },
+              {
+                "t": 0.9,
+                "v": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "stop-and-check-child",
+        "title": {
+          "en": "Stopping to check the child",
+          "de": "Anhalten und nach dem Kind sehen"
+        },
+        "description": {
+          "en": "The parent stops, folds the hood back, stoops over the stroller to tuck the blanket and straightens up again; all four wheels stay on the ground.",
+          "de": "Die Person bleibt stehen, klappt das Verdeck zurück, beugt sich über den Kinderwagen, richtet die Decke und richtet sich wieder auf; alle vier Räder bleiben am Boden."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.2,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.2,
+            "pose": "checking-child",
+            "ease": "smooth"
+          },
+          {
+            "t": 5.2,
+            "pose": "checking-child",
+            "ease": "smooth"
+          },
+          {
+            "t": 7,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "wheel-rear",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "wheel-front",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "stop",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Stand still",
+              "de": "Stehenbleiben"
+            }
+          },
+          {
+            "id": "stoop",
+            "fromS": 1.2,
+            "toS": 3.2,
+            "title": {
+              "en": "Stoop over the stroller",
+              "de": "Über den Wagen beugen"
+            }
+          },
+          {
+            "id": "check",
+            "fromS": 3.2,
+            "toS": 5.2,
+            "title": {
+              "en": "Check the child",
+              "de": "Kind prüfen"
+            }
+          },
+          {
+            "id": "straighten",
+            "fromS": 5.2,
+            "toS": 8,
+            "title": {
+              "en": "Straighten up",
+              "de": "Aufrichten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.4,
+            "kind": "exhale",
+            "title": {
+              "en": "Breath while stopping",
+              "de": "Atem beim Anhalten"
+            }
+          },
+          {
+            "t": 3.2,
+            "kind": "motion",
+            "title": {
+              "en": "Hood folded back",
+              "de": "Verdeck zurückgeklappt"
+            }
+          },
+          {
+            "t": 5.2,
+            "kind": "inhale",
+            "title": {
+              "en": "Breath after the check",
+              "de": "Atemzug nach der Kontrolle"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 2.6
+              },
+              {
+                "t": 1.2,
+                "v": 1.6
+              },
+              {
+                "t": 3.2,
+                "v": 2.4
+              },
+              {
+                "t": 5.2,
+                "v": 2.2
+              },
+              {
+                "t": 8,
+                "v": 1.5
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 3.2,
+                "v": 0.5
+              },
+              {
+                "t": 8,
+                "v": 0.4
+              }
+            ]
+          },
+          {
+            "target": "emitter:child-breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "kerb-tilt-up",
+        "title": {
+          "en": "Tilting up at the kerb",
+          "de": "Am Bordstein ankippen"
+        },
+        "description": {
+          "en": "The parent presses the push bar down so the front wheels leave the ground, then sets them down again on the kerb.",
+          "de": "Die Person drückt den Schiebebügel nach unten, sodass die Vorderräder abheben, und setzt sie danach auf dem Bordstein wieder ab."
+        },
+        "durationS": 3,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          },
+          {
+            "t": 1,
+            "pose": "kerb-tilt",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.8,
+            "pose": "kerb-tilt",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "pausing-with-stroller",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "wheel-rear",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "wheel-front",
+            "fromS": 0,
+            "toS": 0.6
+          },
+          {
+            "anchor": "wheel-front",
+            "fromS": 2.2,
+            "toS": 3
+          }
+        ],
+        "phases": [
+          {
+            "id": "press",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Press the bar down",
+              "de": "Bügel herunterdrücken"
+            }
+          },
+          {
+            "id": "front-lifted",
+            "fromS": 1,
+            "toS": 1.8,
+            "title": {
+              "en": "Front wheels lifted",
+              "de": "Vorderräder angehoben"
+            }
+          },
+          {
+            "id": "set-down",
+            "fromS": 1.8,
+            "toS": 3,
+            "title": {
+              "en": "Set the wheels down",
+              "de": "Räder absetzen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.6,
+            "kind": "contact-off",
+            "title": {
+              "en": "Front wheels lift off",
+              "de": "Vorderräder heben ab"
+            },
+            "target": "wheel-front"
+          },
+          {
+            "t": 2.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Front wheels touch down",
+              "de": "Vorderräder setzen auf"
+            },
+            "target": "wheel-front"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.8
+              },
+              {
+                "t": 1.2,
+                "v": 3.2
+              },
+              {
+                "t": 3,
+                "v": 1.8
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 1.2,
+                "v": 1
+              },
+              {
+                "t": 3,
+                "v": 0.5
+              }
+            ]
+          },
+          {
+            "target": "emitter:child-breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 3,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0.2,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.5,
+      "regions": [
+        {
+          "id": "head-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.055,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.06,
+          "metabolicShare": 0.06,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "material": "hair",
+          "model": "core-resistance",
+          "areaM2": 0.055,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "torso-clothing",
+          "title": {
+            "en": "Jacket, scarf and shirt",
+            "de": "Jacke, Schal und Hemd"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.694,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.19,
+          "metabolicShare": 0.39,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "arm-clothing",
+          "title": {
+            "en": "Jacket sleeves",
+            "de": "Jackenärmel"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.256,
+          "characteristicLengthM": 0.08,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.17,
+          "metabolicShare": 0.14,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "hand-skin",
+          "title": {
+            "en": "Hands",
+            "de": "Hände"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.091,
+          "characteristicLengthM": 0.07,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.06,
+          "metabolicShare": 0.03,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "leg-clothing",
+          "title": {
+            "en": "Jeans",
+            "de": "Jeans"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.566,
+          "characteristicLengthM": 0.13,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.17,
+          "metabolicShare": 0.38,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shoes",
+          "title": {
+            "en": "Sneakers",
+            "de": "Turnschuhe"
+          },
+          "kind": "surface",
+          "material": "leather-shoe",
+          "model": "passive",
+          "areaM2": 0.128,
+          "characteristicLengthM": 0.12,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "child-skin",
+          "title": {
+            "en": "Toddler's face",
+            "de": "Gesicht des Kleinkinds"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 37,
+          "insulationM2KW": 0.06,
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "child-clothing",
+          "title": {
+            "en": "Toddler's snowsuit and hat",
+            "de": "Schneeanzug und Mütze des Kleinkinds"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.42,
+          "characteristicLengthM": 0.12,
+          "coreTempC": 37,
+          "insulationM2KW": 0.2,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "stroller-fabric",
+          "title": {
+            "en": "Seat, hood and basket fabric",
+            "de": "Sitz-, Verdeck- und Korbstoff"
+          },
+          "kind": "surface",
+          "material": "stroller-textile",
+          "model": "passive",
+          "areaM2": 1.1,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate",
+          "reference": "en-1888"
+        },
+        {
+          "id": "stroller-frame",
+          "title": {
+            "en": "Frame tubes and push bar",
+            "de": "Rahmenrohre und Schiebebügel"
+          },
+          "kind": "surface",
+          "material": "aluminium",
+          "model": "passive",
+          "areaM2": 0.35,
+          "characteristicLengthM": 0.03,
+          "source": "authored-estimate",
+          "reference": "en-1888"
+        },
+        {
+          "id": "tyres",
+          "title": {
+            "en": "Wheels and tyres",
+            "de": "Räder und Reifen"
+          },
+          "kind": "tyre",
+          "material": "rubber",
+          "model": "passive",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.12,
+          "source": "authored-estimate",
+          "reference": "en-1888"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath",
+          "kind": "breath",
+          "title": {
+            "en": "Exhaled breath",
+            "de": "Ausgeatmete Luft"
+          },
+          "anchor": "mouth",
+          "directionDeg": -90,
+          "carries": "vapour",
+          "temperatureC": 34,
+          "velocityMS": 1.6,
+          "diameterM": 0.03,
+          "vapourKgPerKg": 0.034,
+          "periodS": 3.6,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "child-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Toddler's breath",
+            "de": "Atem des Kleinkinds"
+          },
+          "anchor": "child-mouth",
+          "directionDeg": -90,
+          "carries": "vapour",
+          "temperatureC": 33,
+          "velocityMS": 0.7,
+          "diameterM": 0.015,
+          "vapourKgPerKg": 0.034,
+          "periodS": 2,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Parent 1.75 m and 68 kg (DuBois area), winter jacket and jeans about 1.1 clo; toddler in a snowsuit 10 kg.",
+          "de": "Elternteil 1,75 m und 68 kg (DuBois-Fläche), Winterjacke und Jeans etwa 1,1 clo; Kleinkind im Schneeanzug 10 kg."
+        },
+        {
+          "en": "Metabolic rate 2.6 met for pushing a stroller at 1.1 m/s (Compendium: walking pushing a stroller 3.0 to 4.0 METs at 2.5 to 3 mph), 1.5 met standing.",
+          "de": "Stoffwechselrate 2,6 met beim Schieben mit 1,1 m/s (Compendium: Gehen mit Kinderwagen 3,0 bis 4,0 METs bei 2,5 bis 3 mph), 1,5 met im Stand."
+        },
+        {
+          "en": "The toddler is a second breath source (30 breaths per minute) inside the stroller; the stroller surfaces are passive.",
+          "de": "Das Kleinkind ist eine zweite Atemquelle (30 Atemzüge pro Minute) im Kinderwagen; die Wagenoberflächen sind passiv."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "The stroller (11.4 kg: frame 8, hood 0.6, wheels 2.8) and the toddler (10 kg) are bone masses hanging from the right hand; the left hand grips the same bar, so both arms carry them in the lumped elevation.",
+          "de": "Der Kinderwagen (11,4 kg: Rahmen 8, Verdeck 0,6, Räder 2,8) und das Kleinkind (10 kg) sind Knochenmassen an der rechten Hand; die linke Hand greift denselben Bügel, sodass beide Arme sie in der zusammengefassten Ansicht tragen."
+        },
+        {
+          "en": "Load sharing between the feet and the wheel contacts follows the equal-stiffness assumption of the solver, which overestimates the weight the feet carry; wheel friction is rolling friction (0.02).",
+          "de": "Die Lastaufteilung zwischen Füßen und Radkontakten folgt der Gleichsteifigkeitsannahme des Lösers, die das von den Füßen getragene Gewicht überschätzt; Radreibung ist Rollreibung (0,02)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "pushing-stroller",
+      "defaultClip": "push-walk",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

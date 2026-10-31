@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Layout Retained Sparse Edit Ownership",
   "description": "Read-only keyed and positional source plans resolve against the current live post. Authored sparse fields are prepared under original grants. Commit moves untouched owners and retains every displaced field for funded close. No whole-snapshot candidate clone/swap or cold diff operation occurs in a retained turn.",
   "type": "object",

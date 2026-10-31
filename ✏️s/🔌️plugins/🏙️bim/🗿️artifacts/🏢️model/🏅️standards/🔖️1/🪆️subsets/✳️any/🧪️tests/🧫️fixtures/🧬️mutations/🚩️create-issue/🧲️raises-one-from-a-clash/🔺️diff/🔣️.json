@@ -1,38 +1,40 @@
 {
   "issues": {
     "i-1": {
-      "assignee": "",
-      "author": "UG",
-      "clash": {
-        "first": "w-south",
-        "second": "w-east",
-        "set": "cs-1"
-      },
-      "created": "2026-10-09T08:30:00Z",
-      "description": "The beam runs through the wall.",
-      "elements": [
-        "w-south",
-        "w-east"
-      ],
       "entry": "Created",
-      "labels": [
-        "Clash"
-      ],
-      "priority": "Normal",
-      "status": "Open",
-      "title": "Beam hits the south wall",
-      "viewpoint": {
-        "camera": {
-          "azimuth": 0.8,
-          "distance": 25.0,
-          "pitch": 0.5,
-          "target": {
-            "x": 4.0,
-            "y": 3.0
-          },
-          "target_height": 1.5
+      "value": {
+        "assignee": "",
+        "author": "UG",
+        "clash": {
+          "first": "w-south",
+          "second": "w-east",
+          "set": "cs-1"
         },
-        "isolate": []
+        "created": "2026-10-09T08:30:00Z",
+        "description": "The beam runs through the wall.",
+        "elements": [
+          "w-south",
+          "w-east"
+        ],
+        "labels": [
+          "Clash"
+        ],
+        "priority": "Normal",
+        "status": "Open",
+        "title": "Beam hits the south wall",
+        "viewpoint": {
+          "camera": {
+            "azimuth": 0.8,
+            "distance": 25,
+            "pitch": 0.5,
+            "target": {
+              "x": 4,
+              "y": 3
+            },
+            "target_height": 1.5
+          },
+          "isolate": []
+        }
       }
     }
   }

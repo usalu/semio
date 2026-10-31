@@ -1,5 +1,5 @@
 export interface FilterV1{excluded(path:string):boolean}
-export function createFilterV1(options?:{rooted?:readonly string[];names?:readonly string[]}):FilterV1;
+export function createFilterV1(options?:{opaqueBasenames?:Readonly<{prefixes:readonly string[];digestHex:number}>;rooted?:readonly string[];names?:readonly string[]}):FilterV1;
 export function createOwnerIndexV1(roots:Iterable<readonly [string,string]>):{ownerOf(path:string):string|undefined;ownersUnder(prefix:string):string[]};
 export interface TaskConfigV1{name:string;command:readonly string[];dependsOn?:readonly string[];outputs?:readonly string[];cacheable?:boolean}
 export interface OwnerConfigV1{name:string;root:string;deps?:readonly string[];tasks?:readonly TaskConfigV1[]}

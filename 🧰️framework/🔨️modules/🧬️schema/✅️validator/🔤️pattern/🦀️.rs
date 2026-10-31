@@ -3,7 +3,7 @@
 //#region 🔤️Pattern
 
 /// 🔣️ Owned backtracking matcher for the ECMA-262 subset JSON Schema `pattern` needs — anchors,
-/// classes, groups, lookahead, alternation and quantifiers over `char`s.
+/// classes, groups, lookahead, word boundaries, alternation and quantifiers over Unicode code points.
 ///
 /// Not reusing `semio-framework-math`'s `🎯️sampling` DFA: that engine is byte-level with no anchors
 /// and no `\d`/`\w`/`\s` shorthand, exposes an `async` per-byte `step`, and would invert the layering
@@ -17,10 +17,11 @@ pub struct PatternMatcher {
 #[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 enum PatternNode {
     Empty,
-    Literal(char),
+    Literal(u32),
     Any,
     Class { negated: bool, items: Vec<ClassItem> },
     Start,
+    Boundary(bool),
     End,
     Concat(Vec<PatternNode>),
     Alternate(Vec<PatternNode>),
@@ -38,8 +39,8 @@ struct Repeat {
 
 #[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
 enum ClassItem {
-    Literal(char),
-    Range(char, char),
+    Literal(u32),
+    Range(u32, u32),
     Digit(bool),
     Word(bool),
     Space(bool),
@@ -116,6 +117,9 @@ impl PatternParser<'_> {
             },
             _ => return Ok(node),
         };
+        if matches!(node, PatternNode::Boundary(_)) {
+            return Err("word boundary cannot be quantified".to_string());
+        }
         let greedy = if self.peek() == Some('?') {
             self.position += 1;
             false
@@ -184,10 +188,10 @@ impl PatternParser<'_> {
                 })
             }
             '[' => self.parse_class(),
-            '\\' => self.parse_escape(),
+            '\\' => self.parse_escape(false),
             ')' | ']' => Err(format!("unbalanced `{current}`")),
             '*' | '+' | '?' => Err(format!("quantifier `{current}` has nothing to repeat")),
-            literal => Ok(PatternNode::Literal(literal)),
+            literal => Ok(PatternNode::Literal(literal as u32)),
         }
     }
 
@@ -206,7 +210,7 @@ impl PatternParser<'_> {
                 break;
             }
             let item = if current == '\\' {
-                match self.parse_escape()? {
+                match self.parse_escape(true)? {
                     PatternNode::Literal(literal) => ClassItem::Literal(literal),
                     PatternNode::Class { negated: shorthand_negated, items: shorthand } => {
                         items.extend(shorthand.into_iter().map(|item| match (item, shorthand_negated) {
@@ -220,7 +224,7 @@ impl PatternParser<'_> {
                     _ => return Err("unsupported escape inside a character class".to_string()),
                 }
             } else {
-                ClassItem::Literal(current)
+                ClassItem::Literal(current as u32)
             };
             let ClassItem::Literal(low) = item else {
                 items.push(item);
@@ -231,15 +235,15 @@ impl PatternParser<'_> {
                 let Some(high) = self.peek() else { return Err("unclosed character class".to_string()) };
                 self.position += 1;
                 let high = if high == '\\' {
-                    match self.parse_escape()? {
+                    match self.parse_escape(true)? {
                         PatternNode::Literal(literal) => literal,
                         _ => return Err("unsupported escape as a class range bound".to_string()),
                     }
                 } else {
-                    high
+                    high as u32
                 };
                 if high < low {
-                    return Err(format!("descending class range `{low}-{high}`"));
+                    return Err(format!("descending class range `U+{low:X}-U+{high:X}`"));
                 }
                 items.push(ClassItem::Range(low, high));
                 continue;
@@ -249,7 +253,7 @@ impl PatternParser<'_> {
         Ok(PatternNode::Class { negated, items })
     }
 
-    fn parse_escape(&mut self) -> Result<PatternNode, String> {
+    fn parse_escape(&mut self, in_class: bool) -> Result<PatternNode, String> {
         let Some(current) = self.peek() else { return Err("dangling escape".to_string()) };
         self.position += 1;
         let shorthand = |item: ClassItem| Ok(PatternNode::Class { negated: false, items: vec![item] });
@@ -260,17 +264,20 @@ impl PatternParser<'_> {
             'W' => shorthand(ClassItem::Word(false)),
             's' => shorthand(ClassItem::Space(true)),
             'S' => shorthand(ClassItem::Space(false)),
-            'n' => Ok(PatternNode::Literal('\n')),
-            'r' => Ok(PatternNode::Literal('\r')),
-            't' => Ok(PatternNode::Literal('\t')),
-            'f' => Ok(PatternNode::Literal('\u{c}')),
-            'v' => Ok(PatternNode::Literal('\u{b}')),
-            '0' => Ok(PatternNode::Literal('\0')),
+            'n' => Ok(PatternNode::Literal('\n' as u32)),
+            'r' => Ok(PatternNode::Literal('\r' as u32)),
+            't' => Ok(PatternNode::Literal('\t' as u32)),
+            'f' => Ok(PatternNode::Literal('\u{c}' as u32)),
+            'v' => Ok(PatternNode::Literal('\u{b}' as u32)),
+            '0' => Ok(PatternNode::Literal('\0' as u32)),
             'x' => self.parse_code_point(2),
             'u' => self.parse_code_point(4),
             digit if digit.is_ascii_digit() => Err("backreferences are outside the supported subset".to_string()),
-            'b' | 'B' => Err("word boundaries are outside the supported subset".to_string()),
-            literal => Ok(PatternNode::Literal(literal)),
+            'b' if in_class => Ok(PatternNode::Literal(8)),
+            'b' => Ok(PatternNode::Boundary(true)),
+            'B' if !in_class => Ok(PatternNode::Boundary(false)),
+            'B' => Err("invalid character class escape".to_string()),
+            literal => Ok(PatternNode::Literal(literal as u32)),
         }
     }
 
@@ -282,26 +289,52 @@ impl PatternParser<'_> {
         let digits: String = self.chars[self.position..end].iter().collect();
         let code = u32::from_str_radix(&digits, 16).map_err(|_| format!("invalid code point escape `{digits}`"))?;
         self.position = end;
-        char::from_u32(code).map(PatternNode::Literal).ok_or_else(|| format!("invalid code point escape `{digits}`"))
+        if (0xD800..=0xDBFF).contains(&code) && self.chars.get(self.position) == Some(&'\\') && self.chars.get(self.position + 1) == Some(&'u') {
+            if let Some(digits) = self.chars.get(self.position + 2..self.position + 6) {
+                let digits: String = digits.iter().collect();
+                if let Ok(low) = u32::from_str_radix(&digits, 16) {
+                    if (0xDC00..=0xDFFF).contains(&low) {
+                        self.position += 6;
+                        return Ok(PatternNode::Literal(0x10000 + ((code - 0xD800) << 10) + low - 0xDC00));
+                    }
+                }
+            }
+        }
+        Ok(PatternNode::Literal(code))
     }
+}
+
+fn is_word(value: &char) -> bool {
+    value.is_ascii_alphanumeric() || *value == '_'
+}
+
+/// ␠️ ECMA-262 whitespace and line terminators used by pattern character classes.
+/// @see <https://tc39.es/ecma262/#sec-runtime-semantics-compiletocharset>
+fn is_space(value: char) -> bool {
+    matches!(value, '\u{9}'..='\u{d}' | '\u{20}' | '\u{a0}' | '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}' | '\u{205f}' | '\u{3000}' | '\u{feff}')
 }
 
 fn class_item_matches(item: ClassItem, value: char) -> bool {
     match item {
-        ClassItem::Literal(literal) => literal == value,
-        ClassItem::Range(low, high) => low <= value && value <= high,
+        ClassItem::Literal(literal) => literal == value as u32,
+        ClassItem::Range(low, high) => low <= value as u32 && value as u32 <= high,
         ClassItem::Digit(polarity) => value.is_ascii_digit() == polarity,
-        ClassItem::Word(polarity) => (value.is_ascii_alphanumeric() || value == '_') == polarity,
-        ClassItem::Space(polarity) => value.is_whitespace() == polarity,
+        ClassItem::Word(polarity) => is_word(&value) == polarity,
+        ClassItem::Space(polarity) => is_space(value) == polarity,
     }
 }
 
 fn match_node(node: &PatternNode, input: &[char], position: usize, next: &mut dyn FnMut(usize) -> bool) -> bool {
     match node {
         PatternNode::Empty => next(position),
-        PatternNode::Literal(literal) => input.get(position) == Some(literal) && next(position + 1),
+        PatternNode::Literal(literal) => input.get(position).is_some_and(|value| *value as u32 == *literal) && next(position + 1),
         PatternNode::Any => input.get(position).is_some_and(|value| *value != '\n') && next(position + 1),
         PatternNode::Class { negated, items } => input.get(position).is_some_and(|value| items.iter().any(|item| class_item_matches(*item, *value)) != *negated) && next(position + 1),
+        PatternNode::Boundary(positive) => {
+            let left = position.checked_sub(1).and_then(|index| input.get(index)).is_some_and(is_word);
+            let right = input.get(position).is_some_and(is_word);
+            (left != right) == *positive && next(position)
+        }
         PatternNode::Start => position == 0 && next(position),
         PatternNode::End => position == input.len() && next(position),
         PatternNode::Concat(nodes) => match_concat(nodes, input, position, next),

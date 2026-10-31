@@ -9,7 +9,7 @@ import type { ClockState, StaffageClock } from "./🧱️core/🟦️.ts";
 export { StaffageClock } from "./🧱️core/🟦️.ts";
 export type { ClockOptions, ClockScheduler, ClockState } from "./🧱️core/🟦️.ts";
 
-/** 🪝️ Subscribes a component to a clock; a `null` clock yields `null`. */
+/** 🪝 Subscribes a component to a clock; a `null` clock yields `null`. Playback notifies when the frame or the playing flag changes; `seek`, `step` and the transport controls notify at once. */
 export function useClock(clock: StaffageClock | null | undefined): ClockState | null {
   return useSyncExternalStore(clock?.subscribe ?? noSubscribe, clock?.getSnapshot ?? nullSnapshot, clock?.getSnapshot ?? nullSnapshot);
 }

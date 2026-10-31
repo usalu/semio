@@ -50,5 +50,14 @@
         "command": "repo ./📜️script.ts verify physical-codecs"
       }
     }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
+      }
+    }
   }
 }

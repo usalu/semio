@@ -6,7 +6,7 @@ import type {IfcSnapshot,IfcValue,IfcEntity} from '../🧬️schema/📸️snaps
 import type {IfcTemplateApplication} from '../🧬️schema/🏷️templates/✍️apply/types.ts';
 import {ifcAttributeDeclarations} from '../🧬️schema/📚️catalog/🟦️.ts';
 import {ifc4x3Template,ifc4x3TemplateCatalog} from '../🧬️schema/🏷️templates/🟦️.ts';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import applicationSchema from '../🧬️schema/🏷️templates/✍️apply/🔣️.json';
 import snapshotSchema from '../🧬️schema/🔣️.json';
 import {s,a,r,real,empty,entity,application,base,fixture,retained} from './template-fixtures.ts';

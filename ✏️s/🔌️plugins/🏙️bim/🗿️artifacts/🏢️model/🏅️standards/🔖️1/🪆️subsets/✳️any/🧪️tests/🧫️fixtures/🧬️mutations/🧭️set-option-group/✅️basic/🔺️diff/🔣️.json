@@ -2,7 +2,9 @@
   "option_groups": {
     "g": {
       "entry": "Patched",
-      "name": "Revised"
+      "value": {
+        "name": "Revised"
+      }
     }
   }
 }

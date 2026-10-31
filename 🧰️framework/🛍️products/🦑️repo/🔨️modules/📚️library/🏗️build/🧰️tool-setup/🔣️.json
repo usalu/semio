@@ -643,8 +643,9 @@
         "de": "nextest führt die Rust-Tests aus."
       },
       "pin": {
-        "format": "value",
-        "value": "0.9.140"
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/cargo/cargo-nextest/version"
       },
       "probe": {
         "mode": "version",
@@ -656,26 +657,14 @@
       "locate": [
         {
           "kind": "provisioned",
-          "family": "cargo",
+          "family": "native",
+          "tool": "cargo-nextest",
           "executable": "cargo-nextest"
-        },
-        {
-          "kind": "path",
-          "names": [
-            "cargo-nextest"
-          ],
-          "directories": [
-            "~/.cargo/bin"
-          ]
         }
       ],
       "setup": {
-        "kind": "script",
-        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
-        "prepare": [
-          "sync",
-          "tools"
-        ]
+        "kind": "native",
+        "tool": "cargo-nextest"
       }
     },
     {
@@ -685,8 +674,9 @@
         "de": "llvm-cov misst die Rust-Abdeckung."
       },
       "pin": {
-        "format": "value",
-        "value": "0.8.7"
+        "format": "json",
+        "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+        "pointer": "/cargo/cargo-llvm-cov/version"
       },
       "probe": {
         "mode": "version",
@@ -699,26 +689,14 @@
       "locate": [
         {
           "kind": "provisioned",
-          "family": "cargo",
+          "family": "native",
+          "tool": "cargo-llvm-cov",
           "executable": "cargo-llvm-cov"
-        },
-        {
-          "kind": "path",
-          "names": [
-            "cargo-llvm-cov"
-          ],
-          "directories": [
-            "~/.cargo/bin"
-          ]
         }
       ],
       "setup": {
-        "kind": "script",
-        "script": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
-        "prepare": [
-          "sync",
-          "tools"
-        ]
+        "kind": "native",
+        "tool": "cargo-llvm-cov"
       }
     },
     {

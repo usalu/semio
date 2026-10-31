@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {Database} from "bun:sqlite";
 test("catalog append reservations preserve immutable funded extents and match SQLite",()=>{
  const corpus=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(corpus)).toBe(true);

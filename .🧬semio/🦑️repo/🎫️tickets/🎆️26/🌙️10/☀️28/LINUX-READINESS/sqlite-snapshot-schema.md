@@ -1,0 +1,9 @@
+# SQLite Snapshot Schema Parity
+
+The current closed SnapshotInput JSON schema declares four fields and omits native. The real Rust SnapshotInput requires the fifth native field of SnapshotGrant; the existing authored neutral request contains all five independent grant axes. This is genuine schema/runtime drift. No native request values were stripped to manufacture a passing witness.
+
+Retained sqlite-snapshot-schema.test.ts reads the actual existing authored request and Rust field declarations. Its four laws compare independent Ajv and the owned validator, test required axes, preserve zero axes and reject unknown, negative, fractional and non-JSON-safe numbers. Initial schema parity red is retained in generated/sqlite-snapshot-schema-red.log. Product schema correction and durable owner test registration remain pending while profile28265 captures its current Source. No actual Native authority is created by these DATA-only tests.
+
+Schema corrected to canonical draft07 and now requires native plus its five independent integral nonnegative JSON-safe axes. Existing limits/payload/dialect constraints remain unchanged. Native property exactly equals the nearby already-correct Rust wire schema; no grant factories/custody were added. Four durable owner laws passed75assertions, including the original unchanged full request, zero axes, required/unknown/refusal axes and real Rust field parity. Portable laws JSON lives next to the owning schema. New plugin test-sqlite-snapshot-schema source target is a dependency of default framework:test. Canonical target execution remains pending normal admission/graph work; pure schema proof is not a runtime Native proof.
+
+Expanded normal-admission semantic88073 finished0 with5explicit process/SQLite roots and2865importedfiles, ALLdiagnostics0. Includes the new owner schema tests and actual package router; no imported diagnostics were excluded.

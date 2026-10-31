@@ -1,0 +1,21 @@
+{
+  "type": "array",
+  "minItems": 10,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "path",
+      "excluded"
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "minLength": 1
+      },
+      "excluded": {
+        "type": "boolean"
+      }
+    }
+  }
+}

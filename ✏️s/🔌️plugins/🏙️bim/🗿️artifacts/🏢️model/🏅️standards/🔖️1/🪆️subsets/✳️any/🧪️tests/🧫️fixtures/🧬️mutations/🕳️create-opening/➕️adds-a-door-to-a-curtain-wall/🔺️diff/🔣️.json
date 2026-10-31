@@ -2,16 +2,18 @@
   "openings": {
     "o-1": {
       "entry": "Created",
-      "flip_facing": false,
-      "flip_hand": false,
-      "host": "cw-1",
-      "kind": {
-        "Door": {
-          "door_type": "door-1"
-        }
-      },
-      "name": "Entrance",
-      "offset": 2.0
+      "value": {
+        "flip_facing": false,
+        "flip_hand": false,
+        "host": "cw-1",
+        "kind": {
+          "Door": {
+            "door_type": "door-1"
+          }
+        },
+        "name": "Entrance",
+        "offset": 2
+      }
     }
   }
 }

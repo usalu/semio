@@ -86,9 +86,12 @@ describe("🥞️ the opened page and the short viewport", () => {
   it("lets a card the learner swipes to scroll inside its page's cell instead of clipping it when the viewport is short", () => {
     atViewport(700, 360);
     render(<Home session={stubSession()} />);
-    const layers = [...document.querySelectorAll<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-overlay] > [data-layered-cell]')].filter((layer) => layer.querySelector("[data-layered-card]") !== null);
+    const layers = [...document.querySelectorAll<HTMLElement>('[data-grid-active] > [data-layered-overview] > [data-layered-overlay] > [data-layered-cell]')].filter((layer) => layer.matches("[data-layered-card]"));
     expect(layers).toHaveLength(PAGES.length);
+    expect(layers.map(layer => layer.dataset.layeredCard)).toEqual(PAGES);
     for (const layer of layers) {
+      expect(layer.dataset.layeredCell).toBe(layer.dataset.layeredCard);
+      expect(layer.querySelector("[data-overview-card]")).not.toBeNull();
       const classes = layer.className.split(" ");
       expect(classes).toContain("overflow-y-auto");
       expect(classes).toContain("items-center-safe");

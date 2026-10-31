@@ -1,0 +1,4205 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "hornbeam-hedge",
+  "category": "vegetation",
+  "rig": {
+   "kind": "botanical",
+   "root": "root-plate",
+   "bones": [
+    {
+     "id": "root-plate",
+     "parent": null,
+     "title": {
+      "en": "Hedge row base",
+      "de": "Heckenfuß"
+     },
+     "x": -1.5,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 3,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 100,
+      "comX": 1.5,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.070686,
+      "secondMomentM4": 0.0003976,
+      "extremeFibreM": 0.15,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 30 cm",
+       "de": "Vollquerschnitt, d = 30 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-1",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 1",
+      "de": "Stammbündel 1"
+     },
+     "x": 0.25,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-2",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 2",
+      "de": "Stammbündel 2"
+     },
+     "x": 0.75,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-3",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 3",
+      "de": "Stammbündel 3"
+     },
+     "x": 1.25,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-4",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 4",
+      "de": "Stammbündel 4"
+     },
+     "x": 1.75,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-5",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 5",
+      "de": "Stammbündel 5"
+     },
+     "x": 2.25,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "stem-6",
+     "parent": "root-plate",
+     "title": {
+      "en": "Stem bundle 6",
+      "de": "Stammbündel 6"
+     },
+     "x": 2.75,
+     "y": 0,
+     "angleDeg": 90,
+     "lengthM": 0.35,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 5,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "wood-handbook-2021"
+     },
+     "section": {
+      "areaM2": 0.002827,
+      "secondMomentM4": 6.362e-7,
+      "extremeFibreM": 0.03,
+      "material": "hornbeam-wood",
+      "title": {
+       "en": "Solid section, d = 6 cm",
+       "de": "Vollquerschnitt, d = 6 cm"
+      }
+     }
+    },
+    {
+     "id": "block-1",
+     "parent": "stem-1",
+     "title": {
+      "en": "Clipped foliage block 1",
+      "de": "Geschnittener Laubblock 1"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    },
+    {
+     "id": "block-2",
+     "parent": "stem-2",
+     "title": {
+      "en": "Clipped foliage block 2",
+      "de": "Geschnittener Laubblock 2"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    },
+    {
+     "id": "block-3",
+     "parent": "stem-3",
+     "title": {
+      "en": "Clipped foliage block 3",
+      "de": "Geschnittener Laubblock 3"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    },
+    {
+     "id": "block-4",
+     "parent": "stem-4",
+     "title": {
+      "en": "Clipped foliage block 4",
+      "de": "Geschnittener Laubblock 4"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    },
+    {
+     "id": "block-5",
+     "parent": "stem-5",
+     "title": {
+      "en": "Clipped foliage block 5",
+      "de": "Geschnittener Laubblock 5"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    },
+    {
+     "id": "block-6",
+     "parent": "stem-6",
+     "title": {
+      "en": "Clipped foliage block 6",
+      "de": "Geschnittener Laubblock 6"
+     },
+     "x": 0.35,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -6,
+      "maxDeg": 6
+     },
+     "mass": {
+      "kg": 36,
+      "comX": 0.73,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "jones-2014"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "base-support",
+    "bone": "root-plate",
+    "x": 1.5,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Hedge row anchorage (planting strip)",
+     "de": "Verankerung der Heckenreihe (Pflanzstreifen)"
+    },
+    "support": "fixed",
+    "normalDeg": 90,
+    "footprintLengthM": 3,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "tp-face-1",
+    "bone": "block-1",
+    "x": 0.909,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 1",
+     "de": "Transpiration der Heckenaußenseite, Anker 1"
+    }
+   },
+   {
+    "id": "tp-face-2",
+    "bone": "block-2",
+    "x": 0.914,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 2",
+     "de": "Transpiration der Heckenaußenseite, Anker 2"
+    }
+   },
+   {
+    "id": "tp-face-3",
+    "bone": "block-3",
+    "x": 0.907,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 3",
+     "de": "Transpiration der Heckenaußenseite, Anker 3"
+    }
+   },
+   {
+    "id": "tp-face-4",
+    "bone": "block-4",
+    "x": 0.915,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 4",
+     "de": "Transpiration der Heckenaußenseite, Anker 4"
+    }
+   },
+   {
+    "id": "tp-face-5",
+    "bone": "block-5",
+    "x": 0.911,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 5",
+     "de": "Transpiration der Heckenaußenseite, Anker 5"
+    }
+   },
+   {
+    "id": "tp-face-6",
+    "bone": "block-6",
+    "x": 0.91,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the hedge face, anchor 6",
+     "de": "Transpiration der Heckenaußenseite, Anker 6"
+    }
+   },
+   {
+    "id": "tp-core-1",
+    "bone": "block-1",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 1",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 1"
+    }
+   },
+   {
+    "id": "tp-core-2",
+    "bone": "block-2",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 2",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 2"
+    }
+   },
+   {
+    "id": "tp-core-3",
+    "bone": "block-3",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 3",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 3"
+    }
+   },
+   {
+    "id": "tp-core-4",
+    "bone": "block-4",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 4",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 4"
+    }
+   },
+   {
+    "id": "tp-core-5",
+    "bone": "block-5",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 5",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 5"
+    }
+   },
+   {
+    "id": "tp-core-6",
+    "bone": "block-6",
+    "x": 0.8,
+    "y": 0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of the shaded hedge core, anchor 6",
+     "de": "Transpiration des beschatteten Heckenkerns, Anker 6"
+    }
+   }
+  ],
+  "title": {
+   "en": "Hornbeam Hedge",
+   "de": "Hainbuchenhecke"
+  },
+  "summary": {
+   "en": "A clipped hornbeam hedge segment (Carpinus betulus) 3 m long and 1.8 m high: a dense, flat-topped, rectangular mass of foliage on six stem bundles; the lowest 0.35 m is open so the grey, slender stems and the planting strip show at large scale.",
+   "de": "Ein Abschnitt einer geschnittenen Hainbuchenhecke (Carpinus betulus) von 3 m Länge und 1,8 m Höhe: eine dichte, flach abgeschlossene, rechteckige Laubmasse auf sechs Stammbündeln; die untersten 0,35 m sind offen, sodass die grauen, schlanken Stämme und der Pflanzstreifen im großen Maßstab sichtbar sind."
+  },
+  "tags": [
+   "hedge",
+   "deciduous",
+   "broadleaf",
+   "clipped",
+   "wind",
+   "transpiration"
+  ],
+  "provenance": {
+   "author": "Semio staffage vegetation content worker",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "wood-handbook-2021",
+     "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service. Chapter 5 (green density, modulus of elasticity and rupture; closest listed species used as proxy)."
+    },
+    {
+     "id": "en-1991-1-4",
+     "citation": "EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Air density 1.25 kg/m3, F = 0.5 rho cd A v^2, peak velocity pressure (1 + 7 Iv) q_m."
+    },
+    {
+     "id": "en-1991-1-3",
+     "citation": "EN 1991-1-3:2003 Eurocode 1, Actions on structures, Part 1-3: Snow loads. Used for the order of magnitude of snow and ice accretion (about 10 kg/m2 on plan area)."
+    },
+    {
+     "id": "vogel-1989",
+     "citation": "Vogel, S. (1989). Drag and reconfiguration of broad leaves in high winds. Journal of Experimental Botany 40(8), 941-948."
+    },
+    {
+     "id": "jones-2014",
+     "citation": "Jones, H. G. (2014). Plants and Microclimate, 3rd ed., Cambridge University Press. Leaf energy balance, leaf area index, boundary-layer conductance."
+    },
+    {
+     "id": "monteith-unsworth-2013",
+     "citation": "Monteith, J. L. and Unsworth, M. H. (2013). Principles of Environmental Physics, 4th ed., Academic Press. Penman-Monteith leaf transpiration."
+    }
+   ],
+   "notes": {
+    "en": "Six stem bundles carry six overlapping clipped foliage blocks; wind moves each block as a stiff panel with a small travelling phase along the row. Hornbeam keeps dry leaves through winter, which is why a clipped hedge keeps its screen function; a winter-bare geometry is not offered because shapes cannot be toggled by a pose. Poses are calm, fresh breeze, gale and snow on the clipped top.",
+    "de": "Sechs Stammbündel tragen sechs überlappende geschnittene Laubblöcke; der Wind bewegt jeden Block als steife Tafel mit kleiner wandernder Phase entlang der Reihe. Die Hainbuche behält trockenes Laub im Winter, weshalb eine geschnittene Hecke ihre Sichtschutzfunktion behält; eine winterkahle Geometrie wird nicht angeboten, da Formen durch eine Pose nicht ausgeblendet werden können. Posen sind Ruhe, frische Brise, Sturm und Schnee auf der geschnittenen Oberseite."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.88,
+   "widthM": 3.14,
+   "depthM": 0.7,
+   "massKg": 346
+  },
+  "materials": [
+   {
+    "id": "hornbeam-bark",
+    "title": {
+     "en": "Smooth grey hornbeam bark",
+     "de": "Glatte graue Hainbuchenrinde"
+    },
+    "emissivity": 0.94,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 700,
+    "conductivityWmK": 0.13,
+    "source": "authored-estimate",
+    "reference": "jones-2014"
+   },
+   {
+    "id": "hornbeam-leaf",
+    "title": {
+     "en": "Hornbeam leaves in a clipped hedge face",
+     "de": "Hainbuchenblätter in der geschnittenen Heckenfläche"
+    },
+    "emissivity": 0.97,
+    "solarAbsorptivity": 0.5,
+    "source": "literature",
+    "reference": "jones-2014"
+   },
+   {
+    "id": "hornbeam-wood",
+    "title": {
+     "en": "Green hornbeam wood",
+     "de": "Frisches Hainbuchenholz"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 1000,
+    "conductivityWmK": 0.17,
+    "elasticModulusPa": 9000000000,
+    "strengthPa": 60000000,
+    "source": "authored-estimate",
+    "reference": "wood-handbook-2021"
+   }
+  ],
+  "poses": [
+   {
+    "id": "calm",
+    "title": {
+     "en": "Calm summer day",
+     "de": "Windstiller Sommertag"
+    },
+    "description": {
+     "en": "Light air of 1.5 m/s: the hedge stands upright and its six blocks form a straight clipped wall, drag per block 0.1 N.",
+     "de": "Leiser Zug von 1,5 m/s: Die Hecke steht aufrecht, ihre sechs Blöcke bilden eine gerade geschnittene Wand, der Widerstand je Block beträgt 0,1 N."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "stem-bark": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.02
+      },
+      "leaf-face": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "leaf-core": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      }
+     },
+     "emitters": {
+      "transpiration-face": 0.8,
+      "transpiration-core": 0.8
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-block-1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 1",
+       "de": "Winddruck auf Geschnittener Laubblock 1"
+      },
+      "bone": "block-1",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 2",
+       "de": "Winddruck auf Geschnittener Laubblock 2"
+      },
+      "bone": "block-2",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 3",
+       "de": "Winddruck auf Geschnittener Laubblock 3"
+      },
+      "bone": "block-3",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 4",
+       "de": "Winddruck auf Geschnittener Laubblock 4"
+      },
+      "bone": "block-4",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 5",
+       "de": "Winddruck auf Geschnittener Laubblock 5"
+      },
+      "bone": "block-5",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-6",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 6",
+       "de": "Winddruck auf Geschnittener Laubblock 6"
+      },
+      "bone": "block-6",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 0.1,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "windy",
+    "title": {
+     "en": "Fresh breeze",
+     "de": "Frische Brise"
+    },
+    "description": {
+     "en": "Beaufort 5, 8 m/s at 10 m, which is 4.7 m/s at the 0.9 m mid-height of the hedge; cd 0.8 on 0.9 m2 per block gives about 10 N per block, 60 N for the segment. The hedge leans 3.5 degrees downwind.",
+     "de": "Beaufort 5, 8 m/s in 10 m Höhe, das sind 4,7 m/s in der Mittelhöhe von 0,9 m; cd 0,8 auf 0,9 m2 je Block ergibt etwa 10 N je Block, 60 N für den Abschnitt. Die Hecke neigt sich um 3,5 Grad nach Lee."
+    },
+    "bones": {
+     "stem-1": {
+      "angleDeg": -1
+     },
+     "stem-2": {
+      "angleDeg": -1
+     },
+     "stem-3": {
+      "angleDeg": -1
+     },
+     "stem-4": {
+      "angleDeg": -1
+     },
+     "stem-5": {
+      "angleDeg": -1
+     },
+     "stem-6": {
+      "angleDeg": -1
+     },
+     "block-1": {
+      "angleDeg": -2.5
+     },
+     "block-2": {
+      "angleDeg": -2.5
+     },
+     "block-3": {
+      "angleDeg": -2.5
+     },
+     "block-4": {
+      "angleDeg": -2.5
+     },
+     "block-5": {
+      "angleDeg": -2.5
+     },
+     "block-6": {
+      "angleDeg": -2.5
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "stem-bark": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.02
+      },
+      "leaf-face": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "leaf-core": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      }
+     },
+     "emitters": {
+      "transpiration-face": 1,
+      "transpiration-core": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-block-1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 1",
+       "de": "Winddruck auf Geschnittener Laubblock 1"
+      },
+      "bone": "block-1",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 2",
+       "de": "Winddruck auf Geschnittener Laubblock 2"
+      },
+      "bone": "block-2",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 3",
+       "de": "Winddruck auf Geschnittener Laubblock 3"
+      },
+      "bone": "block-3",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 4",
+       "de": "Winddruck auf Geschnittener Laubblock 4"
+      },
+      "bone": "block-4",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 5",
+       "de": "Winddruck auf Geschnittener Laubblock 5"
+      },
+      "bone": "block-5",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-block-6",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 6",
+       "de": "Winddruck auf Geschnittener Laubblock 6"
+      },
+      "bone": "block-6",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 10,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "storm",
+    "title": {
+     "en": "Gale",
+     "de": "Sturm"
+    },
+    "description": {
+     "en": "Beaufort 9, 22 m/s at 10 m (12.9 m/s at hedge height), cd 0.6 after leaf reconfiguration: 56 N per block, 340 N in total; the blocks lean 7 degrees. A hedge close to the ground carries only a small base moment.",
+     "de": "Beaufort 9, 22 m/s in 10 m Höhe (12,9 m/s in Heckenhöhe), cd 0,6 nach Blattumformung: 56 N je Block, insgesamt 340 N; die Blöcke neigen sich 7 Grad. Eine bodennahe Hecke trägt nur ein kleines Fußmoment."
+    },
+    "bones": {
+     "stem-1": {
+      "angleDeg": -2
+     },
+     "stem-2": {
+      "angleDeg": -2
+     },
+     "stem-3": {
+      "angleDeg": -2
+     },
+     "stem-4": {
+      "angleDeg": -2
+     },
+     "stem-5": {
+      "angleDeg": -2
+     },
+     "stem-6": {
+      "angleDeg": -2
+     },
+     "block-1": {
+      "angleDeg": -5
+     },
+     "block-2": {
+      "angleDeg": -5
+     },
+     "block-3": {
+      "angleDeg": -5
+     },
+     "block-4": {
+      "angleDeg": -5
+     },
+     "block-5": {
+      "angleDeg": -5
+     },
+     "block-6": {
+      "angleDeg": -5
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "stem-bark": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "wettedness": 0.4
+      },
+      "leaf-face": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "wettedness": 0.4
+      },
+      "leaf-core": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "wettedness": 0.4
+      }
+     },
+     "emitters": {
+      "transpiration-face": 0.5,
+      "transpiration-core": 0.5
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-block-1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 1",
+       "de": "Winddruck auf Geschnittener Laubblock 1"
+      },
+      "bone": "block-1",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     },
+     {
+      "id": "wind-block-2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 2",
+       "de": "Winddruck auf Geschnittener Laubblock 2"
+      },
+      "bone": "block-2",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     },
+     {
+      "id": "wind-block-3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 3",
+       "de": "Winddruck auf Geschnittener Laubblock 3"
+      },
+      "bone": "block-3",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     },
+     {
+      "id": "wind-block-4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 4",
+       "de": "Winddruck auf Geschnittener Laubblock 4"
+      },
+      "bone": "block-4",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     },
+     {
+      "id": "wind-block-5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 5",
+       "de": "Winddruck auf Geschnittener Laubblock 5"
+      },
+      "bone": "block-5",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     },
+     {
+      "id": "wind-block-6",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on clipped foliage block 6",
+       "de": "Winddruck auf Geschnittener Laubblock 6"
+      },
+      "bone": "block-6",
+      "x": 0.73,
+      "y": 0,
+      "fxN": 56,
+      "fyN": 0,
+      "source": "literature",
+      "reference": "vogel-1989"
+     }
+    ]
+   },
+   {
+    "id": "snow",
+    "title": {
+     "en": "Snow on the clipped top",
+     "de": "Schnee auf der geschnittenen Oberseite"
+    },
+    "description": {
+     "en": "A flat clipped top collects snow: 0.5 kN/m2 on the 0.3 m2 top area of each block gives 150 N per block (EN 1991-1-3 order of magnitude for a settled snow cover of about 0.15 m, authored estimate); wind is calm.",
+     "de": "Eine flache geschnittene Oberseite sammelt Schnee: 0,5 kN/m2 auf die 0,3 m2 große Oberseite jedes Blocks ergeben 150 N je Block (Größenordnung nach EN 1991-1-3 für eine gesetzte Schneedecke von etwa 0,15 m, Schätzung); Windstille."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "stem-bark": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "wettedness": 0.3
+      },
+      "leaf-face": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "wettedness": 0.5
+      },
+      "leaf-core": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "wettedness": 0.5
+      }
+     },
+     "emitters": {
+      "transpiration-face": 0,
+      "transpiration-core": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "snow-block-1",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 1",
+       "de": "Schnee auf Geschnittener Laubblock 1"
+      },
+      "bone": "block-1",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "snow-block-2",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 2",
+       "de": "Schnee auf Geschnittener Laubblock 2"
+      },
+      "bone": "block-2",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "snow-block-3",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 3",
+       "de": "Schnee auf Geschnittener Laubblock 3"
+      },
+      "bone": "block-3",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "snow-block-4",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 4",
+       "de": "Schnee auf Geschnittener Laubblock 4"
+      },
+      "bone": "block-4",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "snow-block-5",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 5",
+       "de": "Schnee auf Geschnittener Laubblock 5"
+      },
+      "bone": "block-5",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "snow-block-6",
+      "kind": "snow",
+      "title": {
+       "en": "Snow on clipped foliage block 6",
+       "de": "Schnee auf Geschnittener Laubblock 6"
+      },
+      "bone": "block-6",
+      "x": 1.45,
+      "y": 0,
+      "fxN": 0,
+      "fyN": -150,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "wind-sway",
+    "title": {
+     "en": "Wind sway",
+     "de": "Windschwingung"
+    },
+    "description": {
+     "en": "A deterministic 1.6 s cycle (stiff panels, estimated 0.6 Hz) about the fresh-breeze lean: each block flutters by 1 degree with a small phase offset along the row so the clipped face ripples.",
+     "de": "Ein deterministischer Zyklus von 1,6 s (steife Tafeln, geschätzt 0,6 Hz) um die Neigung der frischen Brise: Jeder Block flattert um 1 Grad mit kleinem Phasenversatz entlang der Reihe, sodass die geschnittene Fläche wellt."
+    },
+    "durationS": 1.6,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.07
+       },
+       "stem-2": {
+        "angleDeg": -1.14
+       },
+       "stem-3": {
+        "angleDeg": -1.21
+       },
+       "stem-4": {
+        "angleDeg": -1.25
+       },
+       "stem-5": {
+        "angleDeg": -1.29
+       },
+       "stem-6": {
+        "angleDeg": -1.3
+       },
+       "block-1": {
+        "angleDeg": -3.14
+       },
+       "block-2": {
+        "angleDeg": -3.34
+       },
+       "block-3": {
+        "angleDeg": -3.47
+       },
+       "block-4": {
+        "angleDeg": -3.5
+       },
+       "block-5": {
+        "angleDeg": -3.43
+       },
+       "block-6": {
+        "angleDeg": -3.27
+       }
+      }
+     },
+     {
+      "t": 0.2,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.85
+       },
+       "stem-2": {
+        "angleDeg": -0.92
+       },
+       "stem-3": {
+        "angleDeg": -0.99
+       },
+       "stem-4": {
+        "angleDeg": -1.07
+       },
+       "stem-5": {
+        "angleDeg": -1.14
+       },
+       "stem-6": {
+        "angleDeg": -1.2
+       },
+       "block-1": {
+        "angleDeg": -2.41
+       },
+       "block-2": {
+        "angleDeg": -2.72
+       },
+       "block-3": {
+        "angleDeg": -3.01
+       },
+       "block-4": {
+        "angleDeg": -3.25
+       },
+       "block-5": {
+        "angleDeg": -3.42
+       },
+       "block-6": {
+        "angleDeg": -3.5
+       }
+      }
+     },
+     {
+      "t": 0.4,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.71
+       },
+       "stem-2": {
+        "angleDeg": -0.74
+       },
+       "stem-3": {
+        "angleDeg": -0.78
+       },
+       "stem-4": {
+        "angleDeg": -0.84
+       },
+       "stem-5": {
+        "angleDeg": -0.91
+       },
+       "stem-6": {
+        "angleDeg": -0.98
+       },
+       "block-1": {
+        "angleDeg": -1.73
+       },
+       "block-2": {
+        "angleDeg": -1.96
+       },
+       "block-3": {
+        "angleDeg": -2.25
+       },
+       "block-4": {
+        "angleDeg": -2.56
+       },
+       "block-5": {
+        "angleDeg": -2.87
+       },
+       "block-6": {
+        "angleDeg": -3.14
+       }
+      }
+     },
+     {
+      "t": 0.6000000000000001,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.74
+       },
+       "stem-2": {
+        "angleDeg": -0.71
+       },
+       "stem-3": {
+        "angleDeg": -0.7
+       },
+       "stem-4": {
+        "angleDeg": -0.71
+       },
+       "stem-5": {
+        "angleDeg": -0.73
+       },
+       "stem-6": {
+        "angleDeg": -0.77
+       },
+       "block-1": {
+        "angleDeg": -1.5
+       },
+       "block-2": {
+        "angleDeg": -1.52
+       },
+       "block-3": {
+        "angleDeg": -1.64
+       },
+       "block-4": {
+        "angleDeg": -1.84
+       },
+       "block-5": {
+        "angleDeg": -2.1
+       },
+       "block-6": {
+        "angleDeg": -2.41
+       }
+      }
+     },
+     {
+      "t": 0.8,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.93
+       },
+       "stem-2": {
+        "angleDeg": -0.86
+       },
+       "stem-3": {
+        "angleDeg": -0.79
+       },
+       "stem-4": {
+        "angleDeg": -0.75
+       },
+       "stem-5": {
+        "angleDeg": -0.71
+       },
+       "stem-6": {
+        "angleDeg": -0.7
+       },
+       "block-1": {
+        "angleDeg": -1.86
+       },
+       "block-2": {
+        "angleDeg": -1.66
+       },
+       "block-3": {
+        "angleDeg": -1.53
+       },
+       "block-4": {
+        "angleDeg": -1.5
+       },
+       "block-5": {
+        "angleDeg": -1.57
+       },
+       "block-6": {
+        "angleDeg": -1.73
+       }
+      }
+     },
+     {
+      "t": 1,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.15
+       },
+       "stem-2": {
+        "angleDeg": -1.08
+       },
+       "stem-3": {
+        "angleDeg": -1.01
+       },
+       "stem-4": {
+        "angleDeg": -0.93
+       },
+       "stem-5": {
+        "angleDeg": -0.86
+       },
+       "stem-6": {
+        "angleDeg": -0.8
+       },
+       "block-1": {
+        "angleDeg": -2.59
+       },
+       "block-2": {
+        "angleDeg": -2.28
+       },
+       "block-3": {
+        "angleDeg": -1.99
+       },
+       "block-4": {
+        "angleDeg": -1.75
+       },
+       "block-5": {
+        "angleDeg": -1.58
+       },
+       "block-6": {
+        "angleDeg": -1.5
+       }
+      }
+     },
+     {
+      "t": 1.2000000000000002,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.29
+       },
+       "stem-2": {
+        "angleDeg": -1.26
+       },
+       "stem-3": {
+        "angleDeg": -1.22
+       },
+       "stem-4": {
+        "angleDeg": -1.16
+       },
+       "stem-5": {
+        "angleDeg": -1.09
+       },
+       "stem-6": {
+        "angleDeg": -1.02
+       },
+       "block-1": {
+        "angleDeg": -3.27
+       },
+       "block-2": {
+        "angleDeg": -3.04
+       },
+       "block-3": {
+        "angleDeg": -2.75
+       },
+       "block-4": {
+        "angleDeg": -2.44
+       },
+       "block-5": {
+        "angleDeg": -2.13
+       },
+       "block-6": {
+        "angleDeg": -1.86
+       }
+      }
+     },
+     {
+      "t": 1.4000000000000001,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.26
+       },
+       "stem-2": {
+        "angleDeg": -1.29
+       },
+       "stem-3": {
+        "angleDeg": -1.3
+       },
+       "stem-4": {
+        "angleDeg": -1.29
+       },
+       "stem-5": {
+        "angleDeg": -1.27
+       },
+       "stem-6": {
+        "angleDeg": -1.23
+       },
+       "block-1": {
+        "angleDeg": -3.5
+       },
+       "block-2": {
+        "angleDeg": -3.48
+       },
+       "block-3": {
+        "angleDeg": -3.36
+       },
+       "block-4": {
+        "angleDeg": -3.16
+       },
+       "block-5": {
+        "angleDeg": -2.9
+       },
+       "block-6": {
+        "angleDeg": -2.59
+       }
+      }
+     },
+     {
+      "t": 1.6,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.07
+       },
+       "stem-2": {
+        "angleDeg": -1.14
+       },
+       "stem-3": {
+        "angleDeg": -1.21
+       },
+       "stem-4": {
+        "angleDeg": -1.25
+       },
+       "stem-5": {
+        "angleDeg": -1.29
+       },
+       "stem-6": {
+        "angleDeg": -1.3
+       },
+       "block-1": {
+        "angleDeg": -3.14
+       },
+       "block-2": {
+        "angleDeg": -3.34
+       },
+       "block-3": {
+        "angleDeg": -3.47
+       },
+       "block-4": {
+        "angleDeg": -3.5
+       },
+       "block-5": {
+        "angleDeg": -3.43
+       },
+       "block-6": {
+        "angleDeg": -3.27
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "sway",
+      "fromS": 0,
+      "toS": 1.6,
+      "title": {
+       "en": "Sway cycle",
+       "de": "Schwingungszyklus"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "motion",
+      "title": {
+       "en": "Cycle start at mean lean",
+       "de": "Zyklusbeginn in mittlerer Neigung"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "emitter:transpiration-face",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.8,
+        "v": 0.9
+       },
+       {
+        "t": 1.6,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:transpiration-core",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.8,
+        "v": 0.9
+       },
+       {
+        "t": 1.6,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "gust",
+    "title": {
+     "en": "Gust",
+     "de": "Windböe"
+    },
+    "description": {
+     "en": "A single 8 s gust: the wind-load tracks rise from 5 % to 2.75 times the fresh-breeze load at 2.5 s (EN 1991-1-4 peak pressure with Iv 0.25) and decay; the blocks lean up to 70 % of the gale lean.",
+     "de": "Eine einzelne Böe über 8 s: Die Windlast-Spuren steigen bei 2,5 s von 5 % auf das 2,75-fache der Last der frischen Brise (Spitzendruck nach EN 1991-1-4 mit Iv 0,25) und klingen ab; die Blöcke neigen sich bis zu 70 % der Sturmneigung."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.1
+       },
+       "stem-2": {
+        "angleDeg": -0.1
+       },
+       "stem-3": {
+        "angleDeg": -0.1
+       },
+       "stem-4": {
+        "angleDeg": -0.1
+       },
+       "stem-5": {
+        "angleDeg": -0.1
+       },
+       "stem-6": {
+        "angleDeg": -0.1
+       },
+       "block-1": {
+        "angleDeg": -0.25
+       },
+       "block-2": {
+        "angleDeg": -0.25
+       },
+       "block-3": {
+        "angleDeg": -0.25
+       },
+       "block-4": {
+        "angleDeg": -0.25
+       },
+       "block-5": {
+        "angleDeg": -0.25
+       },
+       "block-6": {
+        "angleDeg": -0.25
+       }
+      }
+     },
+     {
+      "t": 1.2,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.6
+       },
+       "stem-2": {
+        "angleDeg": -0.6
+       },
+       "stem-3": {
+        "angleDeg": -0.6
+       },
+       "stem-4": {
+        "angleDeg": -0.6
+       },
+       "stem-5": {
+        "angleDeg": -0.6
+       },
+       "stem-6": {
+        "angleDeg": -0.6
+       },
+       "block-1": {
+        "angleDeg": -1.5
+       },
+       "block-2": {
+        "angleDeg": -1.5
+       },
+       "block-3": {
+        "angleDeg": -1.5
+       },
+       "block-4": {
+        "angleDeg": -1.5
+       },
+       "block-5": {
+        "angleDeg": -1.5
+       },
+       "block-6": {
+        "angleDeg": -1.5
+       }
+      }
+     },
+     {
+      "t": 2.5,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -1.4
+       },
+       "stem-2": {
+        "angleDeg": -1.4
+       },
+       "stem-3": {
+        "angleDeg": -1.4
+       },
+       "stem-4": {
+        "angleDeg": -1.4
+       },
+       "stem-5": {
+        "angleDeg": -1.4
+       },
+       "stem-6": {
+        "angleDeg": -1.4
+       },
+       "block-1": {
+        "angleDeg": -3.5
+       },
+       "block-2": {
+        "angleDeg": -3.5
+       },
+       "block-3": {
+        "angleDeg": -3.5
+       },
+       "block-4": {
+        "angleDeg": -3.5
+       },
+       "block-5": {
+        "angleDeg": -3.5
+       },
+       "block-6": {
+        "angleDeg": -3.5
+       }
+      }
+     },
+     {
+      "t": 3.6,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.9
+       },
+       "stem-2": {
+        "angleDeg": -0.9
+       },
+       "stem-3": {
+        "angleDeg": -0.9
+       },
+       "stem-4": {
+        "angleDeg": -0.9
+       },
+       "stem-5": {
+        "angleDeg": -0.9
+       },
+       "stem-6": {
+        "angleDeg": -0.9
+       },
+       "block-1": {
+        "angleDeg": -2.25
+       },
+       "block-2": {
+        "angleDeg": -2.25
+       },
+       "block-3": {
+        "angleDeg": -2.25
+       },
+       "block-4": {
+        "angleDeg": -2.25
+       },
+       "block-5": {
+        "angleDeg": -2.25
+       },
+       "block-6": {
+        "angleDeg": -2.25
+       }
+      }
+     },
+     {
+      "t": 5,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.4
+       },
+       "stem-2": {
+        "angleDeg": -0.4
+       },
+       "stem-3": {
+        "angleDeg": -0.4
+       },
+       "stem-4": {
+        "angleDeg": -0.4
+       },
+       "stem-5": {
+        "angleDeg": -0.4
+       },
+       "stem-6": {
+        "angleDeg": -0.4
+       },
+       "block-1": {
+        "angleDeg": -1
+       },
+       "block-2": {
+        "angleDeg": -1
+       },
+       "block-3": {
+        "angleDeg": -1
+       },
+       "block-4": {
+        "angleDeg": -1
+       },
+       "block-5": {
+        "angleDeg": -1
+       },
+       "block-6": {
+        "angleDeg": -1
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "windy",
+      "ease": "smooth",
+      "bones": {
+       "stem-1": {
+        "angleDeg": -0.1
+       },
+       "stem-2": {
+        "angleDeg": -0.1
+       },
+       "stem-3": {
+        "angleDeg": -0.1
+       },
+       "stem-4": {
+        "angleDeg": -0.1
+       },
+       "stem-5": {
+        "angleDeg": -0.1
+       },
+       "stem-6": {
+        "angleDeg": -0.1
+       },
+       "block-1": {
+        "angleDeg": -0.25
+       },
+       "block-2": {
+        "angleDeg": -0.25
+       },
+       "block-3": {
+        "angleDeg": -0.25
+       },
+       "block-4": {
+        "angleDeg": -0.25
+       },
+       "block-5": {
+        "angleDeg": -0.25
+       },
+       "block-6": {
+        "angleDeg": -0.25
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "rise",
+      "fromS": 0,
+      "toS": 2.5,
+      "title": {
+       "en": "Gust front",
+       "de": "Böenfront"
+      }
+     },
+     {
+      "id": "peak",
+      "fromS": 2.5,
+      "toS": 3.6,
+      "title": {
+       "en": "Peak",
+       "de": "Spitze"
+      }
+     },
+     {
+      "id": "decay",
+      "fromS": 3.6,
+      "toS": 8,
+      "title": {
+       "en": "Decay and recovery",
+       "de": "Abklingen und Erholung"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.5,
+      "kind": "load-on",
+      "title": {
+       "en": "Peak gust load",
+       "de": "Böenspitze"
+      }
+     },
+     {
+      "t": 5,
+      "kind": "load-off",
+      "title": {
+       "en": "Load below the mean again",
+       "de": "Last wieder unter dem Mittelwert"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:wind-block-1",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "load:wind-block-2",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "load:wind-block-3",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "load:wind-block-4",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "load:wind-block-5",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "load:wind-block-6",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1.2,
+        "v": 0.45
+       },
+       {
+        "t": 2.5,
+        "v": 2.75
+       },
+       {
+        "t": 3.6,
+        "v": 1.4
+       },
+       {
+        "t": 5,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.05
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "diurnal-transpiration",
+    "title": {
+     "en": "Day of transpiration",
+     "de": "Transpirationstag"
+    },
+    "description": {
+     "en": "A 24 h cycle compressed to 24 s (1 s = 1 h, 00:00 to 24:00), calm weather. The sunlit fraction of every region and the transpiration strength follow the sun, stomata nearly closed at night; leaf and bark temperatures are not authored but follow from the thermal solver.",
+     "de": "Ein 24-h-Zyklus auf 24 s gerafft (1 s = 1 h, 00:00 bis 24:00) bei ruhigem Wetter. Der besonnte Anteil jeder Region und die Transpirationsstärke folgen der Sonne, nachts sind die Stomata fast geschlossen; Blatt- und Rindentemperaturen werden nicht vorgegeben, sondern folgen aus dem thermischen Löser."
+    },
+    "durationS": 24,
+    "fps": 10,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "calm",
+      "ease": "smooth"
+     },
+     {
+      "t": 12,
+      "pose": "calm",
+      "ease": "smooth"
+     },
+     {
+      "t": 24,
+      "pose": "calm",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "night",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Night",
+       "de": "Nacht"
+      }
+     },
+     {
+      "id": "morning",
+      "fromS": 6,
+      "toS": 12,
+      "title": {
+       "en": "Morning to noon",
+       "de": "Morgen bis Mittag"
+      }
+     },
+     {
+      "id": "afternoon",
+      "fromS": 12,
+      "toS": 18,
+      "title": {
+       "en": "Afternoon",
+       "de": "Nachmittag"
+      }
+     },
+     {
+      "id": "evening",
+      "fromS": 18,
+      "toS": 24,
+      "title": {
+       "en": "Evening and night",
+       "de": "Abend und Nacht"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6,
+      "kind": "thermal",
+      "title": {
+       "en": "Sunrise",
+       "de": "Sonnenaufgang"
+      }
+     },
+     {
+      "t": 12,
+      "kind": "thermal",
+      "title": {
+       "en": "Solar noon, peak transpiration",
+       "de": "Sonnenhöchststand, maximale Transpiration"
+      }
+     },
+     {
+      "t": 18,
+      "kind": "thermal",
+      "title": {
+       "en": "Sunset",
+       "de": "Sonnenuntergang"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "emitter:transpiration-face",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.03
+       },
+       {
+        "t": 5,
+        "v": 0.05
+       },
+       {
+        "t": 7,
+        "v": 0.3
+       },
+       {
+        "t": 9,
+        "v": 0.7
+       },
+       {
+        "t": 12,
+        "v": 1
+       },
+       {
+        "t": 15,
+        "v": 0.9
+       },
+       {
+        "t": 18,
+        "v": 0.35
+       },
+       {
+        "t": 20,
+        "v": 0.08
+       },
+       {
+        "t": 24,
+        "v": 0.03
+       }
+      ]
+     },
+     {
+      "target": "emitter:transpiration-core",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.03
+       },
+       {
+        "t": 5,
+        "v": 0.05
+       },
+       {
+        "t": 7,
+        "v": 0.35
+       },
+       {
+        "t": 9,
+        "v": 0.75
+       },
+       {
+        "t": 12,
+        "v": 1
+       },
+       {
+        "t": 15,
+        "v": 0.85
+       },
+       {
+        "t": 18,
+        "v": 0.3
+       },
+       {
+        "t": 20,
+        "v": 0.06
+       },
+       {
+        "t": 24,
+        "v": 0.03
+       }
+      ]
+     },
+     {
+      "target": "region:stem-bark:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 0
+       },
+       {
+        "t": 8,
+        "v": 0.009
+       },
+       {
+        "t": 10,
+        "v": 0.016
+       },
+       {
+        "t": 12,
+        "v": 0.02
+       },
+       {
+        "t": 14,
+        "v": 0.016
+       },
+       {
+        "t": 16,
+        "v": 0.007
+       },
+       {
+        "t": 18,
+        "v": 0
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "region:leaf-face:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 0
+       },
+       {
+        "t": 8,
+        "v": 0.214
+       },
+       {
+        "t": 10,
+        "v": 0.393
+       },
+       {
+        "t": 12,
+        "v": 0.5
+       },
+       {
+        "t": 14,
+        "v": 0.393
+       },
+       {
+        "t": 16,
+        "v": 0.179
+       },
+       {
+        "t": 18,
+        "v": 0
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "region:leaf-core:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 0
+       },
+       {
+        "t": 8,
+        "v": 0.021
+       },
+       {
+        "t": 10,
+        "v": 0.039
+       },
+       {
+        "t": 12,
+        "v": 0.05
+       },
+       {
+        "t": 14,
+        "v": 0.039
+       },
+       {
+        "t": 16,
+        "v": 0.018
+       },
+       {
+        "t": 18,
+        "v": 0
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 22,
+    "meanRadiantTempC": 25,
+    "relativeHumidity": 0.55,
+    "windMS": 2,
+    "windDirectionDeg": 0,
+    "solarWM2": 700,
+    "pressurePa": 101325,
+    "diffuseFraction": 0.15
+   },
+   "regions": [
+    {
+     "id": "stem-bark",
+     "title": {
+      "en": "Stems at the base",
+      "de": "Stämme am Fuß"
+     },
+     "kind": "bark",
+     "model": "passive",
+     "material": "hornbeam-bark",
+     "areaM2": 0.8,
+     "characteristicLengthM": 0.04,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [],
+     "heatCapacityJM2K": 13000,
+     "source": "authored-estimate",
+     "reference": "wood-handbook-2021"
+    },
+    {
+     "id": "leaf-face",
+     "title": {
+      "en": "Leaves of the outer hedge face",
+      "de": "Blätter der äußeren Heckenfläche"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "hornbeam-leaf",
+     "areaM2": 16,
+     "characteristicLengthM": 0.07,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 900,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.0045,
+      "leafAreaIndex": 7.27,
+      "photosynthesis": "c3"
+     },
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    },
+    {
+     "id": "leaf-core",
+     "title": {
+      "en": "Shaded leaves in the hedge core",
+      "de": "Beschattete Blätter im Heckenkern"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "hornbeam-leaf",
+     "areaM2": 14,
+     "characteristicLengthM": 0.07,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.1,
+     "layers": [],
+     "heatCapacityJM2K": 900,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.0025,
+      "leafAreaIndex": 6.36,
+      "photosynthesis": "c3"
+     },
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "transpiration-face",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the hedge face (distributed over the crown)",
+      "de": "Transpiration der Heckenaußenseite (über die Krone verteilt)"
+     },
+     "anchor": "tp-face-1",
+     "anchors": [
+      "tp-face-1",
+      "tp-face-2",
+      "tp-face-3",
+      "tp-face-4",
+      "tp-face-5",
+      "tp-face-6"
+     ],
+     "directionDeg": 0,
+     "diameterM": 0.6,
+     "region": "leaf-face",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    },
+    {
+     "id": "transpiration-core",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the shaded hedge core (distributed over the crown)",
+      "de": "Transpiration des beschatteten Heckenkerns (über die Krone verteilt)"
+     },
+     "anchor": "tp-core-1",
+     "anchors": [
+      "tp-core-1",
+      "tp-core-2",
+      "tp-core-3",
+      "tp-core-4",
+      "tp-core-5",
+      "tp-core-6"
+     ],
+     "directionDeg": 0,
+     "diameterM": 0.5,
+     "region": "leaf-core",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Leaf regions use one-sided leaf area; the leaf area index is that area over the crown ground projection. The maximum stomatal conductance is an authored estimate for the species type, guided by Jones (2014); an earlier citation of published conductance maxima could not be verified and was removed. Photosynthesis type: C3. Aperture and night closure are the engine's business, not authored here.",
+     "de": "Blattregionen verwenden die einseitige Blattfläche; der Blattflächenindex ist diese Fläche bezogen auf die Kronenprojektion am Boden. Die maximale Spaltöffnungsleitfähigkeit ist eine Autorenschätzung für den Artentyp, angelehnt an Jones (2014); eine frühere Angabe veröffentlichter Leitfähigkeitsmaxima ließ sich nicht prüfen und wurde entfernt. Photosynthesetyp: C3. Öffnung und nächtliches Schließen sind Sache der Engine und werden hier nicht vorgegeben."
+    },
+    {
+     "en": "Bark, stems and similar regions are passive. Their areal heat capacity is the volumetric heat capacity of green wood (about 2.7 MJ per m3 and K) times an effective depth of 1 to 3 cm (a quarter of the stem diameter for thin members), an authored estimate guided by the Wood Handbook. No surface temperature is authored.",
+     "de": "Rinde, Stämme und ähnliche Regionen sind passiv. Ihre flächenbezogene Wärmekapazität ist die volumetrische Wärmekapazität von frischem Holz (etwa 2,7 MJ je m3 und K) mal einer wirksamen Tiefe von 1 bis 3 cm (ein Viertel des Durchmessers bei dünnen Gliedern), eine Autorenschätzung angelehnt an das Wood Handbook. Es werden keine Oberflächentemperaturen vorgegeben."
+    },
+    {
+     "en": "Transpiration emitters release the latent flux of their foliage region as vapour, spread over at least five anchors across the crown; the direction is the vertical measured in the frame of the first anchor's bone, since the release is diffuse. Sun and shade foliage are separate regions where the crown has an inner shaded mass; otherwise the sunlit fraction is a crown mean authored per pose.",
+     "de": "Transpirationsemitter geben den latenten Strom ihrer Laubregion als Dampf ab, verteilt auf mindestens fünf Anker über die Krone; die Richtung ist die Senkrechte im Bezugssystem des Knochens des ersten Ankers, da die Abgabe diffus ist. Sonnen- und Schattenlaub sind getrennte Regionen, wo die Krone eine innere Schattenmasse hat; sonst ist der besonnte Anteil ein je Pose vorgegebener Kronenmittelwert."
+    }
+   ],
+   "operating": [],
+   "passengers": []
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "base-support"
+   ],
+   "assumptions": [
+    {
+     "en": "One rigid body per evaluated pose, fixed at the planting strip; wind drag acts at the mid-height of each block, snow on the block tops, gravity on all bone masses. The hedge is a bodily short structure so base moments stay below 0.2 kN m even in a gale. Dynamic amplification and root-soil failure are not modelled.",
+     "de": "Ein starrer Körper je ausgewerteter Pose, am Pflanzstreifen eingespannt; Winddruck wirkt in der Mittelhöhe jedes Blocks, Schnee auf den Blockoberseiten, Schwerkraft auf allen Knochenmassen. Die Hecke ist ein niedriges Bauwerk, sodass die Fußmomente selbst im Sturm unter 0,2 kNm bleiben. Dynamische Überhöhung und Wurzel-Boden-Versagen werden nicht modelliert."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "calm",
+   "defaultClip": "wind-sway",
+   "viewpoints": [
+    "elevation"
+   ],
+   "defaultScale": 50
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored",
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "shade-lines",
+      "title": {
+       "en": "Shade line hatch",
+       "de": "Schattenschraffur"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.8,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "strip",
+       "bone": "root-plate",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         0.02
+        ],
+        [
+         3.05,
+         0.02
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "block-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 4.51,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.41 0.32 Q 1.56 0.24 1.46 0.16 Q 1.53 0.08 1.52 0 Q 1.52 -0.08 1.49 -0.16 Q 1.56 -0.24 1.43 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.788
+      },
+      {
+       "id": "stem-1-a",
+       "bone": "stem-1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.393
+      },
+      {
+       "id": "stem-1-b",
+       "bone": "stem-1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.537
+      },
+      {
+       "id": "stem-1-bark",
+       "bone": "stem-1",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.839
+      },
+      {
+       "id": "block-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 4.52,
+       "filled": true,
+       "tone": 0.46,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.44 0.32 Q 1.52 0.24 1.51 0.16 Q 1.56 0.08 1.49 0 Q 1.57 -0.08 1.45 -0.16 Q 1.53 -0.24 1.48 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.8
+      },
+      {
+       "id": "stem-2-a",
+       "bone": "stem-2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.337
+      },
+      {
+       "id": "stem-2-b",
+       "bone": "stem-2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.608
+      },
+      {
+       "id": "stem-2-bark",
+       "bone": "stem-2",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.761
+      },
+      {
+       "id": "block-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 4.53,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.41 0.32 Q 1.57 0.24 1.49 0.16 Q 1.53 0.08 1.47 0 Q 1.55 -0.08 1.5 -0.16 Q 1.51 -0.24 1.46 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.8
+      },
+      {
+       "id": "stem-3-a",
+       "bone": "stem-3",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.393
+      },
+      {
+       "id": "stem-3-b",
+       "bone": "stem-3",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.553
+      },
+      {
+       "id": "stem-3-bark",
+       "bone": "stem-3",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.882
+      },
+      {
+       "id": "block-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 4.54,
+       "filled": true,
+       "tone": 0.46,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.45 0.32 Q 1.52 0.24 1.46 0.16 Q 1.57 0.08 1.51 0 Q 1.52 -0.08 1.45 -0.16 Q 1.55 -0.24 1.43 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.8
+      },
+      {
+       "id": "stem-4-a",
+       "bone": "stem-4",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.409
+      },
+      {
+       "id": "stem-4-b",
+       "bone": "stem-4",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.558
+      },
+      {
+       "id": "stem-4-bark",
+       "bone": "stem-4",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.81
+      },
+      {
+       "id": "block-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 4.55,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.41 0.32 Q 1.56 0.24 1.48 0.16 Q 1.53 0.08 1.52 0 Q 1.54 -0.08 1.49 -0.16 Q 1.56 -0.24 1.45 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.8
+      },
+      {
+       "id": "stem-5-a",
+       "bone": "stem-5",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.393
+      },
+      {
+       "id": "stem-5-b",
+       "bone": "stem-5",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.582
+      },
+      {
+       "id": "stem-5-bark",
+       "bone": "stem-5",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.781
+      },
+      {
+       "id": "block-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 4.56,
+       "filled": true,
+       "tone": 0.46,
+       "kind": "path",
+       "d": "M -0.01 0.32 L 1.44 0.32 Q 1.52 0.24 1.5 0.16 Q 1.56 0.08 1.47 0 Q 1.56 -0.08 1.45 -0.16 Q 1.51 -0.24 1.47 -0.32 L -0.01 -0.32 Z",
+       "region": "leaf-face",
+       "material": "hornbeam-leaf",
+       "penMm": 1.8
+      },
+      {
+       "id": "stem-6-a",
+       "bone": "stem-6",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M -0.0025 0.0549 C 0.1311 0.0657 0.2647 0.0766 0.3983 0.0874 L 0.4017 0.0526 C 0.2687 0.0368 0.1356 0.0209 0.0025 0.0051 Z",
+       "penMm": 0.337
+      },
+      {
+       "id": "stem-6-b",
+       "bone": "stem-6",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "path",
+       "region": "stem-bark",
+       "material": "hornbeam-bark",
+       "d": "M 0.0025 -0.0051 C 0.1356 -0.0209 0.2687 -0.0368 0.4017 -0.0526 L 0.3983 -0.0874 C 0.2647 -0.0766 0.1311 -0.0657 -0.0025 -0.0549 Z",
+       "penMm": 0.545
+      },
+      {
+       "id": "stem-6-bark",
+       "bone": "stem-6",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.1,
+       "kind": "path",
+       "d": "M 0.08 0.02 Q 0.13 0.01 0.18 0.02 M 0.2 -0.05 Q 0.25 -0.04 0.3 -0.05 M 0.28 0.06 Q 0.3197 0.0506 0.36 0.0572",
+       "penMm": 0.846
+      },
+      {
+       "id": "core-gap",
+       "bone": "block-3",
+       "role": "detail",
+       "z": 4.59,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "region": "leaf-core",
+       "material": "hornbeam-leaf",
+       "d": "M 0.55 0.15 Q 0.4949 -0.1136 0.6368 -0.3424 M 1.05 0.1 Q 1.1078 -0.1353 0.9874 -0.3456 M 0.25 -0.1 Q 0.15 -0.35 0.25 -0.6",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-1-arcs",
+       "bone": "block-1",
+       "role": "detail",
+       "z": 4.52,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 0.196 Q 0.8979 0.0014 1.0629 -0.1141 M 1.15 -0.028 Q 1.2251 -0.2345 1.0568 -0.3757 M 0.75 -0.168 Q 0.7974 0.0089 0.6474 0.1139 M 0.4 0.084 Q 0.4928 -0.1151 0.3375 -0.2705 M 0.3 -0.126 Q 0.2374 -0.2981 0.3776 -0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-1-leaves",
+       "bone": "block-1",
+       "role": "texture",
+       "z": 4.53,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 0.266 Q 0.587 0.1805 0.6675 0.1491 M 1.2 0.21 Q 1.2246 0.1372 1.159 0.0972 M 0.75 0.126 Q 0.7815 0.0455 0.8669 0.0585 M 1.35 0.028 Q 1.4077 -0.0228 1.3708 -0.0902 M 0.85 -0.056 Q 0.7652 -0.073 0.7632 -0.1594 M 1.25 -0.14 Q 1.3189 -0.1741 1.3007 -0.2488 M 0.95 -0.238 Q 0.8851 -0.2951 0.9266 -0.3709 M 0.45 -0.21 Q 0.5268 -0.2118 0.5419 -0.2871 M 0.15 -0.084 Q 0.0695 -0.1155 0.0825 -0.2009 M 0.25 0.042 Q 0.3119 -0.0035 0.2811 -0.0739 M 0.25 0.168 Q 0.252 0.0816 0.3368 0.0646 M 0.6 -0.014 Q 0.572 -0.0856 0.4961 -0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-1-fine",
+       "bone": "block-1",
+       "role": "texture",
+       "z": 4.54,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 0.308 Q 0.8459 0.2615 0.8924 0.2574 M 0.4 0.238 Q 0.4243 0.2032 0.3896 0.1789 M 1.4 0.154 Q 1.3879 0.1089 1.433 0.0968 M 0.6 0.07 Q 0.6385 0.0879 0.6564 0.0495 M 1.05 -0.028 Q 1.0049 -0.0401 1.017 -0.0852 M 1.45 -0.126 Q 1.4867 -0.1472 1.4655 -0.184 M 1.05 -0.196 Q 1.0035 -0.1919 0.9994 -0.2384 M 0.6 -0.266 Q 0.6385 -0.2839 0.6205 -0.3224 M 0.25 -0.126 Q 0.2621 -0.1711 0.3072 -0.159 M 0 0.028 Q 0.0179 -0.0105 -0.0205 -0.0284 M 0.1 0.14 Q 0.0919 0.094 0.1379 0.0859 M 0.75 -0.084 Q 0.7848 -0.1083 0.7604 -0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-2-arcs",
+       "bone": "block-2",
+       "role": "detail",
+       "z": 4.53,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 -0.196 Q 1.115 -0.0805 1.0629 0.1141 M 1.15 0.028 Q 0.9817 0.1693 1.0568 0.3757 M 0.75 0.168 Q 0.6 0.063 0.6474 -0.1139 M 0.4 -0.084 Q 0.2447 0.0714 0.3375 0.2705 M 0.3 0.126 Q 0.4402 0.2437 0.3776 0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-2-leaves",
+       "bone": "block-2",
+       "role": "texture",
+       "z": 4.54,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 -0.266 Q 0.6805 -0.2345 0.6675 -0.1491 M 1.2 -0.21 Q 1.1344 -0.17 1.159 -0.0972 M 0.75 -0.126 Q 0.8355 -0.139 0.8669 -0.0585 M 1.35 -0.028 Q 1.3131 0.0394 1.3708 0.0902 M 0.85 0.056 Q 0.848 0.1424 0.7632 0.1594 M 1.25 0.14 Q 1.2319 0.2147 1.3007 0.2488 M 0.95 0.238 Q 0.9915 0.3139 0.9266 0.3709 M 0.45 0.21 Q 0.4651 0.2853 0.5419 0.2871 M 0.15 0.084 Q 0.163 0.1695 0.0825 0.2009 M 0.25 -0.042 Q 0.2192 0.0284 0.2811 0.0739 M 0.25 -0.168 Q 0.3348 -0.151 0.3368 -0.0646 M 0.6 0.014 Q 0.524 0.0024 0.4961 0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-2-fine",
+       "bone": "block-2",
+       "role": "texture",
+       "z": 4.55,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 -0.308 Q 0.8965 -0.3039 0.8924 -0.2574 M 0.4 -0.238 Q 0.3652 -0.2137 0.3896 -0.1789 M 1.4 -0.154 Q 1.4451 -0.1419 1.433 -0.0968 M 0.6 -0.07 Q 0.6179 -0.0315 0.6564 -0.0495 M 1.05 0.028 Q 1.0621 0.0731 1.017 0.0852 M 1.45 0.126 Q 1.4288 0.1627 1.4655 0.184 M 1.05 0.196 Q 1.0459 0.2425 0.9994 0.2384 M 0.6 0.266 Q 0.5821 0.3045 0.6205 0.3224 M 0.25 0.126 Q 0.2951 0.1139 0.3072 0.159 M 0 -0.028 Q -0.0385 -0.0101 -0.0205 0.0284 M 0.1 -0.14 Q 0.146 -0.1319 0.1379 -0.0859 M 0.75 0.084 Q 0.7257 0.1188 0.7604 0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-3-arcs",
+       "bone": "block-3",
+       "role": "detail",
+       "z": 4.54,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 0.196 Q 0.8979 0.0014 1.0629 -0.1141 M 1.15 -0.028 Q 1.2251 -0.2345 1.0568 -0.3757 M 0.75 -0.168 Q 0.7974 0.0089 0.6474 0.1139 M 0.4 0.084 Q 0.4928 -0.1151 0.3375 -0.2705 M 0.3 -0.126 Q 0.2374 -0.2981 0.3776 -0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-3-leaves",
+       "bone": "block-3",
+       "role": "texture",
+       "z": 4.55,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 0.266 Q 0.587 0.1805 0.6675 0.1491 M 1.2 0.21 Q 1.2246 0.1372 1.159 0.0972 M 0.75 0.126 Q 0.7815 0.0455 0.8669 0.0585 M 1.35 0.028 Q 1.4077 -0.0228 1.3708 -0.0902 M 0.85 -0.056 Q 0.7652 -0.073 0.7632 -0.1594 M 1.25 -0.14 Q 1.3189 -0.1741 1.3007 -0.2488 M 0.95 -0.238 Q 0.8851 -0.2951 0.9266 -0.3709 M 0.45 -0.21 Q 0.5268 -0.2118 0.5419 -0.2871 M 0.15 -0.084 Q 0.0695 -0.1155 0.0825 -0.2009 M 0.25 0.042 Q 0.3119 -0.0035 0.2811 -0.0739 M 0.25 0.168 Q 0.252 0.0816 0.3368 0.0646 M 0.6 -0.014 Q 0.572 -0.0856 0.4961 -0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-3-fine",
+       "bone": "block-3",
+       "role": "texture",
+       "z": 4.56,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 0.308 Q 0.8459 0.2615 0.8924 0.2574 M 0.4 0.238 Q 0.4243 0.2032 0.3896 0.1789 M 1.4 0.154 Q 1.3879 0.1089 1.433 0.0968 M 0.6 0.07 Q 0.6385 0.0879 0.6564 0.0495 M 1.05 -0.028 Q 1.0049 -0.0401 1.017 -0.0852 M 1.45 -0.126 Q 1.4867 -0.1472 1.4655 -0.184 M 1.05 -0.196 Q 1.0035 -0.1919 0.9994 -0.2384 M 0.6 -0.266 Q 0.6385 -0.2839 0.6205 -0.3224 M 0.25 -0.126 Q 0.2621 -0.1711 0.3072 -0.159 M 0 0.028 Q 0.0179 -0.0105 -0.0205 -0.0284 M 0.1 0.14 Q 0.0919 0.094 0.1379 0.0859 M 0.75 -0.084 Q 0.7848 -0.1083 0.7604 -0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-4-arcs",
+       "bone": "block-4",
+       "role": "detail",
+       "z": 4.55,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 -0.196 Q 1.115 -0.0805 1.0629 0.1141 M 1.15 0.028 Q 0.9817 0.1693 1.0568 0.3757 M 0.75 0.168 Q 0.6 0.063 0.6474 -0.1139 M 0.4 -0.084 Q 0.2447 0.0714 0.3375 0.2705 M 0.3 0.126 Q 0.4402 0.2437 0.3776 0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-4-leaves",
+       "bone": "block-4",
+       "role": "texture",
+       "z": 4.56,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 -0.266 Q 0.6805 -0.2345 0.6675 -0.1491 M 1.2 -0.21 Q 1.1344 -0.17 1.159 -0.0972 M 0.75 -0.126 Q 0.8355 -0.139 0.8669 -0.0585 M 1.35 -0.028 Q 1.3131 0.0394 1.3708 0.0902 M 0.85 0.056 Q 0.848 0.1424 0.7632 0.1594 M 1.25 0.14 Q 1.2319 0.2147 1.3007 0.2488 M 0.95 0.238 Q 0.9915 0.3139 0.9266 0.3709 M 0.45 0.21 Q 0.4651 0.2853 0.5419 0.2871 M 0.15 0.084 Q 0.163 0.1695 0.0825 0.2009 M 0.25 -0.042 Q 0.2192 0.0284 0.2811 0.0739 M 0.25 -0.168 Q 0.3348 -0.151 0.3368 -0.0646 M 0.6 0.014 Q 0.524 0.0024 0.4961 0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-4-fine",
+       "bone": "block-4",
+       "role": "texture",
+       "z": 4.57,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 -0.308 Q 0.8965 -0.3039 0.8924 -0.2574 M 0.4 -0.238 Q 0.3652 -0.2137 0.3896 -0.1789 M 1.4 -0.154 Q 1.4451 -0.1419 1.433 -0.0968 M 0.6 -0.07 Q 0.6179 -0.0315 0.6564 -0.0495 M 1.05 0.028 Q 1.0621 0.0731 1.017 0.0852 M 1.45 0.126 Q 1.4288 0.1627 1.4655 0.184 M 1.05 0.196 Q 1.0459 0.2425 0.9994 0.2384 M 0.6 0.266 Q 0.5821 0.3045 0.6205 0.3224 M 0.25 0.126 Q 0.2951 0.1139 0.3072 0.159 M 0 -0.028 Q -0.0385 -0.0101 -0.0205 0.0284 M 0.1 -0.14 Q 0.146 -0.1319 0.1379 -0.0859 M 0.75 0.084 Q 0.7257 0.1188 0.7604 0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-5-arcs",
+       "bone": "block-5",
+       "role": "detail",
+       "z": 4.56,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 0.196 Q 0.8979 0.0014 1.0629 -0.1141 M 1.15 -0.028 Q 1.2251 -0.2345 1.0568 -0.3757 M 0.75 -0.168 Q 0.7974 0.0089 0.6474 0.1139 M 0.4 0.084 Q 0.4928 -0.1151 0.3375 -0.2705 M 0.3 -0.126 Q 0.2374 -0.2981 0.3776 -0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-5-leaves",
+       "bone": "block-5",
+       "role": "texture",
+       "z": 4.57,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 0.266 Q 0.587 0.1805 0.6675 0.1491 M 1.2 0.21 Q 1.2246 0.1372 1.159 0.0972 M 0.75 0.126 Q 0.7815 0.0455 0.8669 0.0585 M 1.35 0.028 Q 1.4077 -0.0228 1.3708 -0.0902 M 0.85 -0.056 Q 0.7652 -0.073 0.7632 -0.1594 M 1.25 -0.14 Q 1.3189 -0.1741 1.3007 -0.2488 M 0.95 -0.238 Q 0.8851 -0.2951 0.9266 -0.3709 M 0.45 -0.21 Q 0.5268 -0.2118 0.5419 -0.2871 M 0.15 -0.084 Q 0.0695 -0.1155 0.0825 -0.2009 M 0.25 0.042 Q 0.3119 -0.0035 0.2811 -0.0739 M 0.25 0.168 Q 0.252 0.0816 0.3368 0.0646 M 0.6 -0.014 Q 0.572 -0.0856 0.4961 -0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-5-fine",
+       "bone": "block-5",
+       "role": "texture",
+       "z": 4.58,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 0.308 Q 0.8459 0.2615 0.8924 0.2574 M 0.4 0.238 Q 0.4243 0.2032 0.3896 0.1789 M 1.4 0.154 Q 1.3879 0.1089 1.433 0.0968 M 0.6 0.07 Q 0.6385 0.0879 0.6564 0.0495 M 1.05 -0.028 Q 1.0049 -0.0401 1.017 -0.0852 M 1.45 -0.126 Q 1.4867 -0.1472 1.4655 -0.184 M 1.05 -0.196 Q 1.0035 -0.1919 0.9994 -0.2384 M 0.6 -0.266 Q 0.6385 -0.2839 0.6205 -0.3224 M 0.25 -0.126 Q 0.2621 -0.1711 0.3072 -0.159 M 0 0.028 Q 0.0179 -0.0105 -0.0205 -0.0284 M 0.1 0.14 Q 0.0919 0.094 0.1379 0.0859 M 0.75 -0.084 Q 0.7848 -0.1083 0.7604 -0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-6-arcs",
+       "bone": "block-6",
+       "role": "detail",
+       "z": 4.57,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.95 -0.196 Q 1.115 -0.0805 1.0629 0.1141 M 1.15 0.028 Q 0.9817 0.1693 1.0568 0.3757 M 0.75 0.168 Q 0.6 0.063 0.6474 -0.1139 M 0.4 -0.084 Q 0.2447 0.0714 0.3375 0.2705 M 0.3 0.126 Q 0.4402 0.2437 0.3776 0.4158",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-6-leaves",
+       "bone": "block-6",
+       "role": "texture",
+       "z": 4.58,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6 -0.266 Q 0.6805 -0.2345 0.6675 -0.1491 M 1.2 -0.21 Q 1.1344 -0.17 1.159 -0.0972 M 0.75 -0.126 Q 0.8355 -0.139 0.8669 -0.0585 M 1.35 -0.028 Q 1.3131 0.0394 1.3708 0.0902 M 0.85 0.056 Q 0.848 0.1424 0.7632 0.1594 M 1.25 0.14 Q 1.2319 0.2147 1.3007 0.2488 M 0.95 0.238 Q 0.9915 0.3139 0.9266 0.3709 M 0.45 0.21 Q 0.4651 0.2853 0.5419 0.2871 M 0.15 0.084 Q 0.163 0.1695 0.0825 0.2009 M 0.25 -0.042 Q 0.2192 0.0284 0.2811 0.0739 M 0.25 -0.168 Q 0.3348 -0.151 0.3368 -0.0646 M 0.6 0.014 Q 0.524 0.0024 0.4961 0.074",
+       "penMm": 1.8
+      },
+      {
+       "id": "block-6-fine",
+       "bone": "block-6",
+       "role": "texture",
+       "z": 4.59,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.85 -0.308 Q 0.8965 -0.3039 0.8924 -0.2574 M 0.4 -0.238 Q 0.3652 -0.2137 0.3896 -0.1789 M 1.4 -0.154 Q 1.4451 -0.1419 1.433 -0.0968 M 0.6 -0.07 Q 0.6179 -0.0315 0.6564 -0.0495 M 1.05 0.028 Q 1.0621 0.0731 1.017 0.0852 M 1.45 0.126 Q 1.4288 0.1627 1.4655 0.184 M 1.05 0.196 Q 1.0459 0.2425 0.9994 0.2384 M 0.6 0.266 Q 0.5821 0.3045 0.6205 0.3224 M 0.25 0.126 Q 0.2951 0.1139 0.3072 0.159 M 0 -0.028 Q -0.0385 -0.0101 -0.0205 0.0284 M 0.1 -0.14 Q 0.146 -0.1319 0.1379 -0.0859 M 0.75 0.084 Q 0.7257 0.1188 0.7604 0.1431",
+       "penMm": 1.8
+      },
+      {
+       "id": "core-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      },
+      {
+       "id": "core-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      },
+      {
+       "id": "core-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      },
+      {
+       "id": "core-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      },
+      {
+       "id": "core-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      },
+      {
+       "id": "core-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) the hornbeam hedge is drawn in full: the full 1:50 drawing: clipped blocks with leaf texture, seams, shaded core outlines and stems below 0.35 m.",
+      "de": "Bei 1:50 (1 m sind 20 mm) wird die Hainbuchenhecke vollständig gezeichnet: die volle 1:50-Zeichnung: geschnittene Blöcke mit Blatttextur, Fugen, Kernumrissen und Stämmen unter 0,35 m."
+     },
+     "retained": {
+      "en": "Retained: every foliage mass, every woody member, texture and detail strokes as designed for this scale.",
+      "de": "Beibehalten: jede Laubmasse, jedes Holzglied, Textur- und Detailstriche wie für diesen Maßstab entworfen."
+     },
+     "merged": {
+      "en": "Only the clipped plug pieces at bone joints close the seams between tapered woody parts.",
+      "de": "Nur die Passstücke an den Knochengelenken schließen die Nähte zwischen verjüngten Holzteilen."
+     },
+     "omitted": {
+      "en": "Omitted: single leaves and bud scales, which are below 0.5 mm on paper.",
+      "de": "Weggelassen: einzelne Blätter und Knospenschuppen, die auf dem Papier unter 0,5 mm liegen."
+     },
+     "thinElements": {
+      "en": "leaf marks are the finest strokes (0.13 mm).",
+      "de": "Blattzeichen sind die feinsten Striche (0,13 mm)."
+     },
+     "hatching": {
+      "en": "A thin 45 degree line hatch marks shaded foliage where the asset has a shade region; bark and leaves are otherwise drawn with strokes.",
+      "de": "Eine feine 45-Grad-Schraffur kennzeichnet beschattetes Laub, wo das Asset eine Schattenregion hat; Rinde und Blätter sind sonst mit Strichen gezeichnet."
+     },
+     "styles": {
+      "en": "Light line: 0.25 mm outlines, 0.18 mm detail, 0.13 mm texture. Dark solid: tonal fills separate bark, sun foliage and shade foliage.",
+      "de": "Helle Linie: Umrisse 0,25 mm, Detail 0,18 mm, Textur 0,13 mm. Dunkle Fläche: getönte Füllungen trennen Rinde, Sonnenlaub und Schattenlaub."
+     },
+     "overlays": {
+      "en": "Each thermal region has its own shapes; stroke details carry no region and follow their bone.",
+      "de": "Jede thermische Region hat eigene Formen; Strichdetails tragen keine Region und folgen ihrem Knochen."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.2,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.3
+    },
+    "hatches": [
+     {
+      "id": "shade-lines",
+      "title": {
+       "en": "Shade line hatch",
+       "de": "Schattenschraffur"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.6,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "plinth",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "path",
+       "d": "M0 0L3 0L3 0.4L0 0.4Z",
+       "region": "stem-bark"
+      },
+      {
+       "id": "block-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.222 1.54 0.138 1.49 0.12C1.54 0.102 1.54 0.018 1.49 0C1.54 -0.018 1.54 -0.102 1.49 -0.12C1.54 -0.138 1.54 -0.222 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.513
+      },
+      {
+       "id": "core-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.506
+      },
+      {
+       "id": "block-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.222 1.51 0.138 1.46 0.12C1.51 0.102 1.51 0.018 1.46 0C1.51 -0.018 1.51 -0.102 1.46 -0.12C1.51 -0.138 1.51 -0.222 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.564
+      },
+      {
+       "id": "core-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.698
+      },
+      {
+       "id": "block-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.222 1.54 0.138 1.49 0.12C1.54 0.102 1.54 0.018 1.49 0C1.54 -0.018 1.54 -0.102 1.49 -0.12C1.54 -0.138 1.54 -0.222 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.564
+      },
+      {
+       "id": "core-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.698
+      },
+      {
+       "id": "block-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.222 1.51 0.138 1.46 0.12C1.51 0.102 1.51 0.018 1.46 0C1.51 -0.018 1.51 -0.102 1.46 -0.12C1.51 -0.138 1.51 -0.222 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.564
+      },
+      {
+       "id": "core-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.698
+      },
+      {
+       "id": "block-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.222 1.54 0.138 1.49 0.12C1.54 0.102 1.54 0.018 1.49 0C1.54 -0.018 1.54 -0.102 1.49 -0.12C1.54 -0.138 1.54 -0.222 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.564
+      },
+      {
+       "id": "core-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.698
+      },
+      {
+       "id": "block-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.222 1.51 0.138 1.46 0.12C1.51 0.102 1.51 0.018 1.46 0C1.51 -0.018 1.51 -0.102 1.46 -0.12C1.51 -0.138 1.51 -0.222 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.535
+      },
+      {
+       "id": "core-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "hatch": "shade-lines",
+       "penMm": 1.306
+      },
+      {
+       "id": "leaf-1-1",
+       "bone": "block-1",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02"
+      },
+      {
+       "id": "leaf-1-2",
+       "bone": "block-1",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.258
+      },
+      {
+       "id": "leaf-1-3",
+       "bone": "block-1",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.245
+      },
+      {
+       "id": "stem-1",
+       "bone": "stem-1",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      },
+      {
+       "id": "leaf-2-1",
+       "bone": "block-2",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02",
+       "penMm": 0.336
+      },
+      {
+       "id": "leaf-2-2",
+       "bone": "block-2",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.258
+      },
+      {
+       "id": "leaf-2-3",
+       "bone": "block-2",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.611
+      },
+      {
+       "id": "stem-2",
+       "bone": "stem-2",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      },
+      {
+       "id": "leaf-3-1",
+       "bone": "block-3",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02",
+       "penMm": 0.315
+      },
+      {
+       "id": "leaf-3-2",
+       "bone": "block-3",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.258
+      },
+      {
+       "id": "leaf-3-3",
+       "bone": "block-3",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.459
+      },
+      {
+       "id": "stem-3",
+       "bone": "stem-3",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      },
+      {
+       "id": "leaf-4-1",
+       "bone": "block-4",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02",
+       "penMm": 0.315
+      },
+      {
+       "id": "leaf-4-2",
+       "bone": "block-4",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.258
+      },
+      {
+       "id": "leaf-4-3",
+       "bone": "block-4",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.459
+      },
+      {
+       "id": "stem-4",
+       "bone": "stem-4",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      },
+      {
+       "id": "leaf-5-1",
+       "bone": "block-5",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02",
+       "penMm": 0.315
+      },
+      {
+       "id": "leaf-5-2",
+       "bone": "block-5",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.525
+      },
+      {
+       "id": "leaf-5-3",
+       "bone": "block-5",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.459
+      },
+      {
+       "id": "stem-5",
+       "bone": "stem-5",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      },
+      {
+       "id": "leaf-6-1",
+       "bone": "block-6",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M1.1 0.22Q1.03 0.12 1.1 0.02",
+       "penMm": 0.315
+      },
+      {
+       "id": "leaf-6-2",
+       "bone": "block-6",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.8 0Q0.73 -0.1 0.8 -0.2",
+       "penMm": 0.145
+      },
+      {
+       "id": "leaf-6-3",
+       "bone": "block-6",
+       "role": "texture",
+       "z": 9,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.5 0.18Q0.43 0.08 0.5 -0.02",
+       "penMm": 0.459
+      },
+      {
+       "id": "stem-6",
+       "bone": "stem-6",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0 0L0.34 0"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) the masses of 1:200 get finer lobes and the structure appears: three leaf marks per block and six single stem lines in the plinth.",
+      "de": "Bei 1:100 (1 m sind 10 mm) erhalten die Massen von 1:200 feinere Lappen und die Struktur erscheint: drei Blattzeichen je Block und sechs einzelne Stammlinien im Sockel."
+     },
+     "retained": {
+      "en": "Retained: six overlapping clipped blocks with scalloped tops, each with its inner shaded core outline; the bare stems merged into one plinth strip.",
+      "de": "Beibehalten: sechs überlappende geschnittene Blöcke mit gewellter Oberkante, jeder mit dem Umriss seines beschatteten Kerns; die kahlen Stämme zu einem Sockelstreifen vereint."
+     },
+     "merged": {
+      "en": "Single leaves and twig ends are merged into lobed foliage outlines; bark relief into a few fissure strokes.",
+      "de": "Einzelne Blätter und Zweigenden sind in gelappte Laubumrisse eingeschmolzen; Rindenrelief in wenige Risslinien."
+     },
+     "omitted": {
+      "en": "Omitted: individual leaves, fine twig tufts and knots; the fine 1:50 leaf marks are replaced by a few arcs.",
+      "de": "Weggelassen: einzelne Blätter, feine Zweigbüschel und Astknoten; die feinen 1:50-Blattzeichen sind durch wenige Bögen ersetzt."
+     },
+     "thinElements": {
+      "en": "Thin strokes are at least 0.1 mm; strands and fissures are drawn with the texture pen, branches at real section width.",
+      "de": "Dünne Striche sind mindestens 0,1 mm; Stränge und Risse mit dem Texturstift, Äste in realer Querschnittsbreite."
+     },
+     "hatching": {
+      "en": "Restrained: no hatching; the core outline separates sun face and shade core. Hatch spacing is above the profile minimum.",
+      "de": "Zurückhaltend: keine Schraffur; der Kernumriss trennt Sonnenseite und Schattenkern. Der Schraffurabstand liegt über dem Profilminimum."
+     },
+     "styles": {
+      "en": "Light line: 0.2 mm outlines, 0.13 mm detail, 0.1 mm texture. Dark solid: tonal masses; detail strokes stay visible on them.",
+      "de": "Helle Linie: Umrisse 0,2 mm, Detail 0,13 mm, Textur 0,1 mm. Dunkle Fläche: getönte Massen; Detailstriche bleiben darauf sichtbar."
+     },
+     "overlays": {
+      "en": "Every region keeps its shape; the shade hatch (where present) is a pure drawing hatch and does not stand for temperature.",
+      "de": "Jede Region behält ihre Form; die Schattenschraffur (wo vorhanden) ist eine reine Zeichenschraffur und steht nicht für Temperatur."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "plinth",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "path",
+       "d": "M0 0L3 0L3 0.4L0 0.4Z",
+       "region": "stem-bark"
+      },
+      {
+       "id": "block-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.204 1.54 0.036 1.49 0C1.54 -0.036 1.54 -0.204 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.468
+      },
+      {
+       "id": "core-1",
+       "bone": "block-1",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.539
+      },
+      {
+       "id": "block-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.204 1.51 0.036 1.46 0C1.51 -0.036 1.51 -0.204 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.51
+      },
+      {
+       "id": "core-2",
+       "bone": "block-2",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.652
+      },
+      {
+       "id": "block-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.204 1.54 0.036 1.49 0C1.54 -0.036 1.54 -0.204 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.51
+      },
+      {
+       "id": "core-3",
+       "bone": "block-3",
+       "role": "body",
+       "z": 2.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.652
+      },
+      {
+       "id": "block-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.204 1.51 0.036 1.46 0C1.51 -0.036 1.51 -0.204 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.51
+      },
+      {
+       "id": "core-4",
+       "bone": "block-4",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.652
+      },
+      {
+       "id": "block-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.41 0.32Q1.49 0.32 1.49 0.24C1.54 0.204 1.54 0.036 1.49 0C1.54 -0.036 1.54 -0.204 1.49 -0.24Q1.49 -0.32 1.41 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.51
+      },
+      {
+       "id": "core-5",
+       "bone": "block-5",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.652
+      },
+      {
+       "id": "block-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M-0.01 0.32L1.38 0.32Q1.46 0.32 1.46 0.24C1.51 0.204 1.51 0.036 1.46 0C1.51 -0.036 1.51 -0.204 1.46 -0.24Q1.46 -0.32 1.38 -0.32L-0.01 -0.32Z",
+       "region": "leaf-face",
+       "penMm": 0.464
+      },
+      {
+       "id": "core-6",
+       "bone": "block-6",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.2 0.22L0.2 -0.22L1.2 -0.22L1.2 0.22Z",
+       "region": "leaf-core",
+       "penMm": 0.535
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) the hornbeam hedge is separated into its main masses: six overlapping clipped blocks with scalloped tops, each with its inner shaded core outline.",
+      "de": "Bei 1:200 (1 m sind 5 mm) wird die Hainbuchenhecke in ihre Hauptmassen aufgeteilt: sechs überlappende geschnittene Blöcke mit gewellter Oberkante, jeder mit dem Umriss seines beschatteten Kerns."
+     },
+     "retained": {
+      "en": "Retained: the bare stems merged into one plinth strip.",
+      "de": "Beibehalten: die kahlen Stämme zu einem Sockelstreifen vereint."
+     },
+     "merged": {
+      "en": "Neighbouring twigs, leaf clusters and bark relief are merged into their mass outlines.",
+      "de": "Benachbarte Zweige, Blattbüschel und Rindenrelief sind in die Massenumrisse eingeschmolzen."
+     },
+     "omitted": {
+      "en": "Omitted: the six clipped blocks, their seams and the individual stems and all texture strokes; gaps below the minimum gap between separate outlines are closed by overlapping the masses.",
+      "de": "Weggelassen: die sechs geschnittenen Blöcke, ihre Fugen und die einzelnen Stämme und alle Texturstriche; Lücken unter dem Mindestabstand zwischen getrennten Umrissen werden durch Überlappen der Massen geschlossen."
+     },
+     "thinElements": {
+      "en": "Slender limbs and branches are drawn as tapered outlines at their real section width where this is at least 0.3 mm on paper, otherwise they stay as an under-layer hidden by the masses.",
+      "de": "Schlanke Äste und Zweige werden mit realer Querschnittsbreite als verjüngte Umrisse gezeichnet, wo diese auf dem Papier mindestens 0,3 mm beträgt, sonst bleiben sie als von den Massen verdeckte Unterlage."
+     },
+     "hatching": {
+      "en": "No hatching. Internal edges: the core outlines inside the blocks.",
+      "de": "Keine Schraffur. Innere Kanten: die Kernumrisse in den Blöcken."
+     },
+     "styles": {
+      "en": "Light line: outlines 0.18 mm, one 0.13 mm detail pen. Dark solid: masses in tones separate sun and shade foliage, wood lighter.",
+      "de": "Helle Linie: Umrisse 0,18 mm, ein Detailstift 0,13 mm. Dunkle Fläche: Massen in Tonwerten trennen Sonnen- und Schattenlaub, Holz heller."
+     },
+     "overlays": {
+      "en": "Every thermal region keeps its own shape: stem-bark (plinth strip); overlays follow the bone-bound masses, so sway and loads act on the drawn shapes.",
+      "de": "Jede thermische Region behält ihre eigene Form: stem-bark (Sockelstreifen); Überlagerungen folgen den knochengebundenen Massen, so dass Schwingung und Lasten an den gezeichneten Formen wirken."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "plinth",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "path",
+       "d": "M0 0L3 0L3 0.4L0 0.4Z",
+       "region": "stem-bark"
+      },
+      {
+       "id": "hedge",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M0.036 0.565C-0.105 0.797 -0.105 1.492 0.036 1.724C0.059 1.758 0.156 1.809 0.199 1.809C0.227 1.833 0.325 1.853 0.362 1.843C0.39 1.867 0.488 1.888 0.524 1.877C0.565 1.881 0.663 1.84 0.687 1.809C0.715 1.833 0.813 1.853 0.849 1.843C0.878 1.867 0.975 1.888 1.012 1.877C1.053 1.881 1.15 1.84 1.175 1.809C1.204 1.833 1.3 1.853 1.338 1.843C1.366 1.867 1.464 1.888 1.5 1.877C1.541 1.881 1.639 1.84 1.662 1.809C1.691 1.833 1.789 1.853 1.825 1.843C1.853 1.867 1.951 1.888 1.988 1.877C2.029 1.881 2.127 1.84 2.151 1.809C2.179 1.833 2.277 1.853 2.313 1.843C2.342 1.867 2.439 1.888 2.476 1.877C2.517 1.881 2.614 1.84 2.638 1.809C2.667 1.833 2.764 1.853 2.801 1.843C2.848 1.836 2.946 1.765 2.964 1.724C3.105 1.492 3.105 0.797 2.964 0.565C2.378 0.265 0.622 0.265 0.036 0.565Z",
+       "regions": [
+        "leaf-face",
+        "leaf-core"
+       ]
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The hornbeam hedge is composed as a clipped block with a gently undulating flat top, 3.14 m by 1.9 m; 1 m is 2 mm, so only the overall form is drawn, with a restrained closed outline and no internal structure.",
+      "de": "Die Hainbuchenhecke ist als ein geschnittener Block mit sanft welliger, ebener Oberkante, 3,14 m mal 1,9 m komponiert; 1 m sind 2 mm, daher wird nur die Gesamtform mit zurückhaltendem geschlossenem Umriss und ohne innere Struktur gezeichnet."
+     },
+     "retained": {
+      "en": "Retained: a plinth strip for the six bare stems.",
+      "de": "Beibehalten: ein Sockelstreifen für die sechs kahlen Stämme."
+     },
+     "merged": {
+      "en": "Merged into the crown path: the six blocks, face leaves and shaded core into one block path.",
+      "de": "Im Kronenpfad vereint: die sechs Blöcke, Außenblätter und beschatteten Kern zu einem Blockpfad."
+     },
+     "omitted": {
+      "en": "Omitted: the six clipped blocks, their seams and the individual stems; they are far below 0.1 mm line width at this scale.",
+      "de": "Weggelassen: die sechs geschnittenen Blöcke, ihre Fugen und die einzelnen Stämme; sie liegen bei diesem Maßstab weit unter 0,1 mm Strichbreite."
+     },
+     "thinElements": {
+      "en": "Thin parts (the six clipped blocks, their seams and the individual stems) are not thickened; they are merged into the filled mass or dropped, so the outline stays within the real outline tolerance of the 1:50 drawing.",
+      "de": "Dünne Teile (die sechs geschnittenen Blöcke, ihre Fugen und die einzelnen Stämme) werden nicht verdickt, sondern in die gefüllte Masse eingeschmolzen oder weggelassen, so dass der Umriss innerhalb der realen Umrisstoleranz der 1:50-Zeichnung bleibt."
+     },
+     "hatching": {
+      "en": "No hatching; the pen is 0.15 mm for outlines and 0.25 mm for the ground line.",
+      "de": "Keine Schraffur; der Stift ist 0,15 mm für Umrisse und 0,25 mm für die Bodenlinie."
+     },
+     "styles": {
+      "en": "Light line: closed outline only. Dark solid: the crown path reads as one dark mass, the bole lighter. Both stay readable at 36 mm printed height or less.",
+      "de": "Helle Linie: nur der geschlossene Umriss. Dunkle Fläche: der Kronenpfad liest sich als eine dunkle Masse, der Schaft heller. Beides bleibt bei höchstens 36 mm gedruckter Höhe lesbar."
+     },
+     "overlays": {
+      "en": "Thermal and structural overlays map onto: stem-bark (plinth strip) and, merged in the block path, leaf-face and leaf-core. Merged paths show the area-weighted value of their regions, labelled as merged.",
+      "de": "Thermische und statische Überlagerungen bilden sich ab auf: stem-bark (Sockelstreifen) sowie, im Blockpfad vereint, leaf-face und leaf-core. Vereinte Pfade zeigen den flächengewichteten Wert ihrer Regionen, als vereint gekennzeichnet."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "plan-extent",
+    "title": {
+     "en": "Plan symbol with true crown extent",
+     "de": "Grundrisssymbol mit wahrer Kronenausdehnung"
+    },
+    "description": {
+     "en": "A conventional plan sign of the plant for site and landscape plans: outline of the true crown extent and the stem section. It is a separate symbol and is never used silently for a pictorial scale.",
+     "de": "Ein konventionelles Grundrisszeichen der Pflanze für Lage- und Freiraumpläne: Umriss der wahren Kronenausdehnung und der Stammquerschnitt. Es ist ein eigenes Symbol und wird nie stillschweigend für einen Bildmaßstab verwendet."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200,
+     100
+    ],
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "outline",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M-0.07 0L3.07 0L3.07 1.88L-0.07 1.88Z"
+      }
+     ],
+     "plan": [
+      {
+       "id": "outline",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M-0.07 -0.35L3.07 -0.35L3.07 0.35L-0.07 0.35Z"
+      },
+      {
+       "id": "axis",
+       "bone": "root-plate",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.1 0L2.9 0"
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "The rectangle is the true plan footprint of the hedge (3.14 m by 0.70 m) with its axis line; the symbol carries dimension, not clipping detail.",
+     "de": "Das Rechteck ist der wahre Grundrissfußabdruck der Hecke (3.14 m mal 0.70 m) mit Achslinie; das Symbol trägt Maß, keine Schnittdetails."
+    }
+   }
+  ]
+ }
+}

@@ -35,3 +35,6 @@ pub trait GeometryGraph {
     fn entity(&self, index: usize) -> Option<GeometryEntity<'_, Self::Value>>;
     fn constituent(&self, instance: usize, index: usize) -> Option<GeometryConstituent<'_, Self::Value>>;
 }
+
+#[path="🪧️part21/🦀️.rs"]
+mod part21;

@@ -69,3 +69,5 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-tool-typing-edit = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run-operations = { path = "../../../../⏯️tool-run/🎞️tick/🎮️operations/📦️packages/🦀️rust" }

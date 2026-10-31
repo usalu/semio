@@ -1,3 +1,7 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
+import {compileSchemaScopeExport as physicalSchemaScopeV1} from "./../../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
+import {findWorkspaceRoot as physicalSchemaWorkspaceRootV1} from "./../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const physicalProjectOracleV1=()=>physicalSchemaScopeV1(physicalSchemaWorkspaceRootV1(import.meta.dir),physicalSchemaSourcePathV1(new URL("./../../../🧬️schema/📋️project/🔣️.json",import.meta.url)),null,[physicalSchemaSourcePathV1(new URL("./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url))]);
 import {buildBackendDefaultIdV1} from "../../../🔌️backends/🟦️.ts";
 import ts from"typescript";
 /** 🧭️ The portable CLI, task selections and native caller keep literal arguments and original resources. */
@@ -24,7 +28,7 @@ import {createIssuedResourceControlV1,createScriptProcessEnvelope,withScriptProc
 import {nxOracleRequireV1,graph} from "../🧰️support/🟦️.ts";
 declareBuildTestEnvelopeV1({owner:"test:build-workspace-graph-laws",maximumElapsedMilliseconds:300000,capabilities:{}});
 
-const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
+const require=createRequire(import.meta.url),Ajv=require("ajv").default;
 test("portable CLI keeps backend selection separate from literal task arguments",()=>{
   expect(parseBuildInvocationV1(["--tool=bazel","run","app:build","--","--tool=nx"],{})).toEqual({tool:"bazel",args:["run","app:build","--","--tool=nx"]});
   expect(parseBuildInvocationV1(["show","projects"],{SEMIO_BUILD_TOOL:"bazel"}).tool).toBe("bazel");
@@ -118,7 +122,7 @@ test("dashboard target selection preserves the portable initial authority corpus
  for(const row of fixture.initialAuthoring.cases){const request=["repo",...row.arguments],declared={workspaceRoot:row.workspaceRoot,tool:row.tool,arguments:request,selection:request,launches:[request],buildMode:row.buildMode,native:row.native};expect(validate(declared),row.name).toBe(true);const [project,target]=row.arguments[1]!.split(":");const owner=registry.owners.find((owner:any)=>owner.name===project);expect(owner,row.name).toBeDefined();expect(JSON.parse(readFileSync(resolve(root,owner.manifest),"utf8")).targets[target],row.name).toBeDefined();}
 });
 test("neutral arguments admit literal arrays and refuse scalar shell fragments before execution",()=>{
- const validate=new(require("ajv").default)({strict:true}).compile(require("../../../🧬️schema/📋️project/🔣️.json")),portable=new Ajv({strict:true}).compile(schema),row=fixture.literalArguments;
+ const validate=physicalProjectOracleV1(),portable=new Ajv({strict:true}).compile(schema),row=fixture.literalArguments;
  for(const args of row.rejected){
   const base={executor:"repo:script",options:{command:"repo ./📜️script.ts",args}},configured={executor:"repo:script",options:{command:"repo ./📜️script.ts"},configurations:{release:{args}}};
   for(const target of [base,configured]){expect(validate({name:"app",targets:{build:target}})).toBe(false);expect(()=>neutralBuildTargetV1(target,"app:build")).toThrow(/arguments.*app:build/);}

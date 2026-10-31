@@ -1,0 +1,288 @@
+{
+  "contracts": {
+    "mesh": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧬️schema/🔣️.json",
+    "ui": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json"
+  },
+  "resources": [
+    "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔣️.json",
+    "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json"
+  ],
+  "cases": [
+    {
+      "name": "mesh-null-owner",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": null
+      },
+      "valid": true
+    },
+    {
+      "name": "mesh-empty-owner",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": {
+          "vertices": [],
+          "halfedges": [],
+          "faces": [],
+          "uvSeams": [],
+          "attributes": [],
+          "materials": [],
+          "textures": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "mesh-scalar-owner",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "mesh-partial-owner",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "mesh-unknown-owner-field",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": {
+          "vertices": [],
+          "halfedges": [],
+          "faces": [],
+          "uvSeams": [],
+          "attributes": [],
+          "materials": [],
+          "textures": [],
+          "unknown": true
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "mesh-missing-owner",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": "mesh-1",
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "mesh-required-child",
+      "contract": "mesh",
+      "value": {
+        "id": "object-1",
+        "childId": 17,
+        "target": {
+          "artifactId": "mesh-1",
+          "dialect": {
+            "artifactKind": "s.stdio.semio.mesh",
+            "standard": "1",
+            "subset": "any"
+          }
+        },
+        "meshWorkspace": "",
+        "meshState": null
+      },
+      "valid": false
+    },
+    {
+      "name": "ui-custom-driver",
+      "contract": "ui",
+      "value": {
+        "mutation": "setCustomDriver",
+        "driverId": "canvas",
+        "driver": {
+          "driverId": "canvas",
+          "label": "Canvas",
+          "config": {
+            "sensitivity": 1
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "ui-reset-driver",
+      "contract": "ui",
+      "value": {
+        "mutation": "setCustomDriver",
+        "driverId": "canvas",
+        "driver": null
+      },
+      "valid": true
+    },
+    {
+      "name": "ui-missing-driver-label",
+      "contract": "ui",
+      "value": {
+        "mutation": "setCustomDriver",
+        "driverId": "canvas",
+        "driver": {
+          "driverId": "canvas",
+          "config": {}
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "ui-unknown-driver-field",
+      "contract": "ui",
+      "value": {
+        "mutation": "setCustomDriver",
+        "driverId": "canvas",
+        "driver": {
+          "driverId": "canvas",
+          "label": "Canvas",
+          "config": {},
+          "unknown": true
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "ui-german",
+      "contract": "ui",
+      "value": {
+        "mutation": "setLocale",
+        "locale": "de"
+      },
+      "valid": true
+    },
+    {
+      "name": "ui-no-default-language",
+      "contract": "ui",
+      "value": {
+        "mutation": "setLocale",
+        "locale": null
+      },
+      "valid": true
+    },
+    {
+      "name": "ui-unsupported-language",
+      "contract": "ui",
+      "value": {
+        "mutation": "setLocale",
+        "locale": "fr"
+      },
+      "valid": false
+    }
+  ],
+  "boardContract": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🔣️.json",
+  "boardCases": [
+    {
+      "name": "empty",
+      "value": [],
+      "valid": true
+    },
+    {
+      "name": "identifiers",
+      "value": [
+        "node-1",
+        "Knoten-ä"
+      ],
+      "valid": true
+    },
+    {
+      "name": "numeric-member",
+      "value": [
+        1
+      ],
+      "valid": false
+    },
+    {
+      "name": "null-member",
+      "value": [
+        null
+      ],
+      "valid": false
+    },
+    {
+      "name": "object-member",
+      "value": [
+        {}
+      ],
+      "valid": false
+    },
+    {
+      "name": "scalar",
+      "value": "node-1",
+      "valid": false
+    }
+  ]
+}

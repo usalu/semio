@@ -2,8 +2,10 @@
   "spaces": {
     "sp-1": {
       "entry": "Patched",
-      "zone": {
-        "value": "z-night"
+      "value": {
+        "zone": {
+          "value": "z-night"
+        }
       }
     }
   }

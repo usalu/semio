@@ -1,4 +1,4 @@
-/** 🦀️ Contract: the source set of a crate follows every module mount and include a compilation reads (a `#[path]` mount that leaves the package directory, an inline `mod` a macro emits, `include!`, `include_str!`, `include_bytes!`, `env!("CARGO_MANIFEST_DIR")`) exactly as `rustc --emit=dep-info` does, and refuses, with a named reason, what no static reading can follow (a macro that mounts a file, a conditional mount, a macro-variable include, a build script) instead of falling back to the package directory, which misses every mounted file outside it. rustc is the independent oracle of every row.
+/** 🦀️ Contract: the source set of a crate follows every module mount and include a compilation reads (a `#[path]` mount that leaves the package directory, an inline `mod` a macro emits, `include!`, `include_str!`, `include_bytes!`, `env!("CARGO_MANIFEST_DIR")`) exactly as `rustc --emit=dep-info` does, and refuses, with a named reason, what no static reading can follow (a macro that mounts a file, a conditional mount, a macro-variable include, an unreviewed build script) instead of falling back to the package directory, which misses every mounted file outside it. rustc is the independent oracle of every row.
  * @see ./🔣️.json */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
@@ -48,8 +48,8 @@ for(const row of corpus.cases)test(`${row.name}: ${row.mechanism}`,()=>{
   const read=named?rustc(root,row.crate,["--test"]):[],outside=read.filter(path=>!path.startsWith(row.crate+"/")).sort();
   if(named)expect(outside,"files rustc reads outside the package directory").toEqual([...row.outside].sort());
   if(row.resolved){
+   expect(set.resolved,JSON.stringify(set)).toBe(true);
    const derived=set.files.map((path:string)=>path.slice(prefix.length)).sort();
-   expect(set.resolved).toBe(true);
    expect(derived).toEqual([...row.expected!].sort());
    expect(derived,"the derivation is exactly what rustc reads").toEqual(read);
    expect(set.emitters?.map((path:string)=>path.slice(prefix.length))??[]).toEqual(row.emitters??[]);
@@ -66,6 +66,24 @@ for(const row of corpus.cases)test(`${row.name}: ${row.mechanism}`,()=>{
     expect(cacheInternals.cargoSourceInputs(row.crate,root,new Map(),named,!named),"the default pipeline keeps its directory and owner fallback").toBeUndefined();
    }
   }
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+for(const row of corpus.cases.filter(row=>row.files[(row.crate+"/Cargo.toml") as keyof typeof row.files]?.includes("[package.metadata.semio.build-script]")))test(row.name+": reviewed closure refuses a changed Source hash",()=>{
+ const root=mkdtempSync(join(realpathSync(tmpdir()),"rust-reviewed-"));
+ try{
+  build(root,row.files as unknown as Record<string,string>);
+  const manifest=join(root,row.crate,"Cargo.toml"),text=readFileSync(manifest,"utf8"),cargo=Bun.TOML.parse(text) as any,assertion=cargo.package.metadata.semio["build-script"];
+  expect(ajv.validate(factSchema.definitions.BuildScriptAssertion,assertion),JSON.stringify(ajv.errors)).toBe(true);
+  const actual=rustc(root,row.crate,["--test"]).filter(path=>path!==row.crate+"/src/lib.rs").sort();
+  expect(assertion.files.map((item:any)=>item.path).sort()).toEqual(actual);
+  for(const item of assertion.files)expect(new Bun.CryptoHasher("sha256").update(readFileSync(join(root,item.path))).digest("hex")).toBe(item.sha256);
+  writeFileSync(manifest,text.replace(assertion.files[0].sha256,"0".repeat(64)));
+  const stale=cacheInternals.cargoSourceSetV1(row.crate,root,new Map(),true,false);
+  expect(stale.resolved).toBe(false);expect(stale.reason).toBe("build-script");
+  writeFileSync(manifest,text.replace(/\n\[package\.metadata\.semio\.build-script\][\s\S]*$/u,"\n"));
+  const unknown=cacheInternals.cargoSourceSetV1(row.crate,root,new Map(),true,false);
+  expect(unknown.resolved).toBe(false);expect(unknown.reason).toBe("build-script");
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

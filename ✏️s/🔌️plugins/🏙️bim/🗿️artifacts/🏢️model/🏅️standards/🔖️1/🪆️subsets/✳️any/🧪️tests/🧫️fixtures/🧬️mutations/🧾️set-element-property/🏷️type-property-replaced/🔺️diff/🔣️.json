@@ -1,16 +1,18 @@
 {
   "properties": {
     "wt-300": {
-      "assigned": {
-        "Pset_WallTypeCommon": {
-          "Reference": {
-            "Text": {
-              "value": "W-310"
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "Pset_WallTypeCommon": {
+            "Reference": {
+              "Text": {
+                "value": "W-310"
+              }
             }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

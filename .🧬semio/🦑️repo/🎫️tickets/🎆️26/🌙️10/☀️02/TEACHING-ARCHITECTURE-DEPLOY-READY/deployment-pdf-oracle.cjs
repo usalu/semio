@@ -1,0 +1,6 @@
+const assert=require("node:assert/strict"),fs=require("node:fs"),path=require("node:path"),Ajv=require("ajv");
+const base=path.resolve(process.argv[2],"🎓️teaching/🏛️architecture/📚️course/🧫️fixtures/🌐️publication"),fixture=JSON.parse(fs.readFileSync(path.join(base,"🔣️.json"),"utf8")),schema=JSON.parse(fs.readFileSync(path.join(base,"🧬️schema/🔣️.json"),"utf8")),ajv=new Ajv({strict:true,allErrors:true}),valid=ajv.compile(schema);assert(valid(fixture),JSON.stringify(valid.errors));
+const documents=ajv.compile({type:"object",required:fixture.assignmentFiles,properties:Object.fromEntries(fixture.assignmentFiles.map(file=>[file,{type:"string",pattern:"^%PDF-"}]))}),results=[];
+for(const file of fixture.assignmentFiles)for(const row of fixture.assignmentCases){const files=Object.fromEntries(fixture.assignmentFiles.map(key=>[key,fixture.pdf]));if(row.replacement===null)delete files[file];else files[file]=row.replacement;
+documents(files);const output=(documents.errors??[]).map(error=>error.keyword==="required"?error.params.missingProperty+" is missing":error.instancePath.slice(1).replaceAll("~1","/")+" is not a PDF");assert.deepEqual(output,row.problem===null?[]:[file+row.problem]);results.push({file,case:row.id,problems:output});}
+console.log(JSON.stringify({oracle:"Ajv required fields and PDF signature pattern",cases:results},null,2));

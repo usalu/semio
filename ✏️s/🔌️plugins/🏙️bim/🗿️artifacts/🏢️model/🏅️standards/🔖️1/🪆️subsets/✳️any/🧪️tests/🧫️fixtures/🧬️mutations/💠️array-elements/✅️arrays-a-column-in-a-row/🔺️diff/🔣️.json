@@ -1,56 +1,62 @@
 {
   "columns": {
     "ar-1-0": {
-      "base_offset": 0.0,
-      "column_type": "ct-400",
       "entry": "Created",
-      "name": "C1",
-      "phase": "New",
-      "position": {
-        "x": 7.0,
-        "y": 3.0
-      },
-      "rotation": 0.25,
-      "storey": "st-ground",
-      "top": {
-        "StoreyTop": {
-          "offset": 0.0
+      "value": {
+        "base_offset": 0,
+        "column_type": "ct-400",
+        "name": "C1",
+        "phase": "New",
+        "position": {
+          "x": 7,
+          "y": 3
+        },
+        "rotation": 0.25,
+        "storey": "st-ground",
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
         }
       }
     },
     "ar-2-0": {
-      "base_offset": 0.0,
-      "column_type": "ct-400",
       "entry": "Created",
-      "name": "C1",
-      "phase": "New",
-      "position": {
-        "x": 10.0,
-        "y": 3.0
-      },
-      "rotation": 0.25,
-      "storey": "st-ground",
-      "top": {
-        "StoreyTop": {
-          "offset": 0.0
+      "value": {
+        "base_offset": 0,
+        "column_type": "ct-400",
+        "name": "C1",
+        "phase": "New",
+        "position": {
+          "x": 10,
+          "y": 3
+        },
+        "rotation": 0.25,
+        "storey": "st-ground",
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
         }
       }
     },
     "ar-3-0": {
-      "base_offset": 0.0,
-      "column_type": "ct-400",
       "entry": "Created",
-      "name": "C1",
-      "phase": "New",
-      "position": {
-        "x": 13.0,
-        "y": 3.0
-      },
-      "rotation": 0.25,
-      "storey": "st-ground",
-      "top": {
-        "StoreyTop": {
-          "offset": 0.0
+      "value": {
+        "base_offset": 0,
+        "column_type": "ct-400",
+        "name": "C1",
+        "phase": "New",
+        "position": {
+          "x": 13,
+          "y": 3
+        },
+        "rotation": 0.25,
+        "storey": "st-ground",
+        "top": {
+          "StoreyTop": {
+            "offset": 0
+          }
         }
       }
     }

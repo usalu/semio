@@ -1,0 +1,15 @@
+# Exact Native Journal Lock Metadata — 2026-10-29
+
+Root requested an exact live blocking-owner trace while its profile28265 and frontend SH inventory11986 referred to the nx parent journal. No cleanup, signals, claims/queue edits or Native retry was authorized or performed.
+
+The preserved input nx-journal-lock-metadata.ts derives the current canonical backing identity from actual fixed.dir metadata and canonical nativeDirectoryMappingV1, then calls the public resourceLeasePathV1. Actual resource hash: b563ca18875f4c46cf45349b2017201f71213ae7c6f059d4884280d83440b212. Lease database metadata: device66312, inode1844093,8192bytes,1link. No database content is read. The script reads bounded public readLeaseQueues metadata and bounded /proc lock/fd/stat/comm metadata for this exact device/inode and optional SQLite sidecar inodes. It never reads process environments or full argv.
+
+At1793277918779–1793277918826ms, the exact resource had no public queued ticket, matching kernel lock or accessible matching FD. The bounded scan covered445PIDs/4897FD metadata entries;271process FD directories were inaccessible, with no scan truncation. Therefore the owner was UNKNOWN at this point, not proven absent, dead or stale. The caller-provided compact human label was separately hashed at1793278093926–1793278093968; that distinct key9b2ab4c3… has no file and is not the canonical current resource. No label fallback or identity migration was introduced.
+
+Root subsequently confirmed profile28265 authoritatively exited0 and released its writer. This explains why a later sample may be clear; the metadata sample does not retrospectively identify or invalidate an earlier live holder. Source inspection alone also cannot blame retained cleanup loans: existing cleanup releases ordinary EX and reacquires later under accepted custody.
+
+Generated evidence: nx-journal-lock-metadata.json/.log and nx-journal-lock-compact-metadata.json/.log. These are timed observations, not terminal receipts or cleanup authority.
+
+After the writer release, frontend genuine SH inventory76716 exited0 (1test7assertions,2.80s): actual effective capacity1,610,612,736; used1,545,469,952; remaining65,142,784; next demand67,239,936; shortfall2,097,152bytes.16active rows comprise committed shared store536,870,912 plus15namespace charges of67,239,936 (14committed existing children and1reserved absent child). Sequence71,21627journalbytes, SHA37b94fb1afc200e9f0d04800cee4343a78694fb6bbf9e0c220e3abebac6a8101. The reserved charge remains protected; no death or reclamation inference follows. Frontend owns the corresponding funding preflight implementation; this agent makes no overlapping Nx capacity edits.
+
+The new reader is independently proven by actual compiled physical96996 (1test23assertions), and the canonical Core/public export is available. The semantic gate caught its required lease-owner argument omission; Root owns the exact unique-nonce correction. No guard/rank/quota change is involved. Actual course/backend runtime readiness remains separate and pending.

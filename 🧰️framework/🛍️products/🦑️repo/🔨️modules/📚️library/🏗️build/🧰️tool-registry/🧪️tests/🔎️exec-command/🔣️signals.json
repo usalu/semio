@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "success",
+      "status": 0,
+      "signal": null,
+      "signals": {},
+      "expected": 0
+    },
+    {
+      "name": "nonzero status",
+      "status": 7,
+      "signal": null,
+      "signals": {},
+      "expected": 7
+    },
+    {
+      "name": "numeric143",
+      "status": 143,
+      "signal": null,
+      "signals": {},
+      "expected": 143
+    },
+    {
+      "name": "missing outcome",
+      "status": null,
+      "signal": null,
+      "signals": {},
+      "expected": 1
+    },
+    {
+      "name": "interrupt",
+      "status": null,
+      "signal": "SIGINT",
+      "signals": {
+        "SIGINT": 2
+      },
+      "expected": 130
+    },
+    {
+      "name": "terminate",
+      "status": null,
+      "signal": "SIGTERM",
+      "signals": {
+        "SIGTERM": 15
+      },
+      "expected": 143
+    },
+    {
+      "name": "kill",
+      "status": null,
+      "signal": "SIGKILL",
+      "signals": {
+        "SIGKILL": 9
+      },
+      "expected": 137
+    },
+    {
+      "name": "segmentation",
+      "status": null,
+      "signal": "SIGSEGV",
+      "signals": {
+        "SIGSEGV": 11
+      },
+      "expected": 139
+    },
+    {
+      "name": "host-specific bus",
+      "status": null,
+      "signal": "SIGBUS",
+      "signals": {
+        "SIGBUS": 10
+      },
+      "expected": 138
+    },
+    {
+      "name": "unknown signal",
+      "status": null,
+      "signal": "SIGUNKNOWN",
+      "signals": {},
+      "expected": 1
+    },
+    {
+      "name": "status precedence",
+      "status": 2,
+      "signal": "SIGKILL",
+      "signals": {
+        "SIGKILL": 9
+      },
+      "expected": 2
+    }
+  ]
+}

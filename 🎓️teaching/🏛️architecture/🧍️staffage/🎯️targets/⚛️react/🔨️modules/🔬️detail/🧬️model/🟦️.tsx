@@ -9,9 +9,9 @@ import { formatNumber, formatQuantity } from "@teaching/staffage";
 import type { Asset, Environment, EvaluatedState, Language, ParameterSource, StructuralResult, ThermalField, ThermalRegion } from "@teaching/staffage";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
 import { cn } from "../../🪟️chrome/🟦️.tsx";
-import { DataTable, Fact, Row, num, sci } from "../🧱️tables/🟦️.tsx";
+import { DataTable, Fact, Row, SOURCES, num, sci } from "../🧱️tables/🟦️.tsx";
 
-const SHAPES: Readonly<Record<ParameterSource, string>> = { measured: "M12 4a8 8 0 100 16 8 8 0 000-16z", literature: "M5 5h14v14H5z", "authored-estimate": "M12 4l9 16H3z", illustrative: "M12 3l9 9-9 9-9-9z" };
+const SHAPES: Readonly<Record<ParameterSource, string>> = { measured: "M12 4a8 8 0 100 16 8 8 0 000-16z", literature: "M5 5h14v14H5z", calibrated: "M12 3a9 9 0 100 18 9 9 0 000-18zm0 4a5 5 0 110 10 5 5 0 010-10z", "authored-estimate": "M12 4l9 16H3z", illustrative: "M12 3l9 9-9 9-9-9z" };
 
 /** 🏷️ A source tag: a distinct shape, the source in words and the resolved citation as tooltip. */
 export function SourceTag(props: { readonly source: ParameterSource; readonly reference?: string | undefined; readonly asset?: Asset | undefined }): ReactElement {
@@ -21,7 +21,7 @@ export function SourceTag(props: { readonly source: ParameterSource; readonly re
   return (
     <span data-source={source} title={citation === undefined ? t(`detail.source.${source}.hint`) : `${t(`detail.source.${source}.hint`)} — ${citation}`} className={cn("inline-flex items-center gap-1 border px-single py-0.5 font-sans text-[0.65rem]", source === "illustrative" ? "border-dashed border-border" : "border-border")}>
       <svg viewBox="0 0 24 24" width="10" height="10" aria-hidden="true" focusable="false">
-        <path d={SHAPES[source]} fill={source === "measured" || source === "literature" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeDasharray={source === "illustrative" ? "4 3" : undefined} />
+        <path d={SHAPES[source]} fill={source === "measured" || source === "literature" || source === "calibrated" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeDasharray={source === "illustrative" ? "4 3" : undefined} />
       </svg>
       {t(`detail.source.${source}`)}
       {reference === undefined ? null : <span className="text-muted-foreground">· {reference}</span>}
@@ -33,14 +33,13 @@ const flux = (value: number, language: Language): string => `${formatNumber(valu
 
 function parameters(region: ThermalRegion, language: Language, t: ReturnType<typeof useArchive>["t"]): string[] {
   const list: string[] = [];
-  if (region.surfaceTempC !== undefined) list.push(`${t("detail.param.surfaceTemp")} ${num(region.surfaceTempC, language)} °C`);
-  if (region.coreTempC !== undefined) list.push(`${t("detail.param.coreTemp")} ${num(region.coreTempC, language)} °C`);
-  if (region.insulationM2KW !== undefined) list.push(`${t("detail.param.insulation")} ${num(region.insulationM2KW, language)} m²K/W`);
-  if (region.wettedness !== undefined) list.push(`${t("detail.param.wettedness")} ${num(region.wettedness, language)}`);
-  if (region.stomatalConductanceMS !== undefined) list.push(`${t("detail.param.stomatal")} ${sci(region.stomatalConductanceMS, language)} m/s`);
-  if (region.operatingKey !== undefined) list.push(`${t("detail.param.operating")} ${region.operatingKey}`);
-  if (region.riseK !== undefined) list.push(`${t("detail.param.rise")} ${num(region.riseK, language)} K`);
-  if (region.metabolicShare !== undefined) list.push(`${t("detail.param.share")} ${num(region.metabolicShare * 100, language)} %`);
+  const resistance = region.layers.reduce((sum, layer) => sum + layer.resistanceM2KW, 0);
+  if (region.layers.length > 0) list.push(`${t("detail.param.insulation")} ${num(resistance, language)} m²K/W`);
+  if (region.body !== undefined) list.push(`${t("detail.param.share")} ${num(region.body.metabolicShare * 100, language)} %`);
+  if (region.leaf !== undefined) list.push(`${t("detail.param.stomatal")} ${sci(region.leaf.stomatalConductanceMaxMS, language)} m/s`);
+  if (region.operating !== undefined) list.push(`${t("detail.param.operating")} ${region.operating.key} · ${num(region.operating.heatW, language)} W`);
+  if (region.conditioned !== undefined) list.push(`${t("detail.param.coreTemp")} ${num(region.conditioned.interiorTempC, language)} °C`);
+  if (region.fixed !== undefined) list.push(`${t("detail.param.surfaceTemp")} ${num(region.fixed.surfaceTempC, language)} °C`);
   return list;
 }
 
@@ -66,25 +65,32 @@ function ThermalInspector(props: { readonly asset: Asset; readonly thermal: Ther
         ))}
       </DataTable>
       {model.emitters.length === 0 ? null : (
-        <DataTable caption={t("detail.thermal.emitters")} head={[t("detail.col.emitter"), t("detail.col.kind"), t("detail.col.carries"), t("detail.col.temperature"), t("detail.col.velocity"), t("detail.col.diameter"), t("detail.col.rhythm"), t("detail.col.source")]}>
+        <DataTable caption={t("detail.thermal.emitters")} head={[t("detail.col.emitter"), t("detail.col.kind"), t("detail.col.flow"), t("detail.col.rise"), t("detail.col.diameter"), t("detail.col.binding"), t("detail.col.source")]}>
           {model.emitters.map((emitter) => (
-            <Row key={emitter.id} head={emitter.title[language]} cells={[emitter.kind, t(`detail.carries.${emitter.carries}`), `${num(emitter.temperatureC, language)} °C`, `${num(emitter.velocityMS, language)} m/s`, `${num(emitter.diameterM, language)} m`, emitter.periodS === undefined ? "—" : `${num(emitter.periodS, language)} s · ${num((emitter.dutyFrom ?? 0) * 100, language)}–${num((emitter.dutyTo ?? 1) * 100, language)} %`, <SourceTag key="s" source={emitter.source} reference={emitter.reference} asset={asset} />]} />
+            <Row key={emitter.id} head={emitter.title[language]} cells={[emitter.kind, emitter.volumeFlowM3S === undefined ? "—" : `${sci(emitter.volumeFlowM3S, language)} m³/s`, emitter.temperatureRiseK === undefined ? "—" : `${num(emitter.temperatureRiseK, language)} K`, `${num(emitter.diameterM, language)} m`, emitter.operatingKey ?? emitter.region ?? "—", <SourceTag key="s" source={emitter.source} reference={emitter.reference} asset={asset} />]} />
           ))}
         </DataTable>
       )}
       {thermal === null ? <p className="m-0 text-xs text-muted-foreground">{t("detail.thermal.unsolved")}</p> : (
         <>
-          <DataTable caption={t("detail.thermal.solved")} head={[t("detail.col.region"), t("detail.col.surfaceTemp"), t("detail.col.radiant"), t("detail.col.convective"), t("detail.col.latent"), t("detail.col.net")]}>
+          <DataTable caption={t("detail.thermal.solved")} head={[t("detail.col.region"), t("detail.col.surfaceTemp"), t("detail.col.skin"), t("detail.col.radiant"), t("detail.col.net"), t("detail.col.convective"), t("detail.col.latent"), t("detail.col.moisture")]}>
             {model.regions.flatMap((region) => {
               const field = thermal.regions[region.id];
-              return field === undefined ? [] : [<Row key={region.id} head={region.title[language]} cells={[`${num(field.surfaceTempC, language)} °C`, flux(field.radiantFluxWM2, language), flux(field.convectiveFluxWM2, language), flux(field.latentFluxWM2, language), flux(field.netFluxWM2, language)]} />];
+              return field === undefined ? [] : [<Row key={region.id} head={region.title[language]} cells={[`${num(field.surfaceTempC, language)} °C`, field.skinTempC === null ? "—" : `${num(field.skinTempC, language)} °C`, flux(field.emittedRadiantWM2, language), flux(field.netRadiativeWM2, language), flux(field.sensibleWM2, language), flux(field.latentWM2, language), `${num(field.moistureGM2H, language)} g/(m²·h)`]} />];
             })}
           </DataTable>
           <p className="m-0 text-xs text-muted-foreground">{t("detail.thermal.sign")}</p>
-          <dl className="m-0 grid gap-x-4 sm:grid-cols-3 xl:grid-cols-5" data-totals="thermal">
-            <Fact term={t("detail.totals.radiant")}>{formatQuantity(thermal.totals.radiantW, "W", language)}</Fact>
-            <Fact term={t("detail.totals.convective")}>{formatQuantity(thermal.totals.convectiveW, "W", language)}</Fact>
+          {thermal.body === null ? null : (
+            <dl className="m-0 grid gap-x-4 sm:grid-cols-2" data-totals="body">
+              <Fact term={t("detail.thermal.core")}>{num(thermal.body.coreTempC, language)} °C</Fact>
+              <Fact term={t("detail.thermal.skin")}>{num(thermal.body.meanSkinTempC, language)} °C</Fact>
+            </dl>
+          )}
+          <dl className="m-0 grid gap-x-4 sm:grid-cols-3 xl:grid-cols-6" data-totals="thermal">
+            <Fact term={t("detail.totals.radiant")}>{formatQuantity(thermal.totals.netRadiativeW, "W", language)}</Fact>
+            <Fact term={t("detail.totals.convective")}>{formatQuantity(thermal.totals.sensibleW, "W", language)}</Fact>
             <Fact term={t("detail.totals.latent")}>{formatQuantity(thermal.totals.latentW, "W", language)}</Fact>
+            <Fact term={t("detail.totals.moisture")}>{num(thermal.totals.moistureGH, language)} g/h</Fact>
             <Fact term={t("detail.totals.emitterSensible")}>{formatQuantity(thermal.totals.emitterSensibleW, "W", language)}</Fact>
             <Fact term={t("detail.totals.emitterLatent")}>{formatQuantity(thermal.totals.emitterLatentW, "W", language)}</Fact>
           </dl>
@@ -166,7 +172,7 @@ export function ModelSection(props: { readonly asset: Asset; readonly state: Eva
     <section aria-labelledby="detail-model" className="flex flex-col gap-double" data-section="model">
       <h2 id="detail-model" className="m-0 font-serif text-lg">{t("detail.model.title")}</h2>
       <ul className="m-0 flex list-none flex-wrap gap-single p-0" aria-label={t("detail.source.legend")}>
-        {(["measured", "literature", "authored-estimate", "illustrative"] as const).map((source) => <li key={source}><SourceTag source={source} /></li>)}
+        {SOURCES.map((source) => <li key={source}><SourceTag source={source} /></li>)}
       </ul>
       <ThermalInspector asset={props.asset} thermal={props.thermal} environment={props.environment} language={props.language} />
       <StructuralInspector asset={props.asset} state={props.state} structure={props.structure} language={props.language} />

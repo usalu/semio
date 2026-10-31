@@ -3,6 +3,7 @@
  */
 import { afterAll, expect, test } from "bun:test";
 import Ajv from "ajv";
+import bindingVectors from "./bindings.json";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -265,3 +266,67 @@ test("a sibling document imports the parser of another document from the folder 
   expect(accepts(shape.parseShape!, { at: { x: "1" } })).toBe(false);
   expect(accepts(shape.parseShape!, { at: { x: 1, y: 2 } })).toBe(false);
 });
+
+test("a new leaf-owned schema caller moves its already projected callee without an import cycle", async () => {
+  const name = "late-pin";
+  seed(name, { "🟦️.ts": 'import type { Point } from "./📐️geometry/🟦️.ts";\nimport type { Segment, Track } from "./🛤️paths/🟦️.ts";\nexport type { Point, Segment, Track };\n', "📐️geometry/🟦️.ts": POINT, "🛤️paths/🟦️.ts": SEGMENT });
+  projectParsers({ ...options, under: scopeOf(name) });
+  const leaf = join(moduleOf(name), "🟦️.ts"), schema = schemaOf(name);
+  schema.$defs.Anchor = { type: "object", required: ["point"], additionalProperties: false, properties: { point: { $ref: "#/$defs/Point" } } };
+  write(join(moduleOf(name), "🔣️.json"), JSON.stringify(schema));
+  write(leaf, readFileSync(leaf, "utf8").replace("//#region 🚪️Parsers", "export interface Anchor { point: Point }\n\n//#region 🚪️Parsers"));
+  const report = projectParsers({ ...options, under: scopeOf(name) });
+  expect(report.refused).toEqual([]);
+  expect(readFileSync(leaf, "utf8")).toContain("export function parsePoint(");
+  expect(readFileSync(geometryParsers(name), "utf8")).not.toContain("export function parsePoint(");
+  expect(readFileSync(leaf, "utf8")).not.toContain('from "./📐️geometry/🚪️parsers/');
+  expect(await typeErrors([leaf, geometryParsers(name), pathParsers(name)])).toEqual([]);
+  expect(await importCycles([leaf, geometryParsers(name), pathParsers(name)])).toEqual([]);
+  expect(checkParsers({ root, scopes: [scopeOf(name)], unowned: [] })).toMatchObject({ ok: true, pending: [], drift: [], dangling: [], helperless: [] });
+  const module = await import(pathToFileURL(leaf).href) as Record<string, Parser>, validate = new Ajv({ strict: false }).addSchema(schema).compile({ $ref: schema.$id + "#/$defs/Anchor" });
+  for (const value of [{ point: { x: 1, y: 2 } }, { point: {} }, {}, { point: { x: 1, y: 2 }, extra: true }]) expect(accepts(module.parseAnchor!, value)).toBe(validate(value));
+  await agreesWithAjv(name, "late-pinned", { Point: leaf, Segment: pathParsers(name), Track: pathParsers(name) });
+}, 60_000);
+
+test("a provided local type is explicitly published without a duplicate schema projection", async () => {
+  const name = "imported-type", leaf = join(moduleOf(name), "🟦️.ts"), implementation = join(moduleOf(name), "..", "point-implementation", "🟦️.ts"), schema = schemaOf(name);
+  schema.$defs = { Point: schema.$defs.Point };
+  write(join(moduleOf(name), "🔣️.json"), JSON.stringify(schema));
+  write(implementation, POINT);
+  write(leaf, 'import type { Point } from "../point-implementation/🟦️.ts";\n');
+  const report = projectParsers({ ...options, under: scopeOf(name) });
+  expect(report.refused).toEqual([]);
+  const source = readFileSync(leaf, "utf8");
+  expect(source).toContain('export type { Point } from "../point-implementation/🟦️.ts";');
+  expect(source).not.toContain("export interface Point");
+  const consumer = join(moduleOf(name), "..", "consumer.ts");
+  write(consumer, 'import type { Point } from "./🧬️schema/🟦️.ts";\nexport const point: Point = { x: 1, y: 2 };\n');
+  expect(await typeErrors([leaf, implementation, consumer])).toEqual([]);
+  const module = await import(pathToFileURL(leaf).href) as Record<string, Parser>, validate = new Ajv({ strict: false }).compile(schema.$defs.Point);
+  for (const value of POINTS) expect(accepts(module.parsePoint!, value)).toBe(validate(value));
+  expect(projectParsers({ ...options, mode: "report", under: scopeOf(name) }).touched).toEqual([]);
+}, 60_000);
+
+test("foreign parser bindings preserve distinct local and imported constraints in one split component",async()=>{
+ const scope="✏️s/oracle/bindings",base=join(root,scope),owner=join(base,"owner","owner","🧬️schema"),receiver=join(base,"receiver","receiver","🧬️schema"),component="📐️geometry";
+ const point=(minimum:number)=>({title:"Point",type:"object",additionalProperties:false,required:["x"],properties:{x:{type:"number",minimum}}}),foreignDocument=documentOf("binding-owner",{Point:point(bindingVectors.foreignMinimum)}),localDocument=documentOf("binding-receiver",{Point:point(bindingVectors.localMinimum),Shape:{title:"Shape",type:"object",additionalProperties:false,required:["localPoint","foreignPoint"],properties:{localPoint:{$ref:"#/$defs/Point"},foreignPoint:{$ref:foreignDocument.$id+"#/$defs/Point"}}}});
+ write(join(owner,"🔣️.json"),JSON.stringify(foreignDocument));write(join(receiver,"🔣️.json"),JSON.stringify(localDocument));
+ write(join(owner,"🟦️.ts"),'import type {Point} from "./📐️geometry/🟦️.ts";\nexport type {Point};\n');
+ write(join(receiver,"🟦️.ts"),'import type {Point,Shape} from "./📐️geometry/🟦️.ts";\nexport type {Point,Shape};\n');
+ write(join(owner,component,"🟦️.ts"),"export interface Point { x: number }\n");
+ write(join(receiver,component,"🟦️.ts"),"export interface Point { x: number }\nexport interface Shape { localPoint: Point; foreignPoint: Point }\n");
+ expect(projectParsers({...options,under:scope}).refused).toEqual([]);
+ const foreignFile=join(owner,component,PARSERS,"🟦️.ts"),localFile=join(receiver,component,PARSERS,"🟦️.ts"),files=[join(owner,"🟦️.ts"),join(receiver,"🟦️.ts"),foreignFile,localFile];
+ expect(await typeErrors(files)).toEqual([]);expect(await importCycles(files)).toEqual([]);
+ const local=await import(pathToFileURL(localFile).href)as Record<string,Parser>,foreign=await import(pathToFileURL(foreignFile).href)as Record<string,Parser>,ajv=new Ajv({strict:false});ajv.addSchema(foreignDocument);ajv.addSchema(localDocument);
+ const localOracle=ajv.getSchema(localDocument.$id+"#/$defs/Point")!,foreignOracle=ajv.getSchema(foreignDocument.$id+"#/$defs/Point")!,shapeOracle=ajv.getSchema(localDocument.$id+"#/$defs/Shape")!;
+ for(const value of bindingVectors.values){expect(accepts(local.parsePoint!,value)).toBe(localOracle(value)as boolean);expect(accepts(foreign.parsePoint!,value)).toBe(foreignOracle(value)as boolean);const shape={localPoint:value,foreignPoint:{x:10}},reversed={localPoint:{x:0},foreignPoint:value};expect(accepts(local.parseShape!,shape)).toBe(shapeOracle(shape)as boolean);expect(accepts(local.parseShape!,reversed)).toBe(shapeOracle(reversed)as boolean);}
+ expect(auditLeaves({root,under:scope})).toEqual({drift:[],helperless:[]});expect(projectParsers({...options,mode:"report",under:scope,closing:true}).touched).toEqual([]);expect(checkParsers({root,scopes:[scope],unowned:[]})).toMatchObject({ok:true,pending:[],drift:[],dangling:[],helperless:[]});
+ const clean=readFileSync(localFile,"utf8"),binding=/parsePoint as ([\w$]+)/u.exec(clean)?.[1];expect(binding).toBeDefined();
+ write(localFile,clean.replaceAll(binding!,"parsePoint").replace("parsePoint as parsePoint","parsePoint"));
+ expect(auditLeaves({root,under:scope}).drift.map(row=>row.name)).toContain("Shape");
+ expect(projectParsers({...options,under:scope,restate:new Set(["stale"])}).refused).toEqual([]);
+ expect(await typeErrors(files)).toEqual([]);expect(readFileSync(localFile,"utf8")).toBe(clean);
+ expect(auditLeaves({root,under:scope})).toEqual({drift:[],helperless:[]});
+
+},60000);

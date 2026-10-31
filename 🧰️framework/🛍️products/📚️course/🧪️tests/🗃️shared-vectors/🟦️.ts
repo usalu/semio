@@ -1,3 +1,7 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
+import {compileSchemaScopeExport as physicalSchemaScopeV1} from "./../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
+import {findWorkspaceRoot as physicalSchemaWorkspaceRootV1} from "./../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const physicalProjectOracleV1=()=>physicalSchemaScopeV1(physicalSchemaWorkspaceRootV1(import.meta.dir),physicalSchemaSourcePathV1(new URL("./../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",import.meta.url)),null,[physicalSchemaSourcePathV1(new URL("./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url))]);
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -342,7 +346,7 @@ describe("🧾️learner-lifecycle", () => {
 describe("canonical Course build owners", () => {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
   const contractPath = resolve(root, "../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json");
-  const validate = new Ajv({ strict: false }).compile(JSON.parse(readFileSync(contractPath, "utf8")));
+  const validate = physicalProjectOracleV1();
   for (const [owner, name] of [
     ["📦️packages/🟦️typescript", "@semio-tech/course"],
     ["📦️packages/🦀️rust", "@semio-tech/course-rs"],

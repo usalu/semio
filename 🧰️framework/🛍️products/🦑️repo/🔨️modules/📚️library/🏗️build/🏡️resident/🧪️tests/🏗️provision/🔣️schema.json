@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 6,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "root",
+      "control",
+      "storage",
+      "custody",
+      "lose",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "pattern": "^[a-z-]+$"
+      },
+      "root": {
+        "type": "boolean"
+      },
+      "control": {
+        "type": "boolean"
+      },
+      "storage": {
+        "type": "boolean"
+      },
+      "custody": {
+        "type": "boolean"
+      },
+      "lose": {
+        "type": "boolean"
+      },
+      "expected": {
+        "type": "boolean"
+      }
+    }
+  }
+}

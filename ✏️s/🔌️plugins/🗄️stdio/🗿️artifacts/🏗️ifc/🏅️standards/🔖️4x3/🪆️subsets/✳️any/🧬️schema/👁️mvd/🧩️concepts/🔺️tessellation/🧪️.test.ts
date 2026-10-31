@@ -1,5 +1,5 @@
 import {expect,test} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import cases from './cases.json';
 import schema from './🔣️.json';
 import {validateIfcBodyTessellation,ifcBodyTessellationDefinition} from './🟦️.ts';

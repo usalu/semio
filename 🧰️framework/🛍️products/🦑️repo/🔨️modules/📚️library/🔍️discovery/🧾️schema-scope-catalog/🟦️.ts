@@ -792,21 +792,20 @@ export function inventorySchemaScopes(repoRoot: string, taxonomy: Taxonomy = loa
     const provided = Object.keys(scope.formats).filter((formatId) => formatId !== normativeFormatId);
     if (provided.length === 0) continue;
     const sources = new Map<string, string>();
-    for (const formatId of provided) {
-      try {
-        sources.set(formatId, readFileSync(join(root, scope.path, scope.formats[formatId]!), "utf8"));
-      } catch {
-        sources.set(formatId, "");
-      }
-    }
     const restrictions = new Map<string, readonly string[]>();
     for (const module of byScope.get(scopeId) ?? []) for (const document of module.documents) for (const [exportId, formats] of Object.entries(document.exportFormats)) restrictions.set(exportId, formats);
     for (const [exportId, declaration] of Object.entries(scope.exports)) {
       const restricted = restrictions.get(exportId);
       for (const formatId of provided) {
         if (restricted && !restricted.includes(formatId)) continue;
-        if (schemaFormatDeclaresExport(formatId, sources.get(formatId) ?? "", exportId)) continue;
-        diagnostics.push({ code: "schema-export-incomplete", path: `${scope.path}/${scope.formats[formatId]!}`, detail: `${scopeId} declares export ${exportId} in ${declaration.file}; ${formatId} carries no declaration of it. Provide it, or annotate the export with x-semio-formats to declare restricted support honestly.` });
+        const facet = declaration.file.includes("/") ? declaration.file.slice(0, declaration.file.lastIndexOf("/") + 1) : "";
+        const path = `${scope.path}/${facet}${scope.formats[formatId]!.split("/").at(-1)!}`;
+        if (!sources.has(path)) {
+          try { sources.set(path, readFileSync(join(root, path), "utf8")); }
+          catch { sources.set(path, ""); }
+        }
+        if (schemaFormatDeclaresExport(formatId, sources.get(path)!, exportId)) continue;
+        diagnostics.push({ code: "schema-export-incomplete", path, detail: `${scopeId} declares export ${exportId} in ${declaration.file}; ${formatId} carries no declaration of it. Provide it, or annotate the export with x-semio-formats to declare restricted support honestly.` });
       }
     }
   }

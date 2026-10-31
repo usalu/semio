@@ -1,0 +1,116 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roots",
+    "names",
+    "directories",
+    "files",
+    "expected",
+    "privateFence",
+    "changes",
+    "opaqueDirectory",
+    "visibleDirectory",
+    "moves"
+  ],
+  "properties": {
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "directories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "expected": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "privateFence": {
+      "type": "string",
+      "minLength": 1
+    },
+    "changes": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "excluded"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "excluded": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "opaqueDirectory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "visibleDirectory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moves": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "file",
+          "excluded",
+          "fromExcluded"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "excluded": {
+            "type": "boolean"
+          },
+          "fromExcluded": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

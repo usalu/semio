@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 34603008,
+  "chargeBytes": 4096,
+  "preparationMilliseconds": 30000,
+  "cases": [
+    {
+      "id": "preparation-cancelled",
+      "preparationCancelled": true,
+      "consumerCancelled": false,
+      "usable": true,
+      "status": 0
+    },
+    {
+      "id": "consumer-cancelled",
+      "preparationCancelled": false,
+      "consumerCancelled": true,
+      "usable": false,
+      "status": 1
+    },
+    {
+      "id": "preparation-expired",
+      "preparationCancelled": false,
+      "consumerCancelled": false,
+      "preparationExpired": true,
+      "preparationMilliseconds": 15000,
+      "usable": true,
+      "status": 0
+    }
+  ]
+}

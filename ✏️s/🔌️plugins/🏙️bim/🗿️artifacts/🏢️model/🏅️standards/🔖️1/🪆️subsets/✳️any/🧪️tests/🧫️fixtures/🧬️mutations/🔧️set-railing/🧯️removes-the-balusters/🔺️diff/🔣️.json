@@ -1,10 +1,12 @@
 {
   "railings": {
     "rl-1": {
-      "baluster": {
-        "value": null
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "baluster": {
+          "value": null
+        }
+      }
     }
   }
 }

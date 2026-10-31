@@ -2,7 +2,9 @@
   "family_parameters": {
     "fam-table.width": {
       "entry": "Patched",
-      "value": "1.7 m"
+      "value": {
+        "value": "1.7 m"
+      }
     }
   }
 }

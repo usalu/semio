@@ -1,0 +1,12 @@
+{
+  "id": "process-watchdog-linux",
+  "file": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts",
+  "target": "test-process-watchdog-linux",
+  "level": "quick",
+  "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "preserveSuite": "build-cpu-profile"
+}

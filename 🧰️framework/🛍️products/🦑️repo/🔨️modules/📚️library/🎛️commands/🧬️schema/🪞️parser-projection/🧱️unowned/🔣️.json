@@ -235,11 +235,6 @@
     },
     {
       "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
-      "name": "ProgramMeta",
-      "reason": "in-memory-model"
-    },
-    {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
       "name": "ProjectDefinition",
       "reason": "in-memory-model"
     },

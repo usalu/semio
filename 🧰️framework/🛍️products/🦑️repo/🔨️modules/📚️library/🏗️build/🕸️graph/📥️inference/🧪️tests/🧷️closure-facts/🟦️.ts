@@ -1,9 +1,8 @@
 /** 🧷️ Contract: facts about a shared command closure are shaped, not bytes. A closure member, a data leaf or an entry script is admitted by its physical shape, code is consumed through its analysis fact, the partial inference runs in project scope without an all-or-nothing round; and the observation primitives behave accordingly: a shape fact survives an edit of the bytes, a content fact does not, and a project that raced an edit is stale on its own while the pass completes. */
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
+import {mkdirSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {brotliDecompressSync} from "node:zlib";
-import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
@@ -12,6 +11,13 @@ import fixtureSchema from "./🧬️schema/🔣️.json";
 import {inferenceHeaderLine,observeInference,observeInferenceSnapshotV1,observeProjectInferenceV1,observedFs,projectInferenceCountsV1,readInferenceHeaderV1} from "../../../../👁️observation/🟨️.mjs";
 import {censusInferenceRecordsV1} from "../../../../../⚡️caching/🕸️graph/🔏️seal/🧮️census/🟨️.mjs";
 
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1("graph");
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"@semio-tech/process/routing";
+
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),sources=Object.fromEntries(Object.entries(fixture.files).map(([name,path])=>[name,readFileSync(join(here,path),"utf8")]));
 const body=(name:string):string=>{
  const row=fixture.functions[name as keyof typeof fixture.functions],source=sources[row.file]!,start=source.indexOf(row.start),end=source.indexOf(row.end,start+row.start.length);
@@ -19,7 +25,7 @@ const body=(name:string):string=>{
  return source.slice(start,end);
 };
 let scratch="";
-beforeAll(async()=>{scratch=mkdtempSync(join(realpathSync(tmpdir()),"closure-facts-"));await observeInference({cachePath:join(scratch,"init.json"),key:"closure-facts-initialization"},()=>null);});
+beforeAll(async()=>repository.invoke(async()=>{scratch=await repository.scratch("closure-facts-");await observeInference({cachePath:join(scratch,"init.json"),key:"closure-facts-initialization"},()=>null);}));
 afterAll(()=>{rmSync(scratch,{recursive:true,force:true});});
 
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);});
@@ -32,7 +38,7 @@ test("the independent text model reaches the same verdict",()=>{
  expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
 });
 
-test("a shape fact survives an edit of the bytes, a content fact does not",async()=>{
+test("a shape fact survives an edit of the bytes, a content fact does not",async()=>repository.invoke(async()=>{
  const file=join(scratch,"shared.ts");writeFileSync(file,"export const a=1;\n");
  let shape=0,content=0;
  const viaShape=()=>observeInference({cachePath:join(scratch,"shape.json"),key:"shape"},()=>{shape++;try{return observedFs.lstatSync(file).isFile();}catch{return false;}});
@@ -43,9 +49,9 @@ test("a shape fact survives an edit of the bytes, a content fact does not",async
  await viaShape();await viaBytes();
  expect(shape).toBe(1);expect(content).toBe(2);
  rmSync(file);await viaShape();expect(shape).toBe(2);
-});
+}));
 
-test("a project that raced an edit is stale on its own while the pass completes in one round",async()=>{
+test("a project that raced an edit is stale on its own while the pass completes in one round",async()=>repository.invoke(async()=>{
  const shared=join(scratch,"closure.json");writeFileSync(shared,"1");
  const names=["a","b"];
  const pass=(editBetween:boolean)=>observeInferenceSnapshotV1(async()=>{
@@ -65,9 +71,9 @@ test("a project that raced an edit is stale on its own while the pass completes 
  const second=await pass(false);
  expect(second).toEqual(["2a","2b"]);
  expect(counts()).toEqual({"owner-a":2,"owner-b":1});
-});
+}));
 
-test("records that read the same closure share its fact blocks: small headers, identical rows, a bad block recomputes and heals",async()=>{
+test("records that read the same closure share its fact blocks: small headers, identical rows, a bad block recomputes and heals",async()=>repository.invoke(async(original)=>{
  const library=join(scratch,"library"),np=join(scratch,"np");mkdirSync(library,{recursive:true});
  const closure=Array.from({length:800},(_,i)=>{const path=join(library,"m"+i+".ts");writeFileSync(path,"export const v"+i+"="+i+";\n");return path;});
  const privateFile=(name:string)=>{const path=join(scratch,name);writeFileSync(path,name);return path;};
@@ -92,14 +98,15 @@ test("records that read the same closure share its fact blocks: small headers, i
  expect(census.records.map(row=>row[2])).toEqual([rowsA.length,rowsB.length]);expect(census.rows.length).toBeLessThan(rowsA.length+rowsB.length);
  const again=await record("a",first);expect(again).toEqual(a);expect(counts.a).toBe(1);
  const victim=join(np,"ob",headerA.blocks[0]+".br"),moduleUrl=new URL("../../../../👁️observation/🟨️.mjs",import.meta.url).href;
- const child=()=>{
-  const script="const m=await import(process.env.MODULE);let ran=0;const files=JSON.parse(process.env.FILES);const value=await m.observeInference({cachePath:process.env.CACHE,key:['blocks','a']},()=>{ran++;let total=0;for(const p of files)total+=m.observedFs.readFileSync(p,'utf8').length;return{total,own:m.observedFs.readFileSync(process.env.OWN,'utf8')};});console.log(JSON.stringify({ran,total:value.total}));";
-  const result=Bun.spawnSync([process.execPath,"-e",script],{env:{...process.env,MODULE:moduleUrl,CACHE:join(np,"a.json"),FILES:JSON.stringify(closure),OWN:first}});
-  return JSON.parse(result.stdout.toString().trim().split("\n").at(-1)!) as {ran:number;total:number};
+ const child=async()=>{
+  const script="const{receiveScriptProcessInvocation}=await import("+JSON.stringify(import.meta.resolve("@semio-tech/process/routing"))+");await receiveScriptProcessInvocation(process.env,async()=>{const m=await import(process.env.MODULE);let ran=0;const files=JSON.parse(process.env.FILES);const value=await m.observeInference({cachePath:process.env.CACHE,key:['blocks','a']},()=>{ran++;let total=0;for(const p of files)total+=m.observedFs.readFileSync(p,'utf8').length;return{total,own:m.observedFs.readFileSync(process.env.OWN,'utf8')};});console.log(JSON.stringify({ran,total:value.total}));});";
+  const result=await captureOwnedCommandResultV1(process.execPath,["-e",script],repository.root,{control:createIssuedResourceControlV1(original,"inference:closure-child",0),env:scriptInvocationEnvironment(original,{...process.env,MODULE:moduleUrl,CACHE:join(np,"a.json"),FILES:JSON.stringify(closure),OWN:first}),output:{maximumBytes:65536,maximumLines:256}});
+  expect(result.status,result.stderr).toBe(0);expect(result.signal,result.stderr).toBeNull();
+  return JSON.parse(result.stdout.trim().split("\n").at(-1)!) as {ran:number;total:number};
  };
- expect(child()).toEqual({ran:0,total:a.total});
+ expect(await child()).toEqual({ran:0,total:a.total});
  writeFileSync(victim,Buffer.from("not a block"));
- expect(child()).toEqual({ran:1,total:a.total});
- expect(child()).toEqual({ran:0,total:a.total});
+ expect(await child()).toEqual({ran:1,total:a.total});
+ expect(await child()).toEqual({ran:0,total:a.total});
  expect(brotliDecompressSync(readFileSync(victim)).length).toBeGreaterThan(100);
-});
+}));

@@ -197,7 +197,7 @@ function zoomTrigger(node: EventTarget | null, host: HTMLElement): Element | nul
   return trigger !== null && host.contains(trigger) ? trigger : null;
 }
 
-/** 🃏️ The `display: contents` host of one card: the pointer zooms its page only while it is over the card's explore control
+/** 🃏️ The stable host of one card: the pointer zooms its page only while it is over the card's explore control
  * (`data-layered-zoom`); keyboard focus anywhere in the card reveals the page, and leaving that focus conceals it. The card
  * itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer hover conceals
  * the other hosts without rendering them again, and marks each one `data-concealed`: the slot and the hit target stay,
@@ -213,17 +213,21 @@ export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHo
   readonly onConceal: (id: string) => void;
   readonly onElement: (id: string, element: HTMLElement | null) => void;
   readonly renderCard: LayeredOverviewProps["renderCard"];
+  readonly placement: { readonly onCell: React.RefCallback<HTMLDivElement> | undefined; readonly style: React.CSSProperties | undefined } | null;
 }): React.ReactElement {
   const { pane, onOpen, onElement, onReveal, onConceal, zoomHold } = props;
   const open = React.useCallback(() => onOpen(pane.id), [onOpen, pane.id]);
-  const ref = React.useCallback((element: HTMLDivElement | null) => onElement(pane.id, element), [onElement, pane.id]);
+  const onCell = props.placement?.onCell;
+  const ref = React.useCallback((element: HTMLDivElement | null) => { onElement(pane.id, element); onCell?.(element); }, [onElement, pane.id, onCell]);
   return (
     <div
       ref={ref}
       data-layered-card={pane.id}
       data-revealed={props.revealed ? "" : undefined}
       data-reveal={props.source ?? undefined}
-      className="contents"
+      data-layered-cell={props.placement === null ? undefined : pane.id}
+      className={props.placement === null ? "contents" : "pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom"}
+      style={props.placement?.style}
       onPointerOver={(event) => {
         if (event.pointerType !== "mouse" || zoomTrigger(event.target, event.currentTarget) === null) return;
         const decision = layeredZoomOver(zoomHold.current);

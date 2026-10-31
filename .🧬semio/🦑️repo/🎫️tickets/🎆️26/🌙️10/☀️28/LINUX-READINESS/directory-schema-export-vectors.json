@@ -1,0 +1,195 @@
+{
+  "modules": [
+    {
+      "module": "events_commands_and_admin",
+      "directory": "📖️events-commands-and-admin",
+      "names": [
+        "DirectorySpaceKind",
+        "DirectorySpaceVisibility",
+        "DirectorySpaceRole",
+        "DocumentScope",
+        "ArtifactHash",
+        "CheckpointId",
+        "DirectoryActorKind",
+        "DirectoryActor",
+        "Hlc",
+        "DirectoryEventBody",
+        "DirectoryEvent",
+        "DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS",
+        "DIRECTORY_EVENT_PAGE_MAX_BYTES",
+        "DIRECTORY_EVENT_PAGE_MAX_EVENT_BYTES",
+        "DIRECTORY_PREFERENCE_PAGE_PATH_V1",
+        "USER_PREFERENCE_SCHEMA_ID_MAX_BYTES",
+        "USER_PREFERENCE_MUTATION_MAX_BYTES",
+        "DirectoryEventPageV1",
+        "DirectoryEventPageErrorV1",
+        "directory_event_page_has_control",
+        "DirectoryCommand",
+        "EditedArtifactFrontierV1",
+        "DIRECTORY_COMMAND_REQUEST_MAX_BYTES",
+        "DIRECTORY_COMMAND_RECEIPT_MAX_BYTES",
+        "DIRECTORY_COMMAND_RECEIPT_MAX_EVENTS",
+        "DIRECTORY_COMMAND_INVITE_TOKEN_MAX_BYTES",
+        "DIRECTORY_COMMAND_REQUEST_ID_LEN",
+        "DirectoryCommandRequestV1",
+        "DirectoryCommandOutcomeV1",
+        "DirectoryCommandResultV1",
+        "DirectoryCommandReceiptV1",
+        "DirectoryCommandErrorCodeV1",
+        "mint_directory_command_request_id",
+        "AdminIntentV1",
+        "AdminIntentStateV1",
+        "AdminIntentOutcomeV1",
+        "AdminIntentResultV1",
+        "AdminIntentReceiptV1",
+        "AdminOperationProgressV1",
+        "AdminOperationStatusV1",
+        "AdminPageV1",
+        "AdminRecordedConnectionV1",
+        "AdminConnectionSnapshotV1",
+        "AdminOperationAuditPhaseV1",
+        "AdminOperationAuditV1"
+      ],
+      "restricted": [
+        {
+          "name": "valid_directory_command_request_id",
+          "visibility": "pub(crate)"
+        }
+      ]
+    },
+    {
+      "module": "views_and_document_open",
+      "directory": "🪟️views-and-document-open",
+      "names": [
+        "SpaceView",
+        "PublicSpaceViewV1",
+        "MemberSpaceViewV1",
+        "PublicDocumentCatalogEntryV1",
+        "DirectorySpaceListEntryV1",
+        "DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_ROWS",
+        "DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES",
+        "DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES",
+        "DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA",
+        "DirectorySpaceAdministrationSectionV1",
+        "DirectorySpaceAdministrationMemberRowV1",
+        "DirectorySpaceAdministrationInviteRowV1",
+        "DirectorySpaceAdministrationMemberWindowV1",
+        "DirectorySpaceAdministrationInviteWindowV1",
+        "DirectorySpaceAdministrationDocumentWindowV1",
+        "DirectorySpaceAdministrationPublicDocumentWindowV1",
+        "DirectorySpaceAdministrationCapabilitiesV1",
+        "DirectorySpaceAdministrationPageV1",
+        "DirectorySpaceAdministrationPageErrorV1",
+        "MemberView",
+        "UserView",
+        "ConnectionView",
+        "DocumentOwner",
+        "DocumentFrontier",
+        "DocumentDescriptor",
+        "DOCUMENT_OPEN_ID_MAX_BYTES",
+        "DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES",
+        "DOCUMENT_OPEN_PLAN_MAX_TTL_MS",
+        "DOCUMENT_OPEN_MAX_SAFE_INTEGER",
+        "DocumentOpenIntentV1",
+        "DocumentOpenRendererTargetV1",
+        "DocumentOpenSurfaceRoleV1",
+        "DocumentExecutionProtocolV1",
+        "DocumentOpenPackageV1",
+        "DocumentOpenCatalogV1",
+        "DocumentOpenArtifactV1",
+        "DocumentOpenParentDialectV1",
+        "DocumentOpenSurfaceV1",
+        "DocumentOpenGrantV1",
+        "DocumentOpenCheckpointV1",
+        "DocumentOpenRevalidationV1",
+        "DocumentOpenPlanV1",
+        "DocumentPlanSocketGrantIntentV1",
+        "DocumentOpenPlanErrorCodeV1",
+        "DocumentOpenPlanErrorV1",
+        "valid_document_open_hash"
+      ],
+      "restricted": [
+        {
+          "name": "directory_space_administration_cursor_valid",
+          "visibility": "pub(crate)"
+        },
+        {
+          "name": "directory_space_administration_text_valid",
+          "visibility": "pub(crate)"
+        },
+        {
+          "name": "directory_space_administration_members_valid",
+          "visibility": "pub(crate)"
+        },
+        {
+          "name": "directory_space_administration_invites_valid",
+          "visibility": "pub(crate)"
+        },
+        {
+          "name": "valid_document_open_text",
+          "visibility": "pub(super)"
+        }
+      ]
+    },
+    {
+      "module": "execution_target_artifacts_and_stream",
+      "directory": "🛰️execution-target-artifacts-and-stream",
+      "names": [
+        "DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES",
+        "DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES",
+        "DocumentExecutionTargetComponentV1",
+        "DocumentExecutionTargetDescriptorV1",
+        "DocumentExecutionTargetLeaseFieldsV1",
+        "lease_fields_from_plan_v1",
+        "same_lease_fields_v1",
+        "DocumentExecutionTargetStatusCodeV1",
+        "DocumentExecutionTargetLocaleV1",
+        "DescriptorDigestError",
+        "validate_document_descriptor_v1",
+        "ArtifactFrontier",
+        "ArtifactBlobRef",
+        "PublishedArtifactBlob",
+        "PublishedArtifactCheckpoint",
+        "ArtifactCheckpoint",
+        "ArtifactRetention",
+        "DocumentView",
+        "InviteView",
+        "DirectoryConnectionPhase",
+        "DirectoryPresenceActor",
+        "RebootstrapRequired",
+        "DirectoryAccessChange",
+        "DirectoryStreamMessage"
+      ],
+      "restricted": []
+    }
+  ],
+  "groups": [
+    {
+      "module": "session_authority",
+      "names": [
+        "DIRECTORY_SESSION_AUTHORITY_MAX_BYTES",
+        "DirectorySessionAuthorityV1",
+        "DirectorySessionKindV1"
+      ]
+    },
+    {
+      "module": "document_index",
+      "names": [
+        "DirectoryIndexedDocumentViewV1",
+        "DocumentIndexEntryV1"
+      ]
+    },
+    {
+      "module": "semio_framework_os_directory_browser_actor",
+      "names": [
+        "DOCUMENT_BROWSER_ACTOR_INTERFACES",
+        "DOCUMENT_BROWSER_ACTOR_MAX_BYTES",
+        "DocumentBrowserActorByteLengthV1",
+        "DocumentBrowserActorErrorV1",
+        "DocumentBrowserActorSourceV1",
+        "DocumentExecutionTargetBrowserActorV1",
+        "DocumentOpenBrowserActorV1"
+      ]
+    }
+  ]
+}

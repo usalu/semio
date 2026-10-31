@@ -23,8 +23,9 @@ export async function isolateRequestV1(request,body,state=process){
 /** 🏁 The marker an executor writes to both output streams after a command; the pool delivers every byte before it and none after. */
 export const executorEndMarkerV1=id=>"\u0000semio-end:"+id+"\u0000";
 
+/** 🏁 Queues the complete delimiter line with command output, before console formatting can append a reset. */
 function fence(state,id){
- const marker=executorEndMarkerV1(id),sink=state.console??console;
+ const marker=executorEndMarkerV1(id)+"\n",sink=state.console??console;
  sink.log(marker);sink.error(marker);
  return new Promise(resolve=>setImmediate(resolve));
 }

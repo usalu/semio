@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "polygon tangent orientation and nonzero direction",
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🧬️schema/🥽️polygon/🔣️.json",
+      "pointer": "/properties/attributes/properties/tangent/allOf/1/properties/values/items",
+      "instances": [
+        {
+          "value": [
+            1,
+            0,
+            0,
+            1
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            1,
+            0,
+            0,
+            0
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            1,
+            0,
+            0
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            1,
+            0,
+            0,
+            1,
+            1
+          ],
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "refused entry pair",
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json",
+      "pointer": "/properties/refusedEntries/items",
+      "instances": [
+        {
+          "value": [
+            "a",
+            1
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            "a",
+            "invalid"
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            "a",
+            null
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            "a",
+            1,
+            2
+          ],
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "refusal heap is zero pair",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/⚠️receipt/🔣️.json",
+      "pointer": "/properties/refusalHeap",
+      "instances": [
+        {
+          "value": [
+            0,
+            0
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            1,
+            0
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            0
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            0,
+            0,
+            0
+          ],
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "dashboard string pair",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json",
+      "pointer": "/$defs/Pair",
+      "instances": [
+        {
+          "value": [
+            "a",
+            "b"
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            "a",
+            1
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            "a"
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            "a",
+            "b",
+            "c"
+          ],
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "dashboard tool ownership",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json",
+      "pointer": "/$defs/DashboardToolCommand",
+      "instances": [
+        {
+          "value": [
+            "repo",
+            "test"
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            "code",
+            "."
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            "open",
+            "-a",
+            "Code.app"
+          ],
+          "valid": false
+        },
+        {
+          "value": [
+            "repo",
+            "code"
+          ],
+          "valid": true
+        }
+      ]
+    }
+  ]
+}

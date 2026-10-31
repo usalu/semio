@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 const channelContract = JSON.parse(readFileSync(new URL("../../../🧬️schema/🪪️channels/🔣️.json", import.meta.url), "utf8"));
 const channelFixtures = JSON.parse(readFileSync(new URL("../../../🧪️tests/🧫️fixtures/🪪️channels/🔣️.json", import.meta.url), "utf8"));
 test("packaged BRep channels satisfy typed schema and portable identities", () => {

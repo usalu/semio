@@ -1,0 +1,82 @@
+{
+  "cases": [
+    {
+      "id": "struct",
+      "source": "pub struct Item;",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "enum",
+      "source": "pub enum Item { Case }",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "type",
+      "source": "pub type Item<T> = Vec<T>;",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "named",
+      "source": "pub use types::Item;",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "named-crate",
+      "source": "pub use crate::types::Item;",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "named-alias",
+      "source": "pub use types::Original as Item;",
+      "name": "Item",
+      "declared": true
+    },
+    {
+      "id": "restricted-crate",
+      "source": "pub(crate) use types::Item;",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "restricted-parent",
+      "source": "pub(super) use types::Item;",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "group",
+      "source": "pub use types::{Item};",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "glob",
+      "source": "pub use types::*;",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "private",
+      "source": "use types::Item;",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "other-name",
+      "source": "pub use types::Other;",
+      "name": "Item",
+      "declared": false
+    },
+    {
+      "id": "function",
+      "source": "pub fn Item() {}",
+      "name": "Item",
+      "declared": false
+    }
+  ]
+}

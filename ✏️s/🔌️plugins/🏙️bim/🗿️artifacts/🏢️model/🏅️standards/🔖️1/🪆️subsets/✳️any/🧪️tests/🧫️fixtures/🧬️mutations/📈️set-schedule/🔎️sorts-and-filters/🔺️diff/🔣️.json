@@ -2,44 +2,46 @@
   "schedules": {
     "sch-walls": {
       "entry": "Patched",
-      "filter": [
-        {
-          "key": {
-            "Field": {
-              "field": "Length"
+      "value": {
+        "filter": [
+          {
+            "key": {
+              "Field": {
+                "field": "Length"
+              }
+            },
+            "op": "GreaterOrEqual",
+            "value": "6"
+          },
+          {
+            "key": {
+              "Field": {
+                "field": "Name"
+              }
+            },
+            "op": "Contains",
+            "value": "st"
+          }
+        ],
+        "sort": [
+          {
+            "descending": true,
+            "key": {
+              "Field": {
+                "field": "Length"
+              }
             }
           },
-          "op": "GreaterOrEqual",
-          "value": "6"
-        },
-        {
-          "key": {
-            "Field": {
-              "field": "Name"
-            }
-          },
-          "op": "Contains",
-          "value": "st"
-        }
-      ],
-      "sort": [
-        {
-          "descending": true,
-          "key": {
-            "Field": {
-              "field": "Length"
+          {
+            "descending": false,
+            "key": {
+              "Field": {
+                "field": "Name"
+              }
             }
           }
-        },
-        {
-          "descending": false,
-          "key": {
-            "Field": {
-              "field": "Name"
-            }
-          }
-        }
-      ]
+        ]
+      }
     }
   }
 }

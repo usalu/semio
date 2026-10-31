@@ -1,6 +1,10 @@
+import Ajv from "ajv";
+import { Database } from "bun:sqlite";
+import signalCases from "./🔣️signals.json" with { type: "json" };
+import signalSchema from "./🧬️schema/🔣️signals.json" with { type: "json" };
 import { describe, expect, test } from "bun:test";
 import { ToolErrorV1, toolForCommandV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
-import { runToolsCommandV1 } from "../../⌨️command/🟦️.ts";
+import { runToolsCommandV1, toolCommandExitStatusV1 } from "../../⌨️command/🟦️.ts";
 
 const context = (lines: string[]) => ({ environment: { ...process.env, SEMIO_LANGUAGE: "en" }, write: (line: string) => { lines.push(line); } });
 
@@ -22,4 +26,23 @@ describe("repo tools exec accepts an executable a registered tool owns", () => {
     expect(error).toBeInstanceOf(ToolErrorV1);
     expect(String((error as Error).message)).toContain("no-such-tool");
   });
+});
+
+type SignalCorpusV1 = Readonly<{ version: 1; cases: readonly Readonly<{ name: string; status: number | null; signal: string | null; signals: Readonly<Record<string, number>>; expected: number }>[] }>;
+
+test("signal outcomes agree with the neutral corpus and independent SQLite oracle", () => {
+  const validate = new Ajv({ strict: true }).compile<SignalCorpusV1>(signalSchema);
+  const corpus: unknown = signalCases;
+  if (!validate(corpus)) throw Error("Signal corpus schema required: " + JSON.stringify(validate.errors));
+  expect(validate(corpus)).toBe(true);
+  const database = new Database(":memory:");
+  try {
+    const query = database.query<{ code: number }, [number | null, string | null, number | null]>("SELECT COALESCE(?1, CASE WHEN ?2 IS NOT NULL AND ?3 IS NOT NULL THEN 128 + ?3 ELSE 1 END) AS code");
+    for (const row of corpus.cases) {
+      const signal = row.signal === null ? null : Object.entries(row.signals).find(([name]) => name === row.signal)?.[1] ?? null;
+      const oracle = query.get(row.status, row.signal, signal);
+      expect(oracle?.code).toBe(row.expected);
+      expect(toolCommandExitStatusV1(row.status, row.signal, row.signals)).toBe(row.expected);
+    }
+  } finally { database.close(); }
 });

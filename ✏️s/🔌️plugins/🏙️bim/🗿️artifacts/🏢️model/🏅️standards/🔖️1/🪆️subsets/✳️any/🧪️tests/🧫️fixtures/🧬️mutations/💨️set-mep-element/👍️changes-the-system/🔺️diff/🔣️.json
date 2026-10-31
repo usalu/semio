@@ -2,7 +2,9 @@
   "mep_elements": {
     "mep-duct": {
       "entry": "Patched",
-      "system": "Exhaust"
+      "value": {
+        "system": "Exhaust"
+      }
     }
   }
 }

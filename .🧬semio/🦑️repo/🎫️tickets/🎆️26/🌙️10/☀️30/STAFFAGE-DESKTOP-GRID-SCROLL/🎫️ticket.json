@@ -1,0 +1,87 @@
+{
+  "title": "Staffage Desktop Grid Scroll",
+  "emoji": "🗂️",
+  "status": "closed",
+  "description": "Keep desktop and tablet Staffage grids in strip mode and scroll rows that exceed the window, with mobile swipe only.",
+  "summary": "The manifest check now sees every loaded asset document, and the live archive shows 107 ready assets with an empty manifest check.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "03be94ec-0875-4d23-9164-03fa5b5f3730",
+    "1591559c-e08c-450f-ae24-99317f7d84a4"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-30 22:42:13",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Keep desktop and tablet Staffage grids in strip mode and scroll rows that exceed the window, with mobile swipe only."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 22:46:12",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "Desktop and tablet stay on the scrolling card grid. Only a phone swipes.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🥞️levels/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🏠️overview/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/🗃️browse/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🎨️.css"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/🗂️grid-scroll/🥒️.feature"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-30 23:28:23",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Finish staffage catalog validation so every authored asset stays visible to the manifest check."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 23:47:45",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "The manifest check now sees every loaded asset document, and the live archive shows 107 ready assets with an empty manifest check.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🟦️.tsx"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🧪️tests/📚️catalog-loading/🥒️.feature"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/🔨️modules/📚️catalog/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️30/STAFFAGE-DESKTOP-GRID-SCROLL/live-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️30/STAFFAGE-DESKTOP-GRID-SCROLL/live-browser.mjs"
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import law from "./🧫️fixtures/🔣️.json";

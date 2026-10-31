@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio.repo.launcher.runtimes/1",
   "title": "Runtime registry of the repo launcher",
   "description": "The pinned JavaScript runtimes the repo launcher provisions, the repository implementation entries it starts through them, and the EN/DE texts it prints. Every runtime is an adapter: the launcher knows only this contract.",

@@ -1,6 +1,7 @@
 //! 📖️ Events, commands and administration of the directory schema: the space kinds, visibility and roles, the artifact hash, the actor and clock, the event log records and pages, the directory command with its request, receipt and error codes and the administration intents, progress, connection and audit records. See [`super`].
 
 use super::*;
+use super::views_and_document_open::valid_document_open_text;
 
 //#region 🔖️Vocabulary
 /// 🏛️ Mirrors `🪐️space::SpaceKind` string-identically (see this file's header).

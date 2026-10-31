@@ -2,8 +2,10 @@
   "spaces": {
     "sp-1": {
       "entry": "Patched",
-      "name": "Cooking Area",
-      "usage": "Dining"
+      "value": {
+        "name": "Cooking Area",
+        "usage": "Dining"
+      }
     }
   }
 }

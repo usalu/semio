@@ -200,6 +200,164 @@
         "--nocapture"
       ],
       "accepted": true
+    },
+    {
+      "name": "clippy-deny-split",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "clippy-deny-joined",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "-Dclippy::all"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "clippy-deny-long",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "--deny=warnings"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "clippy-output",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "clippy-linker",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "-Clinker=/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "clippy-lint-path",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "-D",
+        "../outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "clippy-unknown",
+      "args": [
+        "clippy",
+        "--lib",
+        "--",
+        "--plugin=/outside"
+      ],
+      "accepted": false
+    }
+  ],
+  "coverageCases": [
+    {
+      "name": "coverage-nextest-opaque",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--profile",
+        "quick",
+        "--",
+        "--output",
+        "/outside"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "coverage-test-list",
+      "args": [
+        "llvm-cov",
+        "test",
+        "--profile",
+        "prototype",
+        "--",
+        "--list"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "global-value-is-not-prefix",
+      "args": [
+        "--config",
+        "llvm-cov",
+        "--color",
+        "never",
+        "llvm-cov",
+        "nextest",
+        "--",
+        "--nocapture"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "global-value-does-not-hide-compiler",
+      "args": [
+        "--config",
+        "llvm-cov",
+        "rustc",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "coverage-report-has-no-program",
+      "args": [
+        "llvm-cov",
+        "report",
+        "--",
+        "--output",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "coverage-unknown-compiler",
+      "args": [
+        "llvm-cov",
+        "rustc",
+        "--",
+        "-o",
+        "/outside"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "coverage-archive-is-not-program",
+      "args": [
+        "llvm-cov",
+        "nextest-archive",
+        "--",
+        "--nocapture"
+      ],
+      "accepted": false
     }
   ]
 }

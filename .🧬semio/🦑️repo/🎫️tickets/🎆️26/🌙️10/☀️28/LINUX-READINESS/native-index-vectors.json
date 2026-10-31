@@ -1,0 +1,58 @@
+{
+  "cases": [
+    {
+      "name": "sparse-valid",
+      "count": 1,
+      "expectedCount": null,
+      "change": "none"
+    },
+    {
+      "name": "full-valid",
+      "count": 64,
+      "expectedCount": 64,
+      "change": "none"
+    },
+    {
+      "name": "hash-mismatch",
+      "count": 1,
+      "expectedCount": null,
+      "change": "hash"
+    },
+    {
+      "name": "byte-mismatch",
+      "count": 1,
+      "expectedCount": null,
+      "change": "bytes"
+    },
+    {
+      "name": "duplicate",
+      "count": 2,
+      "expectedCount": null,
+      "change": "duplicate"
+    },
+    {
+      "name": "unordered",
+      "count": 2,
+      "expectedCount": null,
+      "change": "unordered"
+    },
+    {
+      "name": "out-of-range",
+      "count": 1,
+      "expectedCount": null,
+      "change": "range"
+    },
+    {
+      "name": "incomplete",
+      "count": 63,
+      "expectedCount": 64,
+      "change": "none"
+    },
+    {
+      "name": "document-mismatch",
+      "count": 1,
+      "expectedCount": null,
+      "change": "documents"
+    }
+  ]
+}

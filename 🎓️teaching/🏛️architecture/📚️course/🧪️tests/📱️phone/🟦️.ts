@@ -43,7 +43,7 @@ test("home is the same grid on a phone, swiped page by page in both directions, 
   const cards = await root.locator(":scope > [data-layered-overlay] > [data-layered-cell]").evaluateAll((cells) =>
     cells.map((cell) => {
       const held = cell.querySelector<HTMLElement>("[data-layered-card] [data-card]")!;
-      return { centred: getComputedStyle(held.closest("[data-layered-card]")!.parentElement!).alignItems, cut: held.scrollHeight - held.clientHeight };
+      return { centred: getComputedStyle(cell).alignItems, cut: held.scrollHeight - held.clientHeight };
     }),
   );
   expect(cards, "every card is centred on its page where it fits and cut nowhere").toEqual(cards.map(() => ({ centred: "safe center", cut: 0 })));

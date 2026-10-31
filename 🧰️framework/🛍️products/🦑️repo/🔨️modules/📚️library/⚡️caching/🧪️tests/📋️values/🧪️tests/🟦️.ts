@@ -1,5 +1,5 @@
 import Ajv from"ajv";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{testMethodV1,testInputsV1}from"../🟦️.ts";
 import{cargoLockClosure,cargoLockIdentity}from"../../../../🏗️build/📥️inputs/🔒️lock/🟨️.mjs";
 import schema from"../🧬️schema.json";

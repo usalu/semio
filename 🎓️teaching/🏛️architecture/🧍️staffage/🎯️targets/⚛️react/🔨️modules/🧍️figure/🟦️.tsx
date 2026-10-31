@@ -1,6 +1,6 @@
 /** 🧍️ `StaffageFigure`: one evaluated asset drawn as inline SVG in true paper size or fitted to its parent, with hover and keyboard inspection and a table alternative to colour.
  *
- * `fit="paper"` sizes the element to the scene in CSS millimetres times `zoom` (zoom 1 is print size on screen); `fit="contain"` fits the parent box without changing the scene.
+ * `fit="paper"` sizes the element to the scene in CSS millimetres times `zoom` (zoom 1 is print size on screen); `fit="contain"` fills the parent box and never reports the scene's size back to it, so a walking figure cannot resize the card around it.
  * Only analytic views solve thermal or structural analyses; results are memoised by (asset, query, time, environment) across all figures.
  *
  * @see ../⏱️clock/🟦️.ts — the shared time source
@@ -133,7 +133,8 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
   const markup = useMemo(() => inlineSvg(scene, props.frame), [scene, frameKey]);
   const widthMm = props.frame === undefined ? scene.widthMm : props.frame.maxX - props.frame.minX;
   const heightMm = props.frame === undefined ? scene.heightMm : props.frame.maxY - props.frame.minY;
-  const items = useMemo(() => valuedItems(scene), [scene]);
+  const showValues = props.annotations?.legend !== false || onInspect !== undefined;
+  const items = useMemo(() => (showValues ? valuedItems(scene) : []), [scene, showValues]);
   const ids = useMemo(() => new Set(items.map((item) => svgId(item.id))), [items]);
   const [focused, setFocused] = useState(-1);
   const tableId = useRef(`staffage-values-${Math.random().toString(36).slice(2, 9)}`).current;
@@ -163,8 +164,8 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
 
   const size: CSSProperties =
     fit === "paper"
-      ? { width: `${widthMm * zoom}mm`, height: `${heightMm * zoom}mm` }
-      : { width: "100%", height: "100%", aspectRatio: `${widthMm} / ${heightMm}`, maxWidth: "100%", maxHeight: "100%" };
+      ? { position: "relative", width: `${widthMm * zoom}mm`, height: `${heightMm * zoom}mm`, overflow: "hidden", flex: "none" }
+      : { position: "absolute", inset: 0, width: "100%", height: "100%", minWidth: 0, minHeight: 0, overflow: "hidden", flex: "none" };
   const label = title ?? describeScene(scene, language);
   const current = items[focused];
 
@@ -185,15 +186,15 @@ export function StaffageFigure(props: StaffageFigureProps): ReactElement {
       data-time={scene.metadata.timeS}
       data-width-mm={widthMm}
       data-height-mm={heightMm}
-      style={{ position: "relative", display: "block", overflow: "visible", flex: "none", ...(props.frame !== undefined && scene.background !== null ? { background: scene.background } : {}), ...size }}
+      style={{ display: "block", ...(props.frame !== undefined && scene.background !== null ? { background: scene.background } : {}), ...size }}
       onPointerMove={onPointer}
       onPointerLeave={() => onInspect !== undefined && inspect(-1)}
       onKeyDown={onKey}
       onBlur={() => focused >= 0 && inspect(-1)}
     >
-      <div style={{ width: "100%", height: "100%" }} dangerouslySetInnerHTML={{ __html: markup }} />
+      <div style={{ position: "absolute", inset: 0 }} dangerouslySetInnerHTML={{ __html: markup }} />
     </div>
-    <StaffageValueTable scene={scene} language={language} id={tableId} />
+    {showValues ? <StaffageValueTable scene={scene} language={language} id={tableId} /> : null}
     <span role="status" aria-live="polite" style={HIDDEN}>
       {current === undefined ? "" : `${current.value.label[language]}: ${valueText(current.value, language)}`}
     </span>

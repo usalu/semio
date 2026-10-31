@@ -28,18 +28,19 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, projects,
   let state = "idle", started, closing = false, capacity, opening = Promise.resolve(), image, refusal, ownedRefresh;
   const captured = launch ?? undefined, imageFile = () => { if (image !== undefined) return image.file; const directory = createFarmTemporaryDirectoryV1("image"), file = join(directory, "snapshot.json"); try { writeFileSync(file, captured.text(), { flag: "wx", mode: 0o600 }); } catch (error) { rmSync(directory, { recursive: true, force: true }); throw error; } image = { directory, file }; return file; };
   const stop = (key, fields) => { state = "off"; say(key, fields); };
+  const closePool=pool=>pool.closing??=(pool.farm.close().finally(()=>pool.release()));
   const loops = () => pools.reduce((total, pool) => total + (pool.ready ? pool.workers * policy.loopsPerWorker : 0), 0);
   const start = ({ source, workers, megabytes }, release) => {
     if (state === "off") { release(); return undefined; }
     let auxiliaryFile;
     try { auxiliaryFile = captured === undefined ? undefined : imageFile(); } catch (error) { release(); stop("degraded", { reason: String(error?.message ?? error) }); return undefined; }
-    const base = createFarmTemporaryDirectoryV1("staging"), pool = { source, workers, megabytes, base, release, ready: false, farm: undefined, work:new Set() };
+    const base = createFarmTemporaryDirectoryV1("staging"), pool = { source, workers, megabytes, base, released:false,release:()=>{if(!pool.released){pool.released=true;release();}}, ready: false, farm: undefined, work:new Set(),closing:undefined };
     pool.farm = createFarmV1({
       entry: captured === undefined ? ENTRY : GRAPH_FARM_WORKER_ROLE_V1, service: SERVICE, workers, megabytes, environment: captured === undefined ? environment : { ...environment, ...captured.environment }, signal,
       session: { version: 3, workspaceRoot, registry: context.registry ?? null, contracts, commandInputs: commandInputs ?? null, lateClosures, projectsByRoot: [...projectsByRoot], componentRoots, stagingBase: base, authority: inferenceAuthorityRowsV1() },
       accept: identity => { const difference = graphFarmIdentityDifferenceV1(graphFarmIdentityV1(inferenceRecordIdentityV1(), captured?.implementation), identity); refusal = difference === "" ? undefined : difference + (Array.isArray(identity?.conflicts) && identity.conflicts.length ? " (" + identity.conflicts.join(", ") + ")" : ""); return difference === ""; },
       report: (event, fields) => {
-        if (event === "disabled") pool.release();
+        if (event === "disabled") { pool.ready=false;void closePool(pool).catch(()=>{}); }
         if (event === "recycled") { counts.recycled++; say("recycled", fields); }
         else if (event === "lost") { counts.lost++; say("lost", fields); }
         else if (event === "disabled") say(String(fields.reason).startsWith("identity") ? "refused" : "degraded", refusal === undefined ? fields : { ...fields, reason: fields.reason + ": " + refusal });
@@ -83,7 +84,7 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, projects,
       const adopting = performance.now(), adoption = adopt(workspaceRoot, join(pool.base, "w" + outcome.slot + "-g" + outcome.generation), outcome.reply.names);
       counts.adoptMilliseconds += performance.now() - adopting;
       counts.leaves += outcome.reply.names.length; counts.workerCpuMilliseconds += outcome.reply.cpuMilliseconds;
-      if (adoption.declined) { counts.declined++; say("declined", { project: job.name }); if (state !== "off") { stop("degraded", { reason: "the graph cache declined the leaves of " + job.name }); for (const each of pools) { each.ready = false; void each.farm.close().finally(() => each.release()); } } return false; }
+      if (adoption.declined) { counts.declined++; say("declined", { project: job.name }); if (state !== "off") { stop("degraded", { reason: "the graph cache declined the leaves of " + job.name }); for (const each of pools) { each.ready = false; void closePool(each).catch(()=>{}); } } return false; }
       if (adoption.published + adoption.present === 0) return false;
       counts.adopted++;
       return true;})();pool.work.add(work);try{return await work;}finally{pool.work.delete(work);}
@@ -96,7 +97,7 @@ export function openProjectFarmV1({ workspaceRoot, context, contracts, projects,
       if (pools.length === 0) return;
       const stats = pools.map(pool => pool.farm.stats());
       const failures = refreshFailure===undefined?[]:[refreshFailure];
-      for (const pool of pools) { try { await pool.farm.close(); } catch (error) { failures.push(error); } finally { try { pool.release(); } finally { rmSync(pool.base, { recursive: true, force: true }); } } }
+      for (const pool of pools) { try { await closePool(pool); } catch (error) { failures.push(error); } finally { rmSync(pool.base, { recursive: true, force: true }); } }
       if (image !== undefined) rmSync(image.directory, { recursive: true, force: true });
       say("finished", { adopted: counts.adopted, projects, workers: pools.reduce((total, pool) => total + pool.workers, 0), seconds: Math.round((performance.now() - started) / 1000), failed: counts.failed, lost: counts.lost, recycled: counts.recycled });
       if (environment[policy.phasesEnvironment] === "1") write("[graph-farm] " + JSON.stringify({ pools: stats, ...counts, adoptMilliseconds: Math.round(counts.adoptMilliseconds), projects, reason: plan.reason }));

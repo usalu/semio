@@ -1,4 +1,4 @@
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import Ajv from "ajv";
 import { authoredSnapshotSqliteContract, authoredSnapshotPreflightContract,authoredSnapshotSemanticContract } from "../../../../../../🪐️space/🧪️tests/🪶️sqlite/🔬️oracle/🟦️.ts";
 import { fileURLToPath } from "node:url";

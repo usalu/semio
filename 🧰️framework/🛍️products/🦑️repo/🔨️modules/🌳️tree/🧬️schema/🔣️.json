@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio-tech.com/schema/repo/tree.json",
   "title": "🌳️ Repository tree",
   "description": "🌳️ The wire shapes of the `🌳️tree` domain: the record set a tree is projected from, the tree node and filter literals the fixtures state, the Mermaid treemap and the tree cache envelope. Both implementations (`semio-framework-repo-tree` and `github.com/usalu/semio/repo/tree`) read and write exactly these shapes. The tree node and filter themselves belong to `📐️model`; what this schema adds are the compact literals a fixture may state and the records a `TreeSource` supplies.",
@@ -946,6 +946,17 @@
         "searchIdentity": "combined-projection-digest",
         "publication": "complete-codebase-only"
       }
+    },
+    "QueryCaptureProtocol": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "scope": "query-operation",
+        "sourceCaptures": 1,
+        "freshAcrossOperations": true,
+        "freshDomainProjection": true
+      },
+      "description": "📸️ One composite authored Source identity belongs to one composed build-and-search operation; independent operations recapture physical Source and project current domain records."
     }
   },
   "properties": {

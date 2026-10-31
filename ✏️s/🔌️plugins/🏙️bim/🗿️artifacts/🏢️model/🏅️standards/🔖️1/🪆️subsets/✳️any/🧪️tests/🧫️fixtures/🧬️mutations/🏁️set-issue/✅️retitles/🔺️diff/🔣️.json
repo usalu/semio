@@ -2,7 +2,9 @@
   "issues": {
     "i-1": {
       "entry": "Patched",
-      "title": "Beam runs through the south wall"
+      "value": {
+        "title": "Beam runs through the south wall"
+      }
     }
   }
 }

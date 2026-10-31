@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import schema from "../🧬️schema/🔣️.json";
 import { bindingSharedUtf8Fixture as fixture } from "@semio-tech/framework-dsl-ts/testing/fixtures/binding/shared-utf8";

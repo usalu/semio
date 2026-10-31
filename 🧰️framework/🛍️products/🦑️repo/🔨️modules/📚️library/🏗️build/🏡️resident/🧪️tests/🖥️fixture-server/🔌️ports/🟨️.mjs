@@ -55,3 +55,6 @@ export function createCustodyPort({acquireMs=0}={}){
  let held=false;const stats={acquired:0,released:0};
  return{async acquire(){if(held)return;await new Promise(resolve=>setTimeout(resolve,acquireMs));held=true;stats.acquired++;},async release(){held=false;stats.released++;},held:()=>held,stats};
 }
+
+/** 🛑 Lifecycle fixtures deliberately have no execution capability. */
+export function createLifecycleExecutionPortV1(){return{async run(){throw Error("Lifecycle fixture cannot execute tasks");}};}

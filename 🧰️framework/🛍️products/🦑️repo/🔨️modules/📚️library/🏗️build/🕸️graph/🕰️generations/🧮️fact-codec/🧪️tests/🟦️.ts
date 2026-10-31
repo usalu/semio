@@ -1,7 +1,7 @@
 /** 🧮️ Contract: the binary fact index round-trips the logical index exactly, equals the independent Python encoder byte for byte, refuses every malformed document the Python decoder refuses, scans its strings without building rows, and stays a fraction of the canonical JSON of the same graph. */
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";

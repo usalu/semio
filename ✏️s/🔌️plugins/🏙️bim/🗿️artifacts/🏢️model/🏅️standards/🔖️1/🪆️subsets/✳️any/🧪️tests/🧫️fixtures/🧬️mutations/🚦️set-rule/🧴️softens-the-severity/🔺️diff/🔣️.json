@@ -2,7 +2,9 @@
   "rules": {
     "r-1": {
       "entry": "Patched",
-      "severity": "Warning"
+      "value": {
+        "severity": "Warning"
+      }
     }
   }
 }

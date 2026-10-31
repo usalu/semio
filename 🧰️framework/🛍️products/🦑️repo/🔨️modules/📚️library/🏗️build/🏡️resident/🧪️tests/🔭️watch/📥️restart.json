@@ -1,0 +1,14 @@
+[
+  {
+    "backend": "inotify",
+    "history": false
+  },
+  {
+    "backend": "rdcw",
+    "history": false
+  },
+  {
+    "backend": "fsevents",
+    "history": true
+  }
+]

@@ -13,7 +13,7 @@ pub struct CreateMesh {
     pub target: semio_framework_artifact_reference::ArtifactRef,
     pub mesh_workspace: String,
     #[canonical_json(tree)]
-    #[value(with="crate::managed_mesh::json")]
+    #[value(with="semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::json")]
     pub mesh_state: Option<semio_s_artifact_lowpoly_lowpoly_model::managed_mesh::LowpolyMeshState>,
 }
 

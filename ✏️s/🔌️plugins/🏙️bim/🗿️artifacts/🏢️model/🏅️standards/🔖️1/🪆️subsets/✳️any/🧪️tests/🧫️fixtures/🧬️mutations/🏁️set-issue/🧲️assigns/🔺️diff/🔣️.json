@@ -1,8 +1,10 @@
 {
   "issues": {
     "i-1": {
-      "assignee": "AB",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "assignee": "AB"
+      }
     }
   }
 }

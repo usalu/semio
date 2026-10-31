@@ -1,0 +1,5 @@
+{
+  "extends": "/home/deck/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "tsBuildInfoFile": null, "types": ["bun"], "rootDir": "/home/deck/semio" },
+  "include": ["/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/💨️transport/**/*.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/💨️transport-view/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/💨️transport/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🫁️respiration/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-field/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🌀️parcel-jet/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/☁️condensation/🟦️.ts", "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/💨️transport-view/🟦️.ts"]
+}

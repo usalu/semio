@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import fixture from "./🔣️.json";
 import fixtureSchema from "./🧬️schema/🔣️.json";
 import generationSchema from "../../../🧬️schema/🔣️.json";

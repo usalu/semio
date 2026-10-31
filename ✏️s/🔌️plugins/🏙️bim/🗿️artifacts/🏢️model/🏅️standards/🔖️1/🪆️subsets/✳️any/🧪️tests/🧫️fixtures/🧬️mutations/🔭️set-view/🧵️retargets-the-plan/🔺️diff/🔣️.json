@@ -2,8 +2,10 @@
   "views": {
     "v-ground": {
       "entry": "Patched",
-      "storey": {
-        "value": "st-first"
+      "value": {
+        "storey": {
+          "value": "st-first"
+        }
       }
     }
   }

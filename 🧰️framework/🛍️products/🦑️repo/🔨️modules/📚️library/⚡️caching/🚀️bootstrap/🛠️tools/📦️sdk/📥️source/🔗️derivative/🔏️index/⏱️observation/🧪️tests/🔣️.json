@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "name": "context",
+      "duration": 2,
+      "failure": false
+    },
+    {
+      "name": "context",
+      "duration": 3,
+      "failure": true
+    },
+    {
+      "name": "recheck",
+      "duration": 7,
+      "failure": false
+    },
+    {
+      "name": "parent",
+      "duration": 11,
+      "failure": false
+    }
+  ],
+  "expected": {
+    "context": [
+      2,
+      5
+    ],
+    "recheck": [
+      1,
+      7
+    ],
+    "parent": [
+      1,
+      11
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 /** 🧪️ Differential native shape cases are derived from the artifact JSON Schemas. */
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import cases from "./shape-cases.json";
 import snapshotSchema from "../../🧬️schema/🔣️.json";
 import mutationSchema from "../../🧬️schema/🧬️mutations/🔣️.json";

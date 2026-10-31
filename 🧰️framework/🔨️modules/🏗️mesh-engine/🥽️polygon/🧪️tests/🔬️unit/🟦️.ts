@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import{fileURLToPath}from"node:url";
 import ts from"typescript";
 import { describe, expect, test } from "bun:test";
@@ -25,7 +26,7 @@ const attributes = JSON.parse(readFileSync(new URL("../../../🧪️tests/🧫�
 test("indexed owned samples preserve UV seams and shared custom values", () => {
   const mesh = parsePolygonMesh(JSON.stringify(attributes.indexedMesh));
   const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json", import.meta.url), "utf8"));
-  expect(new Ajv().compile(schema)(mesh)).toBe(true);
+  expect(new AjvDraft07().compile(schema)(mesh)).toBe(true);
   const normal = mesh.attributes!.normal;
   const expanded = normal.indices!.map((index: number) => normal.values[index]);
   expect(expanded).toEqual(attributes.mesh.attributes.normal.values);
@@ -52,7 +53,7 @@ test("polygon parser preserves owned channels and refuses invalid cardinality an
 });
 test("owned polygon attribute declaration and independent inverse-transpose oracle", () => {
   const schema = JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv().compile(schema);
+  const validate = new AjvDraft07().compile(schema);
   expect(validate(attributes.mesh)).toBe(true);
   const normal = new Vector3(...attributes.mesh.attributes.normal.values[0]);
   const inverseTranspose = new Matrix4().makeScale(...vector3(attributes.normalTransform.scale)).invert().transpose();
@@ -185,7 +186,7 @@ test("knife cut rejects invalid or non-finite input without mutation", () => {
   }
 });
 const componentTransforms = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧭️component-transform/🔣️.json", import.meta.url), "utf8"));
-const validateComponentTransform = new Ajv().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🧭️component-transform/🔣️.json", import.meta.url), "utf8")));
+const validateComponentTransform = new AjvDraft07().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🧭️component-transform/🔣️.json", import.meta.url), "utf8")));
 for (const fixture of componentTransforms.cases) test(`component transform and Three.js oracle: ${fixture.name}`, () => {
   const input = structuredClone(componentTransforms.mesh), transform = fixture.transform;
   expect(validateComponentTransform(transform)).toBe(true);
@@ -236,7 +237,7 @@ for (const fixture of fixtures.reflections) test(`Three.js reflection oracle: ${
   expect(volume * orientation / fixture.volume).toBeCloseTo(1, 6);
   geometry.dispose();
 });
-const validate = new Ajv().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json", import.meta.url), "utf8")));
+const validate = new AjvDraft07().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json", import.meta.url), "utf8")));
 
 describe("portable mesh widgets", () => {
   for (const fixture of fixtures.meshes) test(fixture.name, () => {
@@ -293,7 +294,7 @@ for (const fixture of modeling.merges) test(`retained merge portable fixture and
   }
   expect(new Set(faces.flat()).size).toBe(fixture.vertices); expect(faces.length).toBe(fixture.faces); expect(area).toBeCloseTo(fixture.area,6);
 });
-const validateLoopCut = new Ajv().compile(JSON.parse(readFileSync(meshLoopCutSchemaUrl, "utf8")));
+const validateLoopCut = new AjvDraft07().compile(JSON.parse(readFileSync(meshLoopCutSchemaUrl, "utf8")));
 for (const fixture of modeling.loopCuts) test(`connected loop cut: ${fixture.name}`, () => {
   const input = structuredClone(fixture.mesh) as PolygonMesh;
   const halfedges = input.faces.flatMap(face => face.map((a, i) => [a, face[(i + 1) % face.length]]));
@@ -379,7 +380,7 @@ for (const fixture of modeling.polygons) for (const scale of modeling.scales) te
 });
 
 const inspections = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔎️inspection/🔣️.json", import.meta.url), "utf8"));
-const validateInspection = new Ajv().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔎️inspection/🔣️.json", import.meta.url), "utf8")));
+const validateInspection = new AjvDraft07().compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔎️inspection/🔣️.json", import.meta.url), "utf8")));
 for (const fixture of inspections.cases) test(`mesh inspection and Three.js oracle: ${fixture.query.kind}`, () => {
   expect(validateInspection(fixture.query)).toBe(true);
   const input = structuredClone(inspections.mesh), result = inspectMeshComponent(input, fixture.query), inspected: Record<string, unknown> = { ...result };
@@ -494,7 +495,7 @@ test("retained decimation directed linear sample fixture matches independent Thr
 
 test("canonical tangent affine neutral basis matches independent Three.js direction and determinant",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).tangentJobs;const m=new Matrix4().fromArray(c.matrix);const direction=new Vector3(c.tangent[0],c.tangent[1],c.tangent[2]).transformDirection(m);for(let axis=0;axis<3;axis++)expect(direction.getComponent(axis)).toBeCloseTo(c.expected[axis],12);expect(c.tangent[3]*Math.sign(m.determinant())).toBe(c.expected[3]);});
 
-test("canonical tangent parser and selected aliases obey schema and independent Three.js",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).tangentJobs;const validate=new Ajv().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json",import.meta.url),"utf8")));for(const domain of ["vertex","corner","face"] as const){const count=domain==="vertex"?c.positions.length:domain==="face"?c.faces.length:c.faces.flat().length;const mesh:PolygonMesh={vertices:c.positions,faces:c.faces,attributes:{tangent:{domain,semantic:"custom",interpolation:"linear",values:[c.tangent],indices:Array(count).fill(0)}}};expect(validate(mesh)).toBe(true);expect(parsePolygonMesh(JSON.stringify(mesh))).toEqual(mesh);for(const value of [[0,0,0,1],[1,0,0,0],[1,0,0],[1,0,0,2]]){const invalid=structuredClone(mesh);invalid.attributes!.tangent.values=[value];expect(validate(invalid)).toBe(false);expect(()=>parsePolygonMesh(JSON.stringify(invalid))).toThrow();}const request={mode:"vertex",selection:[0],operation:"scale",vector:[-2,1,3],angle:0,pivot:[0,0,0]} as const;if(domain==="face"){expect(()=>transformMeshComponents(mesh,request as any)).toThrow();continue;}const result=transformMeshComponents(mesh,request as any);for(let id=0;id<count;id++){const affected=domain==="vertex"?id===0:c.faces.flat()[id]===0;const attribute=result.attributes!.tangent;const value=attribute.values[attribute.indices![id]] as number[];expect(value.length).toBe(4);for(let axis=0;axis<4;axis++)expect(value[axis]).toBeCloseTo((affected?c.expected:c.tangent)[axis],6);}expect(mesh.attributes!.tangent.values).toEqual([c.tangent]);}});
+test("canonical tangent parser and selected aliases obey schema and independent Three.js",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).tangentJobs;const validate=new AjvDraft07().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json",import.meta.url),"utf8")));for(const domain of ["vertex","corner","face"] as const){const count=domain==="vertex"?c.positions.length:domain==="face"?c.faces.length:c.faces.flat().length;const mesh:PolygonMesh={vertices:c.positions,faces:c.faces,attributes:{tangent:{domain,semantic:"custom",interpolation:"linear",values:[c.tangent],indices:Array(count).fill(0)}}};expect(validate(mesh)).toBe(true);expect(parsePolygonMesh(JSON.stringify(mesh))).toEqual(mesh);for(const value of [[0,0,0,1],[1,0,0,0],[1,0,0],[1,0,0,2]]){const invalid=structuredClone(mesh);invalid.attributes!.tangent.values=[value];expect(validate(invalid)).toBe(false);expect(()=>parsePolygonMesh(JSON.stringify(invalid))).toThrow();}const request={mode:"vertex",selection:[0],operation:"scale",vector:[-2,1,3],angle:0,pivot:[0,0,0]} as const;if(domain==="face"){expect(()=>transformMeshComponents(mesh,request as any)).toThrow();continue;}const result=transformMeshComponents(mesh,request as any);for(let id=0;id<count;id++){const affected=domain==="vertex"?id===0:c.faces.flat()[id]===0;const attribute=result.attributes!.tangent;const value=attribute.values[attribute.indices![id]] as number[];expect(value.length).toBe(4);for(let axis=0;axis<4;axis++)expect(value[axis]).toBeCloseTo((affected?c.expected:c.tangent)[axis],6);}expect(mesh.attributes!.tangent.values).toEqual([c.tangent]);}});
 
 test("selected face flip neutral winding preserves Three.js area",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).flipJob;const faces=c.faces.map((face:number[],id:number)=>c.selection.includes(id)?face.toReversed():face);expect(faces).toEqual(c.outputFaces);const points=c.positions.map((point:number[])=>new Vector3(...point));expect(faces.reduce((sum:number,face:number[])=>sum+new Triangle(...face.map(id=>points[id]) as [Vector3,Vector3,Vector3]).getArea(),0)).toBe(c.area);});
 
@@ -506,7 +507,7 @@ test("retained primitive neutral admission matches independent Three.js geometry
 test("faceted BRep neutral import matches independent Three.js planar triangle area",()=>{const c=outputBudget.toBrep;const points=c.mesh.vertices.map((point:number[])=>new Vector3(...point));let area=0,triangles=0;for(const face of c.mesh.faces){const projected=face.map((id:number)=>new Vector2(points[id].x,points[id].y));for(const triangle of ShapeUtils.triangulateShape(projected,[])){triangles++;area+=new Triangle(...triangle.map(id=>points[face[id]]) as [Vector3,Vector3,Vector3]).getArea();}}expect(triangles).toBe(c.triangles);expect(area).toBeCloseTo(c.area,12);expect(c.quality).toBe("MeshDerivedBRep");});
 
 
-test("reserved tangent schema refuses f32 overflow for every sampling policy",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).tangentJobs;const validate=new Ajv().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json",import.meta.url),"utf8")));for(const interpolation of ["nearest","constant","linear"]){const source={vertices:c.positions,faces:c.faces,attributes:{tangent:{domain:"vertex",semantic:"custom",interpolation,values:[[1e40,0,0,1]],indices:Array(c.positions.length).fill(0)}}};expect(()=>parsePolygonMesh(JSON.stringify(source))).toThrow();expect(validate(source)).toBe(false);}});
+test("reserved tangent schema refuses f32 overflow for every sampling policy",()=>{const c=JSON.parse(readFileSync(fixture3dMeshModelingFixtureUrl,"utf8")).tangentJobs;const validate=new AjvDraft07().compile(JSON.parse(readFileSync(new URL("../../../🧬️schema/🥽️polygon/🔣️.json",import.meta.url),"utf8")));for(const interpolation of ["nearest","constant","linear"]){const source={vertices:c.positions,faces:c.faces,attributes:{tangent:{domain:"vertex",semantic:"custom",interpolation,values:[[1e40,0,0,1]],indices:Array(c.positions.length).fill(0)}}};expect(()=>parsePolygonMesh(JSON.stringify(source))).toThrow();expect(validate(source)).toBe(false);}});
 
 test("retained source preparation neutral translated bounds match Three.js",()=>{const c=JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️output-budget/🔣️.json",import.meta.url),"utf8")).inputPreparation;const geometry=new BoxGeometry(1,1,1).translate(...c.offset as [number,number,number]);geometry.computeBoundingBox();expect(geometry.boundingBox!.min.toArray()).toEqual(c.minimum);expect(geometry.boundingBox!.max.toArray()).toEqual(c.maximum);let area=0;const positions=geometry.attributes.position;const indices=geometry.index!.array;for(let i=0;i<indices.length;i+=3){area+=new Triangle(...Array.from(indices.slice(i,i+3)).map(id=>new Vector3().fromBufferAttribute(positions,id)) as [Vector3,Vector3,Vector3]).getArea();}expect(area).toBe(c.area);geometry.dispose();});
 

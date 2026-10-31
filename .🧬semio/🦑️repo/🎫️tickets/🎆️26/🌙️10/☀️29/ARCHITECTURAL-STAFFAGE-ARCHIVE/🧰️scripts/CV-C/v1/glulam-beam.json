@@ -1,0 +1,654 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "glulam-beam",
+    "category": "components",
+    "title": {
+      "en": "Glulam Beam",
+      "de": "Brettschichtholzbalken"
+    },
+    "summary": {
+      "en": "An 8 m GL24h glulam beam simply supported on a pin and a roller, carrying a uniform floor load and a moving concentrated load.",
+      "de": "Ein 8 m langer Brettschichtholzbalken GL24h auf Festlager und Rollenlager mit gleichmäßiger Deckenlast und wandernder Einzellast."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "timber",
+      "beam",
+      "glulam"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-14080",
+          "citation": "EN 14080:2013 Timber structures, glued laminated timber, Table 5: GL24h E0,mean = 11.6 GPa, mean density 420 kg/m3."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table 6.1 (floor imposed load category A, 2.0 kN/m2) and Table 6.2 (concentrated load 2.0 kN)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "Section 160 x 600 mm; tributary width 2.0 m for the floor load.",
+        "de": "Querschnitt 160 x 600 mm; Einzugsbreite 2,0 m für die Deckenlast."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.6,
+      "widthM": 8.0,
+      "depthM": 0.16,
+      "massKg": 322.6
+    },
+    "materials": [
+      {
+        "id": "glulam",
+        "title": {
+          "en": "Glulam GL24h",
+          "de": "Brettschichtholz GL24h"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11600000000,
+        "source": "literature",
+        "reference": "en-14080"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "beam",
+      "bones": [
+        {
+          "id": "beam",
+          "parent": null,
+          "title": {
+            "en": "Beam",
+            "de": "Balken"
+          },
+          "x": 0,
+          "y": 0.32,
+          "angleDeg": 0,
+          "lengthM": 8,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 322.56,
+            "comX": 4,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-14080"
+          },
+          "section": {
+            "areaM2": 0.096,
+            "secondMomentM4": 0.00288,
+            "extremeFibreM": 0.3,
+            "material": "glulam",
+            "title": {
+              "en": "GL24h 160 x 600 mm",
+              "de": "GL24h 160 x 600 mm"
+            }
+          }
+        },
+        {
+          "id": "load-carrier",
+          "parent": "beam",
+          "title": {
+            "en": "Load carrier (massless, moves the point load)",
+            "de": "Lastträger (masselos, bewegt die Einzellast)"
+          },
+          "x": 0.5,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 7
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "bearing-left",
+        "bone": "beam",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Left bearing, pin",
+          "de": "Linkes Auflager, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "bearing-right",
+        "bone": "beam",
+        "x": 8,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Right bearing, roller",
+          "de": "Rechtes Auflager, Rollenlager"
+        },
+        "support": "roller",
+        "normalDeg": 90
+      },
+      {
+        "id": "load-point",
+        "bone": "load-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Concentrated load",
+          "de": "Einzellast"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "beam-body",
+          "bone": "beam",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.3,
+          "w": 8,
+          "h": 0.6,
+          "region": "beam-sides",
+          "material": "glulam"
+        },
+        {
+          "id": "beam-top-line",
+          "bone": "beam",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "rect",
+          "x": 0,
+          "y": 0.25,
+          "w": 8,
+          "h": 0.05,
+          "region": "beam-top",
+          "material": "glulam"
+        },
+        {
+          "id": "beam-soffit-line",
+          "bone": "beam",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.3,
+          "w": 8,
+          "h": 0.05,
+          "region": "beam-soffit",
+          "material": "glulam"
+        },
+        {
+          "id": "lamination-line",
+          "bone": "beam",
+          "role": "texture",
+          "lod": 2,
+          "z": 4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0 -0.260 L 8.0 -0.260 M 0.0 -0.220 L 8.0 -0.220 M 0.0 -0.180 L 8.0 -0.180 M 0.0 -0.140 L 8.0 -0.140 M 0.0 -0.100 L 8.0 -0.100 M 0.0 -0.060 L 8.0 -0.060 M 0.0 -0.020 L 8.0 -0.020 M 0.0 0.020 L 8.0 0.020 M 0.0 0.060 L 8.0 0.060 M 0.0 0.100 L 8.0 0.100 M 0.0 0.140 L 8.0 0.140 M 0.0 0.180 L 8.0 0.180 M 0.0 0.220 L 8.0 0.220 M 0.0 0.260 L 8.0 0.260"
+        },
+        {
+          "id": "finger-joints",
+          "bone": "beam",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.90 -0.180 L 1.93 -0.170 L 1.90 -0.160 L 1.93 -0.150 L 1.90 -0.140 M 3.70 -0.020 L 3.73 -0.010 L 3.70 0.000 L 3.73 0.010 L 3.70 0.020 M 5.30 -0.100 L 5.33 -0.090 L 5.30 -0.080 L 5.33 -0.070 L 5.30 -0.060 M 6.60 0.100 L 6.63 0.110 L 6.60 0.120 L 6.63 0.130 L 6.60 0.140 M 2.80 0.180 L 2.83 0.190 L 2.80 0.200 L 2.83 0.210 L 2.80 0.220 M 4.40 -0.260 L 4.43 -0.250 L 4.40 -0.240 L 4.43 -0.230 L 4.40 -0.220"
+        },
+        {
+          "id": "bearing-plate-left",
+          "bone": "beam",
+          "role": "body",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0.0,
+          "y": -0.32,
+          "w": 0.12,
+          "h": 0.02,
+          "r": 0.002
+        },
+        {
+          "id": "bearing-plate-left-bolt",
+          "bone": "beam",
+          "role": "detail",
+          "lod": 3,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.06,
+          "cy": -0.31,
+          "rx": 0.006,
+          "ry": 0.006
+        },
+        {
+          "id": "bearing-plate-right",
+          "bone": "beam",
+          "role": "body",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 7.88,
+          "y": -0.32,
+          "w": 0.12,
+          "h": 0.02,
+          "r": 0.002
+        },
+        {
+          "id": "bearing-plate-right-bolt",
+          "bone": "beam",
+          "role": "detail",
+          "lod": 3,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 7.94,
+          "cy": -0.31,
+          "rx": 0.006,
+          "ry": 0.006
+        },
+        {
+          "id": "beam-end-cap-left",
+          "bone": "beam",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.3
+            ],
+            [
+              0.0,
+              -0.3
+            ]
+          ],
+          "closed": false,
+          "region": "beam-sides",
+          "material": "glulam"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Self-weight only",
+          "de": "Nur Eigengewicht"
+        },
+        "description": {
+          "en": "Beam under its own weight.",
+          "de": "Balken unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "distributed-live-load",
+        "title": {
+          "en": "Uniform floor load",
+          "de": "Gleichmäßige Deckenlast"
+        },
+        "description": {
+          "en": "Imposed floor load of 2 kN/m² over a 2.0 m tributary width, 4 kN/m along the beam.",
+          "de": "Deckenlast 2 kN/m² über 2,0 m Einzugsbreite, 4 kN/m entlang des Balkens."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "imposed-floor",
+            "kind": "imposed",
+            "title": {
+              "en": "Imposed floor load 4 kN/m",
+              "de": "Deckenlast 4 kN/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "beam",
+              "fromM": 0,
+              "toM": 8,
+              "wxNPerM": 0,
+              "wyNPerM": -4000
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "point-load-midspan",
+        "title": {
+          "en": "Midspan point load",
+          "de": "Einzellast in Feldmitte"
+        },
+        "description": {
+          "en": "A 2 kN concentrated load at midspan on top of the self-weight.",
+          "de": "Einzellast 2 kN in Feldmitte zusätzlich zum Eigengewicht."
+        },
+        "bones": {
+          "load-carrier": {
+            "dx": 3.5
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "point-midspan",
+            "kind": "live",
+            "title": {
+              "en": "Concentrated load 2 kN",
+              "de": "Einzellast 2 kN"
+            },
+            "anchor": "load-point",
+            "fxN": 0,
+            "fyN": -2000,
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "moving-point-load",
+        "title": {
+          "en": "Moving concentrated load",
+          "de": "Wandernde Einzellast"
+        },
+        "description": {
+          "en": "The 2 kN load travels from near the left bearing to near the right bearing.",
+          "de": "Die Einzellast 2 kN wandert von nahe dem linken zum nahen rechten Auflager."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "point-load-midspan",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 0
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "point-load-midspan",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 7
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "travel",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Travel",
+              "de": "Wanderung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Load starts near the left bearing",
+              "de": "Last beginnt nahe dem linken Auflager"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The floor load rises smoothly from zero to its full value.",
+          "de": "Die Deckenlast steigt weich von null auf ihren vollen Wert."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Floor load at full value",
+              "de": "Deckenlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:imposed-floor",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "beam-sides",
+          "title": {
+            "en": "Beam side faces",
+            "de": "Balkenseitenflächen"
+          },
+          "kind": "surface",
+          "material": "glulam",
+          "model": "passive",
+          "areaM2": 9.6,
+          "characteristicLengthM": 0.6,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "beam-top",
+          "title": {
+            "en": "Beam top",
+            "de": "Balkenoberseite"
+          },
+          "kind": "surface",
+          "material": "glulam",
+          "model": "passive",
+          "areaM2": 1.28,
+          "characteristicLengthM": 8,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "beam-soffit",
+          "title": {
+            "en": "Beam soffit",
+            "de": "Balkenunterseite"
+          },
+          "kind": "surface",
+          "material": "glulam",
+          "model": "passive",
+          "areaM2": 1.28,
+          "characteristicLengthM": 8,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Passive timber surfaces with ambient air and solar absorption; no moisture or drying model.",
+          "de": "Passive Holzoberflächen mit Umgebungsluft und Sonnenabsorption; kein Feuchte- oder Trocknungsmodell."
+        },
+        {
+          "en": "Areas are the exposed surfaces of the 8 m beam.",
+          "de": "Flächen sind die freiliegenden Oberflächen des 8 m Balkens."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "bearing-left",
+        "bearing-right"
+      ],
+      "assumptions": [
+        {
+          "en": "Simply supported beam, pin left and roller right; E0,mean = 11.6 GPa, section 160 x 600 mm, uniform self-weight from density 420 kg/m3.",
+          "de": "Frei aufliegender Balken, Festlager links und Rollenlager rechts; E0,mean = 11,6 GPa, Querschnitt 160 x 600 mm, gleichmäßiges Eigengewicht aus Dichte 420 kg/m3."
+        },
+        {
+          "en": "Shear and axial deformation are neglected in the deflection.",
+          "de": "Schub- und Längsverformung werden in der Durchbiegung vernachlässigt."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "distributed-live-load",
+      "defaultClip": "moving-point-load",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

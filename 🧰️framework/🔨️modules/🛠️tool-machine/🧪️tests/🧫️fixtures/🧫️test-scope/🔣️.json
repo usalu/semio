@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "name": "semio-framework-tool-machine",
+      "manifest": "📦️packages/🦀️rust/Cargo.toml",
+      "unitTests": true,
+      "requiredTests": [
+        "original_typing_read_preserves_original_rows_and_issuer",
+        "original_typing_transfer_preserves_resident_and_entries",
+        "typing_reader_survives_resident_growth_and_prefix_insertion"
+      ]
+    },
+    {
+      "name": "semio-framework-tool-machine-tests",
+      "manifest": "🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "unitTests": true,
+      "requiredTests": []
+    }
+  ],
+  "checks": [
+    {
+      "package": "semio-framework-tool-machine",
+      "target": "native",
+      "unitTests": false
+    },
+    {
+      "package": "semio-framework-tool-machine",
+      "target": "wasm32-wasip2",
+      "unitTests": false
+    },
+    {
+      "package": "semio-framework-tool-machine",
+      "target": "native",
+      "unitTests": true
+    },
+    {
+      "package": "semio-framework-tool-machine-tests",
+      "target": "native",
+      "unitTests": true
+    }
+  ]
+}

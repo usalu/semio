@@ -1,5 +1,5 @@
 {
- "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$schema":"http://json-schema.org/draft-07/schema#",
  "$id":"https://semio.tech/s/stdio/ifc/4x3/template-command.schema.json",
  "type":"object","required":["ApplyTemplate"],"additionalProperties":false,
  "properties":{"ApplyTemplate":{"type":"object","required":["application"],"additionalProperties":false,"properties":{"application":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/template-application.schema.json"}}}}

@@ -1,16 +1,17 @@
 import { expect, test } from "bun:test";
+import {AsyncLocalStorage} from "node:async_hooks";
 import { lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import Ajv from "ajv";
 import glob from "fast-glob";
-import { createTestScratchRootV1, disposeTestScratchRootV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
+import {privateRepositoryWorkspaceV1} from "../../../📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
+import {createIssuedResourceControlV1,scriptInvocationEnvironment,withScriptInvocationSignalV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {captureOwnedCommandResultV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/📥️capture/🟦️.ts";
 import layoutVectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
-import discoveryFixtureSchema from "../🧫️fixtures/🚷️discovery-boundaries/🔣️schema.json";
 
-type Vector = Readonly<{ schemaVersion: number; features: readonly string[]; links: readonly { path: string; target: string; file?: boolean }[]; expected: readonly string[]; candidateCases: readonly {id:string;inputs:readonly string[];expected:readonly string[];mutation?:{path:string;operation:"add"|"remove"}}[]; authorityCases:readonly {id:string;path:string;authority:"root"|"taxonomy"|"policy"}[];bootstrapOrder:Readonly<{expected:readonly string[]}> }>;
+type Vector = Readonly<{ schemaVersion: number; features: readonly string[]; links: readonly { path: string; target: string; file?: boolean }[]; expected: readonly string[]; candidateCases: readonly {id:string;inputs:readonly string[];expected:readonly string[];mutation?:{path:string;operation:"add"|"remove"}}[]; authorityCases:readonly {id:string;path:string;authority:"root"|"taxonomy"|"policy"}[];residentRejection:Readonly<{staleCode:string;staleName:string}>;bootstrapOrder:Readonly<{expected:readonly string[]}> }>;
 const owner = resolve(import.meta.dir, "../.."), repo = resolve(owner, "../../../../..");
 /** 🔌️ The plugin source for a scratch layout: its framework module imports are made absolute because the copy no longer sits at its repository depth. */
 const pluginSource = (): string => readFileSync(join(owner, "🟨️.mjs"), "utf8").replaceAll('"../../../../🔨️modules/', '"' + pathToFileURL(join(repo, "🧰️framework/🔨️modules")).href + "/");
@@ -18,20 +19,21 @@ const fixture = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixture
 
 const taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const vocabulary = JSON.parse(readFileSync(join(repo, taxonomyPath), "utf8"));
-const plugin = await import(pathToFileURL(join(owner, "🟨️.mjs")).href) as { discoverCaseDirs: (root: string) => string[]; default: {createNodesV2: readonly [string,(files:readonly string[],options:object,context:{workspaceRoot:string})=>Promise<readonly [string,{projects:Record<string,{root:string}>}][]>]} };
+const plugin = await import(pathToFileURL(join(owner, "🟨️.mjs")).href) as { discoverCaseDirs: (root: string) => string[]; default: {createNodesV2: readonly [string,(files:readonly string[],options:object,context:{workspaceRoot:string;invocation:ScriptInvocation;phaseControl:ReturnType<typeof createIssuedResourceControlV1>})=>Promise<readonly [string,{projects:Record<string,{root:string;metadata:{semio:{testCases:string[]}}}>}][]>]} };
+const outsideOriginalV1=AsyncLocalStorage.snapshot(),repository=await privateRepositoryWorkspaceV1("graph"),layoutMembersV1=new Set<string>();
+const withLayoutV1=async(body:(root:string,context:{workspaceRoot:string;invocation:ScriptInvocation;phaseControl:ReturnType<typeof createIssuedResourceControlV1>})=>Promise<void>)=>repository.invoke(async invocation=>{
+ const context={workspaceRoot:repository.root,invocation,phaseControl:createIssuedResourceControlV1(invocation,"discovery:fixture",0)};
+ try{await body(repository.root,context);}finally{for(const name of layoutMembersV1)rmSync(join(repository.root,name),{recursive:true,force:true});layoutMembersV1.clear();}
+},{owner:"discovery:fixture",maximumElapsedMilliseconds:30000});
+const noteLayoutMemberV1=(path:string)=>{layoutMembersV1.add(path.split("/")[0]!);};
 const kind = vocabulary.fileKinds[vocabulary.testFeatureFileKindId];
 const feature = `${kind.emoji}${kind.extensionChains[0]}`;
 
-test("portable no-follow discovery fixtures satisfy their schema", () => {
-  
-  expect(new Ajv({strict:true}).compile(discoveryFixtureSchema)(fixture)).toBe(true);
+test("Nx test discovery rejects loop, case and feature links and skips generated/opaque trees", async () => {
   expect(fixture["schemaVersion"]).toEqual(1);
-});
-
-test("Nx test discovery rejects loop, case and feature links and skips generated/opaque trees", () => {
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
-  const root = createTestScratchRootV1(output,"case-discovery-");
+  const root = await repository.scratch("case-discovery-");
   try {
     mkdirSync(dirname(join(root, taxonomyPath)), { recursive: true });
     writeFileSync(join(root, taxonomyPath), JSON.stringify(vocabulary));
@@ -53,13 +55,13 @@ test("Nx test discovery rejects loop, case and feature links and skips generated
     const oracle = glob.sync(`**/${vocabulary.testsDirName}/*/${feature}`, { cwd: root, dot: true, followSymbolicLinks: false, ignore: ignored }).filter((path) => !lstatSync(join(root, path)).isSymbolicLink()).map((path) => dirname(path).replaceAll("\\", "/")).sort();
     expect(oracle).toEqual([...fixture.expected]);
     expect(plugin.discoverCaseDirs(root)).toEqual(oracle);
-  } finally { disposeTestScratchRootV1(root); }
+  } finally { rmSync(root,{recursive:true,force:true}); }
 });
 
-test("Nx uses the current supplied candidate inventory with independent no-follow glob membership",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"case-candidates-");
- const put=(path:string,content:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
- try{
+test("Nx uses the current supplied candidate inventory with independent no-follow glob membership",async()=>withLayoutV1(async(root,context)=>{
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});
+ const put=(path:string,content:string)=>{noteLayoutMemberV1(path);mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
+ 
   put(taxonomyPath,JSON.stringify(vocabulary));put(`${dirname(taxonomyPath)}/⚡️caching/🔣️policy.json`,readFileSync(join(repo,dirname(taxonomyPath),"⚡️caching/🔣️policy.json"),"utf8"));put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
   for(const path of fixture.features)put(`${path}/${feature}`,"Feature: Candidate\n");
   for(const link of fixture.links){mkdirSync(dirname(join(root,link.path)),{recursive:true});const junction=process.platform==="win32";symlinkSync(junction&&link.file?dirname(join(root,link.target)):join(root,link.target),join(root,link.path),junction?"junction":link.file?"file":"dir");}
@@ -69,38 +71,38 @@ test("Nx uses the current supplied candidate inventory with independent no-follo
    const ignored=[...vocabulary.implementationLeafPolicy.ignoredPathPatterns.map((pattern:string)=>`${pattern}/**`),...vocabulary.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((segment:string)=>`**/${segment}/**`),...Object.values(vocabulary.pathExclusions).map(entry=>`${(entry as {path:string}).path}**`)];
    const inventory=glob.sync(`**/${vocabulary.testsDirName}/*/${feature}`,{cwd:root,dot:true,followSymbolicLinks:false,ignore:ignored}).filter(path=>!lstatSync(join(root,path)).isSymbolicLink());
    const oracle=[...new Set(row.inputs.map(path=>path.replaceAll("\\","/")).filter(path=>!path.split("/").some(part=>!part||part==="."||part==="..")&&inventory.includes(path)))].sort();expect(oracle,row.id).toEqual([...row.expected].sort());
-   const actual=await plugin.default.createNodesV2[1](row.inputs,{}, {workspaceRoot:root}),projects=actual.flatMap(entry=>Object.values(entry[1].projects)) as {root:string;metadata:{semio:{testCases:string[]}}}[];
+   const actual=await plugin.default.createNodesV2[1](row.inputs,{}, context),projects=actual.flatMap(entry=>Object.values(entry[1].projects)) as {root:string;metadata:{semio:{testCases:string[]}}}[];
    expect(actual.every(entry=>oracle.includes(entry[0])),row.id).toBe(true);
    expect(projects.map(project=>project.root).sort(),row.id).toEqual([...new Set(oracle.map(path=>dirname(dirname(path))))].sort());
    expect(projects.flatMap(project=>project.metadata.semio.testCases).sort(),row.id).toEqual(oracle.map(path=>basename(dirname(path))).sort());
   }
- }finally{disposeTestScratchRootV1(root);}
-},30000);
+ 
+}),30000);
 
-test("fresh authority links and resident Node and Bun source mutations fail closed",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"candidate-authority-");const put=(path:string,content:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
+test("fresh authority links and resident Node and Bun source mutations fail closed",async()=>withLayoutV1(async(root,context)=>{
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const put=(path:string,content:string)=>{noteLayoutMemberV1(path);mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
  const library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`,policyPath=`${library}/⚡️caching/🔣️policy.json`;
- try{
+ 
   put(taxonomyPath,JSON.stringify(vocabulary));put(policyPath,readFileSync(join(repo,policyPath),"utf8"));put(featurePath,"Feature: Authority\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
   expect(new Set(fixture.authorityCases.map(row=>row.id)).size).toBe(fixture.authorityCases.length);
   const oracle=String.raw`import{mkdirSync,writeFileSync,symlinkSync,lstatSync,rmSync}from"node:fs";import{join,dirname}from"node:path";const base=process.argv[1],rows=JSON.parse(process.argv[2]),result=[];mkdirSync(base,{recursive:true});for(const row of rows){const path=join(base,row.path),target=row.authority==="root"?base:join(base,row.id+".json");mkdirSync(dirname(path),{recursive:true});if(row.authority!=="root")writeFileSync(target,"{}");symlinkSync(process.platform==="win32"&&row.authority!=="root"?dirname(target):target,path,process.platform==="win32"?"junction":row.authority==="root"?"dir":"file");result.push({id:row.id,linked:lstatSync(path).isSymbolicLink()});rmSync(path);}process.stdout.write(JSON.stringify(result));`;
   const child=spawnSync("node",["--input-type=module","--eval",oracle,join(root,"physical-oracle"),JSON.stringify(fixture.authorityCases)],{encoding:"utf8",timeout:3000});
-  const nodeRows=child.status===0?JSON.parse(child.stdout):[];
+  noteLayoutMemberV1("physical-oracle");const nodeRows=child.status===0?JSON.parse(child.stdout):[];
   for(const row of fixture.authorityCases){
-   const path=join(root,row.path),saved=row.authority==="root"?null:readFileSync(path,"utf8"),target=row.authority==="root"?root:join(root,`authority-${row.id}.json`);if(saved!==null){writeFileSync(target,saved);rmSync(path);}symlinkSync(process.platform==="win32"&&row.authority!=="root"?dirname(target):target,path,process.platform==="win32"?"junction":row.authority==="root"?"dir":"file");
+   const path=join(root,row.path),saved=row.authority==="root"?null:readFileSync(path,"utf8"),target=row.authority==="root"?root:join(root,`authority-${row.id}.json`);noteLayoutMemberV1(row.path);if(saved!==null){noteLayoutMemberV1(basename(target));writeFileSync(target,saved);rmSync(path);}symlinkSync(process.platform==="win32"&&row.authority!=="root"?dirname(target):target,path,process.platform==="win32"?"junction":row.authority==="root"?"dir":"file");
    expect(child.status,row.id).toBe(0);expect(nodeRows.find((observed:{id:string;linked:boolean})=>observed.id===row.id)?.linked).toBe(true);expect(lstatSync(path).isSymbolicLink()).toBe(true);
-   await expect(plugin.default.createNodesV2[1]([featurePath],{}, {workspaceRoot:row.authority==="root"?path:root})).rejects.toThrow(row.authority==="root"?/real workspace ancestry/:row.authority==="taxonomy"?/no-follow taxonomy/:/no-follow cache policy/);
+   await expect(outsideOriginalV1(()=>repository.invoke(privateOriginal=>withScriptInvocationSignalV1(privateOriginal,context.invocation.control.signal,invocation=>plugin.default.createNodesV2[1]([featurePath],{}, {workspaceRoot:row.authority==="root"?path:root,invocation,phaseControl:createIssuedResourceControlV1(invocation,"discovery:authority-negative",0)})),{owner:"discovery:authority-negative",maximumElapsedMilliseconds:Math.floor(context.invocation.control.remainingMilliseconds()??30000)}))).rejects.toThrow(row.authority==="root"?/real workspace ancestry/:row.authority==="taxonomy"?/no-follow taxonomy/:/no-follow cache policy/);
    rmSync(path);if(saved!==null)writeFileSync(path,saved);
   }
-  const changed=structuredClone(vocabulary);changed.pathExclusions.fixture={path:fixture.expected[0]};put(taxonomyPath,JSON.stringify(changed));expect(await plugin.default.createNodesV2[1]([featurePath],{}, {workspaceRoot:root})).toEqual([]);put(taxonomyPath,JSON.stringify(vocabulary));
+  const changed=structuredClone(vocabulary);changed.pathExclusions.fixture={path:fixture.expected[0]};put(taxonomyPath,JSON.stringify(changed));expect(await plugin.default.createNodesV2[1]([featurePath],{}, context)).toEqual([]);put(taxonomyPath,JSON.stringify(vocabulary));
   const helper=readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8");
   put("plugin/🟨️.mjs",pluginSource());put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",`export {cacheInternals,libraryBootstrap,loadCurrentImplementationV1,currentImplementationRevisionV1} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};\n`);put("📚️library/📦️packages/🟦️typescript/🏗️build/🟨️.mjs",`export * from ${JSON.stringify(pathToFileURL(join(repo,library,"📦️packages/🟦️typescript/🏗️build/🟨️.mjs")).href)};\n`);put("📚️library/🏗️build/📥️inputs/🟨️.mjs",`export {compactSourceInputs} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/📥️inputs/🟨️.mjs")).href)};\n`);
-  const code=`import assert from "node:assert/strict";import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import{pathToFileURL}from"node:url";const root=${JSON.stringify(root)},feature=${JSON.stringify(featurePath)},path=join(root,"plugin/🕸️dependencies/🟨️.mjs"),source=readFileSync(path,"utf8"),resident=(await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href)).default;assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);writeFileSync(path,source+"\\nexport const invalid = ;\\n");await assert.rejects(()=>resident.createNodesV2[1]([feature],{}, {workspaceRoot:root}),/Unexpected|Expected|Parse|Syntax|stale ESM/i);writeFileSync(path,source);assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);console.log("fresh resident source accepted/refused/accepted");`;
-  for(const runtime of ["node",process.execPath]){const child=spawnSync(runtime,[...(runtime==="node"?["--input-type=module"]:[]),"--eval",code],{encoding:"utf8",timeout:10000});expect(child.status,child.stdout+child.stderr).toBe(0);expect(child.stdout.trim()).toBe("fresh resident source accepted/refused/accepted");}
- }finally{disposeTestScratchRootV1(root);}
-},30000);
+  const code=`import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withScriptInvocationSignalV1}from ${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts")).href)};const{AsyncLocalStorage}=await import("node:async_hooks"),outsideOriginalV1=AsyncLocalStorage.snapshot();await receiveScriptProcessInvocation(process.env,async invocation=>{const context={workspaceRoot:${JSON.stringify(root)},invocation,phaseControl:createIssuedResourceControlV1(invocation,"discovery:resident",0)};if(!("bun"in process.versions)){const{toolForCommandV1,resolveRegisteredToolV1}=await import(${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts")).href)}),{nodeNativeLinkerEnvironmentV1}=await import(${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🟦️.ts")).href)}),{nativeSystemFromProviderV1}=await import(${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🟦️.ts")).href)}),cc=toolForCommandV1("cc"),registered=cc?resolveRegisteredToolV1(cc,${JSON.stringify(repo)},{env:process.env}):undefined,environment=registered?nodeNativeLinkerEnvironmentV1(process.env,{...registered,suffix:registered.suffix??[]}):process.env;nativeSystemFromProviderV1(environment);}const{withRepositoryCompilerRuntimeEntriesV1}=await import(${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts")).href)});return withRepositoryCompilerRuntimeEntriesV1(${JSON.stringify(repo)},invocation,context.phaseControl,async()=>{const{default:assert}=await import("node:assert/strict"),{readFileSync,writeFileSync}=await import("node:fs"),{join}=await import("node:path"),{pathToFileURL}=await import("node:url");const root=${JSON.stringify(root)},feature=${JSON.stringify(featurePath)},path=join(root,"plugin/🕸️dependencies/🟨️.mjs"),source=readFileSync(path,"utf8"),resident=(await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href)).default;assert.equal((await resident.createNodesV2[1]([feature],{}, context)).length,1);writeFileSync(path,source+"\\nexport const invalid = ;\\n");const{privateRepositoryInvocationV1}=await import(${JSON.stringify(pathToFileURL(join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/📥️invocation/🟦️.ts")).href)}),invokePrivate=privateRepositoryInvocationV1(root);await assert.rejects(()=>outsideOriginalV1(()=>invokePrivate(privateOriginal=>withScriptInvocationSignalV1(privateOriginal,invocation.control.signal,negative=>resident.createNodesV2[1]([feature],{}, {workspaceRoot:root,invocation:negative,phaseControl:createIssuedResourceControlV1(negative,"discovery:source-negative",0)})),{owner:"discovery:source-negative",maximumElapsedMilliseconds:Math.floor(invocation.control.remainingMilliseconds()??10000)})),error=>error instanceof SyntaxError||(error?.name===${JSON.stringify(fixture.residentRejection.staleName)}&&error?.code===${JSON.stringify(fixture.residentRejection.staleCode)}));writeFileSync(path,source);assert.equal((await resident.createNodesV2[1]([feature],{}, context)).length,1);console.log("fresh resident source accepted/refused/accepted");});});`;
+  for(const runtime of ["node",process.execPath]){const child=await captureOwnedCommandResultV1(runtime,[...(runtime==="node"?["--input-type=module"]:[]),"--eval",code],root,{control:createIssuedResourceControlV1(context.invocation,"discovery:resident-child",10000),env:scriptInvocationEnvironment(context.invocation,process.env),output:{maximumBytes:1048576,maximumLines:8192}});expect(child.signal,child.stderr).toBeNull();expect(child.status,child.stdout+child.stderr).toBe(0);expect(child.stdout.trim()).toBe("fresh resident source accepted/refused/accepted");}
+ 
+}),30000);
 
-test("Nx discovers the same canonical names and semantic owners as the layout vectors", async () => {
+test("Nx discovers the same canonical names and semantic owners as the layout vectors", async()=>withLayoutV1(async(root,context)=>{
     const current = plugin.default;
     const cases = new Map<string, boolean>();
     for (const vector of layoutVectors.cases) for (const source of vector.sources) {
@@ -111,32 +113,33 @@ test("Nx discovers the same canonical names and semantic owners as the layout ve
     }
     const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
     mkdirSync(output, { recursive: true });
-    const root = createTestScratchRootV1(output,"layout-nx-candidates-");
-    const put = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
+    
+    const put = (path: string, content: string) => { noteLayoutMemberV1(path);mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-    try {
+    
       put(`${library}/🔣️taxonomy.json`, JSON.stringify(vocabulary));
       put(`${library}/⚡️caching/🔣️policy.json`, readFileSync(join(repo, library, "⚡️caching/🔣️policy.json"), "utf8"));
       put(`${vocabulary.testDomainPath}/📜️script.ts`, "export {};\n");
       for (const path of cases.keys()) put(path, "Feature: Actual layout input\n");
-      for (const [path, accepted] of cases) {
-        const discovered = await current.createNodesV2[1]([path], {}, { workspaceRoot: root });
-        expect(discovered.map(entry => entry[0]), path).toEqual(accepted ? [path] : []);
+      const discovered=await current.createNodesV2[1]([...cases.keys()],{},context),projects=discovered.flatMap(entry=>Object.values(entry[1].projects));
+      for(const[path,accepted]of cases){
+        const actual=projects.filter(project=>project.root===dirname(dirname(path))&&project.metadata.semio.testCases.includes(basename(dirname(path))));
+        expect(actual.length,path).toBe(accepted?1:0);
       }
-    } finally { disposeTestScratchRootV1(root); }
-  });
+    
+  }));
 
-test("test inference awaits the exact library bootstrap before command helpers",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"bootstrap-order-"),put=(path:string,bytes:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),bytes);},library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`;
- try{
+test("test inference awaits the exact library bootstrap before command helpers",async()=>withLayoutV1(async(root,context)=>{
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const put=(path:string,bytes:string)=>{noteLayoutMemberV1(path);mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),bytes);},library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`;
+ 
   put(taxonomyPath,JSON.stringify(vocabulary));put(`${library}/⚡️caching/🔣️policy.json`,readFileSync(join(repo,library,"⚡️caching/🔣️policy.json"),"utf8"));put(featurePath,"Feature: Bootstrap ordering\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
   put("plugin/🟨️.mjs",pluginSource());put("plugin/🕸️dependencies/🟨️.mjs",readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8"));put("📚️library/📦️packages/🟦️typescript/🏗️build/🟨️.mjs",`export * from ${JSON.stringify(pathToFileURL(join(repo,library,"📦️packages/🟦️typescript/🏗️build/🟨️.mjs")).href)};\n`);
   put("📚️library/🏗️build/📥️inputs/🟨️.mjs",`export {compactSourceInputs} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/📥️inputs/🟨️.mjs")).href)};\n`);
-  const wrapper=`import {cacheInternals as original,libraryBootstrap as originalBootstrap,createScriptInputCache,currentImplementationRevisionV1} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};export const events=[];let ready=false;export const libraryBootstrap={then(accept,reject){return originalBootstrap.then(()=>{ready=true;events.push("ready");return accept();},reject)}};export const cacheInternals=new Proxy(original,{get(target,key){const value=Reflect.get(target,key);if(key!=="relativeScriptInputs")return value;return(...args)=>{events.push("inputs");if(!ready)throw Error("Original test library bootstrap was not received");return value(...args)}}});export {currentImplementationRevisionV1};export const loadCurrentImplementationV1=async()=>({revision:currentImplementationRevisionV1(),cacheInternals,libraryBootstrap,createScriptInputCache});\n`;
+  const wrapper=`import{createHash}from"node:crypto";import{readFileSync}from"node:fs";import{fileURLToPath}from"node:url";import {cacheInternals as original,libraryBootstrap as originalBootstrap,createScriptInputCache,currentImplementationRevisionV1 as originalRevision} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};export const events=[];let ready=false;export const libraryBootstrap={then(accept,reject){return originalBootstrap.then(()=>{ready=true;events.push("ready");return accept();},reject)}};export const cacheInternals=new Proxy(original,{get(target,key){const value=Reflect.get(target,key);if(key!=="relativeScriptInputs")return value;return(...args)=>{events.push("inputs");if(!ready)throw Error("Original test library bootstrap was not received");return value(...args)}}});export const currentImplementationRevisionV1=()=>createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(originalRevision()).digest("hex");export const loadCurrentImplementationV1=async()=>({revision:currentImplementationRevisionV1(),cacheInternals,libraryBootstrap,createScriptInputCache});\n`;
   put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",wrapper);
-  const copied=await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href),result=await copied.default.createNodesV2[1]([featurePath],{},{workspaceRoot:root});expect(result).toHaveLength(1);
+  const copied=await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href),result=await copied.default.createNodesV2[1]([featurePath],{},context);expect(result).toHaveLength(1);
   const revision=new Bun.CryptoHasher("sha256").update(wrapper).digest("hex"),received=await import(pathToFileURL(join(root,"📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href+"?revision="+revision);
   expect(received.events).toEqual(fixture.bootstrapOrder.expected);
   const oracle=spawnSync("node",["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
- }finally{disposeTestScratchRootV1(root);}
-},30000);
+ 
+}),30000);

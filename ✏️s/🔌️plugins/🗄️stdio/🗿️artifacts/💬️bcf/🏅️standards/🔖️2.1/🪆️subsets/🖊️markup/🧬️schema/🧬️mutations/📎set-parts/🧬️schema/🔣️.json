@@ -38,7 +38,7 @@
           "type": "string"
         },
         "data": {
-          "$ref": "#/definitions/octets"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/bytes/schema.json#/$defs/Octets"
         }
       }
     }

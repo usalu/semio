@@ -1,20 +1,22 @@
 {
   "spaces": {
     "sp-1": {
-      "boundary": {
-        "Bounded": {
-          "seed": {
-            "x": 2.0,
-            "y": 2.0
-          }
-        }
-      },
       "entry": "Created",
-      "name": "Kitchen",
-      "number": "0.01",
-      "phase": "New",
-      "storey": "st-ground",
-      "usage": "Kitchen"
+      "value": {
+        "boundary": {
+          "Bounded": {
+            "seed": {
+              "x": 2,
+              "y": 2
+            }
+          }
+        },
+        "name": "Kitchen",
+        "number": "0.01",
+        "phase": "New",
+        "storey": "st-ground",
+        "usage": "Kitchen"
+      }
     }
   }
 }

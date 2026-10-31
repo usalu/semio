@@ -168,6 +168,8 @@
       },
       "description": "Independent literal source text."
     },
-    "meshState": null
+    "meshState": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject/properties/meshState"
+    }
   }
 }

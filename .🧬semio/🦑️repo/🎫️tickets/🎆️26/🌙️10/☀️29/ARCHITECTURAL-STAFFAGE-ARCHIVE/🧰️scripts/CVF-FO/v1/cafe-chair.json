@@ -1,0 +1,1178 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "cafe-chair",
+    "category": "furniture",
+    "title": {
+      "en": "Café Chair",
+      "de": "Café-Stuhl"
+    },
+    "summary": {
+      "en": "A light bentwood-style chair on steel legs (two coinciding leg pairs in side elevation, four legs in reality) with a beech seat and ladder back; it can be pulled out, sat on by a 75 kg occupant and tipped back onto its two rear feet.",
+      "de": "Leichter Stuhl im Bugholz-Stil auf Stahlbeinen (im Seitenaufriss zwei deckungsgleiche Beinpaare, real vier Beine) mit Buchensitz und Sprossenlehne; er lässt sich herausziehen, von einer Person mit 75 kg besetzen und auf die beiden hinteren Füße kippen."
+    },
+    "tags": [
+      "chair",
+      "cafe",
+      "street-furniture",
+      "steel",
+      "beech"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (objects worker)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "wood-handbook-2021",
+          "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service. Chapter 5 (mechanical properties and density of timber species; the values used here are rounded air-dry estimates guided by this source, not table look-ups)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1: General rules (E = 210 GPa)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation; near and far legs share one projection. Tipping is a rigid rotation about the rear feet, not a bending analysis. No occupant load: the pose set holds empty states.",
+        "de": "Seitenansicht; nahe und ferne Beine liegen in einer Projektion. Das Kippen ist eine starre Drehung um die hinteren Füße, keine Biegeanalyse. Keine Personenlast: die Posen sind unbesetzte Zustände."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.88,
+      "widthM": 0.45,
+      "depthM": 0.5,
+      "massKg": 4.5
+    },
+    "materials": [
+      {
+        "id": "beech-timber",
+        "title": {
+          "en": "Beech",
+          "de": "Buche"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 720,
+        "elasticModulusPa": 13500000000,
+        "source": "authored-estimate",
+        "reference": "wood-handbook-2021"
+      },
+      {
+        "id": "steel-tube",
+        "title": {
+          "en": "Painted steel tube",
+          "de": "Lackiertes Stahlrohr"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "source": "literature",
+        "reference": "en-1993-1-1"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "ground",
+      "bones": [
+        {
+          "id": "ground",
+          "parent": null,
+          "title": {
+            "en": "Ground frame",
+            "de": "Bezugsrahmen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "leg-rear",
+          "parent": "ground",
+          "title": {
+            "en": "Rear legs (pair)",
+            "de": "Hintere Beine (Paar)"
+          },
+          "x": 0.05,
+          "y": 0,
+          "angleDeg": 88,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0.23,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "leg-front",
+          "parent": "ground",
+          "title": {
+            "en": "Front legs (pair)",
+            "de": "Vordere Beine (Paar)"
+          },
+          "x": 0.42,
+          "y": 0,
+          "angleDeg": 92,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0.23,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "stretcher",
+          "parent": "ground",
+          "title": {
+            "en": "Stretcher",
+            "de": "Zarge"
+          },
+          "x": 0.0542,
+          "y": 0.12,
+          "angleDeg": 0,
+          "lengthM": 0.3616,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.2,
+            "comX": 0.1808,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "seat",
+          "parent": "ground",
+          "title": {
+            "en": "Seat",
+            "de": "Sitz"
+          },
+          "x": 0.03,
+          "y": 0.46,
+          "angleDeg": 0,
+          "lengthM": 0.42,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.4,
+            "comX": 0.21,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "back",
+          "parent": "ground",
+          "title": {
+            "en": "Backrest post",
+            "de": "Rückenstütze"
+          },
+          "x": 0.066,
+          "y": 0.46,
+          "angleDeg": 95,
+          "lengthM": 0.42,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.5,
+            "comX": 0.21,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-rear",
+        "bone": "leg-rear",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear feet",
+          "de": "Hintere Füße"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "contact-front",
+        "bone": "leg-front",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Front feet",
+          "de": "Vordere Füße"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.5
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "seat-pad",
+          "bone": "seat",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M 0.012 0 L 0.40 0 C 0.416 0 0.426 -0.004 0.428 -0.014 C 0.43 -0.022 0.424 -0.028 0.414 -0.028 L 0.012 -0.028 C 0.004 -0.028 0 -0.022 0 -0.014 C 0 -0.006 0.004 0 0.012 0 Z",
+          "region": "seat-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "seat-apron",
+          "bone": "seat",
+          "role": "body",
+          "lod": 1,
+          "z": 3.8,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "rect",
+          "x": 0.03,
+          "y": -0.062,
+          "w": 0.36,
+          "h": 0.036,
+          "r": 0.004,
+          "region": "seat-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "seat-edge",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.006,
+              -0.0145
+            ],
+            [
+              0.424,
+              -0.0145
+            ]
+          ],
+          "closed": false,
+          "region": "seat-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "seat-apron-line",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.03,
+              -0.044
+            ],
+            [
+              0.39,
+              -0.044
+            ]
+          ],
+          "closed": false,
+          "region": "seat-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "seat-grain",
+          "bone": "seat",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.08 -0.006 C 0.14 -0.003 0.20 -0.009 0.27 -0.005 M 0.15 -0.020 C 0.22 -0.017 0.30 -0.023 0.36 -0.019",
+          "region": "seat-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "seat-screw-0",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.05,
+          "cy": -0.0145,
+          "rx": 0.003,
+          "ry": 0.003,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "seat-screw-1",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.37,
+          "cy": -0.0145,
+          "rx": 0.003,
+          "ry": 0.003,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "back-post",
+          "bone": "back",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.42,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.405,
+          "y1": 0,
+          "r0": 0.013,
+          "r1": 0.009,
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-finial",
+          "bone": "back",
+          "role": "body",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.38,
+          "kind": "ellipse",
+          "cx": 0.412,
+          "cy": 0,
+          "rx": 0.012,
+          "ry": 0.011,
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-panel",
+          "bone": "back",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.52,
+          "kind": "rect",
+          "x": 0.215,
+          "y": -0.02,
+          "w": 0.17,
+          "h": 0.028,
+          "r": 0.009,
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-lower-rail",
+          "bone": "back",
+          "role": "body",
+          "lod": 1,
+          "z": 4,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "rect",
+          "x": 0.11,
+          "y": -0.017,
+          "w": 0.06,
+          "h": 0.02,
+          "r": 0.006,
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-panel-line",
+          "bone": "back",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.23,
+              -0.006
+            ],
+            [
+              0.37,
+              -0.006
+            ]
+          ],
+          "closed": false,
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-grain",
+          "bone": "back",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.235 -0.013 C 0.28 -0.010 0.33 -0.016 0.375 -0.012",
+          "region": "back-beech",
+          "material": "beech-timber"
+        },
+        {
+          "id": "back-rivet-a",
+          "bone": "back",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.24,
+          "cy": -0.006,
+          "rx": 0.0025,
+          "ry": 0.0025,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "back-rivet-b",
+          "bone": "back",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.36,
+          "cy": -0.006,
+          "rx": 0.0025,
+          "ry": 0.0025,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-rear-tube",
+          "bone": "leg-rear",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0.006,
+          "y0": 0,
+          "x1": 0.46,
+          "y1": 0,
+          "r0": 0.0095,
+          "r1": 0.0125,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-foot-rear",
+          "bone": "leg-rear",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "rect",
+          "x": -0.007,
+          "y": -0.0115,
+          "w": 0.016,
+          "h": 0.023,
+          "r": 0.003,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-rear-ferrule",
+          "bone": "leg-rear",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.03,
+              -0.0105
+            ],
+            [
+              0.03,
+              0.0105
+            ]
+          ],
+          "closed": false,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-front-tube",
+          "bone": "leg-front",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0.006,
+          "y0": 0,
+          "x1": 0.46,
+          "y1": 0,
+          "r0": 0.0095,
+          "r1": 0.0125,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-foot-front",
+          "bone": "leg-front",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "rect",
+          "x": -0.007,
+          "y": -0.0115,
+          "w": 0.016,
+          "h": 0.023,
+          "r": 0.003,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-front-ferrule",
+          "bone": "leg-front",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.03,
+              -0.0105
+            ],
+            [
+              0.03,
+              0.0105
+            ]
+          ],
+          "closed": false,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "leg-rear-knuckle",
+          "bone": "leg-rear",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0.452,
+          "cy": 0,
+          "rx": 0.012,
+          "ry": 0.014,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "stretcher-tube",
+          "bone": "stretcher",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.3616,
+          "y1": 0,
+          "r0": 0.007,
+          "r1": 0.007,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "stretcher-joint-a",
+          "bone": "stretcher",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "ellipse",
+          "cx": 0.004,
+          "cy": 0,
+          "rx": 0.0085,
+          "ry": 0.0095,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        },
+        {
+          "id": "stretcher-joint-b",
+          "bone": "stretcher",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "ellipse",
+          "cx": 0.3576,
+          "cy": 0,
+          "rx": 0.0085,
+          "ry": 0.0095,
+          "region": "steel-tube",
+          "material": "steel-tube"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "upright-empty",
+        "title": {
+          "en": "Upright, empty",
+          "de": "Aufrecht, unbesetzt"
+        },
+        "description": {
+          "en": "Standing at its table on all four feet.",
+          "de": "Am Tisch stehend auf allen vier Füßen."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "contact-rear",
+          "contact-front"
+        ],
+        "thermal": {},
+        "loads": []
+      },
+      {
+        "id": "pulled-out",
+        "title": {
+          "en": "Pulled out",
+          "de": "Herausgezogen"
+        },
+        "description": {
+          "en": "Pulled 0.25 m away from the table on all four feet.",
+          "de": "0,25 m vom Tisch weggezogen, auf allen vier Füßen."
+        },
+        "bones": {},
+        "root": {
+          "x": -0.25,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-rear",
+          "contact-front"
+        ],
+        "thermal": {},
+        "loads": []
+      },
+      {
+        "id": "tilted-on-two-legs",
+        "title": {
+          "en": "Tilted on two legs",
+          "de": "Auf zwei Beinen gekippt"
+        },
+        "description": {
+          "en": "Rigid rotation of 12 degrees about the rear feet; the front feet are lifted.",
+          "de": "Starre Drehung um 12 Grad um die hinteren Füße; die vorderen Füße sind angehoben."
+        },
+        "bones": {},
+        "root": {
+          "x": 0.001093,
+          "y": -0.010396,
+          "angleDeg": 12
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-rear"
+        ],
+        "thermal": {},
+        "loads": []
+      },
+      {
+        "id": "seated-pulled-out",
+        "key": true,
+        "title": {
+          "en": "Seated, pulled out",
+          "de": "Sitzend, herausgezogen"
+        },
+        "description": {
+          "en": "A 75 kg occupant has just sat on the chair, which still stands 0.25 m away from the table.",
+          "de": "Eine Person von 75 kg hat sich gerade gesetzt; der Stuhl steht noch 0,25 m vom Tisch entfernt."
+        },
+        "bones": {},
+        "root": {
+          "x": -0.25,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-rear",
+          "contact-front"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Seated adult occupant (75 kg)",
+              "de": "Sitzende erwachsene Person (75 kg)"
+            },
+            "bone": "seat",
+            "x": 0.23,
+            "y": 0,
+            "fxN": 0,
+            "fyN": -735.5,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "occupant-back",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant leaning on the backrest",
+              "de": "Person lehnt am Rücken"
+            },
+            "bone": "back",
+            "x": 0.28,
+            "y": -0.014,
+            "fxN": -60,
+            "fyN": 0,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "seated-occupied",
+        "title": {
+          "en": "Seated at the table",
+          "de": "Sitzend am Tisch"
+        },
+        "description": {
+          "en": "Adult occupant (75 kg, authored estimate) on the seat, a light lean of 60 N on the backrest; all four feet carry the load.",
+          "de": "Erwachsene Person (75 kg, Schätzwert) auf dem Sitz, leichte Anlehnung mit 60 N am Rücken; alle vier Füße tragen die Last."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "contact-rear",
+          "contact-front"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Seated adult occupant (75 kg)",
+              "de": "Sitzende erwachsene Person (75 kg)"
+            },
+            "bone": "seat",
+            "x": 0.23,
+            "y": 0,
+            "fxN": 0,
+            "fyN": -735.5,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "occupant-back",
+            "kind": "occupant",
+            "title": {
+              "en": "Occupant leaning on the backrest",
+              "de": "Person lehnt am Rücken"
+            },
+            "bone": "back",
+            "x": 0.28,
+            "y": -0.014,
+            "fxN": -60,
+            "fyN": 0,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "pull-out-and-sit",
+        "title": {
+          "en": "Pull out and sit",
+          "de": "Herausziehen und Hinsetzen"
+        },
+        "description": {
+          "en": "The chair stands pulled out from the table, an adult sits down and draws it up to the table; the occupant load fades in and the four feet stay in contact throughout.",
+          "de": "Der Stuhl steht vom Tisch weggezogen, eine erwachsene Person setzt sich und rückt ihn an den Tisch; die Personenlast steigt an und die vier Füße bleiben durchgehend in Kontakt."
+        },
+        "durationS": 2.8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "pulled-out",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.6,
+            "pose": "pulled-out",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.3,
+            "pose": "seated-pulled-out",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.4,
+            "pose": "seated-occupied",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.8,
+            "pose": "seated-occupied",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-rear",
+            "fromS": 0,
+            "toS": 2.8
+          },
+          {
+            "anchor": "contact-front",
+            "fromS": 0,
+            "toS": 2.8
+          }
+        ],
+        "phases": [
+          {
+            "id": "approach",
+            "fromS": 0,
+            "toS": 0.6,
+            "title": {
+              "en": "Chair pulled out",
+              "de": "Stuhl herausgezogen"
+            }
+          },
+          {
+            "id": "sit-down",
+            "fromS": 0.6,
+            "toS": 1.3,
+            "title": {
+              "en": "Sitting down",
+              "de": "Hinsetzen"
+            }
+          },
+          {
+            "id": "draw-up",
+            "fromS": 1.3,
+            "toS": 2.4,
+            "title": {
+              "en": "Drawing up to the table",
+              "de": "Heranrücken an den Tisch"
+            }
+          },
+          {
+            "id": "seated",
+            "fromS": 2.4,
+            "toS": 2.8,
+            "title": {
+              "en": "Seated at the table",
+              "de": "Sitzend am Tisch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.3,
+            "kind": "load-on",
+            "title": {
+              "en": "Occupant loads the seat",
+              "de": "Person belastet den Sitz"
+            },
+            "target": "occupant"
+          },
+          {
+            "t": 2.4,
+            "kind": "motion",
+            "title": {
+              "en": "Chair reaches the table",
+              "de": "Stuhl erreicht den Tisch"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "tip-back",
+        "title": {
+          "en": "Tip back on two legs",
+          "de": "Nach hinten auf zwei Beine kippen"
+        },
+        "description": {
+          "en": "The chair tips back onto its rear feet and returns; the front feet lift and touch down again.",
+          "de": "Der Stuhl kippt auf die hinteren Füße und kehrt zurück; die vorderen Füße heben ab und setzen wieder auf."
+        },
+        "durationS": 3.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "upright-empty",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.2,
+            "pose": "tilted-on-two-legs",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.2,
+            "pose": "tilted-on-two-legs",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.0,
+            "pose": "upright-empty",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-rear",
+            "fromS": 0,
+            "toS": 3.0
+          },
+          {
+            "anchor": "contact-front",
+            "fromS": 0,
+            "toS": 0.6
+          },
+          {
+            "anchor": "contact-front",
+            "fromS": 2.2,
+            "toS": 3.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "tilt-back",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Tilting back",
+              "de": "Kippen nach hinten"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 1.2,
+            "toS": 2.2,
+            "title": {
+              "en": "Balanced on two legs",
+              "de": "Im Gleichgewicht auf zwei Beinen"
+            }
+          },
+          {
+            "id": "return",
+            "fromS": 2.2,
+            "toS": 3.0,
+            "title": {
+              "en": "Returning",
+              "de": "Zurückkehren"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.6,
+            "kind": "contact-off",
+            "title": {
+              "en": "Front feet lift",
+              "de": "Vordere Füße heben ab"
+            },
+            "target": "contact-front"
+          },
+          {
+            "t": 2.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Front feet touch down",
+              "de": "Vordere Füße setzen auf"
+            },
+            "target": "contact-front"
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1.0,
+        "windDirectionDeg": 180,
+        "solarWM2": 600,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "seat-beech",
+          "title": {
+            "en": "Beech seat and back",
+            "de": "Buchensitz und Rücken"
+          },
+          "kind": "surface",
+          "material": "beech-timber",
+          "model": "passive",
+          "areaM2": 0.19,
+          "characteristicLengthM": 0.45,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "back-beech",
+          "title": {
+            "en": "Beech backrest",
+            "de": "Buchenrücken"
+          },
+          "kind": "surface",
+          "material": "beech-timber",
+          "model": "passive",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.1,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "steel-tube",
+          "title": {
+            "en": "Steel tubes",
+            "de": "Stahlrohre"
+          },
+          "kind": "surface",
+          "material": "steel-tube",
+          "model": "passive",
+          "areaM2": 0.13,
+          "characteristicLengthM": 0.022,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Passive surfaces in sun; no emitters.",
+          "de": "Passive Flächen in der Sonne; keine Emitter."
+        },
+        {
+          "en": "Reference case: 600 W/m² sun, 20 °C air.",
+          "de": "Referenzfall: 600 W/m² Sonne, 20 °C Luft."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Contacts come from the pose or clip; tipping is a rigid rotation about the rear feet.",
+          "de": "Kontakte kommen aus Pose oder Clip; Kippen ist eine starre Drehung um die hinteren Füße."
+        },
+        {
+          "en": "Near and far legs coincide in elevation and are drawn once; the occupant is a 75 kg point load on the seat plus a 60 N lean on the backrest (authored estimates).",
+          "de": "Nahe und ferne Beine fallen im Aufriss zusammen und sind einmal gezeichnet; die Person ist eine Punktlast von 75 kg auf dem Sitz plus 60 N Anlehnung am Rücken (Schätzwerte)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "upright-empty",
+      "defaultClip": "tip-back",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

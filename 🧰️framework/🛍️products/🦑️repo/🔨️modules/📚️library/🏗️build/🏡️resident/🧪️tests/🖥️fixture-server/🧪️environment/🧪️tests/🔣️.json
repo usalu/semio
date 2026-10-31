@@ -1,0 +1,122 @@
+[
+  {
+    "name": "lifecycle",
+    "platform": "linux",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "/owned/watch",
+      "executionTool": null
+    },
+    "accepted": true
+  },
+  {
+    "name": "execution",
+    "platform": "darwin",
+    "value": {
+      "profile": "execution",
+      "watcher": "/owned/watch",
+      "executionTool": "/owned/tool"
+    },
+    "accepted": true
+  },
+  {
+    "name": "windows",
+    "platform": "win32",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "C:\\owned\\watch.exe",
+      "executionTool": null
+    },
+    "accepted": true
+  },
+  {
+    "name": "unrequested-tool",
+    "platform": "linux",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "/owned/watch",
+      "executionTool": "/unowned/tool"
+    },
+    "accepted": false
+  },
+  {
+    "name": "missing-tool",
+    "platform": "linux",
+    "value": {
+      "profile": "execution",
+      "watcher": "/owned/watch",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "relative",
+    "platform": "linux",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "relative/watch",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "wrong-profile",
+    "platform": "linux",
+    "value": {
+      "profile": "unknown",
+      "watcher": "/owned/watch",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "windows-root-relative",
+    "platform": "win32",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "/owned/watch.exe",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "windows-drive-relative",
+    "platform": "win32",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "C:watch.exe",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "windows-unc",
+    "platform": "win32",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "\\\\server\\share\\watch.exe",
+      "executionTool": null
+    },
+    "accepted": true
+  },
+  {
+    "name": "overlong",
+    "platform": "linux",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "/wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",
+      "executionTool": null
+    },
+    "accepted": false
+  },
+  {
+    "name": "nul",
+    "platform": "linux",
+    "value": {
+      "profile": "lifecycle",
+      "watcher": "/owned/\u0000watch",
+      "executionTool": null
+    },
+    "accepted": false
+  }
+]

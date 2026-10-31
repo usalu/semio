@@ -1,0 +1,11 @@
+# Native Focus Reveal after Actual Geometry Change
+
+Root vf4 passed the repaired mode/locale continuity and first font stages, then demonstrated that an already focused current learner control remained below a200px viewport after actual text preference growth and resize. Navigation to Preferences separately creates a legitimate new overview tree; Root owns that observation baseline correction. This feature does not refocus or replace any node.
+
+The existing production scrollport schema now declares the private FocusVisibility measurement. Eight closed neutral DATA cases cover changed versus unchanged geometry, unrelated ownership, viewport/inner/horizontal clipping and exact edges. Independent SQLite rectangle comparisons produce the same decisions. The existing adaptive owner also exercises the actual binder on controlled DOM: no reveal initially or after unchanged geometry/manual scroll, one native nearest call after changed client geometry, unchanged node/focus, no new call when manual scroll follows, unrelated active control ignored, and cleanup cancels work.
+
+Registered normal Node owner21481 authoritatively exited1:13existing tests passed and2new tests failed, including the actual binder's missing native scroll call. Same complete owner77320 authoritatively exited0:15/15tests,4.26s. No filtered assertions or deadline/budget overrides.
+
+The binder caches the actual viewport/app/main/port dimensions, natural chrome/insets/control extents and committed minimum. It deliberately excludes scroll offsets and focused-control positions from this change signature. Only a changed layout with a current eligible focusable main descendant builds native clipping ancestors and invokes scrollIntoView with block/inline nearest when clipped. No focus(), replacement element, direct scrollTop assignment, smooth animation or manual-scroll reclamation is introduced. Existing observer cleanup and coalescing remain.
+
+Exact four-file hashes and actual red/green receipts are in generated/focus-reveal-checkpoint.json. The earlier stable-host seven-file checkpoint is unchanged. Controlled geometry is not native browser proof; Root owns unchanged strict font/convergence rerun and full acceptance remains required.

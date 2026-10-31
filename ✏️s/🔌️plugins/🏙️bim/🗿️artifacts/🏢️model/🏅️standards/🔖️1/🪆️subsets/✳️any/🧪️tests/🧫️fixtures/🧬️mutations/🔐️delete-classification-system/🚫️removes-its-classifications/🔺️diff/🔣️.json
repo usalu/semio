@@ -6,10 +6,12 @@
   },
   "classifications": {
     "w-east": {
-      "assigned": {
-        "cs-din": null
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "cs-din": null
+        }
+      }
     },
     "wt-300": {
       "entry": "Deleted"

@@ -10,6 +10,7 @@
  * @see ../../🔣️.json — the course; its quizzes hold the solutions
  * @see ../../../../../🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🟦️.tsx — the client under test */
 import { readFileSync } from "node:fs";
+import { swipeAttemptLimit, swipeNavigationProgress } from "./👆️progress/🟦️.ts";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test as base, type Browser, type BrowserContext, type Locator, type Page } from "@playwright/test";
@@ -273,16 +274,22 @@ export function activeOverview(page: Page): Locator {
 }
 
 /** 🌳️ Opens a grid's containing page through the address before its cards receive input — once the client stands: it mounts
- * after its texts have arrived, and an address set before the mount is read as the arrival address, which a screen other than the overview discards. */
+ * after its texts have arrived, and an address set before the mount is read as the arrival address, which a screen other than the overview discards.
+ * The active grid then has to sit on the root overview's frame. Both rectangles are read in the page, so a root overview
+ * that is already mounted is not waited on through a second attachment check after the test budget has closed the browser. */
 export async function openGrid(device: Pick<Device, "page">, id?: string): Promise<void> {
   await expect(device.page.locator("#course-main")).toBeAttached();
   await device.page.evaluate((target) => (window.location.hash = target ?? ""), id);
   await expect(device.page.locator(`[data-course-grid="${id ?? "root"}"][data-grid-active]`)).toBeVisible();
-  const frame = await boxOf(device.page.locator('[data-course-grid="root"] > [data-layered-overview]'));
-  await expect.poll(async () => {
-    const shown = await boxOf(activeOverview(device.page));
-    return Math.max(Math.abs(shown.x - frame.x), Math.abs(shown.y - frame.y), Math.abs(shown.width - frame.width), Math.abs(shown.height - frame.height));
-  }).toBeLessThan(0.5);
+  await expect.poll(() => device.page.evaluate(() => {
+    const root = document.querySelector<HTMLElement>('[data-course-grid="root"] > [data-layered-overview]');
+    const shown = document.querySelector<HTMLElement>('[data-course-grid][data-grid-active] > [data-layered-overview]');
+    if (root === null || shown === null) return Number.POSITIVE_INFINITY;
+    const frame = root.getBoundingClientRect();
+    const box = shown.getBoundingClientRect();
+    if (frame.width <= 0 || frame.height <= 0 || box.width <= 0 || box.height <= 0) return Number.POSITIVE_INFINITY;
+    return Math.max(Math.abs(box.x - frame.x), Math.abs(box.y - frame.y), Math.abs(box.width - frame.width), Math.abs(box.height - frame.height));
+  })).toBeLessThan(0.5);
 }
 
 /** 📂️ Opens the overview containing an authored quiz, using the course's topic membership. */
@@ -792,10 +799,10 @@ export function scoredPoints(device: Device, text: string): { readonly challenge
 }
 
 /** 🏁️ What the results on screen say: the score of the run in percent, its challenge with the points it earned of the
- * most, and per task its score and the rows of its result tables (the item a row is about, by its label without its icon, everything the
+ * most, and per task its score and the rows of its result tables (the item and matching dimension a row is about, by stable identity and its label without its icon, everything the
  * row says, and whether it marks a guess as far off) — not those of the figures of what everyone answered, which are
  * tables too. */
-export async function shownResults(device: Device): Promise<{ readonly score: number; readonly challenge: Challenge; readonly points: number; readonly par: number; readonly tasks: readonly { readonly task: string; readonly score: number; readonly rows: readonly { readonly label: string; readonly text: string; readonly miss: boolean }[] }[] }> {
+export async function shownResults(device: Device): Promise<{ readonly score: number; readonly challenge: Challenge; readonly points: number; readonly par: number; readonly tasks: readonly { readonly task: string; readonly score: number; readonly rows: readonly { readonly item: string; readonly dimension: string | null; readonly label: string; readonly text: string; readonly miss: boolean }[] }[] }> {
   const summary = screen(device.page, "results");
   const score = percent(await summary.locator("p").first().innerText());
   const scored = scoredPoints(device, await summary.locator("p").nth(1).innerText());
@@ -803,7 +810,11 @@ export async function shownResults(device: Device): Promise<{ readonly score: nu
   const tasks = [];
   for (let index = 0; index < (await cards.count()); index++) {
     const result = cards.nth(index);
-    const rows = await result.locator("table:not(.course-plot) tbody tr").evaluateAll((elements) => elements.map((element) => ({ label: (element.querySelector<HTMLElement>("th[scope=row]")?.innerText ?? "").trim(), text: (element as HTMLElement).innerText, miss: element.querySelector("[data-miss]") !== null })));
+    const rows = await result.locator("table:not(.course-plot) tbody tr").evaluateAll((elements) => elements.map((element) => {
+      const item = element.getAttribute("data-result-item");
+      if (item === null || item.length === 0) throw new Error("Result item identity required");
+      return { item, dimension: element.getAttribute("data-result-dimension"), label: (element.querySelector<HTMLElement>("th[scope=row]")?.innerText ?? "").trim(), text: (element as HTMLElement).innerText, miss: element.querySelector("[data-miss]") !== null };
+    }));
     tasks.push({ task: ((await result.getAttribute("data-presence-anchor")) ?? "").replace(/^result:/u, ""), score: percent(await result.locator("p").first().innerText()), rows: rows.map((row) => ({ ...row, label: row.label.replace(/^[^\p{L}\p{N}]+/u, "") })) });
   }
   return { score, ...scored, tasks };
@@ -829,10 +840,19 @@ export async function expectFeedback(device: Device, quiz: SourceQuiz, how: "per
     const task = taskOf(quiz, entry.task);
     const drawn = Math.min(task.draw ?? task.items.length, task.items.length);
     expect(entry.rows.length, `${task.id}: one row per drawn item${task.kind === "matching" ? " and dimension" : ""}`).toBe(drawn * (task.dimensions?.length ?? 1));
+    const dimensions: readonly (string | null)[] = task.kind === "matching" ? task.dimensions!.map((dimension) => dimension.id) : [null];
+    const identities = dimensions.map((dimension) => entry.rows.filter((row) => row.dimension === dimension).map((row) => row.item).sort());
+    for (const items of identities) {
+      expect(items, task.id + ": every dimension has the drawn items").toHaveLength(drawn);
+      expect(new Set(items).size, task.id + ": each item occurs once per dimension").toBe(drawn);
+      expect(items, task.id + ": every dimension describes the same drawn items").toEqual(identities[0]);
+    }
     for (const row of entry.rows) {
-      const item = task.items.find((candidate) => candidate.label[device.locale] === row.label);
-      expect(item, `${task.id}: the row of ${JSON.stringify(row.label)} is about an item of the task`).toBeDefined();
-      expect(row.text, `${task.id}: the row of ${item!.id} explains it`).toContain(item!.explanation[device.locale]);
+      expect(dimensions, task.id + ": the row has a declared result dimension").toContain(row.dimension);
+      const item = task.items.find((candidate) => candidate.id === row.item);
+      expect(item, task.id + ": result item " + JSON.stringify(row.item) + " belongs to the task").toBeDefined();
+      expect(row.label, task.id + ": the row labels its exact item").toBe(item!.label[device.locale]);
+      expect(row.text, task.id + ": the row of " + item!.id + " explains it").toContain(item!.explanation[device.locale]);
     }
     if (how === "perfect") expect(entry.score, `${task.id}: a perfect answer scores 100 %`).toBe(100);
     else expect(entry.score, `${task.id}: one mistake costs some credit, not all`).toBeGreaterThan(0);
@@ -899,8 +919,30 @@ export async function touchSwipe(page: Page, dx: number, dy: number, ms = 160, s
   await cdp.detach();
 }
 
-/** 📱️ Swipes the overview of a phone one neighbouring page at a time — along the rows first, then along the columns — until
- * the card of `id` rests in front, and checks that every swipe lands on the cell it heads for. */
+
+/** 📜️ Measures the actual remaining scroll range inside the page the next gesture starts on. */
+async function swipeScrollProgress(page: Page, id: string, axis: "x" | "y", direction: number): Promise<{ readonly position: number; readonly remaining: number }> {
+  return activeOverview(page).evaluate((overview, [id, axis, direction]) => {
+    const cell = overview.querySelector<HTMLElement>(':scope > [data-layered-overlay] > [data-layered-cell="' + id + '"]');
+    if (cell === null) throw new Error("Actual swipe source cell required");
+    let position = 0, remaining = 0;
+    for (const node of [cell, ...cell.querySelectorAll<HTMLElement>("*")]) {
+      if (!(node instanceof HTMLElement) || node.getClientRects().length === 0 || node.closest("[inert],[hidden]") !== null) continue;
+      const style = getComputedStyle(node);
+      if (!/auto|scroll/u.test(axis === "x" ? style.overflowX : style.overflowY)) continue;
+      const maximum = Math.max(0, axis === "x" ? node.scrollWidth - node.clientWidth : node.scrollHeight - node.clientHeight);
+      const raw = axis === "x" ? node.scrollLeft : node.scrollTop;
+      const directed = direction > 0 ? raw : maximum - raw;
+      if (!Number.isFinite(directed) || directed < 0 || directed > maximum) throw new Error("Bounded native swipe scroll required");
+      position += directed;
+      remaining += maximum - directed;
+    }
+    return { position, remaining };
+  }, [id, axis, direction] as const);
+}
+
+/** 📱️ Reaches a neighbouring page with real gestures, allowing proved inner-card scroll progress before the next gesture;
+ * checks each neighbour landing and the requested card, along rows first and then columns. */
 export async function swipeTo(device: Pick<Device,"page">, id: string): Promise<void> {
   const page = device.page;
   if (await card(page, id).count() === 0 && QUIZZES.some((quiz) => quiz.id === id)) await openQuizGrid(device, id);
@@ -916,8 +958,20 @@ export async function swipeTo(device: Pick<Device,"page">, id: string): Promise<
     const across = Math.sign(target.column - from.column);
     const [dx, dy] = across !== 0 && cells.some((cell) => cell.column === from.column + across && cell.row === from.row) ? [across, 0] : [0, Math.sign(target.row - from.row)];
     const next = cells.find((cell) => cell.column === from.column + dx && cell.row === from.row + dy)!;
-    await touchSwipe(page, -dx * box.width * 0.6, -dy * box.height * 0.4);
-    await expect.poll(() => restingPage(page), { message: `a swipe from ${from.id} lands on ${next.id}` }).toBe(next.id);
+    const axis = dx !== 0 ? "x" : "y", direction = dx !== 0 ? dx : dy;
+    const quoted = await swipeScrollProgress(page, from.id, axis, direction);
+    const limit = swipeAttemptLimit(quoted.remaining);
+    for (let attempt = 0; attempt < limit; attempt += 1) {
+      const before = await swipeScrollProgress(page, from.id, axis, direction);
+      await touchSwipe(page, -dx * box.width * 0.6, -dy * box.height * 0.4);
+      await expect.poll(async () => {
+        const observed = await restingPage(page);
+        const after = await swipeScrollProgress(page, from.id, axis, direction);
+        return swipeNavigationProgress({ from: from.id, next: next.id, observed, before, after });
+      }, { message: "a swipe from " + from.id + " reaches " + next.id + " or makes actual content progress" }).not.toBe("pending");
+      if (await restingPage(page) === next.id) break;
+    }
+    await expect.poll(() => restingPage(page), { message: "a swipe from " + from.id + " lands on " + next.id }).toBe(next.id);
   }
   await expect(card(page, id).locator("[data-card]").first()).toBeInViewport();
 }

@@ -1,0 +1,97 @@
+[
+  {
+    "id": "plain",
+    "source": "pub fn visible() {}",
+    "expected": [
+      {
+        "name": "visible",
+        "visibility": "pub"
+      }
+    ]
+  },
+  {
+    "id": "inline-attribute",
+    "source": "#[doc(hidden)] pub fn hidden() {}",
+    "expected": [
+      {
+        "name": "hidden",
+        "visibility": "pub"
+      }
+    ]
+  },
+  {
+    "id": "crate-helper",
+    "source": "pub(crate) fn internal() {}",
+    "expected": [
+      {
+        "name": "internal",
+        "visibility": "pub(crate)"
+      }
+    ]
+  },
+  {
+    "id": "parent-helper",
+    "source": "pub(super) fn helper() {}",
+    "expected": [
+      {
+        "name": "helper",
+        "visibility": "pub(super)"
+      }
+    ]
+  },
+  {
+    "id": "const-function",
+    "source": "pub const fn constant() {}",
+    "expected": [
+      {
+        "name": "constant",
+        "visibility": "pub"
+      }
+    ]
+  },
+  {
+    "id": "async-function",
+    "source": "pub async fn later() {}",
+    "expected": [
+      {
+        "name": "later",
+        "visibility": "pub"
+      }
+    ]
+  },
+  {
+    "id": "unsafe-function",
+    "source": "pub unsafe extern \"C\" fn foreign() {}",
+    "expected": [
+      {
+        "name": "foreign",
+        "visibility": "pub"
+      }
+    ]
+  },
+  {
+    "id": "implementation-member",
+    "source": "struct Local; impl Local { pub const fn method() {} }",
+    "expected": []
+  },
+  {
+    "id": "comment-and-text",
+    "source": "// pub fn fake() {}\nconst TEXT: &str = \"pub fn fake() {}\";",
+    "expected": []
+  },
+  {
+    "id": "self-only",
+    "source": "pub(self) fn private() {}",
+    "expected": []
+  },
+  {
+    "id": "foreign-declaration",
+    "source": "extern \"C\" { pub fn imported(); }",
+    "expected": [
+      {
+        "name": "imported",
+        "visibility": "pub"
+      }
+    ]
+  }
+]

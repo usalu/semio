@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Borrowed Admitted IDML Member Lookup",
   "type": "object",
   "description": "Reuses the admitted numeric package index without rebuilding a map or copying member paths. Immutable original package/key views, bounded name hashing/probing/comparison, no retained allocation.",

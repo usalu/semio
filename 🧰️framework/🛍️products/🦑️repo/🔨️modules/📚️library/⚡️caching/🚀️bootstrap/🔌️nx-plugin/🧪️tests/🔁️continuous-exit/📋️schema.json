@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 15,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "code",
+      "selected",
+      "needed",
+      "completed",
+      "stoppingReason",
+      "expected"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1
+      },
+      "code": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "selected": {
+        "type": "boolean"
+      },
+      "needed": {
+        "type": "boolean"
+      },
+      "completed": {
+        "type": "boolean"
+      },
+      "stoppingReason": {
+        "enum": [
+          null,
+          "fulfilled",
+          "interrupted"
+        ]
+      },
+      "expected": {
+        "enum": [
+          "none",
+          "fulfilled",
+          "interrupted",
+          "crashed"
+        ]
+      }
+    }
+  }
+}

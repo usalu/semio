@@ -1,6 +1,6 @@
 import { test,expect } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };

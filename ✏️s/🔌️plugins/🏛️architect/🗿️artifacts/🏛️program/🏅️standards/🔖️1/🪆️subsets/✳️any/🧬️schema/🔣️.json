@@ -997,13 +997,15 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "notes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/TaggedNote"
-          }
+          },
+          "default": []
         },
         "timestamps": {
           "$ref": "#/$defs/TimestampMeta"

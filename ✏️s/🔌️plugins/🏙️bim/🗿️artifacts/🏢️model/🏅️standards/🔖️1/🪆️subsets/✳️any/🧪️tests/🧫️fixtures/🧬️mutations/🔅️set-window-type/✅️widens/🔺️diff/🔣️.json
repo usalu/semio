@@ -2,7 +2,9 @@
   "window_types": {
     "win-1": {
       "entry": "Patched",
-      "width": 1.5
+      "value": {
+        "width": 1.5
+      }
     }
   }
 }

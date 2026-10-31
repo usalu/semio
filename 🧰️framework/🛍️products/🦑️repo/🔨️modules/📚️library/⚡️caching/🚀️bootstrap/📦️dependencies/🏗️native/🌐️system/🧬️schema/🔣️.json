@@ -1,0 +1,218 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "order",
+    "packages"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "order": {
+      "const": [
+        "apt-get",
+        "dnf",
+        "pacman",
+        "zypper"
+      ]
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manager",
+            "arguments",
+            "packages"
+          ],
+          "properties": {
+            "manager": {
+              "const": "dnf"
+            },
+            "arguments": {
+              "const": [
+                "install",
+                "-y"
+              ]
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manager",
+            "arguments",
+            "packages"
+          ],
+          "properties": {
+            "manager": {
+              "const": "pacman"
+            },
+            "arguments": {
+              "const": [
+                "-Sy",
+                "--needed",
+                "--noconfirm"
+              ]
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manager",
+            "arguments",
+            "packages"
+          ],
+          "properties": {
+            "manager": {
+              "const": "zypper"
+            },
+            "arguments": {
+              "const": [
+                "--non-interactive",
+                "install",
+                "--no-recommends"
+              ]
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        }
+      ],
+      "additionalItems": false
+    }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "platform",
+        "available",
+        "root",
+        "cli",
+        "offline",
+        "cancel",
+        "fail",
+        "expected",
+        "error"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "win32",
+            "darwin"
+          ]
+        },
+        "available": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "apt-get",
+              "dnf",
+              "pacman",
+              "zypper",
+              "sudo",
+              "env"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "root": {
+          "type": "boolean"
+        },
+        "cli": {
+          "type": "boolean"
+        },
+        "offline": {
+          "type": "boolean"
+        },
+        "cancel": {
+          "enum": [
+            "none",
+            "before",
+            "during",
+            "return"
+          ]
+        },
+        "fail": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "command",
+              "args",
+              "env"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "env": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

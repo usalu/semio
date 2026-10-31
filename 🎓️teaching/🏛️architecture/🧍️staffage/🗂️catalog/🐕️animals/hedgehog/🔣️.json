@@ -1,0 +1,4199 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "hedgehog",
+  "category": "animals",
+  "title": {
+   "en": "European Hedgehog",
+   "de": "Westeuropäischer Igel"
+  },
+  "summary": {
+   "en": "An adult European hedgehog (Erinaceus europaeus, 1.0 kg): spiny dome with front and rear spine skirts that swing down to close the animal into a defensive ball, pointed snout, four short limbs; foraging, alert and rolled-up poses, a slow foraging walk and the roll-up reaction; spine and fur thermal model with 35.5 degC core, nose breathing and a back plume. Too small for 1:500.",
+   "de": "Ein erwachsener Westeuropäischer Igel (Erinaceus europaeus, 1,0 kg): Stachelkuppel mit vorderem und hinterem Stachelsaum, die sich zum Abwehrball um das Tier schließen, spitze Schnauze, vier kurze Gliedmaßen; Suchen, Wachsamkeit und eingerollt, ein langsamer Suchgang und die Einrollreaktion; Stachel- und Fell-Wärmemodell mit 35,5 Grad Kern, Nasenatmung und Rückenfahne. Zu klein für 1:500."
+  },
+  "tags": [
+   "animal",
+   "mammal",
+   "hedgehog",
+   "spines",
+   "defensive",
+   "garden",
+   "nocturnal"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-A2 (animals)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "reeve-1994",
+     "citation": "Reeve, N. J. (1994). Hedgehogs. T & AD Poyser, London. Erinaceus europaeus: head and body 20-27 cm, adult mass about 0.6-1.2 kg, 5000-7000 spines of 2-3 cm, rolling up by the panniculus carnosus."
+    },
+    {
+     "id": "kleiber-1961",
+     "citation": "Kleiber, M. (1961). The Fire of Life: An Introduction to Animal Energetics. Wiley, New York. Basal metabolic rate 70 kcal/day per kg^0.75 = 3.39 W per kg^0.75."
+    },
+    {
+     "id": "mcnab-1980",
+     "citation": "McNab, B. K. (1980). Food habits, energetics, and the population biology of mammals. The American Naturalist 116, 106-124. Insectivores with spines have a basal rate well below the Kleiber line; the factor 0.65 used here is an authored estimate guided by this paper."
+    },
+    {
+     "id": "scholander-1950",
+     "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236."
+    },
+    {
+     "id": "calder-1984",
+     "citation": "Calder, W. A. (1984). Size, Function, and Life History. Harvard University Press. Allometric breathing frequency of mammals about 53.5 M^-0.26 breaths per minute (M in kg) and tidal volume about 7.7 mL per kg; the hedgehog patterns are authored estimates guided by these."
+    },
+    {
+     "id": "meeh-1879",
+     "citation": "Meeh, K. (1879). Oberflaechenmessungen des menschlichen Koerpers. Zeitschrift fuer Biologie 15, 425-458. Skin area about k M^(2/3) with k near 10 (cm2, g)."
+    },
+    {
+     "id": "gupta-2010",
+     "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39. Nostril areas and jet angles of the hedgehog are authored estimates guided by the human case.",
+     "url": "https://research.polyu.edu.hk/en/publications/characterizing-exhaled-airflow-from-breathing-and-talking/"
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort: emissivity of skin and respiratory heat loss."
+    },
+    {
+     "id": "schmidt-nielsen-1970",
+     "citation": "Schmidt-Nielsen, K., Hainsworth, F. R., Murrish, D. E. (1970). Counter-current heat exchange in the respiratory passages. Respiration Physiology 9, 263-276."
+    }
+   ],
+   "notes": {
+    "en": "Handcrafted: rig, outlines, poses and numbers are authored by hand; parameters without a verifiable source are tagged authored-estimate and name the reference they are guided by.",
+    "de": "Handgefertigt: Rig, Umrisse, Posen und Zahlen sind von Hand erstellt; Parameter ohne prüfbare Quelle sind als authored-estimate gekennzeichnet und nennen die Referenz, an der sie sich orientieren."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.128,
+   "widthM": 0.28,
+   "depthM": 0.15,
+   "massKg": 1
+  },
+  "rig": {
+   "kind": "anatomical",
+   "root": "trunk",
+   "bones": [
+    {
+     "id": "trunk",
+     "parent": null,
+     "title": {
+      "en": "Trunk under the spiny dome",
+      "de": "Rumpf unter der Stachelkuppel"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.16,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -60,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.646,
+      "comX": 0.07,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "coat-r",
+     "parent": "trunk",
+     "title": {
+      "en": "Rear spine skirt (panniculus flap)",
+      "de": "Hinterer Stachelsaum (Hautmuskel-Lappen)"
+     },
+     "x": -0.02,
+     "y": 0,
+     "angleDeg": 250,
+     "lengthM": 0.07,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -130,
+      "maxDeg": 130
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.035,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "coat-f",
+     "parent": "trunk",
+     "title": {
+      "en": "Front spine skirt over the forehead",
+      "de": "Vorderer Stachelsaum über der Stirn"
+     },
+     "x": 0.14,
+     "y": 0,
+     "angleDeg": -70,
+     "lengthM": 0.07,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -130,
+      "maxDeg": 130
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.035,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "neck",
+     "parent": "trunk",
+     "title": {
+      "en": "Neck",
+      "de": "Hals"
+     },
+     "x": 0.15,
+     "y": -0.005,
+     "angleDeg": -10,
+     "lengthM": 0.02,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.02,
+      "comX": 0.01,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "head",
+     "parent": "neck",
+     "title": {
+      "en": "Head with pointed snout",
+      "de": "Kopf mit spitzer Schnauze"
+     },
+     "x": 0.02,
+     "y": 0,
+     "angleDeg": -10,
+     "lengthM": 0.055,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.08,
+      "comX": 0.03,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "fore-n",
+     "parent": "trunk",
+     "title": {
+      "en": "Near fore limb",
+      "de": "Vorderbein (nah)"
+     },
+     "x": 0.11,
+     "y": -0.03,
+     "angleDeg": -90,
+     "lengthM": 0.03,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.03,
+      "comX": 0.015,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "forepaw-n",
+     "parent": "fore-n",
+     "title": {
+      "en": "Near fore paw",
+      "de": "Vorderpfote (nah)"
+     },
+     "x": 0.03,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.035,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.01,
+      "comX": 0.0175,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "hind-n",
+     "parent": "trunk",
+     "title": {
+      "en": "Near hind limb",
+      "de": "Hinterbein (nah)"
+     },
+     "x": 0.02,
+     "y": -0.03,
+     "angleDeg": -90,
+     "lengthM": 0.035,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.035,
+      "comX": 0.0175,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "hindpaw-n",
+     "parent": "hind-n",
+     "title": {
+      "en": "Near hind foot",
+      "de": "Hinterfuß (nah)"
+     },
+     "x": 0.035,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.04,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.012,
+      "comX": 0.02,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "fore-f",
+     "parent": "trunk",
+     "title": {
+      "en": "Far fore limb",
+      "de": "Vorderbein (fern)"
+     },
+     "x": 0.11,
+     "y": -0.03,
+     "angleDeg": -90,
+     "lengthM": 0.03,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.03,
+      "comX": 0.015,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "forepaw-f",
+     "parent": "fore-f",
+     "title": {
+      "en": "Far fore paw",
+      "de": "Vorderpfote (fern)"
+     },
+     "x": 0.03,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.035,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.01,
+      "comX": 0.0175,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "hind-f",
+     "parent": "trunk",
+     "title": {
+      "en": "Far hind limb",
+      "de": "Hinterbein (fern)"
+     },
+     "x": 0.02,
+     "y": -0.03,
+     "angleDeg": -90,
+     "lengthM": 0.035,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.035,
+      "comX": 0.0175,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    },
+    {
+     "id": "hindpaw-f",
+     "parent": "hind-f",
+     "title": {
+      "en": "Far hind foot",
+      "de": "Hinterfuß (fern)"
+     },
+     "x": 0.035,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.04,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.012,
+      "comX": 0.02,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "reeve-1994"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "foot-fn",
+    "bone": "forepaw-n",
+    "x": 0.035,
+    "y": -0.0105,
+    "kind": "contact",
+    "title": {
+     "en": "Near fore paw on the ground",
+     "de": "Vorderpfote nah am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.02,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "foot-ff",
+    "bone": "forepaw-f",
+    "x": 0.035,
+    "y": -0.0105,
+    "kind": "contact",
+    "title": {
+     "en": "Far fore paw on the ground",
+     "de": "Vorderpfote fern am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.02,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "foot-hn",
+    "bone": "hindpaw-n",
+    "x": 0.04,
+    "y": -0.0105,
+    "kind": "contact",
+    "title": {
+     "en": "Near hind foot on the ground",
+     "de": "Hinterfuß nah am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.02,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "foot-hf",
+    "bone": "hindpaw-f",
+    "x": 0.04,
+    "y": -0.0105,
+    "kind": "contact",
+    "title": {
+     "en": "Far hind foot on the ground",
+     "de": "Hinterfuß fern am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.02,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "spine-front",
+    "bone": "coat-f",
+    "x": 0.07,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Front spine tips on the ground (rolled up)",
+     "de": "Vordere Stachelspitzen am Boden (eingerollt)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.04,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "spine-rear",
+    "bone": "coat-r",
+    "x": 0.07,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear spine tips on the ground (rolled up)",
+     "de": "Hintere Stachelspitzen am Boden (eingerollt)"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.04,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "nostrils",
+    "bone": "head",
+    "x": 0.054,
+    "y": -0.004,
+    "kind": "emitter",
+    "title": {
+     "en": "Nostrils at the snout tip",
+     "de": "Nasenlöcher an der Schnauzenspitze"
+    }
+   },
+   {
+    "id": "snout-tip",
+    "bone": "head",
+    "x": 0.056,
+    "y": -0.006,
+    "kind": "attachment",
+    "title": {
+     "en": "Snout tip",
+     "de": "Schnauzenspitze"
+    }
+   },
+   {
+    "id": "eye",
+    "bone": "head",
+    "x": 0.028,
+    "y": 0.012,
+    "kind": "attachment",
+    "title": {
+     "en": "Eye",
+     "de": "Auge"
+    }
+   },
+   {
+    "id": "back-plume",
+    "bone": "trunk",
+    "x": 0.06,
+    "y": 0.07,
+    "kind": "emitter",
+    "title": {
+     "en": "Back above the dome (plume source)",
+     "de": "Rücken über der Kuppel (Fahnenquelle)"
+    }
+   }
+  ],
+  "materials": [
+   {
+    "id": "spines",
+    "title": {
+     "en": "Keratin spines with enclosed air",
+     "de": "Keratinstacheln mit eingeschlossener Luft"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.75,
+    "densityKgM3": 1200,
+    "conductivityWmK": 0.05,
+    "source": "authored-estimate",
+    "reference": "reeve-1994"
+   },
+   {
+    "id": "belly-fur",
+    "title": {
+     "en": "Coarse belly fur",
+     "de": "Grobes Bauchfell"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 150,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "face-fur",
+    "title": {
+     "en": "Short face fur",
+     "de": "Kurzes Gesichtsfell"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 150,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "bare-skin",
+    "title": {
+     "en": "Bare skin of nose and paws",
+     "de": "Nackte Haut von Nase und Pfoten"
+    },
+    "emissivity": 0.96,
+    "solarAbsorptivity": 0.7,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "poses": [
+   {
+    "id": "foraging",
+    "title": {
+     "en": "Foraging, snout down",
+     "de": "Auf Nahrungssuche, Schnauze unten"
+    },
+    "description": {
+     "en": "Standing on all four feet with the head lowered and the snout near the ground, the front spine skirt hanging over the forehead, the back dome relaxed.",
+     "de": "Auf allen vier Füßen, Kopf gesenkt und Schnauze nah am Boden, der vordere Stachelsaum hängt über die Stirn, die Rückenkuppel ist entspannt."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 0
+     },
+     "neck": {
+      "angleDeg": -18
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 0
+     },
+     "coat-r": {
+      "angleDeg": 0
+     },
+     "fore-n": {
+      "angleDeg": -29.63
+     },
+     "forepaw-n": {
+      "angleDeg": 114.02
+     },
+     "fore-f": {
+      "angleDeg": -97.9
+     },
+     "forepaw-f": {
+      "angleDeg": 114.02
+     },
+     "hind-n": {
+      "angleDeg": 107.2
+     },
+     "hindpaw-n": {
+      "angleDeg": -112.13
+     },
+     "hind-f": {
+      "angleDeg": 55.43
+     },
+     "hindpaw-f": {
+      "angleDeg": -131.48
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-fn",
+     "foot-ff",
+     "foot-hn",
+     "foot-hf"
+    ],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "alert",
+    "title": {
+     "en": "Alert, sniffing",
+     "de": "Wachsam, witternd"
+    },
+    "description": {
+     "en": "Standing still with the head raised and the snout level, sniffing the air; the spine skirts a little raised.",
+     "de": "Ruhig stehend mit erhobenem Kopf und waagerechter Schnauze, die Luft witternd; die Stachelsäume leicht angehoben."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 4
+     },
+     "neck": {
+      "angleDeg": 14
+     },
+     "head": {
+      "angleDeg": 0
+     },
+     "coat-f": {
+      "angleDeg": 6
+     },
+     "coat-r": {
+      "angleDeg": -9
+     },
+     "fore-n": {
+      "angleDeg": -32.6
+     },
+     "forepaw-n": {
+      "angleDeg": 96.96
+     },
+     "fore-f": {
+      "angleDeg": -84.19
+     },
+     "forepaw-f": {
+      "angleDeg": 92.96
+     },
+     "hind-n": {
+      "angleDeg": 96.72
+     },
+     "hindpaw-n": {
+      "angleDeg": -109.98
+     },
+     "hind-f": {
+      "angleDeg": 45.52
+     },
+     "hindpaw-f": {
+      "angleDeg": -124.68
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-fn",
+     "foot-ff",
+     "foot-hn",
+     "foot-hf"
+    ],
+    "thermal": {
+     "activityMet": 1.4,
+     "breathing": "rest",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "rolled",
+    "title": {
+     "en": "Rolled up in defence",
+     "de": "Eingerollt zur Verteidigung"
+    },
+    "description": {
+     "en": "The defensive ball: both spine skirts swung down around the body until their tips meet under it, the head tucked inside, the limbs folded away; only spines face the world and the animal rests on the skirt tips; breathing slows.",
+     "de": "Die Abwehrkugel: beide Stachelsäume sind um den Körper nach unten geschwungen, bis sich ihre Spitzen darunter treffen, der Kopf ist eingezogen, die Gliedmaßen sind weggeklappt; nur Stacheln zeigen nach außen, das Tier ruht auf den Saumspitzen; die Atmung verlangsamt sich."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 0
+     },
+     "neck": {
+      "angleDeg": -90
+     },
+     "head": {
+      "angleDeg": -60
+     },
+     "coat-f": {
+      "angleDeg": -80
+     },
+     "coat-r": {
+      "angleDeg": 80
+     },
+     "fore-n": {
+      "angleDeg": -100
+     },
+     "forepaw-n": {
+      "angleDeg": -20
+     },
+     "fore-f": {
+      "angleDeg": -95
+     },
+     "forepaw-f": {
+      "angleDeg": -25
+     },
+     "hind-n": {
+      "angleDeg": 150
+     },
+     "hindpaw-n": {
+      "angleDeg": 0
+     },
+     "hind-f": {
+      "angleDeg": 145
+     },
+     "hindpaw-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "spine-front",
+     "spine-rear"
+    ],
+    "thermal": {
+     "activityMet": 1.1,
+     "breathing": "rolled",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.27999999999999997,
+       "contact": {
+        "fraction": 0.25,
+        "tempC": 12
+       }
+      },
+      "belly-fur": {
+       "exposedFraction": 0.03,
+       "sunlitFraction": 0
+      },
+      "face-fur": {
+       "exposedFraction": 0.03,
+       "sunlitFraction": 0
+      },
+      "nose": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0
+      },
+      "limbs-fur": {
+       "exposedFraction": 0.05,
+       "sunlitFraction": 0
+      },
+      "paws-skin": {
+       "exposedFraction": 0.05,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-0",
+    "title": {
+     "en": "Walk phase 0",
+     "de": "Gehphase 0"
+    },
+    "description": {
+     "en": "Key pose 0 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 0 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 0
+     },
+     "neck": {
+      "angleDeg": -18
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 0
+     },
+     "coat-r": {
+      "angleDeg": 0
+     },
+     "hind-n": {
+      "angleDeg": 84.74
+     },
+     "hindpaw-n": {
+      "angleDeg": -35.83
+     },
+     "fore-n": {
+      "angleDeg": -90.03
+     },
+     "forepaw-n": {
+      "angleDeg": 140.82
+     },
+     "hind-f": {
+      "angleDeg": 19.74
+     },
+     "hindpaw-f": {
+      "angleDeg": -114.68
+     },
+     "fore-f": {
+      "angleDeg": -90.42
+     },
+     "forepaw-f": {
+      "angleDeg": 122.3
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-hf",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-1",
+    "title": {
+     "en": "Walk phase 1",
+     "de": "Gehphase 1"
+    },
+    "description": {
+     "en": "Key pose 1 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 1 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 1.5
+     },
+     "neck": {
+      "angleDeg": -19.5
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": -1.5
+     },
+     "coat-r": {
+      "angleDeg": -1.5
+     },
+     "hind-n": {
+      "angleDeg": 99.01
+     },
+     "hindpaw-n": {
+      "angleDeg": -76.06
+     },
+     "fore-n": {
+      "angleDeg": -4.41
+     },
+     "forepaw-n": {
+      "angleDeg": 103.98
+     },
+     "hind-f": {
+      "angleDeg": -5.38
+     },
+     "hindpaw-f": {
+      "angleDeg": -93.14
+     },
+     "fore-f": {
+      "angleDeg": -95.96
+     },
+     "forepaw-f": {
+      "angleDeg": 101.67
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-hf",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-2",
+    "title": {
+     "en": "Walk phase 2",
+     "de": "Gehphase 2"
+    },
+    "description": {
+     "en": "Key pose 2 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 2 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 1.8369701987210297e-16
+     },
+     "neck": {
+      "angleDeg": -18
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 0
+     },
+     "coat-r": {
+      "angleDeg": 0
+     },
+     "hind-n": {
+      "angleDeg": 106.92
+     },
+     "hindpaw-n": {
+      "angleDeg": -99.74
+     },
+     "fore-n": {
+      "angleDeg": 44.23
+     },
+     "forepaw-n": {
+      "angleDeg": 32.54
+     },
+     "hind-f": {
+      "angleDeg": 8.39
+     },
+     "hindpaw-f": {
+      "angleDeg": -116.63
+     },
+     "fore-f": {
+      "angleDeg": -98.6
+     },
+     "forepaw-f": {
+      "angleDeg": 84.77
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-fn",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-3",
+    "title": {
+     "en": "Walk phase 3",
+     "de": "Gehphase 3"
+    },
+    "description": {
+     "en": "Key pose 3 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 3 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": -1.5
+     },
+     "neck": {
+      "angleDeg": -16.5
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 1.5
+     },
+     "coat-r": {
+      "angleDeg": 1.5
+     },
+     "hind-n": {
+      "angleDeg": 108.65
+     },
+     "hindpaw-n": {
+      "angleDeg": -117.84
+     },
+     "fore-n": {
+      "angleDeg": 16.27
+     },
+     "forepaw-n": {
+      "angleDeg": 79.13
+     },
+     "hind-f": {
+      "angleDeg": 102.39
+     },
+     "hindpaw-f": {
+      "angleDeg": -149.49
+     },
+     "fore-f": {
+      "angleDeg": -91.8
+     },
+     "forepaw-f": {
+      "angleDeg": 57.42
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-fn",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-4",
+    "title": {
+     "en": "Walk phase 4",
+     "de": "Gehphase 4"
+    },
+    "description": {
+     "en": "Key pose 4 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 4 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": -3.6739403974420594e-16
+     },
+     "neck": {
+      "angleDeg": -18
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 0
+     },
+     "coat-r": {
+      "angleDeg": 0
+     },
+     "hind-n": {
+      "angleDeg": 95.43
+     },
+     "hindpaw-n": {
+      "angleDeg": -130.31
+     },
+     "fore-n": {
+      "angleDeg": -12.54
+     },
+     "forepaw-n": {
+      "angleDeg": 102.19
+     },
+     "hind-f": {
+      "angleDeg": 105.83
+     },
+     "hindpaw-f": {
+      "angleDeg": -118.35
+     },
+     "fore-f": {
+      "angleDeg": -108.95
+     },
+     "forepaw-f": {
+      "angleDeg": 84.46
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-fn",
+     "foot-hf"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-5",
+    "title": {
+     "en": "Walk phase 5",
+     "de": "Gehphase 5"
+    },
+    "description": {
+     "en": "Key pose 5 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 5 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 1.5
+     },
+     "neck": {
+      "angleDeg": -19.5
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": -1.5
+     },
+     "coat-r": {
+      "angleDeg": -1.5
+     },
+     "hind-n": {
+      "angleDeg": 69.96
+     },
+     "hindpaw-n": {
+      "angleDeg": -133.26
+     },
+     "fore-n": {
+      "angleDeg": -41.4
+     },
+     "forepaw-n": {
+      "angleDeg": 114.36
+     },
+     "hind-f": {
+      "angleDeg": 91.75
+     },
+     "hindpaw-f": {
+      "angleDeg": -130.08
+     },
+     "fore-f": {
+      "angleDeg": -98.13
+     },
+     "forepaw-f": {
+      "angleDeg": 136.9
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-hn",
+     "foot-fn",
+     "foot-hf"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-6",
+    "title": {
+     "en": "Walk phase 6",
+     "de": "Gehphase 6"
+    },
+    "description": {
+     "en": "Key pose 6 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 6 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 5.51091059616309e-16
+     },
+     "neck": {
+      "angleDeg": -18
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 0
+     },
+     "coat-r": {
+      "angleDeg": 0
+     },
+     "hind-n": {
+      "angleDeg": 102.04
+     },
+     "hindpaw-n": {
+      "angleDeg": -144.71
+     },
+     "fore-n": {
+      "angleDeg": -68.15
+     },
+     "forepaw-n": {
+      "angleDeg": 126.56
+     },
+     "hind-f": {
+      "angleDeg": 73.14
+     },
+     "hindpaw-f": {
+      "angleDeg": -134.21
+     },
+     "fore-f": {
+      "angleDeg": -40.22
+     },
+     "forepaw-f": {
+      "angleDeg": 119.36
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-fn",
+     "foot-hf",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "walk-7",
+    "title": {
+     "en": "Walk phase 7",
+     "de": "Gehphase 7"
+    },
+    "description": {
+     "en": "Key pose 7 of 8 of the foraging walk.",
+     "de": "Schlüsselpose 7 von 8 des Suchgangs."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": -1.5
+     },
+     "neck": {
+      "angleDeg": -16.5
+     },
+     "head": {
+      "angleDeg": -4
+     },
+     "coat-f": {
+      "angleDeg": 1.5
+     },
+     "coat-r": {
+      "angleDeg": 1.5
+     },
+     "hind-n": {
+      "angleDeg": 121.67
+     },
+     "hindpaw-n": {
+      "angleDeg": -99.52
+     },
+     "fore-n": {
+      "angleDeg": -93.24
+     },
+     "forepaw-n": {
+      "angleDeg": 128.47
+     },
+     "hind-f": {
+      "angleDeg": 48.7
+     },
+     "hindpaw-f": {
+      "angleDeg": -129.72
+     },
+     "fore-f": {
+      "angleDeg": -68.91
+     },
+     "forepaw-f": {
+      "angleDeg": 132.15
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-fn",
+     "foot-hf",
+     "foot-ff"
+    ],
+    "thermal": {
+     "activityMet": 2.4,
+     "breathing": "forage",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "rolling-half",
+    "title": {
+     "en": "Rolling up, halfway",
+     "de": "Beim Einrollen, halb"
+    },
+    "description": {
+     "en": "Key pose: the skirts are half closed and the head is drawn in.",
+     "de": "Schlüsselpose: die Säume sind halb geschlossen und der Kopf ist eingezogen."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 0
+     },
+     "neck": {
+      "angleDeg": -40
+     },
+     "head": {
+      "angleDeg": -35
+     },
+     "coat-f": {
+      "angleDeg": -40
+     },
+     "coat-r": {
+      "angleDeg": 40
+     },
+     "fore-n": {
+      "angleDeg": -51.08
+     },
+     "forepaw-n": {
+      "angleDeg": 123.36
+     },
+     "fore-f": {
+      "angleDeg": -100.56
+     },
+     "forepaw-f": {
+      "angleDeg": 99.73
+     },
+     "hind-n": {
+      "angleDeg": 107.2
+     },
+     "hindpaw-n": {
+      "angleDeg": -112.13
+     },
+     "hind-f": {
+      "angleDeg": 55.43
+     },
+     "hindpaw-f": {
+      "angleDeg": -131.48
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "foot-fn",
+     "foot-ff",
+     "foot-hn",
+     "foot-hf"
+    ],
+    "thermal": {
+     "activityMet": 3,
+     "breathing": "rolled",
+     "regions": {
+      "spines-dome": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "spines-skirt": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "belly-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 12
+       }
+      },
+      "face-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "limbs-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.12
+      },
+      "paws-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.08000000000000002,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 12
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "forage-walk",
+    "title": {
+     "en": "Foraging walk",
+     "de": "Suchgang"
+    },
+    "description": {
+     "en": "A slow lateral-sequence walk with the snout low: hind near, front near, hind far, front far, each foot on the ground 66 % of the 0.8 s cycle, the spiny dome bobbing 1.5 degrees; about 0.15 m/s.",
+     "de": "Ein langsamer Passgang mit tiefer Schnauze in Folge: hinten nah, vorn nah, hinten fern, vorn fern, jeder Fuß steht 66 % des 0,8-s-Zyklus am Boden, die Stachelkuppel wippt um 1,5 Grad; etwa 0,15 m/s."
+    },
+    "durationS": 0.8,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "plant",
+    "advanceM": 0.1127,
+    "keys": [
+     {
+      "t": 0,
+      "pose": "walk-0",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.1,
+      "pose": "walk-1",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.2,
+      "pose": "walk-2",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.3,
+      "pose": "walk-3",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.4,
+      "pose": "walk-4",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.5,
+      "pose": "walk-5",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.6,
+      "pose": "walk-6",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.7,
+      "pose": "walk-7",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot-hn",
+      "fromS": 0,
+      "toS": 0.528
+     },
+     {
+      "anchor": "foot-fn",
+      "fromS": 0.2,
+      "toS": 0.728
+     },
+     {
+      "anchor": "foot-hf",
+      "fromS": 0.4,
+      "toS": 0.8
+     },
+     {
+      "anchor": "foot-hf",
+      "fromS": 0,
+      "toS": 0.128
+     },
+     {
+      "anchor": "foot-ff",
+      "fromS": 0.6,
+      "toS": 0.8
+     },
+     {
+      "anchor": "foot-ff",
+      "fromS": 0,
+      "toS": 0.328
+     }
+    ],
+    "phases": [
+     {
+      "id": "cycle",
+      "fromS": 0,
+      "toS": 0.8,
+      "title": {
+       "en": "Lateral-sequence walk",
+       "de": "Passgang in Folge"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "contact-on",
+      "title": {
+       "en": "Foot touches down",
+       "de": "Fuß setzt auf"
+      },
+      "target": "foot-hn"
+     },
+     {
+      "t": 0.2,
+      "kind": "contact-on",
+      "title": {
+       "en": "Foot touches down",
+       "de": "Fuß setzt auf"
+      },
+      "target": "foot-fn"
+     },
+     {
+      "t": 0.4,
+      "kind": "contact-on",
+      "title": {
+       "en": "Foot touches down",
+       "de": "Fuß setzt auf"
+      },
+      "target": "foot-hf"
+     },
+     {
+      "t": 0.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Foot touches down",
+       "de": "Fuß setzt auf"
+      },
+      "target": "foot-ff"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2.4
+       },
+       {
+        "t": 0.4,
+        "v": 2.5
+       },
+       {
+        "t": 0.8,
+        "v": 2.4
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "roll-up",
+    "title": {
+     "en": "Rolling up",
+     "de": "Einrollen"
+    },
+    "description": {
+     "en": "The defensive reaction in 2.4 s: the hedgehog freezes alert, the head is drawn in and the spine skirts swing down around the body until the ball is closed on the skirt tips; breathing drops to the slow rolled pattern and stays there.",
+     "de": "Die Abwehrreaktion in 2,4 s: Der Igel erstarrt wachsam, der Kopf wird eingezogen und die Stachelsäume schwingen um den Körper nach unten, bis sich die Kugel auf den Saumspitzen schließt; die Atmung fällt auf das langsame Einrollmuster und bleibt dort."
+    },
+    "durationS": 2.4,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "foraging",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.5,
+      "pose": "alert",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.1,
+      "pose": "rolling-half",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.8,
+      "pose": "rolled",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.4,
+      "pose": "rolled",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot-fn",
+      "fromS": 0,
+      "toS": 1.3
+     },
+     {
+      "anchor": "foot-ff",
+      "fromS": 0,
+      "toS": 1.3
+     },
+     {
+      "anchor": "foot-hn",
+      "fromS": 0,
+      "toS": 1.3
+     },
+     {
+      "anchor": "foot-hf",
+      "fromS": 0,
+      "toS": 1.3
+     },
+     {
+      "anchor": "spine-front",
+      "fromS": 1.1,
+      "toS": 2.4
+     },
+     {
+      "anchor": "spine-rear",
+      "fromS": 1.1,
+      "toS": 2.4
+     }
+    ],
+    "phases": [
+     {
+      "id": "freeze",
+      "fromS": 0,
+      "toS": 0.5,
+      "title": {
+       "en": "Freezing alert",
+       "de": "Wachsames Erstarren"
+      }
+     },
+     {
+      "id": "closing",
+      "fromS": 0.5,
+      "toS": 1.8,
+      "title": {
+       "en": "Skirts close around the body",
+       "de": "Säume schließen sich um den Körper"
+      }
+     },
+     {
+      "id": "ball",
+      "fromS": 1.8,
+      "toS": 2.4,
+      "title": {
+       "en": "Closed ball",
+       "de": "Geschlossene Kugel"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.5,
+      "kind": "motion",
+      "title": {
+       "en": "Head lifts, startle",
+       "de": "Kopf hebt sich, Erschrecken"
+      }
+     },
+     {
+      "t": 1.1,
+      "kind": "contact-on",
+      "title": {
+       "en": "Rear skirt tips reach the ground",
+       "de": "Hintere Saumspitzen erreichen den Boden"
+      },
+      "target": "spine-rear"
+     },
+     {
+      "t": 1.8,
+      "kind": "motion",
+      "title": {
+       "en": "Ball closed",
+       "de": "Kugel geschlossen"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "breathing",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 0.5,
+        "v": 0
+       },
+       {
+        "t": 1.5,
+        "v": 2
+       }
+      ]
+     },
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2
+       },
+       {
+        "t": 1.1,
+        "v": 3
+       },
+       {
+        "t": 2.4,
+        "v": 1.1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 10,
+    "meanRadiantTempC": 10,
+    "skyTempC": 2,
+    "groundTempC": 9,
+    "relativeHumidity": 0.85,
+    "windMS": 0.3,
+    "windDirectionDeg": 180,
+    "solarWM2": 0,
+    "diffuseFraction": 0,
+    "pressurePa": 101325
+   },
+   "baseMet": 1.5,
+   "body": {
+    "species": "hedgehog",
+    "massKg": 1,
+    "skinAreaM2": 0.0998,
+    "basalMetabolismW": 2.2,
+    "metWM2": 22,
+    "coreSetPointC": 35.5,
+    "skinSetPointC": 32,
+    "sweating": false,
+    "panting": false,
+    "maxSkinBloodFlowLM2H": 30,
+    "minSkinBloodFlowLM2H": 3,
+    "source": "authored-estimate",
+    "reference": "mcnab-1980"
+   },
+   "respiration": {
+    "noseEmitter": "breath-nose",
+    "exhaledTempC": 31,
+    "exhaledRelativeHumidity": 0.95,
+    "patterns": [
+     {
+      "id": "rest",
+      "title": {
+       "en": "Resting alert, nose breathing",
+       "de": "Wachsam ruhend, Nasenatmung"
+      },
+      "rateBpm": 40,
+      "tidalVolumeL": 0.007,
+      "inhaleFraction": 0.4,
+      "pauseAfterInhaleFraction": 0.04,
+      "exhaleFraction": 0.45,
+      "pauseAfterExhaleFraction": 0.11,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     },
+     {
+      "id": "forage",
+      "title": {
+       "en": "Foraging walk, sniffing",
+       "de": "Suchgang, Schnuppern"
+      },
+      "rateBpm": 80,
+      "tidalVolumeL": 0.0075,
+      "inhaleFraction": 0.45,
+      "pauseAfterInhaleFraction": 0.02,
+      "exhaleFraction": 0.45,
+      "pauseAfterExhaleFraction": 0.08,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     },
+     {
+      "id": "rolled",
+      "title": {
+       "en": "Rolled up, slow breathing with long pauses",
+       "de": "Eingerollt, langsame Atmung mit langen Pausen"
+      },
+      "rateBpm": 18,
+      "tidalVolumeL": 0.005,
+      "inhaleFraction": 0.3,
+      "pauseAfterInhaleFraction": 0.1,
+      "exhaleFraction": 0.3,
+      "pauseAfterExhaleFraction": 0.3,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     }
+    ],
+    "motion": [
+     {
+      "bone": "trunk",
+      "angleDeg": 1,
+      "dy": 0.001
+     }
+    ],
+    "source": "authored-estimate",
+    "reference": "schmidt-nielsen-1970"
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "spines-dome",
+     "title": {
+      "en": "Spiny dome (back and flanks)",
+      "de": "Stachelkuppel (Rücken und Flanken)"
+     },
+     "kind": "hair",
+     "model": "body",
+     "material": "spines",
+     "areaM2": 0.04,
+     "characteristicLengthM": 0.12,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "dome-air",
+       "title": {
+        "en": "Air among the spine bases",
+        "de": "Luft zwischen den Stachelfüßen"
+       },
+       "kind": "air-gap",
+       "material": "spines",
+       "thicknessM": 0.015,
+       "resistanceM2KW": 0.18,
+       "vapourResistanceM2PaW": 21.82,
+       "heatCapacityJM2K": 180,
+       "source": "authored-estimate",
+       "reference": "reeve-1994"
+      },
+      {
+       "id": "dome-spines",
+       "title": {
+        "en": "Spine layer (2-3 cm spines, still air)",
+        "de": "Stachelschicht (2-3 cm Stacheln, ruhende Luft)"
+       },
+       "kind": "hair",
+       "material": "spines",
+       "thicknessM": 0.01,
+       "resistanceM2KW": 0.12,
+       "vapourResistanceM2PaW": 14.55,
+       "heatCapacityJM2K": 420,
+       "source": "authored-estimate",
+       "reference": "reeve-1994"
+      }
+     ],
+     "heatCapacityJM2K": 12000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.3,
+      "skinFraction": 0.4008
+     },
+     "source": "authored-estimate",
+     "reference": "reeve-1994"
+    },
+    {
+     "id": "spines-skirt",
+     "title": {
+      "en": "Spine skirts (front and rear)",
+      "de": "Stachelsäume (vorn und hinten)"
+     },
+     "kind": "hair",
+     "model": "body",
+     "material": "spines",
+     "areaM2": 0.02,
+     "characteristicLengthM": 0.07,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "skirt-air",
+       "title": {
+        "en": "Air among the spine bases",
+        "de": "Luft zwischen den Stachelfüßen"
+       },
+       "kind": "air-gap",
+       "material": "spines",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.15,
+       "vapourResistanceM2PaW": 18.18,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate",
+       "reference": "reeve-1994"
+      },
+      {
+       "id": "skirt-spines",
+       "title": {
+        "en": "Spine layer (2-3 cm spines, still air)",
+        "de": "Stachelschicht (2-3 cm Stacheln, ruhende Luft)"
+       },
+       "kind": "hair",
+       "material": "spines",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.1,
+       "vapourResistanceM2PaW": 12.12,
+       "heatCapacityJM2K": 350,
+       "source": "authored-estimate",
+       "reference": "reeve-1994"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.04,
+      "skinFraction": 0.2004
+     },
+     "source": "authored-estimate",
+     "reference": "reeve-1994"
+    },
+    {
+     "id": "belly-fur",
+     "title": {
+      "en": "Belly fur",
+      "de": "Bauchfell"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "belly-fur",
+     "areaM2": 0.02,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0,
+     "layers": [
+      {
+       "id": "belly-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "belly-fur",
+       "thicknessM": 0.0072,
+       "resistanceM2KW": 0.098,
+       "vapourResistanceM2PaW": 11.82,
+       "heatCapacityJM2K": 160,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "belly-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "belly-fur",
+       "thicknessM": 0.0048,
+       "resistanceM2KW": 0.052,
+       "vapourResistanceM2PaW": 6.36,
+       "heatCapacityJM2K": 240,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 10000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.3,
+      "skinFraction": 0.2004
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "face-fur",
+     "title": {
+      "en": "Face and cheeks (short fur)",
+      "de": "Gesicht und Wangen (kurzes Fell)"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "face-fur",
+     "areaM2": 0.006,
+     "characteristicLengthM": 0.045,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "face-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "face-fur",
+       "thicknessM": 0.0036,
+       "resistanceM2KW": 0.065,
+       "vapourResistanceM2PaW": 7.88,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "face-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "face-fur",
+       "thicknessM": 0.0024,
+       "resistanceM2KW": 0.035,
+       "vapourResistanceM2PaW": 4.24,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.12,
+      "skinFraction": 0.06012
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "nose",
+     "title": {
+      "en": "Nose and snout tip (bare)",
+      "de": "Nase und Schnauzenspitze (nackt)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bare-skin",
+     "areaM2": 0.0008,
+     "characteristicLengthM": 0.01,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 2000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.01,
+      "skinFraction": 0.00802
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "limbs-fur",
+     "title": {
+      "en": "Limbs (short coarse hair)",
+      "de": "Gliedmaßen (kurzes grobes Haar)"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "belly-fur",
+     "areaM2": 0.0095,
+     "characteristicLengthM": 0.025,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "limbs-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "belly-fur",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.052,
+       "vapourResistanceM2PaW": 6.3,
+       "heatCapacityJM2K": 80,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "limbs-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "belly-fur",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.028,
+       "vapourResistanceM2PaW": 3.39,
+       "heatCapacityJM2K": 120,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 5000,
+     "body": {
+      "segment": "leg",
+      "metabolicShare": 0.17,
+      "skinFraction": 0.09519
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "paws-skin",
+     "title": {
+      "en": "Paws and claws (bare)",
+      "de": "Pfoten und Krallen (nackt)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bare-skin",
+     "areaM2": 0.0035,
+     "characteristicLengthM": 0.02,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0,
+     "layers": [],
+     "heatCapacityJM2K": 2500,
+     "body": {
+      "segment": "foot",
+      "metabolicShare": 0.06,
+      "skinFraction": 0.03507
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "breath-nose",
+     "kind": "breath",
+     "title": {
+      "en": "Both nostrils at the snout tip (combined)",
+      "de": "Beide Nasenlöcher an der Schnauzenspitze (zusammen)"
+     },
+     "anchor": "nostrils",
+     "directionDeg": -10,
+     "diameterM": 0.004,
+     "source": "authored-estimate",
+     "reference": "gupta-2010"
+    },
+    {
+     "id": "plume-back",
+     "kind": "plume",
+     "title": {
+      "en": "Warm-air plume above the spiny dome",
+      "de": "Warmluftfahne über der Stachelkuppel"
+     },
+     "anchor": "back-plume",
+     "directionDeg": 90,
+     "diameterM": 0.1,
+     "region": "spines-dome",
+     "source": "authored-estimate",
+     "reference": "reeve-1994"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Basal metabolism 2.2 W is Kleiber's 3.39 W per kg^0.75 times an authored factor of 0.65 (hedgehogs lie below the Kleiber line, McNab 1980); the 35.5 degC core is a typical value of an active hedgehog (authored estimate); the dome is a 25 mm layer of spines and still air with a resistance of 0.30 m2K/W (authored estimate).",
+     "de": "Der Grundumsatz von 2,2 W ist Kleibers 3,39 W pro kg^0,75 mal ein Schätzfaktor von 0,65 (Igel liegen unter der Kleiber-Linie, McNab 1980); die Kerntemperatur von 35,5 Grad ist ein üblicher Wert aktiver Igel (Schätzwert); die Kuppel ist eine 25 mm dicke Schicht aus Stacheln und ruhender Luft mit 0,30 m2K/W Widerstand (Schätzwert)."
+    },
+    {
+     "en": "Rolling up closes the air layer around the body: the belly, face, limbs and paws bind an exposed fraction of 0.03-0.05, so only the spines face the environment; the enclosed air is represented by that exposure, not by an extra layer.",
+     "de": "Das Einrollen schließt die Luftschicht um den Körper: Bauch, Gesicht, Gliedmaßen und Pfoten binden einen freien Anteil von 0,03-0,05, sodass nur die Stacheln der Umgebung zugewandt sind; die eingeschlossene Luft wird durch diese Bindung, nicht durch eine zusätzliche Schicht abgebildet."
+    },
+    {
+     "en": "Breathing is nasal; the exhaled air leaves at 31 degC and 95 % relative humidity; there is no sweating or panting.",
+     "de": "Die Atmung erfolgt über die Nase; die Ausatemluft verlässt sie mit 31 Grad und 95 % relativer Feuchte; es gibt weder Schwitzen noch Hecheln."
+    }
+   ]
+  },
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "spine-lines",
+      "title": {
+       "en": "Spine direction lines",
+       "de": "Stachelrichtungslinien"
+      },
+      "pattern": "lines",
+      "angleDeg": 72,
+      "spacingMm": 0.45,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "regions": [
+        "face-fur",
+        "nose"
+       ],
+       "points": [
+        [
+         -0.022,
+         0.02
+        ],
+        [
+         -0.01822,
+         0.02415
+        ],
+        [
+         -0.01287,
+         0.02688
+        ],
+        [
+         0,
+         0.03
+        ],
+        [
+         0.01515,
+         0.03176
+        ],
+        [
+         0.02303,
+         0.0315
+        ],
+        [
+         0.03,
+         0.03
+        ],
+        [
+         0.03582,
+         0.02672
+        ],
+        [
+         0.04098,
+         0.02201
+        ],
+        [
+         0.05,
+         0.012
+        ],
+        [
+         0.064,
+         -0.004
+        ],
+        [
+         0.06214,
+         -0.00787
+        ],
+        [
+         0.05965,
+         -0.01117
+        ],
+        [
+         0.056,
+         -0.014
+        ],
+        [
+         0.04435,
+         -0.01845
+        ],
+        [
+         0.03,
+         -0.022
+        ],
+        [
+         0.01477,
+         -0.02492
+        ],
+        [
+         0.00705,
+         -0.02563
+        ],
+        [
+         0,
+         -0.025
+        ],
+        [
+         -0.00761,
+         -0.02674
+        ],
+        [
+         -0.01423,
+         -0.02124
+        ],
+        [
+         -0.01958,
+         -0.01691
+        ],
+        [
+         -0.022,
+         -0.01
+        ],
+        [
+         -0.02408,
+         -0.00309
+        ],
+        [
+         -0.02477,
+         0.0053
+        ],
+        [
+         -0.02408,
+         0.01354
+        ],
+        [
+         -0.022,
+         0.02
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck",
+       "bone": "neck",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "face-fur",
+       "points": [
+        [
+         -0.025,
+         0.021
+        ],
+        [
+         -0.01996,
+         0.02311
+        ],
+        [
+         -0.01281,
+         0.02446
+        ],
+        [
+         0.005,
+         0.02503
+        ],
+        [
+         0.02281,
+         0.02308
+        ],
+        [
+         0.02996,
+         0.02128
+        ],
+        [
+         0.035,
+         0.019
+        ],
+        [
+         0.03828,
+         0.01572
+        ],
+        [
+         0.04062,
+         0.01118
+        ],
+        [
+         0.04203,
+         0.0058
+        ],
+        [
+         0.0425,
+         0
+        ],
+        [
+         0.04203,
+         -0.0058
+        ],
+        [
+         0.04062,
+         -0.01118
+        ],
+        [
+         0.03828,
+         -0.01572
+        ],
+        [
+         0.035,
+         -0.019
+        ],
+        [
+         0.02996,
+         -0.02128
+        ],
+        [
+         0.02281,
+         -0.02308
+        ],
+        [
+         0.005,
+         -0.02502
+        ],
+        [
+         -0.01281,
+         -0.02446
+        ],
+        [
+         -0.01996,
+         -0.02311
+        ],
+        [
+         -0.025,
+         -0.021
+        ],
+        [
+         -0.02828,
+         -0.01755
+        ],
+        [
+         -0.03062,
+         -0.01255
+        ],
+        [
+         -0.03203,
+         -0.00653
+        ],
+        [
+         -0.0325,
+         0
+        ],
+        [
+         -0.03203,
+         0.00653
+        ],
+        [
+         -0.03062,
+         0.01255
+        ],
+        [
+         -0.02828,
+         0.01755
+        ],
+        [
+         -0.025,
+         0.021
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "belly",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "poly",
+       "regions": [
+        "belly-fur",
+        "limbs-fur",
+        "paws-skin"
+       ],
+       "points": [
+        [
+         0.03,
+         -0.028
+        ],
+        [
+         0.03378,
+         -0.02748
+        ],
+        [
+         0.03874,
+         -0.02798
+        ],
+        [
+         0.05125,
+         -0.03087
+        ],
+        [
+         0.06633,
+         -0.03039
+        ],
+        [
+         0.08001,
+         -0.032
+        ],
+        [
+         0.09524,
+         -0.03041
+        ],
+        [
+         0.11349,
+         -0.03099
+        ],
+        [
+         0.1294,
+         -0.02811
+        ],
+        [
+         0.13505,
+         -0.02361
+        ],
+        [
+         0.14152,
+         -0.02647
+        ],
+        [
+         0.14426,
+         -0.02806
+        ],
+        [
+         0.14826,
+         -0.03191
+        ],
+        [
+         0.14469,
+         -0.03538
+        ],
+        [
+         0.14413,
+         -0.03902
+        ],
+        [
+         0.14042,
+         -0.04639
+        ],
+        [
+         0.1375,
+         -0.04956
+        ],
+        [
+         0.134,
+         -0.052
+        ],
+        [
+         0.12378,
+         -0.05544
+        ],
+        [
+         0.10974,
+         -0.05787
+        ],
+        [
+         0.08,
+         -0.06
+        ],
+        [
+         0.05163,
+         -0.0591
+        ],
+        [
+         0.03888,
+         -0.05722
+        ],
+        [
+         0.03,
+         -0.054
+        ],
+        [
+         0.02728,
+         -0.05148
+        ],
+        [
+         0.02533,
+         -0.04812
+        ],
+        [
+         0.02377,
+         -0.04014
+        ],
+        [
+         0.02533,
+         -0.03258
+        ],
+        [
+         0.02728,
+         -0.02976
+        ],
+        [
+         0.03,
+         -0.028
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "dome",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.03,
+         -0.008
+        ],
+        [
+         -0.036,
+         0.016
+        ],
+        [
+         -0.02287,
+         0.02654
+        ],
+        [
+         -0.016,
+         0.042
+        ],
+        [
+         0.00829,
+         0.04618
+        ],
+        [
+         0.03,
+         0.058
+        ],
+        [
+         0.0554,
+         0.05648
+        ],
+        [
+         0.08,
+         0.063
+        ],
+        [
+         0.09908,
+         0.0546
+        ],
+        [
+         0.12,
+         0.054
+        ],
+        [
+         0.13172,
+         0.04075
+        ],
+        [
+         0.148,
+         0.034
+        ],
+        [
+         0.14918,
+         0.0182
+        ],
+        [
+         0.158,
+         0.005
+        ],
+        [
+         0.15018,
+         -0.00521
+        ],
+        [
+         0.15,
+         -0.018
+        ],
+        [
+         0.13376,
+         -0.01919
+        ],
+        [
+         0.12,
+         -0.028
+        ],
+        [
+         0.06,
+         -0.033
+        ],
+        [
+         0,
+         -0.028
+        ]
+       ],
+       "closed": true,
+       "region": "spines-dome",
+       "hatch": "spine-lines"
+      },
+      {
+       "id": "skirt-front",
+       "bone": "coat-f",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.015,
+         0.02
+        ],
+        [
+         0.03,
+         0.026
+        ],
+        [
+         0.0436,
+         0.0161
+        ],
+        [
+         0.06,
+         0.02
+        ],
+        [
+         0.0638,
+         0.0053
+        ],
+        [
+         0.078,
+         0
+        ],
+        [
+         0.0638,
+         -0.0053
+        ],
+        [
+         0.06,
+         -0.02
+        ],
+        [
+         0.0436,
+         -0.0161
+        ],
+        [
+         0.03,
+         -0.026
+        ],
+        [
+         -0.015,
+         -0.02
+        ]
+       ],
+       "closed": true,
+       "region": "spines-skirt",
+       "hatch": "spine-lines"
+      },
+      {
+       "id": "skirt-rear",
+       "bone": "coat-r",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.015,
+         0.02
+        ],
+        [
+         0.03,
+         0.026
+        ],
+        [
+         0.0436,
+         0.0161
+        ],
+        [
+         0.06,
+         0.02
+        ],
+        [
+         0.0638,
+         0.0053
+        ],
+        [
+         0.078,
+         0
+        ],
+        [
+         0.0638,
+         -0.0053
+        ],
+        [
+         0.06,
+         -0.02
+        ],
+        [
+         0.0436,
+         -0.0161
+        ],
+        [
+         0.03,
+         -0.026
+        ],
+        [
+         -0.015,
+         -0.02
+        ]
+       ],
+       "closed": true,
+       "region": "spines-skirt",
+       "hatch": "spine-lines"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full articulation, 0.285 x 0.13 m = 5.7 x 2.6 mm (foraging) and a closed ball of 0.14 m = 2.8 mm: spiny dome and both skirts with serrated outlines (tooth height 0.008 m), pointed head with snout, belly fur strip; the spine fringe hangs to 0.012 m above the ground and hides the legs, as on the real animal.",
+      "de": "Volle Gliederung, 0,285 x 0,13 m = 5,7 x 2,6 mm (Suchen) und eine geschlossene Kugel von 0,14 m = 2,8 mm: Stachelkuppel und beide Säume mit gezackter Kontur (Zahnhöhe 0,008 m), spitzer Kopf mit Schnauze, Bauchfellstreifen; der Stachelsaum hängt bis 0,012 m über den Boden und verdeckt die Beine, wie beim echten Tier."
+     },
+     "retained": {
+      "en": "The serrated spine edge, the hatch of spine direction lines on dome and skirts, the pointed snout, the belly fur strip below the spines.",
+      "de": "Die gezackte Stachelkante, die Schraffur der Stachelrichtung auf Kuppel und Säumen, die spitze Schnauze, der Bauchfellstreifen unter den Stacheln."
+     },
+     "merged": {
+      "en": "Limbs and paws (regions limbs-fur and paws-skin) and the nose are merged into the belly strip and the head shape; the neck merges into the face region.",
+      "de": "Gliedmaßen und Pfoten (Regionen limbs-fur und paws-skin) und die Nase sind in den Bauchfellstreifen und die Kopfform aufgenommen; der Hals geht in die Gesichtsregion auf."
+     },
+     "omitted": {
+      "en": "All four limbs and paws (0.019-0.025 m wide: in the foraging, alert and rolled poses their outlines come within 0.15 mm of the spine skirts or dome in some pose), eye and nose dot (0.011 m), claws, ears, individual spines.",
+      "de": "Alle vier Gliedmaßen und Pfoten (0,019-0,025 m breit: in den Posen Suchen, Wachsam und Eingerollt kommen ihre Konturen in irgendeiner Pose näher als 0,15 mm an die Stachelsäume oder die Kuppel), Auge und Nasenpunkt (0,011 m), Krallen, Ohren, einzelne Stacheln."
+     },
+     "thinElements": {
+      "en": "The serration teeth (0.008 m) are filled spikes, not individual spines; the neck 0.04 m is the narrowest filled part (0.8 mm).",
+      "de": "Die Zacken (0,008 m) sind gefüllte Spitzen, keine einzelnen Stacheln; der 0,04 m breite Hals ist der schmalste gefüllte Teil (0,8 mm)."
+     },
+     "hatching": {
+      "en": "One hatch: lines at 72 degrees, 0.45 mm spacing (0.0225 m), 0.1 mm pen, on dome and skirts as material indication of the spine direction.",
+      "de": "Eine Schraffur: Linien unter 72 Grad, 0,45 mm Abstand (0,0225 m), 0,1-mm-Stift, auf Kuppel und Säumen als Materialhinweis auf die Stachelrichtung."
+     },
+     "styles": {
+      "en": "0.25 mm silhouette, 0.1 mm hatch; spines mid-dark, belly light. The head is drawn behind the skirts so the rolled ball shows spines only.",
+      "de": "0,25-mm-Kontur, 0,1-mm-Schraffur; Stacheln mitteldunkel, Bauch hell. Der Kopf liegt hinter den Säumen, sodass die eingerollte Kugel nur Stacheln zeigt."
+     },
+     "overlays": {
+      "en": "Dome, skirts, belly strip and head are separate shapes, so the thermal overlay shows the insulating spine layer against the bare belly; the limb and paw regions are painted with the belly strip value (merged).",
+      "de": "Kuppel, Säume, Bauchstreifen und Kopf sind eigene Formen, sodass das Wärmebild die dämmende Stachelschicht gegen den nackten Bauch zeigt; die Gliedmaßen- und Pfotenregionen werden mit dem Wert des Bauchstreifens gefärbt (zusammengeführt)."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [
+     {
+      "id": "spine-lines",
+      "title": {
+       "en": "Spine direction lines",
+       "de": "Stachelrichtungslinien"
+      },
+      "pattern": "lines",
+      "angleDeg": 72,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "neck",
+       "bone": "neck",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "face-fur",
+       "points": [
+        [
+         -0.03,
+         0.024
+        ],
+        [
+         -0.02411,
+         0.02644
+        ],
+        [
+         -0.01577,
+         0.02802
+        ],
+        [
+         0.005,
+         0.02878
+        ],
+        [
+         0.02577,
+         0.02664
+        ],
+        [
+         0.03411,
+         0.02461
+        ],
+        [
+         0.04,
+         0.022
+        ],
+        [
+         0.04384,
+         0.01821
+        ],
+        [
+         0.04658,
+         0.01296
+        ],
+        [
+         0.04823,
+         0.00672
+        ],
+        [
+         0.04878,
+         0
+        ],
+        [
+         0.04823,
+         -0.00672
+        ],
+        [
+         0.04658,
+         -0.01296
+        ],
+        [
+         0.04384,
+         -0.01821
+        ],
+        [
+         0.04,
+         -0.022
+        ],
+        [
+         0.03411,
+         -0.02461
+        ],
+        [
+         0.02577,
+         -0.02664
+        ],
+        [
+         0.005,
+         -0.02877
+        ],
+        [
+         -0.01577,
+         -0.02802
+        ],
+        [
+         -0.02411,
+         -0.02644
+        ],
+        [
+         -0.03,
+         -0.024
+        ],
+        [
+         -0.03384,
+         -0.02004
+        ],
+        [
+         -0.03658,
+         -0.01433
+        ],
+        [
+         -0.03823,
+         -0.00746
+        ],
+        [
+         -0.03878,
+         0
+        ],
+        [
+         -0.03823,
+         0.00746
+        ],
+        [
+         -0.03658,
+         0.01433
+        ],
+        [
+         -0.03384,
+         0.02004
+        ],
+        [
+         -0.03,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "regions": [
+        "face-fur",
+        "nose"
+       ],
+       "points": [
+        [
+         -0.03,
+         0.022
+        ],
+        [
+         -0.02821,
+         0.02522
+        ],
+        [
+         -0.02544,
+         0.02761
+        ],
+        [
+         -0.01781,
+         0.03054
+        ],
+        [
+         0,
+         0.033
+        ],
+        [
+         0.0181,
+         0.03445
+        ],
+        [
+         0.02717,
+         0.03387
+        ],
+        [
+         0.035,
+         0.032
+        ],
+        [
+         0.04123,
+         0.02824
+        ],
+        [
+         0.04639,
+         0.02294
+        ],
+        [
+         0.05812,
+         0.0145
+        ],
+        [
+         0.068,
+         -0.004
+        ],
+        [
+         0.06536,
+         -0.00876
+        ],
+        [
+         0.06222,
+         -0.01273
+        ],
+        [
+         0.058,
+         -0.016
+        ],
+        [
+         0.04651,
+         -0.0206
+        ],
+        [
+         0.03,
+         -0.024
+        ],
+        [
+         0.00388,
+         -0.02852
+        ],
+        [
+         -0.0098,
+         -0.02917
+        ],
+        [
+         -0.01551,
+         -0.02819
+        ],
+        [
+         -0.02,
+         -0.026
+        ],
+        [
+         -0.02344,
+         -0.02213
+        ],
+        [
+         -0.02625,
+         -0.01663
+        ],
+        [
+         -0.02999,
+         -0.00279
+        ],
+        [
+         -0.03124,
+         0.01145
+        ],
+        [
+         -0.03,
+         0.022
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "dome",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "regions": [
+        "spines-dome",
+        "belly-fur",
+        "limbs-fur",
+        "paws-skin"
+       ],
+       "hatch": "spine-lines",
+       "points": [
+        [
+         -0.032,
+         -0.01
+        ],
+        [
+         -0.0359,
+         -0.00178
+        ],
+        [
+         -0.03824,
+         0.00564
+        ],
+        [
+         -0.03845,
+         0.01274
+        ],
+        [
+         -0.036,
+         0.02
+        ],
+        [
+         -0.03063,
+         0.02788
+        ],
+        [
+         -0.02265,
+         0.03601
+        ],
+        [
+         -0.01235,
+         0.04364
+        ],
+        [
+         0,
+         0.05
+        ],
+        [
+         0.01548,
+         0.05523
+        ],
+        [
+         0.03384,
+         0.05963
+        ],
+        [
+         0.05278,
+         0.06271
+        ],
+        [
+         0.07,
+         0.064
+        ],
+        [
+         0.0853,
+         0.06348
+        ],
+        [
+         0.09979,
+         0.06138
+        ],
+        [
+         0.11313,
+         0.05759
+        ],
+        [
+         0.125,
+         0.052
+        ],
+        [
+         0.13577,
+         0.04409
+        ],
+        [
+         0.14544,
+         0.0341
+        ],
+        [
+         0.15314,
+         0.02306
+        ],
+        [
+         0.158,
+         0.012
+        ],
+        [
+         0.15912,
+         0.00638
+        ],
+        [
+         0.15941,
+         0.00037
+        ],
+        [
+         0.15794,
+         -0.01212
+        ],
+        [
+         0.1545,
+         -0.02406
+        ],
+        [
+         0.15,
+         -0.034
+        ],
+        [
+         0.14476,
+         -0.04154
+        ],
+        [
+         0.13826,
+         -0.04747
+        ],
+        [
+         0.13013,
+         -0.05217
+        ],
+        [
+         0.12,
+         -0.056
+        ],
+        [
+         0.10711,
+         -0.05906
+        ],
+        [
+         0.09188,
+         -0.06114
+        ],
+        [
+         0.0757,
+         -0.06215
+        ],
+        [
+         0.06,
+         -0.062
+        ],
+        [
+         0.04434,
+         -0.06093
+        ],
+        [
+         0.02824,
+         -0.05889
+        ],
+        [
+         0.01302,
+         -0.0554
+        ],
+        [
+         0,
+         -0.05
+        ],
+        [
+         -0.00552,
+         -0.04626
+        ],
+        [
+         -0.01061,
+         -0.04172
+        ],
+        [
+         -0.01949,
+         -0.03112
+        ],
+        [
+         -0.02662,
+         -0.01996
+        ],
+        [
+         -0.032,
+         -0.01
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "skirt-front",
+       "bone": "coat-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "spines-skirt",
+       "hatch": "spine-lines",
+       "points": [
+        [
+         -0.02,
+         0.022
+        ],
+        [
+         -0.01601,
+         0.02464
+        ],
+        [
+         -0.01056,
+         0.02644
+        ],
+        [
+         0.00312,
+         0.02811
+        ],
+        [
+         0.03,
+         0.028
+        ],
+        [
+         0.04688,
+         0.02676
+        ],
+        [
+         0.05368,
+         0.02492
+        ],
+        [
+         0.06,
+         0.022
+        ],
+        [
+         0.06663,
+         0.01761
+        ],
+        [
+         0.07311,
+         0.01198
+        ],
+        [
+         0.07804,
+         0.00586
+        ],
+        [
+         0.08259,
+         -0.00149
+        ],
+        [
+         0.08063,
+         -0.00735
+        ],
+        [
+         0.07547,
+         -0.0152
+        ],
+        [
+         0.06663,
+         -0.01761
+        ],
+        [
+         0.06,
+         -0.022
+        ],
+        [
+         0.05368,
+         -0.02492
+        ],
+        [
+         0.04688,
+         -0.02676
+        ],
+        [
+         0.03,
+         -0.028
+        ],
+        [
+         0.00312,
+         -0.02811
+        ],
+        [
+         -0.01056,
+         -0.02644
+        ],
+        [
+         -0.01601,
+         -0.02464
+        ],
+        [
+         -0.02,
+         -0.022
+        ],
+        [
+         -0.02272,
+         -0.01807
+        ],
+        [
+         -0.02467,
+         -0.01279
+        ],
+        [
+         -0.02622,
+         0
+        ],
+        [
+         -0.02467,
+         0.01279
+        ],
+        [
+         -0.02272,
+         0.01807
+        ],
+        [
+         -0.02,
+         0.022
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "skirt-rear",
+       "bone": "coat-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "spines-skirt",
+       "hatch": "spine-lines",
+       "points": [
+        [
+         -0.02,
+         0.022
+        ],
+        [
+         -0.01601,
+         0.02464
+        ],
+        [
+         -0.01056,
+         0.02644
+        ],
+        [
+         0.00312,
+         0.02811
+        ],
+        [
+         0.03,
+         0.028
+        ],
+        [
+         0.04688,
+         0.02676
+        ],
+        [
+         0.05368,
+         0.02492
+        ],
+        [
+         0.06,
+         0.022
+        ],
+        [
+         0.06854,
+         0.02112
+        ],
+        [
+         0.0757,
+         0.01347
+        ],
+        [
+         0.08063,
+         0.00735
+        ],
+        [
+         0.08,
+         0
+        ],
+        [
+         0.07804,
+         -0.00586
+        ],
+        [
+         0.07311,
+         -0.01197
+        ],
+        [
+         0.06663,
+         -0.01761
+        ],
+        [
+         0.06,
+         -0.022
+        ],
+        [
+         0.05368,
+         -0.02492
+        ],
+        [
+         0.04688,
+         -0.02676
+        ],
+        [
+         0.03,
+         -0.028
+        ],
+        [
+         0.00312,
+         -0.02811
+        ],
+        [
+         -0.01056,
+         -0.02644
+        ],
+        [
+         -0.01601,
+         -0.02464
+        ],
+        [
+         -0.02,
+         -0.022
+        ],
+        [
+         -0.02272,
+         -0.01807
+        ],
+        [
+         -0.02467,
+         -0.01279
+        ],
+        [
+         -0.02622,
+         0
+        ],
+        [
+         -0.02467,
+         0.01279
+        ],
+        [
+         -0.02272,
+         0.01807
+        ],
+        [
+         -0.02,
+         0.022
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Composed outline 0.285 x 0.13 m = 2.85 x 1.3 mm: smooth spiny dome with belly strip, two skirts and a pointed head with neck; closed ball 1.4 mm.",
+      "de": "Zusammengesetzter Umriss 0,285 x 0,13 m = 2,85 x 1,3 mm: glatte Stachelkuppel mit Bauchstreifen, zwei Säume und ein spitzer Kopf mit Hals; geschlossene Kugel 1,4 mm."
+     },
+     "retained": {
+      "en": "The two skirts as separate pieces so the roll-up articulates; spine direction hatch on dome and skirts; the pointed snout; the fringe reaching 0.012 m above the ground.",
+      "de": "Die zwei Säume als getrennte Stücke, damit das Einrollen gegliedert ist; Schraffur der Stachelrichtung auf Kuppel und Säumen; die spitze Schnauze; der Saum, der bis 0,012 m über den Boden reicht."
+     },
+     "merged": {
+      "en": "Belly strip, limbs and paws merge into the dome (regions spines-dome, belly-fur, limbs-fur, paws-skin), nose into the head; the neck overlaps head and trunk by 0.04 m.",
+      "de": "Bauchstreifen, Gliedmaßen und Pfoten gehen in der Kuppel auf (Regionen spines-dome, belly-fur, limbs-fur, paws-skin), die Nase im Kopf; der Hals überlappt Kopf und Rumpf um 0,04 m."
+     },
+     "omitted": {
+      "en": "All limbs and paws (0.02-0.025 m: below the 0.2 mm limit or within 0.15 mm of the skirts), serrated spine edge, eye, nose dot, ears, claws.",
+      "de": "Alle Gliedmaßen und Pfoten (0,02-0,025 m: unter der 0,2-mm-Grenze oder näher als 0,15 mm an den Säumen), gezackte Stachelkante, Auge, Nasenpunkt, Ohren, Krallen."
+     },
+     "thinElements": {
+      "en": "No thin element is drawn; the narrowest filled part is the neck (0.05 m = 0.5 mm).",
+      "de": "Kein dünnes Element ist gezeichnet; der schmalste gefüllte Teil ist der Hals (0,05 m = 0,5 mm)."
+     },
+     "hatching": {
+      "en": "One hatch: lines at 72 degrees, 0.5 mm spacing (0.05 m), 0.1 mm pen, as the spine direction on dome and skirts.",
+      "de": "Eine Schraffur: Linien unter 72 Grad, 0,5 mm Abstand (0,05 m), 0,1-mm-Stift, als Stachelrichtung auf Kuppel und Säumen."
+     },
+     "styles": {
+      "en": "0.18 mm silhouette; head and neck drawn behind the skirts.",
+      "de": "0,18-mm-Kontur; Kopf und Hals hinter den Säumen."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions, so the thermal overlay paints the dome with the area-weighted value of spines, belly, limbs and paws.",
+      "de": "Zusammengeführte Formen listen ihre Regionen, sodass das Wärmebild die Kuppel mit dem flächengewichteten Wert von Stacheln, Bauch, Gliedmaßen und Pfoten färbt."
+     }
+    }
+   },
+   "200": {
+    "status": "unavailable",
+    "denominator": 200,
+    "reason": {
+     "en": "A foraging hedgehog is 0.285 m x 0.13 m = 1.4 x 0.65 mm on paper at 1:200, the rolled ball 0.14 m = 0.7 mm. The snout (0.03 m = 0.15 mm), the paws and limbs (0.02 m = 0.1 mm) and the spine edge are below the 0.2 mm feature width, and the dome, the two skirts and the head leave no room for the 0.15 mm ink gap between neighbouring outlines in the foraging, alert and rolled poses.",
+     "de": "Ein Nahrung suchender Igel misst 0,285 m x 0,13 m = 1,4 x 0,65 mm auf dem Papier bei 1:200, die eingerollte Kugel 0,14 m = 0,7 mm. Schnauze (0,03 m = 0,15 mm), Pfoten und Beine (0,02 m = 0,1 mm) und die Stachelkante liegen unter der Merkmalsbreite von 0,2 mm, und Kuppel, beide Säume und Kopf lassen in den Posen Suchen, Wachsam und Eingerollt keinen Platz für den Tintenabstand von 0,15 mm zwischen benachbarten Konturen."
+    },
+    "limitingFeature": {
+     "en": "Snout, limbs and spine edge (0.02-0.03 m = 0.1-0.15 mm)",
+     "de": "Schnauze, Beine und Stachelkante (0,02-0,03 m = 0,1-0,15 mm)"
+    },
+    "limitingSizeM": 0.03,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     },
+     {
+      "kind": "asset",
+      "asset": "red-squirrel"
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "A foraging hedgehog is 0.27 m x 0.14 m = 0.54 x 0.28 mm on paper at 1:500, the rolled ball 0.14 m = 0.28 mm: the snout (0.03 m = 0.06 mm), limbs (0.02 m = 0.04 mm) and the spine edge cannot print below the 0.2 mm feature width of the office laser profile, so only a speck would remain.",
+     "de": "Ein Nahrung suchender Igel misst 0,27 m x 0,14 m = 0,54 x 0,28 mm auf dem Papier bei 1:500, die eingerollte Kugel 0,14 m = 0,28 mm: Schnauze (0,03 m = 0,06 mm), Glieder (0,02 m = 0,04 mm) und Stachelkante sind unter der Merkmalsbreite von 0,2 mm des Büro-Laser-Profils nicht druckbar, es bliebe nur ein Fleck."
+    },
+    "limitingFeature": {
+     "en": "Snout, limbs and spine edge (0.02-0.03 m = 0.04-0.06 mm)",
+     "de": "Schnauze, Glieder und Stachelkante (0,02-0,03 m = 0,04-0,06 mm)"
+    },
+    "limitingSizeM": 0.03,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     },
+     {
+      "kind": "asset",
+      "asset": "red-squirrel"
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "clinical": false,
+   "assumptions": [
+    {
+     "en": "Segments are rigid with authored masses summing to 1.0 kg; on the ground all four feet carry the weight; rolled up, the weight rests on the tips of the two spine skirts (unilateral supports with a friction coefficient of 0.6).",
+     "de": "Segmente sind starr mit Massen von zusammen 1,0 kg; am Boden tragen alle vier Füße; eingerollt ruht das Gewicht auf den Spitzen der beiden Stachelsäume (einseitige Auflager mit Reibungszahl 0,6)."
+    },
+    {
+     "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.",
+     "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen."
+    }
+   ]
+  },
+  "presentation": {
+   "defaultPose": "foraging",
+   "defaultClip": "forage-walk",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

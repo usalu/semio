@@ -1,0 +1,149 @@
+[
+  {
+    "id": "empty-parts",
+    "input": {
+      "mutation": "setParts",
+      "parts": []
+    },
+    "expected": true
+  },
+  {
+    "id": "named-part",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp"
+        }
+      ]
+    },
+    "expected": true
+  },
+  {
+    "id": "empty-octets",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": []
+        }
+      ]
+    },
+    "expected": true
+  },
+  {
+    "id": "octet-bounds",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            0,
+            127,
+            255
+          ]
+        }
+      ]
+    },
+    "expected": true
+  },
+  {
+    "id": "negative-octet",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            -1
+          ]
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "large-octet",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            256
+          ]
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "fractional-octet",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            1.5
+          ]
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "text-octet",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "missing-name",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "data": [
+            1
+          ]
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "unknown-part-field",
+    "input": {
+      "mutation": "setParts",
+      "parts": [
+        {
+          "name": "project.bcfp",
+          "data": [
+            1
+          ],
+          "extra": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "missing-parts",
+    "input": {
+      "mutation": "setParts"
+    },
+    "expected": false
+  }
+]

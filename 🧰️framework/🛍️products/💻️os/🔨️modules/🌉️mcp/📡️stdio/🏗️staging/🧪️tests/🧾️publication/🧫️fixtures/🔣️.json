@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "linux-prototype",
+      "platform": "linux",
+      "mode": "prototype",
+      "repoRoot": "/work/semio",
+      "backingRoot": "/issued/compiler",
+      "manifest": "/work/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "manifestKey": "3ee62c2590c62d7f1d67",
+      "publication": "/issued/compiler/published/3ee62c2590c62d7f1d67/prototype",
+      "binary": "semio-os-mcp",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "linux-release",
+      "platform": "linux",
+      "mode": "release",
+      "repoRoot": "/work/semio",
+      "backingRoot": "/issued/compiler",
+      "manifest": "/work/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "manifestKey": "3ee62c2590c62d7f1d67",
+      "publication": "/issued/compiler/published/3ee62c2590c62d7f1d67/release",
+      "binary": "semio-os-mcp",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "darwin-prototype",
+      "platform": "darwin",
+      "mode": "prototype",
+      "repoRoot": "/Users/dev/semio",
+      "backingRoot": "/issued/compiler",
+      "manifest": "/Users/dev/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "manifestKey": "00c5add3f72a31a46598",
+      "publication": "/issued/compiler/published/00c5add3f72a31a46598/prototype",
+      "binary": "semio-os-mcp",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "darwin-release",
+      "platform": "darwin",
+      "mode": "release",
+      "repoRoot": "/Users/dev/semio",
+      "backingRoot": "/issued/compiler",
+      "manifest": "/Users/dev/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "manifestKey": "00c5add3f72a31a46598",
+      "publication": "/issued/compiler/published/00c5add3f72a31a46598/release",
+      "binary": "semio-os-mcp",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "win32-prototype",
+      "platform": "win32",
+      "mode": "prototype",
+      "repoRoot": "C:\\work\\semio",
+      "backingRoot": "D:\\issued\\compiler",
+      "manifest": "C:\\work\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\Cargo.toml",
+      "manifestKey": "8ea1a407e0d41119fab0",
+      "publication": "D:\\issued\\compiler\\published\\8ea1a407e0d41119fab0\\prototype",
+      "binary": "semio-os-mcp.exe",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    },
+    {
+      "id": "win32-release",
+      "platform": "win32",
+      "mode": "release",
+      "repoRoot": "C:\\work\\semio",
+      "backingRoot": "D:\\issued\\compiler",
+      "manifest": "C:\\work\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\Cargo.toml",
+      "manifestKey": "8ea1a407e0d41119fab0",
+      "publication": "D:\\issued\\compiler\\published\\8ea1a407e0d41119fab0\\release",
+      "binary": "semio-os-mcp.exe",
+      "target": "@semio-tech/framework-os-mcp-rs:build",
+      "arguments": [
+        "run",
+        "@semio-tech/framework-os-mcp-rs:build",
+        "--output=stream"
+      ]
+    }
+  ]
+}

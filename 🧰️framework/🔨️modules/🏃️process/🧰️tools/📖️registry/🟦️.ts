@@ -37,6 +37,7 @@ export type ToolCapacitySpecV1 = Readonly<{ mode: "none" | "inherit" | "admit"; 
 /** 🧩️ One registered external tool. */
 export type ToolEntryV1 = Readonly<{
   id: string; kind: string; summary: ToolTextV1; capabilities: readonly string[]; commands: readonly string[]; platforms: readonly ToolPlatformV1[];
+  invocations?: readonly Readonly<{ command: string; prefix: readonly string[] }>[];
   pin: ToolPinSpecV1; provision: ToolProvisionV1; locate: readonly ToolLocatorV1[]; probe?: Readonly<{ arguments: readonly string[]; pattern: string }>;
   adapter: string; adapterScope: readonly string[]; allowedCallers: readonly string[]; environment: ToolEnvironmentSpecV1; capacity: ToolCapacitySpecV1;
 }>;
@@ -68,6 +69,11 @@ export function readToolRegistryV1(document: unknown): ToolRegistryV1 {
       const owner = owners.get(command);
       if (owner !== undefined) throw new Error(`Tool registry invalid: command ${command} belongs to ${owner} and ${tool.id}`);
       owners.set(command, tool.id);
+    }
+    const invocations = new Set<string>();
+    for (const invocation of tool.invocations ?? []) {
+      if (invocation.command === tool.commands[0] || !tool.commands.includes(invocation.command) || invocations.has(invocation.command)) throw new Error(`Tool registry invalid: undeclared, primary or duplicate invocation command for ${tool.id}`);
+      invocations.add(invocation.command);
     }
     const rules = new Set<string>();
     for (const rule of tool.capacity.rules ?? []) {

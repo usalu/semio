@@ -1,0 +1,10 @@
+const fs=require("node:fs"),path=require("node:path"),cp=require("node:child_process");
+const artifacts=path.resolve(__dirname,"🗑️generated"),profileDirectory=path.join(artifacts,"generator-profiles"),logPath=path.join(artifacts,"framework-manifest-profiled.log");
+fs.mkdirSync(profileDirectory,{recursive:true});
+const args=["run","@semio-tech/framework-rs:generate","--skip-cache","--parallel=1"],log=fs.openSync(logPath,"w");
+const environment={...process.env,SEMIO_LANGUAGE:"en",SEMIO_REPO_CPU_PROFILE:JSON.stringify({version:1,directory:profileDirectory}),SEMIO_TEST_ARTIFACT_DIR:profileDirectory};
+delete environment.BUN_OPTIONS;
+const child=cp.spawn("/home/deck/.local/bin/repo",args,{env:environment,stdio:["ignore",log,log]});
+console.log(JSON.stringify({pid:child.pid,args,logPath,profileDirectory}));
+child.once("error",error=>{console.error(error);process.exitCode=1;});
+child.once("close",(status,signal)=>{fs.closeSync(log);console.log(JSON.stringify({status,signal,profiles:fs.readdirSync(profileDirectory)}));process.exitCode=status??1;});

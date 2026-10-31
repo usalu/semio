@@ -1,0 +1,11 @@
+# Conditional And Negation Review
+
+Read-only review of framework/schema/validator TypeScript prepare/ready and Rust compile/validate paths. No tests, compilers, or Source edits by this reviewer.
+
+For well-formed schemas with resolvable references, the new TypeScript logic matches the existing Rust runtime: not rejects exactly a matching subschema; if is a selector rather than an independent assertion; only the selected then/else branch contributes instance errors; then/else without if are ignored. Prepared boolean schemas remain callable checks, so false conditions choose else, true conditions choose then, not true rejects and not false accepts. References use the same scoped prepare mechanism as other assertions. The new neutral Ajv-backed cases and owner-reported112/336 green are appropriate coverage; the reviewer did not rerun them.
+
+One concrete malformed-schema distinction remains: TypeScript unresolved references become ordinary instance-error checkers at ready lines195–198. A new not checker treats those errors as a nonmatch and accepts; a new if checker treats them as false and selects else. Rust compile recursively validates not/if/then/else schema nodes and refuses unresolved references before instance validation. Thus malformed schema faults can become successful TypeScript validation through the new selectors. This is separate from valid-schema conditional semantics and resembles an inherited anyOf boundary. If compileJsonSchemaSubset is intended to refuse unknown reference schemas, preparation must preserve schema faults separately from instance mismatch; no broad branch or guard relaxation is appropriate. Coordinator was notified with exact static counterexample shapes.
+
+## Orphan Preparation Repair
+
+Current TypeScript preparation unconditionally prepares then/else when those keywords exist; runtime application remains inside if(condition). This matches Rust compile’s unconditional schema-node integrity validation and its runtime’s conditional selected-branch application. Added shared compilation refusals are orphan-then-number and orphan-else-array. No concrete blocker found in this exact delta. The owner’s genuine red127pass/2fail is recorded as reported evidence; green40831 was pending at review time and was not rerun here.

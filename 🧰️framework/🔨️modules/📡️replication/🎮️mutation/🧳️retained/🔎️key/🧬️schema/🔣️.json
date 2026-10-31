@@ -1,5 +1,5 @@
 {
- "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$schema":"http://json-schema.org/draft-07/schema#",
  "title":"Retained Key Lookup Laws","type":"object","additionalProperties":false,"required":["chunkBytes","cases"],
  "properties":{"chunkBytes":{"type":"integer","minimum":2},"cases":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","keys","needle","expectedIndices"],"properties":{"id":{"type":"string"},"keys":{"type":"array","items":{"type":"string"}},"needle":{"type":"string"},"expectedIndices":{"type":"array","maxItems":2,"items":{"type":"integer","minimum":0}}}}}}
 }

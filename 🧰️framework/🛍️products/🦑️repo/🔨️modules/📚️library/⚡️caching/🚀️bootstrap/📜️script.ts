@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import{withRepositoryCompilerRuntimeEntriesV1}from"../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import{dependencyReadmissionV1}from"../../🏗️build/📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {createNxBootstrapCapabilitiesV1,readNxBootstrapAuthoringCapabilitiesV1} from "./📥️caller/🟦️.ts";
@@ -390,7 +391,7 @@ export class NxScript extends Script {
     }
     return owned.sort((a, b) => a - b);
   }
-  async run(segments: string[]): Promise<void> {return this.runIssued(segments,createIssuedResourceControlV1(this.invocation,"nx:invocation",0));}
+  async run(segments: string[]): Promise<void> {const phase=createIssuedResourceControlV1(this.invocation,"nx:invocation",0);return withRepositoryCompilerRuntimeEntriesV1(this.root,this.invocation,phase,()=>this.runIssued(segments,phase));}
   async runIssued(segments:string[],phaseControl:ResourceLeaseControl):Promise<void>{
     requireIssuedResourceControlInvocationV1(phaseControl,this.invocation);
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts");projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root).args);

@@ -1,0 +1,259 @@
+{
+  "packageName": "@fixture/compiled",
+  "producer": {
+    "kind": "typescript-artifact-package",
+    "source": "./source.ts",
+    "target": "build"
+  },
+  "cases": [
+    {
+      "name": "import",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "require withheld without branch",
+      "source": "const { value } = require('@fixture/compiled'); export { value };",
+      "exports": {
+        ".": {
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "removed export",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        "./other": "./dist/🟦️.js"
+      },
+      "accepted": false
+    },
+    {
+      "name": "undeclared compiled output",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": "./dist/other.js"
+      },
+      "accepted": false
+    },
+    {
+      "name": "warm compiled module remains a producer fact",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": true,
+      "warm": true
+    },
+    {
+      "name": "missing physical authoring Source refuses warm output",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": false,
+      "warm": true,
+      "missingSource": true
+    },
+    {
+      "name": "missing authored producer refuses warm output",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": false,
+      "warm": true,
+      "missingProducer": true
+    },
+    {
+      "name": "unregistered task owner refuses",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": false,
+      "unknownOwner": true
+    },
+    {
+      "name": "missing build task refuses",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": false,
+      "missingTarget": true
+    },
+    {
+      "name": "require follows its explicit branch",
+      "source": "const { value } = require('@fixture/compiled'); export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "require": "./dist/🟦️.js"
+        }
+      },
+      "accepted": true,
+      "require": true
+    },
+    {
+      "name": "self package import",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": true,
+      "self": true
+    },
+    {
+      "name": "relative future output",
+      "source": "import { value } from '../compiled/dist/🟦️.js'; export { value };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts",
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "accepted": true,
+      "relative": true
+    }
+  ],
+  "producers": [
+    {
+      "name": "physical producer",
+      "value": {
+        "kind": "typescript-artifact-package",
+        "source": "./source.ts",
+        "target": "build"
+      },
+      "accepted": true
+    },
+    {
+      "name": "unknown protocol",
+      "value": {
+        "kind": "source-alias",
+        "source": "./source.ts",
+        "target": "build"
+      },
+      "accepted": false
+    },
+    {
+      "name": "unknown field",
+      "value": {
+        "kind": "typescript-artifact-package",
+        "source": "./source.ts",
+        "target": "build",
+        "fallback": true
+      },
+      "accepted": false
+    },
+    {
+      "name": "empty Source",
+      "value": {
+        "kind": "typescript-artifact-package",
+        "source": "",
+        "target": "build"
+      },
+      "accepted": false
+    },
+    {
+      "name": "absolute Source",
+      "value": {
+        "kind": "typescript-artifact-package",
+        "source": "/outside.ts",
+        "target": "build"
+      },
+      "accepted": false
+    },
+    {
+      "name": "backslash Source",
+      "value": {
+        "kind": "typescript-artifact-package",
+        "source": "..\\\\outside.ts",
+        "target": "build"
+      },
+      "accepted": false
+    }
+  ],
+  "selected": [
+    {
+      "id": "runtime import",
+      "source": "import { value } from '@fixture/compiled'; export { value };",
+      "exports": {
+        ".": {
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "phase": "runtime",
+      "accepted": true
+    },
+    {
+      "id": "runtime require",
+      "source": "const { value } = require('@fixture/compiled'); export { value };",
+      "exports": {
+        ".": {
+          "require": "./dist/🟦️.js"
+        }
+      },
+      "phase": "runtime",
+      "accepted": true
+    },
+    {
+      "id": "runtime require refuses import-only",
+      "source": "const { value } = require('@fixture/compiled'); export { value };",
+      "exports": {
+        ".": {
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "phase": "runtime",
+      "accepted": false
+    },
+    {
+      "id": "typed-only declaration",
+      "source": "import type { Shape } from '@fixture/compiled'; export type { Shape };",
+      "exports": {
+        ".": {
+          "types": "./dist/🟦️.d.ts"
+        }
+      },
+      "phase": "compile",
+      "accepted": true
+    },
+    {
+      "id": "both runtime modes retain require refusal",
+      "source": "import { value } from '@fixture/compiled'; const other=require('@fixture/compiled'); export { value,other };",
+      "exports": {
+        ".": {
+          "import": "./dist/🟦️.js"
+        }
+      },
+      "phase": "runtime",
+      "accepted": false
+    }
+  ]
+}

@@ -8,6 +8,6 @@
   "oracleToleranceDeg": 1e-9,
   "bone": "thigh-l",
   "sparseClip": "walk",
-  "tracks": { "clip": "idle-breathing", "target": "emitter:breath", "keyTimes": [2, 2.4, 3.6] },
+  "tracks": { "clip": "idle-breathing", "target": "emitter:body-plume", "keyTimes": [2, 2.4, 3.6] },
   "transition": { "from": "stand", "to": "carry-bag", "durationS": 1, "bone": "arm-l" }
 }

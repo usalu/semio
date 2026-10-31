@@ -9,6 +9,8 @@ import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts"
 import { type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../📋️types/🟦️.ts";
 import chunk from "lodash/chunk";
 import swipeVectors from "../🧫️fixtures/👀️controlled-swipe/🔣️.json";
+import { DatabaseSync } from "node:sqlite";
+import modeVectors from "../🧫️fixtures/🔄️card-continuity/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region 🥞️LayeredOverviewBehaviour
@@ -75,6 +77,58 @@ afterEach(() => {
 });
 
 describe("LayeredOverview", () => {
+  it("keeps logical camera identity through responsive mode and cell changes", () => {
+    const sql = new DatabaseSync(":memory:");
+    try {
+      for (const vector of modeVectors.cameraCases) {
+        const mode = (value: string) => { if (value === "strip" || value === "swipe") return value; throw Error("Declared layout mode required"); };
+        const renderer: LayeredOverviewProps["renderCard"] = (pane, state) => <>{card(pane, state)}{pane.id === "learner" ? <div data-layered-overview=""><a href="#nested">Nested owner</a></div> : null}</>;
+        const props = { panes: pages(HOME), cells: GRID, renderCard: renderer, labels: LABELS, lifecycle: LATER, routing: "none" as const, reducedMotion: "always" as const, revealedId: null };
+        const firstMode = mode(vector.before);
+        const result = render(<LayeredOverview {...props} mode={firstMode} swipeId={firstMode === "swipe" ? "prefs" : undefined} camera={firstMode === "strip" ? { x: 1, y: 1 } : undefined} />);
+        result.rerender(<LayeredOverview {...props} mode={firstMode} />);
+        const root = result.container.querySelector<HTMLElement>("[data-layered-overview]")!;
+        const link = within(result.container).getByRole("link", { name: "Learner" });
+        const outside = document.createElement("button");
+        document.body.append(outside);
+        try {
+        if (vector.focus === "owned") act(() => link.focus());
+        if (vector.focus === "outside") act(() => outside.focus());
+        if (vector.focus === "nested") act(() => within(result.container).getByRole("link", { name: "Nested owner" }).focus());
+        const focused = document.activeElement;
+        const cells = Object.fromEntries(vector.order.map((id, index) => [id, { column: index % 3, row: Math.floor(index / 3) }]));
+        result.rerender(<LayeredOverview {...props} panes={pages(vector.order)} cells={cells} mode={mode(vector.after)} swipeId={vector.swipe ?? undefined} />);
+        const oracle = sql.prepare("SELECT CAST(key AS INTEGER)%3 AS x, CAST(CAST(key AS INTEGER)/3 AS INTEGER) AS y FROM json_each(?) WHERE value=?").get(JSON.stringify(vector.order), vector.expected) as { x: number; y: number };
+        const strip = root.querySelector<HTMLElement>("[data-layered-strip]")!;
+        const actual = offsetOf(strip.style.transform, 3, Math.ceil(vector.order.length / 3));
+        expect(actual.x, vector.id).toBeCloseTo(oracle.x);
+        expect(actual.y, vector.id).toBeCloseTo(oracle.y);
+        expect(root.dataset.layeredResting, vector.id).toBe(vector.expected);
+        expect(document.activeElement, vector.id).toBe(focused);
+        if (vector.focus === "owned") expect(link.isConnected, vector.id).toBe(true);
+        } finally { result.unmount(); outside.remove(); }
+      }
+    } finally { sql.close(); }
+  });
+
+  it("retains each focused card and its overlay through layout mode transitions", () => {
+    for (const vector of modeVectors.cases) {
+      const props = { panes: pages(HOME), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, routing: "none" as const };
+      const mode = (value: string) => value === "strip" ? "strip" as const : "swipe" as const;
+      const result = render(<LayeredOverview {...props} mode={mode(vector.modes[0]!)} />);
+      const overlay = result.container.querySelector("[data-layered-overlay]");
+      const link = within(result.container).getByRole("link", { name: "Learner" });
+      act(() => link.focus());
+      for (const next of vector.modes.slice(1)) {
+        result.rerender(<LayeredOverview {...props} mode={mode(next)} />);
+        expect(result.container.querySelector("[data-layered-overlay]"), vector.id).toBe(overlay);
+        expect(within(result.container).getByRole("link", { name: "Learner" }), vector.id).toBe(link);
+        expect(link.isConnected, vector.id).toBe(true);
+        expect(document.activeElement, vector.id).toBe(link);
+      }
+      result.unmount();
+    }
+  });
   it("holds a fresh explore hover until the pointer moves off it, and releases a long move at once", () => {
     const armed = layeredZoomArm(10, 20);
     expect(layeredZoomOver(armed)).toEqual({ hold: armed, reveal: false });
@@ -708,6 +762,21 @@ describe("LayeredOverview swipe", () => {
     result.rerender(<LayeredOverview {...props} swipeId="unknown" />);
     expect(cellsAt(strip, 3, 3)).toEqual(swipeVectors.steps.at(-1)!.offset);
     expect(changed).not.toHaveBeenCalled();
+  });
+
+  it("does not reclaim stale focused-card position after a real gesture and unrelated rerender", () => {
+    const props = { panes: pages(HOME), cells: GRID, renderCard: card, labels: LABELS, lifecycle: LATER, mode: "swipe" as const, routing: "none" as const, revealedId: null };
+    const home = swipeHome(props);
+    const link = within(home.root).getByRole("link", { name: "Learner" });
+    act(() => link.focus());
+    swipe(home.root, [600, 450], [300, 450], 100);
+    frames(400);
+    expect(home.root.dataset.layeredResting).toBe("physics");
+    home.rerender(<LayeredOverview {...props} labels={{ ...LABELS }} cells={{ ...GRID }} />);
+    frames(400);
+    expect(home.root.dataset.layeredResting).toBe("physics");
+    expect(home.at()).toEqual({ x: 1, y: 0 });
+    expect(document.activeElement).toBe(link);
   });
 
   it("publishes only settled page ids through normal and wrapped touch swipes", () => {

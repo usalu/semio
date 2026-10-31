@@ -245,6 +245,102 @@
       "source": "export type Approval = { artifactId: string };\nexport function parseApproval(value: unknown): Approval {\n  return value as Approval;\n}\n",
       "present": true,
       "parser": true
+    },
+    {
+      "id": "typescript-named-type",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type { Approval } from \"./owner\";\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-aliased-type",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type { Draft as Approval } from \"./owner\";\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-runtime-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export { type Approval, parseApproval } from \"./owner\";\n",
+      "present": true,
+      "parser": true
+    },
+    {
+      "id": "typescript-named-aliased-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export { type Draft as Approval, parseDraft as parseApproval } from \"./owner\";\n",
+      "present": true,
+      "parser": true
+    },
+    {
+      "id": "typescript-named-type-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type { Approval, parseApproval } from \"./owner\";\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-inline-type-parser",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export { type Approval, type parseApproval } from \"./owner\";\n",
+      "present": true,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-private-import",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "import type { Approval } from \"./owner\";\n",
+      "present": false,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-elsewhere",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export type { Approval as Draft } from \"./owner\";\n",
+      "present": false,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-glob",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "export * from \"./owner\";\n",
+      "present": false,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-comment",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "/*\nexport type { Approval } from \"./owner\";\n*/\n",
+      "present": false,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-template",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "const example = `\nexport { Approval, parseApproval } from \"./owner\";\n`;\n",
+      "present": false,
+      "parser": false
+    },
+    {
+      "id": "typescript-named-nested",
+      "format": "🟦️typescript",
+      "export": "Approval",
+      "source": "namespace Local { export type { Approval } from \"./owner\"; }\n",
+      "present": false,
+      "parser": false
     }
   ],
   "treeCases": [
@@ -1890,6 +1986,194 @@
         "failedStage": null,
         "code": null
       }
+    }
+  ],
+  "storageCases": [
+    {
+      "id": "live-root",
+      "definition": null,
+      "value": {
+        "version": 1,
+        "partition": "diagnostics",
+        "directory": "tests",
+        "live": true
+      },
+      "valid": true
+    },
+    {
+      "id": "unissued-root",
+      "definition": null,
+      "value": {
+        "version": 1,
+        "partition": "diagnostics",
+        "directory": "tests",
+        "live": false
+      },
+      "valid": false
+    },
+    {
+      "id": "foreign-root-member",
+      "definition": null,
+      "value": {
+        "version": 1,
+        "partition": "diagnostics",
+        "directory": "tests",
+        "live": true,
+        "foreign": true
+      },
+      "valid": false
+    },
+    {
+      "id": "bounded-retention",
+      "definition": "Retention",
+      "value": {
+        "version": 1,
+        "maximumRetainedBytes": 1024,
+        "maximumRuns": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "zero-retention",
+      "definition": "Retention",
+      "value": {
+        "version": 1,
+        "maximumRetainedBytes": 0,
+        "maximumRuns": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "unbounded-retention",
+      "definition": "Retention",
+      "value": {
+        "version": 1,
+        "maximumRetainedBytes": 1024,
+        "maximumRuns": 257
+      },
+      "valid": false
+    },
+    {
+      "id": "issued-run-shape",
+      "definition": "Run",
+      "value": {
+        "version": 1,
+        "task": "0123456789abcdef01234567",
+        "run": "0123456789abcdef"
+      },
+      "valid": true
+    },
+    {
+      "id": "short-task",
+      "definition": "Run",
+      "value": {
+        "version": 1,
+        "task": "0123456789abcdef",
+        "run": "0123456789abcdef"
+      },
+      "valid": false
+    },
+    {
+      "id": "uppercase-run",
+      "definition": "Run",
+      "value": {
+        "version": 1,
+        "task": "0123456789abcdef01234567",
+        "run": "0123456789abcdeF"
+      },
+      "valid": false
+    }
+  ],
+  "publicationCases": [
+    {
+      "id": "named-publication",
+      "format": "ts",
+      "source": "export { operation } from \"./owner.ts\";",
+      "owned": false
+    },
+    {
+      "id": "type-publication",
+      "format": "ts",
+      "source": "export type { Contract } from \"./owner.ts\";",
+      "owned": false
+    },
+    {
+      "id": "grouped-aliased-publication",
+      "format": "ts",
+      "source": "export { operation as invoke, type Contract } from \"./owner.ts\";",
+      "owned": false
+    },
+    {
+      "id": "json-named-publication",
+      "format": "ts",
+      "source": "export { default as document } from \"./schema.json\" with {type:\"json\"};",
+      "owned": false
+    },
+    {
+      "id": "json-default-identity",
+      "format": "ts",
+      "source": "import document from \"./schema.json\" with {type:\"json\"};export default document;",
+      "owned": false
+    },
+    {
+      "id": "owned-interface",
+      "format": "ts",
+      "source": "export interface Contract {id:string}",
+      "owned": true
+    },
+    {
+      "id": "owned-alias",
+      "format": "ts",
+      "source": "export type Contract={id:string};",
+      "owned": true
+    },
+    {
+      "id": "owned-constant",
+      "format": "ts",
+      "source": "export const document={type:\"string\"};",
+      "owned": true
+    },
+    {
+      "id": "comments-own-no-contract",
+      "format": "ts",
+      "source": "/* export interface Contract {id:string} */",
+      "owned": false
+    },
+    {
+      "id": "mixed-publication-and-definition",
+      "format": "ts",
+      "source": "export { operation } from \"./owner.ts\";export interface Contract {id:string}",
+      "owned": true
+    },
+    {
+      "id": "comment-does-not-hide-definition",
+      "format": "ts",
+      "source": "/* export {operation} from \"./owner.ts\"; */\nconst document={type:\"string\"};",
+      "owned": true
+    },
+    {
+      "id": "template-does-not-hide-definition",
+      "format": "ts",
+      "source": "const example=`export {operation} from \"./owner.ts\";`;",
+      "owned": true
+    },
+    {
+      "id": "normative-json-is-authority",
+      "format": "json",
+      "source": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Contract\",\"type\":\"object\"}",
+      "owned": true
+    },
+    {
+      "id": "malformed-normative-slot-stays-refused",
+      "format": "json",
+      "source": "{",
+      "owned": true
+    },
+    {
+      "id": "malformed-publication-stays-refused",
+      "format": "ts",
+      "source": "export { Contract } from",
+      "owned": true
     }
   ]
 }

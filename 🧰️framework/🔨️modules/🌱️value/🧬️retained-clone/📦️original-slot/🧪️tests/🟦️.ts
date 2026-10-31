@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {Database} from 'bun:sqlite';
-import Ajv from 'ajv/dist/2020.js';
+import Ajv from 'ajv';
 import {applyPatch,type Operation} from 'fast-json-patch';
 /** 🧪️ Independent RFC6902 validates every portable original-slot payload exchange. */
 export function verifyOriginalSlot():void{

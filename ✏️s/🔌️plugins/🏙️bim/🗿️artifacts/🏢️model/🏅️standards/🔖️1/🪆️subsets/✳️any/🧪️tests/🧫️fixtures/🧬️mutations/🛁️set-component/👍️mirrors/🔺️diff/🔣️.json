@@ -2,7 +2,9 @@
   "components": {
     "cmp-table": {
       "entry": "Patched",
-      "mirrored": true
+      "value": {
+        "mirrored": true
+      }
     }
   }
 }

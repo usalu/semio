@@ -9,10 +9,12 @@ import { presenceUpgradeStatus, waitForPresenceSocket } from "../../🚀️deplo
 type OracleSocket = EventEmitter & { close(): void; terminate(): void };
 type OracleResponse = { statusCode?: number; destroy(): void };
 type OracleServer = EventEmitter & { address(): AddressInfo; readonly clients: Set<OracleSocket>; close(callback: () => void): void };
-const { WebSocket: Ws, WebSocketServer } = createRequire(import.meta.url)("ws") as {
-  WebSocket: new (url: string, options: { handshakeTimeout: number; signal: AbortSignal }) => OracleSocket;
-  WebSocketServer: new (options: { host: string; port: number }) => OracleServer;
-};
+/** 🧩 The installed `ws` client. Vitest rewrites a bare `ws` specifier into a socket whose handshake deadline never fires. */
+function loadWsOracle(): { WebSocket: new (url: string, options: { handshakeTimeout: number; signal: AbortSignal }) => OracleSocket; WebSocketServer: new (options: { host: string; port: number }) => OracleServer } {
+  const nodeRequire = createRequire(import.meta.url);
+  return nodeRequire(nodeRequire.resolve("ws/package.json").replace(/package\.json$/u, "index.js"));
+}
+const { WebSocket: Ws, WebSocketServer } = loadWsOracle();
 
 for (const row of cases.cases) it(`settles the ${row.id} presence handshake like ws`, async () => {
   const connections = new Set<Socket>();
@@ -62,3 +64,5 @@ for (const row of cases.cases) it(`settles the ${row.id} presence handshake like
     await new Promise<void>(resolve => server.close(() => resolve()));
   }
 }, 5000);
+
+import "./👆️swipe-progress/🟦️.ts";

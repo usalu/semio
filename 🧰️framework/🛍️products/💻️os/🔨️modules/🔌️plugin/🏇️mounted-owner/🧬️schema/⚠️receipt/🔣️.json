@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -37,7 +37,7 @@
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "prefixItems": [
+      "items": [
         {
           "const": 0
         },
@@ -45,7 +45,7 @@
           "const": 0
         }
       ],
-      "items": false
+      "additionalItems": false
     },
     "falseCompleteReceipt": {
       "const": "same-actual-receipt"

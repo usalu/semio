@@ -1,9 +1,11 @@
 {
   "worksets": {
     "structure": {
-      "default_visible": true,
       "entry": "Created",
-      "name": "Structure"
+      "value": {
+        "default_visible": true,
+        "name": "Structure"
+      }
     }
   }
 }

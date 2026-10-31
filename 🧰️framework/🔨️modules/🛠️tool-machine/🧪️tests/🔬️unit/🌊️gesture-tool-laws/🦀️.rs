@@ -160,11 +160,11 @@ fn gesture_input(gesture: &Value) -> GestureInput {
 }
 
 fn gesture_runner<T: GestureTool>(gesture: &Value) -> ToolMachineRunner<T, TestHost<T>> {
-    ToolMachineRunner::start(text(&gesture["tool"]), ActorId(text(&gesture["actor"]).to_string()), gesture_input(gesture), TestHost::new()).expect("entering idle yields nothing")
+    ToolMachineRunner::start(text(&gesture["tool"]), ActorId(text(&gesture["actor"]).into()), gesture_input(gesture), TestHost::new()).expect("entering idle yields nothing")
 }
 
 fn resumed<T: GestureTool>(gesture: &Value, snapshot: Snapshot<T>, transaction: Option<ToolTransaction<GestureMutation>>) -> Result<ToolMachineRunner<T, TestHost<T>>, ToolRefusal> {
-    ToolMachineRunner::resume(text(&gesture["tool"]), ActorId(text(&gesture["actor"]).to_string()), gesture_input(gesture), snapshot, transaction, TestHost::new())
+    ToolMachineRunner::resume(text(&gesture["tool"]), ActorId(text(&gesture["actor"]).into()), gesture_input(gesture), snapshot, transaction, TestHost::new())
 }
 
 fn lower_camel(name: &str) -> String {

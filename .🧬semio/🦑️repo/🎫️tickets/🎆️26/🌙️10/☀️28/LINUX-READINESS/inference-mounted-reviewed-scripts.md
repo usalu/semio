@@ -1,0 +1,13 @@
+# Mounted Rust Reviewed Script Fixtures
+
+Actual canonical graph-module-memo run 126714 failed three mounted-source rows with undefined set.files. The precise cause is not source discovery failing to follow includes: current cargoSourceSetOfV1 requires an authored package.metadata.semio.build-script assertion before admitting any build script. Those old resolved fixtures declared none. The normative contract is closed link-only, permitted Cargo target environment only, no file outputs, hash-bound exact finite static closure; hashes attest reviewed bytes and do not prove semantics. No classifier, policy, schema, budget or refusal was widened.
+
+The environment-only helper genuinely reads CARGO_CFG_TARGET_OS and emits a linker argument; its Cargo fixture now contains handcrafted exact script/helper paths and hashes. The static include_str fixture has no runtime effects or outputs; its reviewed compile-time text input is included in the exact asserted closure. The original comment/literal decoy fixture reads TARGET and emits rerun-if-env-changed, outside this contract; the case remains in the corpus as a named build-script refusal. A separate reviewed decoy case uses allowed target environment and linker-only output, retaining its comment, nested comment, normal/raw string and quote-character coverage. No cases or refusal gates were removed.
+
+For each accepted assertion, added actual integration laws independently decode TOML and compute SHA-256 with Bun, compare the exact script closure with real rustc dep-info, then require both stale-hash and removed-assertion variants to refuse. Existing all-target source inclusion, emitted-code, no-entry, dynamic/conditional/macro refusal and repository real crate tests remain. The generic positive branch now asserts resolved before reading files so a refusal gives its actual diagnostic.
+
+Full normal single-file genuine Original runner is inference-mounted-reviewed-genuine, handle 12270 / PID 258277, no test-name filter. Its observed close receipt will determine acceptance; no compiler success is inferred from fixture inspection.
+
+## Actual Acceptance
+
+`inference-mounted-reviewed-genuine.outcome.json`: status 0, signal null, closed 2026-10-30T02:44:26.160Z. Complete one-file genuine runner passed 29 tests, 0 failed, 225 assertions in 3.08 seconds. Explicit inventory includes reviewed environment-only, reviewed link-only decoys, static include_str, three stale/missing assertion tests, all original unknown/read/build-dependency refusals, retained mutation, FEM mounts, and the real renderer builder. No test-name filter, compiler shortcut, policy change or cache success inference.

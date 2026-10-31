@@ -12,6 +12,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { type SchemaTestExample, type SchemaDiagnostic, type SchemaDiagnosticCode, GRAPHQL_EXPORT_KEYWORDS, SCHEMA_DIAGNOSTIC_CODES, SCHEMA_DIAGNOSTIC_CODE_TABLE, SCHEMA_DIAGNOSTIC_EMITTERS, SCHEMA_FIXTURE_STAGES, TAXONOMY_REL_PATH, TEST_DOMAIN_REL_PATH, clearSchemaContractCache, declaresSchemaExport, declaresSchemaExportParser, discoverSchemaFixtures, testInputUrisIn, isFixtureOwnedPath, isJsonSchemaDefinition, leafDescriptorCoverage, matchesTaxonomyPathPattern, mutationLeafDirectories, mutationLeafSchemaId, parseSchemaUri, readLeafDescriptors, readSchemaCatalog, repoRootFromHere, resolveTestInputs, resolvePayloadSchemas, resolveSchemaExport, runSchemaFixture, schemaContractDiagnostics, schemaDiagnosticCodesEmittedBy, schemaExportCompletenessDiagnostics, schemaFixtureIsolationDiagnostics, schemaMeasurementDisagreementDiagnostics, schemaOwnerEligibilityDiagnostics, schemaPlacementDiagnostics, schemaResolutionDiagnostics, schemaScopeEligibility, schemaTreeFiles, submodulePaths, validateAgainstJsonSchema } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import ts from "typescript";
+import Ajv from "ajv";
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
 import cases from "../🧫️fixtures/🧬️schema-invariants/🔣️.json";
 import { testFixture as protocolSchema } from "@semio-tech/framework/test/schema";
@@ -588,6 +590,18 @@ describe("🔎️ per-format export presence", () => {
     });
   }
 
+  test("named TypeScript publications agree with the compiler syntax oracle", () => {
+    for (const row of cases.exportPresenceCases.filter((entry) => entry.id.startsWith("typescript-named-"))) {
+      const file = ts.createSourceFile("entry.ts", row.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const publications = file.statements.filter(ts.isExportDeclaration).flatMap((statement) =>
+        statement.exportClause && ts.isNamedExports(statement.exportClause)
+          ? statement.exportClause.elements.map((entry) => ({ name: entry.name.text, runtime: !statement.isTypeOnly && !entry.isTypeOnly }))
+          : []);
+      expect(publications.some((entry) => entry.name === row.export)).toBe(row.present);
+      expect(publications.some((entry) => entry.name === `parse${row.export}` && entry.runtime)).toBe((row as { parser?: boolean }).parser);
+    }
+  });
+
   test("a rust re-export declares an export only when the statement names it, alone", () => {
     expect(declaresSchemaExport("🦀️rust", "pub use inner::Artifact;\n", "Artifact")).toBe(true);
     expect(declaresSchemaExport("🦀️rust", "pub use inner::{Artifact};\n", "Artifact")).toBe(false);
@@ -802,3 +816,29 @@ describe("🩺️ the committed tree is measured by the same checkers", () => {
   });
 });
 //#endregion 🧪️Tests
+
+describe("test storage uses its actual Draft07 authority", () => {
+  const document = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🧬️schema/🔣️.json"), "utf8"));
+  const oracle = new Ajv({ strict: false });
+  for (const row of cases.storageCases) test(row.id, () => {
+    const node = row.definition === null ? document : document.definitions[row.definition];
+    expect(oracle.compile(node)(row.value)).toBe(row.valid);
+    expect(validateAgainstJsonSchema(node, row.value, document).length === 0).toBe(row.valid);
+  });
+});
+
+describe("schema ownership distinguishes explicit publications from definitions",()=>{
+ for(const row of cases.publicationCases)test(row.id,()=>{
+  const root=scaffold();
+  try{
+   const file="🧰️framework/🔨️modules/example/📦️packages/🟦️typescript/🧬️schema/"+(row.format==="json"?"🔣️.json":"🟦️.ts");
+   write(root,file,row.source);
+   if(row.format==="ts"){
+   const source=ts.createSourceFile("entry.ts",row.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS),diagnostics=ts.transpileModule(row.source,{compilerOptions:{target:ts.ScriptTarget.Latest,module:ts.ModuleKind.ESNext},reportDiagnostics:true}).diagnostics??[],bindings=new Set(source.statements.filter(ts.isImportDeclaration).flatMap(statement=>statement.importClause?.name?[statement.importClause.name.text]:[]));
+   const publication=diagnostics.length===0&&source.statements.every(statement=>ts.isImportDeclaration(statement)||ts.isExportDeclaration(statement)&&statement.moduleSpecifier!==undefined||ts.isExportAssignment(statement)&&ts.isIdentifier(statement.expression)&&bindings.has(statement.expression.text));
+   expect(publication).toBe(!row.owned);
+   }
+   expect(schemaOwnerEligibilityDiagnostics(root,[file]).length).toBe(row.owned?1:0);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
+});

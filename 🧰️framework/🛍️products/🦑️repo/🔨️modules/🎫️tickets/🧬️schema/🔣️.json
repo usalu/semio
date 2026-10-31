@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/tickets/schema.json",
   "title": "🎫️ semio repo tickets",
   "description": "The wire shapes of the ticket domain: the persisted 🎫️ticket.json document, the ticket identity, the open/close/reopen/change requests and their outcomes, the important-document transaction journal, the plan attachment and the file scope of a close. Objects are deliberately open: neither implementation refuses an unknown member — a document may carry members such as `note`, `closedAt`, `files` or `contributors`, and the codec reads and then DROPS them.",

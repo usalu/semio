@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {applyPatch} from "fast-json-patch";
 test("original context header custody never certifies unsupported payload leaves",()=>{
  const corpus=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));

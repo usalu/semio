@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {canonicalGoLayoutFromTaxonomyV1,readCanonicalGoLayoutV1} from "../🟦️.ts";
 import {taxonomyFileKindFilenamesV1,taxonomySingleFileKindFilenameV1} from "../../📄️file-kind-query/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

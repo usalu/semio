@@ -7,9 +7,9 @@
     "./browser-host": "./🌐️browser-host/🟦️.ts",
     "./browser-host/staging": "./🌐️browser-host/🏗️staging/🟦️.ts",
     "./builder": "./🏗️builder/🟦️.ts",
-    "./generated": "./🤖️generated/🟦️.ts",
-    "./generated/playgrounds": "./🤖️generated/🎮️playgrounds/🟦️.ts",
-    "./generated/plugins": "./🤖️generated/🧩️plugins/🟦️.ts",
+    "./generated": "./📚️catalog/🟦️.ts",
+    "./generated/playgrounds": "./📚️catalog/🎮️playgrounds/🟦️.ts",
+    "./generated/plugins": "./📚️catalog/🧩️plugins/🟦️.ts",
     "./publication": "./📣️publication/🟦️.ts",
     "./session": "./🎮️session/🟦️.ts"
   },

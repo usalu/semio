@@ -1,0 +1,4073 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "city-car",
+  "category": "vehicles",
+  "title": {
+   "en": "City Car",
+   "de": "Stadtauto"
+  },
+  "summary": {
+   "en": "A petrol-engined five-door compact hatchback (3.9 m, about 1 t) on 185/60 R15 tyres: suspended axles, rolling wheels, a lifting tailgate and bonnet, glazing, a tailpipe jet and tyre, brake and engine thermal regions.",
+   "de": "Ein fünftüriger Kompakt-Schrägheckwagen mit Benzinmotor (3,9 m, rund 1 t) auf 185/60-R15-Reifen: gefederte Achsen, rollende Räder, schwenkende Heckklappe und Motorhaube, Verglasung, Auspuffstrahl sowie thermische Regionen für Reifen, Bremsen und Motor."
+  },
+  "tags": [
+   "vehicle",
+   "car",
+   "hatchback",
+   "petrol",
+   "city",
+   "wheeled"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "etrto-2023",
+     "citation": "ETRTO Standards Manual (2023): tyre dimension 185/60 R15, rim diameter 381 mm, section width 185 mm, overall diameter about 603 mm."
+    },
+    {
+     "id": "wong-2008",
+     "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Ch. 1 and 3: tyre contact patch, ground pressure about equal to inflation pressure, rolling radius, longitudinal load transfer."
+    },
+    {
+     "id": "gillespie-1992",
+     "citation": "Gillespie, T. D. (1992). Fundamentals of Vehicle Dynamics, SAE International. Ch. 3: static axle loads, load transfer under acceleration and braking."
+    },
+    {
+     "id": "heywood-2018",
+     "citation": "Heywood, J. B. (2018). Internal Combustion Engine Fundamentals, 2nd ed., McGraw-Hill. Ch. 4 and 13: exhaust gas temperature and mass flow of spark-ignition engines."
+    },
+    {
+     "id": "limpert-1999",
+     "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Ch. 5: brake disc temperature rise."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer, convection and radiation properties of surfaces."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber)."
+    }
+   ],
+   "notes": {
+    "en": "Wheels roll consistently: the pose roots and wheel angles of the clips satisfy theta = -x / r with r = 0.30 m. The side doors hinge about vertical axes and are drawn as panel lines, not as elevation joints; the tailgate and bonnet are true transverse-axis hinges. Thermal: sheet-steel body regions with 6 kJ/(m2 K); engine surfaces, exhaust, tyres and brake discs are heated by heat release (W) at operating level 1, calibrated from typical steady surface rises with total film coefficients of 11 to 22 W/(m2 K), so warm-up is a transient with minutes-scale time constants. Dimensions, masses and loads are authored typical values of the vehicle class (authored-estimate).",
+    "de": "Die Räder rollen konsistent: Wurzellage und Radwinkel der Clips erfüllen theta = -x / r mit r = 0,30 m. Die Seitentüren schwenken um vertikale Achsen und sind als Fugenlinien gezeichnet, nicht als Gelenke der Ansicht; Heckklappe und Motorhaube sind echte Scharniere um die Querachse. Thermik: Karosserieregionen aus Stahlblech mit 6 kJ/(m2 K); Motoroberflächen, Abgasanlage, Reifen und Bremsscheiben werden durch Wärmefreisetzung (W) bei Betriebsstufe 1 beheizt, kalibriert aus typischen stationären Oberflächenerwärmungen mit Gesamtübergangskoeffizienten von 11 bis 22 W/(m2 K); das Warmlaufen ist daher ein Übergang mit Zeitkonstanten im Minutenbereich. Abmessungen, Massen und Lasten sind selbst gesetzte typische Werte der Fahrzeugklasse (authored-estimate)."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.5,
+   "widthM": 3.9,
+   "depthM": 1.68,
+   "massKg": 1000
+  },
+  "materials": [
+   {
+    "id": "paint",
+    "title": {
+     "en": "Painted sheet steel",
+     "de": "Lackiertes Stahlblech"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.45,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "Laminated and toughened glass",
+     "de": "Verbund- und Einscheibensicherheitsglas"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.15,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1150,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "wong-2008"
+   },
+   {
+    "id": "alloy",
+    "title": {
+     "en": "Aluminium alloy rim",
+     "de": "Aluminium-Leichtmetallfelge"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "Grey cast iron brake disc",
+     "de": "Graugussbremsscheibe"
+    },
+    "emissivity": 0.65,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7200,
+    "conductivityWmK": 46,
+    "source": "literature",
+    "reference": "limpert-1999"
+   },
+   {
+    "id": "exhaust-steel",
+    "title": {
+     "en": "Oxidised exhaust steel",
+     "de": "Oxidierter Abgasstahl"
+    },
+    "emissivity": 0.7,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 7800,
+    "conductivityWmK": 25,
+    "source": "literature",
+    "reference": "heywood-2018"
+   },
+   {
+    "id": "plastic-trim",
+    "title": {
+     "en": "Bumper and trim plastic",
+     "de": "Stoßfänger- und Zierteilkunststoff"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 1050,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "engine-metal",
+    "title": {
+     "en": "Engine casting and manifold",
+     "de": "Motorguss und Krümmer"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 2700,
+    "conductivityWmK": 120,
+    "source": "authored-estimate",
+    "reference": "heywood-2018"
+   },
+   {
+    "id": "interior-trim",
+    "title": {
+     "en": "Interior trim and seats",
+     "de": "Innenraumverkleidung und Sitze"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 300,
+    "conductivityWmK": 0.1,
+    "source": "authored-estimate"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "chassis",
+   "bones": [
+    {
+     "id": "chassis",
+     "parent": null,
+     "title": {
+      "en": "Body and powertrain",
+      "de": "Karosserie und Antriebsstrang"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 3.9,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 850,
+      "comX": 0.38,
+      "comY": 0.55,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "bonnet",
+     "parent": "chassis",
+     "title": {
+      "en": "Bonnet",
+      "de": "Motorhaube"
+     },
+     "x": 0.95,
+     "y": 0.97,
+     "angleDeg": -10.6,
+     "lengthM": 0.93,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 50
+     },
+     "mass": {
+      "kg": 14,
+      "comX": 0.46,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "hatch",
+     "parent": "chassis",
+     "title": {
+      "en": "Tailgate",
+      "de": "Heckklappe"
+     },
+     "x": -1.5,
+     "y": 1.44,
+     "angleDeg": -125.6,
+     "lengthM": 0.74,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -110,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 20,
+      "comX": 0.37,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "axle-f",
+     "parent": "chassis",
+     "title": {
+      "en": "Front axle with suspension",
+      "de": "Vorderachse mit Federung"
+     },
+     "x": 1.25,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.1,
+      "maxM": 0.1
+     },
+     "mass": {
+      "kg": 28,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "axle-r",
+     "parent": "chassis",
+     "title": {
+      "en": "Rear axle with suspension",
+      "de": "Hinterachse mit Federung"
+     },
+     "x": -1.2,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.1,
+      "maxM": 0.1
+     },
+     "mass": {
+      "kg": 20,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "axle-f",
+     "title": {
+      "en": "Front wheels",
+      "de": "Vorderräder"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 34,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "wong-2008"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "axle-r",
+     "title": {
+      "en": "Rear wheels",
+      "de": "Hinterräder"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 34,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "wong-2008"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-f",
+    "bone": "axle-f",
+    "x": 0,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patches",
+     "de": "Vorderreifenaufstandsflächen"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.085,
+    "footprintWidthM": 0.37,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "contact-r",
+    "bone": "axle-r",
+    "x": 0,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patches",
+     "de": "Hinterreifenaufstandsflächen"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.085,
+    "footprintWidthM": 0.37,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "tailpipe",
+    "bone": "chassis",
+    "x": -1.945,
+    "y": 0.31,
+    "kind": "emitter",
+    "title": {
+     "en": "Tailpipe mouth",
+     "de": "Auspuffmündung"
+    }
+   },
+   {
+    "id": "boot-floor",
+    "bone": "chassis",
+    "x": -1.5,
+    "y": 0.8,
+    "kind": "load",
+    "title": {
+     "en": "Boot floor load point",
+     "de": "Lastpunkt Kofferraumboden"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "glass-sheen",
+      "title": {
+       "en": "Glass sheen",
+       "de": "Glasglanz"
+      },
+      "pattern": "lines",
+      "angleDeg": 55,
+      "spacingMm": 1.6,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "path",
+       "d": "M -1.9,0.3 L -1.58,0.3 C -1.58,0.56 -1.42,0.69 -1.2,0.69 C -0.98,0.69 -0.82,0.56 -0.82,0.3 L -0.78,0.2 L 0.91,0.2 L 0.87,0.3 C 0.87,0.56 1.03,0.69 1.25,0.69 C 1.47,0.69 1.63,0.56 1.63,0.3 L 1.9,0.3 C 1.945,0.32 1.955,0.4 1.95,0.48 L 1.95,0.62 C 1.95,0.7 1.93,0.74 1.88,0.77 C 1.6,0.85 1.2,0.9 0.95,0.93 L 0.95,0.99 C 0.78,1.1 0.5,1.33 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 C -1.6,1.28 -1.74,1.04 -1.86,0.8 L -1.95,0.76 L -1.95,0.45 C -1.95,0.36 -1.94,0.31 -1.9,0.3 Z",
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "roof-band",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.42,1.375 C -1.3,1.44 -1.2,1.455 -0.9,1.46 C -0.4,1.465 0.1,1.465 0.22,1.425 Z",
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "id": "well-front",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "kind": "path",
+       "d": "M 0.87,0.3 C 0.87,0.56 1.03,0.69 1.25,0.69 C 1.47,0.69 1.63,0.56 1.63,0.3 Z",
+       "material": "plastic-trim"
+      },
+      {
+       "id": "well-rear",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "kind": "path",
+       "d": "M -1.58,0.3 C -1.58,0.56 -1.42,0.69 -1.2,0.69 C -0.98,0.69 -0.82,0.56 -0.82,0.3 Z",
+       "material": "plastic-trim"
+      },
+      {
+       "id": "exhaust-pipe",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0.35,
+       "y0": 0.12,
+       "x1": -1.1,
+       "y1": 0.12,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "silencer",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "capsule",
+       "x0": -1.1,
+       "y0": 0.13,
+       "x1": -1.7,
+       "y1": 0.13,
+       "r0": 0.075,
+       "r1": 0.075,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "tail-pipe",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "capsule",
+       "x0": -1.7,
+       "y0": 0.15,
+       "x1": -1.945,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.025,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "id": "engine-bay-top",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "path",
+       "d": "M 1.02,0.915 C 1.2,0.89 1.55,0.845 1.82,0.78 L 1.82,0.75 L 1.02,0.86 Z",
+       "region": "engine-bay",
+       "material": "engine-metal"
+      },
+      {
+       "id": "side-glass-front",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "path",
+       "d": "M 0.74,1.04 L 0.31,1.4 C 0.25,1.44 0.15,1.455 0.05,1.455 L -0.02,1.455 L -0.02,1.04 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "side-glass-rear",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "path",
+       "d": "M -0.14,1.04 L -0.14,1.45 C -0.6,1.46 -1.0,1.46 -1.22,1.435 C -1.33,1.34 -1.36,1.16 -1.34,1.04 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "seat-front-back",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 0.02,
+       "y0": 1.06,
+       "x1": 0,
+       "y1": 1.12,
+       "r0": 0.07,
+       "r1": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "id": "seat-front-headrest",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.01,
+       "y0": 1.15,
+       "x1": -0.04,
+       "y1": 1.3,
+       "r0": 0.05,
+       "r1": 0.045,
+       "material": "interior-trim"
+      },
+      {
+       "id": "seat-rear-back",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.6,
+       "y0": 1.06,
+       "x1": -0.62,
+       "y1": 1.1,
+       "r0": 0.07,
+       "r1": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "id": "seat-rear-headrest",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.63,
+       "y0": 1.13,
+       "x1": -0.64,
+       "y1": 1.27,
+       "r0": 0.045,
+       "r1": 0.04,
+       "material": "interior-trim"
+      },
+      {
+       "id": "steering-wheel",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0.56,
+       "cy": 1.08,
+       "rx": 0.03,
+       "ry": 0.085,
+       "rotationDeg": 20,
+       "material": "interior-trim"
+      },
+      {
+       "id": "windscreen-edge",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.8,
+       "kind": "path",
+       "d": "M 0.9,1.01 C 0.74,1.12 0.48,1.33 0.26,1.43",
+       "material": "glass"
+      },
+      {
+       "id": "door-front-edge",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.72,1.0 C 0.72,0.7 0.72,0.45 0.74,0.24"
+      },
+      {
+       "id": "door-gap-b",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.08,1.04 L -0.08,0.22"
+      },
+      {
+       "id": "door-gap-rear",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -1.34,1.04 L -1.4,0.64"
+      },
+      {
+       "id": "belt-crease",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 1.64,0.9 C 1.2,0.93 0.9,0.97 0.4,0.98 C -0.4,0.99 -1.0,0.99 -1.62,0.97"
+      ,
+       "penMm": 0.33
+      },
+      {
+       "id": "sill-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.85,0.3 L -0.76,0.3"
+      },
+      {
+       "id": "door-handle-front",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 0.28,
+       "y0": 0.94,
+       "x1": 0.36,
+       "y1": 0.94,
+       "r0": 0.012,
+       "r1": 0.012,
+       "material": "plastic-trim"
+      },
+      {
+       "id": "door-handle-rear",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.55,
+       "y0": 0.94,
+       "x1": -0.63,
+       "y1": 0.94,
+       "r0": 0.012,
+       "r1": 0.012,
+       "material": "plastic-trim"
+      },
+      {
+       "id": "mirror",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "ellipse",
+       "cx": 0.86,
+       "cy": 1.07,
+       "rx": 0.07,
+       "ry": 0.045,
+       "rotationDeg": -10,
+       "material": "plastic-trim"
+      },
+      {
+       "id": "fuel-flap",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": -1.14,
+       "cy": 0.84,
+       "rx": 0.045,
+       "ry": 0.05
+      },
+      {
+       "id": "headlamp",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "path",
+       "d": "M 1.72,0.78 C 1.8,0.8 1.9,0.77 1.95,0.72 L 1.94,0.67 C 1.86,0.69 1.78,0.71 1.7,0.73 Z",
+       "material": "glass"
+      },
+      {
+       "id": "grille-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 1.95,0.6 L 1.86,0.6 M 1.95,0.54 L 1.84,0.54"
+      },
+      {
+       "id": "bumper-front-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 1.66,0.46 C 1.8,0.47 1.9,0.47 1.95,0.48"
+      },
+      {
+       "id": "bumper-rear-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -1.58,0.5 C -1.7,0.5 -1.85,0.5 -1.95,0.5"
+      },
+      {
+       "id": "bumper-rear-lamp",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -1.95,
+       "y": 0.6,
+       "w": 0.05,
+       "h": 0.14,
+       "r": 0.01
+      },
+      {
+       "id": "bonnet-slab",
+       "bone": "bonnet",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "path",
+       "d": "M 0.94,0.033 C 0.652,0.051 0.248,0.031 -0.004,0.02 L 0.007,-0.039 C 0.259,-0.023 0.661,0.002 0.93,-0.024 C 0.957,-0.004 0.961,0.027 0.94,0.033 Z",
+       "region": "bonnet",
+       "material": "paint"
+      ,
+       "penMm": 0.4
+      },
+      {
+       "id": "bonnet-crease",
+       "bone": "bonnet",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.04,0.002 L 0.902,0.016"
+      },
+      {
+       "id": "hatch-slab",
+       "bone": "hatch",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "path",
+       "d": "M -0.012,-0.009 C 0.199,-0.054 0.489,-0.031 0.747,-0.013 L 0.796,0.022 L 0.73,0.08 C 0.465,0.038 0.196,0.018 0.015,0.048 Z",
+       "region": "tailgate",
+       "material": "paint"
+      },
+      {
+       "id": "hatch-glass",
+       "bone": "hatch",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "kind": "path",
+       "d": "M 0.03,-0.0 L 0.15,-0.03 L 0.33,-0.032 L 0.49,-0.005 L 0.455,0.036 L 0.296,0.01 L 0.13,0.01 L 0.02,0.04 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "tail-lamp",
+       "bone": "hatch",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "path",
+       "d": "M 0.72,-0.026 L 0.609,-0.078 L 0.587,-0.047 L 0.697,0.014 Z",
+       "material": "glass"
+      },
+      {
+       "id": "hatch-seam",
+       "bone": "hatch",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.509,0.045 L 0.648,-0.028"
+      },
+      {
+       "id": "well-liner-f",
+       "bone": "axle-f",
+       "role": "detail",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.28,
+       "x1": 0,
+       "y1": 0.4,
+       "r0": 0.02,
+       "r1": 0.02,
+       "material": "alloy"
+      },
+      {
+       "id": "caliper-f",
+       "bone": "axle-f",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": 0.03,
+       "y": 0.095,
+       "w": 0.11,
+       "h": 0.05,
+       "r": 0.015,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "well-liner-r",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.28,
+       "x1": 0,
+       "y1": 0.4,
+       "r0": 0.02,
+       "r1": 0.02,
+       "material": "alloy"
+      },
+      {
+       "id": "caliper-r",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "rect",
+       "x": -0.14,
+       "y": -0.145,
+       "w": 0.11,
+       "h": 0.05,
+       "r": 0.015,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-barrel-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.15,
+       "ry": 0.15,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "spoke-f-1",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.05,
+       "x1": 0,
+       "y1": 0.165,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-f-2",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": -0.0476,
+       "y0": 0.0155,
+       "x1": -0.1569,
+       "y1": 0.051,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-f-3",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": -0.0294,
+       "y0": -0.0405,
+       "x1": -0.097,
+       "y1": -0.1335,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-f-4",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0.0294,
+       "y0": -0.0405,
+       "x1": 0.097,
+       "y1": -0.1335,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-f-5",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0.0476,
+       "y0": 0.0155,
+       "x1": 0.1569,
+       "y1": 0.051,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "sidewall-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.25,
+       "ry": 0.25,
+       "material": "rubber"
+      },
+      {
+       "id": "tread-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.282,0.000 L0.298,0.000 M0.272,0.073 L0.288,0.077 M0.244,0.141 L0.258,0.149 M0.199,0.199 L0.211,0.211 M0.141,0.244 L0.149,0.258 M0.073,0.272 L0.077,0.288 M0.000,0.282 L0.000,0.298 M-0.073,0.272 L-0.077,0.288 M-0.141,0.244 L-0.149,0.258 M-0.199,0.199 L-0.211,0.211 M-0.244,0.141 L-0.258,0.149 M-0.272,0.073 L-0.288,0.077 M-0.282,0.000 L-0.298,0.000 M-0.272,-0.073 L-0.288,-0.077 M-0.244,-0.141 L-0.258,-0.149 M-0.199,-0.199 L-0.211,-0.211 M-0.141,-0.244 L-0.149,-0.258 M-0.073,-0.272 L-0.077,-0.288 M-0.000,-0.282 L-0.000,-0.298 M0.073,-0.272 L0.077,-0.288 M0.141,-0.244 L0.149,-0.258 M0.199,-0.199 L0.211,-0.211 M0.244,-0.141 L0.258,-0.149 M0.272,-0.073 L0.288,-0.077",
+       "material": "rubber"
+      },
+      {
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-barrel-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.42,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.15,
+       "ry": 0.15,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "spoke-r-1",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.05,
+       "x1": 0,
+       "y1": 0.165,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-r-2",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": -0.0476,
+       "y0": 0.0155,
+       "x1": -0.1569,
+       "y1": 0.051,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-r-3",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": -0.0294,
+       "y0": -0.0405,
+       "x1": -0.097,
+       "y1": -0.1335,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-r-4",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0.0294,
+       "y0": -0.0405,
+       "x1": 0.097,
+       "y1": -0.1335,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "spoke-r-5",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "capsule",
+       "x0": 0.0476,
+       "y0": 0.0155,
+       "x1": 0.1569,
+       "y1": 0.051,
+       "r0": 0.025,
+       "r1": 0.02,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "material": "alloy",
+       "region": "brakes"
+      },
+      {
+       "id": "sidewall-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.25,
+       "ry": 0.25,
+       "material": "rubber"
+      },
+      {
+       "id": "tread-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.282,0.000 L0.298,0.000 M0.272,0.073 L0.288,0.077 M0.244,0.141 L0.258,0.149 M0.199,0.199 L0.211,0.211 M0.141,0.244 L0.149,0.258 M0.073,0.272 L0.077,0.288 M0.000,0.282 L0.000,0.298 M-0.073,0.272 L-0.077,0.288 M-0.141,0.244 L-0.149,0.258 M-0.199,0.199 L-0.211,0.211 M-0.244,0.141 L-0.258,0.149 M-0.272,0.073 L-0.288,0.077 M-0.282,0.000 L-0.298,0.000 M-0.272,-0.073 L-0.288,-0.077 M-0.244,-0.141 L-0.258,-0.149 M-0.199,-0.199 L-0.211,-0.211 M-0.141,-0.244 L-0.149,-0.258 M-0.073,-0.272 L-0.077,-0.288 M-0.000,-0.282 L-0.000,-0.298 M0.073,-0.272 L0.077,-0.288 M0.141,-0.244 L0.149,-0.258 M0.199,-0.199 L0.211,-0.211 M0.244,-0.141 L0.258,-0.149 M0.272,-0.073 L0.288,-0.077",
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full side elevation as authored in the first version: wheel arches, roof, windscreen, door gaps, handles, mirror, lamps, bumpers, exhaust.",
+      "de": "Vollständige Seitenansicht wie in der ersten Fassung erarbeitet: Radkästen, Dach, Windschutzscheibe, Türfugen, Griffe, Spiegel, Leuchten, Stoßfänger, Abgasanlage."
+     },
+     "retained": {
+      "en": "Everything: seats and steering wheel behind the glass, five-spoke wheels with discs and calipers, tread marks, panel gaps.",
+      "de": "Alles: Sitze und Lenkrad hinter dem Glas, Fünfspeichenräder mit Scheiben und Sätteln, Profilstriche, Blechfugen."
+     },
+     "merged": {
+      "en": "Nothing merged except the fuel flap and bumper lamp, drawn as outlines.",
+      "de": "Nichts zusammengefasst außer Tankklappe und Heckleuchte, als Umrisse gezeichnet."
+     },
+     "omitted": {
+      "en": "Windscreen wipers, door seals and badges (not modelled).",
+      "de": "Scheibenwischer, Türdichtungen und Embleme (nicht modelliert)."
+     },
+     "thinElements": {
+      "en": "Thinnest elements: handle 0.024 m = 0.48 mm, tread tick 0.016 m = 0.32 mm at the texture pen 0.13 mm.",
+      "de": "Dünnste Elemente: Griff 0,024 m = 0,48 mm, Profilstrich 0,016 m = 0,32 mm mit Texturstift 0,13 mm."
+     },
+     "hatching": {
+      "en": "Glazing carries a sheen hatch (55 degrees, 1.6 mm).",
+      "de": "Verglasung trägt eine Glanzschraffur (55 Grad, 1,6 mm)."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass light, tyres and wheel wells near black, alloy light; three line weights 0.35 / 0.25 / 0.13 mm.",
+      "de": "Aufbau mittlerer Ton, Glas hell, Reifen und Radkästen fast schwarz, Leichtmetall hell; drei Linienstärken 0,35 / 0,25 / 0,13 mm."
+     },
+     "overlays": {
+      "en": "All regions drawn at their real extent, including calipers and exhaust silencer.",
+      "de": "Alle Regionen in ihrer realen Ausdehnung gezeichnet, einschließlich Sättel und Schalldämpfer."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M -1.9,0.3 L -1.58,0.3 C -1.58,0.6 -1.42,0.69 -1.2,0.69 C -0.98,0.69 -0.82,0.6 -0.82,0.3 L -0.78,0.2 L 0.83,0.2 L 0.87,0.3 C 0.87,0.6 1.03,0.69 1.25,0.69 C 1.47,0.69 1.63,0.6 1.63,0.3 L 1.9,0.3 C 1.945,0.32 1.955,0.4 1.95,0.48 L 1.95,0.62 C 1.95,0.68 1.93,0.7 1.91,0.667 L 1.809,0.667 L 0.924,0.832 L 0.924,0.99 C 0.78,1.1 0.5,1.33 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.411,1.391 L -1.874,0.749 L -1.95,0.76 L -1.95,0.45 C -1.95,0.36 -1.94,0.31 -1.9,0.3 Z",
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      ,
+       "penMm": 0.33
+      },
+      {
+       "kind": "path",
+       "d": "M 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.4,1.34 C -1.25,1.41 -1.2,1.42 -0.9,1.425 C -0.4,1.43 0.1,1.43 0.2,1.39 Z",
+       "id": "roof-band",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.87,0.3 C 0.87,0.6 1.03,0.69 1.25,0.69 C 1.47,0.69 1.63,0.6 1.63,0.3 Z",
+       "id": "well-front",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "path",
+       "d": "M -1.58,0.3 C -1.58,0.6 -1.42,0.69 -1.2,0.69 C -0.98,0.69 -0.82,0.6 -0.82,0.3 Z",
+       "id": "well-rear",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.8217652196917085,
+         0.735638310008083
+        ],
+        [
+         0.9371234054571096,
+         0.9011945255595312
+        ],
+        [
+         0.9242468109142191,
+         0.8323890511190624
+        ],
+        [
+         1.808888625148818,
+         0.6668328355676142
+        ]
+       ],
+       "closed": true,
+       "id": "engine-bay-top",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.12,
+       "region": "engine-bay",
+       "material": "engine-metal"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.72,1.05 L 0.345,1.405 C 0.28,1.41 0.2,1.42 0.1,1.42 L -0.02,1.42 L -0.02,1.05 Z",
+       "id": "side-glass-front",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.14,1.05 L -0.14,1.42 C -0.6,1.425 -1.0,1.425 -1.22,1.405 C -1.31,1.32 -1.34,1.16 -1.33,1.05 Z",
+       "id": "side-glass-rear",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.9,1.01 C 0.74,1.12 0.52,1.31 0.31,1.4",
+       "id": "windscreen-edge",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": false,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.08,1.05 L -0.08,0.24",
+       "id": "door-gap-b",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 0.72,1.0 C 0.72,0.7 0.72,0.45 0.74,0.24",
+       "id": "door-front-edge",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M -1.34,1.05 L -1.4,0.64",
+       "id": "door-gap-rear",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 1.72,0.78 C 1.8,0.8 1.9,0.77 1.95,0.72 L 1.94,0.67 C 1.86,0.69 1.78,0.71 1.7,0.73 Z",
+       "id": "headlamp",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.85,
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -1.95,
+       "y": 0.5,
+       "w": 0.06,
+       "h": 0.13,
+       "id": "tail-lamp",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 1.13,
+       "rx": 0.07,
+       "ry": 0.045,
+       "id": "mirror",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic-trim",
+       "rotationDeg": -10
+      },
+      {
+       "kind": "path",
+       "d": "M 0.94,0.033 C 0.652,0.051 0.248,0.031 -0.05,0.02 L -0.05,-0.07 L 0.9,-0.07 C 0.95,-0.055 0.965,0.0 0.94,0.033 Z",
+       "id": "bonnet-panel",
+       "bone": "bonnet",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.05,-0.009 C 0.199,-0.054 0.489,-0.031 0.747,-0.013 L 0.80,0.03 L 0.74,0.095 C 0.465,0.075 0.196,0.065 -0.05,0.08 Z",
+       "id": "tailgate-panel",
+       "bone": "hatch",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "tailgate",
+       "material": "paint"
+      ,
+       "penMm": 0.33
+      },
+      {
+       "kind": "path",
+       "d": "M 0.03,-0.03 L 0.45,-0.015 L 0.45,0.05 L 0.03,0.055 Z",
+       "id": "hatch-glass",
+       "bone": "hatch",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      ,
+       "penMm": 0.25
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.35,
+       "y0": 0.16,
+       "x1": -0.9,
+       "y1": 0.16,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "exhaust-pipe",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -1,
+       "y0": 0.14,
+       "x1": -1.7,
+       "y1": 0.14,
+       "r0": 0.07,
+       "r1": 0.07,
+       "id": "silencer",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -1.7,
+       "y0": 0.16,
+       "x1": -1.945,
+       "y1": 0.25,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "tail-pipe",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.45,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "id": "rim-barrel-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.55,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.15,
+       "ry": 0.15,
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.42,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.05,
+       "x1": 0,
+       "y1": 0.165,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-f-1",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.0476,
+       "y0": 0.0155,
+       "x1": -0.1569,
+       "y1": 0.051,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-f-2",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.0294,
+       "y0": -0.0405,
+       "x1": -0.097,
+       "y1": -0.1335,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-f-3",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.0294,
+       "y0": -0.0405,
+       "x1": 0.097,
+       "y1": -0.1335,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-f-4",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.0476,
+       "y0": 0.0155,
+       "x1": 0.1569,
+       "y1": 0.051,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-f-5",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "id": "rim-barrel-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.55,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.15,
+       "ry": 0.15,
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.42,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.05,
+       "x1": 0,
+       "y1": 0.165,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-r-1",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.0476,
+       "y0": 0.0155,
+       "x1": -0.1569,
+       "y1": 0.051,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-r-2",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.0294,
+       "y0": -0.0405,
+       "x1": -0.097,
+       "y1": -0.1335,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-r-3",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.0294,
+       "y0": -0.0405,
+       "x1": 0.097,
+       "y1": -0.1335,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-r-4",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.0476,
+       "y0": 0.0155,
+       "x1": 0.1569,
+       "y1": 0.051,
+       "r0": 0.03,
+       "r1": 0.025,
+       "id": "spoke-r-5",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Hatchback profile with arches and a gap of 0.08 m (0.8 mm) around each tyre, separate roof band, glazing in three parts, bonnet and tailgate as thickened panels.",
+      "de": "Fließheckprofil mit Radläufen und 0,08 m (0,8 mm) Abstand um jeden Reifen, eigenes Dachband, Verglasung in drei Teilen, Haube und Heckklappe als verstärkte Bleche."
+     },
+     "retained": {
+      "en": "Door gaps (front, B, rear), headlamp, tail lamp, mirror, exhaust pipe, silencer and tail pipe, tyres with rim, disc, five spokes and hub, engine-bay slot.",
+      "de": "Türfugen (vorn, B, hinten), Scheinwerfer, Rückleuchte, Spiegel, Abgasrohr, Schalldämpfer und Endrohr, Reifen mit Felge, Scheibe, fünf Speichen und Nabe, Motorraumspalt."
+     },
+     "merged": {
+      "en": "Sill, belt crease and bumper lines merge into the body outline; the caliper merges into the disc.",
+      "de": "Schweller, Zierlinie und Stoßfängerlinien gehen in der Aufbaukontur auf; der Sattel in der Scheibe."
+     },
+     "omitted": {
+      "en": "Door handles, fuel flap, grille lines, seats, steering wheel, sidewall and tread (below 0.04 m = 0.4 mm).",
+      "de": "Türgriffe, Tankklappe, Kühlergrilllinien, Sitze, Lenkrad, Flanke und Profil (unter 0,04 m = 0,4 mm)."
+     },
+     "thinElements": {
+      "en": "Spokes are 0.06 m wide (0.6 mm) and drawn at real width; panels 0.11 m (real 0.05 m).",
+      "de": "Speichen sind 0,06 m breit (0,6 mm) in Realbreite gezeichnet; Bleche 0,11 m (real 0,05 m)."
+     },
+     "hatching": {
+      "en": "None; material is shown by tone only.",
+      "de": "Keine; das Material zeigt sich nur über den Ton."
+     },
+     "styles": {
+      "en": "Body mid-tone, roof lighter, alloy lightest, tyres near black; outlines 0.25 mm, detail 0.18 mm.",
+      "de": "Aufbau mittlerer Ton, Dach heller, Leichtmetall am hellsten, Reifen fast schwarz; Konturen 0,25 mm, Details 0,18 mm."
+     },
+     "overlays": {
+      "en": "Regions map one to one onto shapes; the rotating wheel shows spokes, so rolling is legible in clips.",
+      "de": "Regionen bilden sich eins zu eins auf Formen ab; das rollende Rad zeigt Speichen, sodass das Rollen in Clips lesbar ist."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M -1.9,0.3 L -1.58,0.3 C -1.58,0.6 -1.42,0.73 -1.2,0.73 C -0.98,0.73 -0.82,0.6 -0.82,0.3 L -0.78,0.2 L 0.83,0.2 L 0.87,0.3 C 0.87,0.6 1.03,0.73 1.25,0.73 C 1.47,0.73 1.63,0.6 1.63,0.3 L 1.9,0.3 C 1.945,0.32 1.955,0.4 1.95,0.48 L 1.95,0.62 C 1.95,0.68 1.93,0.7 1.91,0.662 L 1.808,0.662 L 0.923,0.827 L 0.923,0.99 C 0.78,1.1 0.5,1.33 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.403,1.385 L -1.866,0.743 L -1.95,0.76 L -1.95,0.45 C -1.95,0.36 -1.94,0.31 -1.9,0.3 Z",
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.4,1.34 C -1.25,1.41 -1.2,1.42 -0.9,1.425 C -0.4,1.43 0.1,1.43 0.2,1.39 Z",
+       "id": "roof-band",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.87,0.3 C 0.87,0.6 1.03,0.73 1.25,0.73 C 1.47,0.73 1.63,0.6 1.63,0.3 Z",
+       "id": "well-front",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "path",
+       "d": "M -1.58,0.3 C -1.58,0.6 -1.42,0.73 -1.2,0.73 C -0.98,0.73 -0.82,0.6 -0.82,0.3 Z",
+       "id": "well-rear",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "material": "plastic-trim"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.8208454629386448,
+         0.7307236332623352
+        ],
+        [
+         0.9362036487040459,
+         0.8962798488137834
+        ],
+        [
+         0.9233270541611556,
+         0.8274743743733146
+        ],
+        [
+         1.8079688683957544,
+         0.6619181588218664
+        ]
+       ],
+       "closed": true,
+       "id": "engine-bay-top",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.12,
+       "region": "engine-bay",
+       "material": "engine-metal"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.72,1.05 L 0.345,1.405 C 0.28,1.41 0.2,1.42 0.1,1.42 L -0.02,1.42 L -0.02,1.05 Z",
+       "id": "side-glass-front",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.14,1.05 L -0.14,1.42 C -0.6,1.425 -1.0,1.425 -1.22,1.405 C -1.31,1.32 -1.34,1.16 -1.33,1.05 Z",
+       "id": "side-glass-rear",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.08,1.05 L -0.08,0.5",
+       "id": "door-gap-b",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 0.72,1.05 C 0.72,0.8 0.72,0.62 0.73,0.5",
+       "id": "door-front-edge",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 0.94,0.033 C 0.652,0.051 0.248,0.031 -0.05,0.02 L -0.05,-0.075 L 0.9,-0.075 C 0.95,-0.06 0.965,0.0 0.94,0.033 Z",
+       "id": "bonnet-panel",
+       "bone": "bonnet",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.05,-0.009 C 0.199,-0.054 0.489,-0.031 0.747,-0.013 L 0.80,0.03 L 0.74,0.105 C 0.465,0.085 0.196,0.075 -0.05,0.09 Z",
+       "id": "tailgate-panel",
+       "bone": "hatch",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "tailgate",
+       "material": "paint"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.35,
+       "y0": 0.16,
+       "x1": -0.9,
+       "y1": 0.16,
+       "r0": 0.035,
+       "r1": 0.035,
+       "id": "exhaust-pipe",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.35,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "capsule",
+       "x0": -1,
+       "y0": 0.2,
+       "x1": -1.75,
+       "y1": 0.2,
+       "r0": 0.08,
+       "r1": 0.08,
+       "id": "silencer",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 0.8,
+       "filled": true,
+       "tone": 0.4,
+       "region": "exhaust-system",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.72,
+       "material": "alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.19,
+       "ry": 0.19,
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.72,
+       "material": "alloy"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Hatchback profile with open wheel arches, a lighter roof band, two glass panes and the dark engine-bay slot under the bonnet; each tyre keeps 0.08 m clearance (0.4 mm) to its arch.",
+      "de": "Fließheckprofil mit offenen Radkästen, hellerem Dachband, zwei Scheiben und dem dunklen Motorraumspalt unter der Haube; jeder Reifen hält 0,08 m (0,4 mm) Abstand zum Radlauf."
+     },
+     "retained": {
+      "en": "Body, roof band, front and rear side glass (separated by the B-pillar, 0.6 mm), bonnet and tailgate panels, exhaust pipe and silencer, tyres with brake discs and hubs, two door gaps.",
+      "de": "Aufbau, Dachband, vordere und hintere Seitenscheibe (durch die B-Säule 0,6 mm getrennt), Motorhauben- und Heckklappenblech, Abgasrohr und Schalldämpfer, Reifen mit Bremsscheiben und Naben, zwei Türfugen."
+     },
+     "merged": {
+      "en": "Rim barrel and disc are one lighter disc (brakes region); tail pipe merges into the silencer; tailgate glass merges into the tailgate panel.",
+      "de": "Felgenbett und Scheibe sind eine hellere Scheibe (Region Bremsen); Endrohr geht im Schalldämpfer auf; Heckscheibe im Heckklappenblech."
+     },
+     "omitted": {
+      "en": "Spokes, calipers, mirror, handles, lamps, belt crease, seats, steering wheel, tread (all below 0.1 m).",
+      "de": "Speichen, Sättel, Spiegel, Griffe, Leuchten, Zierlinie, Sitze, Lenkrad, Profil (alle unter 0,1 m)."
+     },
+     "thinElements": {
+      "en": "Panels are 0.10 to 0.12 m thick (real 0.05 m) to stay at 0.5 mm; the pipe is 0.07 m (0.35 mm) and is kept because it carries the exhaust region.",
+      "de": "Bleche sind 0,10 bis 0,12 m dick gezeichnet (real 0,05 m), um 0,5 mm zu halten; das Rohr hat 0,07 m (0,35 mm) und bleibt, weil es die Region Abgasanlage trägt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body mid-tone, roof lighter, glass lightest, wheel wells and tyres near black; outlines 0.18 mm, door gaps 0.13 mm.",
+      "de": "Aufbau mittlerer Ton, Dach heller, Glas am hellsten, Radkästen und Reifen fast schwarz; Konturen 0,18 mm, Türfugen 0,13 mm."
+     },
+     "overlays": {
+      "en": "Every thermal region has its own shape: panels, roof band, bonnet, tailgate, glass, engine-bay slot, exhaust, tyres, brake discs; the engine bay shows when the bonnet is raised.",
+      "de": "Jede thermische Region hat eine eigene Form: Bleche, Dachband, Haube, Heckklappe, Glas, Motorraumspalt, Abgasanlage, Reifen, Bremsscheiben; der Motorraum zeigt sich bei geöffneter Haube."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M -1.9,0.3 L -1.35,0.3 L -1.35,0.2 L 1.1,0.2 L 1.1,0.3 L 1.9,0.3 C 1.945,0.32 1.955,0.4 1.95,0.48 L 1.95,0.62 C 1.95,0.68 1.93,0.7 1.9,0.696 L 1.814,0.696 L 0.93,0.862 L 0.93,0.99 C 0.78,1.1 0.5,1.33 0.25,1.46 C 0.1,1.5 -0.4,1.5 -0.9,1.495 C -1.2,1.49 -1.33,1.47 -1.45,1.4 L -1.387,1.374 L -1.848,0.73 L -1.95,0.76 L -1.95,0.45 C -1.95,0.36 -1.94,0.31 -1.9,0.3 Z",
+       "id": "body-shell",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "engine-bay",
+        "exhaust-system"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.74,1.04 L 0.33,1.38 C 0.28,1.41 0.2,1.42 0.1,1.42 L -1.2,1.4 C -1.3,1.32 -1.34,1.16 -1.33,1.04 Z",
+       "id": "greenhouse",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.94,0.033 C 0.652,0.051 0.248,0.031 -0.05,0.02 L -0.05,-0.11 L 0.9,-0.11 C 0.95,-0.095 0.965,0.0 0.94,0.033 Z",
+       "id": "bonnet-panel",
+       "bone": "bonnet",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "bonnet",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.05,-0.009 C 0.199,-0.054 0.489,-0.031 0.747,-0.013 L 0.80,0.03 L 0.74,0.125 C 0.465,0.105 0.196,0.095 -0.05,0.11 Z",
+       "id": "tailgate-panel",
+       "bone": "hatch",
+       "role": "body",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.62,
+       "region": "tailgate",
+       "material": "paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One composed body silhouette (hatchback profile) with two solid wheel discs; the wheel arches are closed so each tyre reads as one dark disc against the body.",
+      "de": "Eine zusammengesetzte Karosseriesilhouette (Fließheckprofil) mit zwei vollen Radscheiben; die Radkästen sind geschlossen, sodass jeder Reifen als dunkle Scheibe vor dem Aufbau steht."
+     },
+     "retained": {
+      "en": "Body, one glazing band, bonnet and tailgate panels (so both still open on their hinge bones) and both tyres.",
+      "de": "Aufbau, ein Verglasungsband, Motorhauben- und Heckklappenblech (beide öffnen weiter an ihren Gelenken) und beide Reifen."
+     },
+     "merged": {
+      "en": "Side glass, windscreen and B-pillar are one band (pillar 0.12 m < 0.3 mm). Rim, disc and caliper merge into the tyre disc; engine bay and exhaust merge into the body fill (area-weighted overlay).",
+      "de": "Seitenscheiben, Frontscheibe und B-Säule bilden ein Band (Säule 0,12 m < 0,3 mm). Felge, Scheibe und Sattel gehen in der Reifenscheibe auf; Motorraum und Abgasanlage in der Aufbaufläche (flächengewichtete Überlagerung)."
+     },
+     "omitted": {
+      "en": "Door gaps, handles, mirror, lamps, bumper lines, seats, tread and every wheel detail; exhaust pipe (0.06 m = 0.12 mm).",
+      "de": "Türfugen, Griffe, Spiegel, Leuchten, Stoßfängerlinien, Sitze, Profil und alle Raddetails; Abgasrohr (0,06 m = 0,12 mm)."
+     },
+     "thinElements": {
+      "en": "Bonnet and tailgate are drawn 0.14 m thick (real 0.05 m) so the hinged panels stay a printable 0.3 mm; the body is cut back by the same amount, so the closed outline equals the real one.",
+      "de": "Motorhaube und Heckklappe sind 0,14 m dick gezeichnet (real 0,05 m), damit die schwenkbaren Bleche druckbare 0,3 mm bleiben; der Aufbau ist um denselben Betrag zurückgenommen, die geschlossene Kontur entspricht der realen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body mid-tone, glazing light, tyres almost black; one pen of 0.15 mm for all outlines and a 0.13 mm line for the glazing edge.",
+      "de": "Aufbau mittlerer Ton, Verglasung hell, Reifen fast schwarz; ein Stift von 0,15 mm für alle Konturen und 0,13 mm für die Verglasungskante."
+     },
+     "overlays": {
+      "en": "Thermal overlays colour the merged body by the area-weighted mean of panels, roof, engine bay and exhaust; bonnet, tailgate, glazing and tyres (with brakes) are separate.",
+      "de": "Thermische Überlagerungen färben den Aufbau mit dem flächengewichteten Mittel aus Blechen, Dach, Motorraum und Abgasanlage; Haube, Heckklappe, Verglasung und Reifen (mit Bremsen) sind getrennt."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "parked",
+    "title": {
+     "en": "Parked",
+     "de": "Geparkt"
+    },
+    "description": {
+     "en": "Engine off and cold, wheels on level ground, tailgate and bonnet closed.",
+     "de": "Motor aus und kalt, Räder auf ebenem Grund, Heckklappe und Motorhaube geschlossen."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "driving",
+    "title": {
+     "en": "Driving at cruise",
+     "de": "Fahrt mit Reisegeschwindigkeit"
+    },
+    "description": {
+     "en": "Steady urban cruise at about 30 km/h: engine at part load, warm exhaust, tyres rolling.",
+     "de": "Gleichmäßige Stadtfahrt mit etwa 30 km/h: Motor im Teillastbetrieb, warmes Abgas, rollende Reifen."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "rolling": 0.8,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "hatch-open",
+    "title": {
+     "en": "Tailgate open, loading",
+     "de": "Heckklappe offen, Beladen"
+    },
+    "description": {
+     "en": "Parked with the tailgate raised about 100 degrees and an 18 kg suitcase on the boot floor.",
+     "de": "Geparkt mit um rund 100 Grad angehobener Heckklappe und einem 18-kg-Koffer auf dem Kofferraumboden."
+    },
+    "bones": {
+     "hatch": {
+      "angleDeg": -100
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "luggage",
+      "kind": "carried",
+      "title": {
+       "en": "Suitcase",
+       "de": "Koffer"
+      },
+      "anchor": "boot-floor",
+      "fxN": 0,
+      "fyN": -176.5,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "bonnet-open",
+    "title": {
+     "en": "Bonnet open, engine warm",
+     "de": "Motorhaube offen, Motor warm"
+    },
+    "description": {
+     "en": "Stopped shortly after a drive, bonnet raised about 48 degrees; the warm engine bay is exposed to the air.",
+     "de": "Kurz nach einer Fahrt angehalten, Motorhaube um rund 48 Grad angehoben; der warme Motorraum liegt frei in der Luft."
+    },
+    "bones": {
+     "bonnet": {
+      "angleDeg": 48
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "braking-nose-down",
+    "title": {
+     "en": "Braking, nose down",
+     "de": "Bremsung, Nase unten"
+    },
+    "description": {
+     "en": "Hard braking attitude: front springs compressed, rear extended, body pitched 1.5 degrees nose down; discs and pads hot.",
+     "de": "Haltung bei kräftiger Bremsung: vordere Federn eingefedert, hintere ausgefedert, Aufbau 1,5 Grad nach vorn geneigt; Scheiben und Beläge heiß."
+    },
+    "bones": {
+     "axle-f": {
+      "dy": 0.032
+     },
+     "axle-r": {
+      "dy": -0.032
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -1.5
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.15,
+      "rolling": 0.4,
+      "braking": 0.05
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lane-start",
+    "key": true,
+    "title": {
+     "en": "Standing at the lane start",
+     "de": "Stillstand am Fahrspurbeginn"
+    },
+    "description": {
+     "en": "Technical key of the drive-by: the car stands 12 m before the origin with engine off; the wheel angle encodes the rolling distance.",
+     "de": "Technische Schlüsselstellung der Vorbeifahrt: das Auto steht 12 m vor dem Ursprung mit abgestelltem Motor; der Radwinkel kodiert die Rollstrecke."
+    },
+    "bones": {
+     "wheel-f": {
+      "angleDeg": 2291.83
+     },
+     "wheel-r": {
+      "angleDeg": 2291.83
+     }
+    },
+    "root": {
+     "x": -12,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.2,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lane-cruise-entry",
+    "key": true,
+    "title": {
+     "en": "Reaching cruise speed",
+     "de": "Reisegeschwindigkeit erreicht"
+    },
+    "description": {
+     "en": "Technical key of the drive-by: 8 m after the start the car reaches 8 m/s; wheels have turned x / r.",
+     "de": "Technische Schlüsselstellung der Vorbeifahrt: 8 m nach dem Start erreicht das Auto 8 m/s; die Räder haben x / r gedreht."
+    },
+    "bones": {
+     "wheel-f": {
+      "angleDeg": 763.944
+     },
+     "wheel-r": {
+      "angleDeg": 763.944
+     }
+    },
+    "root": {
+     "x": -4,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.6,
+      "rolling": 0.8,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lane-exit",
+    "key": true,
+    "title": {
+     "en": "Leaving the lane",
+     "de": "Ausfahrt aus der Fahrspur"
+    },
+    "description": {
+     "en": "Technical key of the drive-by: the car is 12 m beyond the origin at cruise; the wheels have turned back to minus x / r.",
+     "de": "Technische Schlüsselstellung der Vorbeifahrt: das Auto ist 12 m hinter dem Ursprung bei Reisegeschwindigkeit; die Räder stehen bei minus x / r."
+    },
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -2291.83
+     },
+     "wheel-r": {
+      "angleDeg": -2291.83
+     }
+    },
+    "root": {
+     "x": 12,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "rolling": 0.8,
+      "braking": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "crawl-in",
+    "key": true,
+    "title": {
+     "en": "Crawling into the bay",
+     "de": "Einrollen in die Parklücke"
+    },
+    "description": {
+     "en": "Technical key of park-and-open-hatch: 6 m before the bay at 3 m/s, brakes applied, body pitched 0.8 degrees nose down.",
+     "de": "Technische Schlüsselstellung von Einparken-und-Heckklappe-öffnen: 6 m vor der Lücke mit 3 m/s, Bremse betätigt, Aufbau 0,8 Grad nach vorn geneigt."
+    },
+    "bones": {
+     "axle-f": {
+      "dy": 0.017
+     },
+     "axle-r": {
+      "dy": -0.017
+     },
+     "wheel-f": {
+      "angleDeg": 1145.916
+     },
+     "wheel-r": {
+      "angleDeg": 1145.916
+     }
+    },
+    "root": {
+     "x": -6,
+     "y": 0,
+     "angleDeg": -0.8
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.2,
+      "rolling": 0.2,
+      "braking": 0.3
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bonnet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "tailgate": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "engine-bay": {
+       "exposedFraction": 0.2,
+       "sunlitFraction": 0
+      },
+      "exhaust-system": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "tailpipe": 1
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "drive-by",
+    "title": {
+     "en": "Drive-by from standstill",
+     "de": "Vorbeifahrt aus dem Stand"
+    },
+    "description": {
+     "en": "The engine is started, idles, the car accelerates uniformly over 8 m to 8 m/s (29 km/h) and cruises past the origin; the wheels roll with theta = -x / r.",
+     "de": "Der Motor wird gestartet, läuft im Leerlauf, das Auto beschleunigt gleichmäßig auf 8 m Strecke auf 8 m/s (29 km/h) und fährt am Ursprung vorbei; die Räder rollen mit theta = -x / r."
+    },
+    "durationS": 4.8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "lane-start",
+      "ease": "linear"
+     },
+     {
+      "t": 0.8,
+      "pose": "lane-start",
+      "ease": "in"
+     },
+     {
+      "t": 2.8,
+      "pose": "lane-cruise-entry",
+      "ease": "linear"
+     },
+     {
+      "t": 4.8,
+      "pose": "lane-exit",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 4.8
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 4.8
+     }
+    ],
+    "phases": [
+     {
+      "id": "idle",
+      "fromS": 0,
+      "toS": 0.8,
+      "title": {
+       "en": "Start and idle",
+       "de": "Start und Leerlauf"
+      }
+     },
+     {
+      "id": "accelerate",
+      "fromS": 0.8,
+      "toS": 2.8,
+      "title": {
+       "en": "Uniform acceleration",
+       "de": "Gleichmäßige Beschleunigung"
+      }
+     },
+     {
+      "id": "cruise",
+      "fromS": 2.8,
+      "toS": 4.8,
+      "title": {
+       "en": "Cruise",
+       "de": "Reisefahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.3,
+      "kind": "ignition",
+      "title": {
+       "en": "Ignition",
+       "de": "Zündung"
+      },
+      "target": "tailpipe"
+     },
+     {
+      "t": 0.8,
+      "kind": "motion",
+      "title": {
+       "en": "Pulls away",
+       "de": "Anfahren"
+      }
+     },
+     {
+      "t": 2.8,
+      "kind": "thermal",
+      "title": {
+       "en": "Cruise speed 8 m/s",
+       "de": "Reisegeschwindigkeit 8 m/s"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.3,
+        "v": 0.45
+       },
+       {
+        "t": 0.6,
+        "v": 0.2
+       },
+       {
+        "t": 0.8,
+        "v": 0.2
+       },
+       {
+        "t": 2,
+        "v": 0.95
+       },
+       {
+        "t": 2.8,
+        "v": 0.6
+       },
+       {
+        "t": 4.8,
+        "v": 0.5
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.8,
+        "v": 0
+       },
+       {
+        "t": 2.8,
+        "v": 0.8
+       },
+       {
+        "t": 4.8,
+        "v": 0.8
+       }
+      ]
+     },
+     {
+      "target": "emitter:tailpipe",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.3,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "park-and-open-hatch",
+    "title": {
+     "en": "Park and open the tailgate",
+     "de": "Einparken und Heckklappe öffnen"
+    },
+    "description": {
+     "en": "The car brakes uniformly from 3 m/s to rest in 4 s (6 m, nose dips), the engine is switched off, the tailgate is raised and a suitcase is loaded.",
+     "de": "Das Auto bremst gleichmäßig in 4 s von 3 m/s bis zum Stillstand (6 m, Nase taucht), der Motor wird abgestellt, die Heckklappe angehoben und ein Koffer geladen."
+    },
+    "durationS": 9,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "crawl-in",
+      "ease": "out"
+     },
+     {
+      "t": 4,
+      "pose": "parked",
+      "ease": "linear"
+     },
+     {
+      "t": 5,
+      "pose": "parked",
+      "ease": "smooth"
+     },
+     {
+      "t": 6.5,
+      "pose": "hatch-open",
+      "ease": "linear"
+     },
+     {
+      "t": 9,
+      "pose": "hatch-open",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 9
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 9
+     }
+    ],
+    "phases": [
+     {
+      "id": "brake",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Braking to rest",
+       "de": "Bremsen bis zum Stillstand"
+      }
+     },
+     {
+      "id": "shutdown",
+      "fromS": 4,
+      "toS": 5,
+      "title": {
+       "en": "Engine off",
+       "de": "Motor aus"
+      }
+     },
+     {
+      "id": "open",
+      "fromS": 5,
+      "toS": 6.5,
+      "title": {
+       "en": "Tailgate opens",
+       "de": "Heckklappe öffnet"
+      }
+     },
+     {
+      "id": "load",
+      "fromS": 6.5,
+      "toS": 9,
+      "title": {
+       "en": "Loading",
+       "de": "Beladen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "motion",
+      "title": {
+       "en": "Standstill",
+       "de": "Stillstand"
+      }
+     },
+     {
+      "t": 4.4,
+      "kind": "shutdown",
+      "title": {
+       "en": "Ignition off",
+       "de": "Zündung aus"
+      },
+      "target": "tailpipe"
+     },
+     {
+      "t": 7.2,
+      "kind": "load-on",
+      "title": {
+       "en": "Suitcase placed",
+       "de": "Koffer abgelegt"
+      },
+      "target": "luggage"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.2
+       },
+       {
+        "t": 4.4,
+        "v": 0.2
+       },
+       {
+        "t": 4.7,
+        "v": 0
+       },
+       {
+        "t": 9,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:braking",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.7
+       },
+       {
+        "t": 4,
+        "v": 0.6
+       },
+       {
+        "t": 9,
+        "v": 0.1
+       }
+      ]
+     },
+     {
+      "target": "emitter:tailpipe",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 4.4,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:luggage",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 6.5,
+        "v": 0
+       },
+       {
+        "t": 7.2,
+        "v": 0
+       },
+       {
+        "t": 7.6,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "region:tailgate:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 6.5,
+        "v": 0.5
+       },
+       {
+        "t": 7.4,
+        "v": 0.9
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "engine-load",
+     "title": {
+      "en": "Engine load",
+      "de": "Motorlast"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Engine off",
+        "de": "Motor aus"
+       }
+      },
+      {
+       "v": 0.2,
+       "title": {
+        "en": "Idle",
+        "de": "Leerlauf"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Part load (cruising)",
+        "de": "Teillast (Reisefahrt)"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full load",
+        "de": "Volllast"
+       }
+      }
+     ]
+    },
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "About 25 km/h",
+        "de": "Etwa 25 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 50 km/h",
+        "de": "Etwa 50 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Braking",
+      "de": "Bremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Light braking",
+        "de": "Leichte Bremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full braking from 50 km/h",
+        "de": "Vollbremsung aus 50 km/h"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "body-panels",
+     "title": {
+      "en": "Painted side and end panels",
+      "de": "Lackierte Seiten- und Endbleche"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 8.2,
+     "characteristicLengthM": 1.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel sheet 0.8 mm",
+        "de": "Stahlblech 0,8 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0008,
+       "resistanceM2KW": 0.000016,
+       "heatCapacityJM2K": 3100,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00008,
+       "resistanceM2KW": 0.0002666666666666667,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "roof",
+     "title": {
+      "en": "Roof panel",
+      "de": "Dachblech"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 1.5,
+     "characteristicLengthM": 1.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel sheet 0.8 mm",
+        "de": "Stahlblech 0,8 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0008,
+       "resistanceM2KW": 0.000016,
+       "heatCapacityJM2K": 3100,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00008,
+       "resistanceM2KW": 0.0002666666666666667,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "bonnet",
+     "title": {
+      "en": "Bonnet, warmed from below",
+      "de": "Motorhaube, von unten erwärmt"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "paint",
+     "areaM2": 1.2,
+     "characteristicLengthM": 0.9,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel sheet 0.8 mm",
+        "de": "Stahlblech 0,8 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0008,
+       "resistanceM2KW": 0.000016,
+       "heatCapacityJM2K": 3100,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00008,
+       "resistanceM2KW": 0.0002666666666666667,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 6500,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 200
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "tailgate",
+     "title": {
+      "en": "Tailgate panel",
+      "de": "Heckklappenblech"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 0.9,
+     "characteristicLengthM": 0.8,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel sheet 0.8 mm",
+        "de": "Stahlblech 0,8 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0008,
+       "resistanceM2KW": 0.000016,
+       "heatCapacityJM2K": 3100,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00008,
+       "resistanceM2KW": 0.0002666666666666667,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "glazing",
+     "title": {
+      "en": "Glazing (windscreen, side and rear glass)",
+      "de": "Verglasung (Windschutz-, Seiten- und Heckscheibe)"
+     },
+     "kind": "glazing",
+     "model": "passive",
+     "material": "glass",
+     "areaM2": 3.2,
+     "characteristicLengthM": 0.9,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "glass",
+       "title": {
+        "en": "Laminated or toughened glass 4 mm",
+        "de": "Verbund- oder Einscheibensicherheitsglas 4 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.004,
+       "heatCapacityJM2K": 7500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7500,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "engine-bay",
+     "title": {
+      "en": "Engine and manifold surfaces",
+      "de": "Motor- und Krümmeroberflächen"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "engine-metal",
+     "areaM2": 1.1,
+     "characteristicLengthM": 0.5,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.1,
+     "layers": [],
+     "heatCapacityJM2K": 9000,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 1100
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "exhaust-system",
+     "title": {
+      "en": "Exhaust pipe and silencer",
+      "de": "Abgasrohr und Schalldämpfer"
+     },
+     "kind": "exhaust",
+     "model": "operating",
+     "material": "exhaust-steel",
+     "areaM2": 0.45,
+     "characteristicLengthM": 0.08,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "pipe",
+       "title": {
+        "en": "Steel pipe 1.5 mm",
+        "de": "Stahlrohr 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "exhaust-steel",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.000033333333333333335,
+       "heatCapacityJM2K": 8500,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8500,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 2300
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyre treads and sidewalls",
+      "de": "Reifenlaufflächen und -flanken"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 1.8,
+     "characteristicLengthM": 0.6,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "tread",
+       "title": {
+        "en": "Rubber tread and carcass",
+        "de": "Gummilauffläche und Karkasse"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.01,
+       "resistanceM2KW": 0.049999999999999996,
+       "heatCapacityJM2K": 34000,
+       "source": "authored-estimate",
+       "reference": "wong-2008"
+      }
+     ],
+     "heatCapacityJM2K": 34000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 480
+     },
+     "source": "authored-estimate",
+     "reference": "wong-2008"
+    },
+    {
+     "id": "brakes",
+     "title": {
+      "en": "Brake discs and calipers",
+      "de": "Bremsscheiben und Bremssättel"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "cast-iron",
+     "areaM2": 0.22,
+     "characteristicLengthM": 0.28,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.2,
+     "layers": [],
+     "heatCapacityJM2K": 31000,
+     "operating": {
+      "key": "braking",
+      "heatW": 1406.3
+     },
+     "source": "authored-estimate",
+     "reference": "limpert-1999"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "tailpipe",
+     "kind": "exhaust",
+     "title": {
+      "en": "Exhaust jet",
+      "de": "Abgasstrahl"
+     },
+     "anchor": "tailpipe",
+     "directionDeg": 190,
+     "diameterM": 0.045,
+     "operatingKey": "engine-load",
+     "volumeFlowM3S": 0.08,
+     "temperatureRiseK": 280,
+     "vapourKgPerKg": 0.075,
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Heat release at level 1 is the part of the waste heat that leaves through the visible surface: engine bay 1.1 kW (about +70 K), exhaust system 2.3 kW (about +230 K), bonnet 0.2 kW, tyres 0.48 kW (about 50 km/h), brake discs 36 kW (full stop from 50 km/h, 96 kJ in 2.7 s). Heat capacities are the thermally active shell masses on a minutes timescale: engine surfaces 9 kJ/(m2 K), exhaust 8.5 kJ/(m2 K), tyres 34 kJ/(m2 K), discs 31 kJ/(m2 K).",
+     "de": "Die Wärmefreisetzung bei Stufe 1 ist der Teil der Abwärme, der durch die sichtbare Oberfläche austritt: Motorraum 1,1 kW (etwa +70 K), Abgasanlage 2,3 kW (etwa +230 K), Haube 0,2 kW, Reifen 0,48 kW (etwa 50 km/h), Bremsscheiben 36 kW (Vollbremsung aus 50 km/h, 96 kJ in 2,7 s). Wärmekapazitäten sind die thermisch wirksamen Schalenmassen im Minutenbereich: Motoroberflächen 9 kJ/(m2 K), Abgasanlage 8,5 kJ/(m2 K), Reifen 34 kJ/(m2 K), Scheiben 31 kJ/(m2 K)."
+    },
+    {
+     "en": "Tailpipe at level 1 (full load, about 4000 rpm of a 1.4 L petrol engine): exhaust mass flow rho_a * eta_v * V * N / 2 = 1.19 * 0.85 * 1.4e-3 * 33 = 0.047 kg/s plus fuel, gas at about 300 C (rho 0.6 kg/m3), hence 0.08 m3/s through a 45 mm pipe; the gas carries about 0.075 kg of water vapour per kg (combustion water, Heywood Ch. 4). Flow, temperature rise and vapour scale linearly with the engine load level; this overestimates idle exhaust temperature.",
+     "de": "Endrohr bei Stufe 1 (Volllast, etwa 4000 U/min eines 1,4-L-Ottomotors): Abgasmassenstrom rho_a * eta_v * V * N / 2 = 1,19 * 0,85 * 1,4e-3 * 33 = 0,047 kg/s plus Kraftstoff, Gas mit etwa 300 C (rho 0,6 kg/m3), also 0,08 m3/s durch ein 45-mm-Rohr; das Gas führt etwa 0,075 kg Wasserdampf je kg (Verbrennungswasser, Heywood Kap. 4). Volumenstrom, Temperaturerhöhung und Dampf skalieren linear mit der Motorlast; der Leerlaufabgas-Temperatur wird dadurch überschätzt."
+    },
+    {
+     "en": "Sun: the elevation shows one flank, so side panels and glass are half sunlit; roof and bonnet fully; ground contact of the tyres (7 % of the tread area, four patches of 0.085 x 0.37 m) is on asphalt at 30 C. Closed bonnet exposes 20 % of the engine surfaces to air, an open bonnet all of it.",
+     "de": "Sonne: die Ansicht zeigt eine Flanke, daher sind Seitenbleche und Glas zur Hälfte besonnt, Dach und Haube ganz; der Bodenkontakt der Reifen (7 % der Lauffläche, vier Aufstandsflächen von 0,085 x 0,37 m) liegt auf Asphalt mit 30 C. Die geschlossene Haube setzt 20 % der Motoroberflächen der Luft aus, die offene alle."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Body, powertrain, panels, axles and wheels are rigid point masses; the tyre patches act as two equally stiff springs, so the axle reactions follow moment equilibrium (static front share about 62 %).",
+     "de": "Aufbau, Antrieb, Bleche, Achsen und Räder sind starre Punktmassen; die Reifenaufstandsflächen wirken als zwei gleich steife Federn, die Achsreaktionen folgen dem Momentengleichgewicht (statischer Vorderachsanteil etwa 62 %)."
+    },
+    {
+     "en": "During clips the d'Alembert forces of the evaluated motion shift load to the front axle under braking and to the rear under acceleration.",
+     "de": "In den Clips verlagern die d'Alembert-Kräfte der ausgewerteten Bewegung die Last beim Bremsen auf die Vorderachse und beim Beschleunigen auf die Hinterachse."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "parked",
+   "defaultClip": "drive-by",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

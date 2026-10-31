@@ -1,0 +1,68 @@
+{
+  "$schema": "../../🧬️schema/🔣️.json#/$defs/PrintProfileDocument",
+  "version": "semio.staffage/v2",
+  "defaultProfile": "office-laser",
+  "profiles": [
+    {
+      "id": "office-laser",
+      "title": { "en": "Office laser printer, 600 dpi", "de": "Büro-Laserdrucker, 600 dpi" },
+      "description": {
+        "en": "A4/A3 monochrome or colour laser at 600 dpi (dot pitch 25.4 mm / 600 = 0.042 mm). Toner spreads about one dot, so a line needs about two and a half dots, a white gap about three and a half dots and a filled feature about five dots to print reliably. The default profile of the archive.",
+        "de": "A4/A3-Laserdrucker, schwarzweiß oder farbig, mit 600 dpi (Punktabstand 25,4 mm / 600 = 0,042 mm). Der Toner verläuft etwa um einen Punkt: Eine Linie braucht etwa zweieinhalb Punkte, eine weiße Lücke etwa dreieinhalb und eine gefüllte Einzelheit etwa fünf Punkte, um zuverlässig zu drucken. Das Standardprofil des Archivs."
+      },
+      "minStrokeMm": 0.1,
+      "minGapMm": 0.15,
+      "minFeatureMm": 0.2,
+      "minHatchSpacingMm": 0.4,
+      "source": "authored-estimate",
+      "reference": "dot-pitch"
+    },
+    {
+      "id": "draft-300dpi",
+      "title": { "en": "Draft printer, 300 dpi", "de": "Entwurfsdrucker, 300 dpi" },
+      "description": {
+        "en": "A 300 dpi office printer or a fax-quality copy (dot pitch 0.085 mm). The strictest profile: the thinnest ISO 128 pens (0.13 mm) pass, finer drawn detail does not.",
+        "de": "Ein Bürodrucker mit 300 dpi oder eine Kopie in Faxqualität (Punktabstand 0,085 mm). Das strengste Profil: Die dünnsten ISO-128-Stifte (0,13 mm) genügen, feinere Zeichnung nicht."
+      },
+      "minStrokeMm": 0.13,
+      "minGapMm": 0.3,
+      "minFeatureMm": 0.4,
+      "minHatchSpacingMm": 0.7,
+      "source": "authored-estimate",
+      "reference": "iso-128-20"
+    },
+    {
+      "id": "large-format-plot",
+      "title": { "en": "Large-format inkjet plot, 1200 dpi", "de": "Großformat-Tintenstrahlplot, 1200 dpi" },
+      "description": {
+        "en": "A0–A1 inkjet plotter on matt coated paper at 1200 dpi (dot pitch 0.021 mm). Plotter datasheets quote a guaranteed minimum line width of about 0.07 mm; with ink bleed on paper a white gap of 0.1 mm and a filled feature of 0.12 mm remain reliable.",
+        "de": "A0–A1-Tintenstrahlplotter auf mattem gestrichenem Papier mit 1200 dpi (Punktabstand 0,021 mm). Plotter-Datenblätter nennen eine garantierte Mindestlinienbreite von etwa 0,07 mm; mit Tintenverlauf auf dem Papier bleiben eine weiße Lücke von 0,1 mm und eine gefüllte Einzelheit von 0,12 mm zuverlässig."
+      },
+      "minStrokeMm": 0.07,
+      "minGapMm": 0.1,
+      "minFeatureMm": 0.12,
+      "minHatchSpacingMm": 0.25,
+      "source": "authored-estimate",
+      "reference": "dot-pitch"
+    },
+    {
+      "id": "offset-press",
+      "title": { "en": "Offset press, computer-to-plate", "de": "Offsetdruck, Computer-to-Plate" },
+      "description": {
+        "en": "Sheet-fed offset lithography from computer-to-plate (2400 dpi and finer). Print-production guides give a hairline of 0.25 pt (0.09 mm) for positive lines and 0.5 pt (0.18 mm) for reversed (white) lines; fills below about 0.15 mm fill in.",
+        "de": "Bogenoffsetdruck von Computer-to-Plate (2400 dpi und feiner). Druckvorstufen-Leitfäden nennen eine Haarlinie von 0,25 pt (0,09 mm) für positive Linien und 0,5 pt (0,18 mm) für negative (weiße) Linien; Flächen unter etwa 0,15 mm laufen zu."
+      },
+      "minStrokeMm": 0.09,
+      "minGapMm": 0.18,
+      "minFeatureMm": 0.15,
+      "minHatchSpacingMm": 0.3,
+      "source": "authored-estimate",
+      "reference": "print-production-rules"
+    }
+  ],
+  "references": [
+    { "id": "iso-128-20", "citation": "ISO 128-20:1996, Technical drawings — General principles of presentation — Part 20: Basic conventions for lines (preferred pen series 0.13, 0.18, 0.25, 0.35, 0.5, 0.7, 1, 1.4, 2 mm, ratio 1:√2)." },
+    { "id": "dot-pitch", "citation": "Derived by the author: dot pitch = 25.4 mm / dpi; reliable minima are multiples of the dot pitch that account for toner or ink spread. Authored estimates, not measured on a particular device." },
+    { "id": "print-production-rules", "citation": "Print-production rules of thumb for offset lithography (positive hairline 0.25 pt, reversed line 0.5 pt), as given in common prepress guides; authored estimate, not verified against a specific press." }
+  ]
+}

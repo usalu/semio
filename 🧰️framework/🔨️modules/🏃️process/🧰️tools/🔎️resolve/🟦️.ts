@@ -43,7 +43,7 @@ const expandWildcard = (pattern: string, host: ToolHostV1): readonly string[] =>
 
 const packageRoots = (registry: ToolRegistryV1, host: ToolHostV1): readonly string[] => registry.packageRoots.flatMap(root => expandWildcard(isAbsolute(root) ? root : join(host.root, root), host));
 
-/** 🧱️ Finds one tool on a host by trying its locators in order; a missing tool answers `source: "missing"` with what was tried. A `command` that is not the first executable name of the tool (`rustc` of the Rust toolchain) is only looked up on the path. */
+/** 🧱️ Finds one tool on a host by trying its locators in order; a missing tool answers `source: "missing"` with what was tried. An explicitly declared invocation uses the same qualified primary with its prefix; genuine sibling programs (`rustc`) keep their path lookup. */
 export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: ToolRegistryV1 = TOOL_REGISTRY_V1, depth = 0, command?: string): ToolResolutionV1 {
   const pin = readToolPinV1(entry, host.root, host.pins), tried: string[] = [];
   const found = (command: string, source: ToolLocatorV1["kind"], prefix: readonly string[] = [], suffix: readonly string[] = []): ToolResolutionV1 => Object.freeze({ id: entry.id, command, prefix, ...(suffix.length ? { suffix } : {}), source, tried, pin });
@@ -54,7 +54,9 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
     return inner.command === null ? undefined : inner;
   };
   if (!entry.platforms.includes(host.platform as never)) return Object.freeze({ id: entry.id, command: null, prefix: [], source: "missing", tried: [`platform ${host.platform}`], pin });
-  const secondary = command !== undefined && command !== entry.commands[0];
+  const requested = command?.replace(/\\/gu, "/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu, ""), invocation = requested !== entry.commands[0] ? entry.invocations?.find(row => row.command === requested) : undefined;
+  if (invocation) { const primary = resolveToolV1(entry, host, registry, depth, entry.commands[0]); return primary.command === null ? primary : Object.freeze({ ...primary, prefix: Object.freeze([...primary.prefix, ...invocation.prefix]) }); }
+  const secondary = requested !== undefined && requested !== entry.commands[0];
   for (const locator of entry.locate) {
     if (secondary && locator.kind !== "path") continue;
     if (locator.kind === "environment") {
@@ -88,7 +90,7 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
     } else {
       const directories = [...(host.environment.PATH ?? host.environment.Path ?? "").split(delimiter).filter(Boolean), ...locator.directories.map(directory => expand(directory, host))];
       tried.push(`PATH ${entry.commands[0]}`);
-      const hit = pathHit(secondary ? [command] : locator.names ?? [entry.commands[0]!], directories, host);
+      const hit = pathHit(secondary ? [requested!] : locator.names ?? [entry.commands[0]!], directories, host);
       if (hit !== undefined) return found(hit, "path");
     }
   }

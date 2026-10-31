@@ -76,7 +76,7 @@ export async function exportCapabilities(host?: ExportHost): Promise<ExportCapab
   if (dwg === null) dwgReason = NO_DWG;
   else
     try {
-      const bytes = await dwg({ units: "m", asset: "probe", timeS: 0, layers: [] });
+      const bytes = await dwg({ units: "m", asset: "probe", timeS: 0, representation: { kind: "none" }, layers: [] });
       if (bytes.length < 6 || !String.fromCharCode(...bytes.subarray(0, 6)).startsWith("AC10")) dwgReason = NO_DWG;
     } catch {
       dwgReason = NO_DWG;
@@ -169,7 +169,7 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
   try {
     check(control);
     const sheet = options.sheet ?? "single";
-    const state = evaluateState(asset, query);
+    const state = evaluateState(asset, query, depictionOptions(options).representation);
     const label = (en: string, de: string): Text => ({ en, de });
 
     if (format === "svg") {

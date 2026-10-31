@@ -1,9 +1,9 @@
 //! 🏗️ Normative IFC4 ADD2 TC1 declarations without a runtime parser.
-#[path="../../../../../../📚️catalog/🦀️.rs"]mod shared;
+use semio_s_artifact_stdio_ifc_declarations as shared;
 pub use shared::{IfcCatalog,IfcDeclaration,IfcTypeExpression,IfcAttributeDeclaration,IfcDerivedDeclaration,IfcEntityDeclaration,IfcTypeDeclaration};
 /// 📏️ Largest inherited serialized tuple in this pinned normative profile.
 pub const IFC4_MAXIMUM_ATTRIBUTES: usize = 21;
-include!("data.rs");
+use semio_s_artifact_stdio_ifc4_catalog::build_catalog;
 pub fn ifc4_catalog()->&'static IfcCatalog{static CATALOG:std::sync::OnceLock<IfcCatalog>=std::sync::OnceLock::new();CATALOG.get_or_init(build_catalog)}
 pub fn ifc4_declaration(name:&str)->Option<IfcDeclaration<'static>>{shared::ifc_declaration(ifc4_catalog(),name)}
 pub fn ifc4_attribute_declarations(name:&str)->Option<&'static[IfcAttributeDeclaration]>{shared::ifc_attributes(ifc4_catalog(),name)}

@@ -46,7 +46,7 @@ export function AccessGate(props: { readonly course: CourseView | undefined; rea
   return (
     <div data-course-locked={props.task === undefined ? props.page : `${props.page}/${props.task}`} className="course-access-gate relative h-full min-h-0 w-full">
       <div inert aria-hidden="true" className="course-access-preview h-full pointer-events-none select-none" onClickCapture={(event) => { event.preventDefault(); event.stopPropagation(); }} onKeyDownCapture={(event) => { event.preventDefault(); event.stopPropagation(); }}>{props.children}</div>
-      <div className="course-access-tint absolute inset-0 z-10 flex items-center justify-center bg-background/80 p-double text-foreground">
+      <div className="course-access-tint pointer-events-auto absolute inset-0 z-10 flex items-center justify-center bg-background/80 p-double text-foreground">
         <p className="m-0 flex items-center gap-single border border-normal bg-background px-double py-single text-sm" role="status">
           <Icon icon="lock" size="small" />
           {date === undefined ? props.text("course.access.locked") : props.text("course.access.opens", { date })}

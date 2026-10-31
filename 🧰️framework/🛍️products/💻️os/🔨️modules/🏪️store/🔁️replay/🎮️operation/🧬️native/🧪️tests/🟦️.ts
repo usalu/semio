@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
-import Ajv from 'ajv/dist/2020.js';
+import Ajv from 'ajv';
 import {Database} from 'bun:sqlite';
 import {applyPatch,type Operation} from 'fast-json-patch';
 /** 🧪️ Independent JSONPatch calculation admits portable semantic preview laws. */

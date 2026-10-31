@@ -2,7 +2,9 @@
   "issue_comments": {
     "c-1": {
       "entry": "Patched",
-      "text": "Edited."
+      "value": {
+        "text": "Edited."
+      }
     }
   }
 }

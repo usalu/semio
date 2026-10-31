@@ -10,7 +10,7 @@ import { clipOf, sampleClip, spanActive } from "../../🔨️modules/🎞️anim
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🦶️foot-plant/🔣️.json", import.meta.url), "utf8"));
-const asset = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚶️reference-walker/🔣️.json", import.meta.url), "utf8")) as Asset;
+const asset = (JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as { asset: Asset }).asset;
 const clip = clipOf(asset, fixture.clip);
 const dt = 1 / fixture.stepsPerSecond;
 const total = Math.round(clip.durationS * fixture.cycles * fixture.stepsPerSecond);

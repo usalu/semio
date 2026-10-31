@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 /** 🏭️ Native grammar compilations, domain control effects: process, thermodynamic, list seating, primitive hull, timeline, density, diagram, spatial group, planning, logo radar, caption, biofabric, engineering and UpSet controls.
  *
  * @see ../🧰️grammar-kit/🟦️.ts — the equality check
@@ -134,7 +135,7 @@ export async function compileNativeTimelineControlEffects(execution:PrintExecuti
 
 /** 🛑️ Requires evaluated native thermodynamic-domain diagnostics for invalid physical sounding inputs. */
 async function compileNativeThermodynamicGuards(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/thermodynamic-guards",async({directory:workDir,execution})=>{
-  const descriptors=chartSchema["x-semio-family-options"]["sci-skewt"].options,ajv=new Ajv2020({strict:false}),mode=ajv.compile({type:"string",enum:descriptors.mode.enum}),pressure=ajv.compile({type:"number",exclusiveMinimum:descriptors.top.exclusiveMinimum});
+  const descriptors=chartSchema["x-semio-family-options"]["sci-skewt"].options,ajv=new AjvDraft07({strict:false}),mode=ajv.compile({type:"string",enum:descriptors.mode.enum}),pressure=ajv.compile({type:"number",exclusiveMinimum:descriptors.top.exclusiveMinimum});
   for(const value of ["skew-t","tephigram"])if(!mode(value))throw Error("Thermodynamic source descriptor refuses "+value);if(mode("rotated")||pressure(0)||!pressure(100))throw Error("Thermodynamic closed mode/positive pressure source descriptor differs from independent AJV");
   for(const[language,appearance]of [["en","light"],["de","dark"]]as const)for(const entry of fixture.nativeThermodynamicControlEffects.guards){const directory=join(workDir,language,entry.id);{const refusal=await inspectVizProbeDocumentRefusalV1({case:"thermodynamic-domain",scenario:entry.id,documentClass:"semio",documentClassOptions:`type=paper,language=${language},theme=${appearance}`,packages:["semio-viz"],preamble:["\\title{Thermodynamic Domain}","\\author{Semio}","\\date{}"],body:[{raw:`\\begin{VizFigure}[width=80,height=40]\\SemioVizChart{skew-t-log-p-diagram}[isotherms=false,adiabats=false,${entry.options}]\\end{VizFigure}`} ]},{execution,});const log=refusal.log;if(!log.includes("Thermodynamic temperature domain"))throw Error("Unexpected actual compiler diagnostic: "+log);}}
 });}
@@ -176,7 +177,7 @@ export async function compileNativeDiagramControlEffects(execution:PrintExecutio
     const body:{raw:string}[]=[],directory=join(workDir,appearance);
     for(const entry of cases){
       const key=entry.mutation.path.at(-1)!,options={...entry.options} as Record<string,unknown>,value=options[key];options[key]=key==="arrows"?!value:key==="orientation"?value==="down"?"right":"down":value==="layer"?"rankA":"layer";
-      const descriptor=chartSchema["x-semio-family-options"][entry.family as keyof typeof chartSchema["x-semio-family-options"]].options[key as never] as {type:string;enum?:unknown[]},contract=new Ajv2020({strict:false}).compile({type:descriptor.type,...(descriptor.enum?{enum:descriptor.enum}:{})});
+      const descriptor=chartSchema["x-semio-family-options"][entry.family as keyof typeof chartSchema["x-semio-family-options"]].options[key as never] as {type:string;enum?:unknown[]},contract=new AjvDraft07({strict:false}).compile({type:descriptor.type,...(descriptor.enum?{enum:descriptor.enum}:{})});
       if(!contract(value))throw Error(entry.id+" canonical option AJV admission "+JSON.stringify(contract.errors));
       const base={chart:{...control.snapshot.chart,language:entry.language,theme:{appearance},tables:[control.conceptLevels,control.logicNodes,control.neuralLayers],presets:[{kind:entry.kind,options}]}} as unknown as VizChartSnapshot,original=JSON.stringify(base),outcome=changeVizChartValue(base,entry.mutation);
       if(outcome.messages.length||outcome.diff.edits.length!==1)throw Error(entry.id+" diagram mutation refused");

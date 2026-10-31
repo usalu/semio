@@ -40,6 +40,14 @@ export class TestScript extends BundleScript {
       });
       return;
     }
+    if (segments[0] === "pdf") {
+      if (segments.length !== 1) throw Error("Expected test pdf");
+      const { captureOwnedCommandV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"), { scriptInvocationEnvironment, withRequestedIssuedResourceControlV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), phaseControl = createIssuedResourceControlV1(this.invocation, "print:pdf:test", 0);
+      await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "probe" }, execution => withPrintScratchV1(execution, "test/pdf", scratch => withRequestedIssuedResourceControlV1(scratch.control, 30000, async control => {
+        process.stdout.write(await captureOwnedCommandV1(process.execPath, ["test", "../../📦️artifacts/📖️pdf/🧪️tests/🟦️.ts"], this.root, { control, env: scriptInvocationEnvironment(this.invocation, scratch.environment) }));
+      })));
+      return;
+    }
     if (segments[0] === "measurement") {
       if (segments.length !== 1) throw new Error("Expected test measurement");
       const{captureOwnedCommandV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"),{scriptInvocationEnvironment,withRequestedIssuedResourceControlV1}=await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),phaseControl=createIssuedResourceControlV1(this.invocation,"print:measurement:test",0);

@@ -1,3 +1,4 @@
+import {prepareRepoCpuTestProfileArgumentsV1} from "../../🏗️build/⏱️profile/📊️cpu/🟨️.mjs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { realpath } from "node:fs/promises";
 import { advanceScriptInvocation, createIssuedResourceControlV1, createScriptProcessEnvelope, scriptInvocationEnvironment, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -74,7 +75,7 @@ export async function runGenuineBunTestV1(request: GenuineBunTestRequestV1): Pro
     await advanceScriptInvocation(original, label, "running");
     const remaining = original.control.remainingMilliseconds();
     if (remaining === null || remaining < 1) throw Error("Finite genuine test budget required");
-    await runOwnedCommand(process.execPath, [...guardArgumentsV1(process.execPath, ["test", "--timeout", String(declared.childTimeoutMilliseconds), "./" + local, ...(request.pattern === undefined ? [] : ["--test-name-pattern", request.pattern])], environment)], root, label, Math.floor(remaining), {
+    await runOwnedCommand(process.execPath, [...guardArgumentsV1(process.execPath, ["test",...prepareRepoCpuTestProfileArgumentsV1(environment), "--timeout", String(declared.childTimeoutMilliseconds), "./" + local, ...(request.pattern === undefined ? [] : ["--test-name-pattern", request.pattern])], environment)], root, label, Math.floor(remaining), {
       env: scriptInvocationEnvironment(original, { ...environment, ...extra, SEMIO_GENUINE_BIRTH: birth.id }),
       signal: request.signal ? AbortSignal.any([original.control.signal, request.signal]) : original.control.signal,
       onProgress: () => advanceScriptInvocation(original, label, "running"),

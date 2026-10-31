@@ -1,3 +1,7 @@
+import Ajv from "ajv";
+import {JSDOM} from "jsdom";
+import pointer from "../../🧫️fixtures/🔓️access/👆️pointer.json";
+import pointerSchema from "../../🧫️fixtures/🔓️access/🧬️schema/👆️pointer.json";
 /** 🧭️ Pointer, keyboard, URL, schedule-boundary and question preview behavior. */
 import { act, fireEvent, render, renderHook, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -100,4 +104,15 @@ describe("scheduled UI access", () => {
     expect(document.querySelector("[inert]")?.textContent).toContain("Question preview");
     expect(screen.queryByRole("button")).toBeNull();
   });
+});
+
+/** 👆️ The real locked tint receives ordinary input inside the overview pointer boundary. */
+for(const locale of pointer.locales) it(`locked tint receives pointer input without unlocking in ${locale}`,async()=>{
+ if(locale!=="en"&&locale!=="de")throw Error("Authored locale required");
+ expect(new Ajv({strict:true}).compile(pointerSchema)(pointer)).toBe(true);
+ const open=vi.fn(),view=render(<><style>{".pointer-events-none{pointer-events:none}.pointer-events-auto{pointer-events:auto}"}</style><div className="pointer-events-none"><AccessGate course={locked} page="physics" at={1000} locale={locale} text={courseText(locale)}><button onClick={open}>Locked action</button></AccessGate></div></>),tint=view.container.querySelector<HTMLElement>(".course-access-tint")!,preview=view.container.querySelector<HTMLElement>(".course-access-preview")!;
+ expect(getComputedStyle(tint).pointerEvents).toBe(pointer.tintPointer);
+ await userEvent.setup().click(tint);
+ expect(open).not.toHaveBeenCalled();expect(preview.hasAttribute("inert")).toBe(true);expect(preview.getAttribute("aria-hidden")).toBe("true");
+ const oracle=new JSDOM(view.container.innerHTML);try{expect(oracle.window.getComputedStyle(oracle.window.document.querySelector(".course-access-tint")!).pointerEvents).toBe(pointer.tintPointer);expect(oracle.window.document.querySelector("[inert][aria-hidden=true]")?.textContent).toBe("Locked action");}finally{oracle.window.close();}
 });

@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {stringCloneOutputReady} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";

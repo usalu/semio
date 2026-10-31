@@ -31,7 +31,7 @@ export interface LayeredPaneState {
   readonly dirty: () => void;
 }
 
-/** 🃏️ What a card knows: the mode, whether its page is revealed (lift the card) or opened, and `open` (hash route plus glide). */
+/** 🃏️ What a card knows: the mode, whether its page is revealed (highlight the card) or opened, and `open` (hash route plus glide). */
 export interface LayeredCardState {
   readonly mode: LayeredMode;
   readonly revealed: boolean;
@@ -66,7 +66,8 @@ export interface LayeredInsets {
  * app's CSS (`overlayClassName`/`overlayStyle`, each card wrapped in a `display: contents` host), in `swipe` mode the element centres each card
  * in its page's cell itself, inside `insets`, and the hints of its neighbours stand inside them too; `pan` lets the mouse pan the strip under the glass while it is between the cards; `reducedMotion` says whether
  * pan, glide and settle give way to stillness — `"never"` (the default), `"auto"` (when the device asks for it) or `"always"`; `openedId`
- * makes the open page controlled. */
+ * makes the open page controlled. Layout changes retain the current owned focused card, otherwise its logical resting pane; explicit
+ * controlled page/reveal/swipe and camera observations keep their existing priority. Ordinary rerenders and gestures do not reapply that anchor. */
 export interface LayeredOverviewProps {
   /** 🎛️ Whether this overview handles input; inactive ancestor and preview grids still render their controlled panes. */
   readonly interactive?: boolean;

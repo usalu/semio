@@ -1,3 +1,8 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
+import {compileSchemaScopeExport as physicalSchemaScopeV1} from "./../../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
+import {findWorkspaceRoot as physicalSchemaWorkspaceRootV1} from "./../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const physicalProjectOracleV1=()=>physicalSchemaScopeV1(physicalSchemaWorkspaceRootV1(import.meta.dir),physicalSchemaSourcePathV1(new URL("./../../../🧬️schema/📋️project/🔣️.json",import.meta.url)),null,[physicalSchemaSourcePathV1(new URL("./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url))]);
+import AjvDraft07 from "ajv";
 /** 📐️ The portable graph model agrees with its independent schema, bundler and projection oracles. */
 import {testValueV1} from "../../../../⚡️caching/🧪️tests/📋️values/🟦️.ts";
 import {resolve,posix,win32} from "node:path";
@@ -14,7 +19,7 @@ import {graph} from "../🧰️support/🟦️.ts";
 
 const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
 test("portable graph fixture agrees with the independent JSON Schema implementation",()=>{
-  const validate=new Ajv({strict:false}).compile(schema);
+  const validate=new AjvDraft07({strict:false}).compile(schema);
   expect(validate(fixture.graph)).toBe(true);
   expect(testValueV1(graph().projects.app).name).toBe("app");
   for(const value of [{...fixture.graph,version:2},{...fixture.graph,projects:{bad:{name:"bad",root:"bad",targets:{build:{}}}}}]){
@@ -47,11 +52,11 @@ test("portable relative GUI declarations survive Windows and POSIX JSON path ser
  }
 });
 test("configuration options preserve task identity and command form under both schema oracles",()=>{
- const authored=require("../../../🧬️schema/📋️project/🔣️.json"),authoring=new(require("ajv").default)({strict:true}).compile(authored),portable=new Ajv({strict:true}).compile(schema);
+ const authored=require("../../../🧬️schema/📋️project/🔣️.json"),authoring=physicalProjectOracleV1(),portable=new AjvDraft07({strict:true}).compile(schema);
  for(const row of fixture.configurationRefusals){const target={executor:"repo:script",options:{command:"one"},configurations:{release:row.configuration}},project={name:"app",targets:{build:target}};expect(authoring(project),row.name).toBe(false);expect(()=>neutralBuildTargetV1(target),row.name).toThrow();const value=graph();value.projects.app!.targets.build!.configurations={release:row.name==="commands"?{execution:row.configuration}:row.name==="kind"||row.name==="ownerArguments"||row.name==="nativeOwnerCommand"?{execution:row.configuration}:row.configuration};expect(portable(value),row.name).toBe(false);expect(()=>readBuildGraphV1(value),row.name).toThrow();}
 });
 test("authored command shorthand normalizes to the complete portable execution",()=>{
-  const source=fixture.topCommand,author=require("../../../🧬️schema/📋️project/🔣️.json"),Draft7=require("ajv").default,validate=new Draft7({strict:true}).compile(author),neutral=neutralBuildTargetV1(source.target),resolved=resolveBuildTargetV1(neutral,"release"),sdk=createRequire(resolve(process.cwd(),".nx/installation/package.json")),projection=projectBuildTargetForNxV1(neutral),oracle=sdk("nx/src/utils/params").combineOptionsForExecutor({},"release",projection,sdk("nx/src/executors/run-commands/schema.json"),null,null);
+  const source=fixture.topCommand,author=require("../../../🧬️schema/📋️project/🔣️.json"),Draft7=require("ajv").default,validate=physicalProjectOracleV1(),neutral=neutralBuildTargetV1(source.target),resolved=resolveBuildTargetV1(neutral,"release"),sdk=createRequire(resolve(process.cwd(),".nx/installation/package.json")),projection=projectBuildTargetForNxV1(neutral),oracle=sdk("nx/src/utils/params").combineOptionsForExecutor({},"release",projection,sdk("nx/src/executors/run-commands/schema.json"),null,null);
   const inferred=require("../../../🕸️graph/📥️inference/🟨️.mjs").cacheInternals.targetWithDefaults(source.target,"app",true);expect(inferred).not.toHaveProperty("command");expect(inferred.options.command).toBe(source.target.command);
   expect(validate({name:"app",targets:{build:source.target}})).toBe(true);expect(neutral).not.toHaveProperty("command");expect(neutral.execution.command).toBe(source.target.command);expect(resolved.execution.command).toBe(source.target.configurations.release.command);expect(oracle.command).toBe(resolved.execution.command);expect(oracle.env).toEqual(resolved.execution.env);
   for(const target of source.invalid){expect(validate({name:"app",targets:{build:target}})).toBe(false);expect(()=>neutralBuildTargetV1(target)).toThrow();}

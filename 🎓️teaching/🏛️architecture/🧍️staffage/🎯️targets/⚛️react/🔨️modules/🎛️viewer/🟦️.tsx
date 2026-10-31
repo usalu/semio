@@ -14,7 +14,7 @@ import { useArchive } from "../🧭️context/🟦️.tsx";
 import { Button, CheckField, Notice, NumberField, Segmented, SelectField, SliderField, Tag, cn } from "../🪟️chrome/🟦️.tsx";
 import { useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { Transport } from "../⏯️transport/🟦️.tsx";
-import { allViews, depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
+import { depictionOptions, evaluateState, frameOf, sceneOf, type SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 import type { ViewerState } from "../🗺️routing/🟦️.ts";
 import { VIEW_NAMES } from "../🗣️labels/🟦️.ts";
@@ -76,13 +76,13 @@ export function Viewer(props: ViewerProps): ReactElement {
   const frames = useMemo(() => {
     try {
       const state = evaluateState(asset, query);
-      const scenes = allViews(state, { scale: { denominator: viewer.scale }, language, theme, transparent: true });
-      const base = frameOf([scenes[0]!]);
-      return { base, byView: Object.fromEntries(VIEWS.map((name, index) => [name, frameOf([scenes[0]!, scenes[index]!])])) as Record<View, SceneFrame> };
+      const baseScene = sceneOf(state, depictionOptions({ view: "dark-line", scale: { denominator: viewer.scale }, language, theme, transparent: true }));
+      const activeScene = viewer.view === "dark-line" ? baseScene : sceneOf(state, depictionOptions({ view: viewer.view, scale: { denominator: viewer.scale }, language, theme, transparent: true }));
+      return { base: frameOf([baseScene]), byView: { [viewer.view]: frameOf([baseScene, activeScene]) } as Record<View, SceneFrame> };
     } catch {
       return undefined;
     }
-  }, [asset, query, viewer.scale, language, theme]);
+  }, [asset, query, viewer.scale, viewer.view, language, theme]);
   const reasoned = viewer.environment;
   const base = asset.thermal.environment;
   const environment: Environment = useMemo(() => ({ ...base, ...reasoned }), [base, JSON.stringify(reasoned)]);

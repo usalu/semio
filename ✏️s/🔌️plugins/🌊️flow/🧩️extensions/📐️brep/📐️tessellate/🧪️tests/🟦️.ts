@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 
 test("original tessellation keeps strict business source until complete canonical handoff", () => {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));

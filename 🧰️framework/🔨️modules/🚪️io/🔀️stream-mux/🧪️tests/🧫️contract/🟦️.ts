@@ -72,7 +72,7 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const fixture = (await import("../🧫️fixtures/🔣️.json", { with: { type: "json" } })).default as unknown as Fixture;
   const schema = (await import("../../🧬️schema/🔣️.json", { with: { type: "json" } })).default;
-  const { default: Ajv } = await import("ajv/dist/2020.js");
+  const { default: Ajv } = await import("ajv");
   const ajv = new Ajv({ strict: false });
   ajv.addSchema(schema);
   const judge = {

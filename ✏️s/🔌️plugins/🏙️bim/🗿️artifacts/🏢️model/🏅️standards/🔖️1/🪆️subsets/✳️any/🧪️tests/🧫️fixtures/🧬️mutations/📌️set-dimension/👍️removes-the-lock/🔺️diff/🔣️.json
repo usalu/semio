@@ -2,8 +2,10 @@
   "dimensions": {
     "dim-south": {
       "entry": "Patched",
-      "lock": {
-        "value": null
+      "value": {
+        "lock": {
+          "value": null
+        }
       }
     }
   }

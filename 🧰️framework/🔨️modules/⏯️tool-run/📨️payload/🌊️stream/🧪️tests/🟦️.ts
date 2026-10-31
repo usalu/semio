@@ -1,7 +1,7 @@
 /** 🧪️ The original portable range contract agrees with independent Buffer pages and Ajv admission. */
 import {test}from"bun:test";
 import assert from"node:assert/strict";
-import Ajv from"ajv/dist/2020";
+import Ajv from"ajv";
 import law from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import{PayloadReadView,validatePayloadUpdate,validatePayloadContinuation,type PayloadUpdate,type PayloadIndexedSource}from"../🟦️.ts";

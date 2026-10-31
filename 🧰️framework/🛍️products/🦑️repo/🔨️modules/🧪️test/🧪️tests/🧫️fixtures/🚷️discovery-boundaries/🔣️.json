@@ -149,5 +149,9 @@
       "ready",
       "inputs"
     ]
+  },
+  "residentRejection": {
+    "staleCode": "SEMIO_STALE_IMPLEMENTATION",
+    "staleName": "StaleImplementationErrorV1"
   }
 }

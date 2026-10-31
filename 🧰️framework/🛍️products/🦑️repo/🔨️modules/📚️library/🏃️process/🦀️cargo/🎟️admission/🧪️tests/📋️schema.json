@@ -7,7 +7,8 @@
     "parameters",
     "cases",
     "receiverCallbacks",
-    "commandCases"
+    "commandCases",
+    "runnerCases"
   ],
   "properties": {
     "version": {
@@ -122,6 +123,47 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 1
+          }
+        }
+      }
+    },
+    "runnerCases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "incoming",
+          "ready",
+          "lint",
+          "accepted",
+          "selected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "incoming": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "lint": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "selected": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         }
       }

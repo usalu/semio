@@ -1,6 +1,6 @@
 /** 📊️ The existing Progress wire enters a controlled final native slot without assembled payload movement. */
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {existsSync,readFileSync} from "node:fs";
 import schema from "../🧬️schema/🔣️.json";

@@ -41,3 +41,12 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
+
+[dependencies.semio-s-artifact-stdio-ifc-declarations]
+path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc4-catalog]
+path = "../../📚️catalog/📦️packages/🦀️rust"
+
+[dependencies.semio-s-artifact-stdio-ifc-geometry]
+path = "../../../../../../../📐️geometry/📦️packages/🦀️rust"

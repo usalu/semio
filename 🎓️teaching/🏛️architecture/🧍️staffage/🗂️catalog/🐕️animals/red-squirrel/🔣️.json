@@ -1,0 +1,6774 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "red-squirrel",
+  "category": "animals",
+  "title": {
+   "en": "Red Squirrel",
+   "de": "Eichhörnchen"
+  },
+  "summary": {
+   "en": "An adult Eurasian red squirrel (Sciurus vulgaris, 0.30 kg): two-part spine, bushy two-part tail, fore limbs with long fingers and digitigrade hind limbs; sitting upright eating a nut, a bounding run and climbing a vertical trunk (the trunk is not part of the asset: the claws are supports with a bark friction of 1.5); fur thermal model with 38.5 degC core, nose breathing and a back plume.",
+   "de": "Ein erwachsenes Europäisches Eichhörnchen (Sciurus vulgaris, 0,30 kg): zweiteilige Wirbelsäule, buschiger zweiteiliger Schwanz, Vorderglieder mit langen Fingern und Hinterglieder; aufrecht sitzend beim Nussfressen, ein Sprunglauf und Klettern an einem senkrechten Stamm (der Stamm ist nicht Teil des Assets: die Krallen sind Auflager mit Rindenreibung 1,5); Fell-Wärmemodell mit 38,5 Grad Kern, Nasenatmung und Rückenfahne."
+  },
+  "tags": [
+   "animal",
+   "mammal",
+   "rodent",
+   "squirrel",
+   "climbing",
+   "bounding",
+   "park",
+   "wood"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-A2 (animals)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "gurnell-1987",
+     "citation": "Gurnell, J. (1987). The Natural History of Squirrels. Christopher Helm, London. Red squirrel Sciurus vulgaris: head and body 19-24 cm, tail 14-20 cm, mass about 0.25-0.40 kg."
+    },
+    {
+     "id": "kleiber-1961",
+     "citation": "Kleiber, M. (1961). The Fire of Life: An Introduction to Animal Energetics. Wiley, New York. Basal metabolic rate about 70 kcal per day per kg^0.75 = 3.39 W per kg^0.75; Kleiber (1932), Hilgardia 6(11), 315-353."
+    },
+    {
+     "id": "scholander-1950",
+     "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236. Fur insulation grows with coat thickness; the numbers here are authored estimates guided by it."
+    },
+    {
+     "id": "shorten-1954",
+     "citation": "Shorten, M. (1954). Squirrels. Collins New Naturalist, London. Gaits, bounding and climbing of the red squirrel."
+    },
+    {
+     "id": "hildebrand-1985",
+     "citation": "Hildebrand, M. (1985). Walking and running. In: Hildebrand, M., Bramble, D. M., Liem, K. F., Wake, D. B. (eds), Functional Vertebrate Morphology, Harvard University Press, pp. 38-57. Bounding gait of small mammals."
+    },
+    {
+     "id": "meeh-1879",
+     "citation": "Meeh, K. (1879). Oberflaechenmessungen des menschlichen Koerpers. Zeitschrift fuer Biologie 15, 425-458. Skin area about k M^(2/3) with k near 9-10 for small mammals (cm2, g)."
+    },
+    {
+     "id": "gupta-2010",
+     "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39. Nostril areas and jet angles of the squirrel are authored estimates guided by the human case.",
+     "url": "https://research.polyu.edu.hk/en/publications/characterizing-exhaled-airflow-from-breathing-and-talking/"
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort: emissivity of skin and respiratory heat loss."
+    },
+    {
+     "id": "calder-1984",
+     "citation": "Calder, W. A. (1984). Size, Function, and Life History. Harvard University Press. Allometric breathing frequency of mammals about 53.5 M^-0.26 breaths per minute (M in kg) and tidal volume about 7.7 mL per kg; the squirrel values are authored estimates guided by these."
+    },
+    {
+     "id": "schmidt-nielsen-1970",
+     "citation": "Schmidt-Nielsen, K., Hainsworth, F. R., Murrish, D. E. (1970). Counter-current heat exchange in the respiratory passages. Respiration Physiology 9, 263-276."
+    }
+   ],
+   "notes": {
+    "en": "Handcrafted: rig, outlines, poses and numbers are authored by hand; parameters without a verifiable source are tagged authored-estimate and name the reference they are guided by.",
+    "de": "Handgefertigt: Rig, Umrisse, Posen und Zahlen sind von Hand erstellt; Parameter ohne prüfbare Quelle sind als authored-estimate gekennzeichnet und nennen die Referenz, an der sie sich orientieren."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.275,
+   "widthM": 0.21,
+   "depthM": 0.12,
+   "massKg": 0.3
+  },
+  "rig": {
+   "kind": "anatomical",
+   "root": "spine-r",
+   "bones": [
+    {
+     "id": "spine-r",
+     "parent": null,
+     "title": {
+      "en": "Pelvis and lumbar spine",
+      "de": "Becken und Lendenwirbelsäule"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.08,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 120
+     },
+     "mass": {
+      "kg": 0.024,
+      "comX": 0.04,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "spine-f",
+     "parent": "spine-r",
+     "title": {
+      "en": "Thoracic spine with chest",
+      "de": "Brustwirbelsäule mit Brustkorb"
+     },
+     "x": 0.08,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.08,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 0.075,
+      "comX": 0.04,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "neck",
+     "parent": "spine-f",
+     "title": {
+      "en": "Neck",
+      "de": "Hals"
+     },
+     "x": 0.08,
+     "y": 0.004,
+     "angleDeg": 15,
+     "lengthM": 0.028,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -80,
+      "maxDeg": 80
+     },
+     "mass": {
+      "kg": 0.012,
+      "comX": 0.014,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "head",
+     "parent": "neck",
+     "title": {
+      "en": "Head with snout and ears",
+      "de": "Kopf mit Schnauze und Ohren"
+     },
+     "x": 0.028,
+     "y": 0,
+     "angleDeg": -25,
+     "lengthM": 0.052,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 0.035,
+      "comX": 0.024,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "tail-1",
+     "parent": "spine-r",
+     "title": {
+      "en": "Tail, base",
+      "de": "Schwanz, Basis"
+     },
+     "x": -0.008,
+     "y": 0.016,
+     "angleDeg": 160,
+     "lengthM": 0.072,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -140,
+      "maxDeg": 140
+     },
+     "mass": {
+      "kg": 0.02,
+      "comX": 0.036,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "tail-2",
+     "parent": "tail-1",
+     "title": {
+      "en": "Tail, tip",
+      "de": "Schwanz, Spitze"
+     },
+     "x": 0.072,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.08,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 150
+     },
+     "mass": {
+      "kg": 0.02,
+      "comX": 0.04,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "arm-n",
+     "parent": "spine-f",
+     "title": {
+      "en": "Near upper arm",
+      "de": "Nahe Oberarm"
+     },
+     "x": 0.068,
+     "y": -0.02,
+     "angleDeg": -90,
+     "lengthM": 0.032,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.008,
+      "comX": 0.016,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "forearm-n",
+     "parent": "arm-n",
+     "title": {
+      "en": "Near forearm",
+      "de": "Nahe Unterarm"
+     },
+     "x": 0.032,
+     "y": 0,
+     "angleDeg": 20,
+     "lengthM": 0.032,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.005,
+      "comX": 0.016,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "hand-n",
+     "parent": "forearm-n",
+     "title": {
+      "en": "Near hand with long fingers",
+      "de": "Nahe Hand mit langen Fingern"
+     },
+     "x": 0.032,
+     "y": 0,
+     "angleDeg": 40,
+     "lengthM": 0.024,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.003,
+      "comX": 0.012,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "thigh-n",
+     "parent": "spine-r",
+     "title": {
+      "en": "Near thigh",
+      "de": "Nahe Oberschenkel"
+     },
+     "x": 0.008,
+     "y": -0.024,
+     "angleDeg": -60,
+     "lengthM": 0.048,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.022,
+      "comX": 0.024,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "shank-n",
+     "parent": "thigh-n",
+     "title": {
+      "en": "Near shank",
+      "de": "Nahe Unterschenkel"
+     },
+     "x": 0.048,
+     "y": 0,
+     "angleDeg": -60,
+     "lengthM": 0.056,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.012,
+      "comX": 0.028,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "foot-n",
+     "parent": "shank-n",
+     "title": {
+      "en": "Near hind foot with toes",
+      "de": "Nahe Hinterfuß mit Zehen"
+     },
+     "x": 0.056,
+     "y": 0,
+     "angleDeg": 80,
+     "lengthM": 0.044,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.007,
+      "comX": 0.022,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "arm-f",
+     "parent": "spine-f",
+     "title": {
+      "en": "Far upper arm",
+      "de": "Ferne Oberarm"
+     },
+     "x": 0.068,
+     "y": -0.02,
+     "angleDeg": -90,
+     "lengthM": 0.032,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.008,
+      "comX": 0.016,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "forearm-f",
+     "parent": "arm-f",
+     "title": {
+      "en": "Far forearm",
+      "de": "Ferne Unterarm"
+     },
+     "x": 0.032,
+     "y": 0,
+     "angleDeg": 20,
+     "lengthM": 0.032,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.005,
+      "comX": 0.016,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "hand-f",
+     "parent": "forearm-f",
+     "title": {
+      "en": "Far hand with long fingers",
+      "de": "Ferne Hand mit langen Fingern"
+     },
+     "x": 0.032,
+     "y": 0,
+     "angleDeg": 40,
+     "lengthM": 0.024,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.003,
+      "comX": 0.012,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "thigh-f",
+     "parent": "spine-r",
+     "title": {
+      "en": "Far thigh",
+      "de": "Ferne Oberschenkel"
+     },
+     "x": 0.008,
+     "y": -0.024,
+     "angleDeg": -60,
+     "lengthM": 0.048,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.022,
+      "comX": 0.024,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "shank-f",
+     "parent": "thigh-f",
+     "title": {
+      "en": "Far shank",
+      "de": "Ferne Unterschenkel"
+     },
+     "x": 0.048,
+     "y": 0,
+     "angleDeg": -60,
+     "lengthM": 0.056,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.012,
+      "comX": 0.028,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    },
+    {
+     "id": "foot-f",
+     "parent": "shank-f",
+     "title": {
+      "en": "Far hind foot with toes",
+      "de": "Ferne Hinterfuß mit Zehen"
+     },
+     "x": 0.056,
+     "y": 0,
+     "angleDeg": 80,
+     "lengthM": 0.044,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 0.007,
+      "comX": 0.022,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "gurnell-1987"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "ground-foot-n",
+    "bone": "foot-n",
+    "x": 0.032,
+    "y": -0.0088,
+    "kind": "contact",
+    "title": {
+     "en": "Near hind foot on the ground",
+     "de": "Hinterfuß (nahe) am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.036,
+    "footprintWidthM": 0.016,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "ground-hand-n",
+    "bone": "hand-n",
+    "x": 0.024,
+    "y": -0.0064,
+    "kind": "contact",
+    "title": {
+     "en": "Near hand on the ground",
+     "de": "Hand (nahe) am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.02,
+    "footprintWidthM": 0.012,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "bark-foot-n",
+    "bone": "foot-n",
+    "x": 0.0416,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Near hind claws in the bark",
+     "de": "Hinterkrallen (nahe) in der Rinde"
+    },
+    "support": "contact",
+    "normalDeg": 100,
+    "footprintLengthM": 0.016,
+    "footprintWidthM": 0.012,
+    "frictionCoefficient": 1.5
+   },
+   {
+    "id": "bark-hand-n",
+    "bone": "hand-n",
+    "x": 0.024,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Near fore claws in the bark",
+     "de": "Vorderkrallen (nahe) in der Rinde"
+    },
+    "support": "contact",
+    "normalDeg": 100,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.0096,
+    "frictionCoefficient": 1.5
+   },
+   {
+    "id": "ground-foot-f",
+    "bone": "foot-f",
+    "x": 0.032,
+    "y": -0.0088,
+    "kind": "contact",
+    "title": {
+     "en": "Far hind foot on the ground",
+     "de": "Hinterfuß (ferne) am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.036,
+    "footprintWidthM": 0.016,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "ground-hand-f",
+    "bone": "hand-f",
+    "x": 0.024,
+    "y": -0.0064,
+    "kind": "contact",
+    "title": {
+     "en": "Far hand on the ground",
+     "de": "Hand (ferne) am Boden"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.02,
+    "footprintWidthM": 0.012,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "bark-foot-f",
+    "bone": "foot-f",
+    "x": 0.0416,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Far hind claws in the bark",
+     "de": "Hinterkrallen (ferne) in der Rinde"
+    },
+    "support": "contact",
+    "normalDeg": 100,
+    "footprintLengthM": 0.016,
+    "footprintWidthM": 0.012,
+    "frictionCoefficient": 1.5
+   },
+   {
+    "id": "bark-hand-f",
+    "bone": "hand-f",
+    "x": 0.024,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Far fore claws in the bark",
+     "de": "Vorderkrallen (ferne) in der Rinde"
+    },
+    "support": "contact",
+    "normalDeg": 100,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.0096,
+    "frictionCoefficient": 1.5
+   },
+   {
+    "id": "nostrils",
+    "bone": "head",
+    "x": 0.0496,
+    "y": 0.0032,
+    "kind": "emitter",
+    "title": {
+     "en": "Nostrils at the snout tip",
+     "de": "Nasenlöcher an der Schnauzenspitze"
+    }
+   },
+   {
+    "id": "snout-tip",
+    "bone": "head",
+    "x": 0.0528,
+    "y": -0.0032,
+    "kind": "attachment",
+    "title": {
+     "en": "Snout tip (food reference)",
+     "de": "Schnauzenspitze (Futterbezug)"
+    }
+   },
+   {
+    "id": "eye",
+    "bone": "head",
+    "x": 0.024,
+    "y": 0.0112,
+    "kind": "attachment",
+    "title": {
+     "en": "Eye",
+     "de": "Auge"
+    }
+   },
+   {
+    "id": "back-plume",
+    "bone": "spine-r",
+    "x": 0.048,
+    "y": 0.056,
+    "kind": "emitter",
+    "title": {
+     "en": "Back (plume source)",
+     "de": "Rücken (Fahnenquelle)"
+    }
+   }
+  ],
+  "materials": [
+   {
+    "id": "fur-red",
+    "title": {
+     "en": "Red-brown summer fur",
+     "de": "Rotbraunes Sommerfell"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 150,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "fur-white",
+    "title": {
+     "en": "White belly fur",
+     "de": "Weißes Bauchfell"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 150,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "tail-fur",
+    "title": {
+     "en": "Bushy tail fur",
+     "de": "Buschiges Schwanzfell"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 120,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "bare-skin",
+    "title": {
+     "en": "Bare skin of paws and nose",
+     "de": "Nackte Haut von Pfoten und Nase"
+    },
+    "emissivity": 0.96,
+    "solarAbsorptivity": 0.7,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "poses": [
+   {
+    "id": "sitting-eating",
+    "title": {
+     "en": "Sitting upright, eating",
+     "de": "Aufrecht sitzend beim Fressen"
+    },
+    "description": {
+     "en": "Sitting on the haunches with both hind feet flat, the body upright, both hands holding a nut at the mouth, the head bent forward, the tail arched up over the back.",
+     "de": "Auf den Hinterbeinen sitzend, beide Hinterfüße flach, Körper aufrecht, beide Hände halten eine Nuss vor dem Maul, Kopf nach vorn geneigt, Schwanz in hohem Bogen über dem Rücken."
+    },
+    "bones": {
+     "spine-r": {
+      "angleDeg": 58
+     },
+     "spine-f": {
+      "angleDeg": 28
+     },
+     "neck": {
+      "angleDeg": -23
+     },
+     "head": {
+      "angleDeg": -75
+     },
+     "tail-1": {
+      "angleDeg": -100
+     },
+     "tail-2": {
+      "angleDeg": -56
+     },
+     "arm-n": {
+      "angleDeg": -121.2
+     },
+     "forearm-n": {
+      "angleDeg": 118.73
+     },
+     "hand-n": {
+      "angleDeg": 16.48
+     },
+     "arm-f": {
+      "angleDeg": -137.71
+     },
+     "forearm-f": {
+      "angleDeg": 110.61
+     },
+     "hand-f": {
+      "angleDeg": 49.1
+     },
+     "thigh-n": {
+      "angleDeg": 24.6
+     },
+     "shank-n": {
+      "angleDeg": -88.59
+     },
+     "foot-n": {
+      "angleDeg": 45.99
+     },
+     "thigh-f": {
+      "angleDeg": -14.97
+     },
+     "shank-f": {
+      "angleDeg": -89.76
+     },
+     "foot-f": {
+      "angleDeg": 86.72
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-foot-n",
+     "ground-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 1.5,
+     "breathing": "rest",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.4,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "running",
+    "title": {
+     "en": "Running, hind feet planted",
+     "de": "Laufen, Hinterfüße aufgesetzt"
+    },
+    "description": {
+     "en": "Bounding gait at the gather: both hind feet planted under the pelvis, the back arched, the hands reaching forward, the tail streaming out behind.",
+     "de": "Sprunglauf beim Sammeln: beide Hinterfüße unter dem Becken aufgesetzt, Rücken gewölbt, Hände greifen nach vorn, Schwanz weht nach hinten."
+    },
+    "bones": {
+     "spine-r": {
+      "angleDeg": 12
+     },
+     "spine-f": {
+      "angleDeg": -18
+     },
+     "neck": {
+      "angleDeg": 1
+     },
+     "head": {
+      "angleDeg": 3
+     },
+     "tail-1": {
+      "angleDeg": 0
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": 127.16
+     },
+     "forearm-n": {
+      "angleDeg": -20.45
+     },
+     "hand-n": {
+      "angleDeg": -95.7
+     },
+     "arm-f": {
+      "angleDeg": 147.63
+     },
+     "forearm-f": {
+      "angleDeg": -62.13
+     },
+     "hand-f": {
+      "angleDeg": -79.49
+     },
+     "thigh-n": {
+      "angleDeg": 58.43
+     },
+     "shank-n": {
+      "angleDeg": -80.46
+     },
+     "foot-n": {
+      "angleDeg": 50.03
+     },
+     "thigh-f": {
+      "angleDeg": 26.52
+     },
+     "shank-f": {
+      "angleDeg": -81.26
+     },
+     "foot-f": {
+      "angleDeg": 82.75
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-foot-n",
+     "ground-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.3,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "climbing",
+    "title": {
+     "en": "Climbing a trunk",
+     "de": "Klettern am Stamm"
+    },
+    "description": {
+     "en": "Head up on a vertical trunk at x = 0.075 m (not part of the asset): claws of both hands and both hind feet hooked in the bark as supports, the body hugging the trunk, the tail hanging down.",
+     "de": "Kopf oben an einem senkrechten Stamm bei x = 0,075 m (nicht Teil des Assets): Krallen beider Hände und beider Hinterfüße in der Rinde als Auflager, der Körper schmiegt sich an den Stamm, der Schwanz hängt herab."
+    },
+    "bones": {
+     "spine-r": {
+      "angleDeg": 82
+     },
+     "spine-f": {
+      "angleDeg": 10
+     },
+     "neck": {
+      "angleDeg": -19
+     },
+     "head": {
+      "angleDeg": -25
+     },
+     "tail-1": {
+      "angleDeg": 8
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": -69.85
+     },
+     "forearm-n": {
+      "angleDeg": 4.73
+     },
+     "hand-n": {
+      "angleDeg": 103.12
+     },
+     "arm-f": {
+      "angleDeg": -72.69
+     },
+     "forearm-f": {
+      "angleDeg": -19.59
+     },
+     "hand-f": {
+      "angleDeg": 130.28
+     },
+     "thigh-n": {
+      "angleDeg": -96.21
+     },
+     "shank-n": {
+      "angleDeg": 59.59
+     },
+     "foot-n": {
+      "angleDeg": 79.62
+     },
+     "thigh-f": {
+      "angleDeg": -100.16
+     },
+     "shank-f": {
+      "angleDeg": 59.65
+     },
+     "foot-f": {
+      "angleDeg": 83.51
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.2
+    },
+    "ground": "authored",
+    "contacts": [
+     "bark-hand-n",
+     "bark-hand-f",
+     "bark-foot-n",
+     "bark-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 6.6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "fur-belly": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 14
+       }
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "nibble-b",
+    "title": {
+     "en": "Nibbling, head down",
+     "de": "Knabbern, Kopf gesenkt"
+    },
+    "description": {
+     "en": "Key pose: the head dips 8 degrees while the hands turn the nut.",
+     "de": "Schlüsselpose: der Kopf senkt sich um 8 Grad, während die Hände die Nuss drehen."
+    },
+    "bones": {
+     "spine-r": {
+      "angleDeg": 58
+     },
+     "spine-f": {
+      "angleDeg": 28
+     },
+     "neck": {
+      "angleDeg": -23
+     },
+     "head": {
+      "angleDeg": -83
+     },
+     "tail-1": {
+      "angleDeg": -100
+     },
+     "tail-2": {
+      "angleDeg": -56
+     },
+     "arm-n": {
+      "angleDeg": -121.2
+     },
+     "forearm-n": {
+      "angleDeg": 118.73
+     },
+     "hand-n": {
+      "angleDeg": 30.48
+     },
+     "arm-f": {
+      "angleDeg": -137.71
+     },
+     "forearm-f": {
+      "angleDeg": 110.61
+     },
+     "hand-f": {
+      "angleDeg": 37.1
+     },
+     "thigh-n": {
+      "angleDeg": 24.6
+     },
+     "shank-n": {
+      "angleDeg": -88.59
+     },
+     "foot-n": {
+      "angleDeg": 45.99
+     },
+     "thigh-f": {
+      "angleDeg": -14.97
+     },
+     "shank-f": {
+      "angleDeg": -89.76
+     },
+     "foot-f": {
+      "angleDeg": 86.72
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-foot-n",
+     "ground-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 1.5,
+     "breathing": "rest",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.4,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": [],
+    "key": true
+   },
+   {
+    "id": "bound-extension",
+    "title": {
+     "en": "Bound: extension, hands land",
+     "de": "Sprung: Streckung, Hände landen"
+    },
+    "description": {
+     "en": "Key pose: body stretched, both hands touch down ahead, hind feet trail off the ground.",
+     "de": "Schlüsselpose: Körper gestreckt, beide Hände landen vorn, die Hinterfüße schleppen über dem Boden."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 6
+     },
+     "spine-f": {
+      "angleDeg": -18
+     },
+     "neck": {
+      "angleDeg": 1
+     },
+     "head": {
+      "angleDeg": 7
+     },
+     "tail-1": {
+      "angleDeg": 10
+     },
+     "tail-2": {
+      "angleDeg": 20
+     },
+     "arm-n": {
+      "angleDeg": 68.32
+     },
+     "forearm-n": {
+      "angleDeg": -20.37
+     },
+     "hand-n": {
+      "angleDeg": -15.95
+     },
+     "arm-f": {
+      "angleDeg": 62.33
+     },
+     "forearm-f": {
+      "angleDeg": -20.38
+     },
+     "hand-f": {
+      "angleDeg": -9.94
+     },
+     "thigh-n": {
+      "angleDeg": -130.91
+     },
+     "shank-n": {
+      "angleDeg": 59.64
+     },
+     "foot-n": {
+      "angleDeg": 75.27
+     },
+     "thigh-f": {
+      "angleDeg": -124.75
+     },
+     "shank-f": {
+      "angleDeg": 59.66
+     },
+     "foot-f": {
+      "angleDeg": 69.09
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-hand-n",
+     "ground-hand-f"
+    ],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.3,
+        "tempC": 18
+       }
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "bound-swing",
+    "title": {
+     "en": "Bound: hind legs swing through",
+     "de": "Sprung: Hinterbeine schwingen durch"
+    },
+    "description": {
+     "en": "Key pose in the air: the back arches, the hind legs swing forward past the hands.",
+     "de": "Schlüsselpose in der Luft: der Rücken wölbt sich, die Hinterbeine schwingen nach vorn an den Händen vorbei."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 24
+     },
+     "spine-f": {
+      "angleDeg": -10
+     },
+     "neck": {
+      "angleDeg": -11
+     },
+     "head": {
+      "angleDeg": -1
+     },
+     "tail-1": {
+      "angleDeg": -14
+     },
+     "tail-2": {
+      "angleDeg": 30
+     },
+     "arm-n": {
+      "angleDeg": 22.93
+     },
+     "forearm-n": {
+      "angleDeg": -20.43
+     },
+     "hand-n": {
+      "angleDeg": -6.5
+     },
+     "arm-f": {
+      "angleDeg": 6.05
+     },
+     "forearm-f": {
+      "angleDeg": -20.42
+     },
+     "hand-f": {
+      "angleDeg": 10.38
+     },
+     "thigh-n": {
+      "angleDeg": 36.22
+     },
+     "shank-n": {
+      "angleDeg": -79.46
+     },
+     "foot-n": {
+      "angleDeg": 79.24
+     },
+     "thigh-f": {
+      "angleDeg": -8.35
+     },
+     "shank-f": {
+      "angleDeg": -56.01
+     },
+     "foot-f": {
+      "angleDeg": 100.36
+     }
+    },
+    "root": {
+     "x": 0.096,
+     "y": 0.136
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "bound-gather",
+    "title": {
+     "en": "Bound: gather",
+     "de": "Sprung: Sammeln"
+    },
+    "description": {
+     "en": "Key pose: hind feet planted under the pelvis.",
+     "de": "Schlüsselpose: Hinterfüße unter dem Becken aufgesetzt."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 12
+     },
+     "spine-f": {
+      "angleDeg": -18
+     },
+     "neck": {
+      "angleDeg": 1
+     },
+     "head": {
+      "angleDeg": 3
+     },
+     "tail-1": {
+      "angleDeg": 0
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": 127.16
+     },
+     "forearm-n": {
+      "angleDeg": -20.45
+     },
+     "hand-n": {
+      "angleDeg": -95.7
+     },
+     "arm-f": {
+      "angleDeg": 147.63
+     },
+     "forearm-f": {
+      "angleDeg": -62.13
+     },
+     "hand-f": {
+      "angleDeg": -79.49
+     },
+     "thigh-n": {
+      "angleDeg": 58.43
+     },
+     "shank-n": {
+      "angleDeg": -80.46
+     },
+     "foot-n": {
+      "angleDeg": 50.03
+     },
+     "thigh-f": {
+      "angleDeg": 26.52
+     },
+     "shank-f": {
+      "angleDeg": -81.26
+     },
+     "foot-f": {
+      "angleDeg": 82.75
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-foot-n",
+     "ground-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.3,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "bound-push",
+    "title": {
+     "en": "Bound: push-off",
+     "de": "Sprung: Abdruck"
+    },
+    "description": {
+     "en": "Key pose: the hind legs extend and push the body forward, the hands reach ahead.",
+     "de": "Schlüsselpose: die Hinterbeine strecken sich und schieben den Körper nach vorn, die Hände greifen voraus."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 2
+     },
+     "spine-f": {
+      "angleDeg": -10
+     },
+     "neck": {
+      "angleDeg": -5
+     },
+     "head": {
+      "angleDeg": 13
+     },
+     "tail-1": {
+      "angleDeg": 16
+     },
+     "tail-2": {
+      "angleDeg": 20
+     },
+     "arm-n": {
+      "angleDeg": 116.62
+     },
+     "forearm-n": {
+      "angleDeg": -20.36
+     },
+     "hand-n": {
+      "angleDeg": -78.26
+     },
+     "arm-f": {
+      "angleDeg": 113.34
+     },
+     "forearm-f": {
+      "angleDeg": -20.38
+     },
+     "hand-f": {
+      "angleDeg": -74.97
+     },
+     "thigh-n": {
+      "angleDeg": -48.7
+     },
+     "shank-n": {
+      "angleDeg": -2.69
+     },
+     "foot-n": {
+      "angleDeg": 89.38
+     },
+     "thigh-f": {
+      "angleDeg": -90.52
+     },
+     "shank-f": {
+      "angleDeg": 59.56
+     },
+     "foot-f": {
+      "angleDeg": 68.96
+     }
+    },
+    "root": {
+     "x": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "ground-foot-n",
+     "ground-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.3,
+        "tempC": 18
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "bound-flight",
+    "title": {
+     "en": "Bound: flight",
+     "de": "Sprung: Flugphase"
+    },
+    "description": {
+     "en": "Key pose in the air: the body fully stretched, nothing touches the ground.",
+     "de": "Schlüsselpose in der Luft: der Körper ist ganz gestreckt, nichts berührt den Boden."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 6
+     },
+     "spine-f": {
+      "angleDeg": -18
+     },
+     "neck": {
+      "angleDeg": 1
+     },
+     "head": {
+      "angleDeg": 7
+     },
+     "tail-1": {
+      "angleDeg": 10
+     },
+     "tail-2": {
+      "angleDeg": 20
+     },
+     "arm-n": {
+      "angleDeg": -89.45
+     },
+     "forearm-n": {
+      "angleDeg": -20.46
+     },
+     "hand-n": {
+      "angleDeg": 131.9
+     },
+     "arm-f": {
+      "angleDeg": -78.53
+     },
+     "forearm-f": {
+      "angleDeg": -20.41
+     },
+     "hand-f": {
+      "angleDeg": 120.94
+     },
+     "thigh-n": {
+      "angleDeg": -129.9
+     },
+     "shank-n": {
+      "angleDeg": 59.72
+     },
+     "foot-n": {
+      "angleDeg": 74.18
+     },
+     "thigh-f": {
+      "angleDeg": -127.52
+     },
+     "shank-f": {
+      "angleDeg": 59.73
+     },
+     "foot-f": {
+      "angleDeg": 71.79
+     }
+    },
+    "root": {
+     "x": 0.24,
+     "y": 0.128
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 6,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "fur-belly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.05
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.3
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "climb-a",
+    "title": {
+     "en": "Climb phase a",
+     "de": "Kletterphase a"
+    },
+    "description": {
+     "en": "Key pose of the climb, one hand-over-hand step further up the trunk.",
+     "de": "Schlüsselpose des Kletterns, einen Griffwechsel weiter den Stamm hinauf."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 82
+     },
+     "spine-f": {
+      "angleDeg": 10
+     },
+     "neck": {
+      "angleDeg": -19
+     },
+     "head": {
+      "angleDeg": -25
+     },
+     "tail-1": {
+      "angleDeg": 8
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": -69.85
+     },
+     "forearm-n": {
+      "angleDeg": 4.73
+     },
+     "hand-n": {
+      "angleDeg": 103.12
+     },
+     "arm-f": {
+      "angleDeg": -72.69
+     },
+     "forearm-f": {
+      "angleDeg": -19.59
+     },
+     "hand-f": {
+      "angleDeg": 130.28
+     },
+     "thigh-n": {
+      "angleDeg": -96.21
+     },
+     "shank-n": {
+      "angleDeg": 59.59
+     },
+     "foot-n": {
+      "angleDeg": 79.62
+     },
+     "thigh-f": {
+      "angleDeg": -100.16
+     },
+     "shank-f": {
+      "angleDeg": 59.65
+     },
+     "foot-f": {
+      "angleDeg": 83.51
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.2
+    },
+    "ground": "authored",
+    "contacts": [
+     "bark-hand-n",
+     "bark-hand-f",
+     "bark-foot-n",
+     "bark-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 7,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "fur-belly": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 14
+       }
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "climb-b",
+    "title": {
+     "en": "Climb phase b",
+     "de": "Kletterphase b"
+    },
+    "description": {
+     "en": "Key pose of the climb, one hand-over-hand step further up the trunk.",
+     "de": "Schlüsselpose des Kletterns, einen Griffwechsel weiter den Stamm hinauf."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 82
+     },
+     "spine-f": {
+      "angleDeg": 10
+     },
+     "neck": {
+      "angleDeg": -19
+     },
+     "head": {
+      "angleDeg": -25
+     },
+     "tail-1": {
+      "angleDeg": 8
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": -81.61
+     },
+     "forearm-n": {
+      "angleDeg": 37.52
+     },
+     "hand-n": {
+      "angleDeg": 82.1
+     },
+     "arm-f": {
+      "angleDeg": -71.13
+     },
+     "forearm-f": {
+      "angleDeg": -19.57
+     },
+     "hand-f": {
+      "angleDeg": 128.7
+     },
+     "thigh-n": {
+      "angleDeg": -34.77
+     },
+     "shank-n": {
+      "angleDeg": -33.33
+     },
+     "foot-n": {
+      "angleDeg": 111.1
+     },
+     "thigh-f": {
+      "angleDeg": -95.08
+     },
+     "shank-f": {
+      "angleDeg": 59.57
+     },
+     "foot-f": {
+      "angleDeg": 78.51
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.24
+    },
+    "ground": "authored",
+    "contacts": [
+     "bark-hand-n",
+     "bark-hand-f",
+     "bark-foot-n",
+     "bark-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 7,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "fur-belly": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 14
+       }
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "climb-c",
+    "title": {
+     "en": "Climb phase c",
+     "de": "Kletterphase c"
+    },
+    "description": {
+     "en": "Key pose of the climb, one hand-over-hand step further up the trunk.",
+     "de": "Schlüsselpose des Kletterns, einen Griffwechsel weiter den Stamm hinauf."
+    },
+    "key": true,
+    "bones": {
+     "spine-r": {
+      "angleDeg": 82
+     },
+     "spine-f": {
+      "angleDeg": 10
+     },
+     "neck": {
+      "angleDeg": -19
+     },
+     "head": {
+      "angleDeg": -25
+     },
+     "tail-1": {
+      "angleDeg": 8
+     },
+     "tail-2": {
+      "angleDeg": 18
+     },
+     "arm-n": {
+      "angleDeg": -81.61
+     },
+     "forearm-n": {
+      "angleDeg": 37.52
+     },
+     "hand-n": {
+      "angleDeg": 82.1
+     },
+     "arm-f": {
+      "angleDeg": -71.13
+     },
+     "forearm-f": {
+      "angleDeg": -19.57
+     },
+     "hand-f": {
+      "angleDeg": 128.7
+     },
+     "thigh-n": {
+      "angleDeg": -95.08
+     },
+     "shank-n": {
+      "angleDeg": 59.57
+     },
+     "foot-n": {
+      "angleDeg": 78.51
+     },
+     "thigh-f": {
+      "angleDeg": -99.53
+     },
+     "shank-f": {
+      "angleDeg": 59.64
+     },
+     "foot-f": {
+      "angleDeg": 82.89
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0.288
+    },
+    "ground": "authored",
+    "contacts": [
+     "bark-hand-n",
+     "bark-hand-f",
+     "bark-foot-n",
+     "bark-foot-f"
+    ],
+    "thermal": {
+     "activityMet": 7,
+     "breathing": "run",
+     "regions": {
+      "fur-back": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "fur-belly": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 14
+       }
+      },
+      "head-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "nose": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "ears": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "tail-fur": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.32000000000000006
+      },
+      "arms-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "hands-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      },
+      "legs-fur": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.24
+      },
+      "feet-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.16000000000000003,
+       "contact": {
+        "fraction": 0.9,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.5
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "nibble",
+    "title": {
+     "en": "Nibbling a nut",
+     "de": "Nuss knabbern"
+    },
+    "description": {
+     "en": "Sitting upright and gnawing a nut for 2 s: the head dips 8 degrees at 1 Hz while the hands turn the nut; the hind feet stay planted; breathing is the short feeding pattern.",
+     "de": "Aufrecht sitzend eine Nuss knabbern, 2 s: Der Kopf senkt sich mit 1 Hz um 8 Grad, während die Hände die Nuss drehen; die Hinterfüße bleiben stehen; die Atmung ist das kurze Fressmuster."
+    },
+    "durationS": 2,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "sitting-eating",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.5,
+      "pose": "nibble-b",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "sitting-eating",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.5,
+      "pose": "nibble-b",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "sitting-eating",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "ground-foot-n",
+      "fromS": 0,
+      "toS": 2
+     },
+     {
+      "anchor": "ground-foot-f",
+      "fromS": 0,
+      "toS": 2
+     }
+    ],
+    "phases": [
+     {
+      "id": "gnaw",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Gnawing",
+       "de": "Nagen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.5,
+      "kind": "motion",
+      "title": {
+       "en": "Bite",
+       "de": "Biss"
+      }
+     },
+     {
+      "t": 1.5,
+      "kind": "motion",
+      "title": {
+       "en": "Bite",
+       "de": "Biss"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "breathing",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.8
+       },
+       {
+        "t": 1,
+        "v": 2.2
+       },
+       {
+        "t": 2,
+        "v": 1.8
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "bound",
+    "title": {
+     "en": "Bounding run",
+     "de": "Sprunglauf"
+    },
+    "description": {
+     "en": "A bounding run of 0.36 s per cycle (about 2.8 bounds per second): the hands land, the hind legs swing through, the hind feet plant under the pelvis and push off; two airborne phases per cycle, the tail streams behind.",
+     "de": "Ein Sprunglauf mit 0,36 s je Zyklus (etwa 2,8 Sprünge pro Sekunde): Die Hände landen, die Hinterbeine schwingen durch, die Hinterfüße setzen unter dem Becken auf und drücken ab; zwei Flugphasen je Zyklus, der Schwanz weht hinterher."
+    },
+    "durationS": 0.36,
+    "fps": 60,
+    "loop": true,
+    "rootMotion": "plant",
+    "advanceM": 0.2227,
+    "keys": [
+     {
+      "t": 0,
+      "pose": "bound-extension",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.09,
+      "pose": "bound-swing",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.14,
+      "pose": "bound-gather",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.24,
+      "pose": "bound-push",
+      "ease": "smooth"
+     },
+     {
+      "t": 0.3,
+      "pose": "bound-flight",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "ground-hand-n",
+      "fromS": 0,
+      "toS": 0.09
+     },
+     {
+      "anchor": "ground-hand-f",
+      "fromS": 0,
+      "toS": 0.09
+     },
+     {
+      "anchor": "ground-foot-n",
+      "fromS": 0.14,
+      "toS": 0.26
+     },
+     {
+      "anchor": "ground-foot-f",
+      "fromS": 0.14,
+      "toS": 0.26
+     }
+    ],
+    "phases": [
+     {
+      "id": "fore-stance",
+      "fromS": 0,
+      "toS": 0.09,
+      "title": {
+       "en": "Hands on the ground",
+       "de": "Hände am Boden"
+      }
+     },
+     {
+      "id": "air-a",
+      "fromS": 0.09,
+      "toS": 0.14,
+      "title": {
+       "en": "Airborne, hind legs swing",
+       "de": "Flugphase, Hinterbeine schwingen"
+      },
+      "ballistic": true
+     },
+     {
+      "id": "hind-stance",
+      "fromS": 0.14,
+      "toS": 0.26,
+      "title": {
+       "en": "Hind feet on the ground",
+       "de": "Hinterfüße am Boden"
+      }
+     },
+     {
+      "id": "air-b",
+      "fromS": 0.26,
+      "toS": 0.36,
+      "title": {
+       "en": "Airborne, stretched",
+       "de": "Flugphase, gestreckt"
+      },
+      "ballistic": true
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "contact-on",
+      "title": {
+       "en": "Hands touch down",
+       "de": "Hände setzen auf"
+      },
+      "target": "ground-hand-n"
+     },
+     {
+      "t": 0.09,
+      "kind": "contact-off",
+      "title": {
+       "en": "Hands lift",
+       "de": "Hände heben ab"
+      },
+      "target": "ground-hand-n"
+     },
+     {
+      "t": 0.14,
+      "kind": "contact-on",
+      "title": {
+       "en": "Hind feet touch down",
+       "de": "Hinterfüße setzen auf"
+      },
+      "target": "ground-foot-n"
+     },
+     {
+      "t": 0.26,
+      "kind": "contact-off",
+      "title": {
+       "en": "Push-off",
+       "de": "Abdruck"
+      },
+      "target": "ground-foot-n"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 6
+       },
+       {
+        "t": 0.24,
+        "v": 8
+       },
+       {
+        "t": 0.36,
+        "v": 6
+       }
+      ]
+     },
+     {
+      "target": "breathing",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "climb",
+    "title": {
+     "en": "Climbing a trunk",
+     "de": "Stamm hinaufklettern"
+    },
+    "description": {
+     "en": "Three grip changes up a vertical trunk in 2.4 s (about 0.12 m): the claws of the hands and the hind feet are hooked in the bark as supports, never fewer than two grips at a time, the body rises 0.11 m.",
+     "de": "Drei Griffwechsel an einem senkrechten Stamm in 2,4 s (etwa 0,12 m): Die Krallen der Hände und Hinterfüße haken sich als Auflager in die Rinde, nie weniger als zwei Griffe zugleich, der Körper steigt um 0,11 m."
+    },
+    "durationS": 2.4,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "climb-a",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.2,
+      "pose": "climb-b",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.4,
+      "pose": "climb-c",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "bark-foot-n",
+      "fromS": 0,
+      "toS": 2.4
+     },
+     {
+      "anchor": "bark-foot-f",
+      "fromS": 0,
+      "toS": 2.4
+     },
+     {
+      "anchor": "bark-hand-n",
+      "fromS": 0,
+      "toS": 1.4
+     },
+     {
+      "anchor": "bark-hand-f",
+      "fromS": 0,
+      "toS": 1
+     },
+     {
+      "anchor": "bark-hand-n",
+      "fromS": 1.6,
+      "toS": 2.4
+     },
+     {
+      "anchor": "bark-hand-f",
+      "fromS": 1.3,
+      "toS": 2.4
+     }
+    ],
+    "phases": [
+     {
+      "id": "climb",
+      "fromS": 0,
+      "toS": 2.4,
+      "title": {
+       "en": "Climbing",
+       "de": "Klettern"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "kind": "contact-off",
+      "title": {
+       "en": "Far hand releases",
+       "de": "Ferne Hand löst sich"
+      },
+      "target": "bark-hand-f"
+     },
+     {
+      "t": 1.4,
+      "kind": "contact-off",
+      "title": {
+       "en": "Near hand releases",
+       "de": "Nahe Hand löst sich"
+      },
+      "target": "bark-hand-n"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 7
+       },
+       {
+        "t": 2.4,
+        "v": 7
+       }
+      ]
+     },
+     {
+      "target": "breathing",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 12,
+    "meanRadiantTempC": 12,
+    "skyTempC": 4,
+    "groundTempC": 11,
+    "relativeHumidity": 0.7,
+    "windMS": 0.8,
+    "windDirectionDeg": 180,
+    "solarWM2": 250,
+    "diffuseFraction": 0.35,
+    "pressurePa": 101325
+   },
+   "baseMet": 1.5,
+   "body": {
+    "species": "squirrel",
+    "massKg": 0.3,
+    "skinAreaM2": 0.0688,
+    "basalMetabolismW": 1.4,
+    "metWM2": 20.3,
+    "coreSetPointC": 38.5,
+    "skinSetPointC": 35,
+    "sweating": false,
+    "panting": false,
+    "maxSkinBloodFlowLM2H": 40,
+    "minSkinBloodFlowLM2H": 3,
+    "source": "authored-estimate",
+    "reference": "kleiber-1961"
+   },
+   "respiration": {
+    "noseEmitter": "breath-nose",
+    "exhaledTempC": 33,
+    "exhaledRelativeHumidity": 0.95,
+    "patterns": [
+     {
+      "id": "rest",
+      "title": {
+       "en": "Resting, nose breathing",
+       "de": "Ruhe, Nasenatmung"
+      },
+      "rateBpm": 60,
+      "tidalVolumeL": 0.0024,
+      "inhaleFraction": 0.4,
+      "pauseAfterInhaleFraction": 0.04,
+      "exhaleFraction": 0.45,
+      "pauseAfterExhaleFraction": 0.11,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     },
+     {
+      "id": "eat",
+      "title": {
+       "en": "Feeding, gnawing with short breath",
+       "de": "Fressen, Nagen mit kurzen Atemzügen"
+      },
+      "rateBpm": 90,
+      "tidalVolumeL": 0.002,
+      "inhaleFraction": 0.42,
+      "pauseAfterInhaleFraction": 0.03,
+      "exhaleFraction": 0.45,
+      "pauseAfterExhaleFraction": 0.1,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     },
+     {
+      "id": "run",
+      "title": {
+       "en": "Bounding and climbing",
+       "de": "Sprunglauf und Klettern"
+      },
+      "rateBpm": 200,
+      "tidalVolumeL": 0.0035,
+      "inhaleFraction": 0.5,
+      "pauseAfterInhaleFraction": 0,
+      "exhaleFraction": 0.5,
+      "pauseAfterExhaleFraction": 0,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "calder-1984"
+     }
+    ],
+    "motion": [
+     {
+      "bone": "spine-f",
+      "angleDeg": 1.5,
+      "dy": 0.0008
+     }
+    ],
+    "source": "authored-estimate",
+    "reference": "schmidt-nielsen-1970"
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "fur-back",
+     "title": {
+      "en": "Dorsal fur (back and flanks)",
+      "de": "Rückenfell (Rücken und Flanken)"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-red",
+     "areaM2": 0.022,
+     "characteristicLengthM": 0.12,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "back-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0084,
+       "resistanceM2KW": 0.26,
+       "vapourResistanceM2PaW": 31.52,
+       "heatCapacityJM2K": 200,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "back-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0056,
+       "resistanceM2KW": 0.14,
+       "vapourResistanceM2PaW": 16.97,
+       "heatCapacityJM2K": 300,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 12000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.3791,
+      "skinFraction": 0.31976
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "fur-belly",
+     "title": {
+      "en": "Ventral fur (chest and belly)",
+      "de": "Bauchfell (Brust und Bauch)"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-white",
+     "areaM2": 0.01,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0,
+     "layers": [
+      {
+       "id": "belly-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-white",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.182,
+       "vapourResistanceM2PaW": 22.06,
+       "heatCapacityJM2K": 160,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "belly-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-white",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.098,
+       "vapourResistanceM2PaW": 11.88,
+       "heatCapacityJM2K": 240,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 10000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.1474,
+      "skinFraction": 0.14535
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "head-fur",
+     "title": {
+      "en": "Head fur and cheeks",
+      "de": "Kopffell und Wangen"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-red",
+     "areaM2": 0.0058,
+     "characteristicLengthM": 0.05,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "head-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0042,
+       "resistanceM2KW": 0.117,
+       "vapourResistanceM2PaW": 14.18,
+       "heatCapacityJM2K": 120,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "head-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0028,
+       "resistanceM2KW": 0.063,
+       "vapourResistanceM2PaW": 7.64,
+       "heatCapacityJM2K": 180,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.0947,
+      "skinFraction": 0.0843
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "nose",
+     "title": {
+      "en": "Nose and lips (bare skin)",
+      "de": "Nase und Lippen (nackte Haut)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bare-skin",
+     "areaM2": 0.0006,
+     "characteristicLengthM": 0.01,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 2000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.0105,
+      "skinFraction": 0.00872
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "ears",
+     "title": {
+      "en": "Ears with tufts",
+      "de": "Ohren mit Pinseln"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-red",
+     "areaM2": 0.0016,
+     "characteristicLengthM": 0.02,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "ears-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0024,
+       "resistanceM2KW": 0.065,
+       "vapourResistanceM2PaW": 7.88,
+       "heatCapacityJM2K": 40,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "ears-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0016,
+       "resistanceM2KW": 0.035,
+       "vapourResistanceM2PaW": 4.24,
+       "heatCapacityJM2K": 60,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 1500,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.0105,
+      "skinFraction": 0.02326
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "tail-fur",
+     "title": {
+      "en": "Bushy tail",
+      "de": "Buschiger Schwanz"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "tail-fur",
+     "areaM2": 0.017,
+     "characteristicLengthM": 0.05,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "tail-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "tail-fur",
+       "thicknessM": 0.015,
+       "resistanceM2KW": 0.195,
+       "vapourResistanceM2PaW": 23.64,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "tail-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "tail-fur",
+       "thicknessM": 0.01,
+       "resistanceM2KW": 0.105,
+       "vapourResistanceM2PaW": 12.73,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 4000,
+     "body": {
+      "segment": "tail",
+      "metabolicShare": 0.0421,
+      "skinFraction": 0.24709
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "arms-fur",
+     "title": {
+      "en": "Fore limb fur",
+      "de": "Fell der Vordergliedmaßen"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-red",
+     "areaM2": 0.0042,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "arms-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.078,
+       "vapourResistanceM2PaW": 9.45,
+       "heatCapacityJM2K": 80,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "arms-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.042,
+       "vapourResistanceM2PaW": 5.09,
+       "heatCapacityJM2K": 120,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 5000,
+     "body": {
+      "segment": "arm",
+      "metabolicShare": 0.0842,
+      "skinFraction": 0.06105
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "hands-skin",
+     "title": {
+      "en": "Hands and fingers (bare)",
+      "de": "Hände und Finger (nackt)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bare-skin",
+     "areaM2": 0.0008,
+     "characteristicLengthM": 0.01,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 2000,
+     "body": {
+      "segment": "hand",
+      "metabolicShare": 0.0105,
+      "skinFraction": 0.01163
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "legs-fur",
+     "title": {
+      "en": "Hind limb fur",
+      "de": "Fell der Hintergliedmaßen"
+     },
+     "kind": "fur",
+     "model": "body",
+     "material": "fur-red",
+     "areaM2": 0.0052,
+     "characteristicLengthM": 0.04,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "legs-underfur",
+       "title": {
+        "en": "Underfur with enclosed air",
+        "de": "Unterfell mit eingeschlossener Luft"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0036,
+       "resistanceM2KW": 0.104,
+       "vapourResistanceM2PaW": 12.61,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      },
+      {
+       "id": "legs-guard",
+       "title": {
+        "en": "Guard hair layer",
+        "de": "Deckhaarschicht"
+       },
+       "kind": "fur",
+       "material": "fur-red",
+       "thicknessM": 0.0024,
+       "resistanceM2KW": 0.056,
+       "vapourResistanceM2PaW": 6.79,
+       "heatCapacityJM2K": 150,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "body": {
+      "segment": "leg",
+      "metabolicShare": 0.2105,
+      "skinFraction": 0.07558
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "feet-skin",
+     "title": {
+      "en": "Hind feet and toes (bare)",
+      "de": "Hinterfüße und Zehen (nackt)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bare-skin",
+     "areaM2": 0.0016,
+     "characteristicLengthM": 0.02,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0,
+     "layers": [],
+     "heatCapacityJM2K": 2500,
+     "body": {
+      "segment": "foot",
+      "metabolicShare": 0.0105,
+      "skinFraction": 0.02326
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "breath-nose",
+     "kind": "breath",
+     "title": {
+      "en": "Both nostrils at the snout tip (combined)",
+      "de": "Beide Nasenlöcher an der Schnauzenspitze (zusammen)"
+     },
+     "anchor": "nostrils",
+     "directionDeg": -20,
+     "diameterM": 0.003,
+     "source": "authored-estimate",
+     "reference": "gupta-2010"
+    },
+    {
+     "id": "plume-back",
+     "kind": "plume",
+     "title": {
+      "en": "Warm-air plume above the back",
+      "de": "Warmluftfahne über dem Rücken"
+     },
+     "anchor": "back-plume",
+     "directionDeg": 90,
+     "diameterM": 0.07,
+     "region": "fur-back",
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Basal metabolism 1.4 W is Kleiber's 3.39 W per kg^0.75 (0.30 kg gives 1.37 W); the 38.5 degC core temperature and the fur resistances (0.40 m2K/W dorsal, 0.28 ventral, tail 0.30) are authored estimates guided by Scholander et al. (1950).",
+     "de": "Der Grundumsatz von 1,4 W ist Kleibers 3,39 W pro kg^0,75 (0,30 kg ergeben 1,37 W); die Kerntemperatur von 38,5 Grad und die Fellwiderstände (0,40 m2K/W Rücken, 0,28 Bauch, Schwanz 0,30) sind Schätzwerte nach Scholander et al. (1950)."
+    },
+    {
+     "en": "The squirrel's fur is the summer coat; the winter coat with ear tufts has about 1.5 times the insulation and is not modelled.",
+     "de": "Das Fell ist das Sommerfell; das Winterfell mit Ohrpinseln isoliert etwa 1,5-mal so gut und ist nicht modelliert."
+    },
+    {
+     "en": "Bark contacts are claw supports with a friction coefficient of 1.5 (authored estimate: claws hook under the bark). The reaction points up and slightly away from the trunk (100°), so a hooked claw can carry weight; the trunk itself is not part of the asset.",
+     "de": "Rindenkontakte sind Krallenauflager mit Reibungszahl 1,5 (Schätzwert: Krallen verzahnen sich mit der rauen Rinde) und der Normalen vom Stamm weg; der Stamm selbst ist nicht Teil des Assets."
+    },
+    {
+     "en": "Breathing is nasal; the exhaled air leaves at 33 degC and 95 % relative humidity.",
+     "de": "Die Atmung erfolgt über die Nase; die Ausatemluft verlässt sie mit 33 Grad und 95 % relativer Feuchte."
+    }
+   ]
+  },
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "far-arm",
+       "bone": "arm-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "arms-fur",
+       "points": [
+        [
+         -0.0096,
+         0.01
+        ],
+        [
+         0.00037,
+         0.01136
+        ],
+        [
+         0.01498,
+         0.0112
+        ],
+        [
+         0.04,
+         0.0088
+        ],
+        [
+         0.04421,
+         0.00671
+        ],
+        [
+         0.0449,
+         0.00376
+        ],
+        [
+         0.0472,
+         0
+        ],
+        [
+         0.0449,
+         -0.00376
+        ],
+        [
+         0.04421,
+         -0.00671
+        ],
+        [
+         0.04,
+         -0.0088
+        ],
+        [
+         0.01498,
+         -0.0112
+        ],
+        [
+         0.00037,
+         -0.01136
+        ],
+        [
+         -0.0096,
+         -0.01
+        ],
+        [
+         -0.01229,
+         -0.00838
+        ],
+        [
+         -0.01421,
+         -0.006
+        ],
+        [
+         -0.01575,
+         0
+        ],
+        [
+         -0.01421,
+         0.006
+        ],
+        [
+         -0.01229,
+         0.00838
+        ],
+        [
+         -0.0096,
+         0.01
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-forearm",
+       "bone": "forearm-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "arms-fur",
+       "points": [
+        [
+         -0.0096,
+         0.0092
+        ],
+        [
+         0.00037,
+         0.01045
+        ],
+        [
+         0.01498,
+         0.01025
+        ],
+        [
+         0.04,
+         0.008
+        ],
+        [
+         0.04421,
+         0.00612
+        ],
+        [
+         0.0449,
+         0.00344
+        ],
+        [
+         0.0472,
+         0
+        ],
+        [
+         0.0449,
+         -0.00344
+        ],
+        [
+         0.04421,
+         -0.00612
+        ],
+        [
+         0.04,
+         -0.008
+        ],
+        [
+         0.01498,
+         -0.01025
+        ],
+        [
+         0.00037,
+         -0.01045
+        ],
+        [
+         -0.0096,
+         -0.0092
+        ],
+        [
+         -0.01229,
+         -0.0077
+        ],
+        [
+         -0.01421,
+         -0.00551
+        ],
+        [
+         -0.01575,
+         0
+        ],
+        [
+         -0.01421,
+         0.00551
+        ],
+        [
+         -0.01229,
+         0.0077
+        ],
+        [
+         -0.0096,
+         0.0092
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-hand",
+       "bone": "hand-f",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.65,
+       "kind": "poly",
+       "region": "hands-skin",
+       "points": [
+        [
+         -0.0096,
+         0.0068
+        ],
+        [
+         -0.00225,
+         0.00776
+        ],
+        [
+         0.00843,
+         0.00764
+        ],
+        [
+         0.0272,
+         0.006
+        ],
+        [
+         0.03124,
+         0.0046
+        ],
+        [
+         0.0331,
+         0.00259
+        ],
+        [
+         0.0336,
+         0
+        ],
+        [
+         0.0331,
+         -0.00259
+        ],
+        [
+         0.03124,
+         -0.0046
+        ],
+        [
+         0.0272,
+         -0.006
+        ],
+        [
+         0.00843,
+         -0.00764
+        ],
+        [
+         -0.00225,
+         -0.00776
+        ],
+        [
+         -0.0096,
+         -0.0068
+        ],
+        [
+         -0.01309,
+         -0.00406
+        ],
+        [
+         -0.01425,
+         0
+        ],
+        [
+         -0.01309,
+         0.00406
+        ],
+        [
+         -0.0096,
+         0.0068
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-thigh",
+       "bone": "thigh-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "legs-fur",
+       "points": [
+        [
+         -0.02,
+         0.024
+        ],
+        [
+         -0.01587,
+         0.02663
+        ],
+        [
+         -0.01022,
+         0.02846
+        ],
+        [
+         0.00397,
+         0.03015
+        ],
+        [
+         0.01918,
+         0.02996
+        ],
+        [
+         0.032,
+         0.0288
+        ],
+        [
+         0.04226,
+         0.02653
+        ],
+        [
+         0.05153,
+         0.02275
+        ],
+        [
+         0.05903,
+         0.018
+        ],
+        [
+         0.064,
+         0.0128
+        ],
+        [
+         0.06624,
+         0.00675
+        ],
+        [
+         0.0662,
+         -0.00023
+        ],
+        [
+         0.06406,
+         -0.00708
+        ],
+        [
+         0.06,
+         -0.0128
+        ],
+        [
+         0.05347,
+         -0.0173
+        ],
+        [
+         0.04455,
+         -0.02107
+        ],
+        [
+         0.03435,
+         -0.02391
+        ],
+        [
+         0.024,
+         -0.0256
+        ],
+        [
+         0.01251,
+         -0.02659
+        ],
+        [
+         -0.00025,
+         -0.0268
+        ],
+        [
+         -0.01189,
+         -0.02521
+        ],
+        [
+         -0.01653,
+         -0.02342
+        ],
+        [
+         -0.02,
+         -0.0208
+        ],
+        [
+         -0.02248,
+         -0.01686
+        ],
+        [
+         -0.02433,
+         -0.01149
+        ],
+        [
+         -0.026,
+         0.0016
+        ],
+        [
+         -0.02467,
+         0.01469
+        ],
+        [
+         -0.02277,
+         0.02006
+        ],
+        [
+         -0.02,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-shank",
+       "bone": "shank-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "legs-fur",
+       "points": [
+        [
+         -0.0096,
+         0.0116
+        ],
+        [
+         0.00352,
+         0.01286
+        ],
+        [
+         0.0226,
+         0.01219
+        ],
+        [
+         0.056,
+         0.0088
+        ],
+        [
+         0.06282,
+         0.00662
+        ],
+        [
+         0.06553,
+         0.00369
+        ],
+        [
+         0.06587,
+         0.00111
+        ],
+        [
+         0.0696,
+         0
+        ],
+        [
+         0.06587,
+         -0.00111
+        ],
+        [
+         0.06553,
+         -0.00369
+        ],
+        [
+         0.06282,
+         -0.00662
+        ],
+        [
+         0.056,
+         -0.0088
+        ],
+        [
+         0.0226,
+         -0.01219
+        ],
+        [
+         0.00352,
+         -0.01286
+        ],
+        [
+         -0.0096,
+         -0.0116
+        ],
+        [
+         -0.01321,
+         -0.00977
+        ],
+        [
+         -0.01579,
+         -0.00702
+        ],
+        [
+         -0.01733,
+         -0.00366
+        ],
+        [
+         -0.01785,
+         0
+        ],
+        [
+         -0.01733,
+         0.00366
+        ],
+        [
+         -0.01579,
+         0.00702
+        ],
+        [
+         -0.01321,
+         0.00977
+        ],
+        [
+         -0.0096,
+         0.0116
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-foot",
+       "bone": "foot-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "poly",
+       "region": "feet-skin",
+       "points": [
+        [
+         -0.0096,
+         0.0092
+        ],
+        [
+         -0.00161,
+         0.01
+        ],
+        [
+         0.00993,
+         0.00985
+        ],
+        [
+         0.032,
+         0.0084
+        ],
+        [
+         0.0448,
+         0.00654
+        ],
+        [
+         0.0528,
+         0.004
+        ],
+        [
+         0.05499,
+         0.00224
+        ],
+        [
+         0.0559,
+         0.00013
+        ],
+        [
+         0.05974,
+         -0.00097
+        ],
+        [
+         0.05793,
+         -0.00519
+        ],
+        [
+         0.05727,
+         -0.00734
+        ],
+        [
+         0.0528,
+         -0.0088
+        ],
+        [
+         0.02678,
+         -0.00979
+        ],
+        [
+         0,
+         -0.0092
+        ],
+        [
+         -0.00566,
+         -0.00826
+        ],
+        [
+         -0.0081,
+         -0.00695
+        ],
+        [
+         -0.01324,
+         -0.00486
+        ],
+        [
+         -0.01282,
+         0.00341
+        ],
+        [
+         -0.01278,
+         0.00688
+        ],
+        [
+         -0.01168,
+         0.00824
+        ],
+        [
+         -0.0096,
+         0.0092
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-arm",
+       "bone": "arm-n",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "arms-fur",
+       "points": [
+        [
+         -0.0096,
+         0.01
+        ],
+        [
+         0.00037,
+         0.01136
+        ],
+        [
+         0.01498,
+         0.0112
+        ],
+        [
+         0.04,
+         0.0088
+        ],
+        [
+         0.04421,
+         0.00671
+        ],
+        [
+         0.0449,
+         0.00376
+        ],
+        [
+         0.0472,
+         0
+        ],
+        [
+         0.0449,
+         -0.00376
+        ],
+        [
+         0.04421,
+         -0.00671
+        ],
+        [
+         0.04,
+         -0.0088
+        ],
+        [
+         0.01498,
+         -0.0112
+        ],
+        [
+         0.00037,
+         -0.01136
+        ],
+        [
+         -0.0096,
+         -0.01
+        ],
+        [
+         -0.01229,
+         -0.00838
+        ],
+        [
+         -0.01421,
+         -0.006
+        ],
+        [
+         -0.01575,
+         0
+        ],
+        [
+         -0.01421,
+         0.006
+        ],
+        [
+         -0.01229,
+         0.00838
+        ],
+        [
+         -0.0096,
+         0.01
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-forearm",
+       "bone": "forearm-n",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "arms-fur",
+       "points": [
+        [
+         -0.0096,
+         0.0092
+        ],
+        [
+         0.00037,
+         0.01045
+        ],
+        [
+         0.01498,
+         0.01025
+        ],
+        [
+         0.04,
+         0.008
+        ],
+        [
+         0.04421,
+         0.00612
+        ],
+        [
+         0.0449,
+         0.00344
+        ],
+        [
+         0.0472,
+         0
+        ],
+        [
+         0.0449,
+         -0.00344
+        ],
+        [
+         0.04421,
+         -0.00612
+        ],
+        [
+         0.04,
+         -0.008
+        ],
+        [
+         0.01498,
+         -0.01025
+        ],
+        [
+         0.00037,
+         -0.01045
+        ],
+        [
+         -0.0096,
+         -0.0092
+        ],
+        [
+         -0.01229,
+         -0.0077
+        ],
+        [
+         -0.01421,
+         -0.00551
+        ],
+        [
+         -0.01575,
+         0
+        ],
+        [
+         -0.01421,
+         0.00551
+        ],
+        [
+         -0.01229,
+         0.0077
+        ],
+        [
+         -0.0096,
+         0.0092
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-hand",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "hands-skin",
+       "points": [
+        [
+         -0.0096,
+         0.0068
+        ],
+        [
+         -0.00225,
+         0.00776
+        ],
+        [
+         0.00843,
+         0.00764
+        ],
+        [
+         0.0272,
+         0.006
+        ],
+        [
+         0.03124,
+         0.0046
+        ],
+        [
+         0.0331,
+         0.00259
+        ],
+        [
+         0.0336,
+         0
+        ],
+        [
+         0.0331,
+         -0.00259
+        ],
+        [
+         0.03124,
+         -0.0046
+        ],
+        [
+         0.0272,
+         -0.006
+        ],
+        [
+         0.00843,
+         -0.00764
+        ],
+        [
+         -0.00225,
+         -0.00776
+        ],
+        [
+         -0.0096,
+         -0.0068
+        ],
+        [
+         -0.01309,
+         -0.00406
+        ],
+        [
+         -0.01425,
+         0
+        ],
+        [
+         -0.01309,
+         0.00406
+        ],
+        [
+         -0.0096,
+         0.0068
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-thigh",
+       "bone": "thigh-n",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "legs-fur",
+       "points": [
+        [
+         -0.02,
+         0.024
+        ],
+        [
+         -0.01587,
+         0.02663
+        ],
+        [
+         -0.01022,
+         0.02846
+        ],
+        [
+         0.00397,
+         0.03015
+        ],
+        [
+         0.01918,
+         0.02996
+        ],
+        [
+         0.032,
+         0.0288
+        ],
+        [
+         0.04226,
+         0.02653
+        ],
+        [
+         0.05153,
+         0.02275
+        ],
+        [
+         0.05903,
+         0.018
+        ],
+        [
+         0.064,
+         0.0128
+        ],
+        [
+         0.06624,
+         0.00675
+        ],
+        [
+         0.0662,
+         -0.00023
+        ],
+        [
+         0.06406,
+         -0.00708
+        ],
+        [
+         0.06,
+         -0.0128
+        ],
+        [
+         0.05347,
+         -0.0173
+        ],
+        [
+         0.04455,
+         -0.02107
+        ],
+        [
+         0.03435,
+         -0.02391
+        ],
+        [
+         0.024,
+         -0.0256
+        ],
+        [
+         0.01251,
+         -0.02659
+        ],
+        [
+         -0.00025,
+         -0.0268
+        ],
+        [
+         -0.01189,
+         -0.02521
+        ],
+        [
+         -0.01653,
+         -0.02342
+        ],
+        [
+         -0.02,
+         -0.0208
+        ],
+        [
+         -0.02248,
+         -0.01686
+        ],
+        [
+         -0.02433,
+         -0.01149
+        ],
+        [
+         -0.026,
+         0.0016
+        ],
+        [
+         -0.02467,
+         0.01469
+        ],
+        [
+         -0.02277,
+         0.02006
+        ],
+        [
+         -0.02,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-shank",
+       "bone": "shank-n",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "legs-fur",
+       "points": [
+        [
+         -0.0096,
+         0.0116
+        ],
+        [
+         0.00352,
+         0.01286
+        ],
+        [
+         0.0226,
+         0.01219
+        ],
+        [
+         0.056,
+         0.0088
+        ],
+        [
+         0.06282,
+         0.00662
+        ],
+        [
+         0.06553,
+         0.00369
+        ],
+        [
+         0.06587,
+         0.00111
+        ],
+        [
+         0.0696,
+         0
+        ],
+        [
+         0.06587,
+         -0.00111
+        ],
+        [
+         0.06553,
+         -0.00369
+        ],
+        [
+         0.06282,
+         -0.00662
+        ],
+        [
+         0.056,
+         -0.0088
+        ],
+        [
+         0.0226,
+         -0.01219
+        ],
+        [
+         0.00352,
+         -0.01286
+        ],
+        [
+         -0.0096,
+         -0.0116
+        ],
+        [
+         -0.01321,
+         -0.00977
+        ],
+        [
+         -0.01579,
+         -0.00702
+        ],
+        [
+         -0.01733,
+         -0.00366
+        ],
+        [
+         -0.01785,
+         0
+        ],
+        [
+         -0.01733,
+         0.00366
+        ],
+        [
+         -0.01579,
+         0.00702
+        ],
+        [
+         -0.01321,
+         0.00977
+        ],
+        [
+         -0.0096,
+         0.0116
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-foot",
+       "bone": "foot-n",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "region": "feet-skin",
+       "points": [
+        [
+         -0.0096,
+         0.0092
+        ],
+        [
+         -0.00161,
+         0.01
+        ],
+        [
+         0.00993,
+         0.00985
+        ],
+        [
+         0.032,
+         0.0084
+        ],
+        [
+         0.0448,
+         0.00654
+        ],
+        [
+         0.0528,
+         0.004
+        ],
+        [
+         0.05499,
+         0.00224
+        ],
+        [
+         0.0559,
+         0.00013
+        ],
+        [
+         0.05974,
+         -0.00097
+        ],
+        [
+         0.05793,
+         -0.00519
+        ],
+        [
+         0.05727,
+         -0.00734
+        ],
+        [
+         0.0528,
+         -0.0088
+        ],
+        [
+         0.02678,
+         -0.00979
+        ],
+        [
+         0,
+         -0.0092
+        ],
+        [
+         -0.00566,
+         -0.00826
+        ],
+        [
+         -0.0081,
+         -0.00695
+        ],
+        [
+         -0.01324,
+         -0.00486
+        ],
+        [
+         -0.01282,
+         0.00341
+        ],
+        [
+         -0.01278,
+         0.00688
+        ],
+        [
+         -0.01168,
+         0.00824
+        ],
+        [
+         -0.0096,
+         0.0092
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail-1",
+       "bone": "tail-1",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "tail-fur",
+       "points": [
+        [
+         -0.02,
+         0.024
+        ],
+        [
+         -0.01526,
+         0.02766
+        ],
+        [
+         -0.00885,
+         0.03072
+        ],
+        [
+         0.00723,
+         0.0353
+        ],
+        [
+         0.02469,
+         0.03823
+        ],
+        [
+         0.03951,
+         0.04397
+        ],
+        [
+         0.05318,
+         0.04178
+        ],
+        [
+         0.06575,
+         0.043
+        ],
+        [
+         0.07141,
+         0.04273
+        ],
+        [
+         0.07645,
+         0.04152
+        ],
+        [
+         0.0807,
+         0.0391
+        ],
+        [
+         0.084,
+         0.0352
+        ],
+        [
+         0.08643,
+         0.02907
+        ],
+        [
+         0.08816,
+         0.02066
+        ],
+        [
+         0.08955,
+         0
+        ],
+        [
+         0.08816,
+         -0.02066
+        ],
+        [
+         0.08643,
+         -0.02907
+        ],
+        [
+         0.084,
+         -0.0352
+        ],
+        [
+         0.0807,
+         -0.0391
+        ],
+        [
+         0.07645,
+         -0.04152
+        ],
+        [
+         0.07141,
+         -0.04273
+        ],
+        [
+         0.06575,
+         -0.043
+        ],
+        [
+         0.05318,
+         -0.04178
+        ],
+        [
+         0.03951,
+         -0.04397
+        ],
+        [
+         0.02469,
+         -0.03823
+        ],
+        [
+         0.00723,
+         -0.0353
+        ],
+        [
+         -0.00885,
+         -0.03072
+        ],
+        [
+         -0.01526,
+         -0.02766
+        ],
+        [
+         -0.02,
+         -0.024
+        ],
+        [
+         -0.02328,
+         -0.01933
+        ],
+        [
+         -0.02562,
+         -0.01352
+        ],
+        [
+         -0.02703,
+         -0.00695
+        ],
+        [
+         -0.0275,
+         0
+        ],
+        [
+         -0.02703,
+         0.00695
+        ],
+        [
+         -0.02562,
+         0.01352
+        ],
+        [
+         -0.02328,
+         0.01933
+        ],
+        [
+         -0.02,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail-2",
+       "bone": "tail-2",
+       "role": "body",
+       "z": 0.4,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "tail-fur",
+       "points": [
+        [
+         -0.024,
+         0.036
+        ],
+        [
+         -0.019,
+         0.04043
+        ],
+        [
+         -0.01226,
+         0.0435
+        ],
+        [
+         -0.00421,
+         0.04546
+        ],
+        [
+         0.0047,
+         0.04653
+        ],
+        [
+         0.02331,
+         0.04688
+        ],
+        [
+         0.04,
+         0.0464
+        ],
+        [
+         0.05482,
+         0.04533
+        ],
+        [
+         0.0693,
+         0.04278
+        ],
+        [
+         0.08213,
+         0.03883
+        ],
+        [
+         0.092,
+         0.0336
+        ],
+        [
+         0.09556,
+         0.03038
+        ],
+        [
+         0.09835,
+         0.02663
+        ],
+        [
+         0.10198,
+         0.01807
+        ],
+        [
+         0.10362,
+         0.00888
+        ],
+        [
+         0.104,
+         0
+        ],
+        [
+         0.10362,
+         -0.00888
+        ],
+        [
+         0.10198,
+         -0.01807
+        ],
+        [
+         0.09835,
+         -0.02663
+        ],
+        [
+         0.09556,
+         -0.03038
+        ],
+        [
+         0.092,
+         -0.0336
+        ],
+        [
+         0.08213,
+         -0.03883
+        ],
+        [
+         0.0693,
+         -0.04277
+        ],
+        [
+         0.05482,
+         -0.04533
+        ],
+        [
+         0.04,
+         -0.0464
+        ],
+        [
+         0.02331,
+         -0.04688
+        ],
+        [
+         0.0047,
+         -0.04652
+        ],
+        [
+         -0.00421,
+         -0.04546
+        ],
+        [
+         -0.01226,
+         -0.0435
+        ],
+        [
+         -0.019,
+         -0.04043
+        ],
+        [
+         -0.024,
+         -0.036
+        ],
+        [
+         -0.02748,
+         -0.02951
+        ],
+        [
+         -0.02996,
+         -0.02087
+        ],
+        [
+         -0.03145,
+         -0.01079
+        ],
+        [
+         -0.03195,
+         0
+        ],
+        [
+         -0.03145,
+         0.01079
+        ],
+        [
+         -0.02996,
+         0.02087
+        ],
+        [
+         -0.02748,
+         0.02951
+        ],
+        [
+         -0.024,
+         0.036
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rump",
+       "bone": "spine-r",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "region": "fur-back",
+       "points": [
+        [
+         -0.028,
+         0
+        ],
+        [
+         -0.02877,
+         0.02113
+        ],
+        [
+         -0.02775,
+         0.03164
+        ],
+        [
+         -0.0263,
+         0.03619
+        ],
+        [
+         -0.024,
+         0.04
+        ],
+        [
+         -0.01651,
+         0.04602
+        ],
+        [
+         -0.00625,
+         0.0505
+        ],
+        [
+         0.00514,
+         0.05333
+        ],
+        [
+         0.016,
+         0.0544
+        ],
+        [
+         0.02613,
+         0.05296
+        ],
+        [
+         0.0363,
+         0.04935
+        ],
+        [
+         0.04778,
+         0.04878
+        ],
+        [
+         0.05686,
+         0.04551
+        ],
+        [
+         0.06621,
+         0.04469
+        ],
+        [
+         0.07648,
+         0.04105
+        ],
+        [
+         0.08129,
+         0.04077
+        ],
+        [
+         0.08562,
+         0.03969
+        ],
+        [
+         0.08925,
+         0.03742
+        ],
+        [
+         0.092,
+         0.0336
+        ],
+        [
+         0.09397,
+         0.02763
+        ],
+        [
+         0.09538,
+         0.01961
+        ],
+        [
+         0.0965,
+         0.00015
+        ],
+        [
+         0.09538,
+         -0.01939
+        ],
+        [
+         0.09397,
+         -0.0275
+        ],
+        [
+         0.092,
+         -0.0336
+        ],
+        [
+         0.08936,
+         -0.03771
+        ],
+        [
+         0.08601,
+         -0.04047
+        ],
+        [
+         0.08203,
+         -0.04217
+        ],
+        [
+         0.07753,
+         -0.0431
+        ],
+        [
+         0.06759,
+         -0.04777
+        ],
+        [
+         0.05652,
+         -0.04877
+        ],
+        [
+         0.02725,
+         -0.049
+        ],
+        [
+         0.01224,
+         -0.05014
+        ],
+        [
+         0,
+         -0.0496
+        ],
+        [
+         -0.00876,
+         -0.04707
+        ],
+        [
+         -0.0153,
+         -0.04305
+        ],
+        [
+         -0.02019,
+         -0.0379
+        ],
+        [
+         -0.024,
+         -0.032
+        ],
+        [
+         -0.02657,
+         -0.02523
+        ],
+        [
+         -0.02772,
+         -0.01742
+        ],
+        [
+         -0.028,
+         0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "chest",
+       "bone": "spine-f",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "region": "fur-back",
+       "points": [
+        [
+         -0.024,
+         0.0336
+        ],
+        [
+         -0.01961,
+         0.03748
+        ],
+        [
+         -0.01373,
+         0.03989
+        ],
+        [
+         -0.00674,
+         0.04111
+        ],
+        [
+         0.001,
+         0.04145
+        ],
+        [
+         0.03209,
+         0.044
+        ],
+        [
+         0.05825,
+         0.04015
+        ],
+        [
+         0.07014,
+         0.03876
+        ],
+        [
+         0.08,
+         0.0352
+        ],
+        [
+         0.08793,
+         0.0286
+        ],
+        [
+         0.09428,
+         0.01962
+        ],
+        [
+         0.09848,
+         0.00963
+        ],
+        [
+         0.1,
+         0
+        ],
+        [
+         0.09848,
+         -0.00983
+        ],
+        [
+         0.09428,
+         -0.02028
+        ],
+        [
+         0.08793,
+         -0.02978
+        ],
+        [
+         0.08,
+         -0.0368
+        ],
+        [
+         0.07538,
+         -0.03902
+        ],
+        [
+         0.07014,
+         -0.04053
+        ],
+        [
+         0.05825,
+         -0.0419
+        ],
+        [
+         0.03208,
+         -0.0456
+        ],
+        [
+         0.001,
+         -0.04305
+        ],
+        [
+         -0.00674,
+         -0.04271
+        ],
+        [
+         -0.01373,
+         -0.04149
+        ],
+        [
+         -0.01961,
+         -0.03908
+        ],
+        [
+         -0.024,
+         -0.0352
+        ],
+        [
+         -0.02708,
+         -0.02914
+        ],
+        [
+         -0.02929,
+         -0.02091
+        ],
+        [
+         -0.03061,
+         -0.01122
+        ],
+        [
+         -0.03105,
+         -0.0008
+        ],
+        [
+         -0.03061,
+         0.00962
+        ],
+        [
+         -0.02929,
+         0.01931
+        ],
+        [
+         -0.02708,
+         0.02754
+        ],
+        [
+         -0.024,
+         0.0336
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "belly-patch",
+       "bone": "spine-f",
+       "role": "body",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.05,
+       "kind": "path",
+       "d": "M 0 -0.024 C 0 -0.027 0.0326 -0.0402 0.048 -0.0416 C 0.0634 -0.043 0.0842 -0.0374 0.092 -0.032 C 0.0998 -0.0266 0.1018 -0.011 0.0944 -0.0096 C 0.087 -0.0082 0.0638 -0.0216 0.048 -0.024 C 0.0322 -0.0264 0 -0.021 0 -0.024 Z",
+       "region": "fur-belly"
+      },
+      {
+       "id": "neck",
+       "bone": "neck",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "region": "head-fur",
+       "points": [
+        [
+         -0.02,
+         0.024
+        ],
+        [
+         -0.01528,
+         0.02626
+        ],
+        [
+         -0.00861,
+         0.02754
+        ],
+        [
+         0.008,
+         0.02755
+        ],
+        [
+         0.02461,
+         0.02479
+        ],
+        [
+         0.03128,
+         0.0226
+        ],
+        [
+         0.036,
+         0.02
+        ],
+        [
+         0.03908,
+         0.01646
+        ],
+        [
+         0.04129,
+         0.01167
+        ],
+        [
+         0.04261,
+         0.00604
+        ],
+        [
+         0.04305,
+         0
+        ],
+        [
+         0.04261,
+         -0.00604
+        ],
+        [
+         0.04129,
+         -0.01167
+        ],
+        [
+         0.03908,
+         -0.01646
+        ],
+        [
+         0.036,
+         -0.02
+        ],
+        [
+         0.03128,
+         -0.0226
+        ],
+        [
+         0.02461,
+         -0.02479
+        ],
+        [
+         0.008,
+         -0.02755
+        ],
+        [
+         -0.00861,
+         -0.02754
+        ],
+        [
+         -0.01528,
+         -0.02626
+        ],
+        [
+         -0.02,
+         -0.024
+        ],
+        [
+         -0.02308,
+         -0.02012
+        ],
+        [
+         -0.02529,
+         -0.01442
+        ],
+        [
+         -0.02661,
+         -0.00751
+        ],
+        [
+         -0.02705,
+         0
+        ],
+        [
+         -0.02661,
+         0.00751
+        ],
+        [
+         -0.02529,
+         0.01442
+        ],
+        [
+         -0.02308,
+         0.02012
+        ],
+        [
+         -0.02,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "regions": [
+        "head-fur",
+        "nose"
+       ],
+       "points": [
+        [
+         -0.016,
+         0.0144
+        ],
+        [
+         -0.01421,
+         0.01851
+        ],
+        [
+         -0.01172,
+         0.02208
+        ],
+        [
+         -0.00838,
+         0.025
+        ],
+        [
+         -0.004,
+         0.0272
+        ],
+        [
+         0.00203,
+         0.02872
+        ],
+        [
+         0.00948,
+         0.02958
+        ],
+        [
+         0.01718,
+         0.02965
+        ],
+        [
+         0.024,
+         0.0288
+        ],
+        [
+         0.0298,
+         0.02672
+        ],
+        [
+         0.03513,
+         0.02352
+        ],
+        [
+         0.044,
+         0.016
+        ],
+        [
+         0.05045,
+         0.008
+        ],
+        [
+         0.05255,
+         0.00385
+        ],
+        [
+         0.0536,
+         0
+        ],
+        [
+         0.05368,
+         -0.00349
+        ],
+        [
+         0.0529,
+         -0.00677
+        ],
+        [
+         0.05107,
+         -0.00987
+        ],
+        [
+         0.048,
+         -0.0128
+        ],
+        [
+         0.03713,
+         -0.01835
+        ],
+        [
+         0.024,
+         -0.0224
+        ],
+        [
+         0.01148,
+         -0.02477
+        ],
+        [
+         0.00541,
+         -0.02502
+        ],
+        [
+         0,
+         -0.024
+        ],
+        [
+         -0.00492,
+         -0.02139
+        ],
+        [
+         -0.0095,
+         -0.0175
+        ],
+        [
+         -0.01333,
+         -0.01286
+        ],
+        [
+         -0.016,
+         -0.008
+        ],
+        [
+         -0.01738,
+         -0.00262
+        ],
+        [
+         -0.01772,
+         0.00342
+        ],
+        [
+         -0.016,
+         0.0144
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "ear",
+       "bone": "head",
+       "role": "body",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "ears",
+       "points": [
+        [
+         -0.0032,
+         0.0224
+        ],
+        [
+         -0.00628,
+         0.0269
+        ],
+        [
+         -0.0085,
+         0.03442
+        ],
+        [
+         -0.00967,
+         0.04273
+        ],
+        [
+         -0.0096,
+         0.0496
+        ],
+        [
+         -0.00718,
+         0.05514
+        ],
+        [
+         -0.00282,
+         0.0603
+        ],
+        [
+         0.0032,
+         0.0656
+        ],
+        [
+         0.01078,
+         0.0515
+        ],
+        [
+         0.01577,
+         0.04029
+        ],
+        [
+         0.01727,
+         0.03551
+        ],
+        [
+         0.0176,
+         0.032
+        ],
+        [
+         0.01661,
+         0.0294
+        ],
+        [
+         0.01458,
+         0.02704
+        ],
+        [
+         0.00855,
+         0.02338
+        ],
+        [
+         0.00185,
+         0.02162
+        ],
+        [
+         -0.0032,
+         0.0224
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full articulation 0.21 x 0.27 m = 4.2 x 5.4 mm: red-brown squirrel with a white chest patch, bushy two-part tail, ear tuft, hands and hind feet in bare-skin tone.",
+      "de": "Volle Gliederung 0,21 x 0,27 m = 4,2 x 5,4 mm: rotbraunes Eichhörnchen mit weißem Brustfleck, buschigem zweiteiligem Schwanz, Ohrpinsel, Händen und Hinterfüßen in nackter Hauttönung."
+     },
+     "retained": {
+      "en": "Both fore limbs in upper arm, forearm and hand, both hind limbs in thigh, shank and foot, rump and chest, neck, skull, ear, white belly patch.",
+      "de": "Beide Vorderglieder in Ober-, Unterarm und Hand, beide Hinterglieder in Ober-, Unterschenkel und Fuß, Becken und Brust, Hals, Schädel, Ohr, weißer Bauchfleck."
+     },
+     "merged": {
+      "en": "The nose merges into the skull shape (regions head-fur and nose); whiskers, claws and fur are not drawn.",
+      "de": "Die Nase geht in der Schädelform auf (Regionen head-fur und nose); Schnurrhaare, Krallen und Fell sind nicht gezeichnet."
+     },
+     "omitted": {
+      "en": "Eye (0.008 m = 0.16 mm) and the tail hair line (both would lie within 0.15 mm of neighbouring outlines in some pose), ear tuft hairs, toes, individual hairs, whiskers.",
+      "de": "Auge (0,008 m = 0,16 mm) und die Schwanzhaarlinie (beide läge in irgendeiner Pose näher als 0,15 mm an Nachbarkonturen), Haare des Ohrpinsels, Zehen, einzelne Haare, Schnurrhaare."
+     },
+     "thinElements": {
+      "en": "Hands 0.015 m, shank 0.022 m and foot 0.022 m are filled at true width (0.3-0.44 mm), above the 0.2 mm limit.",
+      "de": "Hände 0,015 m, Unterschenkel 0,022 m und Fuß 0,022 m sind in wahrer Breite gefüllt (0,3-0,44 mm), über der 0,2-mm-Grenze."
+     },
+     "hatching": {
+      "en": "None: the 0.4 mm minimum hatch spacing equals 0.02 m, a third of the body width.",
+      "de": "Keine: der Mindestabstand von 0,4 mm entspricht 0,02 m, einem Drittel der Körperbreite."
+     },
+     "styles": {
+      "en": "0.25 mm silhouette, no detail pen; tones: back mid, tail darker, white patch lightest.",
+      "de": "0,25-mm-Kontur, kein Detailstift; Töne: Rücken mittel, Schwanz dunkler, weißer Fleck am hellsten."
+     },
+     "overlays": {
+      "en": "Every region has its own shape except the nose, which is listed on the skull shape: fur, bare hands and feet and ears are separate in the thermal overlay.",
+      "de": "Jede Region hat eine eigene Form außer der Nase, die an der Schädelform geführt wird: Fell, nackte Hände und Füße sowie Ohren sind im Wärmebild getrennt."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "tail-1",
+       "bone": "tail-1",
+       "role": "body",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "tail-fur",
+       "points": [
+        [
+         -0.024,
+         0.0256
+        ],
+        [
+         -0.01895,
+         0.02943
+        ],
+        [
+         -0.01209,
+         0.03257
+        ],
+        [
+         0.00515,
+         0.03713
+        ],
+        [
+         0.02381,
+         0.03992
+        ],
+        [
+         0.03953,
+         0.04557
+        ],
+        [
+         0.05364,
+         0.04344
+        ],
+        [
+         0.06645,
+         0.04475
+        ],
+        [
+         0.07217,
+         0.04451
+        ],
+        [
+         0.07724,
+         0.04329
+        ],
+        [
+         0.0815,
+         0.04081
+        ],
+        [
+         0.0848,
+         0.0368
+        ],
+        [
+         0.08723,
+         0.03044
+        ],
+        [
+         0.08896,
+         0.02164
+        ],
+        [
+         0.09035,
+         0
+        ],
+        [
+         0.08896,
+         -0.02164
+        ],
+        [
+         0.08723,
+         -0.03044
+        ],
+        [
+         0.0848,
+         -0.0368
+        ],
+        [
+         0.0815,
+         -0.04081
+        ],
+        [
+         0.07724,
+         -0.04329
+        ],
+        [
+         0.07217,
+         -0.04451
+        ],
+        [
+         0.06645,
+         -0.04475
+        ],
+        [
+         0.05364,
+         -0.04344
+        ],
+        [
+         0.03953,
+         -0.04557
+        ],
+        [
+         0.02381,
+         -0.03992
+        ],
+        [
+         0.00515,
+         -0.03713
+        ],
+        [
+         -0.01209,
+         -0.03257
+        ],
+        [
+         -0.01895,
+         -0.02943
+        ],
+        [
+         -0.024,
+         -0.0256
+        ],
+        [
+         -0.02748,
+         -0.02064
+        ],
+        [
+         -0.02996,
+         -0.01445
+        ],
+        [
+         -0.03145,
+         -0.00743
+        ],
+        [
+         -0.03195,
+         0
+        ],
+        [
+         -0.03145,
+         0.00743
+        ],
+        [
+         -0.02996,
+         0.01445
+        ],
+        [
+         -0.02748,
+         0.02064
+        ],
+        [
+         -0.024,
+         0.0256
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail-2",
+       "bone": "tail-2",
+       "role": "body",
+       "z": 0.4,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "tail-fur",
+       "points": [
+        [
+         -0.048,
+         0.04
+        ],
+        [
+         -0.041,
+         0.04457
+        ],
+        [
+         -0.03144,
+         0.04752
+        ],
+        [
+         -0.02002,
+         0.04916
+        ],
+        [
+         -0.00745,
+         0.04978
+        ],
+        [
+         0.01826,
+         0.04914
+        ],
+        [
+         0.04,
+         0.048
+        ],
+        [
+         0.05694,
+         0.04679
+        ],
+        [
+         0.07185,
+         0.0443
+        ],
+        [
+         0.08444,
+         0.04046
+        ],
+        [
+         0.0944,
+         0.0352
+        ],
+        [
+         0.09826,
+         0.03187
+        ],
+        [
+         0.10133,
+         0.02798
+        ],
+        [
+         0.10547,
+         0.01903
+        ],
+        [
+         0.10748,
+         0.00935
+        ],
+        [
+         0.108,
+         0
+        ],
+        [
+         0.10748,
+         -0.00935
+        ],
+        [
+         0.10547,
+         -0.01902
+        ],
+        [
+         0.10133,
+         -0.02798
+        ],
+        [
+         0.09826,
+         -0.03187
+        ],
+        [
+         0.0944,
+         -0.0352
+        ],
+        [
+         0.08444,
+         -0.04046
+        ],
+        [
+         0.07185,
+         -0.0443
+        ],
+        [
+         0.05694,
+         -0.04679
+        ],
+        [
+         0.04,
+         -0.048
+        ],
+        [
+         0.01826,
+         -0.04914
+        ],
+        [
+         -0.00745,
+         -0.04977
+        ],
+        [
+         -0.02002,
+         -0.04916
+        ],
+        [
+         -0.03144,
+         -0.04752
+        ],
+        [
+         -0.041,
+         -0.04457
+        ],
+        [
+         -0.048,
+         -0.04
+        ],
+        [
+         -0.05279,
+         -0.03297
+        ],
+        [
+         -0.05621,
+         -0.02339
+        ],
+        [
+         -0.05827,
+         -0.01212
+        ],
+        [
+         -0.05895,
+         0
+        ],
+        [
+         -0.05827,
+         0.01212
+        ],
+        [
+         -0.05621,
+         0.02339
+        ],
+        [
+         -0.05279,
+         0.03297
+        ],
+        [
+         -0.048,
+         0.04
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rump",
+       "bone": "spine-r",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "regions": [
+        "fur-back",
+        "legs-fur",
+        "feet-skin"
+       ],
+       "points": [
+        [
+         -0.032,
+         0
+        ],
+        [
+         -0.033,
+         0.02288
+        ],
+        [
+         -0.032,
+         0.03428
+        ],
+        [
+         -0.03047,
+         0.03917
+        ],
+        [
+         -0.028,
+         0.0432
+        ],
+        [
+         -0.02441,
+         0.04645
+        ],
+        [
+         -0.0198,
+         0.04917
+        ],
+        [
+         -0.00848,
+         0.05313
+        ],
+        [
+         0.00409,
+         0.05532
+        ],
+        [
+         0.016,
+         0.056
+        ],
+        [
+         0.02715,
+         0.05448
+        ],
+        [
+         0.03845,
+         0.05088
+        ],
+        [
+         0.05087,
+         0.0504
+        ],
+        [
+         0.0608,
+         0.04712
+        ],
+        [
+         0.07051,
+         0.04634
+        ],
+        [
+         0.08078,
+         0.0428
+        ],
+        [
+         0.08551,
+         0.04255
+        ],
+        [
+         0.08973,
+         0.04146
+        ],
+        [
+         0.0944,
+         0.04298
+        ],
+        [
+         0.10383,
+         0.03733
+        ],
+        [
+         0.10582,
+         0.03113
+        ],
+        [
+         0.10341,
+         0.01998
+        ],
+        [
+         0.10073,
+         0.00023
+        ],
+        [
+         0.09963,
+         -0.02029
+        ],
+        [
+         0.09814,
+         -0.0288
+        ],
+        [
+         0.096,
+         -0.0352
+        ],
+        [
+         0.09304,
+         -0.03948
+        ],
+        [
+         0.08922,
+         -0.04232
+        ],
+        [
+         0.08466,
+         -0.04403
+        ],
+        [
+         0.07953,
+         -0.04493
+        ],
+        [
+         0.06832,
+         -0.04946
+        ],
+        [
+         0.0565,
+         -0.05037
+        ],
+        [
+         0.02725,
+         -0.0506
+        ],
+        [
+         0.01241,
+         -0.05174
+        ],
+        [
+         0,
+         -0.0512
+        ],
+        [
+         -0.00952,
+         -0.04873
+        ],
+        [
+         -0.01722,
+         -0.0448
+        ],
+        [
+         -0.02332,
+         -0.03967
+        ],
+        [
+         -0.028,
+         -0.0336
+        ],
+        [
+         -0.0309,
+         -0.02652
+        ],
+        [
+         -0.03202,
+         -0.01837
+        ],
+        [
+         -0.032,
+         0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "chest",
+       "bone": "spine-f",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "regions": [
+        "fur-back",
+        "fur-belly",
+        "arms-fur",
+        "hands-skin"
+       ],
+       "points": [
+        [
+         -0.048,
+         0.0352
+        ],
+        [
+         -0.04159,
+         0.0392
+        ],
+        [
+         -0.03286,
+         0.04166
+        ],
+        [
+         -0.02244,
+         0.04289
+        ],
+        [
+         -0.011,
+         0.0432
+        ],
+        [
+         0.03207,
+         0.0456
+        ],
+        [
+         0.05953,
+         0.0419
+        ],
+        [
+         0.07045,
+         0.04053
+        ],
+        [
+         0.08,
+         0.0368
+        ],
+        [
+         0.08881,
+         0.02987
+        ],
+        [
+         0.0965,
+         0.0205
+        ],
+        [
+         0.10194,
+         0.01008
+        ],
+        [
+         0.10346,
+         0.00491
+        ],
+        [
+         0.104,
+         0
+        ],
+        [
+         0.10346,
+         -0.00497
+        ],
+        [
+         0.10194,
+         -0.0103
+        ],
+        [
+         0.0965,
+         -0.02122
+        ],
+        [
+         0.08881,
+         -0.03113
+        ],
+        [
+         0.08,
+         -0.0384
+        ],
+        [
+         0.07045,
+         -0.04222
+        ],
+        [
+         0.05953,
+         -0.04357
+        ],
+        [
+         0.03207,
+         -0.0472
+        ],
+        [
+         -0.011,
+         -0.0448
+        ],
+        [
+         -0.02244,
+         -0.04449
+        ],
+        [
+         -0.03286,
+         -0.04326
+        ],
+        [
+         -0.04159,
+         -0.0408
+        ],
+        [
+         -0.048,
+         -0.0368
+        ],
+        [
+         -0.0524,
+         -0.03051
+        ],
+        [
+         -0.05554,
+         -0.02189
+        ],
+        [
+         -0.05742,
+         -0.01173
+        ],
+        [
+         -0.05805,
+         -0.0008
+        ],
+        [
+         -0.05742,
+         0.01013
+        ],
+        [
+         -0.05554,
+         0.02029
+        ],
+        [
+         -0.0524,
+         0.02891
+        ],
+        [
+         -0.048,
+         0.0352
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck",
+       "bone": "neck",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.38,
+       "kind": "poly",
+       "region": "head-fur",
+       "points": [
+        [
+         -0.04,
+         0.024
+        ],
+        [
+         -0.03326,
+         0.02629
+        ],
+        [
+         -0.02373,
+         0.02766
+        ],
+        [
+         0,
+         0.02795
+        ],
+        [
+         0.02373,
+         0.02546
+        ],
+        [
+         0.03326,
+         0.02337
+        ],
+        [
+         0.04,
+         0.0208
+        ],
+        [
+         0.0444,
+         0.01719
+        ],
+        [
+         0.04754,
+         0.01222
+        ],
+        [
+         0.04942,
+         0.00634
+        ],
+        [
+         0.05005,
+         0
+        ],
+        [
+         0.04942,
+         -0.00634
+        ],
+        [
+         0.04754,
+         -0.01222
+        ],
+        [
+         0.0444,
+         -0.01719
+        ],
+        [
+         0.04,
+         -0.0208
+        ],
+        [
+         0.03326,
+         -0.02337
+        ],
+        [
+         0.02373,
+         -0.02546
+        ],
+        [
+         0,
+         -0.02795
+        ],
+        [
+         -0.02373,
+         -0.02766
+        ],
+        [
+         -0.03326,
+         -0.02629
+        ],
+        [
+         -0.04,
+         -0.024
+        ],
+        [
+         -0.0444,
+         -0.02012
+        ],
+        [
+         -0.04754,
+         -0.01442
+        ],
+        [
+         -0.05269,
+         -0.00981
+        ],
+        [
+         -0.05814,
+         0.00068
+        ],
+        [
+         -0.05751,
+         0.00819
+        ],
+        [
+         -0.05023,
+         0.01738
+        ],
+        [
+         -0.0444,
+         0.02012
+        ],
+        [
+         -0.04,
+         0.024
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "regions": [
+        "head-fur",
+        "nose"
+       ],
+       "points": [
+        [
+         -0.04,
+         0.016
+        ],
+        [
+         -0.03899,
+         0.02138
+        ],
+        [
+         -0.03597,
+         0.0248
+        ],
+        [
+         -0.03097,
+         0.02703
+        ],
+        [
+         -0.024,
+         0.0288
+        ],
+        [
+         -0.01363,
+         0.03032
+        ],
+        [
+         -0.0003,
+         0.03118
+        ],
+        [
+         0.01318,
+         0.03125
+        ],
+        [
+         0.024,
+         0.0304
+        ],
+        [
+         0.03127,
+         0.02834
+        ],
+        [
+         0.03657,
+         0.0252
+        ],
+        [
+         0.0448,
+         0.0176
+        ],
+        [
+         0.04916,
+         0.01274
+        ],
+        [
+         0.0533,
+         0.00693
+        ],
+        [
+         0.0576,
+         0
+        ],
+        [
+         0.0549,
+         -0.0057
+        ],
+        [
+         0.05186,
+         -0.01046
+        ],
+        [
+         0.048,
+         -0.0144
+        ],
+        [
+         0.0384,
+         -0.0201
+        ],
+        [
+         0.03203,
+         -0.02239
+        ],
+        [
+         0.024,
+         -0.024
+        ],
+        [
+         -0.00052,
+         -0.02707
+        ],
+        [
+         -0.01372,
+         -0.02701
+        ],
+        [
+         -0.01939,
+         -0.02596
+        ],
+        [
+         -0.024,
+         -0.024
+        ],
+        [
+         -0.02773,
+         -0.02075
+        ],
+        [
+         -0.03097,
+         -0.0162
+        ],
+        [
+         -0.03597,
+         -0.00483
+        ],
+        [
+         -0.03899,
+         0.00697
+        ],
+        [
+         -0.04,
+         0.016
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "ear",
+       "bone": "head",
+       "role": "body",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "ears",
+       "points": [
+        [
+         -0.008,
+         0.0208
+        ],
+        [
+         -0.0099,
+         0.02282
+        ],
+        [
+         -0.01142,
+         0.02611
+        ],
+        [
+         -0.01332,
+         0.03508
+        ],
+        [
+         -0.01377,
+         0.0449
+        ],
+        [
+         -0.0128,
+         0.0528
+        ],
+        [
+         -0.00912,
+         0.05868
+        ],
+        [
+         -0.00318,
+         0.0638
+        ],
+        [
+         0.0048,
+         0.0688
+        ],
+        [
+         0.01362,
+         0.0534
+        ],
+        [
+         0.01923,
+         0.04113
+        ],
+        [
+         0.02074,
+         0.03588
+        ],
+        [
+         0.0208,
+         0.032
+        ],
+        [
+         0.01916,
+         0.02908
+        ],
+        [
+         0.01616,
+         0.0264
+        ],
+        [
+         0.00768,
+         0.02213
+        ],
+        [
+         -0.00145,
+         0.01999
+        ],
+        [
+         -0.00524,
+         0.01998
+        ],
+        [
+         -0.008,
+         0.0208
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Composed outline 0.21 x 0.275 m = 2.1 x 2.75 mm: two-part bushy tail, rump, chest, neck, head and ear as overlapping filled masses; no limbs.",
+      "de": "Zusammengesetzter Umriss 0,21 x 0,275 m = 2,1 x 2,75 mm: zweiteiliger buschiger Schwanz, Becken, Brust, Hals, Kopf und Ohr als überlappende gefüllte Massen; keine Glieder."
+     },
+     "retained": {
+      "en": "The bushy tail, the ear tuft and the upright haunch-and-chest block that identify a squirrel; the sitting posture.",
+      "de": "Der buschige Schwanz, der Ohrpinsel und der aufrechte Block aus Keule und Brust, die ein Eichhörnchen kennzeichnen; die Sitzhaltung."
+     },
+     "merged": {
+      "en": "Fore limbs and hands are merged into the chest shape (regions fur-back, fur-belly, arms-fur, hands-skin), hind limbs and feet into the rump (fur-back, legs-fur, feet-skin), nose into the head; neck and tail pieces overlap their neighbours by 0.05-0.06 m.",
+      "de": "Vorderglieder und Hände sind in die Brustform aufgenommen (Regionen fur-back, fur-belly, arms-fur, hands-skin), Hinterglieder und Füße in das Becken (fur-back, legs-fur, feet-skin), die Nase in den Kopf; Hals- und Schwanzstücke überlappen ihre Nachbarn um 0,05-0,06 m."
+     },
+     "omitted": {
+      "en": "All limbs, hands and feet (0.016-0.024 m = 0.16-0.24 mm; with four limbs in a 2 mm figure every limb outline comes within 0.15 mm of a neighbouring outline in some pose), eye, whiskers, claws.",
+      "de": "Alle Glieder, Hände und Füße (0,016-0,024 m = 0,16-0,24 mm; bei vier Gliedern in einer 2-mm-Figur kommt jede Gliedkontur in irgendeiner Pose näher als 0,15 mm an eine Nachbarkontur), Auge, Schnurrhaare, Krallen."
+     },
+     "thinElements": {
+      "en": "No thin element is drawn; the narrowest filled part is the neck (0.05 m = 0.5 mm).",
+      "de": "Kein dünnes Element ist gezeichnet; der schmalste gefüllte Teil ist der Hals (0,05 m = 0,5 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "0.18 mm silhouette, no detail pen; tones back mid, tail dark, ear light.",
+      "de": "0,18-mm-Kontur, kein Detailstift; Töne Rücken mittel, Schwanz dunkel, Ohr hell."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions; the thermal overlay shows the area-weighted value of limbs and body together.",
+      "de": "Zusammengeführte Formen listen ihre Regionen; das Wärmebild zeigt den flächengewichteten Wert von Gliedern und Körper zusammen."
+     }
+    }
+   },
+   "200": {
+    "status": "unavailable",
+    "denominator": 200,
+    "reason": {
+     "en": "A sitting red squirrel is 0.215 m x 0.27 m = 1.1 x 1.35 mm on paper at 1:200. Its limbs (0.016-0.024 m = 0.08-0.12 mm), ear tuft, eye and nose are below the 0.2 mm feature width, and the filled masses of tail, body and head that remain are too close together for the 0.15 mm ink gap in some pose (running, climbing). Without limbs the animal would not show how it sits, runs or climbs.",
+     "de": "Ein sitzendes Eichhörnchen misst 0,215 m x 0,27 m = 1,1 x 1,35 mm auf dem Papier bei 1:200. Seine Glieder (0,016-0,024 m = 0,08-0,12 mm), Ohrpinsel, Auge und Nase liegen unter der Merkmalsbreite von 0,2 mm, und die verbleibenden gefüllten Massen von Schwanz, Körper und Kopf liegen in manchen Posen (Laufen, Klettern) zu dicht für den Tintenabstand von 0,15 mm. Ohne Glieder zeigte das Tier nicht, wie es sitzt, läuft oder klettert."
+    },
+    "limitingFeature": {
+     "en": "Limbs and head details (0.016-0.024 m = 0.08-0.12 mm)",
+     "de": "Glieder und Kopfdetails (0,016-0,024 m = 0,08-0,12 mm)"
+    },
+    "limitingSizeM": 0.02,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     },
+     {
+      "kind": "asset",
+      "asset": "domestic-cat"
+     }
+    ]
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "A sitting red squirrel is 0.21 m x 0.27 m = 0.4 x 0.5 mm on paper at 1:500: body depth 0.09 m = 0.18 mm, head 0.05 m = 0.1 mm, limbs 0.016 m = 0.03 mm and the whole animal covers a quarter of a square millimetre. Nothing identifiable can print below the 0.2 mm feature width of the office laser profile.",
+     "de": "Ein sitzendes Eichhörnchen misst 0,21 m x 0,27 m = 0,4 x 0,5 mm auf dem Papier bei 1:500: Körpertiefe 0,09 m = 0,18 mm, Kopf 0,05 m = 0,1 mm, Glieder 0,016 m = 0,03 mm; das ganze Tier bedeckt ein Viertel Quadratmillimeter. Unter der Merkmalsbreite von 0,2 mm des Büro-Laser-Profils ist nichts Erkennbares druckbar."
+    },
+    "limitingFeature": {
+     "en": "Head and limbs (0.06 m = 0.12 mm, 0.02 m = 0.04 mm)",
+     "de": "Kopf und Glieder (0,06 m = 0,12 mm, 0,02 m = 0,04 mm)"
+    },
+    "limitingSizeM": 0.06,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 100
+     },
+     {
+      "kind": "asset",
+      "asset": "domestic-cat"
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "clinical": false,
+   "assumptions": [
+    {
+     "en": "Segments are rigid with authored masses summing to 0.30 kg; on the ground the feet carry the weight; on a trunk the claws of all four limbs are supports with the normal pointing away from the trunk and a friction coefficient of 1.5; airborne phases of the bound are ballistic.",
+     "de": "Segmente sind starr mit Massen von zusammen 0,30 kg; am Boden tragen die Füße; am Stamm sind die Krallen aller vier Gliedmaßen Auflager mit der Normalen vom Stamm weg und der Reibungszahl 1,5; die Flugphasen des Sprungs sind ballistisch."
+    },
+    {
+     "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.",
+     "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen."
+    }
+   ]
+  },
+  "presentation": {
+   "defaultPose": "sitting-eating",
+   "defaultClip": "nibble",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

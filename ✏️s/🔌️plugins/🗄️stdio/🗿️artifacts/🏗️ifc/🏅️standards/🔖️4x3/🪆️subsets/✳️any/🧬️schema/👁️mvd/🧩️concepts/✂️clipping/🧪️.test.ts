@@ -1,6 +1,6 @@
 /** ✂️ Three selected Clipping clauses retain exact concept and original/authored input boundaries. */
 import {test,expect} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {compare,applyPatch} from 'fast-json-patch';
 import * as api from './🟦️.ts';
 import {validateIfcBodyClipping as standardEndpoint,ifcBodyClippingDefinition as standardDefinition} from '../../../../🟦️.ts';

@@ -2,7 +2,7 @@
 import { strict as assert } from "node:assert";
 import { Database } from "bun:sqlite";
 import { test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 

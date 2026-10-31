@@ -1,0 +1,238 @@
+[
+  {
+    "id": "valid",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": true
+  },
+  {
+    "id": "empty-records",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": []
+    },
+    "expected": true
+  },
+  {
+    "id": "codec",
+    "input": {
+      "codec": 2,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "frame",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1024,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "copy-zero",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        0
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "output-fraction",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1.5
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "cancel-negative",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        -1
+      ],
+      "records": [
+        {
+          "name": "λ",
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "record-name",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": 3,
+          "enabled": true
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "record-missing-enabled",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ],
+      "records": [
+        {
+          "name": "λ"
+        }
+      ]
+    },
+    "expected": false
+  },
+  {
+    "id": "missing-records",
+    "input": {
+      "codec": 1,
+      "frameBytes": 1048576,
+      "copyGrants": [
+        1,
+        3
+      ],
+      "outputGrants": [
+        1
+      ],
+      "cancelStops": [
+        0,
+        2
+      ]
+    },
+    "expected": false
+  }
+]

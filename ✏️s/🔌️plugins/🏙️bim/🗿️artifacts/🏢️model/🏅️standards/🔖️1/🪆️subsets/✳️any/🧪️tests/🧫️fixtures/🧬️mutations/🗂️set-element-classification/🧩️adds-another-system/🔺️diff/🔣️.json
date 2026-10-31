@@ -1,10 +1,12 @@
 {
   "classifications": {
     "w-south": {
-      "assigned": {
-        "cs-din": "330"
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "cs-din": "330"
+        }
+      }
     }
   }
 }

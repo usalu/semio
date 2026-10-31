@@ -4,6 +4,7 @@ import {open} from "node:fs/promises";
 import {delimiter, dirname, join, relative, sep} from "node:path";
 import {
   NATIVE_TOOLCHAINS_V1,
+  CARGO_TOOL_IDS_V1,
   extractedLinkEscapesV1,
   nativeDistributionV1,
   nativeToolBinaryDirectoryV1,
@@ -209,4 +210,11 @@ export async function pinnedUvEnvironmentV1(environment: Readonly<Record<string,
 export async function pinnedGoEnvironmentV1(environment: Readonly<Record<string, string | undefined>>, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal, provision: boolean = true, host: ToolchainHostV1 = toolchainHostV1()): Promise<Readonly<Record<string, string | undefined>>> {
   await provisionNativeToolsV1(["go"], toolsRoot, port, signal, provision, host);
   return Object.freeze({...withPinnedNativePathV1(environment, host, toolsRoot, ["go"]), ...NATIVE_TOOLCHAINS_V1.go.variables, GOROOT: nativeToolDirectoryV1("go", host, toolsRoot)});
+}
+
+/** 🦀️ Provisions receipt-verified Cargo test tools inside the caller-owned root while retaining its Cargo home and compiler environment. */
+export async function pinnedCargoToolsEnvironmentV1(environment: Readonly<Record<string, string | undefined>>, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal, provision: boolean = true, host: ToolchainHostV1 = toolchainHostV1()): Promise<Readonly<Record<string, string | undefined>>> {
+  const tools = CARGO_TOOL_IDS_V1;
+  const directories = await provisionNativeToolsV1(tools, toolsRoot, port, signal, provision, host);
+  return Object.freeze({...withPinnedNativePathV1(environment, host, toolsRoot, tools), ...Object.fromEntries(tools.map(tool => ["SEMIO_TOOL_" + tool.toUpperCase().replaceAll("-", "_"), join(directories[tool]!, nativeDistributionV1(tool, host).binaries[0]!)]))});
 }

@@ -1,13 +1,13 @@
+import{nativeExclusionArgumentsV1}from"../../🔭️watch/🟨️.mjs";
 /** 📋 Membership listing in frontier shape: the native parallel scan when a watcher binary exists, a portable walk otherwise. */
 import {spawn} from "node:child_process";
 import {lstat,readdir} from "node:fs/promises";
 
 /** 📋 Returns `{directories:[path,mtimeMs,ino][],members:[path,mode][]}` of the tree under `root` without excluded paths. */
-export async function scanListingV1({root,binary,exclude,filter,threads=8}){
+export async function scanListingV1({root,binary,exclude,filter,opaqueBasenames,threads=8}){
  if(binary){
   const args=["scan","--root",root,"--threads",String(threads)];
-  for(const item of exclude.rooted)args.push("--exclude",item);
-  for(const item of exclude.names)args.push("--exclude-name",item);
+  args.push(...nativeExclusionArgumentsV1({...exclude,opaqueBasenames}));
   const bytes=await new Promise((resolve,reject)=>{
    const child=spawn(binary,args,{stdio:["ignore","pipe","inherit"]}),chunks=[];
    child.stdout.on("data",chunk=>chunks.push(chunk));child.once("error",reject);

@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "locales",
+    "parentPointer",
+    "previewPointer",
+    "tintPointer",
+    "opens"
+  ],
+  "properties": {
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "parentPointer": {
+      "const": "none"
+    },
+    "previewPointer": {
+      "const": "none"
+    },
+    "tintPointer": {
+      "const": "auto"
+    },
+    "opens": {
+      "const": false
+    }
+  }
+}

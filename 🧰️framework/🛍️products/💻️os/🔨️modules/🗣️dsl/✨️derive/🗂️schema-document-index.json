@@ -4296,11 +4296,13 @@
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/bun/operands.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🚧️operands/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/bun/orphans.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/cargo/execution/component.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/framework/process/testing/invocation/isolation/schema.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🪟️isolation/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/suites.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/suites/platforms.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🖥️platforms/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/vitest/policy.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🧪️vitest/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/workers/file-budgets.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/📏️file-budgets/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/process/testing/workers/v1.json": "🧰️framework/🔨️modules/🏃️process/🧪️testing/👷️workers/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/framework/process/watchdog/linux/schema.json": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧬️schema/🔣️.json",
       "https://semio.dev/native/recomputable-retirement/v1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/agent-sessions/v1": "🧰️framework/🔨️modules/🏃️process/🪪️agent-sessions/🧬️schema/🔣️.json",
       "https://semio.tech/framework/process/build-mode/v1": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
@@ -4392,7 +4394,8 @@
       "https://semio.tech/framework/filesystem/observation/churn/races": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🌊️races.json",
       "https://semio.tech/framework/filesystem/observation/churn/refusals": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/🧾️refusals.json",
       "https://semio.tech/framework/filesystem/observation/churn/snapshot": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧬️schema/📸️snapshot.json",
-      "schema://framework.filesystem.observation/LiveFilesystemJournalV1": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json"
+      "schema://framework.filesystem.observation/LiveFilesystemJournalV1": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",
+      "semio:filesystem:windows-path-spelling:v1": "🧰️framework/🔨️modules/📁️filesystem/📂️paths/🪟️windows/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/📚️compiler": {
       "https://json.schemas.assets.semio-tech.com/framework/compiler/syntax/ecma": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🧬️schema/🔣️.json"
@@ -4873,6 +4876,7 @@
       "https://semio.tech/framework/plugin/mounted-original-context-receipt": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🧾️context/🔣️.json",
       "https://semio.tech/framework/plugin/mounted-snapshot-read-preparation": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧬️schema/🔣️.json",
       "https://semio.tech/schema/os/extension-store-record.json": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🧬️schema/🔣️.json",
+      "plugin.typing.edit.settlement.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🧬️schema/🔣️.json",
       "semio.artifact.retained-command.metadata-retirement.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/♻️metadata/🧬️schema/🔣️.json",
       "semio.framework.operation-cancellation.target.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏳️operation-progress/🧬️schema/🎯️target.json",
       "semio.plugin.extension.invoke.corpus.v1": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️extension/🧬️schema/📨️invoke/🔣️.json",
@@ -4933,6 +4937,7 @@
       "https://json.schemas.assets.semio-tech.com/print/visualization-gallery/testing/measurement/schema.json": "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🧬️schema/🔣️.json",
       "https://semio.tech/print/assignment.schema.json": "🧰️framework/🛍️products/📓️print/🧾️template/📝️assignment/🧬️schema/🔣️.json",
       "https://semio.tech/print/font-metrics.schema.json": "🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/📏️metrics/🧬️schema/🔣️.json",
+      "https://semio.tech/print/thesis.schema.json": "🧰️framework/🛍️products/📓️print/🧾️template/🎓️thesis/🧬️schema/🔣️.json",
       "https://semio.tech/schema/print/chart/diff": "🧰️framework/🛍️products/📓️print/🧬️schema/🔀️diff/🔣️.json",
       "https://semio.tech/schema/print/chart/inference": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🔣️.json",
       "https://semio.tech/schema/print/chart/mutation": "🧰️framework/🛍️products/📓️print/🧬️schema/🧬️mutations/🔣️.json",
@@ -4951,6 +4956,9 @@
       "https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/bundle/schema.json": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/catalog/schema.json": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/print/tectonic-template-compilation/toolchain/schema.json": "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🧬️schema/🔣️.json"
+    },
+    "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome": {
+      "semio://course/react/scrollport/v1": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🪟️chrome/📏️scrollport/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli": {
       "https://json.schemas.assets.semio-tech.coms/repo/cli/build.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/🧬️schema/🏗️build/🔣️.json",
@@ -4996,7 +5004,8 @@
       "https://semio-tech.com/schema/repo/metrics.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model": {
-      "https://json.schemas.assets.semio-tech.com/repo/model/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🧬️schema/🔣️.json"
+      "https://json.schemas.assets.semio-tech.com/repo/model/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🧬️schema/🔣️.json",
+      "semio.repo.model.artifact-layout/1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🧬️schema/🆔️artifact-id/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library": {
       "https://json.schemas.assets.semio-tech.com/framework/repo/build/ci-report/suites.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧾️ci-report/🗂️suites/🧬️schema/🔣️.json",
@@ -5004,11 +5013,14 @@
       "https://json.schemas.assets.semio-tech.com/framework/repo/library/testing/mutation-scenario-identities/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧬️mutation-scenario-identities/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/abstraction-ownership/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📏️ownership/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/build-artifact-registry.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📇️registry/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/build/cpu-profile/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/build/runtime-entry-admission/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/cache/artifact-package-inventory.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧭️package-inventory/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/discovery/runtime/graph.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/discovery/runtime/selection/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/discovery/schema-reads/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/build/arguments/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧬️schema/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/library/build/resident/ports/native-tools/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔌️ports/🧰️native-tools/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/caching/artifacts/native-orchestration/invocation/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/caching/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/caching/vite/session/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🧬️schema/🔣️.json",
@@ -5018,6 +5030,7 @@
       "https://json.schemas.assets.semio-tech.com/repo/library/generator/preview/progress/event.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/normalization/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/owner-projection-policy/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🏠️owner-projection-policy/🔣️.json",
+      "https://json.schemas.assets.semio-tech.com/repo/library/root-test-birth/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🌱️birth/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/cargo/preparation/custody/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/repo/library/workspaces/cargo/preparation/synchronization/component.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️synchronization/🧬️schema/🔣️.json",
@@ -5029,6 +5042,7 @@
       "https://semio.tech/framework/build/fleet-status/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚢️fleet-status/🧬️schema/🔣️.json",
       "https://semio.tech/framework/repo/cargo-build-units/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧬️schema/🔣️.json",
       "https://semio.tech/framework/repo/cargo-fill-rate/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧬️schema/🔣️.json",
+      "https://semio.tech/framework/repo/cargo-image-headroom/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧬️schema/🔣️.json",
       "https://semio.tech/framework/repo/cargo-incremental-sessions/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧬️schema/🔣️.json",
       "https://semio.tech/framework/repo/cargo-jobserver/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🎰️jobserver/🧬️schema/🔣️.json",
       "https://semio.tech/framework/repo/preflight-remedies/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/💊️remedies/🧬️schema/🔣️.json",
@@ -5040,6 +5054,7 @@
       "https://semio.tech/repo/nx/bounded-artifact/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧬️schema/🔣️.json",
       "https://semio.tech/repo/storage/compiler-store/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧬️schema/🔣️.json",
       "https://semio.tech/repo/typescript-check/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🧬️schema/🔣️.json",
+      "https://semio.tech/schema/repo/build/workspace-test-selection": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🌐️workspace/🧬️schema/🔣️.json",
       "https://semio.tech/schema/rust-rlib-command-data-v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧬️schema/🔣️.json",
       "https://semio.tech/schema/rust-rlib-command-recipe-v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧩️recipe/🧬️schema/🔣️.json",
       "https://semio.tech/schema/rust-unit-context-v4": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧬️schema/🔣️.json",
@@ -5084,6 +5099,7 @@
       "semio://repo/build/inference-components/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🗂️components/🧬️schema/🔣️.json",
       "semio://repo/build/inference-observation/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json",
       "semio://repo/build/inference-stamps/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔖️stamps/🧬️schema/🔣️.json",
+      "semio://repo/caching/module-source-references/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📥️inference/🔗️references/🧬️schema/🔣️.json",
       "semio://repo/caching/nx-daemon-admission/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚏️admission/🧬️schema/🔣️.json",
       "semio://repo/caching/nx-graph-seal/v3": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧬️schema/🔣️.json",
       "semio://repo/caching/nx-pinned-generation/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📌️generation/🧬️schema/🔣️.json",
@@ -5122,10 +5138,13 @@
       "semio:machine-disk-budget:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🎚️machine/🧬️schema/🔣️.json",
       "semio:nx-graph-law-operation:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🎛️operation/🧬️schema/🔣️.json",
       "semio:nx-toolkit-store-bound:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/🎚️store-bound/🧬️schema/🔣️.json",
+      "semio:nx:output-observation:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧬️schema/🔣️.json",
       "semio:nx:source-input-data:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/📋️data/🧬️schema/🔣️.json",
       "semio:nx:source-read:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json",
       "semio:remote-cache:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧬️schema/🌐️remote-cache.json",
       "semio:repo/authorizers/sites": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧭️sites/🧬️schema/🔣️.json",
+      "semio:repo/canonical-test-aggregate/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧮️aggregate/🧬️schema/🔣️.json",
+      "semio:repository-cargo-artifact-acquisition:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📦️acquisition/🧬️schema/🔣️.json",
       "semio:repository-cargo-launch:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧬️schema/🔣️.json",
       "semio:repository-cargo-storage-arguments:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/🧬️schema/🔣️.json",
       "semio:repository:workspace:cargo:declared-selection:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🪧️declared-selection/🔣️.json",
@@ -5183,6 +5202,7 @@
       "https://json.schemas.assets.semio-tech.com/repo/providers.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/🧬️schema/🔣️.json"
     },
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": {
+      "https://json.schemas.assets.semio-tech.com/repo/test/storage/schema.json": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🧬️schema/🔣️.json",
       "schema://semio/repo-test-acceptance/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧬️schema/🔣️.json",
       "semio.repo.fault-notice/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️fault-notices-gate/🔣️.json",
       "semio.repo.mutation-input-declaration/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️mutation-input-declarations/🔣️.json",

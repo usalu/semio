@@ -1,0 +1,50 @@
+{
+  "meshStates": [
+    {
+      "name": "no-managed-owner",
+      "value": null,
+      "valid": true
+    },
+    {
+      "name": "complete-empty-owner",
+      "value": {
+        "vertices": [],
+        "halfedges": [],
+        "faces": [],
+        "uvSeams": [],
+        "attributes": [],
+        "materials": [],
+        "textures": []
+      },
+      "valid": true
+    },
+    {
+      "name": "scalar-is-not-owner",
+      "value": 0,
+      "valid": false
+    },
+    {
+      "name": "partial-owner",
+      "value": {},
+      "valid": false
+    },
+    {
+      "name": "unknown-owner-field",
+      "value": {
+        "vertices": [],
+        "halfedges": [],
+        "faces": [],
+        "uvSeams": [],
+        "attributes": [],
+        "materials": [],
+        "textures": [],
+        "unknown": true
+      },
+      "valid": false
+    }
+  ],
+  "requiredObjectFields": [
+    "meshContent",
+    "meshState"
+  ]
+}

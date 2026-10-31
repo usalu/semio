@@ -19,7 +19,7 @@ import { contours } from "d3-contour";
 import { parseProbeJsonLines, compileVizProbeDocument, inspectVizProbeDocumentRefusalV1, withCompiledVizProbeDocumentV1 } from "../../../🔨️modules/🧪️viz-probe/🟦️.ts";
 import fixture from "../🔣️.json";
 import chartSchema from "../../../🧬️schema/🔣️.json";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { equal } from "../🧰️grammar-kit/🟦️.ts";
 
 /** 🐝️ Checks planar binning and KDE separately from fitted native rendering and authored paint controls. */

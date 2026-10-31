@@ -1,13 +1,19 @@
 /** 🚧️ Contract: a project withheld because a source of its command closure does not parse holds the facts that withhold it: the bytes of the failing source and everything the failed walk read. Repairing the source, or creating the module it could not find, makes those facts stale, so the next run sees the repair; unrelated files leave them valid. The independent oracles are esbuild (the closure resolves or not) and Python's `hashlib` (the bytes the project holds). */
 import{afterAll,expect,test}from"bun:test";
-import{mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{mkdirSync,rmSync,writeFileSync}from"node:fs";
 import{createRequire}from"node:module";
-import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
 import fixture from"./🔣️.json";
 import fixtureSchema from"./🧬️schema/🔣️.json";
+
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1("graph");
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+import{requireTestToolV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+const pythonTool=requireTestToolV1("python");
 
 const inference=await import("../../🟨️.mjs"),{createScriptInputCache,libraryBootstrap}=inference as any;
 await libraryBootstrap;
@@ -15,7 +21,7 @@ const observation=await import("../../../../👁️observation/🟨️.mjs") as 
 const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const write=(root:string,files:Readonly<Partial<Record<string,string>>>)=>{for(const[path,text]of Object.entries(files)){if(text===undefined)continue;mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
-const sha=(path:string)=>Bun.spawnSync(["python3","-I","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",path]).stdout.toString().trim();
+const sha=(path:string)=>Bun.spawnSync([pythonTool,"-I","-c","import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())",path]).stdout.toString().trim();
 const bundles=async(root:string)=>{try{await createRequire(import.meta.url)("esbuild").build({entryPoints:[join(root,"proj/📜️script.ts")],absWorkingDir:root,bundle:true,write:false,platform:"node",format:"esm",logLevel:"silent",outfile:"out.js"});return true;}catch{return false;}};
 
 const withhold=async(root:string)=>{
@@ -30,8 +36,8 @@ const withhold=async(root:string)=>{
 
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);});
 
-for(const scenario of fixture.scenarios)test("a withheld project "+scenario.name+(scenario.holds?" and its facts still hold":" and its facts go stale"),async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"withheld-rows-"));roots.push(root);write(root,fixture.files);
+for(const scenario of fixture.scenarios)test("a withheld project "+scenario.name+(scenario.holds?" and its facts still hold":" and its facts go stale"),async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("withheld-rows-");roots.push(root);write(root,fixture.files);
  const failing=join(root,fixture.failing);
  expect(await bundles(root),"esbuild cannot bundle the broken closure").toBe(false);
  await new Promise(done=>setTimeout(done,2200));
@@ -45,10 +51,10 @@ for(const scenario of fixture.scenarios)test("a withheld project "+scenario.name
  write(root,scenario.edit);
  expect(await observation.observationsHold(rows),scenario.name).toBe(scenario.holds);
  expect(await bundles(root),"esbuild agrees on whether the closure resolves").toBe(scenario.resolves);
-},60_000);
+}),60_000);
 
-test("a stored failure is never reused, a stored node is: the next inference after a repair is computed again",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"withheld-reuse-"));roots.push(root);
+test("a stored failure is never reused, a stored node is: the next inference after a repair is computed again",async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("withheld-reuse-");roots.push(root);
  const nodes=await import("../../📦️project-nodes/🟨️.mjs") as any;
  const run=async(name:string,value:unknown)=>{
   const cachePath=join(root,"np",name+".json"),count=()=>observation.projectInferenceCountsV1()[name]??0;
@@ -57,4 +63,4 @@ test("a stored failure is never reused, a stored node is: the next inference aft
  };
  expect(await run("failure",{unavailable:{root:"x",source:"x/y.ts",sha256:"0",reason:"does not parse"}})).toBe(2);
  expect(await run("node",{name:"node",root:"x",targets:{}})).toBe(1);
-});
+}));

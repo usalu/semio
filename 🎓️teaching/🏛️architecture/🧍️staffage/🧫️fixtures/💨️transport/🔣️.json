@@ -1,0 +1,1167 @@
+{
+ "id": "transport-scenarios",
+ "oracle": "scenario assets for the transport cases; each case adds its own expectations and third-party oracle",
+ "assets": {
+  "human": {
+   "id": "fixture-human",
+   "category": "humans",
+   "title": {
+    "en": "Fixture human",
+    "de": "Fixture-Mensch"
+   },
+   "anchors": [
+    {
+     "id": "nose",
+     "bone": "head",
+     "x": 0.09,
+     "y": 0.0,
+     "kind": "emitter",
+     "title": {
+      "en": "Nostril",
+      "de": "Nasenloch"
+     }
+    },
+    {
+     "id": "mouth",
+     "bone": "head",
+     "x": 0.09,
+     "y": -0.04,
+     "kind": "emitter",
+     "title": {
+      "en": "Mouth",
+      "de": "Mund"
+     }
+    },
+    {
+     "id": "crown",
+     "bone": "head",
+     "x": 0.0,
+     "y": 0.12,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown",
+      "de": "Scheitel"
+     }
+    }
+   ],
+   "poses": [
+    {
+     "id": "rest",
+     "title": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "description": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "rest"
+     },
+     "loads": []
+    },
+    {
+     "id": "active",
+     "title": {
+      "en": "active",
+      "de": "active"
+     },
+     "description": {
+      "en": "active",
+      "de": "active"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "active"
+     },
+     "loads": []
+    },
+    {
+     "id": "mixed",
+     "title": {
+      "en": "mixed",
+      "de": "mixed"
+     },
+     "description": {
+      "en": "mixed",
+      "de": "mixed"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "mixed"
+     },
+     "loads": []
+    }
+   ],
+   "clips": [
+    {
+     "id": "walk",
+     "title": {
+      "en": "Walk",
+      "de": "Gehen"
+     },
+     "description": {
+      "en": "Walk",
+      "de": "Gehen"
+     },
+     "durationS": 1.2,
+     "fps": 30,
+     "loop": true,
+     "rootMotion": "plant",
+     "advanceM": 1.5,
+     "keys": [
+      {
+       "t": 0,
+       "pose": "rest",
+       "ease": "smooth"
+      },
+      {
+       "t": 0.6,
+       "pose": "active",
+       "ease": "smooth"
+      }
+     ],
+     "contacts": [],
+     "phases": [],
+     "events": [],
+     "tracks": []
+    },
+    {
+     "id": "switch",
+     "title": {
+      "en": "Switch",
+      "de": "Wechsel"
+     },
+     "description": {
+      "en": "Switch",
+      "de": "Wechsel"
+     },
+     "durationS": 20,
+     "fps": 30,
+     "loop": false,
+     "rootMotion": "none",
+     "keys": [
+      {
+       "t": 0,
+       "pose": "rest",
+       "ease": "linear"
+      },
+      {
+       "t": 20,
+       "pose": "rest",
+       "ease": "linear"
+      }
+     ],
+     "contacts": [],
+     "phases": [],
+     "events": [],
+     "tracks": [
+      {
+       "target": "breathing",
+       "ease": "step",
+       "keys": [
+        {
+         "t": 0,
+         "v": 0
+        },
+        {
+         "t": 7,
+         "v": 1
+        },
+        {
+         "t": 14,
+         "v": 0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "thermal": {
+    "environment": {
+     "airTempC": 5,
+     "meanRadiantTempC": 5,
+     "relativeHumidity": 0.8,
+     "windMS": 0,
+     "windDirectionDeg": 0,
+     "solarWM2": 0,
+     "diffuseFraction": 0.2,
+     "pressurePa": 101325
+    },
+    "respiration": {
+     "noseEmitter": "nose",
+     "mouthEmitter": "mouth",
+     "exhaledTempC": 34,
+     "exhaledRelativeHumidity": 0.95,
+     "patterns": [
+      {
+       "id": "rest",
+       "title": {
+        "en": "Rest",
+        "de": "Ruhe"
+       },
+       "rateBpm": 12,
+       "tidalVolumeL": 0.5,
+       "inhaleFraction": 0.38,
+       "pauseAfterInhaleFraction": 0.04,
+       "exhaleFraction": 0.45,
+       "pauseAfterExhaleFraction": 0.13,
+       "route": "nose",
+       "source": "authored-estimate"
+      },
+      {
+       "id": "active",
+       "title": {
+        "en": "Active",
+        "de": "Aktiv"
+       },
+       "rateBpm": 30,
+       "tidalVolumeL": 1.5,
+       "inhaleFraction": 0.4,
+       "pauseAfterInhaleFraction": 0.0,
+       "exhaleFraction": 0.5,
+       "pauseAfterExhaleFraction": 0.1,
+       "route": "mouth",
+       "source": "authored-estimate"
+      },
+      {
+       "id": "mixed",
+       "title": {
+        "en": "Nose and mouth",
+        "de": "Nase und Mund"
+       },
+       "rateBpm": 15,
+       "tidalVolumeL": 0.6,
+       "inhaleFraction": 0.4,
+       "pauseAfterInhaleFraction": 0.05,
+       "exhaleFraction": 0.4,
+       "pauseAfterExhaleFraction": 0.15,
+       "route": "nose-and-mouth",
+       "source": "authored-estimate"
+      }
+     ],
+     "motion": [
+      {
+       "bone": "chest",
+       "angleDeg": 1.5,
+       "dy": 0.004
+      },
+      {
+       "bone": "abdomen",
+       "angleDeg": 0.5,
+       "dy": 0.006
+      }
+     ],
+     "source": "authored-estimate"
+    },
+    "operating": [],
+    "regions": [],
+    "emitters": [
+     {
+      "id": "nose",
+      "kind": "breath",
+      "title": {
+       "en": "Nostril",
+       "de": "Nasenloch"
+      },
+      "anchor": "nose",
+      "directionDeg": -60,
+      "diameterM": 0.0095,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "mouth",
+      "kind": "breath",
+      "title": {
+       "en": "Mouth",
+       "de": "Mund"
+      },
+      "anchor": "mouth",
+      "directionDeg": -10,
+      "diameterM": 0.0124,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "plume",
+      "kind": "plume",
+      "title": {
+       "en": "Body plume",
+       "de": "Körperfahne"
+      },
+      "anchor": "crown",
+      "directionDeg": 90,
+      "diameterM": 0.3,
+      "source": "authored-estimate",
+      "region": "torso"
+     }
+    ],
+    "assumptions": []
+   }
+  },
+  "machine": {
+   "id": "fixture-machine",
+   "category": "machinery",
+   "title": {
+    "en": "Fixture machine",
+    "de": "Fixture-Maschine"
+   },
+   "anchors": [
+    {
+     "id": "pipe",
+     "bone": "body",
+     "x": -1.2,
+     "y": 0.0,
+     "kind": "emitter",
+     "title": {
+      "en": "Exhaust pipe",
+      "de": "Auspuff"
+     }
+    }
+   ],
+   "poses": [
+    {
+     "id": "idle",
+     "title": {
+      "en": "idle",
+      "de": "idle"
+     },
+     "description": {
+      "en": "idle",
+      "de": "idle"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {}
+     },
+     "loads": []
+    }
+   ],
+   "clips": [],
+   "thermal": {
+    "environment": {
+     "airTempC": 5,
+     "meanRadiantTempC": 5,
+     "relativeHumidity": 0.8,
+     "windMS": 0,
+     "windDirectionDeg": 0,
+     "solarWM2": 0,
+     "diffuseFraction": 0.2,
+     "pressurePa": 101325
+    },
+    "operating": [
+     {
+      "id": "engine",
+      "title": {
+       "en": "Engine",
+       "de": "Motor"
+      },
+      "levels": [
+       {
+        "v": 0,
+        "title": {
+         "en": "Off",
+         "de": "Aus"
+        }
+       },
+       {
+        "v": 1,
+        "title": {
+         "en": "Rated",
+         "de": "Nenn"
+        }
+       }
+      ]
+     }
+    ],
+    "regions": [],
+    "emitters": [
+     {
+      "id": "exhaust",
+      "kind": "exhaust",
+      "title": {
+       "en": "Exhaust",
+       "de": "Abgas"
+      },
+      "anchor": "pipe",
+      "directionDeg": 180,
+      "diameterM": 0.05,
+      "source": "authored-estimate",
+      "operatingKey": "engine",
+      "volumeFlowM3S": 0.05,
+      "temperatureRiseK": 150,
+      "vapourKgPerKg": 0.07
+     }
+    ],
+    "assumptions": []
+   }
+  },
+  "tree": {
+   "id": "fixture-tree",
+   "category": "vegetation",
+   "title": {
+    "en": "Fixture tree",
+    "de": "Fixture-Baum"
+   },
+   "anchors": [
+    {
+     "id": "c0",
+     "bone": "crown",
+     "x": -1.5,
+     "y": 0.0,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    },
+    {
+     "id": "c1",
+     "bone": "crown",
+     "x": -0.9,
+     "y": 0.8,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    },
+    {
+     "id": "c2",
+     "bone": "crown",
+     "x": -0.3,
+     "y": 0.2,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    },
+    {
+     "id": "c3",
+     "bone": "crown",
+     "x": 0.3,
+     "y": 0.9,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    },
+    {
+     "id": "c4",
+     "bone": "crown",
+     "x": 0.9,
+     "y": 0.1,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    },
+    {
+     "id": "c5",
+     "bone": "crown",
+     "x": 1.5,
+     "y": 0.7,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown anchor",
+      "de": "Kronenanker"
+     }
+    }
+   ],
+   "poses": [
+    {
+     "id": "summer",
+     "title": {
+      "en": "summer",
+      "de": "summer"
+     },
+     "description": {
+      "en": "summer",
+      "de": "summer"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {}
+     },
+     "loads": []
+    }
+   ],
+   "clips": [],
+   "thermal": {
+    "environment": {
+     "airTempC": 22,
+     "meanRadiantTempC": 5,
+     "relativeHumidity": 0.5,
+     "windMS": 0,
+     "windDirectionDeg": 0,
+     "solarWM2": 0,
+     "diffuseFraction": 0.2,
+     "pressurePa": 101325
+    },
+    "operating": [],
+    "regions": [],
+    "emitters": [
+     {
+      "id": "transpiration",
+      "kind": "transpiration",
+      "title": {
+       "en": "Crown transpiration",
+       "de": "Kronentranspiration"
+      },
+      "anchor": "c0",
+      "directionDeg": 90,
+      "diameterM": 1.0,
+      "source": "authored-estimate",
+      "region": "foliage",
+      "anchors": [
+       "c0",
+       "c1",
+       "c2",
+       "c3",
+       "c4",
+       "c5"
+      ]
+     }
+    ],
+    "assumptions": []
+   }
+  },
+  "carrier": {
+   "id": "fixture-carrier",
+   "category": "humans",
+   "title": {
+    "en": "Fixture human",
+    "de": "Fixture-Mensch"
+   },
+   "anchors": [
+    {
+     "id": "nose",
+     "bone": "head",
+     "x": 0.09,
+     "y": 0.0,
+     "kind": "emitter",
+     "title": {
+      "en": "Nostril",
+      "de": "Nasenloch"
+     }
+    },
+    {
+     "id": "mouth",
+     "bone": "head",
+     "x": 0.09,
+     "y": -0.04,
+     "kind": "emitter",
+     "title": {
+      "en": "Mouth",
+      "de": "Mund"
+     }
+    },
+    {
+     "id": "crown",
+     "bone": "head",
+     "x": 0.0,
+     "y": 0.12,
+     "kind": "emitter",
+     "title": {
+      "en": "Crown",
+      "de": "Scheitel"
+     }
+    },
+    {
+     "id": "toddler-nose",
+     "bone": "head",
+     "x": 0.2,
+     "y": -0.15,
+     "kind": "emitter",
+     "title": {
+      "en": "Toddler nostril",
+      "de": "Kleinkind-Nasenloch"
+     }
+    }
+   ],
+   "poses": [
+    {
+     "id": "rest",
+     "title": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "description": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "rest",
+      "passengers": {
+       "toddler": {
+        "activityMet": 1.0,
+        "breathing": "rest"
+       }
+      }
+     },
+     "loads": []
+    },
+    {
+     "id": "active",
+     "title": {
+      "en": "active",
+      "de": "active"
+     },
+     "description": {
+      "en": "active",
+      "de": "active"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "active",
+      "passengers": {
+       "toddler": {
+        "activityMet": 1.0,
+        "breathing": "rest"
+       }
+      }
+     },
+     "loads": []
+    },
+    {
+     "id": "mixed",
+     "title": {
+      "en": "mixed",
+      "de": "mixed"
+     },
+     "description": {
+      "en": "mixed",
+      "de": "mixed"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "mixed",
+      "passengers": {
+       "toddler": {
+        "activityMet": 1.0,
+        "breathing": "rest"
+       }
+      }
+     },
+     "loads": []
+    },
+    {
+     "id": "crying",
+     "title": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "description": {
+      "en": "rest",
+      "de": "rest"
+     },
+     "bones": {},
+     "ground": "auto",
+     "contacts": [],
+     "thermal": {
+      "regions": {},
+      "emitters": {},
+      "breathing": "rest",
+      "passengers": {
+       "toddler": {
+        "activityMet": 1.5,
+        "breathing": "crying"
+       }
+      }
+     },
+     "loads": []
+    }
+   ],
+   "clips": [
+    {
+     "id": "walk",
+     "title": {
+      "en": "Walk",
+      "de": "Gehen"
+     },
+     "description": {
+      "en": "Walk",
+      "de": "Gehen"
+     },
+     "durationS": 1.2,
+     "fps": 30,
+     "loop": true,
+     "rootMotion": "plant",
+     "advanceM": 1.5,
+     "keys": [
+      {
+       "t": 0,
+       "pose": "rest",
+       "ease": "smooth"
+      },
+      {
+       "t": 0.6,
+       "pose": "active",
+       "ease": "smooth"
+      }
+     ],
+     "contacts": [],
+     "phases": [],
+     "events": [],
+     "tracks": []
+    },
+    {
+     "id": "switch",
+     "title": {
+      "en": "Switch",
+      "de": "Wechsel"
+     },
+     "description": {
+      "en": "Switch",
+      "de": "Wechsel"
+     },
+     "durationS": 20,
+     "fps": 30,
+     "loop": false,
+     "rootMotion": "none",
+     "keys": [
+      {
+       "t": 0,
+       "pose": "rest",
+       "ease": "linear"
+      },
+      {
+       "t": 20,
+       "pose": "rest",
+       "ease": "linear"
+      }
+     ],
+     "contacts": [],
+     "phases": [],
+     "events": [],
+     "tracks": [
+      {
+       "target": "breathing",
+       "ease": "step",
+       "keys": [
+        {
+         "t": 0,
+         "v": 0
+        },
+        {
+         "t": 7,
+         "v": 1
+        },
+        {
+         "t": 14,
+         "v": 0
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "thermal": {
+    "environment": {
+     "airTempC": 5,
+     "meanRadiantTempC": 5,
+     "relativeHumidity": 0.8,
+     "windMS": 0,
+     "windDirectionDeg": 0,
+     "solarWM2": 0,
+     "diffuseFraction": 0.2,
+     "pressurePa": 101325
+    },
+    "respiration": {
+     "noseEmitter": "nose",
+     "mouthEmitter": "mouth",
+     "exhaledTempC": 34,
+     "exhaledRelativeHumidity": 0.95,
+     "patterns": [
+      {
+       "id": "rest",
+       "title": {
+        "en": "Rest",
+        "de": "Ruhe"
+       },
+       "rateBpm": 12,
+       "tidalVolumeL": 0.5,
+       "inhaleFraction": 0.38,
+       "pauseAfterInhaleFraction": 0.04,
+       "exhaleFraction": 0.45,
+       "pauseAfterExhaleFraction": 0.13,
+       "route": "nose",
+       "source": "authored-estimate"
+      },
+      {
+       "id": "active",
+       "title": {
+        "en": "Active",
+        "de": "Aktiv"
+       },
+       "rateBpm": 30,
+       "tidalVolumeL": 1.5,
+       "inhaleFraction": 0.4,
+       "pauseAfterInhaleFraction": 0.0,
+       "exhaleFraction": 0.5,
+       "pauseAfterExhaleFraction": 0.1,
+       "route": "mouth",
+       "source": "authored-estimate"
+      },
+      {
+       "id": "mixed",
+       "title": {
+        "en": "Nose and mouth",
+        "de": "Nase und Mund"
+       },
+       "rateBpm": 15,
+       "tidalVolumeL": 0.6,
+       "inhaleFraction": 0.4,
+       "pauseAfterInhaleFraction": 0.05,
+       "exhaleFraction": 0.4,
+       "pauseAfterExhaleFraction": 0.15,
+       "route": "nose-and-mouth",
+       "source": "authored-estimate"
+      }
+     ],
+     "motion": [
+      {
+       "bone": "chest",
+       "angleDeg": 1.5,
+       "dy": 0.004
+      },
+      {
+       "bone": "abdomen",
+       "angleDeg": 0.5,
+       "dy": 0.006
+      }
+     ],
+     "source": "authored-estimate"
+    },
+    "operating": [],
+    "regions": [],
+    "emitters": [
+     {
+      "id": "nose",
+      "kind": "breath",
+      "title": {
+       "en": "Nostril",
+       "de": "Nasenloch"
+      },
+      "anchor": "nose",
+      "directionDeg": -60,
+      "diameterM": 0.0095,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "mouth",
+      "kind": "breath",
+      "title": {
+       "en": "Mouth",
+       "de": "Mund"
+      },
+      "anchor": "mouth",
+      "directionDeg": -10,
+      "diameterM": 0.0124,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "plume",
+      "kind": "plume",
+      "title": {
+       "en": "Body plume",
+       "de": "Körperfahne"
+      },
+      "anchor": "crown",
+      "directionDeg": 90,
+      "diameterM": 0.3,
+      "source": "authored-estimate",
+      "region": "torso"
+     },
+     {
+      "id": "toddler-nose",
+      "kind": "breath",
+      "title": {
+       "en": "Toddler nostril",
+       "de": "Kleinkind-Nasenloch"
+      },
+      "anchor": "toddler-nose",
+      "directionDeg": -30,
+      "diameterM": 0.005,
+      "source": "authored-estimate"
+     }
+    ],
+    "assumptions": [],
+    "passengers": [
+     {
+      "id": "toddler",
+      "title": {
+       "en": "Toddler",
+       "de": "Kleinkind"
+      },
+      "physiology": {},
+      "respiration": {
+       "noseEmitter": "toddler-nose",
+       "exhaledTempC": 34,
+       "exhaledRelativeHumidity": 0.95,
+       "patterns": [
+        {
+         "id": "rest",
+         "title": {
+          "en": "Rest",
+          "de": "Ruhe"
+         },
+         "rateBpm": 24,
+         "tidalVolumeL": 0.12,
+         "inhaleFraction": 0.4,
+         "pauseAfterInhaleFraction": 0.05,
+         "exhaleFraction": 0.45,
+         "pauseAfterExhaleFraction": 0.1,
+         "route": "nose",
+         "source": "authored-estimate"
+        },
+        {
+         "id": "crying",
+         "title": {
+          "en": "Crying",
+          "de": "Weinen"
+         },
+         "rateBpm": 40,
+         "tidalVolumeL": 0.2,
+         "inhaleFraction": 0.3,
+         "pauseAfterInhaleFraction": 0,
+         "exhaleFraction": 0.6,
+         "pauseAfterExhaleFraction": 0.1,
+         "route": "mouth",
+         "source": "authored-estimate"
+        }
+       ],
+       "motion": [],
+       "source": "authored-estimate"
+      }
+     }
+    ]
+   }
+  }
+ },
+ "environments": {
+  "calm-cold": {
+   "airTempC": 5,
+   "meanRadiantTempC": 5,
+   "relativeHumidity": 0.8,
+   "windMS": 0,
+   "windDirectionDeg": 0,
+   "solarWM2": 0,
+   "diffuseFraction": 0.2,
+   "pressurePa": 101325
+  },
+  "breeze": {
+   "airTempC": 5,
+   "meanRadiantTempC": 5,
+   "relativeHumidity": 0.8,
+   "windMS": 2.0,
+   "windDirectionDeg": 0,
+   "solarWM2": 0,
+   "diffuseFraction": 0.2,
+   "pressurePa": 101325
+  },
+  "gust": {
+   "keys": [
+    {
+     "t": 0,
+     "environment": {
+      "airTempC": 5,
+      "meanRadiantTempC": 5,
+      "relativeHumidity": 0.8,
+      "windMS": 0,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.2,
+      "pressurePa": 101325
+     },
+     "ease": "step"
+    },
+    {
+     "t": 6,
+     "environment": {
+      "airTempC": 5,
+      "meanRadiantTempC": 5,
+      "relativeHumidity": 0.8,
+      "windMS": 3.0,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 0.2,
+      "pressurePa": 101325
+     },
+     "ease": "step"
+    }
+   ]
+  }
+ },
+ "thermal": {
+  "human": {
+   "regions": {
+    "torso": {
+     "sensibleW": 60.0,
+     "latentW": 15.0,
+     "surfaceTempC": 28.0
+    }
+   },
+   "totals": {
+    "sensibleW": 70.0,
+    "latentW": 25.0
+   }
+  },
+  "tree": {
+   "regions": {
+    "foliage": {
+     "sensibleW": 20.0,
+     "latentW": 150.0,
+     "surfaceTempC": 22.0
+    }
+   },
+   "totals": {
+    "sensibleW": 20.0,
+    "latentW": 150.0
+   }
+  },
+  "machine": {
+   "regions": {},
+   "totals": {
+    "sensibleW": 0.0,
+    "latentW": 0.0
+   }
+  },
+  "carrier": {
+   "regions": {
+    "torso": {
+     "sensibleW": 60.0,
+     "latentW": 15.0,
+     "surfaceTempC": 28.0
+    }
+   },
+   "totals": {
+    "sensibleW": 70.0,
+    "latentW": 25.0
+   }
+  }
+ },
+ "kinematics": {
+  "human": {
+   "pivotY": 1.55,
+   "pivotX": 0.0,
+   "rootX": {
+    "x0": 0.0,
+    "vx": 0.0
+   },
+   "angleKeysDeg": [
+    [
+     0,
+     0.0
+    ]
+   ],
+   "operating": {},
+   "emitters": {}
+  },
+  "machine": {
+   "pivotY": 0.5,
+   "pivotX": 0.0,
+   "rootX": {
+    "x0": 3.0,
+    "vx": 0.0
+   },
+   "angleKeysDeg": [
+    [
+     0,
+     0.0
+    ]
+   ],
+   "operating": {
+    "engine": [
+     [
+      0,
+      0.0
+     ],
+     [
+      2,
+      0.0
+     ],
+     [
+      3,
+      1.0
+     ],
+     [
+      8,
+      1.0
+     ],
+     [
+      9,
+      0.0
+     ]
+    ]
+   },
+   "emitters": {}
+  },
+  "tree": {
+   "pivotY": 4.0,
+   "pivotX": 0.0,
+   "rootX": {
+    "x0": 0.0,
+    "vx": 0.0
+   },
+   "angleKeysDeg": [
+    [
+     0,
+     0.0
+    ]
+   ],
+   "operating": {},
+   "emitters": {}
+  },
+  "carrier": {
+   "pivotY": 1.55,
+   "pivotX": 0.0,
+   "rootX": {
+    "x0": 0.0,
+    "vx": 0.0
+   },
+   "angleKeysDeg": [
+    [
+     0,
+     0.0
+    ]
+   ],
+   "operating": {},
+   "emitters": {}
+  }
+ }
+}

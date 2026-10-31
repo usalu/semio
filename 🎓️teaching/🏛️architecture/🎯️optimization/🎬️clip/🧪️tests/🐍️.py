@@ -1184,9 +1184,9 @@ class AlgorithmPaths(unittest.TestCase):
 class SchemaFirstStudy(unittest.TestCase):
     """📜 The schema, the authored study and the invalid models share one contract."""
 
-    def test_schema_file_exists_and_is_a_2020_12_document_forbidding_extras(self):
+    def test_schema_file_exists_and_is_a_draft07_document_forbidding_extras(self):
         schema = json.loads((CLIP / "🧮️model/🧬️schema/🔣️.schema.json").read_text(encoding="utf-8"))
-        self.assertEqual(schema["$schema"], "https://json-schema.org/draft/2020-12/schema")
+        self.assertEqual(schema["$schema"], "http://json-schema.org/draft-07/schema#")
         self.assertIs(schema["additionalProperties"], False)
         self.assertEqual(set(schema["required"]), set(schema["properties"]))
         self.assertGreaterEqual(len(CASES["invalidModels"]), 10)

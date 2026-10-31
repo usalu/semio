@@ -95,59 +95,6 @@
     "support": "contact"
    }
   ],
-  "geometry": {
-   "elevation": [
-    {
-     "id": "stand",
-     "bone": "stand",
-     "role": "body",
-     "lod": 0,
-     "z": 0,
-     "filled": true,
-     "tone": 0.5,
-     "kind": "rect",
-     "x": -0.1,
-     "y": 0,
-     "w": 0.2,
-     "h": 0.05
-    },
-    {
-     "id": "rim",
-     "bone": "wheel",
-     "role": "body",
-     "lod": 0,
-     "z": 0,
-     "filled": false,
-     "tone": 0.5,
-     "kind": "ellipse",
-     "cx": 0,
-     "cy": 0,
-     "rx": 0.5,
-     "ry": 0.5
-    },
-    {
-     "id": "spoke",
-     "bone": "wheel",
-     "role": "detail",
-     "lod": 1,
-     "z": 0,
-     "filled": true,
-     "tone": 0.5,
-     "kind": "poly",
-     "points": [
-      [
-       0,
-       0
-      ],
-      [
-       0.5,
-       0
-      ]
-     ],
-     "closed": false
-    }
-   ]
-  },
   "poses": [
    {
     "id": "rest",
@@ -164,7 +111,10 @@
     "contacts": [
      "foot"
     ],
-    "thermal": {},
+    "thermal": {
+     "regions": {},
+     "emitters": {}
+    },
     "loads": []
    },
    {
@@ -186,7 +136,10 @@
     "contacts": [
      "foot"
     ],
-    "thermal": {},
+    "thermal": {
+     "regions": {},
+     "emitters": {}
+    },
     "loads": []
    },
    {
@@ -208,7 +161,10 @@
     "contacts": [
      "foot"
     ],
-    "thermal": {},
+    "thermal": {
+     "regions": {},
+     "emitters": {}
+    },
     "loads": []
    }
   ],
@@ -315,7 +271,9 @@
    },
    "regions": [],
    "emitters": [],
-   "assumptions": []
+   "assumptions": [],
+   "passengers": [],
+   "operating": []
   },
   "structure": {
    "gravityMS2": 9.80665,
@@ -336,12 +294,396 @@
    "defaultClip": "spin",
    "viewpoints": [
     "elevation"
-   ]
+   ],
+   "defaultScale": 100
   },
   "exports": [
    "svg"
   ],
-  "completion": "authored"
+  "completion": "authored",
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "stand",
+       "bone": "stand",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "id": "rim",
+       "bone": "wheel",
+       "role": "body",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.5,
+       "ry": 0.5
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Wheel at 1:500: silhouette.",
+      "de": "Rad bei 1:500: silhouette."
+     },
+     "retained": {
+      "en": "Wheel at 1:500: retained.",
+      "de": "Rad bei 1:500: retained."
+     },
+     "merged": {
+      "en": "Wheel at 1:500: merged.",
+      "de": "Rad bei 1:500: merged."
+     },
+     "omitted": {
+      "en": "Wheel at 1:500: omitted.",
+      "de": "Rad bei 1:500: omitted."
+     },
+     "thinElements": {
+      "en": "Wheel at 1:500: thinElements.",
+      "de": "Rad bei 1:500: thinElements."
+     },
+     "hatching": {
+      "en": "Wheel at 1:500: hatching.",
+      "de": "Rad bei 1:500: hatching."
+     },
+     "styles": {
+      "en": "Wheel at 1:500: styles.",
+      "de": "Rad bei 1:500: styles."
+     },
+     "overlays": {
+      "en": "Wheel at 1:500: overlays.",
+      "de": "Rad bei 1:500: overlays."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 349
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "stand",
+       "bone": "stand",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "id": "rim",
+       "bone": "wheel",
+       "role": "body",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.498,
+       "ry": 0.498
+      },
+      {
+       "id": "spoke",
+       "bone": "wheel",
+       "role": "detail",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.498,
+         0
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Wheel at 1:200: silhouette.",
+      "de": "Rad bei 1:200: silhouette."
+     },
+     "retained": {
+      "en": "Wheel at 1:200: retained.",
+      "de": "Rad bei 1:200: retained."
+     },
+     "merged": {
+      "en": "Wheel at 1:200: merged.",
+      "de": "Rad bei 1:200: merged."
+     },
+     "omitted": {
+      "en": "Wheel at 1:200: omitted.",
+      "de": "Rad bei 1:200: omitted."
+     },
+     "thinElements": {
+      "en": "Wheel at 1:200: thinElements.",
+      "de": "Rad bei 1:200: thinElements."
+     },
+     "hatching": {
+      "en": "Wheel at 1:200: hatching.",
+      "de": "Rad bei 1:200: hatching."
+     },
+     "styles": {
+      "en": "Wheel at 1:200: styles.",
+      "de": "Rad bei 1:200: styles."
+     },
+     "overlays": {
+      "en": "Wheel at 1:200: overlays.",
+      "de": "Rad bei 1:200: overlays."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 149
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "stand",
+       "bone": "stand",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "id": "rim",
+       "bone": "wheel",
+       "role": "body",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.496,
+       "ry": 0.496
+      },
+      {
+       "id": "spoke",
+       "bone": "wheel",
+       "role": "detail",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.496,
+         0
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Wheel at 1:100: silhouette.",
+      "de": "Rad bei 1:100: silhouette."
+     },
+     "retained": {
+      "en": "Wheel at 1:100: retained.",
+      "de": "Rad bei 1:100: retained."
+     },
+     "merged": {
+      "en": "Wheel at 1:100: merged.",
+      "de": "Rad bei 1:100: merged."
+     },
+     "omitted": {
+      "en": "Wheel at 1:100: omitted.",
+      "de": "Rad bei 1:100: omitted."
+     },
+     "thinElements": {
+      "en": "Wheel at 1:100: thinElements.",
+      "de": "Rad bei 1:100: thinElements."
+     },
+     "hatching": {
+      "en": "Wheel at 1:100: hatching.",
+      "de": "Rad bei 1:100: hatching."
+     },
+     "styles": {
+      "en": "Wheel at 1:100: styles.",
+      "de": "Rad bei 1:100: styles."
+     },
+     "overlays": {
+      "en": "Wheel at 1:100: overlays.",
+      "de": "Rad bei 1:100: overlays."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 74
+    },
+    "pens": {
+     "body": 0.5,
+     "detail": 0.25,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.7
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "stand",
+       "bone": "stand",
+       "role": "body",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": 0,
+       "w": 0.2,
+       "h": 0.05
+      },
+      {
+       "id": "rim",
+       "bone": "wheel",
+       "role": "body",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.494,
+       "ry": 0.494
+      },
+      {
+       "id": "spoke",
+       "bone": "wheel",
+       "role": "detail",
+       "z": 0,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.494,
+         0
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Wheel at 1:50: silhouette.",
+      "de": "Rad bei 1:50: silhouette."
+     },
+     "retained": {
+      "en": "Wheel at 1:50: retained.",
+      "de": "Rad bei 1:50: retained."
+     },
+     "merged": {
+      "en": "Wheel at 1:50: merged.",
+      "de": "Rad bei 1:50: merged."
+     },
+     "omitted": {
+      "en": "Wheel at 1:50: omitted.",
+      "de": "Rad bei 1:50: omitted."
+     },
+     "thinElements": {
+      "en": "Wheel at 1:50: thinElements.",
+      "de": "Rad bei 1:50: thinElements."
+     },
+     "hatching": {
+      "en": "Wheel at 1:50: hatching.",
+      "de": "Rad bei 1:50: hatching."
+     },
+     "styles": {
+      "en": "Wheel at 1:50: styles.",
+      "de": "Rad bei 1:50: styles."
+     },
+     "overlays": {
+      "en": "Wheel at 1:50: overlays.",
+      "de": "Rad bei 1:50: overlays."
+     }
+    }
+   }
+  },
+  "symbols": []
  },
  "clip": "spin",
  "bone": "wheel",

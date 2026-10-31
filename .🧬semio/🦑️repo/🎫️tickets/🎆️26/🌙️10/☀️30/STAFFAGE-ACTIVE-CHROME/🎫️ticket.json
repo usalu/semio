@@ -1,0 +1,37 @@
+{
+  "title": "Staffage Active Chrome",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "The current page and other active controls use the primary color. Pressed toggles use the active background.",
+  "summary": "The current page uses the primary color. Pressed toggles and selected segments use the active background.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "37286bd2-bb31-4899-bfe6-f604c55b92db"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-30 23:51:56",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "The current page and other active controls use the primary color. Pressed toggles use the active background.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-31 11:58:02",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "The current page uses the primary color. Pressed toggles and selected segments use the active background.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️30/STAFFAGE-ACTIVE-CHROME/active-chrome.md"
+        }
+      ]
+    }
+  ]
+}

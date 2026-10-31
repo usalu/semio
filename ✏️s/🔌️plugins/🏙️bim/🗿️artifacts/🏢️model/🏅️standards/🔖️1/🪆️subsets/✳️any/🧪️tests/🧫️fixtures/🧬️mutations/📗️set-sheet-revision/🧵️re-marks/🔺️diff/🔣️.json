@@ -2,7 +2,9 @@
   "sheet_revisions": {
     "rev-2": {
       "entry": "Patched",
-      "number": "C"
+      "value": {
+        "number": "C"
+      }
     }
   }
 }

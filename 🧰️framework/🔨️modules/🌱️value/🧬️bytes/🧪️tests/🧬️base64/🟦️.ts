@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import ts from "typescript";
 import { join } from "node:path";
 import ownedSchema from "../../🧬️schema/🔣️.json" with {type:"json"};
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { BundleScript } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { encodeBase64, decodeBase64, type IntrinsicBytesControl } from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type:"json" };

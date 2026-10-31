@@ -2,7 +2,9 @@
   "walls": {
     "w-east": {
       "entry": "Patched",
-      "wall_type": "wt-150"
+      "value": {
+        "wall_type": "wt-150"
+      }
     }
   }
 }

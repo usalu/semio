@@ -129,16 +129,20 @@ test("keyboard enters Energy and locked topic previews speak both languages with
     const locked = card(learner.page, topic.id);
     await expect(locked.getByRole("link")).toHaveCount(0);
     await expect(locked.locator(".course-access-preview[inert]")).toHaveCount(1);
+    await expect(locked.locator(".course-access-preview[inert]")).toHaveAttribute("aria-hidden", "true");
     await expect(locked.getByRole("status")).toContainText("Noch nicht freigeschaltet");
     await locked.locator(".course-access-tint").click();
     const placeholder = pane(learner.page, topic.id);
     await expect(placeholder).not.toHaveAttribute("data-opened", "");
-    await expect(placeholder).toContainText(topic.title.de);
+    await expect(locked.locator(".course-access-preview[inert]").getByRole("heading", { level: 2, includeHidden: true })).toHaveText(topic.title.de);
     for (const id of topic.quizzes) await expect(placeholder).toContainText(QUIZZES.find(quiz => quiz.id === id)!.title.de);
 
     await learner.page.locator('header button[lang="en"]').click();
     await expect(locked.getByRole("status")).toContainText("Not available yet");
-    await expect(placeholder).toContainText(topic.title.en);
+    await expect(locked.locator(".course-access-preview[inert]").getByRole("heading", { level: 2, includeHidden: true })).toHaveText(topic.title.en);
+    await expect(placeholder).not.toHaveAttribute("data-opened", "");
+    await expect(locked.locator(".course-access-preview[inert]")).toHaveCount(1);
+    await expect(locked.locator(".course-access-preview[inert]")).toHaveAttribute("aria-hidden", "true");
     for (const id of topic.quizzes) await expect(placeholder).toContainText(QUIZZES.find(quiz => quiz.id === id)!.title.en);
     await learner.page.locator('header button[lang="de"]').click();
     await expect.poll(() => new URL(learner.page.url()).hash).toBe("#quizzes");

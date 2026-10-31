@@ -13,7 +13,7 @@ test("the current canonical project orders every closed route through a no-op ag
 });
 
 test("the neutral route join agrees with independent SQLite",async()=>{
- expect(new Ajv({strict:true}).compile({$ref:schema.$id+"#/$defs/Fixture",...schema})(fixture)).toBe(true);
+ const validate=new Ajv({strict:true}).compile({...schema,$ref:"#/$defs/Route"});for(const route of fixture.routes)expect(validate(route)).toBe(true);
  const database=new Database(":memory:");
  try{
   database.exec("CREATE TABLE routes(id TEXT,entry TEXT,args TEXT);CREATE TABLE candidates(target TEXT,entry TEXT,args TEXT)");
@@ -64,4 +64,11 @@ test("a stale or self-referential checked declaration refuses before project pub
  requireCanonicalTestAggregateV1(project,canonicalTestAggregatePolicyV1.root);
  project.targets.test.dependsOn.push("test");
  expect(()=>requireCanonicalTestAggregateV1(project,canonicalTestAggregatePolicyV1.root)).toThrow();
+});
+
+test("the public cache route retains the canonical full-suite runner",()=>{
+ const root=readFileSync(resolve(import.meta.dirname,"../../../../🎛️commands/🧪️test/🟦️.ts"),"utf8"),entry=readFileSync(resolve(import.meta.dirname,"../../../📜️script.ts"),"utf8");
+ expect(root).toContain('import("../../⚡️caching/📜️script.ts")');
+ expect(root).toContain("new CacheTestScript(");
+ expect(entry).toContain("export class CacheTestScript extends BundleScript");
 });

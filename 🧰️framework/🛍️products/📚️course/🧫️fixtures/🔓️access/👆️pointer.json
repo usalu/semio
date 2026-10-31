@@ -1,0 +1,10 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "parentPointer": "none",
+  "previewPointer": "none",
+  "tintPointer": "auto",
+  "opens": false
+}

@@ -4,7 +4,7 @@ import {readFileSync,mkdirSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
 import {join,resolve} from "node:path";
 import {spawnSync} from "node:child_process";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import * as ts from "typescript";
 import {Database} from "bun:sqlite";
 import {rustTokens,rustTokenPairs} from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";

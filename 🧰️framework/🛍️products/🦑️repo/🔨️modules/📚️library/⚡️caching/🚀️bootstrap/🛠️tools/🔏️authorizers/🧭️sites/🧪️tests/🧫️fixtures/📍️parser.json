@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "path": "owner/broken.ts",
+      "loader": "ts",
+      "source": "export const value = (\n;\n",
+      "invalid": true
+    },
+    {
+      "path": "owner/broken.js",
+      "loader": "js",
+      "source": "export const value = (\n;\n",
+      "invalid": true
+    },
+    {
+      "path": "owner/broken.cts",
+      "loader": "ts",
+      "source": "const value = (\n;\n",
+      "invalid": true
+    },
+    {
+      "path": "owner/valid.ts",
+      "loader": "ts",
+      "source": "export const value=1;\n",
+      "invalid": false
+    }
+  ]
+}

@@ -2,7 +2,9 @@
   "curtain_wall_types": {
     "cwt-1": {
       "entry": "Patched",
-      "name": "Facade (renamed)"
+      "value": {
+        "name": "Facade (renamed)"
+      }
     }
   }
 }

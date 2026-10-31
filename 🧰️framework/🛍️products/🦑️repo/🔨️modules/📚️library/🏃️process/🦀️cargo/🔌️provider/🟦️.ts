@@ -1,7 +1,7 @@
 import {receiveScriptProcessInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { CargoAdmissionProviderV1, CompilerStoreViewV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildRepositoryCargoArtifacts,withRepositoryCargoArtifactPlanV1 } from "../../../⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runRepositoryCargoCommandV1, runRepositoryCargoLintV1, runRepositoryCargoTests, runRepositoryCargoTestsV1 } from "../🎟️admission/🟦️.ts";
 import { configuredRepositoryCargoPreparationPolicyV1, runRepositoryExactCargoLaws } from "../🎯️exact/🟦️.ts";
 import { withRepositoryCompilerStoreV1 } from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
@@ -22,4 +22,5 @@ export const provider: CargoAdmissionProviderV1 = {
     return body(Object.freeze({...store,withCargoInputs}),phase);
   })),
   buildArtifacts: (manifest, args, root, request) => buildRepositoryCargoArtifacts(manifest, args, root, { ...request, network: repositoryCargoNetworkV1(request.invocation, root) }),
+  withArtifactPlan: (manifest,args,root,request,body) => withRepositoryCargoArtifactPlanV1(manifest,args,root,{...request,network:repositoryCargoNetworkV1(request.invocation,root)},body),
 };

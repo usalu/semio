@@ -11,7 +11,7 @@ import { buildOverviewButton } from "./🟢️overview-button/🟦️.tsx";
 export type { LayeredDirection };
 // #endregion 👆️LayeredSwipe
 /** 🥞️ A layered landing: every page on a strip of container-sized cells, ONE `ui-veil` glass above it whose `clip-path` punches a hole over the
- * revealed page, and the cards above the glass — in `strip` mode the app's card grid, fixed; in `swipe` mode a card layer of the strip's own
+ * revealed page, and the cards above the glass — in `strip` mode the app's card grid, fixed in the view and scrolling when the rows exceed it; in `swipe` mode a card layer of the strip's own
  * grid that moves with the strip, each card centred on its page and scrolling inside its cell when taller. It fills its positioned parent.
  * Hovering (mouse) the card's explore control, or keyboard-focusing the card, glides the strip to that page (500 ms, cubic) and shows it clear; leaving that control or blurring the card
  * restores the glass and the pointer pan (12 % of the gap per 60 Hz frame, by elapsed time). A pointer hover also fades every other card out
@@ -30,8 +30,8 @@ export type { LayeredDirection };
  * @see ../🃏️OverviewCard/🟦️.tsx — the card the apps render
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — the opened page is a labelled region */
 export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement {
-  const { targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs } = usePanesState({ props });
-  const { focusView, follow, requestOpen, moveTo, reveal, conceal, cardCallback, close, stripCallback, veilCallback, cardStripCallback } = useMoveState({ targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink });
+  const { layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs } = usePanesState({ props });
+  const { focusView, follow, requestOpen, moveTo, reveal, conceal, cardCallback, close, stripCallback, veilCallback, cardStripCallback } = useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink });
   const { restedOn, stripStyle, paneView, cellStyles, cardHost, neighbours, insets, goTo, chrome } = usePaneStylesState({ previousOpened, opened, openedRef, interactive, routing, deepLink, latest, revealedRef, setRevealedId, sourceRef, setRevealSource, finishGhost, focusView, container, rootRef, cardElements, props, revealedId, touch, repaint, mode, pan, reduced, stop, targetRef, paint, follow, cellList, ids, aim, driveRef, cells, requestOpen, panning, swiping, resting, live, lifecycle, warm, panes, paneAt, moveTo, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, reveal, conceal, cardCallback, renderCard });
   const { overviewButton } = buildOverviewButton({ interactive, opened, labels, close });
   return (
@@ -52,22 +52,10 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       {opened === null ? (
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
-          {swiping ? (
-            <>
-              <div ref={cardStripCallback} data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className="pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" style={stripStyle}>
-                {panes.map((pane) => (
-                  <div key={pane.id} ref={cellRefs.get(pane.id)} data-layered-cell={pane.id} className="pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom" style={cellStyles.get(pane.id)}>
-                    {cardHost(pane)}
-                  </div>
-                ))}
-              </div>
-              <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} />
-            </>
-          ) : (
-            <div data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={cn("pointer-events-none absolute inset-0 z-[31] outline-none", props.overlayClassName)} style={props.overlayStyle}>
-              {panes.map(cardHost)}
-            </div>
-          )}
+          <div ref={swiping ? cardStripCallback : undefined} data-layered-overlay="" role="group" aria-label={labels.grid} tabIndex={interactive ? -1 : undefined} inert={!interactive} className={swiping ? "pointer-events-none absolute left-0 top-0 z-[31] grid outline-none will-change-transform" : cn("pointer-events-auto absolute inset-0 z-[31] overflow-x-hidden overflow-y-auto outline-none", props.overlayClassName)} style={swiping ? stripStyle : props.overlayStyle}>
+            {panes.map((pane) => cardHost(pane, swiping ? { onCell: cellRefs.get(pane.id), style: cellStyles.get(pane.id) } : null))}
+          </div>
+          {swiping ? <LayeredNeighbourHints neighbours={neighbours} moving={resting === null} insets={insets} label={labels.neighbour} onGo={goTo} /> : null}
         </>
       ) : null}
       {chrome}

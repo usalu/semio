@@ -2,10 +2,12 @@
   "curtain_walls": {
     "cw-1": {
       "entry": "Patched",
-      "v_grid": {
-        "value": {
-          "Spacing": {
-            "spacing": 0.5
+      "value": {
+        "v_grid": {
+          "value": {
+            "Spacing": {
+              "spacing": 0.5
+            }
           }
         }
       }

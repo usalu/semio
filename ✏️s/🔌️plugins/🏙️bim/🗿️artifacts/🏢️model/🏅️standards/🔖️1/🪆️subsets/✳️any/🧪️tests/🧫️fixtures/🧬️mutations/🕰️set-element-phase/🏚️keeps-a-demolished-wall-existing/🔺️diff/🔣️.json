@@ -2,7 +2,9 @@
   "walls": {
     "w-south": {
       "entry": "Patched",
-      "phase": "Existing"
+      "value": {
+        "phase": "Existing"
+      }
     }
   }
 }

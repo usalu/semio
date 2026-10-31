@@ -6,10 +6,18 @@ import{nativeDirectoryProtocolV1}from"../📋️contract/🟦️.ts";
 const protocol=nativeDirectoryProtocolV1();
 /** 📊️ What one measured tree holds: allocated blocks, summed file sizes and entries visited. */
 export type NativeDirectoryUsageRowV1=Readonly<{allocatedBytes:number;logicalBytes:number;entries:number}>;
-type EntryStatV1=Readonly<{isFile():boolean;isDirectory():boolean;nlink:bigint;blocks:bigint;size:bigint;dev:bigint;ino:bigint}>;
-/** 🔌️ The two filesystem calls of the walk, replaceable so races and failures are testable on any platform. */
+type EntryStatV1=Readonly<{isFile():boolean;isDirectory():boolean;nlink:number|bigint;blocks:number|bigint;size:number|bigint;dev:number|bigint;ino:number|bigint}>;
+/** 🔌️ Observes immutable stat snapshots with exact integer fields: Numbers must be safe integers; listings contain atomic native basenames. */
 export type NativeDirectoryWalkPortV1=Readonly<{list(path:string):Promise<readonly string[]>;stat(path:string):Promise<EntryStatV1>}>;
-const systemWalk:NativeDirectoryWalkPortV1=Object.freeze({list:path=>listEntries(path),stat:path=>statEntry(path,{bigint:true})});
+/** 🧾️ Keeps mathematically exact native metadata and switches the whole walk to BigInt observations when a wider identity or value is encountered. */
+function systemNativeDirectoryWalkV1(signal?:AbortSignal):NativeDirectoryWalkPortV1{
+ let exactOnly=false;const maximum=protocol.usage.metadata.maximumExactInteger,exact=(value:number)=>Number.isInteger(value)&&Math.abs(value)<=maximum;return Object.freeze<NativeDirectoryWalkPortV1>({list:path=>{signal?.throwIfAborted();return listEntries(path);},stat:async path=>{
+  signal?.throwIfAborted();if(exactOnly){const row=await statEntry(path,{bigint:true});signal?.throwIfAborted();return row;}
+  const row=await statEntry(path);signal?.throwIfAborted();
+  if(exact(row.dev)&&exact(row.ino)&&exact(row.nlink)&&exact(row.blocks)&&exact(row.size))return row;
+  exactOnly=true;signal?.throwIfAborted();const precise=await statEntry(path,{bigint:true});signal?.throwIfAborted();return precise;
+ }});
+}
 const vanished=(error:unknown)=>{const code=(error as NodeJS.ErrnoException)?.code;return code==="ENOENT"||code==="ENOTDIR";};
 
 /** 📐️ The entries a tree may hold: what the envelope can store at one entry per allocation unit, times a slack factor, never below the floor, so a legitimate full partition is never refused while a runaway producer still is. */
@@ -18,13 +26,18 @@ export function nativeDirectoryEntryBoundV1(maximumPhysicalBytes:number):number{
  const row=protocol.usage;return Math.max(protocol.maximumEntries,Math.ceil(maximumPhysicalBytes/row.blockBytes)*row.entryFactor);
 }
 
+/** 🧷️ Appends an admitted native basename to its already canonical directory prefix without normalizing Unicode or paths again. */
+function appendNativeDirectoryEntryV1(prefix:string,name:string,windows:boolean):string{const entry=protocol.usage.entry;if(entry.invalidNames.includes(name)||name.includes(entry.nul)||name.includes(entry.posixSeparator)||windows&&name.includes(entry.windowsSeparator))throw Error(entry.refusal);return prefix+name;}
+
 /** 🧮️ Measures physical bytes below a root without blocking the event loop: bounded concurrent lstat and readdir, links not followed, a hard link counted once, a vanished entry skipped because it no longer occupies space; the signal stops the walk between batches. */
 export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Readonly<{maximumEntries?:number;signal?:AbortSignal;port?:NativeDirectoryWalkPortV1}>={}):Promise<NativeDirectoryUsageRowV1>{
- const maximumEntries=options.maximumEntries??protocol.maximumEntries,signal=options.signal,port=options.port??systemWalk,row=protocol.usage;
+ const maximumEntries=options.maximumEntries??protocol.maximumEntries,signal=options.signal,port=options.port??systemNativeDirectoryWalkV1(signal),row=protocol.usage,windows=process.platform==="win32",separator=windows?row.entry.windowsSeparator:row.entry.posixSeparator;
+ if(!row.entry.platforms.includes(process.platform))throw Error(row.entry.refusal);
  if(!Number.isSafeInteger(maximumEntries)||maximumEntries<1)throw Error("Positive entry bound required");
  const seen=new Set<string>(),stack:{path:string;depth:number}[]=[],waiting:(()=>void)[]=[];
- let allocatedBytes=0,logicalBytes=0,entries=0,active=0,failure:unknown;
+ let allocatedBytes=0,logicalBytes=0,entries=0,active=0,failed=false,failure:unknown;
  const wake=()=>{for(const resume of waiting.splice(0))resume();};
+ const fail=(error:unknown)=>{if(!failed){failed=true;failure=error;}wake();};
  const take=(path:string,depth:number,stat:EntryStatV1)=>{
   if(++entries>maximumEntries)throw Error("Directory usage entry bound exceeded");
   if(stat.isFile()&&stat.nlink>1n){const key=stat.dev+":"+stat.ino;if(seen.has(key))return;seen.add(key);}
@@ -33,7 +46,7 @@ export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Rea
  };
  const next=async():Promise<{path:string;depth:number}|undefined>=>{
   for(;;){
-   if(failure!==undefined)return undefined;
+   if(failed)return undefined;
    const item=stack.pop();if(item){active++;return item;}
    if(active===0)return undefined;
    await new Promise<void>(resume=>waiting.push(resume));
@@ -45,16 +58,18 @@ export async function measureNativeDirectoryUsageAsyncV1(root:string,options:Rea
    try{
     signal?.throwIfAborted();
     let names:readonly string[];try{names=await port.list(item.path);}catch(error){if(vanished(error))continue;throw error;}
-    for(let index=0;index<names.length&&failure===undefined;index+=row.batch){
+    const prefix=item.path.endsWith(separator)?item.path:item.path+separator;
+    for(let index=0;index<names.length&&!failed;index+=row.batch){
      signal?.throwIfAborted();
-     const results=await Promise.all(names.slice(index,index+row.batch).map(async name=>{const path=join(item.path,name);try{return{path,stat:await port.stat(path)};}catch(error){if(vanished(error))return undefined;throw error;}}));
-     for(const result of results)if(result)take(result.path,item.depth+1,result.stat);
+     const paths:string[]=[];for(let offset=index;offset<Math.min(names.length,index+row.batch);offset++)paths.push(appendNativeDirectoryEntryV1(prefix,names[offset]!,windows));
+     const results=await Promise.all(paths.map(async path=>{try{return{path,stat:await port.stat(path)};}catch(error){if(!vanished(error))fail(error);return undefined;}}));
+     for(const result of results)if(result&&!failed)take(result.path,item.depth+1,result.stat);
     }
-   }catch(error){failure??=error;}finally{active--;wake();}
+   }catch(error){fail(error);}finally{active--;wake();}
   }
  };
  await Promise.all(Array.from({length:row.concurrency},worker));
- if(failure!==undefined)throw failure;
+ if(failed)throw failure;
  if(!Number.isSafeInteger(allocatedBytes))throw Error("Directory usage overflow");
  return Object.freeze({allocatedBytes,logicalBytes,entries});
 }

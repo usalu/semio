@@ -1,8 +1,10 @@
 {
   "views": {
     "v-section": {
-      "depth": 7.0,
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "depth": 7
+      }
     }
   }
 }

@@ -1,15 +1,17 @@
 {
   "spaces": {
     "sp-1": {
-      "ceiling_finish": {
-        "value": "m-paint"
-      },
       "entry": "Patched",
-      "floor_finish": {
-        "value": "m-tile"
-      },
-      "wall_finish": {
-        "value": "m-paint"
+      "value": {
+        "ceiling_finish": {
+          "value": "m-paint"
+        },
+        "floor_finish": {
+          "value": "m-tile"
+        },
+        "wall_finish": {
+          "value": "m-paint"
+        }
       }
     }
   }

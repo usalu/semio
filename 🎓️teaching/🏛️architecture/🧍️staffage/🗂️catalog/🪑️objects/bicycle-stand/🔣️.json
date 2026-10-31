@@ -1,0 +1,1435 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "bicycle-stand",
+    "category": "objects",
+    "title": {
+      "en": "Bicycle Stand (Sheffield Hoop)",
+      "de": "Fahrradbügel (Sheffield-Bügel)"
+    },
+    "summary": {
+      "en": "A galvanised 48.3 mm tube hoop with a cross rail, set in a concrete footing: 0.75 m wide, 0.80 m high, drawn face-on from the side where the bikes park; a leaning bicycle is a load, not a second asset. The plan shows the hoop as a bar with two leg dots.",
+      "de": "Ein feuerverzinkter Bügel aus 48,3-mm-Rohr mit Querholm im Betonfundament: 0,75 m breit, 0,80 m hoch, von der Parkseite her frontal gezeichnet; ein angelehntes Fahrrad ist eine Last, kein zweites Asset. Der Grundriss zeigt den Bügel als Balken mit zwei Beinpunkten."
+    },
+    "tags": [
+      "bicycle-stand",
+      "sheffield-stand",
+      "steel",
+      "street-furniture",
+      "galvanised",
+      "mobility"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10219-2",
+          "citation": "EN 10219-2:2006 Cold formed welded structural hollow sections of non-alloy and fine grain steels, Part 2: Tolerances, dimensions and sectional properties (circular hollow section 48.3 x 3.2 mm, 3.56 kg/m)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1: General rules and rules for buildings (E = 210 GPa, density 7850 kg/m3)."
+        },
+        {
+          "id": "en-iso-1461",
+          "citation": "EN ISO 1461:2022 Hot dip galvanized coatings on fabricated iron and steel articles - Specifications and test methods (zinc coating of street furniture)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: Densities, self-weight, imposed loads for buildings (guidance on barrier and imposed horizontal loads)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (conductivity, specific heat and density of steel)."
+        }
+      ],
+      "notes": {
+        "en": "Face-on elevation of the hoop plane; bicycles stand parallel to it, so the real lean force acts out of this plane and the planar solver only sees the in-plane share (authored estimate, 150 N lean, 500/200 N lock pull). Tube 48.3 x 3.2 mm (3.56 kg/m, EN 10219-2); legs concreted in 0.3 m, the buried part is neither drawn nor counted. Mass 10.0 kg above ground.",
+        "de": "Frontale Ansicht der Bügelebene; die Fahrräder stehen parallel dazu, die reale Anlehnkraft wirkt also aus der Ebene heraus und der ebene Löser sieht nur den Anteil in der Ebene (Schätzung, 150 N Anlehnen, 500/200 N Schlosszug). Rohr 48,3 x 3,2 mm (3,56 kg/m, EN 10219-2); Beine 0,3 m einbetoniert, der vergrabene Teil wird weder gezeichnet noch gezählt. Masse 10,0 kg über Boden."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.8,
+      "widthM": 0.75,
+      "depthM": 0.0483,
+      "massKg": 9.97
+    },
+    "materials": [
+      {
+        "id": "galv-steel",
+        "title": {
+          "en": "Hot-dip galvanised steel",
+          "de": "Feuerverzinkter Stahl"
+        },
+        "emissivity": 0.28,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "stand",
+      "bones": [
+        {
+          "id": "stand",
+          "parent": null,
+          "title": {
+            "en": "Stand reference (ground point between the legs)",
+            "de": "Standbezug (Bodenpunkt zwischen den Beinen)"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.0483,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "hoop",
+          "parent": "stand",
+          "title": {
+            "en": "Inverted U hoop",
+            "de": "Umgekehrter U-Bügel"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.8,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 7.47,
+            "comX": 0.0,
+            "comY": 0.42,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-10219-2"
+          }
+        },
+        {
+          "id": "crossbar",
+          "parent": "hoop",
+          "title": {
+            "en": "Cross rail",
+            "de": "Querholm"
+          },
+          "x": 0.0,
+          "y": 0.4,
+          "angleDeg": 0,
+          "lengthM": 0.7017,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.5,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-10219-2"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "leg-left",
+        "bone": "hoop",
+        "x": -0.3508,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Left leg embedded in the footing",
+          "de": "Linkes Bein im Fundament eingespannt"
+        },
+        "support": "fixed",
+        "footprintLengthM": 0.0483,
+        "footprintWidthM": 0.0483
+      },
+      {
+        "id": "leg-right",
+        "bone": "hoop",
+        "x": 0.3508,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Right leg embedded in the footing",
+          "de": "Rechtes Bein im Fundament eingespannt"
+        },
+        "support": "fixed",
+        "footprintLengthM": 0.0483,
+        "footprintWidthM": 0.0483
+      },
+      {
+        "id": "lean-point",
+        "bone": "hoop",
+        "x": 0.3508,
+        "y": 0.55,
+        "kind": "load",
+        "title": {
+          "en": "Lean contact on the right leg",
+          "de": "Anlehnpunkt am rechten Bein"
+        }
+      },
+      {
+        "id": "lock-point",
+        "bone": "crossbar",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "load",
+        "title": {
+          "en": "Lock point on the cross rail",
+          "de": "Schlosspunkt am Querholm"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hoop",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.375 0 L -0.375 0.57 C -0.375 0.697029 -0.272029 0.8 -0.145 0.8 L 0.145 0.8 C 0.272029 0.8 0.375 0.697029 0.375 0.57 L 0.375 0 L 0.215 0 L 0.215 0.57 C 0.215 0.608661 0.183661 0.64 0.145 0.64 L -0.145 0.64 C -0.183661 0.64 -0.215 0.608661 -0.215 0.57 L -0.215 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.23,
+              "y": -0.075,
+              "w": 0.46,
+              "h": 0.15,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One closed U band (1.5 x 1.6 mm on paper) with the cross rail as a bar; the 0.75 x 0.80 m outer size is kept exactly.",
+            "de": "Ein geschlossenes U-Band (1,5 x 1,6 mm auf dem Papier) mit dem Querholm als Balken; das Außenmaß 0,75 x 0,80 m bleibt exakt."
+          },
+          "retained": {
+            "en": "Outer width 0.75 m, height 0.80 m, the cross rail at 0.40 m.",
+            "de": "Aussenbreite 0,75 m, Höhe 0,80 m, Querholm auf 0,40 m."
+          },
+          "merged": {
+            "en": "Tube wall and weld collars merge into the solid band.",
+            "de": "Rohrwand und Schweißkragen gehen im vollen Band auf."
+          },
+          "omitted": {
+            "en": "Weld lines, bend tangents, embedded leg stubs.",
+            "de": "Schweißnähte, Biegetangenten, einbetonierte Beinstummel."
+          },
+          "thinElements": {
+            "en": "The 0.0483 m tube would be 0.097 mm on paper, below the feature width: the band is thickened to 0.16 m (0.32 mm) inward from the real outer edge, so the outer size stays exact and the inner opening shrinks by 0.11 m per side; the bend radius is tightened to 0.15 m.",
+            "de": "Das 0,0483-m-Rohr wäre auf dem Papier 0,097 mm breit, unter der Mindestbreite: das Band wird vom realen Außenrand nach innen auf 0,16 m (0,32 mm) verbreitert, das Außenmaß bleibt exakt, die Innenöffnung schrumpft je Seite um 0,11 m; der Biegeradius ist auf 0,15 m verengt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Solid band tone 0.5, outline 0.13 mm; ground line 0.18 mm.",
+            "de": "Volles Band Ton 0,5, Kontur 0,13 mm; Bodenlinie 0,18 mm."
+          },
+          "overlays": {
+            "en": "Hoop = hoop-galv, cross rail = crossbar-galv; overlay colours map onto the two solids.",
+            "de": "Bügel = hoop-galv, Querholm = crossbar-galv; Überlagerungsfarben liegen auf den beiden Vollformen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hoop",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.375 0 L -0.375 0.596 Q -0.375 0.8 -0.19 0.8 L 0.19 0.8 Q 0.375 0.8 0.375 0.596 L 0.375 0 L 0.32665 0 L 0.32665 0.596 Q 0.32665 0.7517 0.19 0.7517 L -0.19 0.7517 Q -0.32665 0.7517 -0.32665 0.596 L -0.32665 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.3508,
+              "y": -0.02415,
+              "w": 0.7016,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Inverted U of true tube size (0.24 mm wide) with a straight cross rail between the legs.",
+            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) mit geradem Querholm zwischen den Beinen."
+          },
+          "retained": {
+            "en": "Real tube diameter 0.0483 m, cross rail at 0.40 m.",
+            "de": "Reale Rohrstärke 0,0483 m, Querholm auf 0,40 m."
+          },
+          "merged": {
+            "en": "The two bends are simplified to one quadratic curve each; weld collars at the rail ends merge into the legs.",
+            "de": "Die beiden Bögen sind zu je einer quadratischen Kurve vereinfacht; Schweißkragen an den Holmenden gehen in den Beinen auf."
+          },
+          "omitted": {
+            "en": "Weld lines and bend tangents.",
+            "de": "Schweißnähte und Biegetangenten."
+          },
+          "thinElements": {
+            "en": "Tube is 0.24 mm wide, just above the 0.2 mm feature width; outline 0.18 mm.",
+            "de": "Das Rohr ist 0,24 mm breit, knapp über der Mindestbreite von 0,2 mm; Kontur 0,18 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Tone 0.45; body pen 0.18 mm, ground 0.25 mm.",
+            "de": "Ton 0,45; Körperstift 0,18 mm, Boden 0,25 mm."
+          },
+          "overlays": {
+            "en": "Same two regions as 1:500.",
+            "de": "Dieselben zwei Regionen wie bei 1:500."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hoop",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.375 0 L -0.375 0.59585 C -0.375 0.708602 -0.283577 0.8 -0.170825 0.8 L 0.170825 0.8 C 0.283577 0.8 0.375 0.708602 0.375 0.59585 L 0.375 0 L 0.32665 0 L 0.32665 0.59585 C 0.32665 0.681926 0.256901 0.7517 0.170825 0.7517 L -0.170825 0.7517 C -0.256901 0.7517 -0.32665 0.681926 -0.32665 0.59585 L -0.32665 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.32665,
+              "y": -0.02415,
+              "w": 0.6533,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "weld-l",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32665,
+                  -0.02415
+                ],
+                [
+                  -0.32665,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv"
+            },
+            {
+              "id": "weld-r",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32665,
+                  -0.02415
+                ],
+                [
+                  0.32665,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Hoop band 0.48 mm wide at true tube size, cross rail with its two weld lines.",
+            "de": "Bügelband in wahrer Rohrstärke 0,48 mm breit, Querholm mit seinen zwei Schweißnähten."
+          },
+          "retained": {
+            "en": "True tube size and bend radius, cross rail, both weld joints.",
+            "de": "Wahre Rohrstärke und Biegeradius, Querholm, beide Schweißstöße."
+          },
+          "merged": {
+            "en": "Bend tangents merge into the continuous band.",
+            "de": "Biegetangenten gehen im durchgehenden Band auf."
+          },
+          "omitted": {
+            "en": "Embedded leg stubs, zinc texture.",
+            "de": "Einbetonierte Beinstummel, Zinktextur."
+          },
+          "thinElements": {
+            "en": "Welds are 0.13 mm detail strokes across the tube (0.48 mm).",
+            "de": "Schweißnähte sind 0,13-mm-Detailstriche quer zum Rohr (0,48 mm)."
+          },
+          "hatching": {
+            "en": "None; the tube is too narrow for hatching.",
+            "de": "Keine; das Rohr ist für Schraffur zu schmal."
+          },
+          "styles": {
+            "en": "Tone 0.45; body pen 0.25 mm, detail 0.13 mm, ground 0.35 mm.",
+            "de": "Ton 0,45; Körperstift 0,25 mm, Detail 0,13 mm, Boden 0,35 mm."
+          },
+          "overlays": {
+            "en": "Hoop and cross rail are separate solids, each with its region.",
+            "de": "Bügel und Querholm sind getrennte Vollformen mit je einer Region."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": null,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "hoop",
+              "bone": "hoop",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.375 0 L -0.375 0.59585 C -0.375 0.708602 -0.283577 0.8 -0.170825 0.8 L 0.170825 0.8 C 0.283577 0.8 0.375 0.708602 0.375 0.59585 L 0.375 0 L 0.32665 0 L 0.32665 0.59585 C 0.32665 0.681926 0.256901 0.7517 0.170825 0.7517 L -0.170825 0.7517 C -0.256901 0.7517 -0.32665 0.681926 -0.32665 0.59585 L -0.32665 0 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.32665,
+              "y": -0.02415,
+              "w": 0.6533,
+              "h": 0.0483,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "weld-collar-0",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.31265,
+                  -0.02415
+                ],
+                [
+                  -0.31265,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv"
+            },
+            {
+              "id": "weld-collar-1",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.31265,
+                  -0.02415
+                ],
+                [
+                  0.31265,
+                  0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv"
+            },
+            {
+              "id": "bend-tangent-low-0",
+              "bone": "hoop",
+              "role": "texture",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.37495,
+                  0.596
+                ],
+                [
+                  -0.32665,
+                  0.596
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "bend-tangent-low-1",
+              "bone": "hoop",
+              "role": "texture",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32665,
+                  0.596
+                ],
+                [
+                  0.37495,
+                  0.596
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "bend-tangent-top-0",
+              "bone": "hoop",
+              "role": "texture",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1708,
+                  0.8
+                ],
+                [
+                  -0.1708,
+                  0.7517
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "bend-tangent-top-1",
+              "bone": "hoop",
+              "role": "texture",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1708,
+                  0.8
+                ],
+                [
+                  0.1708,
+                  0.7517
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "ground-collar-0",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.37495,
+                  0.004
+                ],
+                [
+                  -0.32665,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "ground-collar-1",
+              "bone": "hoop",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32665,
+                  0.004
+                ],
+                [
+                  0.37495,
+                  0.004
+                ]
+              ],
+              "closed": false,
+              "region": "hoop-galv"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Hoop band 0.97 mm wide at true size with bend tangent lines, the cross rail with weld collars at both joints and ground-level collar lines where the legs enter the footing.",
+            "de": "Bügelband in wahrer Größe 0,97 mm breit mit Biegetangentenlinien, Querholm mit Schweißkragen an beiden Stößen und Bodenkragenlinien, wo die Beine ins Fundament eintreten."
+          },
+          "retained": {
+            "en": "Real tube 48.3 mm, bend radius 0.18 m, cross rail 0.40 m, weld collars, bend tangents, ground collars.",
+            "de": "Reales Rohr 48,3 mm, Biegeradius 0,18 m, Querholm 0,40 m, Schweißkragen, Biegetangenten, Bodenkragen."
+          },
+          "merged": {
+            "en": "Weld collar and tube wall form one region each.",
+            "de": "Schweißkragen und Rohrwand bilden je eine Region."
+          },
+          "omitted": {
+            "en": "Zinc spangle texture, bolted footing detail.",
+            "de": "Zinkblumen-Textur, Fundamentschrauben."
+          },
+          "thinElements": {
+            "en": "Weld collars and tangent lines are 0.13-0.18 mm strokes across the 0.97 mm tube.",
+            "de": "Schweißkragen und Tangentenlinien sind 0,13-0,18-mm-Striche quer zum 0,97-mm-Rohr."
+          },
+          "hatching": {
+            "en": "None; the tube is narrower than any hatch spacing.",
+            "de": "Keine; das Rohr ist schmaler als jeder Schraffurabstand."
+          },
+          "styles": {
+            "en": "Tone 0.45; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm, ground 0.5 mm.",
+            "de": "Ton 0,45; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm, Boden 0,5 mm."
+          },
+          "overlays": {
+            "en": "Collar lines and bend tangents carry the region of the tube they cross.",
+            "de": "Kragen- und Tangentenlinien tragen die Region des Rohrs, das sie queren."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "plan-true",
+        "title": {
+          "en": "Plan, true extent",
+          "de": "Grundriss, wahre Ausdehnung"
+        },
+        "description": {
+          "en": "The hoop seen from above: a 0.75 x 0.0483 m bar with the two leg centres marked; the bikes park along the long side of this bar.",
+          "de": "Der Bügel von oben: ein Balken 0,75 x 0,0483 m mit den zwei markierten Beinmitten; die Räder parken entlang der Längsseite des Balkens."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "hoop-plan",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.375,
+              "y": -0.02415,
+              "w": 0.75,
+              "h": 0.0483,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-plan-l",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.3508,
+              "cy": 0.0,
+              "rx": 0.013283,
+              "ry": 0.013283,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "leg-plan-r",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.3508,
+              "cy": 0.0,
+              "rx": 0.013283,
+              "ry": 0.013283,
+              "region": "hoop-galv"
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Model metres at real size: the bar length 0.75 m and width 0.0483 m are true; pen widths are paper millimetres.",
+          "de": "Modellmeter in wahrer Größe: Balkenlänge 0,75 m und Breite 0,0483 m sind wahr; Stiftbreiten sind Papiermillimeter."
+        }
+      },
+      {
+        "id": "plan-mark",
+        "title": {
+          "en": "Plan mark",
+          "de": "Planzeichen"
+        },
+        "description": {
+          "en": "A 4.4 mm bar with a dot at each end marks one stand on a small-scale site plan; the row of marks shows the parking capacity.",
+          "de": "Ein 4,4-mm-Balken mit einem Punkt an jedem Ende markiert einen Bügel auf einem Lageplan; die Zeichenreihe zeigt die Stellplatzzahl."
+        },
+        "semantics": "nominal",
+        "units": "paper-mm",
+        "denominators": [
+          500,
+          200
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "bar",
+              "bone": "stand",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -2.2,
+                  0.0
+                ],
+                [
+                  2.2,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "foot-l",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 1.0,
+              "kind": "ellipse",
+              "cx": -2.2,
+              "cy": 0.0,
+              "rx": 0.45,
+              "ry": 0.45
+            },
+            {
+              "id": "foot-r",
+              "bone": "stand",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 1.0,
+              "kind": "ellipse",
+              "cx": 2.2,
+              "cy": 0.0,
+              "rx": 0.45,
+              "ry": 0.45
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Nominal paper sign: its 4.4 mm length carries no dimension (the real hoop is 0.75 m = 1.5 mm at 1:500); insertion point at the bar centre.",
+          "de": "Nominelles Papierzeichen: seine Länge von 4,4 mm trägt kein Maß (der reale Bügel ist 0,75 m = 1,5 mm bei 1:500); Einfügepunkt in der Balkenmitte."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "empty-shade",
+        "title": {
+          "en": "Empty, in shade",
+          "de": "Leer, im Schatten"
+        },
+        "description": {
+          "en": "The bare stand in shade; only its own weight acts.",
+          "de": "Der leere Bügel im Schatten; nur das Eigengewicht wirkt."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "hoop-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "crossbar-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "empty-sun",
+        "title": {
+          "en": "Empty, in the sun",
+          "de": "Leer, in der Sonne"
+        },
+        "description": {
+          "en": "The bare stand with the sun on one half of each tube.",
+          "de": "Der leere Bügel, die Sonne auf der Hälfte jedes Rohrs."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "hoop-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "crossbar-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "bike-leaning",
+        "title": {
+          "en": "Bicycle leaning",
+          "de": "Fahrrad angelehnt"
+        },
+        "description": {
+          "en": "A parked bicycle leans on the right leg: an in-plane horizontal push of 150 N at 0.55 m. The bicycle is a load only, not a second asset.",
+          "de": "Ein geparktes Fahrrad lehnt am rechten Bein: ein in der Ebene wirkender Horizontalschub von 150 N auf 0,55 m. Das Fahrrad ist nur eine Last, kein zweites Asset."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "hoop-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "crossbar-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "bike-lean",
+            "kind": "imposed",
+            "title": {
+              "en": "In-plane lean of a parked bicycle",
+              "de": "In der Ebene wirkendes Anlehnen eines Fahrrads"
+            },
+            "fxN": 150,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "anchor": "lean-point",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "lock-pulled",
+        "title": {
+          "en": "Lock pulled",
+          "de": "Schloss gezogen"
+        },
+        "description": {
+          "en": "A D-lock on the cross rail is pulled with 500 N sideways and 200 N upwards (theft or a bicycle falling over).",
+          "de": "Ein Bügelschloss am Querholm wird mit 500 N seitlich und 200 N nach oben gezogen (Diebstahl oder umfallendes Fahrrad)."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "hoop-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "crossbar-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "lock-pull",
+            "kind": "imposed",
+            "title": {
+              "en": "Lever pull on the lock point",
+              "de": "Hebelzug am Schlosspunkt"
+            },
+            "fxN": 500,
+            "fyN": 200,
+            "source": "authored-estimate",
+            "anchor": "lock-point",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "bike-parked",
+        "title": {
+          "en": "Bicycle parked and removed",
+          "de": "Fahrrad abgestellt und weggenommen"
+        },
+        "description": {
+          "en": "A bicycle is leaned on the stand, rests for a while and is taken away again; the lean load follows.",
+          "de": "Ein Fahrrad wird angelehnt, steht eine Weile und wird wieder weggenommen; die Anlehnlast folgt."
+        },
+        "durationS": 12,
+        "fps": 10,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "bike-leaning",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "bike-leaning",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 12
+          }
+        ],
+        "phases": [
+          {
+            "id": "approach",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Bicycle arrives",
+              "de": "Fahrrad kommt"
+            }
+          },
+          {
+            "id": "parked",
+            "fromS": 3,
+            "toS": 9,
+            "title": {
+              "en": "Parked",
+              "de": "Geparkt"
+            }
+          },
+          {
+            "id": "departure",
+            "fromS": 9,
+            "toS": 12,
+            "title": {
+              "en": "Bicycle leaves",
+              "de": "Fahrrad geht"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "load-on",
+            "title": {
+              "en": "Bicycle leans on the stand",
+              "de": "Fahrrad lehnt am Bügel"
+            },
+            "target": "bike-lean"
+          },
+          {
+            "t": 10,
+            "kind": "load-off",
+            "title": {
+              "en": "Bicycle is taken away",
+              "de": "Fahrrad wird weggenommen"
+            },
+            "target": "bike-lean"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:bike-lean",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 9,
+                "v": 1
+              },
+              {
+                "t": 10,
+                "v": 0
+              },
+              {
+                "t": 12,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sun-and-shade",
+        "title": {
+          "en": "Sun and shade over four hours",
+          "de": "Sonne und Schatten über vier Stunden"
+        },
+        "description": {
+          "en": "Four hours in which a building shadow leaves and returns: the tubes warm in the sun and cool in shade according to their heat capacity.",
+          "de": "Vier Stunden, in denen ein Gebäudeschatten verschwindet und zurückkehrt: die Rohre erwärmen sich in der Sonne und kühlen im Schatten gemäß ihrer Wärmekapazität."
+        },
+        "durationS": 14400,
+        "fps": 0.01,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "empty-shade",
+            "ease": "step"
+          },
+          {
+            "t": 3600,
+            "pose": "empty-sun",
+            "ease": "step"
+          },
+          {
+            "t": 10800,
+            "pose": "empty-shade",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 14400
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 14400
+          }
+        ],
+        "phases": [
+          {
+            "id": "shade-1",
+            "fromS": 0,
+            "toS": 3600,
+            "title": {
+              "en": "In shade",
+              "de": "Im Schatten"
+            }
+          },
+          {
+            "id": "sun",
+            "fromS": 3600,
+            "toS": 10800,
+            "title": {
+              "en": "In the sun",
+              "de": "In der Sonne"
+            }
+          },
+          {
+            "id": "shade-2",
+            "fromS": 10800,
+            "toS": 14400,
+            "title": {
+              "en": "In shade again",
+              "de": "Wieder im Schatten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3600,
+            "kind": "thermal",
+            "title": {
+              "en": "Sun reaches the stand",
+              "de": "Sonne erreicht den Bügel"
+            }
+          },
+          {
+            "t": 10800,
+            "kind": "thermal",
+            "title": {
+              "en": "Shadow returns",
+              "de": "Schatten kehrt zurück"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:hoop-galv:sunlitFraction",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3600,
+                "v": 0.5
+              },
+              {
+                "t": 10800,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "region:crossbar-galv:sunlitFraction",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3600,
+                "v": 0.5
+              },
+              {
+                "t": 10800,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 22,
+        "meanRadiantTempC": 28,
+        "relativeHumidity": 0.5,
+        "windMS": 1.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 700,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325,
+        "skyTempC": 10,
+        "groundTempC": 30
+      },
+      "operating": [],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "hoop-galv",
+          "title": {
+            "en": "Galvanised hoop tube",
+            "de": "Verzinktes Bügelrohr"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galv-steel",
+          "areaM2": 0.32,
+          "characteristicLengthM": 0.0483,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Galvanised steel tube wall 3.2 mm",
+                "de": "Verzinkte Stahlrohrwand 3,2 mm"
+              },
+              "kind": "metal",
+              "material": "galv-steel",
+              "thicknessM": 0.0032,
+              "resistanceM2KW": 6.4e-05,
+              "heatCapacityJM2K": 11304,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 11304,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "crossbar-galv",
+          "title": {
+            "en": "Galvanised cross rail tube",
+            "de": "Verzinktes Querholmrohr"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "galv-steel",
+          "areaM2": 0.106,
+          "characteristicLengthM": 0.0483,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Galvanised steel tube wall 3.2 mm",
+                "de": "Verzinkte Stahlrohrwand 3,2 mm"
+              },
+              "kind": "metal",
+              "material": "galv-steel",
+              "thicknessM": 0.0032,
+              "resistanceM2KW": 6.4e-05,
+              "heatCapacityJM2K": 11304,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 11304,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Both tubes are inert passive surfaces: solar gain on the lit half, radiation to sky and ground, forced convection from the wind; no internal heat.",
+          "de": "Beide Rohre sind inerte passive Flächen: Solargewinn auf der besonnten Hälfte, Strahlung zu Himmel und Boden, erzwungene Konvektion durch den Wind; keine innere Wärme."
+        },
+        {
+          "en": "The embedded legs conduct to the footing; that exchange is neglected (authored estimate, small compared with the exposed tube area).",
+          "de": "Die einbetonierten Beine leiten in das Fundament; dieser Austausch wird vernachlässigt (Schätzung, klein gegenüber der freien Rohrfläche)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "leg-left",
+        "leg-right"
+      ],
+      "assumptions": [
+        {
+          "en": "The hoop is a rigid body clamped by two fixed supports in the footing; loads are in the plane of the hoop.",
+          "de": "Der Bügel ist ein starrer Körper, durch zwei feste Auflager im Fundament eingespannt; die Lasten liegen in der Bügelebene."
+        },
+        {
+          "en": "Out-of-plane lean of a bicycle is not represented; the in-plane shares are authored estimates.",
+          "de": "Das Anlehnen eines Fahrrads aus der Ebene wird nicht abgebildet; die Anteile in der Ebene sind Schätzungen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "empty-sun",
+      "defaultClip": "bike-parked",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

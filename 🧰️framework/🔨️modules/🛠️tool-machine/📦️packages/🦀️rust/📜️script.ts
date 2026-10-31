@@ -22,7 +22,7 @@ class TestScript extends BundleScript {
     const cargoPhase=createIssuedResourceControlV1(this.invocation,"cargo:script-entry",0);
     const { rest } = resolveTestLevel(segments);
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🧪️tests/🧪️conformance/🟦️.ts"), join(this.root, "../../🧪️tests/🧪️node-graph-row-ownership/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [COMPANION], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [PACKAGE, COMPANION], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation,cargoPhase);
   }
 }
 
@@ -30,6 +30,7 @@ class CheckScript extends BundleScript {
   async run(): Promise<void> {
     await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE],this.repoRoot,process.env,buildBudgetMs());
     await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE, "--target", "wasm32-wasip2"],this.repoRoot,process.env,buildBudgetMs());
+    await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", PACKAGE, "--tests"],this.repoRoot,process.env,buildBudgetMs());
     await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", COMPANION, "--tests"],this.repoRoot,process.env,buildBudgetMs());
   }
 }

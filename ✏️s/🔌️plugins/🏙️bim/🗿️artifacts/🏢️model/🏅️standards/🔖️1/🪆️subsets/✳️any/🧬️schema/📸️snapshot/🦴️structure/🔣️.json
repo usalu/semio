@@ -2,47 +2,21 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "BIM Structural Authoring Contract",
   "description": "Authored SI supports and loads. Station is normalized on current analytical member; force uses N, N/m or N/m² according to point, line or area location. Moments use Nm with corresponding distribution.",
-  "types": {
+  "$defs": {
     "StructuralLocation": {
-      "kind": "enum",
-      "variants": {
-        "Point": {
-          "station": "f64"
-        },
-        "Line": {
-          "start": "f64",
-          "end": "f64"
-        },
-        "Area": {}
-      }
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json#/$defs/StructuralLocation"
     },
     "Restraints": {
-      "x": "bool",
-      "y": "bool",
-      "z": "bool",
-      "rx": "bool",
-      "ry": "bool",
-      "rz": "bool"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json#/$defs/Restraints"
     },
     "StructuralSupport": {
-      "name": "String",
-      "member": "String",
-      "location": "StructuralLocation",
-      "offset": "Point3",
-      "restraints": "Restraints"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json#/$defs/StructuralSupport"
     },
     "LoadCase": {
-      "name": "String",
-      "category": "String",
-      "factor": "f64"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json#/$defs/LoadCase"
     },
     "StructuralLoad": {
-      "name": "String",
-      "load_case": "String",
-      "member": "String",
-      "location": "StructuralLocation",
-      "force": "Point3",
-      "moment": "Point3"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/bim/model/snapshot.json#/$defs/StructuralLoad"
     }
   }
 }

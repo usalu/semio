@@ -31,7 +31,7 @@ const validView = ajv.compile({ $ref: `${schema.$id}#/$defs/CourseView` });
 const topicFixture = read(resolve(siteRoot, "🧫️fixtures/🗂️topics/🔣️.json")) as { topics: readonly unknown[]; reserved: readonly string[]; rejected: readonly { id: string; topic: number; property: string; value: unknown; path: string; code: string }[]; viewRejected: readonly { id: string; path: readonly string[]; value: unknown }[] };
 const SHORT = 40;
 const LANGUAGES = ["en", "de"] as const;
-const PLAIN = /^[^\d()][^()]*$/u;
+const PLAIN = /^[^()]+$/u;
 const COUNTABLE = { en: /^(?!(?:The|A|An|One) )(?!\p{L}+ing (?:(?:an?|the)\b|\d))[^,']*$/u, de: /^(?!(?:Der|Die|Das|Ein|Eine) )(?!\p{Lu}\p{Ll}+en (?:eines|einer|des|der) )[^,']*$/u } as const;
 const length = (text: string): number => [...text].length;
 
@@ -95,13 +95,17 @@ describe("architecture course", () => {
     expect(isCourseView({ ...view, topics: view.topics!.map((topic, index) => index === 1 ? { ...topic, id: reserved } : topic) })).toBe(false);
   });
 
-  it("accepts cached grouped views with empty placeholders and flat views", () => {
+  it("accepts grouped and assignment-free flat views while rejecting orphaned assignments", () => {
     const view = courseView(course, quizzes.map(({ quiz }) => quiz));
     expect(isCourseView(view)).toBe(true);
     expect(courseViewIssues(view)).toEqual([]);
     expect(validView(view) ? [] : validView.errors).toEqual([]);
-    const { topics, ...flat } = view;
+    const { topics, assignments, ...flat } = view;
     expect(isCourseView(flat)).toBe(true);
+    expect(courseViewIssues(flat)).toEqual([]);
+    expect(validView(flat) ? [] : validView.errors).toEqual([]);
+    expect(isCourseView({ ...flat, assignments })).toBe(false);
+    expect(courseViewIssues({ ...flat, assignments })).toContainEqual({ path: "/assignments/0/topic", code: "value-invalid" });
     expect(isCourseView({ ...view, quizzes: [...view.quizzes, view.quizzes[0]] })).toBe(false);
   });
 

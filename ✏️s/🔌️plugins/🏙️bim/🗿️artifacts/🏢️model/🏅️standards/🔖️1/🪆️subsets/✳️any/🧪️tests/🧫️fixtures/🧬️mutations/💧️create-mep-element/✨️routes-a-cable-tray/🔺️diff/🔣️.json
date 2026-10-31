@@ -2,27 +2,29 @@
   "mep_elements": {
     "mep-new": {
       "entry": "Created",
-      "name": "Power tray",
-      "path": [
-        {
-          "x": 0.0,
-          "y": 0.5,
-          "z": 2.7
+      "value": {
+        "name": "Power tray",
+        "path": [
+          {
+            "x": 0,
+            "y": 0.5,
+            "z": 2.7
+          },
+          {
+            "x": 7,
+            "y": 0.5,
+            "z": 2.7
+          }
+        ],
+        "shape": {
+          "Tray": {
+            "height": 0.06,
+            "width": 0.3
+          }
         },
-        {
-          "x": 7.0,
-          "y": 0.5,
-          "z": 2.7
-        }
-      ],
-      "shape": {
-        "Tray": {
-          "height": 0.06,
-          "width": 0.3
-        }
-      },
-      "storey": "st-first",
-      "system": "Power"
+        "storey": "st-first",
+        "system": "Power"
+      }
     }
   }
 }

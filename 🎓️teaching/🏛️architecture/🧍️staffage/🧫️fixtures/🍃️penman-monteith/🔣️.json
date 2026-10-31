@@ -1,0 +1,47 @@
+{
+ "id": "penman-monteith",
+ "oracle": "pyet pm_fao56 (Allen et al. 1998, FAO-56 equation 6); published FAO-56 example 18",
+ "tolerances": {
+  "relative": 0.04,
+  "publishedRelative": 0.03
+ },
+ "cases": [
+  {
+   "id": "fao56-example-18",
+   "tmax": 21.5,
+   "tmin": 12.3,
+   "tmean": 16.9,
+   "u2": 2.078,
+   "rn": 13.28,
+   "ea": 1.409,
+   "elevation": 100.0,
+   "published": 3.88,
+   "pyet": 3.8789522742990683,
+   "es": 1.9974855625338357
+  },
+  {
+   "id": "hot-dry-windy",
+   "tmax": 36.0,
+   "tmin": 24.0,
+   "tmean": 30.0,
+   "u2": 3.5,
+   "rn": 18.0,
+   "ea": 1.2,
+   "elevation": 50.0,
+   "pyet": 10.406151465514498,
+   "es": 4.462457589396455
+  },
+  {
+   "id": "cool-humid-calm",
+   "tmax": 11.0,
+   "tmin": 5.0,
+   "tmean": 8.0,
+   "u2": 0.8,
+   "rn": 4.0,
+   "ea": 0.9,
+   "elevation": 300.0,
+   "pyet": 0.971282800120757,
+   "es": 1.0925125497277701
+  }
+ ]
+}

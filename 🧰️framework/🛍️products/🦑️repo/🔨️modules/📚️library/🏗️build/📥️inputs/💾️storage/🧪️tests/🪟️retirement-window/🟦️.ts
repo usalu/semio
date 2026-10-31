@@ -11,12 +11,12 @@ const load=async()=>{
 };
 
 const model=async(files:number,partials=0)=>{
- const code=await load(),policy=schema.definitions.OptionalQuota.policy,events:string[]=[];
+ const code=await load(),policy=schema.definitions.OptionalQuota.definitions.DefaultPolicy.const,events:string[]=[];
  let held=false,remaining=files,windows=0;
  const entries=Array.from({length:files},(_,i)=>({path:"/graph/inference/np/"+String(i).padStart(8,"0"),bytes:1048576,modified:i,device:1,inode:i+1}));
  const control={publish:async()=>{events.push("progress");},yieldContinuation:async()=>{events.push(held?"yield-held":"yield-free");}};
  const image={root:"/graph",recheck:async()=>{},withExclusiveMaintenance:async(request:unknown,body:Function)=>{expect(request).toEqual({version:1,wait:false});windows++;held=true;try{return{acquired:true,value:await body(undefined,{kind:"mock"})};}finally{held=false;events.push("release");}}};
- const ports={requireNativePlatformImageWriterV1:(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);},repositoryCachePartitionNativeImageV1:(actual:unknown)=>actual,retireBuildGraphOptionalGroupsHeadroomV1:async(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);if(windows<=partials){remaining=Math.max(0,remaining-Math.ceil(files/(partials+1)));return{retiredBytes:1048576,retiredFiles:1,partial:true};}remaining=0;return{retiredBytes:files*1048576,retiredFiles:files};},validateJsonSchemaSubset:()=>[],quotaSchema:{policy,definitions:{Headroom:{}}},schema,checkResourceLeaseControl:()=>{},optionalInventoryV1:async()=>{expect(held).toBe(true);return entries.slice(files-remaining);},nativeStatfsSyncV1:()=>({bsize:1,bavail:(files-remaining)*1048576}),lstat:async(path:string)=>({isFile:()=>true,isSymbolicLink:()=>false,nlink:1,dev:1,ino:Number(path.slice(-8))+1,size:1048576,blocks:2048}),requireNativeStoragePathV1:(_root:string,path:string)=>path,unlink:async()=>{expect(held).toBe(true);remaining--;}};
+ const ports={requireNativePlatformImageWriterV1:(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);},repositoryCachePartitionNativeImageV1:(actual:unknown)=>actual,retireBuildGraphOptionalGroupsHeadroomV1:async(actual:unknown)=>{expect(actual).toBe(image);expect(held).toBe(true);if(windows<=partials){remaining=Math.max(0,remaining-Math.ceil(files/(partials+1)));return{retiredBytes:1048576,retiredFiles:1,partial:true};}remaining=0;return{retiredBytes:files*1048576,retiredFiles:files};},validateJsonSchemaSubset:()=>[],quotaSchema:{definitions:{DefaultPolicy:{const:policy},Headroom:{}}},schema,checkResourceLeaseControl:()=>{},optionalInventoryV1:async()=>{expect(held).toBe(true);return entries.slice(files-remaining);},nativeStatfsSyncV1:()=>({bsize:1,bavail:(files-remaining)*1048576}),lstat:async(path:string)=>({isFile:()=>true,isSymbolicLink:()=>false,nlink:1,dev:1,ino:Number(path.slice(-8))+1,size:1048576,blocks:2048}),requireNativeStoragePathV1:(_root:string,path:string)=>path,unlink:async()=>{expect(held).toBe(true);remaining--;}};
  const run=new Function(...Object.keys(ports),code)(...Object.values(ports));
  const result=await run(image,control,{minimumAvailableBytes:policy.minimumAvailableBytes});
  return{result,windows,remaining,events,held};
@@ -31,9 +31,9 @@ test("atomic retirement completes its group within one owned exclusive callback"
 },60000);
 
 test("the declared window is a finite policy value",()=>{
- expect(Number.isSafeInteger(schema.definitions.OptionalQuota.policy.retirementWindowMilliseconds)).toBe(true);
- expect(schema.definitions.OptionalQuota.policy.retirementWindowMilliseconds).toBeGreaterThan(0);
- expect(schema.definitions.OptionalQuota.policy.retirementWindowMilliseconds).toBeLessThanOrEqual(60000);
+ expect(Number.isSafeInteger(schema.definitions.OptionalQuota.definitions.DefaultPolicy.const.retirementWindowMilliseconds)).toBe(true);
+ expect(schema.definitions.OptionalQuota.definitions.DefaultPolicy.const.retirementWindowMilliseconds).toBeGreaterThan(0);
+ expect(schema.definitions.OptionalQuota.definitions.DefaultPolicy.const.retirementWindowMilliseconds).toBeLessThanOrEqual(60000);
 });
 
 test("a partial retirement defers after one consumed image window",async()=>{

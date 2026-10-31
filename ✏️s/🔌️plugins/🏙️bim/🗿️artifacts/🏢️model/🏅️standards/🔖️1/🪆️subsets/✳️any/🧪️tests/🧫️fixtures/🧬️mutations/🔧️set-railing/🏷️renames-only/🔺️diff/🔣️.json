@@ -2,7 +2,9 @@
   "railings": {
     "rl-1": {
       "entry": "Patched",
-      "name": "Stair Guard"
+      "value": {
+        "name": "Stair Guard"
+      }
     }
   }
 }

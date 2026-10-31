@@ -143,7 +143,7 @@ function ClassificationResult(props: { readonly name: string; readonly task: She
   return (
     <ResultTable name={props.name} fold={56} head={[text("course.results.item"), text("course.results.yourAnswer"), text("course.results.solution"), text("course.results.credit"), text("course.results.explanation")]}>
       {result.items.map((item) => (
-        <tr key={item.item} {...TABLE.row} data-icon-host="">
+        <tr key={item.item} {...TABLE.row} data-result-item={item.item} data-icon-host="">
           <th {...TABLE.name} data-cell="name" className={cn(EDGE, "font-semibold")}>
             <Labelled items={task.items} id={item.item} locale={locale} />
           </th>
@@ -177,7 +177,7 @@ function SortingResult(props: { readonly name: string; readonly task: SheetSorti
       <ToleranceNote id={`${props.name}-tolerance`} within={within} text={text} />
       <ResultTable name={props.name} note={within === undefined ? undefined : `${props.name}-tolerance`} fold={58} head={[text("course.results.position"), text("course.results.item"), ...(guessed ? [text("course.results.yourGuess")] : []), text("course.results.value"), text("course.results.rank"), text("course.results.explanation")]}>
         {result.items.map((item) => (
-          <tr key={item.item} {...TABLE.row} data-icon-host="">
+          <tr key={item.item} {...TABLE.row} data-result-item={item.item} data-icon-host="">
             <td {...TABLE.cell} data-label={text("course.results.position")} className={unanswered ? ANSWER : NUMBER}>
               {unanswered ? text("course.results.unanswered") : item.position + 1}
             </td>
@@ -241,7 +241,7 @@ function MatchingResult(props: { readonly name: string; readonly task: SheetMatc
             <ToleranceNote id={note} within={within} text={text} />
             <ResultTable name={`${props.name}-${dimension.dimension}`} note={within === undefined ? undefined : note} fold={52} head={[text("course.results.item"), answered, text("course.results.solution"), text("course.results.explanation")]}>
               {dimension.items.map((item) => (
-                <tr key={item.item} {...TABLE.row} data-icon-host="">
+                <tr key={item.item} {...TABLE.row} data-result-item={item.item} data-result-dimension={dimension.dimension} data-icon-host="">
                   <th {...TABLE.name} data-cell="name" className={cn(EDGE, "font-semibold")}>
                     <Labelled items={task.items} id={item.item} locale={locale} />
                   </th>

@@ -1,0 +1,7038 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "spiral-stair",
+  "category": "components",
+  "title": {
+   "en": "Steel Spiral Stair",
+   "de": "Stahl-Wendeltreppe"
+  },
+  "summary": {
+   "en": "A 1.6 m diameter steel spiral stair around a 168 mm central column: 15 risers of 0.187 m (2.80 m floor to floor), 15 pie treads turning 22.5 degrees each, 15 balusters and a 0.93 m high helical handrail, drawn in elevation where every tread projects to a bar whose length follows the helix and the rail reads as a sine curve; a plan symbol gives the true spiral.",
+   "de": "Eine Stahl-Wendeltreppe mit 1,6 m Durchmesser um eine 168-mm-Mittelsäule: 15 Steigungen von 0,187 m (2,80 m Geschosshöhe), 15 Kreisringstufen mit je 22,5 Grad Drehung, 15 Stäbe und ein 0,93 m hoher Wendelhandlauf, in der Ansicht gezeichnet, in der jede Stufe als Balken mit wendelfolgender Länge erscheint und der Handlauf als Sinuskurve; ein Grundrisssymbol zeigt die echte Spirale."
+  },
+  "tags": [
+   "component",
+   "structural",
+   "stair",
+   "spiral",
+   "steel",
+   "helix"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors (NW-C)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "din-18065",
+     "citation": "DIN 18065:2015-03 Stairs in buildings, terms, measuring rules, main dimensions (spiral stairs: usable tread width at the walking line 0.15 m inside the outer edge, 2 s + g about 0.59 to 0.65 m, handrail height at least 0.90 m)."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1, part 1-1: Table 6.2 category A imposed load on stairs 2 kN/m2 with 2 kN concentrated load; Table 6.12 line load on barriers (category A, 0.5 to 1.0 kN/m, 0.5 kN/m chosen); Table A.4 steel 77 to 78.5 kN/m3."
+    },
+    {
+     "id": "en-10219",
+     "citation": "EN 10219-2:2019 Cold formed welded structural hollow sections: CHS 168.3 x 6.3 (25.2 kg/m, A 32.1 cm2, I 1068 cm4); CHS 42.4 x 2.6 (2.55 kg/m)."
+    },
+    {
+     "id": "spiral-catalogues",
+     "citation": "Manufacturer data for steel spiral stairs: column 168 mm tube with spacer sleeves, 5 mm pie treads with folded edge (about 8 kg each), balusters 12 mm, handrail tube 42.4 mm, 16 steps per revolution for 2.8 m height. Typical values consulted."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials, hygrothermal properties: steel 50 W/mK, 450 J/kgK; emissivity of painted surfaces 0.9."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and cuts."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, types of drawings, scales and symbols (stair plan symbols)."
+    }
+   ],
+   "notes": {
+    "en": "Tread k is centred at 11.25 + 22.5 (k-1) degrees so the tread edges fall on multiples of 22.5 degrees; the projected tread bar extent is the true min and max of the four tread corners, the rail is x = 0.775 cos(phi).",
+    "de": "Stufe k ist bei 11,25 + 22,5 (k-1) Grad zentriert, sodass die Stufenkanten auf Vielfachen von 22,5 Grad liegen; die Projektionslänge des Stufenbalkens ist das wahre Minimum und Maximum der vier Stufenecken, der Handlauf ist x = 0,775 cos(phi)."
+   }
+  },
+  "dimensions": {
+   "heightM": 3.733,
+   "widthM": 1.6,
+   "depthM": 1.6,
+   "massKg": 223.721
+  },
+  "materials": [
+   {
+    "id": "steel",
+    "title": {
+     "en": "Painted steel RAL 7016",
+     "de": "Stahl, lackiert RAL 7016"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.75,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "en-10219"
+   },
+   {
+    "id": "steel-bright",
+    "title": {
+     "en": "Galvanised steel tube (rail and balusters)",
+     "de": "Verzinktes Stahlrohr (Handlauf und Stäbe)"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "en-10219"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "column",
+   "bones": [
+    {
+     "id": "column",
+     "parent": null,
+     "title": {
+      "en": "Central column CHS 168.3 x 6.3 on its base plate (fixed root)",
+      "de": "Mittelsäule CHS 168,3 x 6,3 auf der Fußplatte (feste Wurzel)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 90,
+     "lengthM": 2.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 78.56,
+      "comX": 1.4,
+      "comY": 0.0,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-10219"
+     },
+     "section": {
+      "areaM2": 0.00321,
+      "secondMomentM4": 1.068e-05,
+      "extremeFibreM": 0.0842,
+      "material": "steel",
+      "title": {
+       "en": "CHS 168.3 x 6.3",
+       "de": "CHS 168,3 x 6,3"
+      }
+     }
+    },
+    {
+     "id": "tread-1",
+     "parent": "column",
+     "title": {
+      "en": "Tread 1 (pie plate on the column)",
+      "de": "Stufe 1 (Kreisringsektor an der Säule)"
+     },
+     "x": 0.18667,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.51785,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-2",
+     "parent": "column",
+     "title": {
+      "en": "Tread 2 (pie plate on the column)",
+      "de": "Stufe 2 (Kreisringsektor an der Säule)"
+     },
+     "x": 0.37333,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.43902,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-3",
+     "parent": "column",
+     "title": {
+      "en": "Tread 3 (pie plate on the column)",
+      "de": "Stufe 3 (Kreisringsektor an der Säule)"
+     },
+     "x": 0.56,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.29334,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-4",
+     "parent": "column",
+     "title": {
+      "en": "Tread 4 (pie plate on the column)",
+      "de": "Stufe 4 (Kreisringsektor an der Säule)"
+     },
+     "x": 0.74667,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.10301,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-5",
+     "parent": "column",
+     "title": {
+      "en": "Tread 5 (pie plate on the column)",
+      "de": "Stufe 5 (Kreisringsektor an der Säule)"
+     },
+     "x": 0.93333,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.10301,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-6",
+     "parent": "column",
+     "title": {
+      "en": "Tread 6 (pie plate on the column)",
+      "de": "Stufe 6 (Kreisringsektor an der Säule)"
+     },
+     "x": 1.12,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.29334,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-7",
+     "parent": "column",
+     "title": {
+      "en": "Tread 7 (pie plate on the column)",
+      "de": "Stufe 7 (Kreisringsektor an der Säule)"
+     },
+     "x": 1.30667,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.43902,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-8",
+     "parent": "column",
+     "title": {
+      "en": "Tread 8 (pie plate on the column)",
+      "de": "Stufe 8 (Kreisringsektor an der Säule)"
+     },
+     "x": 1.49333,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.51785,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-9",
+     "parent": "column",
+     "title": {
+      "en": "Tread 9 (pie plate on the column)",
+      "de": "Stufe 9 (Kreisringsektor an der Säule)"
+     },
+     "x": 1.68,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.51785,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-10",
+     "parent": "column",
+     "title": {
+      "en": "Tread 10 (pie plate on the column)",
+      "de": "Stufe 10 (Kreisringsektor an der Säule)"
+     },
+     "x": 1.86667,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.43902,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-11",
+     "parent": "column",
+     "title": {
+      "en": "Tread 11 (pie plate on the column)",
+      "de": "Stufe 11 (Kreisringsektor an der Säule)"
+     },
+     "x": 2.05333,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.29334,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-12",
+     "parent": "column",
+     "title": {
+      "en": "Tread 12 (pie plate on the column)",
+      "de": "Stufe 12 (Kreisringsektor an der Säule)"
+     },
+     "x": 2.24,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": -0.10301,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-13",
+     "parent": "column",
+     "title": {
+      "en": "Tread 13 (pie plate on the column)",
+      "de": "Stufe 13 (Kreisringsektor an der Säule)"
+     },
+     "x": 2.42667,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.10301,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-14",
+     "parent": "column",
+     "title": {
+      "en": "Tread 14 (pie plate on the column)",
+      "de": "Stufe 14 (Kreisringsektor an der Säule)"
+     },
+     "x": 2.61333,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.29334,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "tread-15",
+     "parent": "column",
+     "title": {
+      "en": "Tread 15 (pie plate on the column)",
+      "de": "Stufe 15 (Kreisringsektor an der Säule)"
+     },
+     "x": 2.8,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.0,
+      "comX": 0.43902,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "balustrade",
+     "parent": "column",
+     "title": {
+      "en": "Balustrade: helical handrail and 15 balusters",
+      "de": "Geländer: Wendelhandlauf und 15 Stäbe"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 1.0,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 25.16137,
+      "comX": 0.0,
+      "comY": 2.42667,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "spiral-catalogues"
+     }
+    },
+    {
+     "id": "walker-x",
+     "parent": "column",
+     "title": {
+      "en": "Walker carrier, horizontal (massless)",
+      "de": "Personenträger, horizontal (masselos)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": -90,
+     "lengthM": 0.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -0.7,
+      "maxM": 0.7
+     }
+    },
+    {
+     "id": "walker-y",
+     "parent": "walker-x",
+     "title": {
+      "en": "Walker carrier, vertical (massless)",
+      "de": "Personenträger, vertikal (masselos)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 0.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": 0,
+      "maxM": 2.9
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "base-fix",
+    "bone": "column",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Base plate anchored to the floor, fixed",
+     "de": "Fußplatte am Boden verankert, eingespannt"
+    },
+    "support": "fixed"
+   },
+   {
+    "id": "top-tie",
+    "bone": "column",
+    "x": 2.8,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Tie at the upper floor slab, horizontal roller",
+     "de": "Anbindung an die obere Decke, horizontales Rollenlager"
+    },
+    "support": "roller",
+    "normalDeg": 0
+   },
+   {
+    "id": "walker-point",
+    "bone": "walker-y",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "load",
+    "title": {
+     "en": "Foot of the person on the tread",
+     "de": "Fußpunkt der Person auf der Stufe"
+    }
+   },
+   {
+    "id": "rail-point",
+    "bone": "balustrade",
+    "x": 0.5,
+    "y": 3.73333,
+    "kind": "load",
+    "title": {
+     "en": "Handrail at the top landing",
+     "de": "Handlauf am oberen Podest"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "column",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.8
+        ],
+        [
+         0.0,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "stair-mass",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "treads",
+        "column-steel"
+       ],
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.2
+        ],
+        [
+         0.02,
+         -0.2
+        ],
+        [
+         0.15667,
+         -0.8
+        ],
+        [
+         0.34333,
+         -0.7391
+        ],
+        [
+         0.53,
+         -0.56569
+        ],
+        [
+         0.71667,
+         -0.30615
+        ],
+        [
+         0.90333,
+         -0.0842
+        ],
+        [
+         1.09,
+         -0.0842
+        ],
+        [
+         1.27667,
+         -0.0842
+        ],
+        [
+         1.46333,
+         -0.0842
+        ],
+        [
+         1.65,
+         -0.0842
+        ],
+        [
+         1.83667,
+         -0.0842
+        ],
+        [
+         2.02333,
+         -0.0842
+        ],
+        [
+         2.21,
+         -0.0842
+        ],
+        [
+         2.39667,
+         -0.30615
+        ],
+        [
+         2.58333,
+         -0.56569
+        ],
+        [
+         2.77,
+         -0.7391
+        ],
+        [
+         2.82,
+         -0.0842
+        ],
+        [
+         2.82,
+         0.0842
+        ],
+        [
+         2.77,
+         0.0842
+        ],
+        [
+         2.58333,
+         0.0842
+        ],
+        [
+         2.39667,
+         0.0842
+        ],
+        [
+         2.21,
+         0.30615
+        ],
+        [
+         2.02333,
+         0.56569
+        ],
+        [
+         1.83667,
+         0.7391
+        ],
+        [
+         1.65,
+         0.8
+        ],
+        [
+         1.46333,
+         0.8
+        ],
+        [
+         1.27667,
+         0.7391
+        ],
+        [
+         1.09,
+         0.56569
+        ],
+        [
+         0.90333,
+         0.30615
+        ],
+        [
+         0.71667,
+         0.0842
+        ],
+        [
+         0.53,
+         0.0842
+        ],
+        [
+         0.34333,
+         0.0842
+        ],
+        [
+         0.15667,
+         0.0842
+        ],
+        [
+         0.02,
+         0.2
+        ],
+        [
+         0.0,
+         0.2
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "handrail",
+       "bone": "balustrade",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.76011,
+         1.12
+        ],
+        [
+         0.75177,
+         1.14333
+        ],
+        [
+         0.74163,
+         1.16667
+        ],
+        [
+         0.7297,
+         1.19
+        ],
+        [
+         0.71601,
+         1.21333
+        ],
+        [
+         0.70059,
+         1.23667
+        ],
+        [
+         0.68349,
+         1.26
+        ],
+        [
+         0.66474,
+         1.28333
+        ],
+        [
+         0.64439,
+         1.30667
+        ],
+        [
+         0.62249,
+         1.33
+        ],
+        [
+         0.59908,
+         1.35333
+        ],
+        [
+         0.57424,
+         1.37667
+        ],
+        [
+         0.54801,
+         1.4
+        ],
+        [
+         0.52046,
+         1.42333
+        ],
+        [
+         0.49165,
+         1.44667
+        ],
+        [
+         0.46167,
+         1.47
+        ],
+        [
+         0.43057,
+         1.49333
+        ],
+        [
+         0.39843,
+         1.51667
+        ],
+        [
+         0.36533,
+         1.54
+        ],
+        [
+         0.33136,
+         1.56333
+        ],
+        [
+         0.29658,
+         1.58667
+        ],
+        [
+         0.26109,
+         1.61
+        ],
+        [
+         0.22497,
+         1.63333
+        ],
+        [
+         0.18831,
+         1.65667
+        ],
+        [
+         0.15119,
+         1.68
+        ],
+        [
+         0.11372,
+         1.70333
+        ],
+        [
+         0.07596,
+         1.72667
+        ],
+        [
+         0.03803,
+         1.75
+        ],
+        [
+         0.0,
+         1.77333
+        ],
+        [
+         -0.03803,
+         1.79667
+        ],
+        [
+         -0.07596,
+         1.82
+        ],
+        [
+         -0.11372,
+         1.84333
+        ],
+        [
+         -0.15119,
+         1.86667
+        ],
+        [
+         -0.18831,
+         1.89
+        ],
+        [
+         -0.22497,
+         1.91333
+        ],
+        [
+         -0.26109,
+         1.93667
+        ],
+        [
+         -0.29658,
+         1.96
+        ],
+        [
+         -0.33136,
+         1.98333
+        ],
+        [
+         -0.36533,
+         2.00667
+        ],
+        [
+         -0.39843,
+         2.03
+        ],
+        [
+         -0.43057,
+         2.05333
+        ],
+        [
+         -0.46167,
+         2.07667
+        ],
+        [
+         -0.49165,
+         2.1
+        ],
+        [
+         -0.52046,
+         2.12333
+        ],
+        [
+         -0.54801,
+         2.14667
+        ],
+        [
+         -0.57424,
+         2.17
+        ],
+        [
+         -0.59908,
+         2.19333
+        ],
+        [
+         -0.62249,
+         2.21667
+        ],
+        [
+         -0.64439,
+         2.24
+        ],
+        [
+         -0.66474,
+         2.26333
+        ],
+        [
+         -0.68349,
+         2.28667
+        ],
+        [
+         -0.70059,
+         2.31
+        ],
+        [
+         -0.71601,
+         2.33333
+        ],
+        [
+         -0.7297,
+         2.35667
+        ],
+        [
+         -0.74163,
+         2.38
+        ],
+        [
+         -0.75177,
+         2.40333
+        ],
+        [
+         -0.76011,
+         2.42667
+        ],
+        [
+         -0.76661,
+         2.45
+        ],
+        [
+         -0.77127,
+         2.47333
+        ],
+        [
+         -0.77407,
+         2.49667
+        ],
+        [
+         -0.775,
+         2.52
+        ],
+        [
+         -0.77407,
+         2.54333
+        ],
+        [
+         -0.77127,
+         2.56667
+        ],
+        [
+         -0.76661,
+         2.59
+        ],
+        [
+         -0.76011,
+         2.61333
+        ],
+        [
+         -0.75177,
+         2.63667
+        ],
+        [
+         -0.74163,
+         2.66
+        ],
+        [
+         -0.7297,
+         2.68333
+        ],
+        [
+         -0.71601,
+         2.70667
+        ],
+        [
+         -0.70059,
+         2.73
+        ],
+        [
+         -0.68349,
+         2.75333
+        ],
+        [
+         -0.66474,
+         2.77667
+        ],
+        [
+         -0.64439,
+         2.8
+        ],
+        [
+         -0.62249,
+         2.82333
+        ],
+        [
+         -0.59908,
+         2.84667
+        ],
+        [
+         -0.57424,
+         2.87
+        ],
+        [
+         -0.54801,
+         2.89333
+        ],
+        [
+         -0.52046,
+         2.91667
+        ],
+        [
+         -0.49165,
+         2.94
+        ],
+        [
+         -0.46167,
+         2.96333
+        ],
+        [
+         -0.43057,
+         2.98667
+        ],
+        [
+         -0.39843,
+         3.01
+        ],
+        [
+         -0.36533,
+         3.03333
+        ],
+        [
+         -0.33136,
+         3.05667
+        ],
+        [
+         -0.29658,
+         3.08
+        ],
+        [
+         -0.26109,
+         3.10333
+        ],
+        [
+         -0.22497,
+         3.12667
+        ],
+        [
+         -0.18831,
+         3.15
+        ],
+        [
+         -0.15119,
+         3.17333
+        ],
+        [
+         -0.11372,
+         3.19667
+        ],
+        [
+         -0.07596,
+         3.22
+        ],
+        [
+         -0.03803,
+         3.24333
+        ],
+        [
+         0.0,
+         3.26667
+        ],
+        [
+         0.03803,
+         3.29
+        ],
+        [
+         0.07596,
+         3.31333
+        ],
+        [
+         0.11372,
+         3.33667
+        ],
+        [
+         0.15119,
+         3.36
+        ],
+        [
+         0.18831,
+         3.38333
+        ],
+        [
+         0.22497,
+         3.40667
+        ],
+        [
+         0.26109,
+         3.43
+        ],
+        [
+         0.29658,
+         3.45333
+        ],
+        [
+         0.33136,
+         3.47667
+        ],
+        [
+         0.36533,
+         3.5
+        ],
+        [
+         0.39843,
+         3.52333
+        ],
+        [
+         0.43057,
+         3.54667
+        ],
+        [
+         0.46167,
+         3.57
+        ],
+        [
+         0.49165,
+         3.59333
+        ],
+        [
+         0.52046,
+         3.61667
+        ],
+        [
+         0.54801,
+         3.64
+        ],
+        [
+         0.57424,
+         3.66333
+        ],
+        [
+         0.59908,
+         3.68667
+        ],
+        [
+         0.62249,
+         3.71
+        ],
+        [
+         0.64439,
+         3.73333
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One twisting mass: the envelope through the tread tips (x = R cos(phi), left and right) around the column, a base plate foot, and one helical handrail line above it.",
+      "de": "Eine sich windende Masse: die Hüllkurve durch die Stufenspitzen (x = R cos(phi), links und rechts) um die Säule, ein Fußplattensockel und darüber eine Wendelhandlauflinie."
+     },
+     "retained": {
+      "en": "Total height 3.70 m (rail), width 1.60 m (tread tips), the helix pattern of the tips: 15 risers of 0.1867 m, 22.5 degrees per tread.",
+      "de": "Gesamthöhe 3,70 m (Handlauf), Breite 1,60 m (Stufenspitzen), das Wendelmuster der Spitzen: 15 Steigungen von 0,1867 m, 22,5 Grad je Stufe."
+     },
+     "merged": {
+      "en": "The 15 treads (0.06 m thick, 0.13 m gaps = 0.27 mm) and the column are one filled mass listing treads and column; the notches between treads close because the bars are thinner than 0.2 mm.",
+      "de": "Die 15 Stufen (0,06 m dick, 0,13 m Lücken = 0,27 mm) und die Säule sind eine gefüllte Masse mit den Regionen Stufen und Säule; die Einkerbungen zwischen den Stufen schließen sich, weil die Balken dünner als 0,2 mm wären."
+     },
+     "omitted": {
+      "en": "Balusters, sleeve joints, nosings.",
+      "de": "Stäbe, Hülsenfugen, Stufenkanten."
+     },
+     "thinElements": {
+      "en": "The 0.0424 m handrail is a 0.13 mm line (0.065 m, wider than real).",
+      "de": "Der 0,0424 m dicke Handlauf ist eine 0,13-mm-Linie (0,065 m, breiter als real)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Mid-grey mass, black rail line.",
+      "de": "Mittelgraue Masse, schwarze Handlauflinie."
+     },
+     "overlays": {
+      "en": "Cells: the stair mass (treads and column merged) and the rail line.",
+      "de": "Zellen: die Treppenmasse (Stufen und Säule zusammengefasst) und die Handlauflinie."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "column",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.8
+        ],
+        [
+         0.0005,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "column",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.0842
+        ],
+        [
+         0.0005,
+         -0.0842
+        ],
+        [
+         2.8005,
+         -0.0842
+        ],
+        [
+         2.8005,
+         0.0842
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "base-plate",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.2
+        ],
+        [
+         0.0005,
+         -0.2
+        ],
+        [
+         0.0205,
+         -0.2
+        ],
+        [
+         0.0205,
+         0.2
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tread-1",
+       "bone": "tread-1",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.07829,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-2",
+       "bone": "tread-2",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.06004,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-3",
+       "bone": "tread-3",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.03272,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-4",
+       "bone": "tread-4",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.0005,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-5",
+       "bone": "tread-5",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.30565,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-6",
+       "bone": "tread-6",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.5651900000000001,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-7",
+       "bone": "tread-7",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.7386,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-8",
+       "bone": "tread-8",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.7995000000000001,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-9",
+       "bone": "tread-9",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.7995000000000001,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-10",
+       "bone": "tread-10",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.7386,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-11",
+       "bone": "tread-11",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.5651900000000001,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-12",
+       "bone": "tread-12",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": -0.30565,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-13",
+       "bone": "tread-13",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.0005,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-14",
+       "bone": "tread-14",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.03272,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-15",
+       "bone": "tread-15",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.13,
+       "kind": "rect",
+       "x": 0.06004,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "handrail",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.21,
+       "kind": "poly",
+       "points": [
+        [
+         0.7606099999999999,
+         1.12
+        ],
+        [
+         0.75227,
+         1.14333
+        ],
+        [
+         0.74213,
+         1.16667
+        ],
+        [
+         0.7302,
+         1.19
+        ],
+        [
+         0.71651,
+         1.21333
+        ],
+        [
+         0.70109,
+         1.23667
+        ],
+        [
+         0.68399,
+         1.26
+        ],
+        [
+         0.6652399999999999,
+         1.28333
+        ],
+        [
+         0.64489,
+         1.30667
+        ],
+        [
+         0.6229899999999999,
+         1.33
+        ],
+        [
+         0.5995799999999999,
+         1.35333
+        ],
+        [
+         0.5747399999999999,
+         1.37667
+        ],
+        [
+         0.5485099999999999,
+         1.4
+        ],
+        [
+         0.52096,
+         1.42333
+        ],
+        [
+         0.49215,
+         1.44667
+        ],
+        [
+         0.46217,
+         1.47
+        ],
+        [
+         0.43107,
+         1.49333
+        ],
+        [
+         0.39893,
+         1.51667
+        ],
+        [
+         0.36583,
+         1.54
+        ],
+        [
+         0.33186,
+         1.56333
+        ],
+        [
+         0.29708,
+         1.58667
+        ],
+        [
+         0.26159,
+         1.61
+        ],
+        [
+         0.22547,
+         1.63333
+        ],
+        [
+         0.18881,
+         1.65667
+        ],
+        [
+         0.15169,
+         1.68
+        ],
+        [
+         0.11422,
+         1.70333
+        ],
+        [
+         0.07646,
+         1.72667
+        ],
+        [
+         0.03853,
+         1.75
+        ],
+        [
+         0.0005,
+         1.77333
+        ],
+        [
+         -0.03753,
+         1.79667
+        ],
+        [
+         -0.07546,
+         1.82
+        ],
+        [
+         -0.11322,
+         1.84333
+        ],
+        [
+         -0.15069,
+         1.86667
+        ],
+        [
+         -0.18781,
+         1.89
+        ],
+        [
+         -0.22447,
+         1.91333
+        ],
+        [
+         -0.26059,
+         1.93667
+        ],
+        [
+         -0.29608,
+         1.96
+        ],
+        [
+         -0.33086,
+         1.98333
+        ],
+        [
+         -0.36483,
+         2.00667
+        ],
+        [
+         -0.39793,
+         2.03
+        ],
+        [
+         -0.43007,
+         2.05333
+        ],
+        [
+         -0.46117,
+         2.07667
+        ],
+        [
+         -0.49115,
+         2.1
+        ],
+        [
+         -0.5199600000000001,
+         2.12333
+        ],
+        [
+         -0.54751,
+         2.14667
+        ],
+        [
+         -0.57374,
+         2.17
+        ],
+        [
+         -0.59858,
+         2.19333
+        ],
+        [
+         -0.62199,
+         2.21667
+        ],
+        [
+         -0.6438900000000001,
+         2.24
+        ],
+        [
+         -0.66424,
+         2.26333
+        ],
+        [
+         -0.6829900000000001,
+         2.28667
+        ],
+        [
+         -0.7000900000000001,
+         2.31
+        ],
+        [
+         -0.7155100000000001,
+         2.33333
+        ],
+        [
+         -0.7292000000000001,
+         2.35667
+        ],
+        [
+         -0.7411300000000001,
+         2.38
+        ],
+        [
+         -0.7512700000000001,
+         2.40333
+        ],
+        [
+         -0.75961,
+         2.42667
+        ],
+        [
+         -0.7661100000000001,
+         2.45
+        ],
+        [
+         -0.7707700000000001,
+         2.47333
+        ],
+        [
+         -0.7735700000000001,
+         2.49667
+        ],
+        [
+         -0.7745000000000001,
+         2.52
+        ],
+        [
+         -0.7735700000000001,
+         2.54333
+        ],
+        [
+         -0.7707700000000001,
+         2.56667
+        ],
+        [
+         -0.7661100000000001,
+         2.59
+        ],
+        [
+         -0.75961,
+         2.61333
+        ],
+        [
+         -0.7512700000000001,
+         2.63667
+        ],
+        [
+         -0.7411300000000001,
+         2.66
+        ],
+        [
+         -0.7292000000000001,
+         2.68333
+        ],
+        [
+         -0.7155100000000001,
+         2.70667
+        ],
+        [
+         -0.7000900000000001,
+         2.73
+        ],
+        [
+         -0.6829900000000001,
+         2.75333
+        ],
+        [
+         -0.66424,
+         2.77667
+        ],
+        [
+         -0.6438900000000001,
+         2.8
+        ],
+        [
+         -0.62199,
+         2.82333
+        ],
+        [
+         -0.59858,
+         2.84667
+        ],
+        [
+         -0.57374,
+         2.87
+        ],
+        [
+         -0.54751,
+         2.89333
+        ],
+        [
+         -0.5199600000000001,
+         2.91667
+        ],
+        [
+         -0.49115,
+         2.94
+        ],
+        [
+         -0.46117,
+         2.96333
+        ],
+        [
+         -0.43007,
+         2.98667
+        ],
+        [
+         -0.39793,
+         3.01
+        ],
+        [
+         -0.36483,
+         3.03333
+        ],
+        [
+         -0.33086,
+         3.05667
+        ],
+        [
+         -0.29608,
+         3.08
+        ],
+        [
+         -0.26059,
+         3.10333
+        ],
+        [
+         -0.22447,
+         3.12667
+        ],
+        [
+         -0.18781,
+         3.15
+        ],
+        [
+         -0.15069,
+         3.17333
+        ],
+        [
+         -0.11322,
+         3.19667
+        ],
+        [
+         -0.07546,
+         3.22
+        ],
+        [
+         -0.03753,
+         3.24333
+        ],
+        [
+         0.0005,
+         3.26667
+        ],
+        [
+         0.03853,
+         3.29
+        ],
+        [
+         0.07646,
+         3.31333
+        ],
+        [
+         0.11422,
+         3.33667
+        ],
+        [
+         0.15169,
+         3.36
+        ],
+        [
+         0.18881,
+         3.38333
+        ],
+        [
+         0.22547,
+         3.40667
+        ],
+        [
+         0.26159,
+         3.43
+        ],
+        [
+         0.29708,
+         3.45333
+        ],
+        [
+         0.33186,
+         3.47667
+        ],
+        [
+         0.36583,
+         3.5
+        ],
+        [
+         0.39893,
+         3.52333
+        ],
+        [
+         0.43107,
+         3.54667
+        ],
+        [
+         0.46217,
+         3.57
+        ],
+        [
+         0.49215,
+         3.59333
+        ],
+        [
+         0.52096,
+         3.61667
+        ],
+        [
+         0.5485099999999999,
+         3.64
+        ],
+        [
+         0.5747399999999999,
+         3.66333
+        ],
+        [
+         0.5995799999999999,
+         3.68667
+        ],
+        [
+         0.6229899999999999,
+         3.71
+        ],
+        [
+         0.64489,
+         3.73333
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The column as a filled bar on its base plate with 15 tread bars whose projected lengths follow the helix, and the handrail as a sine line.",
+      "de": "Die Säule als gefüllter Balken auf der Fußplatte mit 15 Stufenbalken, deren Projektionslängen der Wendel folgen, und der Handlauf als Sinuslinie."
+     },
+     "retained": {
+      "en": "Every tread bar (0.06 m = 0.3 mm thick) with its true projected extent, column 0.168 m, base plate 0.4 m, rail at 0.0424 m.",
+      "de": "Jeder Stufenbalken (0,06 m = 0,3 mm dick) mit seiner wahren Projektionslänge, Säule 0,168 m, Fußplatte 0,4 m, Handlauf 0,0424 m."
+     },
+     "merged": {
+      "en": "Tread and column outlines join where bars cross the column.",
+      "de": "Stufen- und Säulenkonturen verbinden sich, wo die Balken die Säule kreuzen."
+     },
+     "omitted": {
+      "en": "The 15 balusters (0.012 m = 0.06 mm), sleeve joints, nosings.",
+      "de": "Die 15 Stäbe (0,012 m = 0,06 mm), Hülsenfugen, Stufenkanten."
+     },
+     "thinElements": {
+      "en": "The rail is a 0.21 mm line, equal to its real 0.0424 m.",
+      "de": "Der Handlauf ist eine 0,21-mm-Linie, gleich seinen realen 0,0424 m."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Bars and column 0.13 mm outline, rail 0.21 mm.",
+      "de": "Balken und Säule 0,13-mm-Kontur, Handlauf 0,21 mm."
+     },
+     "overlays": {
+      "en": "Cells: the 15 treads (one region), the column with its plate, the rail.",
+      "de": "Zellen: die 15 Stufen (eine Region), die Säule mit Platte, der Handlauf."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "column",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.8
+        ],
+        [
+         0.001,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "column",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.0842
+        ],
+        [
+         0.001,
+         -0.0842
+        ],
+        [
+         2.8009999999999997,
+         -0.0842
+        ],
+        [
+         2.8009999999999997,
+         0.0842
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "base-plate",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.2
+        ],
+        [
+         0.001,
+         -0.2
+        ],
+        [
+         0.021,
+         -0.2
+        ],
+        [
+         0.021,
+         0.2
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tread-1",
+       "bone": "tread-1",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.07879,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-2",
+       "bone": "tread-2",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.246,
+       "kind": "rect",
+       "x": 0.060540000000000004,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-3",
+       "bone": "tread-3",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.03322,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-4",
+       "bone": "tread-4",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.001,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-5",
+       "bone": "tread-5",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.30515,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-6",
+       "bone": "tread-6",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.56469,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-7",
+       "bone": "tread-7",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.7381,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-8",
+       "bone": "tread-8",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.799,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-9",
+       "bone": "tread-9",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.799,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-10",
+       "bone": "tread-10",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.312,
+       "kind": "rect",
+       "x": -0.7381,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-11",
+       "bone": "tread-11",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.56469,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-12",
+       "bone": "tread-12",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": -0.30515,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-13",
+       "bone": "tread-13",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.001,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-14",
+       "bone": "tread-14",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.03322,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-15",
+       "bone": "tread-15",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.18,
+       "kind": "rect",
+       "x": 0.060540000000000004,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "baluster-1",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.186,
+       "kind": "poly",
+       "points": [
+        [
+         0.76111,
+         0.18667
+        ],
+        [
+         0.76111,
+         1.12
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-2",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.64539,
+         0.37333
+        ],
+        [
+         0.64539,
+         1.30667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-3",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.43157,
+         0.56
+        ],
+        [
+         0.43157,
+         1.49333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-4",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.15219,
+         0.74667
+        ],
+        [
+         0.15219,
+         1.68
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-5",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15019,
+         0.93333
+        ],
+        [
+         -0.15019,
+         1.86667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-6",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.42957,
+         1.12
+        ],
+        [
+         -0.42957,
+         2.05333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-7",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.64339,
+         1.30667
+        ],
+        [
+         -0.64339,
+         2.24
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-8",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.186,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75911,
+         1.49333
+        ],
+        [
+         -0.75911,
+         2.42667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-9",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.186,
+       "kind": "poly",
+       "points": [
+        [
+         -0.75911,
+         1.68
+        ],
+        [
+         -0.75911,
+         2.61333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-10",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.64339,
+         1.86667
+        ],
+        [
+         -0.64339,
+         2.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-11",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.42957,
+         2.05333
+        ],
+        [
+         -0.42957,
+         2.98667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-12",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15019,
+         2.24
+        ],
+        [
+         -0.15019,
+         3.17333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-13",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.15219,
+         2.42667
+        ],
+        [
+         0.15219,
+         3.36
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-14",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.43157,
+         2.61333
+        ],
+        [
+         0.43157,
+         3.54667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-15",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.12,
+       "kind": "poly",
+       "points": [
+        [
+         0.64539,
+         2.8
+        ],
+        [
+         0.64539,
+         3.73333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "handrail",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.42,
+       "kind": "poly",
+       "points": [
+        [
+         0.76111,
+         1.12
+        ],
+        [
+         0.75277,
+         1.14333
+        ],
+        [
+         0.74263,
+         1.16667
+        ],
+        [
+         0.7307,
+         1.19
+        ],
+        [
+         0.71701,
+         1.21333
+        ],
+        [
+         0.70159,
+         1.23667
+        ],
+        [
+         0.68449,
+         1.26
+        ],
+        [
+         0.66574,
+         1.28333
+        ],
+        [
+         0.64539,
+         1.30667
+        ],
+        [
+         0.62349,
+         1.33
+        ],
+        [
+         0.60008,
+         1.35333
+        ],
+        [
+         0.57524,
+         1.37667
+        ],
+        [
+         0.54901,
+         1.4
+        ],
+        [
+         0.52146,
+         1.42333
+        ],
+        [
+         0.49265,
+         1.44667
+        ],
+        [
+         0.46267,
+         1.47
+        ],
+        [
+         0.43157,
+         1.49333
+        ],
+        [
+         0.39943,
+         1.51667
+        ],
+        [
+         0.36633,
+         1.54
+        ],
+        [
+         0.33236,
+         1.56333
+        ],
+        [
+         0.29758,
+         1.58667
+        ],
+        [
+         0.26209,
+         1.61
+        ],
+        [
+         0.22597,
+         1.63333
+        ],
+        [
+         0.18931,
+         1.65667
+        ],
+        [
+         0.15219,
+         1.68
+        ],
+        [
+         0.11472,
+         1.70333
+        ],
+        [
+         0.07696,
+         1.72667
+        ],
+        [
+         0.03903,
+         1.75
+        ],
+        [
+         0.001,
+         1.77333
+        ],
+        [
+         -0.03703,
+         1.79667
+        ],
+        [
+         -0.07496,
+         1.82
+        ],
+        [
+         -0.11272,
+         1.84333
+        ],
+        [
+         -0.15019,
+         1.86667
+        ],
+        [
+         -0.18731,
+         1.89
+        ],
+        [
+         -0.22397,
+         1.91333
+        ],
+        [
+         -0.26009,
+         1.93667
+        ],
+        [
+         -0.29558,
+         1.96
+        ],
+        [
+         -0.33036,
+         1.98333
+        ],
+        [
+         -0.36433,
+         2.00667
+        ],
+        [
+         -0.39743,
+         2.03
+        ],
+        [
+         -0.42957,
+         2.05333
+        ],
+        [
+         -0.46067,
+         2.07667
+        ],
+        [
+         -0.49065,
+         2.1
+        ],
+        [
+         -0.51946,
+         2.12333
+        ],
+        [
+         -0.54701,
+         2.14667
+        ],
+        [
+         -0.57324,
+         2.17
+        ],
+        [
+         -0.59808,
+         2.19333
+        ],
+        [
+         -0.62149,
+         2.21667
+        ],
+        [
+         -0.64339,
+         2.24
+        ],
+        [
+         -0.66374,
+         2.26333
+        ],
+        [
+         -0.68249,
+         2.28667
+        ],
+        [
+         -0.69959,
+         2.31
+        ],
+        [
+         -0.71501,
+         2.33333
+        ],
+        [
+         -0.7287,
+         2.35667
+        ],
+        [
+         -0.74063,
+         2.38
+        ],
+        [
+         -0.75077,
+         2.40333
+        ],
+        [
+         -0.75911,
+         2.42667
+        ],
+        [
+         -0.76561,
+         2.45
+        ],
+        [
+         -0.77027,
+         2.47333
+        ],
+        [
+         -0.77307,
+         2.49667
+        ],
+        [
+         -0.774,
+         2.52
+        ],
+        [
+         -0.77307,
+         2.54333
+        ],
+        [
+         -0.77027,
+         2.56667
+        ],
+        [
+         -0.76561,
+         2.59
+        ],
+        [
+         -0.75911,
+         2.61333
+        ],
+        [
+         -0.75077,
+         2.63667
+        ],
+        [
+         -0.74063,
+         2.66
+        ],
+        [
+         -0.7287,
+         2.68333
+        ],
+        [
+         -0.71501,
+         2.70667
+        ],
+        [
+         -0.69959,
+         2.73
+        ],
+        [
+         -0.68249,
+         2.75333
+        ],
+        [
+         -0.66374,
+         2.77667
+        ],
+        [
+         -0.64339,
+         2.8
+        ],
+        [
+         -0.62149,
+         2.82333
+        ],
+        [
+         -0.59808,
+         2.84667
+        ],
+        [
+         -0.57324,
+         2.87
+        ],
+        [
+         -0.54701,
+         2.89333
+        ],
+        [
+         -0.51946,
+         2.91667
+        ],
+        [
+         -0.49065,
+         2.94
+        ],
+        [
+         -0.46067,
+         2.96333
+        ],
+        [
+         -0.42957,
+         2.98667
+        ],
+        [
+         -0.39743,
+         3.01
+        ],
+        [
+         -0.36433,
+         3.03333
+        ],
+        [
+         -0.33036,
+         3.05667
+        ],
+        [
+         -0.29558,
+         3.08
+        ],
+        [
+         -0.26009,
+         3.10333
+        ],
+        [
+         -0.22397,
+         3.12667
+        ],
+        [
+         -0.18731,
+         3.15
+        ],
+        [
+         -0.15019,
+         3.17333
+        ],
+        [
+         -0.11272,
+         3.19667
+        ],
+        [
+         -0.07496,
+         3.22
+        ],
+        [
+         -0.03703,
+         3.24333
+        ],
+        [
+         0.001,
+         3.26667
+        ],
+        [
+         0.03903,
+         3.29
+        ],
+        [
+         0.07696,
+         3.31333
+        ],
+        [
+         0.11472,
+         3.33667
+        ],
+        [
+         0.15219,
+         3.36
+        ],
+        [
+         0.18931,
+         3.38333
+        ],
+        [
+         0.22597,
+         3.40667
+        ],
+        [
+         0.26209,
+         3.43
+        ],
+        [
+         0.29758,
+         3.45333
+        ],
+        [
+         0.33236,
+         3.47667
+        ],
+        [
+         0.36633,
+         3.5
+        ],
+        [
+         0.39943,
+         3.52333
+        ],
+        [
+         0.43157,
+         3.54667
+        ],
+        [
+         0.46267,
+         3.57
+        ],
+        [
+         0.49265,
+         3.59333
+        ],
+        [
+         0.52146,
+         3.61667
+        ],
+        [
+         0.54901,
+         3.64
+        ],
+        [
+         0.57524,
+         3.66333
+        ],
+        [
+         0.60008,
+         3.68667
+        ],
+        [
+         0.62349,
+         3.71
+        ],
+        [
+         0.64539,
+         3.73333
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Tread bars with the helical projection, the column, 15 balusters and the rail at its real width.",
+      "de": "Stufenbalken mit der Wendelprojektion, die Säule, 15 Stäbe und der Handlauf in echter Breite."
+     },
+     "retained": {
+      "en": "All 15 balusters at 0.12 mm (real 0.012 m), the rail at 0.42 mm (real 0.0424 m).",
+      "de": "Alle 15 Stäbe mit 0,12 mm (real 0,012 m), der Handlauf mit 0,42 mm (real 0,0424 m)."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Sleeve joints, nosings.",
+      "de": "Hülsenfugen, Stufenkanten."
+     },
+     "thinElements": {
+      "en": "Balusters and rail are lines whose pen equals the real width.",
+      "de": "Stäbe und Handlauf sind Linien, deren Stift der realen Breite entspricht."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Bars 0.18 mm outline, balusters 0.12 mm, rail 0.42 mm.",
+      "de": "Balken 0,18-mm-Kontur, Stäbe 0,12 mm, Handlauf 0,42 mm."
+     },
+     "overlays": {
+      "en": "Cells: treads, column, balusters and rail.",
+      "de": "Zellen: Stufen, Säule, Stäbe und Handlauf."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "column",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.8
+        ],
+        [
+         0.0,
+         -0.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "column",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0842
+        ],
+        [
+         0.0,
+         -0.0842
+        ],
+        [
+         2.8,
+         -0.0842
+        ],
+        [
+         2.8,
+         0.0842
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "base-plate",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "column-steel",
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.2
+        ],
+        [
+         0.0,
+         -0.2
+        ],
+        [
+         0.02,
+         -0.2
+        ],
+        [
+         0.02,
+         0.2
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sleeve-1",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.12667,
+         0.0842
+        ],
+        [
+         0.12667,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-2",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.31333,
+         0.0842
+        ],
+        [
+         0.31333,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-3",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.5,
+         0.0842
+        ],
+        [
+         0.5,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-4",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.68667,
+         0.0842
+        ],
+        [
+         0.68667,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-5",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.87333,
+         0.0842
+        ],
+        [
+         0.87333,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-6",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.06,
+         0.0842
+        ],
+        [
+         1.06,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-7",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.24667,
+         0.0842
+        ],
+        [
+         1.24667,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-8",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.43333,
+         0.0842
+        ],
+        [
+         1.43333,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-9",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.62,
+         0.0842
+        ],
+        [
+         1.62,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-10",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.80667,
+         0.0842
+        ],
+        [
+         1.80667,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-11",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         1.99333,
+         0.0842
+        ],
+        [
+         1.99333,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-12",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         2.18,
+         0.0842
+        ],
+        [
+         2.18,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-13",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         2.36667,
+         0.0842
+        ],
+        [
+         2.36667,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-14",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         2.55333,
+         0.0842
+        ],
+        [
+         2.55333,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "sleeve-15",
+       "bone": "column",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.2,
+       "region": "column-steel",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         2.74,
+         0.0842
+        ],
+        [
+         2.74,
+         -0.0842
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "tread-1",
+       "bone": "tread-1",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.07779,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-2",
+       "bone": "tread-2",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.05954,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-3",
+       "bone": "tread-3",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.03222,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-4",
+       "bone": "tread-4",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-5",
+       "bone": "tread-5",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.30615,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-6",
+       "bone": "tread-6",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.56569,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-7",
+       "bone": "tread-7",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.7391,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-8",
+       "bone": "tread-8",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-9",
+       "bone": "tread-9",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.8,
+       "y": -0.06,
+       "w": 0.72221,
+       "h": 0.06
+      },
+      {
+       "id": "tread-10",
+       "bone": "tread-10",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.7391,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "tread-11",
+       "bone": "tread-11",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.56569,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-12",
+       "bone": "tread-12",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": -0.30615,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-13",
+       "bone": "tread-13",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.06,
+       "w": 0.30615,
+       "h": 0.06
+      },
+      {
+       "id": "tread-14",
+       "bone": "tread-14",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.03222,
+       "y": -0.06,
+       "w": 0.53346,
+       "h": 0.06
+      },
+      {
+       "id": "tread-15",
+       "bone": "tread-15",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "treads",
+       "material": "steel",
+       "penMm": 0.25,
+       "kind": "rect",
+       "x": 0.05954,
+       "y": -0.06,
+       "w": 0.67957,
+       "h": 0.06
+      },
+      {
+       "id": "nosing-1",
+       "bone": "tread-1",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.07779,
+         -0.012
+        ],
+        [
+         0.8,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-2",
+       "bone": "tread-2",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.05954,
+         -0.012
+        ],
+        [
+         0.7391,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-3",
+       "bone": "tread-3",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.03222,
+         -0.012
+        ],
+        [
+         0.56569,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-4",
+       "bone": "tread-4",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.012
+        ],
+        [
+         0.30615,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-5",
+       "bone": "tread-5",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.30615,
+         -0.012
+        ],
+        [
+         0.0,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-6",
+       "bone": "tread-6",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.56569,
+         -0.012
+        ],
+        [
+         -0.03222,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-7",
+       "bone": "tread-7",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.7391,
+         -0.012
+        ],
+        [
+         -0.05954,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-8",
+       "bone": "tread-8",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.8,
+         -0.012
+        ],
+        [
+         -0.07779,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-9",
+       "bone": "tread-9",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.8,
+         -0.012
+        ],
+        [
+         -0.07779,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-10",
+       "bone": "tread-10",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.7391,
+         -0.012
+        ],
+        [
+         -0.05954,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-11",
+       "bone": "tread-11",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.56569,
+         -0.012
+        ],
+        [
+         -0.03222,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-12",
+       "bone": "tread-12",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         -0.30615,
+         -0.012
+        ],
+        [
+         0.0,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-13",
+       "bone": "tread-13",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.012
+        ],
+        [
+         0.30615,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-14",
+       "bone": "tread-14",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.03222,
+         -0.012
+        ],
+        [
+         0.56569,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "nosing-15",
+       "bone": "tread-15",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "treads",
+       "penMm": 0.1,
+       "kind": "poly",
+       "points": [
+        [
+         0.05954,
+         -0.012
+        ],
+        [
+         0.7391,
+         -0.012
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-1",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.76011,
+         0.18667
+        ],
+        [
+         0.76011,
+         1.12
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-2",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.64439,
+         0.37333
+        ],
+        [
+         0.64439,
+         1.30667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-3",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.43057,
+         0.56
+        ],
+        [
+         0.43057,
+         1.49333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-4",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.15119,
+         0.74667
+        ],
+        [
+         0.15119,
+         1.68
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-5",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15119,
+         0.93333
+        ],
+        [
+         -0.15119,
+         1.86667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-6",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.43057,
+         1.12
+        ],
+        [
+         -0.43057,
+         2.05333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-7",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.64439,
+         1.30667
+        ],
+        [
+         -0.64439,
+         2.24
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-8",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.76011,
+         1.49333
+        ],
+        [
+         -0.76011,
+         2.42667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-9",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.76011,
+         1.68
+        ],
+        [
+         -0.76011,
+         2.61333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-10",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.64439,
+         1.86667
+        ],
+        [
+         -0.64439,
+         2.8
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-11",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.43057,
+         2.05333
+        ],
+        [
+         -0.43057,
+         2.98667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-12",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15119,
+         2.24
+        ],
+        [
+         -0.15119,
+         3.17333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-13",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.15119,
+         2.42667
+        ],
+        [
+         0.15119,
+         3.36
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-14",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.43057,
+         2.61333
+        ],
+        [
+         0.43057,
+         3.54667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "baluster-15",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.24,
+       "kind": "poly",
+       "points": [
+        [
+         0.64439,
+         2.8
+        ],
+        [
+         0.64439,
+         3.73333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "handrail",
+       "bone": "balustrade",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.3,
+       "region": "balustrade-steel",
+       "material": "steel",
+       "penMm": 0.85,
+       "kind": "poly",
+       "points": [
+        [
+         0.76011,
+         1.12
+        ],
+        [
+         0.75177,
+         1.14333
+        ],
+        [
+         0.74163,
+         1.16667
+        ],
+        [
+         0.7297,
+         1.19
+        ],
+        [
+         0.71601,
+         1.21333
+        ],
+        [
+         0.70059,
+         1.23667
+        ],
+        [
+         0.68349,
+         1.26
+        ],
+        [
+         0.66474,
+         1.28333
+        ],
+        [
+         0.64439,
+         1.30667
+        ],
+        [
+         0.62249,
+         1.33
+        ],
+        [
+         0.59908,
+         1.35333
+        ],
+        [
+         0.57424,
+         1.37667
+        ],
+        [
+         0.54801,
+         1.4
+        ],
+        [
+         0.52046,
+         1.42333
+        ],
+        [
+         0.49165,
+         1.44667
+        ],
+        [
+         0.46167,
+         1.47
+        ],
+        [
+         0.43057,
+         1.49333
+        ],
+        [
+         0.39843,
+         1.51667
+        ],
+        [
+         0.36533,
+         1.54
+        ],
+        [
+         0.33136,
+         1.56333
+        ],
+        [
+         0.29658,
+         1.58667
+        ],
+        [
+         0.26109,
+         1.61
+        ],
+        [
+         0.22497,
+         1.63333
+        ],
+        [
+         0.18831,
+         1.65667
+        ],
+        [
+         0.15119,
+         1.68
+        ],
+        [
+         0.11372,
+         1.70333
+        ],
+        [
+         0.07596,
+         1.72667
+        ],
+        [
+         0.03803,
+         1.75
+        ],
+        [
+         0.0,
+         1.77333
+        ],
+        [
+         -0.03803,
+         1.79667
+        ],
+        [
+         -0.07596,
+         1.82
+        ],
+        [
+         -0.11372,
+         1.84333
+        ],
+        [
+         -0.15119,
+         1.86667
+        ],
+        [
+         -0.18831,
+         1.89
+        ],
+        [
+         -0.22497,
+         1.91333
+        ],
+        [
+         -0.26109,
+         1.93667
+        ],
+        [
+         -0.29658,
+         1.96
+        ],
+        [
+         -0.33136,
+         1.98333
+        ],
+        [
+         -0.36533,
+         2.00667
+        ],
+        [
+         -0.39843,
+         2.03
+        ],
+        [
+         -0.43057,
+         2.05333
+        ],
+        [
+         -0.46167,
+         2.07667
+        ],
+        [
+         -0.49165,
+         2.1
+        ],
+        [
+         -0.52046,
+         2.12333
+        ],
+        [
+         -0.54801,
+         2.14667
+        ],
+        [
+         -0.57424,
+         2.17
+        ],
+        [
+         -0.59908,
+         2.19333
+        ],
+        [
+         -0.62249,
+         2.21667
+        ],
+        [
+         -0.64439,
+         2.24
+        ],
+        [
+         -0.66474,
+         2.26333
+        ],
+        [
+         -0.68349,
+         2.28667
+        ],
+        [
+         -0.70059,
+         2.31
+        ],
+        [
+         -0.71601,
+         2.33333
+        ],
+        [
+         -0.7297,
+         2.35667
+        ],
+        [
+         -0.74163,
+         2.38
+        ],
+        [
+         -0.75177,
+         2.40333
+        ],
+        [
+         -0.76011,
+         2.42667
+        ],
+        [
+         -0.76661,
+         2.45
+        ],
+        [
+         -0.77127,
+         2.47333
+        ],
+        [
+         -0.77407,
+         2.49667
+        ],
+        [
+         -0.775,
+         2.52
+        ],
+        [
+         -0.77407,
+         2.54333
+        ],
+        [
+         -0.77127,
+         2.56667
+        ],
+        [
+         -0.76661,
+         2.59
+        ],
+        [
+         -0.76011,
+         2.61333
+        ],
+        [
+         -0.75177,
+         2.63667
+        ],
+        [
+         -0.74163,
+         2.66
+        ],
+        [
+         -0.7297,
+         2.68333
+        ],
+        [
+         -0.71601,
+         2.70667
+        ],
+        [
+         -0.70059,
+         2.73
+        ],
+        [
+         -0.68349,
+         2.75333
+        ],
+        [
+         -0.66474,
+         2.77667
+        ],
+        [
+         -0.64439,
+         2.8
+        ],
+        [
+         -0.62249,
+         2.82333
+        ],
+        [
+         -0.59908,
+         2.84667
+        ],
+        [
+         -0.57424,
+         2.87
+        ],
+        [
+         -0.54801,
+         2.89333
+        ],
+        [
+         -0.52046,
+         2.91667
+        ],
+        [
+         -0.49165,
+         2.94
+        ],
+        [
+         -0.46167,
+         2.96333
+        ],
+        [
+         -0.43057,
+         2.98667
+        ],
+        [
+         -0.39843,
+         3.01
+        ],
+        [
+         -0.36533,
+         3.03333
+        ],
+        [
+         -0.33136,
+         3.05667
+        ],
+        [
+         -0.29658,
+         3.08
+        ],
+        [
+         -0.26109,
+         3.10333
+        ],
+        [
+         -0.22497,
+         3.12667
+        ],
+        [
+         -0.18831,
+         3.15
+        ],
+        [
+         -0.15119,
+         3.17333
+        ],
+        [
+         -0.11372,
+         3.19667
+        ],
+        [
+         -0.07596,
+         3.22
+        ],
+        [
+         -0.03803,
+         3.24333
+        ],
+        [
+         0.0,
+         3.26667
+        ],
+        [
+         0.03803,
+         3.29
+        ],
+        [
+         0.07596,
+         3.31333
+        ],
+        [
+         0.11372,
+         3.33667
+        ],
+        [
+         0.15119,
+         3.36
+        ],
+        [
+         0.18831,
+         3.38333
+        ],
+        [
+         0.22497,
+         3.40667
+        ],
+        [
+         0.26109,
+         3.43
+        ],
+        [
+         0.29658,
+         3.45333
+        ],
+        [
+         0.33136,
+         3.47667
+        ],
+        [
+         0.36533,
+         3.5
+        ],
+        [
+         0.39843,
+         3.52333
+        ],
+        [
+         0.43057,
+         3.54667
+        ],
+        [
+         0.46167,
+         3.57
+        ],
+        [
+         0.49165,
+         3.59333
+        ],
+        [
+         0.52046,
+         3.61667
+        ],
+        [
+         0.54801,
+         3.64
+        ],
+        [
+         0.57424,
+         3.66333
+        ],
+        [
+         0.59908,
+         3.68667
+        ],
+        [
+         0.62249,
+         3.71
+        ],
+        [
+         0.64439,
+         3.73333
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The full front elevation of the helix: column with sleeve joints under every tread, 15 tread bars with nosing lines, 15 balusters and the handrail band.",
+      "de": "Die volle Vorderansicht der Wendel: Säule mit Hülsenfuge unter jeder Stufe, 15 Stufenbalken mit Kantenlinie, 15 Stäbe und das Handlaufband."
+     },
+     "retained": {
+      "en": "Sleeve joints (column built of 0.127 m spacer sleeves), nosing lines at 0.012 m below the tread top, balusters at 0.24 mm, the rail at 0.85 mm.",
+      "de": "Hülsenfugen (Säule aus 0,127 m langen Abstandshülsen), Kantenlinien 0,012 m unter der Trittfläche, Stäbe mit 0,24 mm, der Handlauf mit 0,85 mm."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Anchors, bolts, tread riser lips.",
+      "de": "Anker, Schrauben, Setzstufenlippen."
+     },
+     "thinElements": {
+      "en": "All thin parts at real width.",
+      "de": "Alle dünnen Teile in echter Breite."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Bars 0.25 mm, balusters 0.24 mm, rail 0.85 mm, joints 0.1 mm.",
+      "de": "Balken 0,25 mm, Stäbe 0,24 mm, Handlauf 0,85 mm, Fugen 0,1 mm."
+     },
+     "overlays": {
+      "en": "One cell per region; each tread is a cell of the treads region.",
+      "de": "Eine Zelle je Region; jede Stufe ist eine Zelle der Region Stufen."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "spiral-stair-plan",
+    "title": {
+     "en": "Spiral stair in plan",
+     "de": "Wendeltreppe im Grundriss"
+    },
+    "description": {
+     "en": "The conventional plan of a spiral stair: 15 pie treads around the column in true size, the walking line at 0.6 m radius and the balustrade circle (DIN 1356-1, DIN 18065).",
+     "de": "Der übliche Grundriss einer Wendeltreppe: 15 Kreisringstufen um die Säule in wahrer Größe, die Lauflinie bei 0,6 m Radius und der Geländerkreis (DIN 1356-1, DIN 18065)."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     200,
+     100,
+     50
+    ],
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "tread-plan-1",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0842,
+         0.0
+        ],
+        [
+         0.8,
+         0.0
+        ],
+        [
+         0.79829,
+         0.05232
+        ],
+        [
+         0.79316,
+         0.10442
+        ],
+        [
+         0.78463,
+         0.15607
+        ],
+        [
+         0.77274,
+         0.20706
+        ],
+        [
+         0.75754,
+         0.25715
+        ],
+        [
+         0.7391,
+         0.30615
+        ],
+        [
+         0.07779,
+         0.03222
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-2",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.07779,
+         0.03222
+        ],
+        [
+         0.7391,
+         0.30615
+        ],
+        [
+         0.7175,
+         0.35383
+        ],
+        [
+         0.69282,
+         0.4
+        ],
+        [
+         0.66518,
+         0.44446
+        ],
+        [
+         0.63468,
+         0.48701
+        ],
+        [
+         0.60147,
+         0.52748
+        ],
+        [
+         0.56569,
+         0.56569
+        ],
+        [
+         0.05954,
+         0.05954
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-3",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.05954,
+         0.05954
+        ],
+        [
+         0.56569,
+         0.56569
+        ],
+        [
+         0.52748,
+         0.60147
+        ],
+        [
+         0.48701,
+         0.63468
+        ],
+        [
+         0.44446,
+         0.66518
+        ],
+        [
+         0.4,
+         0.69282
+        ],
+        [
+         0.35383,
+         0.7175
+        ],
+        [
+         0.30615,
+         0.7391
+        ],
+        [
+         0.03222,
+         0.07779
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-4",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.03222,
+         0.07779
+        ],
+        [
+         0.30615,
+         0.7391
+        ],
+        [
+         0.25715,
+         0.75754
+        ],
+        [
+         0.20706,
+         0.77274
+        ],
+        [
+         0.15607,
+         0.78463
+        ],
+        [
+         0.10442,
+         0.79316
+        ],
+        [
+         0.05232,
+         0.79829
+        ],
+        [
+         0.0,
+         0.8
+        ],
+        [
+         0.0,
+         0.0842
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-5",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0842
+        ],
+        [
+         0.0,
+         0.8
+        ],
+        [
+         -0.05232,
+         0.79829
+        ],
+        [
+         -0.10442,
+         0.79316
+        ],
+        [
+         -0.15607,
+         0.78463
+        ],
+        [
+         -0.20706,
+         0.77274
+        ],
+        [
+         -0.25715,
+         0.75754
+        ],
+        [
+         -0.30615,
+         0.7391
+        ],
+        [
+         -0.03222,
+         0.07779
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-6",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.03222,
+         0.07779
+        ],
+        [
+         -0.30615,
+         0.7391
+        ],
+        [
+         -0.35383,
+         0.7175
+        ],
+        [
+         -0.4,
+         0.69282
+        ],
+        [
+         -0.44446,
+         0.66518
+        ],
+        [
+         -0.48701,
+         0.63468
+        ],
+        [
+         -0.52748,
+         0.60147
+        ],
+        [
+         -0.56569,
+         0.56569
+        ],
+        [
+         -0.05954,
+         0.05954
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-7",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05954,
+         0.05954
+        ],
+        [
+         -0.56569,
+         0.56569
+        ],
+        [
+         -0.60147,
+         0.52748
+        ],
+        [
+         -0.63468,
+         0.48701
+        ],
+        [
+         -0.66518,
+         0.44446
+        ],
+        [
+         -0.69282,
+         0.4
+        ],
+        [
+         -0.7175,
+         0.35383
+        ],
+        [
+         -0.7391,
+         0.30615
+        ],
+        [
+         -0.07779,
+         0.03222
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-8",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07779,
+         0.03222
+        ],
+        [
+         -0.7391,
+         0.30615
+        ],
+        [
+         -0.75754,
+         0.25715
+        ],
+        [
+         -0.77274,
+         0.20706
+        ],
+        [
+         -0.78463,
+         0.15607
+        ],
+        [
+         -0.79316,
+         0.10442
+        ],
+        [
+         -0.79829,
+         0.05232
+        ],
+        [
+         -0.8,
+         0.0
+        ],
+        [
+         -0.0842,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-9",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0842,
+         0.0
+        ],
+        [
+         -0.8,
+         0.0
+        ],
+        [
+         -0.79829,
+         -0.05232
+        ],
+        [
+         -0.79316,
+         -0.10442
+        ],
+        [
+         -0.78463,
+         -0.15607
+        ],
+        [
+         -0.77274,
+         -0.20706
+        ],
+        [
+         -0.75754,
+         -0.25715
+        ],
+        [
+         -0.7391,
+         -0.30615
+        ],
+        [
+         -0.07779,
+         -0.03222
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-10",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.07779,
+         -0.03222
+        ],
+        [
+         -0.7391,
+         -0.30615
+        ],
+        [
+         -0.7175,
+         -0.35383
+        ],
+        [
+         -0.69282,
+         -0.4
+        ],
+        [
+         -0.66518,
+         -0.44446
+        ],
+        [
+         -0.63468,
+         -0.48701
+        ],
+        [
+         -0.60147,
+         -0.52748
+        ],
+        [
+         -0.56569,
+         -0.56569
+        ],
+        [
+         -0.05954,
+         -0.05954
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-11",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05954,
+         -0.05954
+        ],
+        [
+         -0.56569,
+         -0.56569
+        ],
+        [
+         -0.52748,
+         -0.60147
+        ],
+        [
+         -0.48701,
+         -0.63468
+        ],
+        [
+         -0.44446,
+         -0.66518
+        ],
+        [
+         -0.4,
+         -0.69282
+        ],
+        [
+         -0.35383,
+         -0.7175
+        ],
+        [
+         -0.30615,
+         -0.7391
+        ],
+        [
+         -0.03222,
+         -0.07779
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-12",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.03222,
+         -0.07779
+        ],
+        [
+         -0.30615,
+         -0.7391
+        ],
+        [
+         -0.25715,
+         -0.75754
+        ],
+        [
+         -0.20706,
+         -0.77274
+        ],
+        [
+         -0.15607,
+         -0.78463
+        ],
+        [
+         -0.10442,
+         -0.79316
+        ],
+        [
+         -0.05232,
+         -0.79829
+        ],
+        [
+         -0.0,
+         -0.8
+        ],
+        [
+         -0.0,
+         -0.0842
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-13",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0,
+         -0.0842
+        ],
+        [
+         -0.0,
+         -0.8
+        ],
+        [
+         0.05232,
+         -0.79829
+        ],
+        [
+         0.10442,
+         -0.79316
+        ],
+        [
+         0.15607,
+         -0.78463
+        ],
+        [
+         0.20706,
+         -0.77274
+        ],
+        [
+         0.25715,
+         -0.75754
+        ],
+        [
+         0.30615,
+         -0.7391
+        ],
+        [
+         0.03222,
+         -0.07779
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-14",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.03222,
+         -0.07779
+        ],
+        [
+         0.30615,
+         -0.7391
+        ],
+        [
+         0.35383,
+         -0.7175
+        ],
+        [
+         0.4,
+         -0.69282
+        ],
+        [
+         0.44446,
+         -0.66518
+        ],
+        [
+         0.48701,
+         -0.63468
+        ],
+        [
+         0.52748,
+         -0.60147
+        ],
+        [
+         0.56569,
+         -0.56569
+        ],
+        [
+         0.05954,
+         -0.05954
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "tread-plan-15",
+       "bone": "column",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.05954,
+         -0.05954
+        ],
+        [
+         0.56569,
+         -0.56569
+        ],
+        [
+         0.60147,
+         -0.52748
+        ],
+        [
+         0.63468,
+         -0.48701
+        ],
+        [
+         0.66518,
+         -0.44446
+        ],
+        [
+         0.69282,
+         -0.4
+        ],
+        [
+         0.7175,
+         -0.35383
+        ],
+        [
+         0.7391,
+         -0.30615
+        ],
+        [
+         0.07779,
+         -0.03222
+        ]
+       ],
+       "closed": true,
+       "region": "treads"
+      },
+      {
+       "id": "column-plan",
+       "bone": "column",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.0842,
+       "ry": 0.0842,
+       "region": "column-steel"
+      },
+      {
+       "id": "walking-line",
+       "bone": "column",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.6,
+         0.0
+        ],
+        [
+         0.59772,
+         0.05229
+        ],
+        [
+         0.59088,
+         0.10419
+        ],
+        [
+         0.57956,
+         0.15529
+        ],
+        [
+         0.56382,
+         0.20521
+        ],
+        [
+         0.54378,
+         0.25357
+        ],
+        [
+         0.51962,
+         0.3
+        ],
+        [
+         0.49149,
+         0.34415
+        ],
+        [
+         0.45963,
+         0.38567
+        ],
+        [
+         0.42426,
+         0.42426
+        ],
+        [
+         0.38567,
+         0.45963
+        ],
+        [
+         0.34415,
+         0.49149
+        ],
+        [
+         0.3,
+         0.51962
+        ],
+        [
+         0.25357,
+         0.54378
+        ],
+        [
+         0.20521,
+         0.56382
+        ],
+        [
+         0.15529,
+         0.57956
+        ],
+        [
+         0.10419,
+         0.59088
+        ],
+        [
+         0.05229,
+         0.59772
+        ],
+        [
+         0.0,
+         0.6
+        ],
+        [
+         -0.05229,
+         0.59772
+        ],
+        [
+         -0.10419,
+         0.59088
+        ],
+        [
+         -0.15529,
+         0.57956
+        ],
+        [
+         -0.20521,
+         0.56382
+        ],
+        [
+         -0.25357,
+         0.54378
+        ],
+        [
+         -0.3,
+         0.51962
+        ],
+        [
+         -0.34415,
+         0.49149
+        ],
+        [
+         -0.38567,
+         0.45963
+        ],
+        [
+         -0.42426,
+         0.42426
+        ],
+        [
+         -0.45963,
+         0.38567
+        ],
+        [
+         -0.49149,
+         0.34415
+        ],
+        [
+         -0.51962,
+         0.3
+        ],
+        [
+         -0.54378,
+         0.25357
+        ],
+        [
+         -0.56382,
+         0.20521
+        ],
+        [
+         -0.57956,
+         0.15529
+        ],
+        [
+         -0.59088,
+         0.10419
+        ],
+        [
+         -0.59772,
+         0.05229
+        ],
+        [
+         -0.6,
+         0.0
+        ],
+        [
+         -0.59772,
+         -0.05229
+        ],
+        [
+         -0.59088,
+         -0.10419
+        ],
+        [
+         -0.57956,
+         -0.15529
+        ],
+        [
+         -0.56382,
+         -0.20521
+        ],
+        [
+         -0.54378,
+         -0.25357
+        ],
+        [
+         -0.51962,
+         -0.3
+        ],
+        [
+         -0.49149,
+         -0.34415
+        ],
+        [
+         -0.45963,
+         -0.38567
+        ],
+        [
+         -0.42426,
+         -0.42426
+        ],
+        [
+         -0.38567,
+         -0.45963
+        ],
+        [
+         -0.34415,
+         -0.49149
+        ],
+        [
+         -0.3,
+         -0.51962
+        ],
+        [
+         -0.25357,
+         -0.54378
+        ],
+        [
+         -0.20521,
+         -0.56382
+        ],
+        [
+         -0.15529,
+         -0.57956
+        ],
+        [
+         -0.10419,
+         -0.59088
+        ],
+        [
+         -0.05229,
+         -0.59772
+        ],
+        [
+         -0.0,
+         -0.6
+        ],
+        [
+         0.05229,
+         -0.59772
+        ],
+        [
+         0.10419,
+         -0.59088
+        ],
+        [
+         0.15529,
+         -0.57956
+        ],
+        [
+         0.20521,
+         -0.56382
+        ],
+        [
+         0.25357,
+         -0.54378
+        ],
+        [
+         0.3,
+         -0.51962
+        ],
+        [
+         0.34415,
+         -0.49149
+        ],
+        [
+         0.38567,
+         -0.45963
+        ],
+        [
+         0.42426,
+         -0.42426
+        ],
+        [
+         0.45963,
+         -0.38567
+        ],
+        [
+         0.49149,
+         -0.34415
+        ],
+        [
+         0.51962,
+         -0.3
+        ],
+        [
+         0.54378,
+         -0.25357
+        ]
+       ],
+       "closed": false,
+       "region": "treads",
+       "penMm": 0.13
+      },
+      {
+       "id": "balustrade-circle",
+       "bone": "column",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.775,
+       "ry": 0.775,
+       "region": "balustrade-steel"
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres at real size: the 1.6 m diameter and the 22.5 degree tread angle are true.",
+     "de": "Modellmeter in wahrer Größe: der Durchmesser 1,6 m und der Stufenwinkel 22,5 Grad sind echt."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "self-weight",
+    "title": {
+     "en": "Self-weight",
+     "de": "Eigengewicht"
+    },
+    "description": {
+     "en": "The stair unloaded; treads and rail partly in the sun.",
+     "de": "Die unbelastete Treppe; Stufen und Handlauf teilweise besonnt."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "treads": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.45
+      },
+      "column-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.35
+      },
+      "balustrade-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "walker-on-tread-8",
+    "title": {
+     "en": "Person on the eighth tread",
+     "de": "Person auf der achten Stufe"
+    },
+    "description": {
+     "en": "An 80 kg person on tread 8, on the walking line at 0.6 m radius, 168.75 degrees round the column.",
+     "de": "Eine 80 kg schwere Person auf Stufe 8, auf der Lauflinie bei 0,6 m Radius, 168,75 Grad um die Säule."
+    },
+    "bones": {
+     "walker-x": {
+      "dx": -0.5884711682419382
+     },
+     "walker-y": {
+      "dy": 1.4933333333333332
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "treads": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.45
+      },
+      "column-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.35
+      },
+      "balustrade-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "walker",
+      "kind": "occupant",
+      "title": {
+       "en": "Person of 80 kg on the tread",
+       "de": "Person mit 80 kg auf der Stufe"
+      },
+      "anchor": "walker-point",
+      "fxN": 0.0,
+      "fyN": -785,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "point-load-top-tread",
+    "title": {
+     "en": "2 kN on the top tread",
+     "de": "2 kN auf der obersten Stufe"
+    },
+    "description": {
+     "en": "The category A concentrated load on the outer part of the top tread.",
+     "de": "Die Einzellast der Kategorie A auf dem äußeren Teil der obersten Stufe."
+    },
+    "bones": {
+     "walker-x": {
+      "dx": 0.4988817673815271
+     },
+     "walker-y": {
+      "dy": 2.8
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "treads": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.8
+      },
+      "column-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.35
+      },
+      "balustrade-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "concentrated",
+      "kind": "imposed",
+      "title": {
+       "en": "Concentrated load 2 kN on the top tread (category A)",
+       "de": "Einzellast 2 kN auf der obersten Stufe (Kategorie A)"
+      },
+      "anchor": "walker-point",
+      "fxN": 0.0,
+      "fyN": -2000,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "rail-push",
+    "title": {
+     "en": "Pushing on the balustrade",
+     "de": "Druck auf das Geländer"
+    },
+    "description": {
+     "en": "A horizontal 0.5 kN barrier load at the handrail of the top landing (shaded side).",
+     "de": "Eine waagerechte Geländerlast von 0,5 kN am Handlauf des oberen Podests (verschattete Seite)."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "treads": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.1
+      },
+      "column-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.35
+      },
+      "balustrade-steel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "rail-push",
+      "kind": "imposed",
+      "title": {
+       "en": "Barrier line load 0.5 kN/m over 1 m, horizontal",
+       "de": "Geländer-Linienlast 0,5 kN/m auf 1 m, waagerecht"
+      },
+      "anchor": "rail-point",
+      "fxN": 500,
+      "fyN": 0.0,
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "climb",
+    "title": {
+     "en": "Person climbs the spiral",
+     "de": "Person steigt die Wendel hinauf"
+    },
+    "description": {
+     "en": "An 80 kg person walks up the 15 treads on the walking line; in elevation the foot swings left and right while rising 0.187 m per step.",
+     "de": "Eine 80 kg schwere Person geht die 15 Stufen auf der Lauflinie hinauf; in der Ansicht schwingt der Fuß nach links und rechts und steigt 0,187 m je Schritt."
+    },
+    "durationS": 14,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.5884711682419382
+       },
+       "walker-y": {
+        "dy": 0.18666666666666665
+       }
+      }
+     },
+     {
+      "t": 1,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.4988817673815271
+       },
+       "walker-y": {
+        "dy": 0.3733333333333333
+       }
+      }
+     },
+     {
+      "t": 2,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.33334213981176136
+       },
+       "walker-y": {
+        "dy": 0.5599999999999999
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.117054193209677
+       },
+       "walker-y": {
+        "dy": 0.7466666666666666
+       }
+      }
+     },
+     {
+      "t": 4,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.11705419320967692
+       },
+       "walker-y": {
+        "dy": 0.9333333333333332
+       }
+      }
+     },
+     {
+      "t": 5,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.33334213981176136
+       },
+       "walker-y": {
+        "dy": 1.1199999999999999
+       }
+      }
+     },
+     {
+      "t": 6,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.4988817673815272
+       },
+       "walker-y": {
+        "dy": 1.3066666666666666
+       }
+      }
+     },
+     {
+      "t": 7,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.5884711682419382
+       },
+       "walker-y": {
+        "dy": 1.4933333333333332
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.5884711682419382
+       },
+       "walker-y": {
+        "dy": 1.6799999999999997
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.4988817673815271
+       },
+       "walker-y": {
+        "dy": 1.8666666666666665
+       }
+      }
+     },
+     {
+      "t": 10,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.3333421398117613
+       },
+       "walker-y": {
+        "dy": 2.0533333333333332
+       }
+      }
+     },
+     {
+      "t": 11,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": -0.1170541932096772
+       },
+       "walker-y": {
+        "dy": 2.2399999999999998
+       }
+      }
+     },
+     {
+      "t": 12,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.11705419320967697
+       },
+       "walker-y": {
+        "dy": 2.4266666666666663
+       }
+      }
+     },
+     {
+      "t": 13,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.3333421398117611
+       },
+       "walker-y": {
+        "dy": 2.6133333333333333
+       }
+      }
+     },
+     {
+      "t": 14,
+      "pose": "walker-on-tread-8",
+      "ease": "smooth",
+      "bones": {
+       "walker-x": {
+        "dx": 0.4988817673815271
+       },
+       "walker-y": {
+        "dy": 2.8
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "climb",
+      "fromS": 0,
+      "toS": 14,
+      "title": {
+       "en": "Climb at 1 step per second",
+       "de": "Aufstieg mit einem Schritt pro Sekunde"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "load-on",
+      "title": {
+       "en": "Person on tread 1",
+       "de": "Person auf Stufe 1"
+      }
+     },
+     {
+      "t": 14,
+      "kind": "load-off",
+      "title": {
+       "en": "Person on the top tread",
+       "de": "Person auf der obersten Stufe"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "live-load-ramp",
+    "title": {
+     "en": "Concentrated load builds up",
+     "de": "Einzellast baut sich auf"
+    },
+    "description": {
+     "en": "The 2 kN concentrated load rises on the top tread.",
+     "de": "Die Einzellast von 2 kN steigt auf der obersten Stufe."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "point-load-top-tread",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "point-load-top-tread",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "ramp",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Ramp",
+       "de": "Aufbau"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 4,
+      "toS": 6,
+      "title": {
+       "en": "Hold",
+       "de": "Halten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "load-on",
+      "title": {
+       "en": "Full load",
+       "de": "Volle Last"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:concentrated",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "sun-and-shade",
+    "title": {
+     "en": "Sun patch crosses the stair",
+     "de": "Sonnenfleck wandert über die Treppe"
+    },
+    "description": {
+     "en": "A window sun patch crosses the stair: treads, column and rail sunlit fractions dip and recover.",
+     "de": "Ein Fenster-Sonnenfleck wandert über die Treppe: die Besonnungsanteile von Stufen, Säule und Handlauf sinken und erholen sich."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "self-weight",
+      "ease": "smooth"
+     },
+     {
+      "t": 8,
+      "pose": "self-weight",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "patch",
+      "fromS": 0,
+      "toS": 8,
+      "title": {
+       "en": "Sun patch",
+       "de": "Sonnenfleck"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "thermal",
+      "title": {
+       "en": "Patch at the top",
+       "de": "Fleck oben"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:treads:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.45
+       },
+       {
+        "t": 4,
+        "v": 0.05
+       },
+       {
+        "t": 8,
+        "v": 0.45
+       }
+      ]
+     },
+     {
+      "target": "region:column-steel:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.35
+       },
+       {
+        "t": 4,
+        "v": 0.04
+       },
+       {
+        "t": 8,
+        "v": 0.35
+       }
+      ]
+     },
+     {
+      "target": "region:balustrade-steel:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 4,
+        "v": 0.05
+       },
+       {
+        "t": 8,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 15,
+    "meanRadiantTempC": 15,
+    "skyTempC": -3,
+    "groundTempC": 18,
+    "relativeHumidity": 0.55,
+    "windMS": 0.3,
+    "windDirectionDeg": 0,
+    "solarWM2": 300,
+    "diffuseFraction": 0.4,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "treads",
+     "title": {
+      "en": "Pie treads, top and underside",
+      "de": "Kreisringstufen, Ober- und Unterseite"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel",
+     "areaM2": 3.729,
+     "characteristicLengthM": 0.7,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.7,
+     "layers": [
+      {
+       "id": "tread-plate",
+       "title": {
+        "en": "Steel plate 5 mm",
+        "de": "Stahlblech 5 mm"
+       },
+       "kind": "metal",
+       "material": "steel",
+       "resistanceM2KW": 0.0001,
+       "source": "literature",
+       "thicknessM": 0.005,
+       "heatCapacityJM2K": 17662,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 17700,
+     "source": "literature",
+     "reference": "en-iso-10456"
+    },
+    {
+     "id": "column-steel",
+     "title": {
+      "en": "Column with sleeves and base plate",
+      "de": "Säule mit Hülsen und Fußplatte"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel",
+     "areaM2": 2.28044,
+     "characteristicLengthM": 0.168,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.8,
+     "layers": [
+      {
+       "id": "column-wall",
+       "title": {
+        "en": "Steel tube wall 6.3 mm",
+        "de": "Stahlrohrwand 6,3 mm"
+       },
+       "kind": "metal",
+       "material": "steel",
+       "resistanceM2KW": 0.00013,
+       "source": "literature",
+       "thicknessM": 0.0063,
+       "heatCapacityJM2K": 22255,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 22200,
+     "source": "literature",
+     "reference": "en-10219"
+    },
+    {
+     "id": "balustrade-steel",
+     "title": {
+      "en": "Handrail and balusters",
+      "de": "Handlauf und Stäbe"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-bright",
+     "areaM2": 1.1917,
+     "characteristicLengthM": 0.0424,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "tube-wall",
+       "title": {
+        "en": "Steel tube wall 2.6 mm",
+        "de": "Stahlrohrwand 2,6 mm"
+       },
+       "kind": "metal",
+       "material": "steel-bright",
+       "resistanceM2KW": 5e-05,
+       "source": "literature",
+       "thicknessM": 0.0026,
+       "heatCapacityJM2K": 9184,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 9200,
+     "source": "literature",
+     "reference": "en-10219"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Reference case: a stair in a sunny, draught-free stair hall (air 15 degC, indirect 300 W/m2 through the glazing); all regions are passive steel.",
+     "de": "Referenzfall: eine Treppe in einem sonnigen, zugfreien Treppenhaus (Luft 15 °C, indirekt 300 W/m2 durch die Verglasung); alle Regionen sind passiver Stahl."
+    },
+    {
+     "en": "Sun and shade are the pose sunlit fractions; the underside of every tread is always in shade, so treads carry the area-weighted fraction of top (sunlit) and underside (shaded).",
+     "de": "Sonne und Schatten sind die Besonnungsanteile der Posen; die Unterseite jeder Stufe liegt immer im Schatten, die Stufen tragen daher den flächengewichteten Anteil von Oberseite (besonnt) und Unterseite (beschattet)."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [
+    "base-fix",
+    "top-tie"
+   ],
+   "assumptions": [
+    {
+     "en": "The column, the 15 treads and the balustrade form one rigid body in the elevation plane, fixed at the base and tied horizontally at the upper slab; the person is a point load at the foot. The 3D torsion of the spiral is not represented.",
+     "de": "Säule, 15 Stufen und Geländer bilden einen starren Körper in der Ansichtsebene, am Fuß eingespannt und an der oberen Decke horizontal gehalten; die Person ist eine Punktlast am Fuß. Die räumliche Torsion der Wendel ist nicht abgebildet."
+    },
+    {
+     "en": "Category A (dwellings): 2 kN/m2 and 2 kN concentrated load on stairs, 0.5 kN/m on barriers; a public stair would use category C.",
+     "de": "Kategorie A (Wohnen): 2 kN/m2 und 2 kN Einzellast auf Treppen, 0,5 kN/m auf Geländern; eine öffentliche Treppe würde Kategorie C verwenden."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "self-weight",
+   "defaultClip": "climb",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation",
+    "plan"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

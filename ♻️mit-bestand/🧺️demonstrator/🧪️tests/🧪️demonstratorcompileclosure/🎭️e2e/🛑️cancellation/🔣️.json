@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "owners": [
+    {
+      "id": "demonstrator",
+      "source": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🟦️.ts",
+      "entry": "runTestScript",
+      "kind": "function"
+    },
+    {
+      "id": "play",
+      "source": "🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts",
+      "entry": "TestScript",
+      "kind": "class"
+    }
+  ],
+  "cases": [
+    {
+      "id": "caller-while-ready",
+      "phase": "ready",
+      "trigger": "caller",
+      "status": 0,
+      "expected": {
+        "stop": true,
+        "exitCode": 0,
+        "fails": true,
+        "kills": 0,
+        "toolSignal": false
+      }
+    },
+    {
+      "id": "caller-while-browser",
+      "phase": "browser",
+      "trigger": "caller",
+      "status": 0,
+      "expected": {
+        "stop": true,
+        "exitCode": 0,
+        "fails": true,
+        "kills": 1,
+        "toolSignal": true
+      }
+    },
+    {
+      "id": "interrupt-while-ready",
+      "phase": "ready",
+      "trigger": "SIGINT",
+      "status": 0,
+      "expected": {
+        "stop": true,
+        "exitCode": 130,
+        "fails": true,
+        "kills": 0,
+        "toolSignal": false
+      }
+    },
+    {
+      "id": "terminate-browser",
+      "phase": "browser",
+      "trigger": "SIGTERM",
+      "status": 0,
+      "expected": {
+        "stop": true,
+        "exitCode": 143,
+        "fails": false,
+        "kills": 1,
+        "toolSignal": true
+      }
+    },
+    {
+      "id": "completed-browser",
+      "phase": "browser",
+      "trigger": "none",
+      "status": 0,
+      "expected": {
+        "stop": false,
+        "exitCode": 0,
+        "fails": false,
+        "kills": 0,
+        "toolSignal": true
+      }
+    },
+    {
+      "id": "failed-browser",
+      "phase": "browser",
+      "trigger": "none",
+      "status": 7,
+      "expected": {
+        "stop": false,
+        "exitCode": 0,
+        "fails": true,
+        "kills": 0,
+        "toolSignal": true
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import policy from "./🧫️fixtures/🔣️.json";
 import policySchema from "../🧬️schema/🔣️.json";
 import interruption from "./🧫️fixtures/🛑️interruption/🔣️.json";

@@ -566,6 +566,32 @@
         "deps-tex",
         "generate"
       ]
+    },
+    "test-pdf": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test pdf",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "modules": [
+              "{workspaceRoot}/🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/**/🟦️.ts"
+            ]
+          }
+        }
+      }
     }
   },
   "metadata": {

@@ -10,7 +10,7 @@ import { validateAsset, validateManifest } from "../../🔨️modules/🗂️cat
 
 type Operation = { op: "replace" | "remove" | "add"; path: string; value?: unknown };
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/✅️asset-validation/🔣️.json", import.meta.url), "utf8"));
-const walker = readFileSync(new URL("../../🧫️fixtures/🚶️reference-walker/🔣️.json", import.meta.url), "utf8");
+const walker = readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8");
 
 function step(node: any, segment: string): string | number {
   if (Array.isArray(node)) {
@@ -39,10 +39,10 @@ function patch<T>(document: T, operations: readonly Operation[]): T {
   return root;
 }
 
-const base = JSON.parse(walker) as Asset;
+const base = (JSON.parse(walker) as { asset: Asset }).asset;
 
 describe("✅️ asset validation", () => {
-  it("accepts the reference walker", () => {
+  it("accepts the sample figure", () => {
     expect(validateAsset(base)).toEqual([]);
   });
 

@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "page-advanced",
+      "observed": "badges",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 0,
+        "remaining": 69
+      },
+      "expected": "advance"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "inner-edge-progress",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 69,
+        "remaining": 0
+      },
+      "expected": "scroll"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "partial-inner-progress",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 34,
+        "remaining": 35
+      },
+      "expected": "scroll"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "fractional-edge",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 0.5
+      },
+      "after": {
+        "position": 0.5,
+        "remaining": 0
+      },
+      "expected": "scroll"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "stalled",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 0,
+        "remaining": 69
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "backward",
+      "observed": "learner",
+      "before": {
+        "position": 10,
+        "remaining": 59
+      },
+      "after": {
+        "position": 9,
+        "remaining": 60
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "animation",
+      "observed": null,
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 69,
+        "remaining": 0
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "unexpected-page",
+      "observed": "prefs",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 0,
+        "remaining": 69
+      },
+      "expected": "refuse"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "range-change-only",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 0,
+        "remaining": 0
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "growing-range",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 69
+      },
+      "after": {
+        "position": 1,
+        "remaining": 70
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "no-scroll-quote",
+      "observed": "learner",
+      "before": {
+        "position": 0,
+        "remaining": 0
+      },
+      "after": {
+        "position": 1,
+        "remaining": 0
+      },
+      "expected": "pending"
+    },
+    {
+      "from": "learner",
+      "next": "badges",
+      "id": "invalid-negative",
+      "observed": "learner",
+      "before": {
+        "position": -1,
+        "remaining": 69
+      },
+      "after": {
+        "position": 0,
+        "remaining": 68
+      },
+      "expected": "refuse"
+    }
+  ],
+  "bounds": [
+    {
+      "range": 0,
+      "attempts": 1
+    },
+    {
+      "range": 69,
+      "attempts": 70
+    },
+    {
+      "range": 0.5,
+      "attempts": 2
+    }
+  ]
+}

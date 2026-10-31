@@ -1,7 +1,7 @@
 /** 🧪️ Portable retained outcomes agree with an independent transactional SQL projection. */
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fieldCorpus from "../🪡️field/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };

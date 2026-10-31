@@ -1,7 +1,11 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
+import {compileSchemaScopeExport as physicalSchemaScopeV1} from "./../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
+import {findWorkspaceRoot as physicalSchemaWorkspaceRootV1} from "./../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const physicalProjectOracleV1=()=>physicalSchemaScopeV1(physicalSchemaWorkspaceRootV1(import.meta.dir),physicalSchemaSourcePathV1(new URL("./../../🏗️build/🧬️schema/📋️project/🔣️.json",import.meta.url)),null,[physicalSchemaSourcePathV1(new URL("./../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url))]);
 import { expect, test } from "bun:test";
 import {testRipgrepV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import ts from "typescript";
 import {parseArgsStringToArgv} from "string-argv";
 import {createRequire} from "node:module";
@@ -87,7 +91,7 @@ test("root orchestration, editor settings and CI use neutral build commands", ()
 });
 
 test("project declarations expose neutral executors through the owned schema", () => {
-  const validate = new Ajv({ strict: true, strictRequired: false }).compile(projectSchema);
+  const validate = physicalProjectOracleV1();
   expect(validate({ name: "sample", targets: { build: { executor: "repo:script", options: { command: "repo ./📜️script.ts build" } }, noop: { executor: "repo:noop" } } })).toBe(true);
   expect(validate({ name: "sample", targets: { build: { executor: "nx:run-commands" } } })).toBe(false);
   const project = JSON.parse(read("📋️project.json"));

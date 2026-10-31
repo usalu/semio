@@ -8,7 +8,7 @@
  * @see ../../🏗️structure/🟦️.ts — `STRUCTURAL_COLORS`
  */
 import type { Text } from "../../../🧬️schema/🟦️.ts";
-import type { Legend } from "../../🔗️contracts/🟦️.ts";
+import type { DisplayRange, Legend } from "../../🔗️contracts/🟦️.ts";
 import { STRUCTURAL_COLORS } from "../../🏗️structure/🟦️.ts";
 
 /** 🌗️ The two drawing themes of the line and solid views. */
@@ -72,18 +72,19 @@ export function divergingColour(value: number, scale: Scale, highWarm: boolean, 
   return mix(weak, theme === "dark" ? mix(strong, "#f7f3e3", 0.25) : strong, f);
 }
 
-/** 🧮️ A symmetric-or-fixed scale for a set of values: auto spans the largest deviation from the centre (at least `minSpan`), fixed uses the given range. */
-export function scaleOf(values: readonly number[], centre: number, range: { readonly mode: "auto" } | { readonly mode: "fixed"; readonly min: number; readonly max: number }, minSpan: number): Scale {
+/** 🧮️ A symmetric-or-fixed scale for a set of values: auto spans the largest deviation from the centre (at least `minSpan`), fixed uses the given range, shared uses the documented comparison range `shared` of the quantity (auto when the caller has none). */
+export function scaleOf(values: readonly number[], centre: number, display: DisplayRange, minSpan: number, shared?: { readonly min: number; readonly max: number }): Scale {
+  const range = display.mode === "shared" ? (shared === undefined ? ({ mode: "auto" } as const) : ({ mode: "fixed", ...shared } as const)) : display;
   if (range.mode === "fixed") return { min: range.min, centre: Math.min(Math.max(centre, range.min), range.max), max: range.max };
   const m = Math.max(minSpan, ...values.map((v) => Math.abs(v - centre)));
   return { min: centre - m, centre, max: centre + m };
 }
 
 /** 🏷️ A legend with nine colour stops sampled along the scale; stop positions are values in the legend unit. */
-export function legendOf(spec: { readonly title: Text; readonly quantity: string; readonly unit: string; readonly convention: Text; readonly interpretation: Text; readonly scale: Scale; readonly colourAt: (value: number) => string }): Legend {
+export function legendOf(spec: { readonly title: Text; readonly quantity: string; readonly unit: string; readonly convention: Text; readonly interpretation: Text; readonly scale: Scale; readonly colourAt: (value: number) => string; readonly range?: DisplayRange["mode"]; readonly conditions?: Text; readonly assumptions?: readonly Text[] }): Legend {
   const { min, max, centre } = spec.scale;
   const values = [...Array.from({ length: 9 }, (_, i) => min + ((max - min) * i) / 8), centre].sort((a, b) => a - b);
-  return { title: spec.title, quantity: spec.quantity, unit: spec.unit, convention: spec.convention, min, max, stops: values.map((v) => ({ at: max === min ? 0 : (v - min) / (max - min), color: spec.colourAt(v) })), interpretation: spec.interpretation };
+  return { title: spec.title, quantity: spec.quantity, unit: spec.unit, convention: spec.convention, min, max, stops: values.map((v) => ({ at: max === min ? 0 : (v - min) / (max - min), color: spec.colourAt(v) })), interpretation: spec.interpretation, range: spec.range ?? "auto", ...(spec.conditions ? { conditions: spec.conditions } : {}), ...(spec.assumptions ? { assumptions: spec.assumptions } : {}) };
 }
 
 /** ✍️ Greedy word wrap at a character width. */

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "watcher",
+        "executionTool"
+      ],
+      "properties": {
+        "profile": {
+          "const": "lifecycle"
+        },
+        "watcher": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "executionTool": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "watcher",
+        "executionTool"
+      ],
+      "properties": {
+        "profile": {
+          "const": "execution"
+        },
+        "watcher": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "executionTool": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    }
+  ],
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/library/build/resident/ports/native-tools/schema.json",
+  "title": "NativeFixtureV1"
+}

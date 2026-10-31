@@ -47,7 +47,7 @@ export function panelTabKindId(kind: PanelTabKind): string {
     case "settingsTheme":
       return "framework.settings.theme";
     case "settingsDefaultApps":
-      return "framework.settings.defaultApps";
+      return "framework.settings.default-apps";
     case "app":
       return kind.id;
   }

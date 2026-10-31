@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "method": "runTypegenExportTest",
+      "callee": "runAdmittedCargoCommandV1",
+      "argument": 3,
+      "mode": "prototype",
+      "expected": [
+        "test",
+        "schema::tests::exports_typescript_bindings"
+      ]
+    },
+    {
+      "method": "runSchemaCheckScript",
+      "callee": "runAdmittedCargoCommandV1",
+      "argument": 3,
+      "mode": "prototype",
+      "expected": [
+        "test",
+        "schema::tests::owned_json_schema_defs_match_registry"
+      ]
+    },
+    {
+      "method": "runPreviewGeneratedScript",
+      "callee": "readRepositoryCargoLaunchV1",
+      "argument": 0,
+      "mode": "prototype",
+      "expected": [
+        "--store=shared",
+        "--configuration=prototype",
+        "--",
+        "test",
+        "--locked",
+        "schema::tests::exports_typescript_bindings"
+      ]
+    },
+    {
+      "method": "runPreviewGeneratedScript",
+      "callee": "readRepositoryCargoLaunchV1",
+      "argument": 0,
+      "mode": "release",
+      "expected": [
+        "--store=shared",
+        "--configuration=release",
+        "--",
+        "test",
+        "--locked",
+        "schema::tests::exports_typescript_bindings"
+      ]
+    }
+  ]
+}

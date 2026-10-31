@@ -1,0 +1,10 @@
+const fs=require("fs");const p="🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/🧵️shard/🐹️.go";let s=fs.readFileSync(p,"utf8");
+const old="\tindex := &ownedIndex{docs: map[string]string{}, seen: map[uint64]struct{}{}}\n\tfor scanner.Scan() {";
+const next="\tindex := &ownedIndex{docs: map[string]string{}, seen: map[uint64]struct{}{}}\n\treader := bytes.NewReader(nil)\n\tdecoder := json.NewDecoder(reader)\n\tdecoder.DisallowUnknownFields()\n\tvar lineStart int64\n\tfor scanner.Scan() {";
+if(!s.includes(old))throw Error("replay start changed");s=s.replace(old,next);
+const a="\t\tdecoder := json.NewDecoder(bytes.NewReader(line))\n\t\tdecoder.DisallowUnknownFields()\n\t\tvar item event";
+const b="\t\treader.Reset(append(line, '\\n'))\n\t\tvar item event";
+if(!s.includes(a))throw Error("decoder changed");s=s.replace(a,b);
+const c="\t\tif err = decoder.Decode(new(interface{})); err != io.EOF {\n\t\t\treturn nil, info, fmt.Errorf(\"%w: trailing shard event\", ErrCorrupt)\n\t\t}";
+const d="\t\tend := decoder.InputOffset() - lineStart\n\t\tif end < 0 || end > int64(len(line)) {\n\t\t\treturn nil, info, fmt.Errorf(\"%w: shard event framing\", ErrCorrupt)\n\t\t}\n\t\tfor _, value := range line[end:] {\n\t\t\tif value != ' ' && value != '\\t' && value != '\\r' && value != '\\n' {\n\t\t\t\treturn nil, info, fmt.Errorf(\"%w: trailing shard event\", ErrCorrupt)\n\t\t\t}\n\t\t}\n\t\tlineStart += int64(len(line)) + 1";
+if(!s.includes(c))throw Error("trailing guard changed");s=s.replace(c,d);fs.writeFileSync(p,s);

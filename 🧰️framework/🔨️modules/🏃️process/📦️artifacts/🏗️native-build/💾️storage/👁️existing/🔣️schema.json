@@ -1,0 +1,60 @@
+{
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "existingOnly": true,
+        "mode": "shared",
+        "journalCache": false,
+        "mutations": false,
+        "progressEvents": 64
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "effectiveCapacityBytes",
+        "journal",
+        "state"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "effectiveCapacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "journal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bytes",
+            "sha256",
+            "events"
+          ],
+          "properties": {
+            "bytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "events": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "state": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/State"
+        }
+      }
+    }
+  }
+}

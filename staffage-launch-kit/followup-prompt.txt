@@ -1,0 +1,143 @@
+Continue working on the existing architectural staffage archive. Significantly expand the library and thoroughly rebuild the drawing-scale and thermodynamic systems. The current scale mechanism is too superficial, the thermal heatmaps lack physical justification, and the convection animations do not adequately represent breathing or other time-dependent processes.
+
+Treat this as a substantial implementation task covering the data, geometry, physical models, animation, interface, and exports. Audit the existing implementation, identify the underlying deficiencies, and complete the improvements across the library.
+
+## 1. Significantly expand the authored library
+
+Record the current inventory and at least double the number of distinct, complete assets, with meaningful additions across humans, animals, vegetation, furniture, everyday objects, vehicles, machinery, and building components.
+
+Count distinct assets honestly. Additional scales, colors, poses, animation clips, or renamed copies do not count as new assets.
+
+Prioritize architectural usefulness and variety: different activities, clothing, body proportions, mobility aids, plant structures, furniture typologies, mechanical operating states, materials, and construction details. Give each asset a recognizable, carefully composed identity.
+
+Every addition must meet the same requirements for dimensions, supported scales, rigs, poses, animations, thermal behavior, structural views, metadata, and exports. Bring existing assets up to the same standard.
+
+## 2. Replace the scale mechanism with individually authored representations
+
+**Physical dimensions, drawing scale, and viewport zoom must be independent concepts.**
+
+Selecting 1:500, 1:200, 1:100, or 1:50 must select a representation deliberately authored for that drawing scale. Zoom only magnifies the selected representation for inspection.
+
+Every asset must have an explicit representation or availability decision for every offered scale. For each supported scale, individually author and review its geometry and graphic treatment, including:
+
+- Silhouette, contours, internal edges, and negative spaces.
+- Which components remain individually represented, merge into a larger form, or disappear.
+- Stroke hierarchy and line weights in paper units.
+- Hatching, material indications, and detail density.
+- The treatment of small gaps, thin elements, and overlapping parts.
+- The appearance of all four graphic styles and the analytical overlays.
+
+Shared dimensions, anatomical structure, rigs, and reusable primitives are appropriate. However, a single detailed drawing passed through a scale transform, a generic simplification algorithm, or a few visibility thresholds does not satisfy this requirement. Each supported scale needs deliberate, asset-specific design decisions and authored geometry.
+
+For example, a tree at 1:500 may require a carefully composed crown outline and restrained internal structure, while its 1:50 representation can distinguish branches and foliage masses where those details remain printable. A person needs a readable silhouette at small scales and appropriately articulated clothing, limbs, and accessories at larger scales. Apply the same care to every category.
+
+Preserve real-world dimensions. A 1.80 m person must occupy 3.6 mm at 1:500, 9 mm at 1:200, 18 mm at 1:100, and 36 mm at 1:50, excluding deliberate annotation. Graphic adjustments must not silently change the physical size.
+
+### Handle objects that cannot be represented at a given scale
+
+Define configurable print profiles with minimum stroke widths, gaps, and feature sizes. Evaluate suitability against the selected profile.
+
+An object that cannot be meaningfully printed at a scale must have an explicit unavailable state and a useful explanation. Keep it discoverable, show its supported scales, and offer an available alternative. Do not silently enlarge it, substitute a different scale, or export an unexplained empty result.
+
+Where a conventional symbol is useful, provide a separately identified symbolic representation with clear dimensional semantics.
+
+For custom scales, document which authored representation and validated scale range are used. Clearly distinguish a derived representation from one individually authored for an exact scale.
+
+## 3. Rebuild thermal fields from explicit physical quantities
+
+Every thermal visualization must identify the quantity being shown, its units, numerical range, environmental conditions, and modeling assumptions.
+
+Distinguish:
+
+- Surface temperature.
+- Emitted radiant flux.
+- Net radiative heat exchange with the surroundings.
+- Sensible heat transfer to or from the air.
+- Moisture transport and latent heat transfer.
+
+Calculate values before mapping them to colors. Provide meaningful legends and a shared comparison range; make any automatic color normalization explicit.
+
+For humans and animals, model the exposed surface and clothing or fur layers appropriately. Define body regions, material properties, insulation, activity, environmental conditions, and relevant thermal response. Derive regional temperatures and heat transfer from those inputs. Do not permanently assign “hot head,” “cold clothing,” or similar colors independently of the scenario.
+
+Radiative exchange must account for surface temperature, emissivity, area, and the surrounding radiant environment using a documented approximation. Distinguish the external clothing surface from the skin beneath it.
+
+For other categories, author suitable thermal parameters and operating states: engine and exhaust behavior, sun-exposed and shaded surfaces, material response, heated components, vegetation, and inactive objects.
+
+Treat vegetation transpiration as water-vapor transport with associated latent heat exchange. Keep it distinct from sensible convection.
+
+**Every pose and animation needs explicit thermal-region and emitter bindings.** Author the necessary region geometry, material assignments, state parameters, and time-dependent behavior. Shared solvers are encouraged, but each asset must supply meaningful data.
+
+Thermal fields must follow the evaluated geometry, respect material boundaries, and remain correctly attached through pose changes. Model thermal response over appropriate time scales; do not make surface temperatures oscillate rapidly merely to create visible animation.
+
+Document sources, equations, parameter assumptions, and validation cases. Distinguish measured, calibrated, estimated, and illustrative data accurately. Demonstrate physical accuracy through evidence and appropriate checks.
+
+## 4. Implement actual breathing and evolving convection
+
+Rebuild convection as time-dependent emission and transport.
+
+For humans and animals, implement breathing behavior with:
+
+- Inhalation, exhalation, and appropriate pauses.
+- Scenario-specific breathing frequency and flow profiles.
+- Mouth or nostril emitters attached to the evaluated head pose.
+- Subtle, synchronized body movement where appropriate.
+- Exhaled air temperature, moisture, and flow parameters.
+- A consistent relationship between flow rate, duration, and volume per breath.
+
+Exhalation must generate successive parcels or traces of air that move, expand, mix, cool, and disperse. During inhalation, previously emitted air continues evolving while outward respiratory emission follows the correct phase.
+
+Emitter position and orientation must follow the body. **Once emitted, air must evolve in world space:** turning or moving the head must not drag the entire previous plume along with it.
+
+Account for the effects of initial flow direction, ambient airflow, buoyancy, and mixing using a documented model. Distinguish intermittent respiratory jets from convection around a warm body.
+
+Use appropriate mechanisms for other assets: exhaust follows machine operating states, heat-emitting surfaces produce suitable convection, and vegetation has distributed moisture sources. Do not reuse one breathing effect for every category.
+
+The curves themselves must reflect evolving transport. Moving dashes along a fixed decorative curve or fading a static plume is insufficient. Label instantaneous streamlines and particle pathlines correctly when both are provided.
+
+Treat these overlays as analytical visualizations. Represent optically visible condensation separately when it is actually modeled.
+
+All animations must support deterministic playback, pause, scrubbing, speed changes, and export. Reaching a given time by scrubbing must produce the same state as playing to it. Use reproducible simulation steps and seeded variation where necessary. Prevent frame-rate-dependent behavior, teleporting particles, and unjustified resets at clip boundaries.
+
+## 5. Integrate the improvements throughout the website and exports
+
+Use the authored scale representations consistently in catalog previews, detail views, comparisons, the playground, and exports.
+
+Provide a clear way to compare the same asset across scales at its actual relative paper dimensions, alongside an independently zoomable inspection view. Enlarging a preview must not imply that otherwise unprintable details will appear in the drawing.
+
+Expose supported scales, unavailable combinations, thermal quantities, units, legends, relevant environmental controls, operating states, and animation controls where they help users understand the result.
+
+Preserve all seven representation modes: dark line, dark solid, light line, light solid, thermodynamic, structural load, and structural moment. Maintain their alignment with the selected geometry, pose, scale, and time.
+
+Changing drawing scale must not change the asset’s real dimensions, mass, temperatures, emitted power, breathing rate, or structural calculations. The representation changes; the physical scenario remains consistent.
+
+Exported SVGs, PDFs, CAD drawings, clips, and UI components must reproduce the selected representation and state. Verify the exported files themselves, including physical dimensions and print appearance.
+
+## 6. Demonstrate completion with concrete evidence
+
+Create a coverage matrix for the entire library showing asset, scale, availability, representation mode, pose or animation, thermal data, and export status.
+
+Produce labeled comparison sheets across all supported scales, including representative assets from every category. Inspect contours, line weights, gaps, silhouettes, and overlays at their intended printed dimensions. Include dimension references so the output can be checked at 100% print size.
+
+Verify at least these behaviors:
+
+- Drawing scale changes authored geometry and graphic treatment; zoom does not.
+- Unsupported scale combinations behave consistently and explain their limitations.
+- Physical dimensions and calculated quantities remain invariant under scale changes.
+- Thermal colors correspond to documented values and units.
+- Environmental and activity changes affect the relevant modeled quantities.
+- Breathing emission follows the correct phase and emitter orientation.
+- Emitted air behaves correctly when the source moves or the wind changes.
+- Playback, scrubbing, and exported animation agree.
+- Existing structural views, rigs, browsing, and exports continue to work.
+
+Review rendered outputs and actual motion, not only source code or successful builds. A few polished examples do not establish completion across the library.
+
+## 7. Continue using the parallel agent workflow
+
+Retain Opus 5.5 Medium for coordination, multiple Sonnet 5.5 Medium agents for substantial implementation, and multiple Haiku 5.5 Medium agents for read-only exploration, audits, and appropriately bounded low-complexity tasks.
+
+Parallelize scale authoring, catalog expansion, thermal modeling, transport animation, interface integration, and verification. Establish shared schemas and ownership before overlapping changes, and coordinate work with other active agents.
+
+Finish with the implemented result, the before-and-after asset counts, the coverage matrix, representative proof sheets and animations, verification results, and any specific remaining limitations.
+
+Begin with a focused audit and concise implementation plan, then carry the work through implementation, integration, and verification.

@@ -1,0 +1,1759 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "steel-column",
+    "category": "components",
+    "title": {
+      "en": "Steel Column",
+      "de": "Stahlstütze"
+    },
+    "summary": {
+      "en": "A 3.0 m HEB 200 steel column (S235) on a welded base plate with stiffeners and anchor bolts, fixed at the footing and capped by a head plate; loaded axially, eccentrically and by lateral wind. Seen onto the web, so the sunlit flange edges and the self-shaded web chambers read separately.",
+      "de": "Eine 3,0 m hohe Stahlstütze HEB 200 (S235) auf geschweißter Fußplatte mit Rippen und Ankerschrauben, am Fundament eingespannt und mit Kopfplatte; axial, außermittig und unter Windlast belastet. Die Ansicht blickt auf den Steg, so sind die besonnten Flanschkanten und die selbstverschatteten Stegkammern getrennt lesbar."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "steel",
+      "column",
+      "buckling"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10365",
+          "citation": "EN 10365:2017 Hot rolled steel channels, I and H sections, dimensions and section properties: HEB 200 A = 78.1 cm2, I_y = 5696 cm4."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (density 7850 kg/m3)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3, Part 1-1: E = 210 GPa for structural steel."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind actions (peak velocity pressure and force coefficient for an I-section column; 0.8 kN/m2 x 2.0 x 0.2 m as an estimate)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity of painted steel; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        }
+      ],
+      "notes": {
+        "en": "HEB 200 column of 3.0 m height on a fixed footing; the cap carries the axial load.",
+        "de": "HEB-200-Stütze von 3,0 m Höhe auf eingespanntem Fuß; der Kopf trägt die Normalkraft."
+      }
+    },
+    "dimensions": {
+      "heightM": 3.0,
+      "widthM": 0.3,
+      "depthM": 0.2,
+      "massKg": 183.93
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2",
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "column",
+      "bones": [
+        {
+          "id": "column",
+          "parent": null,
+          "title": {
+            "en": "Column (rigid root on the footing)",
+            "de": "Stütze (starre Wurzel auf dem Fuß)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 183.93,
+            "comX": 1.5,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10365"
+          },
+          "section": {
+            "areaM2": 0.00781,
+            "secondMomentM4": 5.696e-05,
+            "extremeFibreM": 0.1,
+            "material": "steel",
+            "title": {
+              "en": "HEB 200",
+              "de": "HEB 200"
+            }
+          }
+        },
+        {
+          "id": "eccentric-carrier",
+          "parent": "column",
+          "title": {
+            "en": "Eccentric load carrier (massless)",
+            "de": "Exzentrischer Lastträger (masselos)"
+          },
+          "x": 3,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.2,
+            "maxM": 0.2
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "footing",
+        "bone": "column",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Fixed footing",
+          "de": "Eingespannter Fuß"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "cap",
+        "bone": "column",
+        "x": 3,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Column head, axial load",
+          "de": "Stützenkopf, Normalkraft"
+        }
+      },
+      {
+        "id": "eccentric-point",
+        "bone": "eccentric-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Eccentric load point",
+          "de": "Außermittiger Lastangriff"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web",
+                "base-plate",
+                "cap-plate"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  0.12
+                ],
+                [
+                  2.98,
+                  0.12
+                ],
+                [
+                  2.98,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.15
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One composed vertical bar 0.20 m wide and 3.00 m high (0.4 x 6 mm) with the 20 mm base and head plates as step-outs of the outline.",
+            "de": "Ein zusammengesetzter senkrechter Balken, 0,20 m breit und 3,00 m hoch (0,4 x 6 mm), mit den 20-mm-Fuß- und Kopfplatten als Absätzen der Kontur."
+          },
+          "retained": {
+            "en": "Height, flange width 0.20 m and the plate widths 0.30 m and 0.24 m.",
+            "de": "Höhe, Flanschbreite 0,20 m und die Plattenbreiten 0,30 m und 0,24 m."
+          },
+          "merged": {
+            "en": "Flanges, web, plates, stiffeners and nuts are one solid.",
+            "de": "Flansche, Steg, Platten, Rippen und Muttern sind ein Körper."
+          },
+          "omitted": {
+            "en": "Flange edge lines, fillets, stiffeners, anchor nuts and bolts, splice line.",
+            "de": "Flanschkanten, Hohlkehlen, Rippen, Ankermuttern und -bolzen, Stoßlinie."
+          },
+          "thinElements": {
+            "en": "The stiffeners (0.12 m) and plates (0.04 mm) are below printable size and carried only in the step-out of the outline.",
+            "de": "Rippen (0,12 m) und Platten (0,04 mm) liegen unter der druckbaren Größe und stecken nur in den Absätzen der Kontur."
+          },
+          "hatching": {
+            "en": "No hatch: the elevation is not cut and the bar is 0.4 mm wide.",
+            "de": "Keine Schraffur: die Ansicht ist nicht geschnitten und der Balken 0,4 mm breit."
+          },
+          "styles": {
+            "en": "Dark solid bar reads as steel.",
+            "de": "Der dunkle Vollbalken liest sich als Stahl."
+          },
+          "overlays": {
+            "en": "Overlays colour the whole bar with the area-weighted values of flange, web, base and head plate (labelled merged).",
+            "de": "Überlagerungen färben den ganzen Balken mit den flächengewichteten Werten von Flansch, Steg, Fuß- und Kopfplatte (als zusammengefasst gekennzeichnet)."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.1
+                ],
+                [
+                  0.05,
+                  -0.1
+                ],
+                [
+                  2.95,
+                  -0.1
+                ],
+                [
+                  2.95,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "base-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.05,
+                  -0.15
+                ],
+                [
+                  0.05,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cap-plate-slab",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.95,
+                  0.12
+                ],
+                [
+                  2.95,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  0.12
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 1 mm wide steel bar with a wider base plate and a head plate.",
+            "de": "Ein 1 mm breiter Stahlbalken mit breiterer Fußplatte und Kopfplatte."
+          },
+          "retained": {
+            "en": "Column bar, base plate (1.5 mm) and head plate (1.2 mm) at their true widths.",
+            "de": "Stützenbalken, Fußplatte (1,5 mm) und Kopfplatte (1,2 mm) in wahrer Breite."
+          },
+          "merged": {
+            "en": "Flanges and web are one bar shape.",
+            "de": "Flansche und Steg bilden eine Balkenform."
+          },
+          "omitted": {
+            "en": "Stiffeners, nuts, bolts, fillet and flange edge lines, splice line.",
+            "de": "Rippen, Muttern, Bolzen, Hohlkehlen- und Flanschkantenlinien, Stoßlinie."
+          },
+          "thinElements": {
+            "en": "The 20 mm plates are drawn 50 mm thick (0.25 mm, the smallest filled feature that prints with a margin); the bar is shortened by the same 30 mm per end so the overall height stays 3.00 m.",
+            "de": "Die 20-mm-Platten sind 50 mm dick gezeichnet (0,25 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Balken ist an jedem Ende um dieselben 30 mm gekürzt, sodass die Gesamthöhe 3,00 m bleibt."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Dark bar, lighter plates.",
+            "de": "Dunkler Balken, hellere Platten."
+          },
+          "overlays": {
+            "en": "Bar (merged flange and web), base plate and head plate are separate overlay cells.",
+            "de": "Balken (Flansch und Steg zusammengefasst), Fuß- und Kopfplatte sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "column-web-bar",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "regions": [
+                "column-flange",
+                "column-web"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  0.1
+                ],
+                [
+                  0.035,
+                  -0.1
+                ],
+                [
+                  2.965,
+                  -0.1
+                ],
+                [
+                  2.965,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "base-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.035,
+                  -0.15
+                ],
+                [
+                  0.035,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-left",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  0.1
+                ],
+                [
+                  0.035,
+                  0.15
+                ],
+                [
+                  0.2,
+                  0.13
+                ],
+                [
+                  0.2,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-right",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  -0.1
+                ],
+                [
+                  0.035,
+                  -0.15
+                ],
+                [
+                  0.2,
+                  -0.13
+                ],
+                [
+                  0.2,
+                  -0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "cap-plate-block",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.965,
+                  0.12
+                ],
+                [
+                  2.965,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "splice-joint",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "column-web",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.1
+                ],
+                [
+                  1.5,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A 2 mm wide column bar, a base plate with two stiffener gussets and a head plate; the steel column reads as an H-section seen onto its web.",
+            "de": "Ein 2 mm breiter Stützenbalken, Fußplatte mit zwei Rippen und Kopfplatte; die Stahlstütze liest sich als H-Profil mit Blick auf den Steg."
+          },
+          "retained": {
+            "en": "Plates, two trapezoid gussets (1 x 1.5 mm) and the splice joint at 1.50 m.",
+            "de": "Platten, zwei Trapezrippen (1 x 1,5 mm) und der Montagestoß bei 1,50 m."
+          },
+          "merged": {
+            "en": "Flange and web share the bar shape; the 15 mm flange edges (0.15 mm) are merged into the outline.",
+            "de": "Flansch und Steg teilen sich die Balkenform; die 15-mm-Flanschkanten (0,15 mm) gehen in der Kontur auf."
+          },
+          "omitted": {
+            "en": "Flange edge lines, fillet lines, anchor nuts and bolts (0.36 x 0.48 mm).",
+            "de": "Flanschkantenlinien, Hohlkehlenlinien, Ankermuttern und -bolzen (0,36 x 0,48 mm)."
+          },
+          "thinElements": {
+            "en": "The 20 mm plates are drawn 35 mm thick (0.35 mm, above the 0.2 mm feature minimum); the bar is shortened accordingly. The gussets are drawn as trapezoids with a 30 mm flat top, so no filled tip is thinner than the printable feature.",
+            "de": "Die 20-mm-Platten sind 35 mm dick gezeichnet (0,35 mm, über dem Mindestmerkmal von 0,2 mm); der Balken ist entsprechend gekürzt. Die Rippen sind als Trapeze mit 30 mm breiter Oberkante gezeichnet, sodass keine gefüllte Spitze dünner ist als das druckbare Merkmal."
+          },
+          "hatching": {
+            "en": "No hatch: the elevation is not a cut.",
+            "de": "Keine Schraffur: die Ansicht ist kein Schnitt."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm; dark column, lighter plates.",
+            "de": "Kontur 0,25 mm; dunkle Stütze, hellere Platten."
+          },
+          "overlays": {
+            "en": "Bar cell (merged flange and web), plates with stiffeners and head plate; the bar carries the merged value.",
+            "de": "Balkenzelle (Flansch und Steg zusammengefasst), Platten mit Rippen und Kopfplatte; der Balken trägt den zusammengefassten Wert."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "web",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "column-web",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  0.085
+                ],
+                [
+                  0.14,
+                  -0.085
+                ],
+                [
+                  2.98,
+                  -0.085
+                ],
+                [
+                  2.98,
+                  0.085
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "flange-a",
+              "bone": "column",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "column-flange",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.085
+                ],
+                [
+                  2.98,
+                  0.085
+                ],
+                [
+                  2.98,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "flange-b",
+              "bone": "column",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "column-flange",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.085
+                ],
+                [
+                  0.02,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.1
+                ],
+                [
+                  2.98,
+                  -0.085
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "web-foot",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "region": "column-web",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.085
+                ],
+                [
+                  0.02,
+                  -0.085
+                ],
+                [
+                  0.14,
+                  -0.085
+                ],
+                [
+                  0.14,
+                  0.085
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "fillet-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "column-web",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  0.0655
+                ],
+                [
+                  2.98,
+                  0.0655
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "fillet-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "column-web",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.14,
+                  -0.0655
+                ],
+                [
+                  2.98,
+                  -0.0655
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "base-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.02,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-a",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.02,
+                  0.15
+                ],
+                [
+                  0.11,
+                  0.13
+                ],
+                [
+                  0.11,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "stiffener-b",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.1
+                ],
+                [
+                  0.02,
+                  -0.15
+                ],
+                [
+                  0.11,
+                  -0.13
+                ],
+                [
+                  0.11,
+                  -0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "anchor-nut-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.1,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.137
+                ],
+                [
+                  0.02,
+                  0.113
+                ],
+                [
+                  0.038,
+                  0.113
+                ],
+                [
+                  0.038,
+                  0.137
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "anchor-nut-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.1,
+              "region": "base-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.113
+                ],
+                [
+                  0.02,
+                  -0.137
+                ],
+                [
+                  0.038,
+                  -0.137
+                ],
+                [
+                  0.038,
+                  -0.113
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "anchor-bolt-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.1,
+              "region": "base-plate",
+              "kind": "poly",
+              "points": [
+                [
+                  0.038,
+                  0.125
+                ],
+                [
+                  0.075,
+                  0.125
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "anchor-bolt-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.1,
+              "region": "base-plate",
+              "kind": "poly",
+              "points": [
+                [
+                  0.038,
+                  -0.125
+                ],
+                [
+                  0.075,
+                  -0.125
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "cap-plate",
+              "bone": "column",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "cap-plate",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.98,
+                  0.12
+                ],
+                [
+                  2.98,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  -0.12
+                ],
+                [
+                  3.0,
+                  0.12
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "splice-line",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "column-web",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.1
+                ],
+                [
+                  1.5,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "splice-mark",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.4,
+              "region": "column-web",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.14
+                ],
+                [
+                  1.5,
+                  -0.14
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The H-section seen onto its web: flange edges, web with fillet lines, base plate with two stiffener gussets, anchor nuts and bolts, head plate and a splice joint; the column reads as a rolled steel member.",
+            "de": "Das H-Profil mit Blick auf den Steg: Flanschkanten, Steg mit Hohlkehlenlinien, Fußplatte mit zwei Rippen, Ankermuttern und -bolzen, Kopfplatte und ein Montagestoß; die Stütze liest sich als gewalztes Stahlprofil."
+          },
+          "retained": {
+            "en": "Flange thickness 15 mm (0.3 mm), fillet lines, 20 mm plates at true thickness (0.4 mm), trapezoid gussets 0.05 x 0.09 m (30 mm flat top), nuts 18 x 24 mm (0.36 x 0.48 mm), bolts, splice and cut-plane marker.",
+            "de": "Flanschdicke 15 mm (0,3 mm), Hohlkehlenlinien, 20-mm-Platten in wahrer Dicke (0,4 mm), Trapezrippen 0,05 x 0,09 m (30 mm Oberkante), Muttern 18 x 24 mm (0,36 x 0,48 mm), Bolzen, Stoß und Schnittmarke."
+          },
+          "merged": {
+            "en": "Web faces of both chambers share the web shape; the plate, stiffeners and nuts share the base-plate region.",
+            "de": "Die Stegflächen beider Kammern teilen sich die Stegform; Platte, Rippen und Muttern teilen sich die Region Fußplatte."
+          },
+          "omitted": {
+            "en": "Weld seams, the anchor bolt thread and the grout joint below the plate.",
+            "de": "Schweißnähte, das Ankerbolzengewinde und die Mörtelfuge unter der Platte."
+          },
+          "thinElements": {
+            "en": "The 9 mm web thickness is not drawn (view onto the web); bolt shanks are 0.1 mm pen lines (5 mm real, thinner than the 24 mm bolt).",
+            "de": "Die Stegdicke 9 mm wird nicht gezeichnet (Blick auf den Steg); Bolzenschäfte sind 0,1-mm-Linien (5 mm real, dünner als der 24-mm-Bolzen)."
+          },
+          "hatching": {
+            "en": "No hatch: the elevation is not a cut; the cut section is the plan symbol.",
+            "de": "Keine Schraffur: die Ansicht ist kein Schnitt; der Schnitt ist das Grundrisssymbol."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, details 0.18 mm; flanges darker, web lighter.",
+            "de": "Kontur 0,35 mm, Details 0,18 mm; Flansche dunkler, Steg heller."
+          },
+          "overlays": {
+            "en": "Flange edges, web (fillet lines), base plate group and head plate are separate overlay cells, so sunlit flanges and shaded web chambers show differently.",
+            "de": "Flanschkanten, Steg (Hohlkehlenlinien), Fußplattengruppe und Kopfplatte sind getrennte Überlagerungszellen, so erscheinen besonnte Flansche und verschattete Stegkammern verschieden."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "section-plan",
+        "title": {
+          "en": "HEB 200 column, cut in plan",
+          "de": "Stütze HEB 200, im Grundriss geschnitten"
+        },
+        "description": {
+          "en": "The conventional plan sign of a steel column: the rolled H-section cut above the base plate, hatched at 1:50 and solid black at 1:100 and 1:200 (DIN 1356-1, DIN ISO 128-50).",
+          "de": "Das übliche Grundrisszeichen einer Stahlstütze: das gewalzte H-Profil über der Fußplatte geschnitten, bei 1:50 schraffiert und bei 1:100 und 1:200 schwarz gefüllt (DIN 1356-1, DIN ISO 128-50)."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [
+          {
+            "id": "steel",
+            "title": {
+              "en": "Steel",
+              "de": "Stahl"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.6,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "section",
+              "bone": "column",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  -0.1
+                ],
+                [
+                  0.1,
+                  -0.1
+                ],
+                [
+                  0.1,
+                  -0.085
+                ],
+                [
+                  0.0045,
+                  -0.085
+                ],
+                [
+                  0.0045,
+                  0.085
+                ],
+                [
+                  0.1,
+                  0.085
+                ],
+                [
+                  0.1,
+                  0.1
+                ],
+                [
+                  -0.1,
+                  0.1
+                ],
+                [
+                  -0.1,
+                  0.085
+                ],
+                [
+                  -0.0045,
+                  0.085
+                ],
+                [
+                  -0.0045,
+                  -0.085
+                ],
+                [
+                  -0.1,
+                  -0.085
+                ]
+              ],
+              "closed": true,
+              "region": "column-flange",
+              "material": "steel",
+              "hatch": "steel"
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: 200 x 200 mm with 15 mm flanges and a 9 mm web; the fillets of the rolled section are not drawn. At 1:200 the sign is 1 mm square.",
+          "de": "Echte Größe: 200 x 200 mm mit 15 mm Flanschen und 9 mm Steg; die Hohlkehlen des Walzprofils sind nicht gezeichnet. Bei 1:200 ist das Zeichen 1 mm groß."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "axial-self-weight",
+        "title": {
+          "en": "Axial load",
+          "de": "Normalkraft"
+        },
+        "description": {
+          "en": "Concentric 250 kN axial load from the beam above plus self-weight.",
+          "de": "Zentrische Normalkraft 250 kN vom Träger darüber zuzüglich Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "column-flange": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "column-web": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "base-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.1
+            },
+            "cap-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "axial-cap",
+            "kind": "live",
+            "title": {
+              "en": "Axial reaction 250 kN",
+              "de": "Auflagerkraft 250 kN"
+            },
+            "anchor": "cap",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "eccentric-load",
+        "title": {
+          "en": "Eccentric load",
+          "de": "Außermittige Last"
+        },
+        "description": {
+          "en": "The 250 kN axial load acts 0.1 m off the column axis.",
+          "de": "Die Normalkraft 250 kN greift 0,1 m außerhalb der Stützenachse an."
+        },
+        "bones": {
+          "eccentric-carrier": {
+            "dy": -0.1
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "column-flange": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "column-web": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "base-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.1
+            },
+            "cap-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "axial-eccentric",
+            "kind": "live",
+            "title": {
+              "en": "Eccentric axial load 250 kN",
+              "de": "Außermittige Normalkraft 250 kN"
+            },
+            "anchor": "eccentric-point",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "lateral-wind",
+        "title": {
+          "en": "Lateral wind",
+          "de": "Horizontaler Winddruck"
+        },
+        "description": {
+          "en": "Concentric axial load plus wind on the column, 320 N/m in the direction of +x.",
+          "de": "Zentrische Normalkraft plus Winddruck auf die Stütze, 320 N/m in +x-Richtung."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "column-flange": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.6
+            },
+            "column-web": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.3
+            },
+            "base-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.1
+            },
+            "cap-plate": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "axial-cap",
+            "kind": "live",
+            "title": {
+              "en": "Axial reaction 250 kN",
+              "de": "Auflagerkraft 250 kN"
+            },
+            "anchor": "cap",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "wind-column",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on column 320 N/m",
+              "de": "Winddruck auf die Stütze 320 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "column",
+              "fromM": 0,
+              "toM": 3,
+              "wxNPerM": 320,
+              "wyNPerM": 0
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The axial load rises smoothly from zero to 250 kN.",
+          "de": "Die Normalkraft steigt weich von null auf 250 kN."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "axial-self-weight",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "axial-self-weight",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Axial load at full value",
+              "de": "Normalkraft vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:axial-cap",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "eccentric-load-sweep",
+        "title": {
+          "en": "Eccentric load sweep",
+          "de": "Wandern der außermittigen Last"
+        },
+        "description": {
+          "en": "The load moves from the column axis to 0.1 m eccentricity, so the base moment grows from zero to 25 kN m.",
+          "de": "Die Last wandert von der Stützenachse auf 0,1 m Exzentrizität; das Fußmoment wächst von null auf 25 kN m."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "eccentric-load",
+            "ease": "smooth",
+            "bones": {
+              "eccentric-carrier": {
+                "dy": 0
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "eccentric-load",
+            "ease": "smooth",
+            "bones": {
+              "eccentric-carrier": {
+                "dy": -0.1
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "sweep",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Sweep",
+              "de": "Wanderung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 6,
+            "kind": "motion",
+            "title": {
+              "en": "Eccentricity 0.1 m",
+              "de": "Exzentrizität 0,1 m"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 8,
+        "groundTempC": 18,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "column-flange",
+          "title": {
+            "en": "Flange outer faces and edges",
+            "de": "Flanschaußenseiten und -kanten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 1.38,
+          "characteristicLengthM": 3.0,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.6,
+          "layers": [],
+          "heatCapacityJM2K": 53000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "column-web",
+          "title": {
+            "en": "Web and inner flange faces (chambers)",
+            "de": "Steg und Flanschinnenseiten (Kammern)"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 2.13,
+          "characteristicLengthM": 0.17,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.25,
+          "layers": [],
+          "heatCapacityJM2K": 32000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "base-plate",
+          "title": {
+            "en": "Base plate, stiffeners and anchor nuts",
+            "de": "Fußplatte, Rippen und Ankermuttern"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.3,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.3,
+          "layers": [],
+          "heatCapacityJM2K": 70000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "cap-plate",
+          "title": {
+            "en": "Head plate",
+            "de": "Kopfplatte"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.1,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 1.0,
+          "layers": [],
+          "heatCapacityJM2K": 70000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "HEB 200 has about 1.15 m2 of surface per metre: flange outer faces and edges 0.46 m2/m, web and inner flange faces 0.71 m2/m; the web chambers see little sky and sun (view factor 0.25), so they lag the flanges.",
+          "de": "HEB 200 hat etwa 1,15 m² Oberfläche je Meter: Flanschaußenseiten und -kanten 0,46 m²/m, Steg und Flanschinnenseiten 0,71 m²/m; die Stegkammern sehen wenig Himmel und Sonne (Sichtfaktor 0,25) und hinken den Flanschen nach."
+        },
+        {
+          "en": "Steel conducts well, so the areal heat capacity uses the full plate thickness (flange 15 mm, web 9 mm, plates 20 mm) with c = 450 J/(kg K).",
+          "de": "Stahl leitet gut, deshalb gilt für die flächenbezogene Wärmekapazität die volle Blechdicke (Flansch 15 mm, Steg 9 mm, Platten 20 mm) mit c = 450 J/(kg K)."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: flange faces 60 %, web chambers 30 %, head plate fully, base plate 10 %.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Flanschflächen 60 %, Stegkammern 30 %, Kopfplatte voll, Fußplatte 10 %."
+        },
+        {
+          "en": "Reference case: a mild sunny day, all values authored estimates.",
+          "de": "Referenzfall: ein milder sonniger Tag, alle Werte sind Schätzungen."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "footing"
+      ],
+      "assumptions": [
+        {
+          "en": "Fixed footing, free head with axial and lateral loads; HEB 200 with A = 78.1 cm2 and I_y = 5696 cm4; second-order (buckling) effects are not included in the statics.",
+          "de": "Eingespannter Fuß, freier Kopf mit Normal- und Horizontallasten; HEB 200 mit A = 78,1 cm² und I_y = 5696 cm⁴; Effekte zweiter Ordnung (Knicken) sind in der Statik nicht enthalten."
+        },
+        {
+          "en": "Wind is a distributed load of 320 N/m (0.8 kN/m2 with force coefficient 2.0 over 0.2 m), an estimate.",
+          "de": "Wind ist eine Streckenlast von 320 N/m (0,8 kN/m² mit Kraftbeiwert 2,0 über 0,2 m), eine Schätzung."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "eccentric-load",
+      "defaultClip": "eccentric-load-sweep",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

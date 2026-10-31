@@ -1,0 +1,1 @@
+import base from "/home/deck/semio/🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🎚️config/🟦️.ts";import{dirname,join}from"node:path";import{fileURLToPath}from"node:url";const root=dirname(fileURLToPath(import.meta.url));export default{...base,testDir:root,testMatch:"physics-nav.spec.mjs",outputDir:join(root,"🗑️generated/physics-nav"),reporter:[["list"]],projects:[{name:"desktop"}]};

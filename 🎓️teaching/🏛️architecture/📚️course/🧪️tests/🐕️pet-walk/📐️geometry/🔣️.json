@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "drops": [
+    {
+      "id": "short-home",
+      "width": 400,
+      "reach": 20,
+      "top": 70,
+      "height": 320,
+      "minimum": 200,
+      "edges": [
+        {
+          "left": 0,
+          "right": 400,
+          "top": 257.21875
+        }
+      ],
+      "others": [],
+      "expected": null
+    },
+    {
+      "id": "adequate-page",
+      "width": 400,
+      "reach": 20,
+      "top": 70,
+      "height": 320,
+      "minimum": 200,
+      "edges": [
+        {
+          "left": 0,
+          "right": 400,
+          "top": 520
+        }
+      ],
+      "others": [],
+      "expected": {
+        "x": 80,
+        "floor": 520,
+        "y": 200
+      }
+    },
+    {
+      "id": "clear-column",
+      "width": 400,
+      "reach": 20,
+      "top": 70,
+      "height": 320,
+      "minimum": 200,
+      "edges": [
+        {
+          "left": 0,
+          "right": 400,
+          "top": 520
+        }
+      ],
+      "others": [
+        {
+          "left": 60,
+          "right": 120
+        }
+      ],
+      "expected": {
+        "x": 144,
+        "floor": 520,
+        "y": 200
+      }
+    },
+    {
+      "id": "exact-boundary",
+      "width": 400,
+      "reach": 20,
+      "top": 70,
+      "height": 320,
+      "minimum": 200,
+      "edges": [
+        {
+          "left": 0,
+          "right": 400,
+          "top": 270
+        }
+      ],
+      "others": [],
+      "expected": null
+    },
+    {
+      "id": "odd-viewport-final-column",
+      "width": 401,
+      "reach": 20,
+      "top": 70,
+      "height": 320,
+      "minimum": 200,
+      "edges": [
+        {
+          "left": 320,
+          "right": 321,
+          "top": 520
+        }
+      ],
+      "others": [],
+      "expected": {
+        "x": 320,
+        "floor": 520,
+        "y": 200
+      }
+    }
+  ],
+  "rosters": [
+    {
+      "id": "current-energy",
+      "authored": [
+        "physics",
+        "heating",
+        "parametric-design"
+      ],
+      "observed": [
+        "physics",
+        "heating"
+      ],
+      "expected": [
+        "physics",
+        "heating"
+      ],
+      "refused": false
+    },
+    {
+      "id": "empty",
+      "authored": [
+        "physics"
+      ],
+      "observed": [],
+      "expected": null,
+      "refused": true
+    },
+    {
+      "id": "unknown",
+      "authored": [
+        "physics"
+      ],
+      "observed": [
+        "prefs"
+      ],
+      "expected": null,
+      "refused": true
+    },
+    {
+      "id": "duplicate",
+      "authored": [
+        "physics"
+      ],
+      "observed": [
+        "physics",
+        "physics"
+      ],
+      "expected": null,
+      "refused": true
+    }
+  ]
+}

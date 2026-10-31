@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "success",
+      "fail": ""
+    },
+    {
+      "id": "body-failure",
+      "fail": "body"
+    },
+    {
+      "id": "bootstrap-failure",
+      "fail": "bootstrap"
+    }
+  ],
+  "operations": [
+    "storage",
+    "source",
+    "bootstrap",
+    "cargo-tools",
+    "home-sh",
+    "storage",
+    "receipt",
+    "identity",
+    "manifest",
+    "home-sh",
+    "generation-sh",
+    "source",
+    "storage",
+    "receipt",
+    "identity",
+    "manifest",
+    "body"
+  ],
+  "phases": [
+    "cargo.rustup.initial-recheck",
+    "cargo.rustup.source-request",
+    "cargo.rustup.bootstrap",
+    "cargo.rustup.cargo-tools",
+    "cargo.rustup.verify",
+    "cargo.rustup.generation-scope",
+    "cargo.rustup.generation-body",
+    "cargo.rustup.source-request",
+    "cargo.rustup.verify"
+  ]
+}

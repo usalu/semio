@@ -1,0 +1,28 @@
+# OS Manual Ajv Bindings
+
+Twenty manual constructor sites across six OS test files were inspected without executing them. Eighteen resolve to actual Source JSON files; two mounted-owner sites compile independent inline shared-vocabulary schemas. Source and schema SHA identities plus exact offsets are retained in generated/schema-ajv-os-bindings.json. Ten Source-backed sites already reference draft07; eight still reference2020 and may switch only with their proved coherent header changes. No genuine2020 inline tuple was found in this assigned subset. Public $defs and private definitions/ref coordinates remain unchanged.
+
+| Test Source | Offset | Actual Source Schema | Current Dialect |
+|---|---:|---|---|
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts | 32913 | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🧬️schema/📦️codec-ownership/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts | 33757 | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🧬️schema/🎚️field-set/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts | 34266 | 🧰️framework/🔨️modules/🚪️io/📸️snapshot/🧬️schema/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🟦️.ts | 1832 | 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🧬️schema/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts | 1740 | 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧺️values/🧬️schema/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts | 6695 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧪️inference-admission/🧬️schema/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts | 6763 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧪️inference-admission/🧬️schema/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts | 21504 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts | 23223 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🪆️embedded-mount/🟦️.ts | 26924 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🧩️plugin-modules/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts | 1293 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts | 2575 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🔣️.json | https://json-schema.org/draft/2020-12/schema |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts | 12378 | independent inline | shared vocabulary; no change required |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts | 19153 | independent inline | shared vocabulary; no change required |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 6901 | 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/♻️host/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 9006 | 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/📥️input/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 9751 | 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🧬️schema/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 9950 | 🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/🧾️receipt/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 14221 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧬️schema/🛂️receiving/🔣️.json | http://json-schema.org/draft-07/schema# |
+| 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts | 15374 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🛂️authority/🪶️snapshot/🧬️schema/input-wallet.json | https://json-schema.org/draft/2020-12/schema |
+
+Resolution follows the literal named roots and URL operations in actual Source. The replay birth URL resolves four parents from the test file directory to store/read/registry/birth; the final machine record includes this corrected coordinate and verifies it exists. SQLite refusal’s local read wrapper resolves VCS control files directly, not the outer sqlite request schema. No dialect instance was selected from a variable name alone.

@@ -1,18 +1,20 @@
 {
   "classification_systems": {
     "cs-din": {
-      "entries": [
-        {
-          "code": "300",
-          "title": "Bauwerk - Baukonstruktionen"
-        },
-        {
-          "code": "340",
-          "parent": "300",
-          "title": "Innenwaende"
-        }
-      ],
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "entries": [
+          {
+            "code": "300",
+            "title": "Bauwerk - Baukonstruktionen"
+          },
+          {
+            "code": "340",
+            "parent": "300",
+            "title": "Innenwaende"
+          }
+        ]
+      }
     }
   }
 }

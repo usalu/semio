@@ -1,3 +1,4 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {mkdtemp,rm} from "node:fs/promises";
@@ -5,7 +6,7 @@ import {tmpdir} from "node:os";
 import {stripVTControlCharacters} from "node:util";
 import {join} from "node:path";
 import {ReadinessMatcherV1,admitReadinessDeclarationV1,probeReadinessV1,readinessMarkerV1,readReadinessDeclarationV1,resolveReadinessV1,watchReadinessV1,type ReadinessV1} from "../🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {compileJsonSchemaSourceSubset,validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../../🧬️schema/🔣️.json";
 import projectSchema from "../../🧬️schema/📋️project/🔣️.json";
 
@@ -78,13 +79,14 @@ test("the graph schema and the project schema carry the dashboard declaration of
  expect(schema.$defs.ReadyPrinted).toEqual(projectSchema.$defs.ReadyPrinted);
 });
 
-test("a target of the graph and of a project declares readiness only through the dashboard metadata",()=>{
+test("a target of the graph and of a project declares readiness only through the dashboard metadata",async()=>{
+ const capture=(url:URL)=>({id:url.href,path:physicalSchemaSourcePathV1(url),baseUri:url.href,source:readFileSync(url,"utf8")}),root=capture(new URL("../../🧬️schema/📋️project/🔣️.json",import.meta.url)),resource=capture(new URL("../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url)),validator=await compileJsonSchemaSourceSubset({dialect:"draft-07",root,resources:[resource],annotations:[]},{limits:{sourceBytes:2000000,documentBytes:1000000,coordinateBytes:1000000,depth:256,schemas:10000,resources:10000,references:10000,chunk:128},cancelled:()=>false,progress:()=>{},yield:async()=>{}});
  const target=schema.properties.projects.additionalProperties.properties.targets.additionalProperties;
  const graph=(ready:unknown)=>({version:1,projects:{p:{name:"p",root:"p",targets:{serve:{execution:{kind:"command",command:"serve"},continuous:true,metadata:{semio:{dashboard:{ready}}}}}}},dependencies:[]});
  const project=(ready:unknown)=>({name:"p",targets:{serve:{executor:"repo:script",options:{command:"serve"},continuous:true,metadata:{semio:{dashboard:{ready}}}}}});
  for(const row of vectors.declarations){
   expect(validateJsonSchemaSubset(schema,graph(row.declaration)).length===0,`graph: ${row.name}`).toBe(row.valid);
-  expect(validateJsonSchemaSubset(projectSchema,project(row.declaration)).length===0,`project: ${row.name}`).toBe(row.valid);
+  expect(validator.validate(project(row.declaration)).length===0,`project: ${row.name}`).toBe(row.valid);
  }
  expect(Object.keys(target.properties.metadata.properties.semio.properties.dashboard.properties)).toEqual(["ready"]);
 });

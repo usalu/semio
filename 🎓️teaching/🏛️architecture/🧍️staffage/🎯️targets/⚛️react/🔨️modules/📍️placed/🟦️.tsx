@@ -7,9 +7,9 @@
  * @see ../🧮️pipeline/🟦️.ts — `frameOf`, `inlineSvg`
  * @see ../⏱️clock/🟦️.ts — the clock figures follow
  */
-import { useMemo, type CSSProperties, type ReactElement } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
 import type { Asset, DisplayRange, EvaluationQuery, Language, View } from "@teaching/staffage";
-import { useClock, type StaffageClock } from "../⏱️clock/🟦️.ts";
+import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { defaultQuery, depictionOptions, evaluateState, inlineSvg, sceneOf } from "../🧮️pipeline/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
 
@@ -49,18 +49,51 @@ export type PlacedFigureProps = {
   readonly style?: CSSProperties;
 };
 
+function drawingQueryOf(asset: Asset, query: EvaluationQuery, view: View): EvaluationQuery {
+  if (query.kind !== "clip" || !(view.endsWith("-line") || view.endsWith("-solid"))) return query;
+  const clip = asset.clips.find((candidate) => candidate.id === query.clip);
+  if (clip === undefined || !clip.loop || clip.durationS <= 0) return query;
+  const timeS = ((query.timeS % clip.durationS) + clip.durationS) % clip.durationS;
+  return { ...query, timeS };
+}
+
+function useHeldFrame(clock: StaffageClock, active: boolean): number | null {
+  const last = useRef<number | null>(null);
+  const snapshot = (): number | null => {
+    if (active || last.current === null) last.current = clock.state.frame / clock.state.fps;
+    return last.current;
+  };
+  return useSyncExternalStore(clock.subscribe, snapshot, snapshot);
+}
+
 /** 📍️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
-export function PlacedFigure(props: PlacedFigureProps): ReactElement {
+export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
   const { asset, selection, clock, offsetS = 0, view, scale, language, pxPerMm, xPx, groundPx, mirrored = false, travel, className, label, style } = props;
-  const time = useClock(clock);
-  const timeS = time === null ? null : time.frame / time.fps;
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(true);
+  const timeS = useHeldFrame(clock, visible);
   const query = useMemo(() => placementQuery(asset, selection, timeS, offsetS), [asset, selection, timeS, offsetS]);
-  const { scene, rootM } = useMemo(() => {
-    const options = depictionOptions({ view, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
-    const state = evaluateState(asset, query);
-    return { scene: sceneOf(state, props.theme === undefined ? options : { ...options, theme: props.theme }), rootM: state.bones[asset.rig.root]?.origin.x ?? 0 };
-  }, [asset, query, view, scale, language, props.range, props.theme]);
-  const markup = useMemo(() => inlineSvg(scene), [scene]);
+  const drawingQuery = useMemo(() => drawingQueryOf(asset, query, view), [asset, query, view]);
+  const drawn = useMemo(() => {
+    try {
+      const options = depictionOptions({ view, scale: { denominator: scale }, language, transparent: true, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false }, ...(props.range === undefined ? {} : { range: props.range }) });
+      const state = evaluateState(asset, drawingQuery, options.representation);
+      return { scene: sceneOf(state, props.theme === undefined ? options : { ...options, theme: props.theme }), rootM: state.bones[asset.rig.root]?.origin.x ?? 0 };
+    } catch {
+      return null;
+    }
+  }, [asset, drawingQuery, view, scale, language, props.range, props.theme]);
+  const scene = drawn?.scene;
+  const rootM = drawn?.rootM ?? 0;
+  const markup = useMemo(() => (scene === undefined ? "" : inlineSvg(scene)), [scene]);
+  useEffect(() => {
+    const element = ref.current;
+    if (scene === undefined || element === null || typeof IntersectionObserver !== "function") return;
+    const observer = new IntersectionObserver((entries) => setVisible(entries.at(-1)?.isIntersecting ?? true));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [scene !== undefined]);
+  if (scene === undefined) return null;
   const lane = travel === undefined ? null : (travelledM(asset, query) + (travel.phaseM ?? 0)) % travel.laneM;
   const shiftPx = (lane === null ? -rootM : lane) * pxPerMm * scene.metadata.mmPerMetre;
   const width = scene.widthMm * pxPerMm;
@@ -68,6 +101,7 @@ export function PlacedFigure(props: PlacedFigureProps): ReactElement {
   const fade = lane === null || travel === undefined ? 1 : Math.min(1, lane / 0.4, (travel.laneM - lane) / 0.4);
   return (
     <div
+      ref={ref}
       role="img"
       aria-label={label ?? asset.title[language]}
       className={className}

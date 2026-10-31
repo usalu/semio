@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "loader",
+          "source",
+          "invalid"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "loader": {
+            "enum": [
+              "ts",
+              "js"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "invalid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

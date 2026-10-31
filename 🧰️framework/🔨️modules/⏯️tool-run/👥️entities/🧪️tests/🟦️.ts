@@ -1,6 +1,6 @@
 /** 👥️ Actual entity-edit transitions agree with an independent RFC6902 oracle over full u64 identities. */
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";

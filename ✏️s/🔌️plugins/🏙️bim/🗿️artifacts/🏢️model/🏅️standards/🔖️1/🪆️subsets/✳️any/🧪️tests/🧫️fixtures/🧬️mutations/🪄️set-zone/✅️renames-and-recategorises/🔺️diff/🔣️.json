@@ -1,9 +1,11 @@
 {
   "zones": {
     "z-day": {
-      "category": "Fire compartment",
       "entry": "Patched",
-      "name": "Living zone"
+      "value": {
+        "category": "Fire compartment",
+        "name": "Living zone"
+      }
     }
   }
 }

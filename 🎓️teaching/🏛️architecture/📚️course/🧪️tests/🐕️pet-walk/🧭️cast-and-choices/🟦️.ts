@@ -2,12 +2,14 @@
  *
  * @see ../🟦️.ts — the pets in a real browser, as the second round made them
  */
-import {QUIZZES, answerRun, arrive, enter, expect, identify, pane, playQuiz, readIntroduction, screen, submitRun, test, activeOverview, COURSE} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
+import {QUIZZES, authorPreview, answerRun, arrive, enter, expect, identify, pane, playQuiz, readIntroduction, screen, submitRun, test, activeOverview, COURSE} from "../../../🎭️e2e/🚶️learner/🟦️.ts";
 import { APPEAR_MS, CAST_LINE, castLine, CHOICES, choosePets, CURSOR, enterWithPets, expectCast, expectMotionless, expectMoving, expectWalk, FORCED_NOTE, HASTE, hasten, HOME, instrumented, layer, middleOf, pets, PETS_LABEL, PLAY_LABEL, reachable, RECAST_MS, REDUCED_NOTE, shownPets, STILL_FRAMES, SWITCH_LABEL, takenTargets, TEMPO, trailOf, watchStill } from "../🧰️pet-kit/🟦️.ts";
 
 for (const locale of ["en", "de"] as const) test(`topic casts show only their own pets in ${locale}`, async ({ device }) => {
   const learner = await device(locale);
   await enterWithPets(learner);
+  await authorPreview(learner);
+  await expect(pets(learner)).not.toHaveCount(0, { timeout: APPEAR_MS });
   for (const topic of COURSE.topics) {
     await learner.page.evaluate((id) => (window.location.hash = id), topic.id);
     await expect(pane(learner.page, topic.id)).toHaveAttribute("data-opened", "");
@@ -22,6 +24,8 @@ for (const locale of ["en", "de"] as const) test(`topic casts show only their ow
 test("the cast follows the learner from quiz pages to each active question", async ({ device }) => {
   const learner = await device("de");
   await enterWithPets(learner);
+  await authorPreview(learner);
+  await expect(pets(learner)).not.toHaveCount(0, { timeout: APPEAR_MS });
   for (const quiz of QUIZZES) {
     await learner.page.evaluate((id) => (window.location.hash = id), quiz.id);
     await expect(pane(learner.page, quiz.id)).toHaveAttribute("data-opened", "");

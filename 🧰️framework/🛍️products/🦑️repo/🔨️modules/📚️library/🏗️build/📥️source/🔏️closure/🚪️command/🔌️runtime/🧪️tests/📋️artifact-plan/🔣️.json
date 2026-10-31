@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "positive": [
+    "plan-a",
+    "plan-b",
+    "produce",
+    "pending"
+  ],
+  "refusals": [
+    "source-change",
+    "manifest-change"
+  ],
+  "samePlan": [
+    "plan-a",
+    "plan-b"
+  ],
+  "recipeIndependentSource": true,
+  "cargoFeatures": [
+    "trim-paths"
+  ]
+}

@@ -42,3 +42,6 @@ semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
+
+[dependencies.semio-s-artifact-stdio-ifc-2x3-base-details]
+path = "../../🚪️io/🪟️details/📦️packages/🦀️rust"

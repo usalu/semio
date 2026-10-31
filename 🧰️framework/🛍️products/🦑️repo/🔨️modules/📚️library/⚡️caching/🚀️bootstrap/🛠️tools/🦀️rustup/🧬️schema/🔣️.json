@@ -178,7 +178,8 @@
         "maximumReceiptBytes": 8192,
         "observationEntryInterval": 64,
         "maximumTomlOutputBytes": 8388608,
-        "maximumGenerationOperations": 32
+        "maximumGenerationOperations": 32,
+        "archiveAcquisitionParallelism": 2
       }
     },
     "BootstrapReceipt": {
@@ -472,7 +473,8 @@
       "required": [
         "home",
         "path",
-        "accepted"
+        "accepted",
+        "toolchain"
       ],
       "properties": {
         "home": {
@@ -487,6 +489,11 @@
         },
         "accepted": {
           "type": "boolean"
+        },
+        "toolchain": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         }
       }
     },
@@ -567,6 +574,89 @@
           "type": "boolean"
         },
         "alias": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ArchiveBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "count",
+        "stop",
+        "started",
+        "completed",
+        "peak",
+        "outcome"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 33
+        },
+        "stop": {
+          "enum": [
+            "none",
+            "error",
+            "undefined",
+            "cancel",
+            "pre-cancel",
+            "over-bound"
+          ]
+        },
+        "started": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        },
+        "peak": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "primary",
+            "undefined",
+            "cancel",
+            "bound"
+          ]
+        }
+      }
+    },
+    "HomeMaterialCase": {
+      "type": "object",
+      "required": [
+        "name",
+        "rustup",
+        "cargo",
+        "accepted"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rustup": {
+          "type": "boolean"
+        },
+        "cargo": {
           "type": "boolean"
         },
         "accepted": {

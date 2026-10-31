@@ -1,3 +1,6 @@
+import {withRepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {browserSystemPortV1,prepareBrowserDependenciesV1,type BrowserSystemPortV1} from "./🌐️system/🟦️.ts";
 import { parseCargoPreparationStorageV1, type CargoPreparationStorageV1 } from "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import nativeSchema from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json" with { type: "json" };
 import { readFileSync } from "node:fs";
@@ -14,8 +17,8 @@ import { selectPackageManagerV1 } from "../🔌️managers/📚️catalog/🟦�
 import { repositoryCachePartitionRootV1 } from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import { NATIVE_TOOLCHAINS_V1, pythonEnvironmentOfProjectV1, toolchainMessageV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import { toolPinValueV1 } from "../../../../🏗️build/🧰️tool-setup/🟦️.ts";
-import { pinnedGoEnvironmentV1, pinnedUvEnvironmentV1 } from "../../🛠️tools/🧰️native/🟦️.ts";
-import { systemNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import { pinnedCargoToolsEnvironmentV1, pinnedGoEnvironmentV1, pinnedUvEnvironmentV1 } from "../../🛠️tools/🧰️native/🟦️.ts";
+import { ownedNativeToolPortV1, systemNativeToolPortV1 } from "../../🛠️tools/🧰️native/🔌️port/🟦️.ts";
 import { runNativeDependencyToolV1, runPreparedCargoDependencyPairV1, type NativeDependencyToolRunnerV1 } from "../🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -24,7 +27,7 @@ import { runtimeExecutableV1 } from "../../../../../../../../📦️packages/�
 export type DependencyToolRunner=NativeDependencyToolRunnerV1;
 
 /** 🛠️ Synchronizes one native environment; The build tool schedules every cross-environment prerequisite. */
-export async function prepareDependencies(kind: string, workspace: string, invocation:ScriptInvocation, storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1,runner: DependencyToolRunner = runNativeDependencyToolV1,environment:NodeJS.ProcessEnv=process.env,goEnvironment:(base:NodeJS.ProcessEnv)=>Promise<Readonly<Record<string,string|undefined>>>=base=>pinnedGoEnvironmentV1(base,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,phase.authority.network.offline),phase.leaseControl.signal),uvEnvironment:(base:NodeJS.ProcessEnv)=>Promise<Readonly<Record<string,string|undefined>>>=base=>pinnedUvEnvironmentV1(base,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,phase.authority.network.offline),phase.leaseControl.signal)): Promise<void> {
+export async function prepareDependencies(kind: string, workspace: string, invocation:ScriptInvocation, storage:CargoPreparationStorageV1,phase:NativeCallerPhaseV1,runner: DependencyToolRunner = runNativeDependencyToolV1,environment:NodeJS.ProcessEnv=process.env,goEnvironment:(base:NodeJS.ProcessEnv)=>Promise<Readonly<Record<string,string|undefined>>>=base=>pinnedGoEnvironmentV1(base,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,phase.authority.network.offline),phase.leaseControl.signal),uvEnvironment:(base:NodeJS.ProcessEnv)=>Promise<Readonly<Record<string,string|undefined>>>=base=>pinnedUvEnvironmentV1(base,repositoryCachePartitionRootV1(workspace,"tools"),systemNativeToolPortV1(workspace,phase.authority.network.offline),phase.leaseControl.signal),cargoToolsEnvironment:(base:NodeJS.ProcessEnv)=>Promise<Readonly<Record<string,string|undefined>>>=base=>withRepositoryToolingStoreV1(workspace,invocation,phase.leaseControl,async(store,actual)=>{requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();return pinnedCargoToolsEnvironmentV1(base,store.root,ownedNativeToolPortV1(base,actual),actual.signal);}),browserPort:(environment:Readonly<Record<string,string|undefined>>)=>BrowserSystemPortV1=environment=>browserSystemPortV1(environment)): Promise<void> {
   if(!nativeSchema.$defs.NativeDependencyKind.enum.some(value=>value===kind))throw new Error("Unknown dependency environment: "+kind);requireIssuedResourceControlInvocationV1(phase.leaseControl,invocation);if(phase.authority.original!==invocation.capabilities)throw new Error("Original native dependencies control required");const boundedEnvironment=environment,signal=phase.leaseControl.signal;await phase.advance("native-dependencies:"+kind);
   const render = (ecosystem: string, operation: "lock" | "sync" | "provision", request: Record<string, unknown> = {}): [string, string[]] => {
     const invocation = selectPackageManagerV1(ecosystem).render(operation, { platform: process.platform, ...request });
@@ -62,7 +65,10 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
     console.log(`[deps-dotnet] Pinned .NET SDK ${sdk} is ready`);
   }
   else if (kind === "cpp") console.log("[deps-cpp] Build-tool native tooling prerequisite completed");
-  else if (kind === "browsers") await run(runtimeExecutableV1(), [join(workspace, "node_modules/playwright/cli.js"), "install", "chromium"], false, repoToolCacheEnv(workspace));
+  else if (kind === "browsers") {
+    const browserEnvironment={...boundedEnvironment,...repoToolCacheEnv(workspace)};
+    await prepareBrowserDependenciesV1(browserPort(browserEnvironment),(command,args,environment)=>run(command,[...args],false,environment),runtimeExecutableV1(),join(workspace,"node_modules/playwright/cli.js"),browserEnvironment,signal,phase.authority.network.offline);
+  }
   else if (kind === "wasm" || kind === "trunk") {
     const bindgen = wasmBindgenVersion(readFileSync(join(workspace, "Cargo.lock"), "utf8"));
     requireWasmBindgenLocksV1(workspace);
@@ -72,8 +78,7 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
     await target(kind === "wasm" ? "wasm32-wasip2" : "wasm32-unknown-unknown");
     console.log(`[deps-${kind}] Pinned tools and Rust WebAssembly target are ready`);
   } else if (kind === "tools") {
-    await tool("cargo-nextest", ["cargo", "nextest"], toolPinValueV1("cargo-nextest"));
-    await tool("cargo-llvm-cov", ["cargo", "llvm-cov"], toolPinValueV1("cargo-llvm-cov"));
+    await cargoToolsEnvironment(boundedEnvironment);
   } else throw new Error(`Unknown dependency environment: ${kind}`);
 }
 

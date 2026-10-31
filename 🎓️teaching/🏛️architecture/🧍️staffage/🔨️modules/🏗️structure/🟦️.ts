@@ -608,6 +608,7 @@ export function structuralLegend(quantity: StructuralQuantity, result: Structura
     max,
     stops,
     interpretation: text(`${QUANTITY_TITLES[quantity].en} from ${min.toPrecision(4)} to ${max.toPrecision(4)} ${unit}; zero is grey.`, `${QUANTITY_TITLES[quantity].de} von ${min.toPrecision(4)} bis ${max.toPrecision(4)} ${unit}; null ist grau.`),
+    range: range.mode,
   };
 }
 

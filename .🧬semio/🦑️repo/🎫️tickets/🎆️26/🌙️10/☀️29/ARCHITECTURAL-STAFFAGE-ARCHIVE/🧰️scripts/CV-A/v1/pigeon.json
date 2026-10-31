@@ -1,0 +1,4544 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "pigeon",
+    "category": "animals",
+    "title": {
+      "en": "Rock Pigeon",
+      "de": "Felsentaube"
+    },
+    "summary": {
+      "en": "An adult city pigeon (Columba livia) of 0.35 kg: bipedal skeleton with S-curved neck, small head with cere and beak, wedge tail, tarsometatarsus legs with toes and folded wings of humerus, forearm and hand that open for flight; walking with head-bob, pecking, wing display and a take-off into flight, with a feathered thermal model and 41 °C body temperature.",
+      "de": "Eine erwachsene Stadttaube (Columba livia) von 0,35 kg: zweibeiniges Skelett mit S-förmigem Hals, kleinem Kopf mit Wachshaut und Schnabel, Keilschwanz, Laufbeinen mit Zehen und angelegten Flügeln aus Ober-, Unterarm und Hand, die sich zum Flug öffnen; Gehen mit Kopfnicken, Picken, Flügelspreizen und Abflug, mit Gefiederwärmemodell und 41 °C Körpertemperatur."
+    },
+    "tags": [
+      "animal",
+      "bird",
+      "pigeon",
+      "biped",
+      "head-bob",
+      "wings",
+      "flight",
+      "urban",
+      "gait"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker (animals)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "johnston-janiga-1995",
+          "citation": "Johnston, R. F., Janiga, M. (1995). Feral Pigeons. Oxford University Press, New York. Body length 29-36 cm, mass 230-380 g, wingspan about 65 cm."
+        },
+        {
+          "id": "baumel-1993",
+          "citation": "Baumel, J. J., King, A. S., Breazile, J. E., Evans, H. E., Vanden Berge, J. C. (eds) (1993). Handbook of Avian Anatomy: Nomina Anatomica Avium, 2nd edn. Publications of the Nuttall Ornithological Club 23. Skeletal nomenclature; segment lengths and joint ranges here are authored estimates."
+        },
+        {
+          "id": "gatesy-biewener-1991",
+          "citation": "Gatesy, S. M., Biewener, A. A. (1991). Bipedal locomotion: effects of speed, size and limb posture in birds and humans. Journal of Zoology 224, 127-147."
+        },
+        {
+          "id": "frost-1978",
+          "citation": "Frost, B. J. (1978). The optokinetic basis of head-bobbing in the pigeon. Journal of Experimental Biology 74, 187-195."
+        },
+        {
+          "id": "davies-green-1988",
+          "citation": "Davies, M. N. O., Green, P. R. (1988). Head-bobbing during walking, running and flying: relative motion perception in the pigeon. Journal of Experimental Biology 138, 71-91."
+        },
+        {
+          "id": "dunlap-mowrer-1930",
+          "citation": "Dunlap, K., Mowrer, O. H. (1930). Head movements and eye functions of birds. Journal of Comparative Psychology 11, 99-113."
+        },
+        {
+          "id": "tobalske-dial-1996",
+          "citation": "Tobalske, B. W., Dial, K. P. (1996). Flight kinematics of black-billed magpies and pigeons over a wide range of speeds. Journal of Experimental Biology 199, 263-280."
+        },
+        {
+          "id": "berg-biewener-2010",
+          "citation": "Berg, A. M., Biewener, A. A. (2010). Wing and body kinematics of takeoff and landing flight in the pigeon (Columba livia). Journal of Experimental Biology 213, 1651-1658."
+        },
+        {
+          "id": "pennycuick-2008",
+          "citation": "Pennycuick, C. J. (2008). Modelling the Flying Bird. Academic Press. Flight muscle fractions of pigeons guide the authored segment masses; the segment fractions are authored estimates."
+        },
+        {
+          "id": "aschoff-pohl-1970",
+          "citation": "Aschoff, J., Pohl, H. (1970). Der Ruheumsatz von Vögeln als Funktion der Tageszeit und der Körpergröße. Journal für Ornithologie 111, 38-47."
+        },
+        {
+          "id": "butler-1977",
+          "citation": "Butler, P. J., West, N. H., Jones, D. R. (1977). Respiratory and cardiovascular responses of the pigeon to sustained, level flight in a wind-tunnel. Journal of Experimental Biology 71, 7-26. Flight metabolism here is an authored estimate guided by this study."
+        },
+        {
+          "id": "calder-king-1974",
+          "citation": "Calder, W. A., King, J. R. (1974). Thermal and caloric relations of birds. In: Farner, D. S., King, J. R. (eds), Avian Biology IV, Academic Press, pp. 259-413; body temperature about 41 °C, resting respiration of pigeons about 25-30 breaths per minute."
+        },
+        {
+          "id": "walsberg-king-1978",
+          "citation": "Walsberg, G. E., King, J. R. (1978). The relationship of the external surface area of birds to body mass. Journal of Experimental Biology 76, 185-189; A = 8.11·M^0.667 cm² for M in g, about 0.040 m² for 350 g."
+        },
+        {
+          "id": "scholander-1950",
+          "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236."
+        },
+        {
+          "id": "cena-monteith-1975",
+          "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, emissivity of skin and respiratory heat loss."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation drawn for the near (left) side of a pigeon facing right. Far-side legs, wing and tail feathers are separate bone chains drawn darker and behind. Wings are modelled as symmetric blades turning in the sagittal plane, which is the side-view projection of the flapping wing; the folded wing is the Z-fold of humerus, forearm and hand. Real standing height of a feral pigeon is about 0.25 m with the head up, a little less than commonly assumed.",
+        "de": "Seitenansicht der nahen (linken) Seite einer nach rechts blickenden Taube. Beine, Flügel und Schwanzfedern der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Flügel sind als symmetrische Blätter modelliert, die sich in der Sagittalebene drehen, was der Seitenprojektion des Flügelschlags entspricht; der angelegte Flügel ist die Z-Faltung aus Ober-, Unterarm und Hand. Die tatsächliche Standhöhe einer Stadttaube mit erhobenem Kopf beträgt etwa 0,25 m, etwas weniger als oft angenommen."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.244,
+      "widthM": 0.317,
+      "depthM": 0.15,
+      "massKg": 0.35
+    },
+    "materials": [
+      {
+        "id": "plumage",
+        "title": {
+          "en": "Contour plumage with down",
+          "de": "Konturgefieder mit Daunen"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 90,
+        "conductivityWmK": 0.035,
+        "source": "authored-estimate",
+        "reference": "cena-monteith-1975"
+      },
+      {
+        "id": "bare-skin",
+        "title": {
+          "en": "Scaled bare skin (tarsus, toes)",
+          "de": "Beschuppte nackte Haut (Lauf, Zehen)"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.75,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "beak-keratin",
+        "title": {
+          "en": "Beak keratin",
+          "de": "Schnabelhorn"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "cere-wax",
+        "title": {
+          "en": "Waxy white cere",
+          "de": "Weiße Wachshaut"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.3,
+        "source": "authored-estimate",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "eye-tissue",
+        "title": {
+          "en": "Eye and bare eye ring",
+          "de": "Auge und nackter Augenring"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.6,
+        "source": "authored-estimate",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "claw-horn",
+        "title": {
+          "en": "Claw horn",
+          "de": "Krallenhorn"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.8,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis and hip joints (synsacrum)",
+            "de": "Becken und Hüftgelenke (Synsacrum)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.07,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.03,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "trunk",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk with keel and flight muscles",
+            "de": "Rumpf mit Brustbeinkamm und Flugmuskeln"
+          },
+          "x": -0.05,
+          "y": 0.0,
+          "angleDeg": 16,
+          "lengthM": 0.165,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.174,
+            "comX": 0.085,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "neck-1",
+          "parent": "trunk",
+          "title": {
+            "en": "Lower neck",
+            "de": "Unterer Hals"
+          },
+          "x": 0.13,
+          "y": 0.03,
+          "angleDeg": 39,
+          "lengthM": 0.03,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -70,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 0.012,
+            "comX": 0.02,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "neck-2",
+          "parent": "neck-1",
+          "title": {
+            "en": "Middle neck",
+            "de": "Mittlerer Hals"
+          },
+          "x": 0.03,
+          "y": 0,
+          "angleDeg": 40,
+          "lengthM": 0.025,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -70,
+            "maxDeg": 50
+          },
+          "mass": {
+            "kg": 0.008,
+            "comX": 0.02,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "neck-3",
+          "parent": "neck-2",
+          "title": {
+            "en": "Upper neck",
+            "de": "Oberer Hals"
+          },
+          "x": 0.025,
+          "y": 0,
+          "angleDeg": -45,
+          "lengthM": 0.02,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.006,
+            "comX": 0.015,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "neck-3",
+          "title": {
+            "en": "Head with upper beak",
+            "de": "Kopf mit Oberschnabel"
+          },
+          "x": 0.02,
+          "y": 0,
+          "angleDeg": -60,
+          "lengthM": 0.054,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -75,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.022,
+            "comX": 0.022,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "jaw",
+          "parent": "head",
+          "title": {
+            "en": "Lower beak (mandible)",
+            "de": "Unterschnabel (Mandibula)"
+          },
+          "x": 0.034,
+          "y": -0.006,
+          "angleDeg": -3,
+          "lengthM": 0.02,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 0.003,
+            "comX": 0.01,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "tail",
+          "parent": "trunk",
+          "title": {
+            "en": "Tail (rectrices)",
+            "de": "Schwanz (Steuerfedern)"
+          },
+          "x": -0.02,
+          "y": -0.004,
+          "angleDeg": 184,
+          "lengthM": 0.105,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.01,
+            "comX": 0.06,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "tail-f",
+          "parent": "tail",
+          "title": {
+            "en": "Far tail feathers (fan)",
+            "de": "Ferne Schwanzfedern (Fächer)"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.105,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -5,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.004,
+            "comX": 0.06,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "thigh-f",
+          "parent": "pelvis",
+          "title": {
+            "en": "Far thigh (femur)",
+            "de": "Ferner Oberschenkel (Femur)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -25,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.01,
+            "comX": 0.0225,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "shank-f",
+          "parent": "thigh-f",
+          "title": {
+            "en": "Far shank (tibiotarsus)",
+            "de": "Ferner Unterschenkel (Tibiotarsus)"
+          },
+          "x": 0.045,
+          "y": 0,
+          "angleDeg": -87,
+          "lengthM": 0.055,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 55
+          },
+          "mass": {
+            "kg": 0.007,
+            "comX": 0.0275,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "tarsus-f",
+          "parent": "shank-f",
+          "title": {
+            "en": "Far tarsometatarsus",
+            "de": "Ferner Lauf (Tarsometatarsus)"
+          },
+          "x": 0.055,
+          "y": 0,
+          "angleDeg": 32,
+          "lengthM": 0.028,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 0.0025,
+            "comX": 0.015,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "toes-f",
+          "parent": "tarsus-f",
+          "title": {
+            "en": "Far toes (middle toe and hallux)",
+            "de": "Ferne Zehen (Mittelzehe und Hinterzehe)"
+          },
+          "x": 0.028,
+          "y": 0,
+          "angleDeg": 77,
+          "lengthM": 0.036,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 0.002,
+            "comX": 0.012,
+            "comY": -0.002,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "humerus-f",
+          "parent": "trunk",
+          "title": {
+            "en": "Far upper arm (humerus)",
+            "de": "Ferner Oberarm (Humerus)"
+          },
+          "x": 0.1,
+          "y": 0.012,
+          "angleDeg": 176,
+          "lengthM": 0.06,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.007,
+            "comX": 0.03,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "forearm-f",
+          "parent": "humerus-f",
+          "title": {
+            "en": "Far forearm (ulna and secondaries)",
+            "de": "Ferner Unterarm (Elle und Armschwingen)"
+          },
+          "x": 0.06,
+          "y": 0,
+          "angleDeg": -167,
+          "lengthM": 0.075,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 178
+          },
+          "mass": {
+            "kg": 0.006,
+            "comX": 0.038,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "hand-f",
+          "parent": "forearm-f",
+          "title": {
+            "en": "Far hand (carpometacarpus and primaries)",
+            "de": "Ferne Hand (Handwurzel-Mittelhand und Handschwingen)"
+          },
+          "x": 0.075,
+          "y": 0,
+          "angleDeg": 163,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -165,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 0.006,
+            "comX": 0.07,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "thigh-n",
+          "parent": "pelvis",
+          "title": {
+            "en": "Near thigh (femur)",
+            "de": "Naher Oberschenkel (Femur)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -25,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.01,
+            "comX": 0.0225,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "shank-n",
+          "parent": "thigh-n",
+          "title": {
+            "en": "Near shank (tibiotarsus)",
+            "de": "Naher Unterschenkel (Tibiotarsus)"
+          },
+          "x": 0.045,
+          "y": 0,
+          "angleDeg": -87,
+          "lengthM": 0.055,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 55
+          },
+          "mass": {
+            "kg": 0.007,
+            "comX": 0.0275,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "tarsus-n",
+          "parent": "shank-n",
+          "title": {
+            "en": "Near tarsometatarsus",
+            "de": "Naher Lauf (Tarsometatarsus)"
+          },
+          "x": 0.055,
+          "y": 0,
+          "angleDeg": 32,
+          "lengthM": 0.028,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 0.0025,
+            "comX": 0.015,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "toes-n",
+          "parent": "tarsus-n",
+          "title": {
+            "en": "Near toes (middle toe and hallux)",
+            "de": "Nahe Zehen (Mittelzehe und Hinterzehe)"
+          },
+          "x": 0.028,
+          "y": 0,
+          "angleDeg": 77,
+          "lengthM": 0.036,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 0.002,
+            "comX": 0.012,
+            "comY": -0.002,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "humerus-n",
+          "parent": "trunk",
+          "title": {
+            "en": "Near upper arm (humerus)",
+            "de": "Naher Oberarm (Humerus)"
+          },
+          "x": 0.1,
+          "y": 0.012,
+          "angleDeg": 176,
+          "lengthM": 0.06,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.007,
+            "comX": 0.03,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "forearm-n",
+          "parent": "humerus-n",
+          "title": {
+            "en": "Near forearm (ulna and secondaries)",
+            "de": "Naher Unterarm (Elle und Armschwingen)"
+          },
+          "x": 0.06,
+          "y": 0,
+          "angleDeg": -167,
+          "lengthM": 0.075,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 178
+          },
+          "mass": {
+            "kg": 0.006,
+            "comX": 0.038,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        },
+        {
+          "id": "hand-n",
+          "parent": "forearm-n",
+          "title": {
+            "en": "Near hand (carpometacarpus and primaries)",
+            "de": "Nahe Hand (Handwurzel-Mittelhand und Handschwingen)"
+          },
+          "x": 0.075,
+          "y": 0,
+          "angleDeg": 163,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -165,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 0.006,
+            "comX": 0.07,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "pennycuick-2008"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-n",
+        "bone": "toes-n",
+        "x": 0.022,
+        "y": -0.0095,
+        "kind": "contact",
+        "title": {
+          "en": "Near foot, ball of the toes",
+          "de": "Nahe Fuß, Zehenballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.034,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-f",
+        "bone": "toes-f",
+        "x": 0.022,
+        "y": -0.0095,
+        "kind": "contact",
+        "title": {
+          "en": "Far foot, ball of the toes",
+          "de": "Ferner Fuß, Zehenballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.034,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "nostril",
+        "bone": "head",
+        "x": 0.037,
+        "y": 0.005,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils in the cere",
+          "de": "Nasenlöcher in der Wachshaut"
+        }
+      },
+      {
+        "id": "beak-tip",
+        "bone": "head",
+        "x": 0.054,
+        "y": -0.002,
+        "kind": "attachment",
+        "title": {
+          "en": "Beak tip",
+          "de": "Schnabelspitze"
+        }
+      },
+      {
+        "id": "eye",
+        "bone": "head",
+        "x": 0.024,
+        "y": 0.007,
+        "kind": "attachment",
+        "title": {
+          "en": "Eye (gaze reference of the head-bob)",
+          "de": "Auge (Blickbezug des Kopfnickens)"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "far-trousers",
+          "bone": "shank-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.5,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0.017 C 0.01 0.021 0.028 0.016 0.04 0.008 L 0.044 0.0 L 0.04 -0.008 C 0.028 -0.015 0.01 -0.02 -0.012 -0.017 C -0.017 -0.008 -0.017 0.008 -0.012 0.017 Z"
+        },
+        {
+          "id": "far-thigh",
+          "bone": "thigh-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.5,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.045,
+          "y1": 0.0,
+          "r0": 0.02,
+          "r1": 0.017
+        },
+        {
+          "id": "far-shank-bare",
+          "bone": "shank-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.36,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.038,
+          "y0": 0.0,
+          "x1": 0.057,
+          "y1": 0.0,
+          "r0": 0.0054,
+          "r1": 0.0048
+        },
+        {
+          "id": "far-tarsus",
+          "bone": "tarsus-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.36,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.028,
+          "y1": 0.0,
+          "r0": 0.0052,
+          "r1": 0.0044
+        },
+        {
+          "id": "far-toe-main",
+          "bone": "toes-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.36,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": -0.0015,
+          "x1": 0.034,
+          "y1": -0.0015,
+          "r0": 0.003,
+          "r1": 0.0022
+        },
+        {
+          "id": "far-toe-side",
+          "bone": "toes-f",
+          "role": "body",
+          "lod": 1,
+          "z": 1.25,
+          "filled": true,
+          "tone": 0.3,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.027,
+          "y1": -0.0014,
+          "r0": 0.0028,
+          "r1": 0.002
+        },
+        {
+          "id": "far-hallux",
+          "bone": "toes-f",
+          "role": "body",
+          "lod": 1,
+          "z": 1.25,
+          "filled": true,
+          "tone": 0.36,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": -0.001,
+          "y0": 0.0005,
+          "x1": -0.014,
+          "y1": 0.0035,
+          "r0": 0.0026,
+          "r1": 0.0018
+        },
+        {
+          "id": "far-claw",
+          "bone": "toes-f",
+          "role": "detail",
+          "lod": 3,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.1,
+          "region": "legs-feet",
+          "material": "claw-horn",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.034,
+              -0.0005
+            ],
+            [
+              0.0408,
+              -0.0042
+            ],
+            [
+              0.034,
+              -0.0043
+            ]
+          ]
+        },
+        {
+          "id": "far-tarsus-scales",
+          "bone": "tarsus-f",
+          "role": "texture",
+          "lod": 3,
+          "z": 1.4,
+          "filled": false,
+          "tone": 0.3,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.007,
+              0.0045
+            ],
+            [
+              0.007,
+              -0.0045
+            ],
+            [
+              0.014,
+              0.0042
+            ],
+            [
+              0.014,
+              -0.0042
+            ],
+            [
+              0.021,
+              0.0038
+            ],
+            [
+              0.021,
+              -0.0038
+            ]
+          ]
+        },
+        {
+          "id": "far-scapulars",
+          "bone": "humerus-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.49000000000000005,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0 C 0.008 0.022 0.045 0.024 0.066 0.012 C 0.07 0.005 0.07 -0.005 0.066 -0.012 C 0.045 -0.024 0.008 -0.022 -0.012 0 Z"
+        },
+        {
+          "id": "far-coverts",
+          "bone": "forearm-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2000000000000002,
+          "filled": true,
+          "tone": 0.55,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.01 0 C 0.012 0.036 0.05 0.04 0.075 0.022 C 0.082 0.012 0.085 0.004 0.086 0 C 0.085 -0.004 0.082 -0.012 0.075 -0.022 C 0.05 -0.04 0.012 -0.036 -0.01 0 Z"
+        },
+        {
+          "id": "far-wing-bar-1",
+          "bone": "forearm-f",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.18,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.027,
+              0.026
+            ],
+            [
+              0.034,
+              0.026
+            ],
+            [
+              0.034,
+              -0.026
+            ],
+            [
+              0.027,
+              -0.026
+            ]
+          ]
+        },
+        {
+          "id": "far-wing-bar-2",
+          "bone": "forearm-f",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.18,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.05,
+              0.02
+            ],
+            [
+              0.057,
+              0.02
+            ],
+            [
+              0.057,
+              -0.02
+            ],
+            [
+              0.05,
+              -0.02
+            ]
+          ]
+        },
+        {
+          "id": "far-primaries",
+          "bone": "hand-f",
+          "role": "body",
+          "lod": 0,
+          "z": 1.4000000000000001,
+          "filled": true,
+          "tone": 0.37000000000000005,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0 C 0.015 0.026 0.07 0.03 0.12 0.016 C 0.14 0.01 0.16 0.004 0.172 0 C 0.16 -0.004 0.14 -0.01 0.12 -0.016 C 0.07 -0.03 0.015 -0.026 -0.012 0 Z"
+        },
+        {
+          "id": "far-primary-tips",
+          "bone": "hand-f",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.5,
+          "filled": true,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M 0.12 0.016 C 0.14 0.01 0.16 0.004 0.172 0 C 0.16 -0.004 0.14 -0.01 0.12 -0.016 C 0.13 -0.005 0.13 0.005 0.12 0.016 Z"
+        },
+        {
+          "id": "far-primary-lines",
+          "bone": "hand-f",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.6,
+          "filled": false,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.03,
+              0.012
+            ],
+            [
+              0.16,
+              0.004
+            ],
+            [
+              0.04,
+              0.0
+            ],
+            [
+              0.17,
+              0.0
+            ],
+            [
+              0.03,
+              -0.012
+            ],
+            [
+              0.16,
+              -0.004
+            ]
+          ]
+        },
+        {
+          "id": "far-covert-lines",
+          "bone": "forearm-f",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.6,
+          "filled": false,
+          "tone": 0.35,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.0,
+              0.012
+            ],
+            [
+              0.06,
+              0.02
+            ],
+            [
+              0.0,
+              -0.012
+            ],
+            [
+              0.06,
+              -0.02
+            ],
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.07,
+              0.0
+            ]
+          ]
+        },
+        {
+          "id": "near-trousers",
+          "bone": "shank-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.2,
+          "filled": true,
+          "tone": 0.68,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0.017 C 0.01 0.021 0.028 0.016 0.04 0.008 L 0.044 0.0 L 0.04 -0.008 C 0.028 -0.015 0.01 -0.02 -0.012 -0.017 C -0.017 -0.008 -0.017 0.008 -0.012 0.017 Z"
+        },
+        {
+          "id": "near-thigh",
+          "bone": "thigh-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.68,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.045,
+          "y1": 0.0,
+          "r0": 0.02,
+          "r1": 0.017
+        },
+        {
+          "id": "near-shank-bare",
+          "bone": "shank-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.5,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.038,
+          "y0": 0.0,
+          "x1": 0.057,
+          "y1": 0.0,
+          "r0": 0.0054,
+          "r1": 0.0048
+        },
+        {
+          "id": "near-tarsus",
+          "bone": "tarsus-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.5,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.028,
+          "y1": 0.0,
+          "r0": 0.0052,
+          "r1": 0.0044
+        },
+        {
+          "id": "near-toe-main",
+          "bone": "toes-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.5,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": -0.0015,
+          "x1": 0.034,
+          "y1": -0.0015,
+          "r0": 0.003,
+          "r1": 0.0022
+        },
+        {
+          "id": "near-toe-side",
+          "bone": "toes-n",
+          "role": "body",
+          "lod": 1,
+          "z": 4.25,
+          "filled": true,
+          "tone": 0.44,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.027,
+          "y1": -0.0014,
+          "r0": 0.0028,
+          "r1": 0.002
+        },
+        {
+          "id": "near-hallux",
+          "bone": "toes-n",
+          "role": "body",
+          "lod": 1,
+          "z": 4.25,
+          "filled": true,
+          "tone": 0.5,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": -0.001,
+          "y0": 0.0005,
+          "x1": -0.014,
+          "y1": 0.0035,
+          "r0": 0.0026,
+          "r1": 0.0018
+        },
+        {
+          "id": "near-claw",
+          "bone": "toes-n",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "region": "legs-feet",
+          "material": "claw-horn",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.034,
+              -0.0005
+            ],
+            [
+              0.0408,
+              -0.0042
+            ],
+            [
+              0.034,
+              -0.0043
+            ]
+          ]
+        },
+        {
+          "id": "near-tarsus-scales",
+          "bone": "tarsus-n",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.3,
+          "region": "legs-feet",
+          "material": "bare-skin",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.007,
+              0.0045
+            ],
+            [
+              0.007,
+              -0.0045
+            ],
+            [
+              0.014,
+              0.0042
+            ],
+            [
+              0.014,
+              -0.0042
+            ],
+            [
+              0.021,
+              0.0038
+            ],
+            [
+              0.021,
+              -0.0038
+            ]
+          ]
+        },
+        {
+          "id": "near-scapulars",
+          "bone": "humerus-n",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.7,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0 C 0.008 0.022 0.045 0.024 0.066 0.012 C 0.07 0.005 0.07 -0.005 0.066 -0.012 C 0.045 -0.024 0.008 -0.022 -0.012 0 Z"
+        },
+        {
+          "id": "near-coverts",
+          "bone": "forearm-n",
+          "role": "body",
+          "lod": 0,
+          "z": 5.1,
+          "filled": true,
+          "tone": 0.76,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.01 0 C 0.012 0.036 0.05 0.04 0.075 0.022 C 0.082 0.012 0.085 0.004 0.086 0 C 0.085 -0.004 0.082 -0.012 0.075 -0.022 C 0.05 -0.04 0.012 -0.036 -0.01 0 Z"
+        },
+        {
+          "id": "near-wing-bar-1",
+          "bone": "forearm-n",
+          "role": "detail",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.027,
+              0.026
+            ],
+            [
+              0.034,
+              0.026
+            ],
+            [
+              0.034,
+              -0.026
+            ],
+            [
+              0.027,
+              -0.026
+            ]
+          ]
+        },
+        {
+          "id": "near-wing-bar-2",
+          "bone": "forearm-n",
+          "role": "detail",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.05,
+              0.02
+            ],
+            [
+              0.057,
+              0.02
+            ],
+            [
+              0.057,
+              -0.02
+            ],
+            [
+              0.05,
+              -0.02
+            ]
+          ]
+        },
+        {
+          "id": "near-primaries",
+          "bone": "hand-n",
+          "role": "body",
+          "lod": 0,
+          "z": 5.3,
+          "filled": true,
+          "tone": 0.5800000000000001,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.012 0 C 0.015 0.026 0.07 0.03 0.12 0.016 C 0.14 0.01 0.16 0.004 0.172 0 C 0.16 -0.004 0.14 -0.01 0.12 -0.016 C 0.07 -0.03 0.015 -0.026 -0.012 0 Z"
+        },
+        {
+          "id": "near-primary-tips",
+          "bone": "hand-n",
+          "role": "detail",
+          "lod": 1,
+          "z": 5.4,
+          "filled": true,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M 0.12 0.016 C 0.14 0.01 0.16 0.004 0.172 0 C 0.16 -0.004 0.14 -0.01 0.12 -0.016 C 0.13 -0.005 0.13 0.005 0.12 0.016 Z"
+        },
+        {
+          "id": "near-primary-lines",
+          "bone": "hand-n",
+          "role": "texture",
+          "lod": 2,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.2,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.03,
+              0.012
+            ],
+            [
+              0.16,
+              0.004
+            ],
+            [
+              0.04,
+              0.0
+            ],
+            [
+              0.17,
+              0.0
+            ],
+            [
+              0.03,
+              -0.012
+            ],
+            [
+              0.16,
+              -0.004
+            ]
+          ]
+        },
+        {
+          "id": "near-covert-lines",
+          "bone": "forearm-n",
+          "role": "texture",
+          "lod": 2,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.35,
+          "region": "plumage-wings",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.0,
+              0.012
+            ],
+            [
+              0.06,
+              0.02
+            ],
+            [
+              0.0,
+              -0.012
+            ],
+            [
+              0.06,
+              -0.02
+            ],
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.07,
+              0.0
+            ]
+          ]
+        },
+        {
+          "id": "tail-fan-far",
+          "bone": "tail-f",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.5,
+          "region": "plumage-tail",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M 0 0.01 L 0.1 0.02 C 0.108 0.013 0.108 0.005 0.105 0 L 0 -0.008 Z"
+        },
+        {
+          "id": "tail-feathers",
+          "bone": "tail",
+          "role": "body",
+          "lod": 0,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.58,
+          "region": "plumage-tail",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M 0 0.018 C 0.03 0.021 0.07 0.02 0.1 0.017 C 0.108 0.01 0.108 -0.01 0.1 -0.017 C 0.07 -0.02 0.03 -0.021 0 -0.018 Z"
+        },
+        {
+          "id": "tail-band",
+          "bone": "tail",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.9,
+          "filled": true,
+          "tone": 0.18,
+          "region": "plumage-tail",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": true,
+          "points": [
+            [
+              0.075,
+              0.0195
+            ],
+            [
+              0.1,
+              0.017
+            ],
+            [
+              0.107,
+              0.0
+            ],
+            [
+              0.1,
+              -0.017
+            ],
+            [
+              0.075,
+              -0.0195
+            ]
+          ]
+        },
+        {
+          "id": "body",
+          "bone": "trunk",
+          "role": "body",
+          "lod": 0,
+          "z": 3.0,
+          "filled": true,
+          "tone": 0.72,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.035 0.0 C -0.03 0.03 0.0 0.05 0.04 0.058 C 0.09 0.064 0.14 0.06 0.17 0.045 C 0.2 0.028 0.208 -0.01 0.19 -0.035 C 0.165 -0.062 0.115 -0.07 0.07 -0.066 C 0.02 -0.062 -0.025 -0.04 -0.035 0 Z"
+        },
+        {
+          "id": "breast-sheen",
+          "bone": "trunk",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.6,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M 0.12 0.04 C 0.16 0.04 0.19 0.02 0.185 -0.02 C 0.17 -0.045 0.14 -0.05 0.12 -0.04 C 0.14 -0.02 0.14 0.02 0.12 0.04 Z"
+        },
+        {
+          "id": "belly-feathers",
+          "bone": "trunk",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.5,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.03,
+              -0.05
+            ],
+            [
+              0.06,
+              -0.035
+            ],
+            [
+              0.08,
+              -0.06
+            ],
+            [
+              0.11,
+              -0.04
+            ],
+            [
+              0.13,
+              -0.058
+            ],
+            [
+              0.155,
+              -0.035
+            ]
+          ]
+        },
+        {
+          "id": "back-feathers",
+          "bone": "trunk",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.5,
+          "region": "plumage-body",
+          "material": "plumage",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.02,
+              0.045
+            ],
+            [
+              0.05,
+              0.03
+            ],
+            [
+              0.07,
+              0.052
+            ],
+            [
+              0.1,
+              0.035
+            ],
+            [
+              0.125,
+              0.05
+            ]
+          ]
+        },
+        {
+          "id": "neck-1",
+          "bone": "neck-1",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.7,
+          "region": "plumage-neck-head",
+          "material": "plumage",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.03,
+          "y1": 0.0,
+          "r0": 0.026,
+          "r1": 0.021
+        },
+        {
+          "id": "neck-2",
+          "bone": "neck-2",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.68,
+          "region": "plumage-neck-head",
+          "material": "plumage",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.025,
+          "y1": 0.0,
+          "r0": 0.021,
+          "r1": 0.017
+        },
+        {
+          "id": "neck-3",
+          "bone": "neck-3",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.66,
+          "region": "plumage-neck-head",
+          "material": "plumage",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.02,
+          "y1": 0.0,
+          "r0": 0.017,
+          "r1": 0.0145
+        },
+        {
+          "id": "neck-sheen",
+          "bone": "neck-2",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.42,
+          "region": "plumage-neck-head",
+          "material": "plumage",
+          "kind": "ellipse",
+          "cx": 0.012,
+          "cy": -0.002,
+          "rx": 0.012,
+          "ry": 0.011
+        },
+        {
+          "id": "skull",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 3.7,
+          "filled": true,
+          "tone": 0.64,
+          "region": "plumage-neck-head",
+          "material": "plumage",
+          "kind": "path",
+          "d": "M -0.007 0.004 C -0.005 0.017 0.008 0.022 0.02 0.021 C 0.03 0.02 0.036 0.015 0.038 0.008 L 0.039 0.002 C 0.036 -0.006 0.03 -0.012 0.02 -0.014 C 0.008 -0.016 -0.005 -0.012 -0.007 -0.004 Z"
+        },
+        {
+          "id": "beak-upper",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 3.8,
+          "filled": true,
+          "tone": 0.34,
+          "region": "beak",
+          "material": "beak-keratin",
+          "kind": "path",
+          "d": "M 0.033 0.011 C 0.04 0.012 0.048 0.007 0.054 -0.002 C 0.05 -0.005 0.044 -0.006 0.034 -0.006 Z"
+        },
+        {
+          "id": "beak-lower",
+          "bone": "jaw",
+          "role": "body",
+          "lod": 0,
+          "z": 3.75,
+          "filled": true,
+          "tone": 0.38,
+          "region": "beak",
+          "material": "beak-keratin",
+          "kind": "path",
+          "d": "M -0.002 0.0 L 0.02 0.0 C 0.014 -0.0035 0.007 -0.0045 -0.002 -0.0045 Z"
+        },
+        {
+          "id": "cere",
+          "bone": "head",
+          "role": "detail",
+          "lod": 0,
+          "z": 3.9,
+          "filled": true,
+          "tone": 0.93,
+          "region": "cere",
+          "material": "cere-wax",
+          "kind": "ellipse",
+          "cx": 0.0375,
+          "cy": 0.0064,
+          "rx": 0.0068,
+          "ry": 0.0043
+        },
+        {
+          "id": "nostril-slit",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.0,
+          "filled": false,
+          "tone": 0.08,
+          "region": "cere",
+          "material": "cere-wax",
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.035,
+              0.0058
+            ],
+            [
+              0.0405,
+              0.0062
+            ]
+          ]
+        },
+        {
+          "id": "eye-ring",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.95,
+          "filled": true,
+          "tone": 0.82,
+          "region": "eye",
+          "material": "eye-tissue",
+          "kind": "ellipse",
+          "cx": 0.024,
+          "cy": 0.007,
+          "rx": 0.0062,
+          "ry": 0.0056
+        },
+        {
+          "id": "iris",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.0,
+          "filled": true,
+          "tone": 0.4,
+          "region": "eye",
+          "material": "eye-tissue",
+          "kind": "ellipse",
+          "cx": 0.0245,
+          "cy": 0.007,
+          "rx": 0.0044,
+          "ry": 0.0044
+        },
+        {
+          "id": "pupil",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.02,
+          "region": "eye",
+          "material": "eye-tissue",
+          "kind": "ellipse",
+          "cx": 0.0246,
+          "cy": 0.007,
+          "rx": 0.0022,
+          "ry": 0.0022
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "standing-alert",
+        "title": {
+          "en": "Standing alert",
+          "de": "Aufmerksam stehend"
+        },
+        "description": {
+          "en": "Standing on both feet, chest tilted up, S-curved neck with the head up, wings folded.",
+          "de": "Stehen auf beiden Füßen, Brust angehoben, S-förmig gebogener Hals mit erhobenem Kopf, Flügel angelegt."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -2.4
+          },
+          "shank-n": {
+            "angleDeg": -17.3
+          },
+          "tarsus-n": {
+            "angleDeg": 19.7
+          },
+          "thigh-f": {
+            "angleDeg": 11.3
+          },
+          "shank-f": {
+            "angleDeg": -11.0
+          },
+          "tarsus-f": {
+            "angleDeg": -0.3
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.0,
+          "emitters": {
+            "breath-nostril": 0.6,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "wings-half-open",
+        "title": {
+          "en": "Wings half open",
+          "de": "Flügel halb geöffnet"
+        },
+        "description": {
+          "en": "Standing with both wings lifted and the elbows spread, the wrists above the back and the primaries trailing, as when stretching or warming up.",
+          "de": "Stehend mit beiden angehobenen Flügeln und gespreizten Ellbogen, die Handgelenke über dem Rücken und die Handschwingen nach hinten, wie beim Strecken oder Aufwärmen."
+        },
+        "bones": {
+          "neck-2": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": 5
+          },
+          "humerus-n": {
+            "angleDeg": -57.0
+          },
+          "forearm-n": {
+            "angleDeg": 102
+          },
+          "hand-n": {
+            "angleDeg": -83
+          },
+          "humerus-f": {
+            "angleDeg": -51.0
+          },
+          "forearm-f": {
+            "angleDeg": 102
+          },
+          "hand-f": {
+            "angleDeg": -81
+          },
+          "thigh-n": {
+            "angleDeg": -2.4
+          },
+          "shank-n": {
+            "angleDeg": -17.3
+          },
+          "tarsus-n": {
+            "angleDeg": 19.7
+          },
+          "thigh-f": {
+            "angleDeg": 11.3
+          },
+          "shank-f": {
+            "angleDeg": -11.0
+          },
+          "tarsus-f": {
+            "angleDeg": -0.3
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.25,
+          "emitters": {
+            "breath-nostril": 0.9,
+            "breath-exertion": 0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "pecking-reach",
+        "title": {
+          "en": "Pecking, reaching",
+          "de": "Picken, Vorstrecken"
+        },
+        "description": {
+          "en": "Body pitched forward and neck stretched down, the beak above the ground.",
+          "de": "Körper nach vorn geneigt und Hals nach unten gestreckt, der Schnabel über dem Boden."
+        },
+        "bones": {
+          "trunk": {
+            "angleDeg": -15
+          },
+          "neck-1": {
+            "angleDeg": -20.0
+          },
+          "neck-2": {
+            "angleDeg": -60
+          },
+          "neck-3": {
+            "angleDeg": 25
+          },
+          "head": {
+            "angleDeg": 20
+          },
+          "humerus-n": {
+            "angleDeg": 15.0
+          },
+          "humerus-f": {
+            "angleDeg": 19.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -10.5
+          },
+          "shank-n": {
+            "angleDeg": -21.5
+          },
+          "tarsus-n": {
+            "angleDeg": 56.9
+          },
+          "toes-n": {
+            "angleDeg": -25.0
+          },
+          "thigh-f": {
+            "angleDeg": -0.3
+          },
+          "shank-f": {
+            "angleDeg": -22.1
+          },
+          "tarsus-f": {
+            "angleDeg": 47.4
+          },
+          "toes-f": {
+            "angleDeg": -25.0
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.3,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "pecking-strike",
+        "title": {
+          "en": "Pecking, strike",
+          "de": "Picken, Zustoßen"
+        },
+        "description": {
+          "en": "Beak tip on the ground: the trunk is pitched forward, the neck is folded down and the head points at the ground.",
+          "de": "Schnabelspitze am Boden: der Rumpf ist nach vorn geneigt, der Hals nach unten gefaltet und der Kopf zeigt zum Boden."
+        },
+        "bones": {
+          "trunk": {
+            "angleDeg": -32
+          },
+          "neck-1": {
+            "angleDeg": -11.0
+          },
+          "neck-2": {
+            "angleDeg": -67
+          },
+          "neck-3": {
+            "angleDeg": 20
+          },
+          "head": {
+            "angleDeg": 25
+          },
+          "humerus-n": {
+            "angleDeg": 32.0
+          },
+          "humerus-f": {
+            "angleDeg": 36.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -2.5
+          },
+          "shank-n": {
+            "angleDeg": -20
+          },
+          "tarsus-n": {
+            "angleDeg": 40
+          },
+          "toes-n": {
+            "angleDeg": -25.0
+          },
+          "thigh-f": {
+            "angleDeg": 9.8
+          },
+          "shank-f": {
+            "angleDeg": -20
+          },
+          "tarsus-f": {
+            "angleDeg": 40
+          },
+          "toes-f": {
+            "angleDeg": -25.0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.3,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-0",
+        "title": {
+          "en": "Walk, phase 1 of 12",
+          "de": "Gehen, Phase 1 von 12"
+        },
+        "description": {
+          "en": "Walking at 0/12 of the stride; stance feet: n, f; the head is thrust forward.",
+          "de": "Gehen bei 0/12 des Doppelschritts; Standfüße: n, f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 21.9
+          },
+          "shank-n": {
+            "angleDeg": 9.0
+          },
+          "tarsus-n": {
+            "angleDeg": -30.9
+          },
+          "thigh-f": {
+            "angleDeg": -23.5
+          },
+          "shank-f": {
+            "angleDeg": -19.5
+          },
+          "tarsus-f": {
+            "angleDeg": 44.8
+          },
+          "toes-f": {
+            "angleDeg": -1.8
+          },
+          "neck-1": {
+            "angleDeg": 12.6
+          },
+          "neck-2": {
+            "angleDeg": -20.7
+          },
+          "head": {
+            "angleDeg": 8.0
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-1",
+        "title": {
+          "en": "Walk, phase 2 of 12",
+          "de": "Gehen, Phase 2 von 12"
+        },
+        "description": {
+          "en": "Walking at 1/12 of the stride; stance feet: n, f; the head is held back against the advancing body.",
+          "de": "Gehen bei 1/12 des Doppelschritts; Standfüße: n, f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 22.6
+          },
+          "shank-n": {
+            "angleDeg": -4.4
+          },
+          "tarsus-n": {
+            "angleDeg": -18.2
+          },
+          "thigh-f": {
+            "angleDeg": -41.0
+          },
+          "shank-f": {
+            "angleDeg": -9.7
+          },
+          "tarsus-f": {
+            "angleDeg": 56.8
+          },
+          "toes-f": {
+            "angleDeg": -6.1
+          },
+          "neck-1": {
+            "angleDeg": 44.2
+          },
+          "neck-2": {
+            "angleDeg": -58.9
+          },
+          "head": {
+            "angleDeg": 14.7
+          },
+          "tail": {
+            "angleDeg": 2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-2",
+        "title": {
+          "en": "Walk, phase 3 of 12",
+          "de": "Gehen, Phase 3 von 12"
+        },
+        "description": {
+          "en": "Walking at 2/12 of the stride; stance feet: n; the head is held back against the advancing body.",
+          "de": "Gehen bei 2/12 des Doppelschritts; Standfüße: n; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 19.8
+          },
+          "shank-n": {
+            "angleDeg": -14.3
+          },
+          "tarsus-n": {
+            "angleDeg": -5.5
+          },
+          "thigh-f": {
+            "angleDeg": -28.7
+          },
+          "shank-f": {
+            "angleDeg": -27.6
+          },
+          "tarsus-f": {
+            "angleDeg": 63.1
+          },
+          "toes-f": {
+            "angleDeg": -18.1
+          },
+          "neck-1": {
+            "angleDeg": -0.3
+          },
+          "neck-2": {
+            "angleDeg": 34.3
+          },
+          "head": {
+            "angleDeg": -34.0
+          },
+          "tail": {
+            "angleDeg": 2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-3",
+        "title": {
+          "en": "Walk, phase 4 of 12",
+          "de": "Gehen, Phase 4 von 12"
+        },
+        "description": {
+          "en": "Walking at 3/12 of the stride; stance feet: n; the head is held back against the advancing body.",
+          "de": "Gehen bei 3/12 des Doppelschritts; Standfüße: n; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 13.6
+          },
+          "shank-n": {
+            "angleDeg": -21.0
+          },
+          "tarsus-n": {
+            "angleDeg": 7.4
+          },
+          "thigh-f": {
+            "angleDeg": 5.6
+          },
+          "shank-f": {
+            "angleDeg": -51.1
+          },
+          "tarsus-f": {
+            "angleDeg": 61.3
+          },
+          "toes-f": {
+            "angleDeg": -42.2
+          },
+          "neck-1": {
+            "angleDeg": 9.5
+          },
+          "neck-2": {
+            "angleDeg": 36.2
+          },
+          "head": {
+            "angleDeg": -45.7
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-4",
+        "title": {
+          "en": "Walk, phase 5 of 12",
+          "de": "Gehen, Phase 5 von 12"
+        },
+        "description": {
+          "en": "Walking at 4/12 of the stride; stance feet: n; the head is thrust forward.",
+          "de": "Gehen bei 4/12 des Doppelschritts; Standfüße: n; der Kopf wird nach vorn gestoßen."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 4.0
+          },
+          "shank-n": {
+            "angleDeg": -24.3
+          },
+          "tarsus-n": {
+            "angleDeg": 20.3
+          },
+          "thigh-f": {
+            "angleDeg": 38.6
+          },
+          "shank-f": {
+            "angleDeg": -52.6
+          },
+          "tarsus-f": {
+            "angleDeg": 31.7
+          },
+          "toes-f": {
+            "angleDeg": -47.1
+          },
+          "neck-1": {
+            "angleDeg": 28.3
+          },
+          "neck-2": {
+            "angleDeg": 21.8
+          },
+          "head": {
+            "angleDeg": -50.1
+          },
+          "tail": {
+            "angleDeg": -2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-5",
+        "title": {
+          "en": "Walk, phase 6 of 12",
+          "de": "Gehen, Phase 6 von 12"
+        },
+        "description": {
+          "en": "Walking at 5/12 of the stride; stance feet: n; the head is thrust forward.",
+          "de": "Gehen bei 5/12 des Doppelschritts; Standfüße: n; der Kopf wird nach vorn gestoßen."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -8.3
+          },
+          "shank-n": {
+            "angleDeg": -24.0
+          },
+          "tarsus-n": {
+            "angleDeg": 32.3
+          },
+          "thigh-f": {
+            "angleDeg": 40.9
+          },
+          "shank-f": {
+            "angleDeg": -31.5
+          },
+          "tarsus-f": {
+            "angleDeg": 2.0
+          },
+          "toes-f": {
+            "angleDeg": -30.5
+          },
+          "neck-1": {
+            "angleDeg": 4.4
+          },
+          "neck-2": {
+            "angleDeg": 26.6
+          },
+          "head": {
+            "angleDeg": -31.0
+          },
+          "tail": {
+            "angleDeg": -2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-6",
+        "title": {
+          "en": "Walk, phase 7 of 12",
+          "de": "Gehen, Phase 7 von 12"
+        },
+        "description": {
+          "en": "Walking at 6/12 of the stride; stance feet: n, f; the head is thrust forward.",
+          "de": "Gehen bei 6/12 des Doppelschritts; Standfüße: n, f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -23.5
+          },
+          "shank-n": {
+            "angleDeg": -19.5
+          },
+          "tarsus-n": {
+            "angleDeg": 44.8
+          },
+          "toes-n": {
+            "angleDeg": -1.8
+          },
+          "thigh-f": {
+            "angleDeg": 21.9
+          },
+          "shank-f": {
+            "angleDeg": 9.0
+          },
+          "tarsus-f": {
+            "angleDeg": -30.9
+          },
+          "neck-1": {
+            "angleDeg": 12.6
+          },
+          "neck-2": {
+            "angleDeg": -20.7
+          },
+          "head": {
+            "angleDeg": 8.0
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-7",
+        "title": {
+          "en": "Walk, phase 8 of 12",
+          "de": "Gehen, Phase 8 von 12"
+        },
+        "description": {
+          "en": "Walking at 7/12 of the stride; stance feet: n, f; the head is held back against the advancing body.",
+          "de": "Gehen bei 7/12 des Doppelschritts; Standfüße: n, f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -41.0
+          },
+          "shank-n": {
+            "angleDeg": -9.7
+          },
+          "tarsus-n": {
+            "angleDeg": 56.8
+          },
+          "toes-n": {
+            "angleDeg": -6.1
+          },
+          "thigh-f": {
+            "angleDeg": 22.6
+          },
+          "shank-f": {
+            "angleDeg": -4.4
+          },
+          "tarsus-f": {
+            "angleDeg": -18.2
+          },
+          "neck-1": {
+            "angleDeg": 44.2
+          },
+          "neck-2": {
+            "angleDeg": -58.9
+          },
+          "head": {
+            "angleDeg": 14.7
+          },
+          "tail": {
+            "angleDeg": 2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-8",
+        "title": {
+          "en": "Walk, phase 9 of 12",
+          "de": "Gehen, Phase 9 von 12"
+        },
+        "description": {
+          "en": "Walking at 8/12 of the stride; stance feet: f; the head is held back against the advancing body.",
+          "de": "Gehen bei 8/12 des Doppelschritts; Standfüße: f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": -28.7
+          },
+          "shank-n": {
+            "angleDeg": -27.6
+          },
+          "tarsus-n": {
+            "angleDeg": 63.1
+          },
+          "toes-n": {
+            "angleDeg": -18.1
+          },
+          "thigh-f": {
+            "angleDeg": 19.8
+          },
+          "shank-f": {
+            "angleDeg": -14.3
+          },
+          "tarsus-f": {
+            "angleDeg": -5.5
+          },
+          "neck-1": {
+            "angleDeg": -0.3
+          },
+          "neck-2": {
+            "angleDeg": 34.3
+          },
+          "head": {
+            "angleDeg": -34.0
+          },
+          "tail": {
+            "angleDeg": 2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-9",
+        "title": {
+          "en": "Walk, phase 10 of 12",
+          "de": "Gehen, Phase 10 von 12"
+        },
+        "description": {
+          "en": "Walking at 9/12 of the stride; stance feet: f; the head is held back against the advancing body.",
+          "de": "Gehen bei 9/12 des Doppelschritts; Standfüße: f; der Kopf wird gegen den vorrückenden Körper zurückgehalten."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 5.6
+          },
+          "shank-n": {
+            "angleDeg": -51.1
+          },
+          "tarsus-n": {
+            "angleDeg": 61.3
+          },
+          "toes-n": {
+            "angleDeg": -42.2
+          },
+          "thigh-f": {
+            "angleDeg": 13.6
+          },
+          "shank-f": {
+            "angleDeg": -21.0
+          },
+          "tarsus-f": {
+            "angleDeg": 7.4
+          },
+          "neck-1": {
+            "angleDeg": 9.5
+          },
+          "neck-2": {
+            "angleDeg": 36.2
+          },
+          "head": {
+            "angleDeg": -45.7
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-10",
+        "title": {
+          "en": "Walk, phase 11 of 12",
+          "de": "Gehen, Phase 11 von 12"
+        },
+        "description": {
+          "en": "Walking at 10/12 of the stride; stance feet: f; the head is thrust forward.",
+          "de": "Gehen bei 10/12 des Doppelschritts; Standfüße: f; der Kopf wird nach vorn gestoßen."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 38.6
+          },
+          "shank-n": {
+            "angleDeg": -52.6
+          },
+          "tarsus-n": {
+            "angleDeg": 31.7
+          },
+          "toes-n": {
+            "angleDeg": -47.1
+          },
+          "thigh-f": {
+            "angleDeg": 4.0
+          },
+          "shank-f": {
+            "angleDeg": -24.3
+          },
+          "tarsus-f": {
+            "angleDeg": 20.3
+          },
+          "neck-1": {
+            "angleDeg": 28.3
+          },
+          "neck-2": {
+            "angleDeg": 21.8
+          },
+          "head": {
+            "angleDeg": -50.1
+          },
+          "tail": {
+            "angleDeg": -2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-11",
+        "title": {
+          "en": "Walk, phase 12 of 12",
+          "de": "Gehen, Phase 12 von 12"
+        },
+        "description": {
+          "en": "Walking at 11/12 of the stride; stance feet: f; the head is thrust forward.",
+          "de": "Gehen bei 11/12 des Doppelschritts; Standfüße: f; der Kopf wird nach vorn gestoßen."
+        },
+        "bones": {
+          "humerus-f": {
+            "angleDeg": 4.0
+          },
+          "hand-f": {
+            "angleDeg": 2
+          },
+          "thigh-n": {
+            "angleDeg": 40.9
+          },
+          "shank-n": {
+            "angleDeg": -31.5
+          },
+          "tarsus-n": {
+            "angleDeg": 2.0
+          },
+          "toes-n": {
+            "angleDeg": -30.5
+          },
+          "thigh-f": {
+            "angleDeg": -8.3
+          },
+          "shank-f": {
+            "angleDeg": -24.0
+          },
+          "tarsus-f": {
+            "angleDeg": 32.3
+          },
+          "neck-1": {
+            "angleDeg": 4.4
+          },
+          "neck-2": {
+            "angleDeg": 26.6
+          },
+          "head": {
+            "angleDeg": -31.0
+          },
+          "tail": {
+            "angleDeg": -2.6
+          }
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "emitters": {
+            "breath-nostril": 0.8,
+            "breath-exertion": 0.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.45
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "takeoff-crouch",
+        "title": {
+          "en": "Take-off crouch",
+          "de": "Abflug, Ducken"
+        },
+        "description": {
+          "en": "Legs flexed, the body lowered and tilted forward, the wings lifting from the body; both feet planted.",
+          "de": "Gebeugte Beine, der Körper gesenkt und nach vorn geneigt, die Flügel heben sich vom Körper; beide Füße aufgesetzt."
+        },
+        "bones": {
+          "trunk": {
+            "angleDeg": -10
+          },
+          "neck-1": {
+            "angleDeg": 10.0
+          },
+          "humerus-n": {
+            "angleDeg": -32.0
+          },
+          "forearm-n": {
+            "angleDeg": 57
+          },
+          "hand-n": {
+            "angleDeg": -43
+          },
+          "humerus-f": {
+            "angleDeg": -28.0
+          },
+          "forearm-f": {
+            "angleDeg": 57
+          },
+          "hand-f": {
+            "angleDeg": -41
+          },
+          "thigh-n": {
+            "angleDeg": 14.2
+          },
+          "shank-n": {
+            "angleDeg": -47.0
+          },
+          "tarsus-n": {
+            "angleDeg": 52.8
+          },
+          "toes-n": {
+            "angleDeg": -20.0
+          },
+          "thigh-f": {
+            "angleDeg": 36.5
+          },
+          "shank-f": {
+            "angleDeg": -41.3
+          },
+          "tarsus-f": {
+            "angleDeg": 24.8
+          },
+          "toes-f": {
+            "angleDeg": -20.0
+          }
+        },
+        "root": {
+          "x": -0.035
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 2.5,
+          "emitters": {
+            "breath-nostril": 0.3,
+            "breath-exertion": 0.5
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 0.7
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "takeoff-wings-up",
+        "title": {
+          "en": "Take-off, wings up",
+          "de": "Abflug, Flügel oben"
+        },
+        "description": {
+          "en": "Top of the preparatory upstroke: both wings raised above the back while the legs stay flexed.",
+          "de": "Höhepunkt des vorbereitenden Aufschlags: beide Flügel über dem Rücken, die Beine bleiben gebeugt."
+        },
+        "bones": {
+          "trunk": {
+            "angleDeg": -8
+          },
+          "neck-1": {
+            "angleDeg": 8.0
+          },
+          "humerus-n": {
+            "angleDeg": -92.0
+          },
+          "forearm-n": {
+            "angleDeg": 163
+          },
+          "hand-n": {
+            "angleDeg": -159
+          },
+          "humerus-f": {
+            "angleDeg": -88.0
+          },
+          "forearm-f": {
+            "angleDeg": 163
+          },
+          "hand-f": {
+            "angleDeg": -157
+          },
+          "thigh-n": {
+            "angleDeg": 4.2
+          },
+          "shank-n": {
+            "angleDeg": -40.8
+          },
+          "tarsus-n": {
+            "angleDeg": 54.6
+          },
+          "toes-n": {
+            "angleDeg": -18.0
+          },
+          "thigh-f": {
+            "angleDeg": 27.0
+          },
+          "shank-f": {
+            "angleDeg": -37.9
+          },
+          "tarsus-f": {
+            "angleDeg": 28.9
+          },
+          "toes-f": {
+            "angleDeg": -18.0
+          }
+        },
+        "root": {
+          "x": -0.03
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 4,
+          "emitters": {
+            "breath-nostril": 0.3,
+            "breath-exertion": 0.8
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "takeoff-push",
+        "title": {
+          "en": "Take-off, push-off",
+          "de": "Abflug, Abstoßen"
+        },
+        "description": {
+          "en": "Mid downstroke: the wings sweep back and down while the legs extend and push the body up and forward.",
+          "de": "Mitte des Abschlags: die Flügel schwingen nach hinten und unten, während die Beine strecken und den Körper nach oben und vorn drücken."
+        },
+        "bones": {
+          "neck-1": {
+            "angleDeg": -7.0
+          },
+          "neck-2": {
+            "angleDeg": -8
+          },
+          "neck-3": {
+            "angleDeg": 10
+          },
+          "head": {
+            "angleDeg": 7
+          },
+          "humerus-n": {
+            "angleDeg": 4.0
+          },
+          "forearm-n": {
+            "angleDeg": 165
+          },
+          "hand-n": {
+            "angleDeg": -165
+          },
+          "humerus-f": {
+            "angleDeg": 8.0
+          },
+          "forearm-f": {
+            "angleDeg": 165
+          },
+          "hand-f": {
+            "angleDeg": -163
+          },
+          "thigh-n": {
+            "angleDeg": -34.6
+          },
+          "shank-n": {
+            "angleDeg": -0.3
+          },
+          "tarsus-n": {
+            "angleDeg": 29.9
+          },
+          "toes-n": {
+            "angleDeg": -2.0
+          },
+          "thigh-f": {
+            "angleDeg": -15.0
+          },
+          "shank-f": {
+            "angleDeg": -6.5
+          },
+          "tarsus-f": {
+            "angleDeg": 16.4
+          },
+          "toes-f": {
+            "angleDeg": -2.0
+          }
+        },
+        "root": {
+          "x": 0.0
+        },
+        "key": true,
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 12,
+          "emitters": {
+            "breath-nostril": 0.3,
+            "breath-exertion": 1.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "takeoff-liftoff",
+        "title": {
+          "en": "Take-off, lift-off",
+          "de": "Abflug, Abheben"
+        },
+        "description": {
+          "en": "End of the first downstroke with fully extended legs on the toes at the instant the feet leave the ground.",
+          "de": "Ende des ersten Abschlags mit voll gestreckten Beinen auf den Zehen im Augenblick des Abhebens."
+        },
+        "bones": {
+          "trunk": {
+            "angleDeg": 10
+          },
+          "neck-1": {
+            "angleDeg": -21.0
+          },
+          "neck-2": {
+            "angleDeg": -14
+          },
+          "neck-3": {
+            "angleDeg": 10
+          },
+          "head": {
+            "angleDeg": 17
+          },
+          "humerus-n": {
+            "angleDeg": 20
+          },
+          "forearm-n": {
+            "angleDeg": 130
+          },
+          "hand-n": {
+            "angleDeg": -140
+          },
+          "humerus-f": {
+            "angleDeg": 20
+          },
+          "forearm-f": {
+            "angleDeg": 130
+          },
+          "hand-f": {
+            "angleDeg": -140
+          },
+          "thigh-n": {
+            "angleDeg": -40.6
+          },
+          "shank-n": {
+            "angleDeg": -10.6
+          },
+          "tarsus-n": {
+            "angleDeg": 31.3
+          },
+          "toes-n": {
+            "angleDeg": -5
+          },
+          "thigh-f": {
+            "angleDeg": -16.4
+          },
+          "shank-f": {
+            "angleDeg": -22.1
+          },
+          "tarsus-f": {
+            "angleDeg": 18.5
+          },
+          "toes-f": {
+            "angleDeg": -5
+          }
+        },
+        "root": {
+          "x": 0.025,
+          "y": 0.102
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-n",
+          "contact-f"
+        ],
+        "thermal": {
+          "activityMet": 12,
+          "emitters": {
+            "breath-nostril": 0.3,
+            "breath-exertion": 1.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "airborne-wings-up",
+        "title": {
+          "en": "Airborne, wings up",
+          "de": "Flug, Flügel oben"
+        },
+        "description": {
+          "en": "Climbing flight at the top of the upstroke, the legs trailing under the tail and the neck stretched forward.",
+          "de": "Steigflug am Ende des Aufschlags, die Beine unter dem Schwanz nachgezogen und der Hals nach vorn gestreckt."
+        },
+        "bones": {
+          "neck-1": {
+            "angleDeg": -27.0
+          },
+          "neck-2": {
+            "angleDeg": -10
+          },
+          "head": {
+            "angleDeg": 20
+          },
+          "humerus-n": {
+            "angleDeg": -112.0
+          },
+          "forearm-n": {
+            "angleDeg": 163
+          },
+          "hand-n": {
+            "angleDeg": -159
+          },
+          "humerus-f": {
+            "angleDeg": -108.0
+          },
+          "forearm-f": {
+            "angleDeg": 163
+          },
+          "hand-f": {
+            "angleDeg": -157
+          },
+          "thigh-n": {
+            "angleDeg": -27.0
+          },
+          "shank-n": {
+            "angleDeg": -33
+          },
+          "tarsus-n": {
+            "angleDeg": -7
+          },
+          "toes-n": {
+            "angleDeg": -47
+          },
+          "thigh-f": {
+            "angleDeg": -27.0
+          },
+          "shank-f": {
+            "angleDeg": -33
+          },
+          "tarsus-f": {
+            "angleDeg": -7
+          },
+          "toes-f": {
+            "angleDeg": -47
+          }
+        },
+        "root": {
+          "x": 0.17,
+          "y": 0.17,
+          "angleDeg": 12
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 12,
+          "emitters": {
+            "breath-nostril": 0.1,
+            "breath-exertion": 1.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "airborne-wings-down",
+        "title": {
+          "en": "Airborne, wings down",
+          "de": "Flug, Flügel unten"
+        },
+        "description": {
+          "en": "Climbing flight at the end of the downstroke, the wings pointing down and slightly forward.",
+          "de": "Steigflug am Ende des Abschlags, die Flügel zeigen nach unten und leicht nach vorn."
+        },
+        "bones": {
+          "neck-1": {
+            "angleDeg": -27.0
+          },
+          "neck-2": {
+            "angleDeg": -10
+          },
+          "head": {
+            "angleDeg": 20
+          },
+          "humerus-n": {
+            "angleDeg": 64.0
+          },
+          "forearm-n": {
+            "angleDeg": 171
+          },
+          "hand-n": {
+            "angleDeg": -159
+          },
+          "humerus-f": {
+            "angleDeg": 68.0
+          },
+          "forearm-f": {
+            "angleDeg": 171
+          },
+          "hand-f": {
+            "angleDeg": -157
+          },
+          "thigh-n": {
+            "angleDeg": -27.0
+          },
+          "shank-n": {
+            "angleDeg": -33
+          },
+          "tarsus-n": {
+            "angleDeg": -7
+          },
+          "toes-n": {
+            "angleDeg": -47
+          },
+          "thigh-f": {
+            "angleDeg": -27.0
+          },
+          "shank-f": {
+            "angleDeg": -33
+          },
+          "tarsus-f": {
+            "angleDeg": -7
+          },
+          "toes-f": {
+            "angleDeg": -47
+          }
+        },
+        "root": {
+          "x": 0.33,
+          "y": 0.27,
+          "angleDeg": 12
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 12,
+          "emitters": {
+            "breath-nostril": 0.1,
+            "breath-exertion": 1.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "airborne-climb",
+        "title": {
+          "en": "Airborne, climbing",
+          "de": "Flug, Steigen"
+        },
+        "description": {
+          "en": "Second upstroke, higher above the ground, the body pitched up.",
+          "de": "Zweiter Aufschlag, höher über dem Boden, der Körper nach oben geneigt."
+        },
+        "bones": {
+          "neck-1": {
+            "angleDeg": -27.0
+          },
+          "neck-2": {
+            "angleDeg": -10
+          },
+          "head": {
+            "angleDeg": 20
+          },
+          "humerus-n": {
+            "angleDeg": -108.0
+          },
+          "forearm-n": {
+            "angleDeg": 163
+          },
+          "hand-n": {
+            "angleDeg": -159
+          },
+          "humerus-f": {
+            "angleDeg": -104.0
+          },
+          "forearm-f": {
+            "angleDeg": 163
+          },
+          "hand-f": {
+            "angleDeg": -157
+          },
+          "thigh-n": {
+            "angleDeg": -27.0
+          },
+          "shank-n": {
+            "angleDeg": -33
+          },
+          "tarsus-n": {
+            "angleDeg": -7
+          },
+          "toes-n": {
+            "angleDeg": -47
+          },
+          "thigh-f": {
+            "angleDeg": -27.0
+          },
+          "shank-f": {
+            "angleDeg": -33
+          },
+          "tarsus-f": {
+            "angleDeg": -7
+          },
+          "toes-f": {
+            "angleDeg": -47
+          }
+        },
+        "root": {
+          "x": 0.52,
+          "y": 0.34,
+          "angleDeg": 12
+        },
+        "key": true,
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "activityMet": 12,
+          "emitters": {
+            "breath-nostril": 0.1,
+            "breath-exertion": 1.0
+          },
+          "regions": {
+            "plumage-wings": {
+              "exposedFraction": 1.0
+            }
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "walk-cycle",
+        "title": {
+          "en": "Walking with head-bob",
+          "de": "Gehen mit Kopfnicken"
+        },
+        "description": {
+          "en": "Two-beat walk with alternating feet: each foot is on the ground 62 % of the stride so both feet share the load briefly twice per stride. The head is held still in space while the body passes under it and then thrust forward during each step (hold and thrust, Frost 1978).",
+          "de": "Zweitakt-Gang mit wechselnden Füßen: jeder Fuß steht 62 % des Doppelschritts am Boden, sodass beide Füße pro Doppelschritt zweimal kurz gemeinsam tragen. Der Kopf bleibt im Raum ruhig, während der Körper darunter vorbeizieht, und wird dann bei jedem Schritt nach vorn gestoßen (Halten und Stoßen, Frost 1978)."
+        },
+        "durationS": 0.5,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 0.1452,
+        "keys": [
+          {
+            "t": 0.0,
+            "pose": "walk-phase-0",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.04167,
+            "pose": "walk-phase-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.08333,
+            "pose": "walk-phase-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.125,
+            "pose": "walk-phase-3",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.16667,
+            "pose": "walk-phase-4",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.20833,
+            "pose": "walk-phase-5",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.25,
+            "pose": "walk-phase-6",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.29167,
+            "pose": "walk-phase-7",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.33333,
+            "pose": "walk-phase-8",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.375,
+            "pose": "walk-phase-9",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.41667,
+            "pose": "walk-phase-10",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.45833,
+            "pose": "walk-phase-11",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-n",
+            "fromS": 0,
+            "toS": 0.31
+          },
+          {
+            "anchor": "contact-f",
+            "fromS": 0.25,
+            "toS": 0.5
+          },
+          {
+            "anchor": "contact-f",
+            "fromS": 0,
+            "toS": 0.06
+          }
+        ],
+        "phases": [
+          {
+            "id": "double-support-a",
+            "fromS": 0,
+            "toS": 0.06,
+            "title": {
+              "en": "Both feet on the ground",
+              "de": "Beide Füße am Boden"
+            }
+          },
+          {
+            "id": "near-stance",
+            "fromS": 0.06,
+            "toS": 0.25,
+            "title": {
+              "en": "Near foot carries, far foot swings",
+              "de": "Naher Fuß trägt, ferner Fuß schwingt"
+            }
+          },
+          {
+            "id": "double-support-b",
+            "fromS": 0.25,
+            "toS": 0.31,
+            "title": {
+              "en": "Both feet on the ground",
+              "de": "Beide Füße am Boden"
+            }
+          },
+          {
+            "id": "far-stance",
+            "fromS": 0.31,
+            "toS": 0.5,
+            "title": {
+              "en": "Far foot carries, near foot swings",
+              "de": "Ferner Fuß trägt, naher Fuß schwingt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near foot touches down",
+              "de": "Naher Fuß setzt auf"
+            },
+            "target": "contact-n"
+          },
+          {
+            "t": 0.31,
+            "kind": "contact-off",
+            "title": {
+              "en": "Near foot lifts",
+              "de": "Naher Fuß hebt ab"
+            },
+            "target": "contact-n"
+          },
+          {
+            "t": 0.25,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far foot touches down",
+              "de": "Ferner Fuß setzt auf"
+            },
+            "target": "contact-f"
+          },
+          {
+            "t": 0.06,
+            "kind": "contact-off",
+            "title": {
+              "en": "Far foot lifts",
+              "de": "Ferner Fuß hebt ab"
+            },
+            "target": "contact-f"
+          },
+          {
+            "t": 0.1667,
+            "kind": "motion",
+            "title": {
+              "en": "Head thrust forward",
+              "de": "Kopf wird nach vorn gestoßen"
+            }
+          },
+          {
+            "t": 0.4167,
+            "kind": "motion",
+            "title": {
+              "en": "Head thrust forward",
+              "de": "Kopf wird nach vorn gestoßen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath-nostril",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 0.25,
+                "v": 0.9
+              },
+              {
+                "t": 0.5,
+                "v": 0.8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "peck-cycle",
+        "title": {
+          "en": "Pecking food",
+          "de": "Futter picken"
+        },
+        "description": {
+          "en": "Standing on both feet the pigeon lowers the body and stretches the neck down twice, strikes the ground with the beak and straightens up again; the feet do not move.",
+          "de": "Auf beiden Füßen stehend senkt die Taube den Körper und streckt den Hals zweimal nach unten, stößt mit dem Schnabel auf den Boden und richtet sich wieder auf; die Füße bewegen sich nicht."
+        },
+        "durationS": 2.0,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "standing-alert",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.4,
+            "pose": "pecking-reach",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5,
+            "pose": "pecking-strike",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.62,
+            "pose": "pecking-reach",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.72,
+            "pose": "pecking-strike",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.84,
+            "pose": "pecking-reach",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.3,
+            "pose": "standing-alert",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-n",
+            "fromS": 0,
+            "toS": 2.0
+          },
+          {
+            "anchor": "contact-f",
+            "fromS": 0,
+            "toS": 2.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "look",
+            "fromS": 0,
+            "toS": 0.4,
+            "title": {
+              "en": "Lowering the head",
+              "de": "Kopf senken"
+            }
+          },
+          {
+            "id": "pecks",
+            "fromS": 0.4,
+            "toS": 0.84,
+            "title": {
+              "en": "Two pecks",
+              "de": "Zwei Picks"
+            }
+          },
+          {
+            "id": "rise",
+            "fromS": 0.84,
+            "toS": 2.0,
+            "title": {
+              "en": "Straightening up and scanning",
+              "de": "Aufrichten und Umschauen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near foot on the ground",
+              "de": "Naher Fuß am Boden"
+            },
+            "target": "contact-n"
+          },
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far foot on the ground",
+              "de": "Ferner Fuß am Boden"
+            },
+            "target": "contact-f"
+          },
+          {
+            "t": 0.5,
+            "kind": "motion",
+            "title": {
+              "en": "Beak strikes the ground",
+              "de": "Schnabel trifft den Boden"
+            }
+          },
+          {
+            "t": 0.72,
+            "kind": "motion",
+            "title": {
+              "en": "Beak strikes the ground",
+              "de": "Schnabel trifft den Boden"
+            }
+          },
+          {
+            "t": 0,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 1.1,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 0.4,
+                "v": 1.3
+              },
+              {
+                "t": 0.84,
+                "v": 1.3
+              },
+              {
+                "t": 1.3,
+                "v": 1.0
+              },
+              {
+                "t": 2.0,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath-nostril",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.5,
+                "v": 0.9
+              },
+              {
+                "t": 1.3,
+                "v": 0.6
+              },
+              {
+                "t": 2.0,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "take-off",
+        "title": {
+          "en": "Take-off into flight",
+          "de": "Abflug in den Flug"
+        },
+        "description": {
+          "en": "From the crouch the wings rise and beat down while the legs extend and push; the feet leave the ground at 0.36 s and three wing positions follow in climbing flight (about 0.36 s without ground contact). Wing beats are slowed to about 4 Hz for legibility; real take-off beats are faster.",
+          "de": "Aus dem Ducken heben sich die Flügel und schlagen nach unten, während die Beine strecken und abstoßen; die Füße verlassen den Boden bei 0,36 s, danach folgen drei Flügelstellungen im Steigflug (etwa 0,36 s ohne Bodenkontakt). Die Flügelschläge sind zur besseren Lesbarkeit auf etwa 4 Hz verlangsamt; echte Abflugschläge sind schneller."
+        },
+        "durationS": 0.72,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "takeoff-crouch",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.22,
+            "pose": "takeoff-wings-up",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.3,
+            "pose": "takeoff-push",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.36,
+            "pose": "takeoff-liftoff",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.48,
+            "pose": "airborne-wings-up",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.6,
+            "pose": "airborne-wings-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.72,
+            "pose": "airborne-climb",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-n",
+            "fromS": 0,
+            "toS": 0.36
+          },
+          {
+            "anchor": "contact-f",
+            "fromS": 0,
+            "toS": 0.36
+          }
+        ],
+        "phases": [
+          {
+            "id": "crouch",
+            "fromS": 0,
+            "toS": 0.22,
+            "title": {
+              "en": "Crouch and wings up",
+              "de": "Ducken und Flügel heben"
+            }
+          },
+          {
+            "id": "push-off",
+            "fromS": 0.22,
+            "toS": 0.36,
+            "title": {
+              "en": "Downstroke and push-off",
+              "de": "Abschlag und Abstoßen"
+            }
+          },
+          {
+            "id": "flight",
+            "fromS": 0.36,
+            "toS": 0.72,
+            "ballistic": true,
+            "title": {
+              "en": "Climbing flight",
+              "de": "Steigflug"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near foot on the ground",
+              "de": "Naher Fuß am Boden"
+            },
+            "target": "contact-n"
+          },
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far foot on the ground",
+              "de": "Ferner Fuß am Boden"
+            },
+            "target": "contact-f"
+          },
+          {
+            "t": 0.36,
+            "kind": "contact-off",
+            "title": {
+              "en": "Near foot leaves the ground",
+              "de": "Naher Fuß verlässt den Boden"
+            },
+            "target": "contact-n"
+          },
+          {
+            "t": 0.36,
+            "kind": "contact-off",
+            "title": {
+              "en": "Far foot leaves the ground",
+              "de": "Ferner Fuß verlässt den Boden"
+            },
+            "target": "contact-f"
+          },
+          {
+            "t": 0.22,
+            "kind": "motion",
+            "title": {
+              "en": "Downstroke begins",
+              "de": "Abschlag beginnt"
+            }
+          },
+          {
+            "t": 0.3,
+            "kind": "thermal",
+            "title": {
+              "en": "Flight metabolism starts",
+              "de": "Flugstoffwechsel beginnt"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 2.5
+              },
+              {
+                "t": 0.22,
+                "v": 4
+              },
+              {
+                "t": 0.3,
+                "v": 12
+              },
+              {
+                "t": 0.72,
+                "v": 12
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath-exertion",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 0.22,
+                "v": 0.8
+              },
+              {
+                "t": 0.3,
+                "v": 1
+              },
+              {
+                "t": 0.72,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath-nostril",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3
+              },
+              {
+                "t": 0.3,
+                "v": 0.1
+              },
+              {
+                "t": 0.72,
+                "v": 0.1
+              }
+            ]
+          },
+          {
+            "target": "region:plumage-wings:exposedFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 0.22,
+                "v": 1
+              },
+              {
+                "t": 0.72,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0.2,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 1,
+      "regions": [
+        {
+          "id": "plumage-body",
+          "title": {
+            "en": "Body plumage (breast, back, belly, thighs)",
+            "de": "Körpergefieder (Brust, Rücken, Bauch, Schenkel)"
+          },
+          "kind": "feather",
+          "material": "plumage",
+          "model": "core-resistance",
+          "areaM2": 0.022,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 41,
+          "insulationM2KW": 0.3,
+          "metabolicShare": 0.66,
+          "source": "authored-estimate",
+          "reference": "scholander-1950"
+        },
+        {
+          "id": "plumage-neck-head",
+          "title": {
+            "en": "Neck and head plumage",
+            "de": "Hals- und Kopfgefieder"
+          },
+          "kind": "feather",
+          "material": "plumage",
+          "model": "core-resistance",
+          "areaM2": 0.0035,
+          "characteristicLengthM": 0.04,
+          "coreTempC": 41,
+          "insulationM2KW": 0.2,
+          "metabolicShare": 0.09,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "plumage-wings",
+          "title": {
+            "en": "Wing plumage (coverts, secondaries, primaries)",
+            "de": "Flügelgefieder (Decken, Armschwingen, Handschwingen)"
+          },
+          "kind": "feather",
+          "material": "plumage",
+          "model": "core-resistance",
+          "areaM2": 0.02,
+          "characteristicLengthM": 0.12,
+          "coreTempC": 41,
+          "insulationM2KW": 0.22,
+          "metabolicShare": 0.12,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "plumage-tail",
+          "title": {
+            "en": "Tail plumage",
+            "de": "Schwanzgefieder"
+          },
+          "kind": "feather",
+          "material": "plumage",
+          "model": "core-resistance",
+          "areaM2": 0.0035,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 41,
+          "insulationM2KW": 0.12,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "legs-feet",
+          "title": {
+            "en": "Bare legs and feet",
+            "de": "Nackte Läufe und Füße"
+          },
+          "kind": "skin",
+          "material": "bare-skin",
+          "model": "core-resistance",
+          "areaM2": 0.002,
+          "characteristicLengthM": 0.03,
+          "coreTempC": 41,
+          "insulationM2KW": 0.25,
+          "metabolicShare": 0.06,
+          "source": "authored-estimate",
+          "reference": "calder-king-1974"
+        },
+        {
+          "id": "beak",
+          "title": {
+            "en": "Beak",
+            "de": "Schnabel"
+          },
+          "kind": "skin",
+          "material": "beak-keratin",
+          "model": "core-resistance",
+          "areaM2": 0.0003,
+          "characteristicLengthM": 0.02,
+          "coreTempC": 41,
+          "insulationM2KW": 0.15,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "calder-king-1974"
+        },
+        {
+          "id": "cere",
+          "title": {
+            "en": "Cere and nostrils",
+            "de": "Wachshaut und Nasenlöcher"
+          },
+          "kind": "skin",
+          "material": "cere-wax",
+          "model": "core-resistance",
+          "areaM2": 0.0001,
+          "characteristicLengthM": 0.008,
+          "coreTempC": 41,
+          "insulationM2KW": 0.08,
+          "wettedness": 0.2,
+          "metabolicShare": 0.01,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "eye",
+          "title": {
+            "en": "Eye and bare eye ring",
+            "de": "Auge und nackter Augenring"
+          },
+          "kind": "skin",
+          "material": "eye-tissue",
+          "model": "core-resistance",
+          "areaM2": 0.00015,
+          "characteristicLengthM": 0.01,
+          "coreTempC": 41,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.3,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath-nostril",
+          "kind": "breath",
+          "title": {
+            "en": "Resting breathing through the nostrils",
+            "de": "Ruheatmung durch die Nasenlöcher"
+          },
+          "anchor": "nostril",
+          "directionDeg": -20,
+          "carries": "vapour",
+          "temperatureC": 32,
+          "velocityMS": 0.6,
+          "diameterM": 0.003,
+          "vapourKgPerKg": 0.028,
+          "periodS": 2.2,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "calder-king-1974"
+        },
+        {
+          "id": "breath-exertion",
+          "kind": "breath",
+          "title": {
+            "en": "Fast breathing in exertion and flight",
+            "de": "Schnelle Atmung bei Anstrengung und Flug"
+          },
+          "anchor": "nostril",
+          "directionDeg": -20,
+          "carries": "vapour",
+          "temperatureC": 35,
+          "velocityMS": 3,
+          "diameterM": 0.003,
+          "vapourKgPerKg": 0.034,
+          "periodS": 0.3,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "butler-1977"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Total plumage and skin area follows Walsberg and King (1978), A = 8.11·M^0.667 cm² = 0.040 m² for 350 g; the regions sum to 0.051 m² because the wing region includes the axilla and underwing that are covered only while the wings are folded (exposed fraction 0.45 folded, 1 open).",
+          "de": "Die gesamte Gefieder- und Hautfläche folgt Walsberg und King (1978), A = 8,11·M^0,667 cm² = 0,040 m² für 350 g; die Regionen summieren sich zu 0,051 m², weil die Flügelregion Achsel und Flügelunterseite enthält, die nur bei angelegten Flügeln bedeckt sind (freie Fläche 0,45 angelegt, 1 offen)."
+        },
+        {
+          "en": "Body temperature is 41 °C (Calder and King 1974). Insulation values run from the core to the outer plumage surface including tissue and are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975); the bare legs carry a high value because countercurrent heat exchange keeps tarsus and toes near 25 to 30 °C at 20 °C air.",
+          "de": "Die Körpertemperatur beträgt 41 °C (Calder und King 1974). Dämmwerte laufen vom Körperkern zur Gefiederoberfläche und umfassen Gewebe; sie sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975); die nackten Läufe haben einen hohen Wert, weil der Gegenstromwärmetauscher Lauf und Zehen bei 20 °C Luft auf etwa 25 bis 30 °C hält."
+        },
+        {
+          "en": "Activity is expressed in the engine's 58.15 W/m² unit: 1.0 met is resting heat production (basal rate about 2 W after Aschoff and Pohl 1970 plus thermoregulation), 1.3 pecking, 1.8 walking and 2.5 crouching are authored estimates; flight metabolism of 12 met (about 28 W) is an authored estimate guided by Butler et al. (1977), not a measured value of this asset.",
+          "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine angegeben: 1,0 met ist die Ruhewärmeproduktion (Grundumsatz etwa 2 W nach Aschoff und Pohl 1970 plus Thermoregulation), 1,3 Picken, 1,8 Gehen und 2,5 Ducken sind Schätzwerte; der Flugstoffwechsel von 12 met (etwa 28 W) ist ein Schätzwert nach Butler et al. (1977), kein Messwert dieses Assets."
+        },
+        {
+          "en": "Resting respiration is 27 breaths per minute (period 2.2 s) through two 3 mm nostrils; the exertion emitter breathes at 3.3 Hz and is bound only in the crouch, the take-off and flight.",
+          "de": "Die Ruheatmung beträgt 27 Atemzüge pro Minute (Periode 2,2 s) durch zwei 3-mm-Nasenlöcher; der Anstrengungs-Emitter atmet mit 3,3 Hz und ist nur beim Ducken, Abflug und Flug aktiv."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Segments are rigid with authored masses summing to 0.35 kg; both feet carry the weight in stance and share it by position. During the flight phase of the take-off no support exists and the quasi-static check reports it.",
+          "de": "Segmente sind starr mit Massen von zusammen 0,35 kg; beide Füße tragen im Stand und teilen die Last nach Lage. In der Flugphase des Abflugs gibt es kein Auflager, was die quasi-statische Prüfung meldet."
+        },
+        {
+          "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.",
+          "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "standing-alert",
+      "defaultClip": "walk-cycle",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

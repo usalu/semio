@@ -10,7 +10,7 @@
 import type { DrawingItem, DrawingScene, Fill, Legend, PathCommand } from "../../🔗️contracts/🟦️.ts";
 
 const FONT_STACK = "Anta, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
-const NAMESPACE = "https://semio.tech/staffage/v1";
+const NAMESPACE = "https://semio.tech/staffage/v2";
 const PATTERN_SIZE_MM = 1.2;
 
 const num = (v: number): string => {
@@ -76,6 +76,11 @@ function legendMetadata(legends: readonly Legend[]): string {
   return legends.map((l) => `<staffage:legend quantity="${esc(l.quantity)}" unit="${esc(l.unit)}" min="${l.min}" max="${l.max}" title-en="${esc(l.title.en)}" title-de="${esc(l.title.de)}" convention-en="${esc(l.convention.en)}" convention-de="${esc(l.convention.de)}" interpretation-en="${esc(l.interpretation.en)}" interpretation-de="${esc(l.interpretation.de)}"/>`).join("");
 }
 
+function representationText(scene: DrawingScene): string {
+  const r = scene.metadata.representation;
+  return r.kind === "scale" ? `scale:${r.denominator}${r.exact ? "" : `~${r.requested}`}` : r.kind === "symbol" ? `symbol:${r.symbol}` : "none";
+}
+
 function queryText(scene: DrawingScene): string {
   const q = scene.metadata.query;
   return q.kind === "pose" ? `pose:${q.pose}` : q.kind === "clip" ? `clip:${q.clip}@${q.timeS}` : `transition:${q.from}>${q.to}@${q.timeS}`;
@@ -92,11 +97,11 @@ export function svgMarkup(scene: DrawingScene): string {
   return `${defs}${background}${layers}`;
 }
 
-/** 🖼️ A standalone SVG 1.1 document: size and viewBox in millimetres, `<title>`, `<desc>`, `<metadata>` (asset, query, time, view, scale, units, legends), layer groups. */
+/** 🖼️ A standalone SVG 1.1 document: size and viewBox in millimetres, `<title>`, `<desc>`, `<metadata>` (asset, query, time, view, scale, resolution, representation, print profile, units, legends), layer groups. */
 export function writeSvg(scene: DrawingScene): string {
   const m = scene.metadata;
   const title = `${m.title.en} / ${m.title.de} — ${m.view} 1:${m.scale.denominator}`;
-  const desc = `Architectural staffage "${m.asset}", ${queryText(scene)}, t = ${m.timeS} s, view ${m.view} (${m.viewpoint}), scale 1:${m.scale.denominator}. Units: paper millimetres (1 user unit = 1 mm), model metres, ${num(m.mmPerMetre)} mm per metre.`;
-  const meta = `<staffage:scene asset="${esc(m.asset)}" query="${esc(queryText(scene))}" time-s="${m.timeS}" view="${m.view}" viewpoint="${m.viewpoint}" scale="1:${m.scale.denominator}" paper-units="mm" model-units="m" mm-per-metre="${m.mmPerMetre}" origin-x-mm="${m.origin.xMm}" origin-y-mm="${m.origin.yMm}">${legendMetadata(scene.legends)}</staffage:scene>`;
+  const desc = `Architectural staffage "${m.asset}", ${queryText(scene)}, t = ${m.timeS} s, view ${m.view} (${m.viewpoint}), scale 1:${m.scale.denominator}. Representation ${representationText(scene)} (${m.resolution}), print profile ${m.profile}. Units: paper millimetres (1 user unit = 1 mm), model metres, ${num(m.mmPerMetre)} mm per metre.`;
+  const meta = `<staffage:scene asset="${esc(m.asset)}" query="${esc(queryText(scene))}" time-s="${m.timeS}" view="${m.view}" viewpoint="${m.viewpoint}" scale="1:${m.scale.denominator}" resolution="${m.resolution}" representation="${esc(representationText(scene))}" profile="${esc(m.profile)}" paper-units="mm" model-units="m" mm-per-metre="${m.mmPerMetre}" origin-x-mm="${m.origin.xMm}" origin-y-mm="${m.origin.yMm}">${legendMetadata(scene.legends)}</staffage:scene>`;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:staffage="${NAMESPACE}" version="1.1" width="${num(scene.widthMm)}mm" height="${num(scene.heightMm)}mm" viewBox="0 0 ${num(scene.widthMm)} ${num(scene.heightMm)}">\n<title>${esc(title)}</title>\n<desc>${esc(desc)}</desc>\n<metadata>${meta}</metadata>\n${svgMarkup(scene)}\n</svg>\n`;
 }

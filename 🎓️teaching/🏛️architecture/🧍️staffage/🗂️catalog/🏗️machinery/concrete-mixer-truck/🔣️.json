@@ -1,0 +1,7801 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "concrete-mixer-truck",
+  "category": "machinery",
+  "title": {
+   "en": "Concrete mixer truck, 9 m3",
+   "de": "Fahrmischer, 9 m3"
+  },
+  "summary": {
+   "en": "An 8x4 truck mixer of the 9 m3 class in side elevation: heavy chassis with cab-over-engine cab and vertical exhaust stack, a tilted mixer drum whose spiral flight marks drift with its rotation, charging hopper and a folding discharge chute with extension.",
+   "de": "Ein Fahrmischer 8x4 der 9-m3-Klasse in der Seitenansicht: schweres Fahrgestell mit Frontlenker-Fahrerhaus und senkrechtem Auspuffrohr, eine geneigte Mischtrommel, deren Wendelmarken mit der Drehung wandern, Einfülltrichter und eine klappbare Entladerutsche mit Verlängerung."
+  },
+  "tags": [
+   "machine",
+   "truck-mixer",
+   "concrete",
+   "diesel",
+   "construction",
+   "wheeled",
+   "rotating-drum"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-MA",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "directive-96-53-ec",
+     "citation": "Council Directive 96/53/EC of 25 July 1996 laying down maximum authorised dimensions in national and international traffic (width 2.55 m for road vehicles)."
+    },
+    {
+     "id": "heywood-2018",
+     "citation": "Heywood, J. B. (2018). Internal Combustion Engine Fundamentals, 2nd ed., McGraw-Hill. Ch. 4 and 12 (air flow, exhaust gas temperature, mass flow and composition of diesel engines)."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 25 Heat, Air and Moisture Control (surface emissivity and solar absorptivity of painted and bare metals, glass)."
+    },
+    {
+     "id": "class-data-note",
+     "citation": "Manufacturer class data (public data sheets of the product class, quoted as orders of magnitude from memory of the data sheet families, not retrieved for this asset); every number derived from it is tagged authored-estimate."
+    }
+   ],
+   "notes": {
+    "en": "Class data of a 9 m3 truck mixer on an 8x4 heavy chassis (about 13.5 t unladen, 32 t gross, 330 kW diesel); all machine numbers are authored estimates from that class, dimensions respect the 2.55 m width limit of Directive 96/53/EC. The drum rotation is shown by a flight pattern that drifts along the drum axis (the rotation axis lies in the drawing plane); the drum, hopper and chute move rigidly with the rig.",
+    "de": "Klassendaten eines 9-m3-Fahrmischers auf schwerem 8x4-Fahrgestell (etwa 13,5 t leer, 32 t Gesamtgewicht, 330-kW-Diesel); alle Maschinenzahlen sind Schätzungen dieser Klasse, die Maße halten die Breitengrenze 2,55 m der Richtlinie 96/53/EG ein. Die Trommeldrehung wird durch ein längs der Trommelachse wanderndes Wendelmuster gezeigt (die Drehachse liegt in der Zeichenebene); Trommel, Trichter und Rutsche bewegen sich starr mit dem Rig."
+   }
+  },
+  "dimensions": {
+   "heightM": 3.95,
+   "widthM": 9,
+   "depthM": 2.55,
+   "massKg": 13500
+  },
+  "materials": [
+   {
+    "id": "paint-steel",
+    "title": {
+     "en": "Painted structural steel",
+     "de": "Lackierter Baustahl"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "drum-paint",
+    "title": {
+     "en": "White drum paint on steel",
+     "de": "Weißer Trommellack auf Stahl"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Galvanised steel",
+     "de": "Verzinkter Stahl"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "Safety glass",
+     "de": "Sicherheitsglas"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.2,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1,
+    "specificHeatJKgK": 840,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.93,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1700,
+    "source": "literature",
+    "reference": "incropera-2011"
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "Cast iron",
+     "de": "Gusseisen"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7200,
+    "conductivityWmK": 46,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "exhaust-steel",
+    "title": {
+     "en": "Oxidised exhaust steel",
+     "de": "Oxidierter Auspuffstahl"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7850,
+    "conductivityWmK": 45,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "chassis",
+   "bones": [
+    {
+     "id": "chassis",
+     "parent": null,
+     "title": {
+      "en": "Chassis with cab, frame and pedestals",
+      "de": "Fahrgestell mit Fahrerhaus, Rahmen und Lagerböcken"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 9,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 7000,
+      "comX": 0,
+      "comY": 0.9,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "drum",
+     "parent": "chassis",
+     "title": {
+      "en": "Mixer drum with hopper and hydraulic drive",
+      "de": "Mischtrommel mit Einfülltrichter und Hydraulikantrieb"
+     },
+     "x": 1.9,
+     "y": 2.1375,
+     "angleDeg": 166,
+     "lengthM": 5.4,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 3600,
+      "comX": 2.6,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "drum-spiral",
+     "parent": "drum",
+     "title": {
+      "en": "Spiral flight marking (drifts one pitch per drum revolution)",
+      "de": "Wendelmarkierung (wandert eine Steigung je Trommelumdrehung)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 3,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.85
+     }
+    },
+    {
+     "id": "chute",
+     "parent": "chassis",
+     "title": {
+      "en": "Main discharge chute",
+      "de": "Hauptrutsche"
+     },
+     "x": -3.9,
+     "y": 2.2,
+     "angleDeg": 40,
+     "lengthM": 2.4,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -20,
+      "maxDeg": 170
+     },
+     "mass": {
+      "kg": 330,
+      "comX": 1.2,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "chute-ext",
+     "parent": "chute",
+     "title": {
+      "en": "Chute extension",
+      "de": "Rutschenverlängerung"
+     },
+     "x": 2.4,
+     "y": 0,
+     "angleDeg": 180,
+     "lengthM": 1.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -185,
+      "maxDeg": 5
+     },
+     "mass": {
+      "kg": 170,
+      "comX": 0.65,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-1",
+     "parent": "chassis",
+     "title": {
+      "en": "Wheel and axle 1",
+      "de": "Rad und Achse 1"
+     },
+     "x": 3.55,
+     "y": 0.52,
+     "angleDeg": 0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 600,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-2",
+     "parent": "chassis",
+     "title": {
+      "en": "Wheel and axle 2",
+      "de": "Rad und Achse 2"
+     },
+     "x": 1.95,
+     "y": 0.52,
+     "angleDeg": 0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 600,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-3",
+     "parent": "chassis",
+     "title": {
+      "en": "Wheel and axle 3",
+      "de": "Rad und Achse 3"
+     },
+     "x": -1.7,
+     "y": 0.52,
+     "angleDeg": 0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 600,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-4",
+     "parent": "chassis",
+     "title": {
+      "en": "Wheel and axle 4",
+      "de": "Rad und Achse 4"
+     },
+     "x": -3.05,
+     "y": 0.52,
+     "angleDeg": 0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 600,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-1",
+    "bone": "chassis",
+    "x": 3.55,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Tyre contact patch, axle 1",
+     "de": "Reifenaufstandsfläche, Achse 1"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "contact-2",
+    "bone": "chassis",
+    "x": 1.95,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Tyre contact patch, axle 2",
+     "de": "Reifenaufstandsfläche, Achse 2"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "contact-3",
+    "bone": "chassis",
+    "x": -1.7,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Tyre contact patch, axle 3",
+     "de": "Reifenaufstandsfläche, Achse 3"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "contact-4",
+    "bone": "chassis",
+    "x": -3.05,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Tyre contact patch, axle 4",
+     "de": "Reifenaufstandsfläche, Achse 4"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.6,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "stack-mouth",
+    "bone": "chassis",
+    "x": 2.32,
+    "y": 3.35,
+    "kind": "emitter",
+    "title": {
+     "en": "Exhaust stack mouth",
+     "de": "Auspuffmündung"
+    }
+   },
+   {
+    "id": "radiator-outlet",
+    "bone": "chassis",
+    "x": 2.3,
+    "y": 0.75,
+    "kind": "emitter",
+    "title": {
+     "en": "Radiator air outlet",
+     "de": "Kühlerluftaustritt"
+    }
+   },
+   {
+    "id": "drum-cog",
+    "bone": "drum",
+    "x": 2.3,
+    "y": 0,
+    "kind": "load",
+    "title": {
+     "en": "Concrete centre of gravity in the drum",
+     "de": "Betonschwerpunkt in der Trommel"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "tread",
+      "title": {
+       "en": "Tyre tread blocks",
+       "de": "Reifenprofilblöcke"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.8,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.5,
+         0.5
+        ],
+        [
+         -4.5,
+         0.9
+        ],
+        [
+         4.3,
+         0.9
+        ],
+        [
+         4.3,
+         0.42
+        ],
+        [
+         4.2,
+         0.42
+        ],
+        [
+         4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "frame",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.4,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.4,
+         0.9
+        ],
+        [
+         2.4,
+         3.14
+        ],
+        [
+         2.43,
+         3.24
+        ],
+        [
+         2.5,
+         3.29
+        ],
+        [
+         2.62,
+         3.3
+        ],
+        [
+         4.02,
+         3.3
+        ],
+        [
+         4.14,
+         3.27
+        ],
+        [
+         4.22,
+         3.2
+        ],
+        [
+         4.36,
+         2.66
+        ],
+        [
+         4.46,
+         2.52
+        ],
+        [
+         4.5,
+         2.36
+        ],
+        [
+         4.5,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "cab",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         1.3
+        ],
+        [
+         4.5,
+         1.95
+        ],
+        [
+         4,
+         1.95
+        ],
+        [
+         4,
+         1.3
+        ]
+       ],
+       "closed": true,
+       "id": "front-grille",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.52
+        ],
+        [
+         4.14,
+         3.12
+        ],
+        [
+         3.92,
+         3.12
+        ],
+        [
+         3.92,
+         2.52
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.76,
+         2.52
+        ],
+        [
+         3.76,
+         3.14
+        ],
+        [
+         3,
+         3.14
+        ],
+        [
+         3,
+         2.52
+        ]
+       ],
+       "closed": true,
+       "id": "door-glass",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7,
+         1.12
+        ],
+        [
+         2.7,
+         3
+        ],
+        [
+         3.9,
+         3
+        ]
+       ],
+       "closed": false,
+       "id": "door-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.7
+        ],
+        [
+         4.5,
+         2.7
+        ],
+        [
+         4.5,
+         2.95
+        ],
+        [
+         4.4,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "mirror-arm",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.9,
+         0.74
+        ],
+        [
+         4.3,
+         0.74
+        ],
+        [
+         4.3,
+         1
+        ],
+        [
+         3.9,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "cab-step",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.64
+        ],
+        [
+         1.2,
+         0.64
+        ],
+        [
+         1.2,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "fuel-tank",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.35,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.6,
+         0.9
+        ],
+        [
+         -2.05,
+         0.9
+        ],
+        [
+         -2.05,
+         2.75
+        ],
+        [
+         -2.6,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pedestal",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.05,
+         0.9
+        ],
+        [
+         -3.8,
+         0.9
+        ],
+        [
+         -3.8,
+         2.35
+        ],
+        [
+         -4.05,
+         2.35
+        ]
+       ],
+       "closed": true,
+       "id": "hinge-post",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.22,
+         1.3
+        ],
+        [
+         2.42,
+         1.3
+        ],
+        [
+         2.42,
+         3.35
+        ],
+        [
+         2.22,
+         3.35
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         3.35
+        ],
+        [
+         2.44,
+         3.35
+        ],
+        [
+         2.44,
+         3.45
+        ],
+        [
+         2.2,
+         3.45
+        ]
+       ],
+       "closed": true,
+       "id": "stack-cap",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.3798,
+         1.3701
+        ],
+        [
+         -0.3964,
+         1.1765
+        ],
+        [
+         -0.2634,
+         0.6429
+        ],
+        [
+         0.5129,
+         0.8364
+        ]
+       ],
+       "closed": true,
+       "id": "drive-housing",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.35,
+       "region": "drum-drive",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-belly",
+       "bone": "drum",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.4075,
+         0.5
+        ],
+        [
+         0.4857,
+         0.3333
+        ],
+        [
+         0.5546,
+         0.1667
+        ],
+        [
+         0.62,
+         0
+        ],
+        [
+         0.6854,
+         -0.1667
+        ],
+        [
+         0.7543,
+         -0.3333
+        ],
+        [
+         0.8325,
+         -0.5
+        ],
+        [
+         0.9925,
+         -0.5
+        ],
+        [
+         0.9143,
+         -0.3333
+        ],
+        [
+         0.8454,
+         -0.1667
+        ],
+        [
+         0.78,
+         0
+        ],
+        [
+         0.7146,
+         0.1667
+        ],
+        [
+         0.6457,
+         0.3333
+        ],
+        [
+         0.5675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-1",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.2575,
+         0.5
+        ],
+        [
+         1.3357,
+         0.3333
+        ],
+        [
+         1.4046,
+         0.1667
+        ],
+        [
+         1.47,
+         0
+        ],
+        [
+         1.5354,
+         -0.1667
+        ],
+        [
+         1.6043,
+         -0.3333
+        ],
+        [
+         1.6825,
+         -0.5
+        ],
+        [
+         1.8425,
+         -0.5
+        ],
+        [
+         1.7643,
+         -0.3333
+        ],
+        [
+         1.6954,
+         -0.1667
+        ],
+        [
+         1.63,
+         0
+        ],
+        [
+         1.5646,
+         0.1667
+        ],
+        [
+         1.4957,
+         0.3333
+        ],
+        [
+         1.4175,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-2",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.1075,
+         0.5
+        ],
+        [
+         2.1857,
+         0.3333
+        ],
+        [
+         2.2546,
+         0.1667
+        ],
+        [
+         2.32,
+         0
+        ],
+        [
+         2.3854,
+         -0.1667
+        ],
+        [
+         2.4543,
+         -0.3333
+        ],
+        [
+         2.5325,
+         -0.5
+        ],
+        [
+         2.6925,
+         -0.5
+        ],
+        [
+         2.6143,
+         -0.3333
+        ],
+        [
+         2.5454,
+         -0.1667
+        ],
+        [
+         2.48,
+         0
+        ],
+        [
+         2.4146,
+         0.1667
+        ],
+        [
+         2.3457,
+         0.3333
+        ],
+        [
+         2.2675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-3",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.9575,
+         0.5
+        ],
+        [
+         3.0357,
+         0.3333
+        ],
+        [
+         3.1046,
+         0.1667
+        ],
+        [
+         3.17,
+         0
+        ],
+        [
+         3.2354,
+         -0.1667
+        ],
+        [
+         3.3043,
+         -0.3333
+        ],
+        [
+         3.3825,
+         -0.5
+        ],
+        [
+         3.5425,
+         -0.5
+        ],
+        [
+         3.4643,
+         -0.3333
+        ],
+        [
+         3.3954,
+         -0.1667
+        ],
+        [
+         3.33,
+         0
+        ],
+        [
+         3.2646,
+         0.1667
+        ],
+        [
+         3.1957,
+         0.3333
+        ],
+        [
+         3.1175,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-4",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.8075,
+         0.5
+        ],
+        [
+         3.8857,
+         0.3333
+        ],
+        [
+         3.9546,
+         0.1667
+        ],
+        [
+         4.02,
+         0
+        ],
+        [
+         4.0854,
+         -0.1667
+        ],
+        [
+         4.1543,
+         -0.3333
+        ],
+        [
+         4.2325,
+         -0.5
+        ],
+        [
+         4.3925,
+         -0.5
+        ],
+        [
+         4.3143,
+         -0.3333
+        ],
+        [
+         4.2454,
+         -0.1667
+        ],
+        [
+         4.18,
+         0
+        ],
+        [
+         4.1146,
+         0.1667
+        ],
+        [
+         4.0457,
+         0.3333
+        ],
+        [
+         3.9675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-5",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         1.15,
+         -1.12
+        ],
+        [
+         1.15,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-dome-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.85,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         2.85,
+         1.12
+        ]
+       ],
+       "closed": true,
+       "id": "drum-cone-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.1936,
+         0.4575
+        ],
+        [
+         5.4677,
+         0.598
+        ],
+        [
+         6.0058,
+         0.0932
+        ],
+        [
+         6.1026,
+         -0.2949
+        ],
+        [
+         5.4429,
+         -0.3357
+        ]
+       ],
+       "closed": true,
+       "id": "hopper",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.55,
+       "region": "hopper",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.14
+        ],
+        [
+         2.4,
+         -0.1
+        ],
+        [
+         2.4,
+         0.14
+        ],
+        [
+         0,
+         0.14
+        ]
+       ],
+       "closed": true,
+       "id": "chute-main",
+       "bone": "chute",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.3,
+         0
+        ],
+        [
+         1.3,
+         0.22
+        ],
+        [
+         0,
+         0.22
+        ]
+       ],
+       "closed": true,
+       "id": "chute-ext-folded",
+       "bone": "chute-ext",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-1",
+       "bone": "wheel-1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber",
+       "hatch": "tread"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-2",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-3",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-4",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-5",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-2",
+       "bone": "wheel-2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber",
+       "hatch": "tread"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-1",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-3",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-4",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-5",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-3",
+       "bone": "wheel-3",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber",
+       "hatch": "tread"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-1",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-2",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-4",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-5",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-4",
+       "bone": "wheel-4",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber",
+       "hatch": "tread"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-1",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-2",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-3",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-5",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         1.2
+        ],
+        [
+         4.5,
+         1.5
+        ],
+        [
+         4.26,
+         1.5
+        ],
+        [
+         4.26,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "head-lamp",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.9,
+       "region": "cab",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.62,
+         2
+        ],
+        [
+         3.92,
+         2
+        ],
+        [
+         3.92,
+         2.06
+        ],
+        [
+         3.62,
+         2.06
+        ]
+       ],
+       "closed": true,
+       "id": "door-handle",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.3,
+         1.12
+        ],
+        [
+         -4.1,
+         1.12
+        ],
+        [
+         -4.1,
+         2.5
+        ],
+        [
+         -4.3,
+         2.5
+        ]
+       ],
+       "closed": true,
+       "id": "rear-ladder",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.6,
+       "filled": false,
+       "tone": 0.4,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         0.66
+        ],
+        [
+         2.2,
+         0.66
+        ],
+        [
+         2.2,
+         0.96
+        ],
+        [
+         1.5,
+         0.96
+        ]
+       ],
+       "closed": true,
+       "id": "air-tank",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.35,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3,
+         -1.12
+        ],
+        [
+         3,
+         1.12
+        ]
+       ],
+       "closed": false,
+       "id": "drum-seam",
+       "bone": "drum",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Cab drawn with rounded roof edges and door details, full chassis equipment, drum with flights, hopper, drive, chute pair, wheels with studs.",
+      "de": "Fahrerhaus mit gerundeten Dachkanten und Türdetails, volle Fahrgestellausrüstung, Trommel mit Wendelmarken, Trichter, Antrieb, Rutschenpaar, Räder mit Bolzen."
+     },
+     "retained": {
+      "en": "All 1:100 parts plus tread hatch on the tyre.",
+      "de": "Alle 1:100-Teile plus Profilschraffur am Reifen."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Lamp lenses, door handle, rails, hinges.",
+      "de": "Leuchtengläser, Türgriff, Geländer, Scharniere."
+     },
+     "thinElements": {
+      "en": "Hand holes 0.1 m (2 mm) as outlines, stack cap 0.1 m.",
+      "de": "Handlöcher 0,1 m (2 mm) als Umriss, Rohrkappe 0,1 m."
+     },
+     "hatching": {
+      "en": "Tread hatch at 0.8 mm spacing on tyres only.",
+      "de": "Profilschraffur mit 0,8 mm Abstand nur auf Reifen."
+     },
+     "styles": {
+      "en": "Heavier pens 0.35 / 0.25 mm; tone as 1:200.",
+      "de": "Stärkere Stifte 0,35 / 0,25 mm; Ton wie 1:200."
+     },
+     "overlays": {
+      "en": "As 1:100.",
+      "de": "Wie 1:100."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.5,
+         0.5
+        ],
+        [
+         -4.5,
+         0.9
+        ],
+        [
+         4.3,
+         0.9
+        ],
+        [
+         4.3,
+         0.42
+        ],
+        [
+         4.2,
+         0.42
+        ],
+        [
+         4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "frame",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.4,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.4,
+         0.9
+        ],
+        [
+         2.4,
+         3.16
+        ],
+        [
+         2.45,
+         3.26
+        ],
+        [
+         2.58,
+         3.3
+        ],
+        [
+         4.05,
+         3.3
+        ],
+        [
+         4.18,
+         3.25
+        ],
+        [
+         4.38,
+         2.62
+        ],
+        [
+         4.46,
+         2.5
+        ],
+        [
+         4.5,
+         2.34
+        ],
+        [
+         4.5,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "cab",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         1.3
+        ],
+        [
+         4.5,
+         1.95
+        ],
+        [
+         4,
+         1.95
+        ],
+        [
+         4,
+         1.3
+        ]
+       ],
+       "closed": true,
+       "id": "front-grille",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.52
+        ],
+        [
+         4.14,
+         3.12
+        ],
+        [
+         3.92,
+         3.12
+        ],
+        [
+         3.92,
+         2.52
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.76,
+         2.52
+        ],
+        [
+         3.76,
+         3.14
+        ],
+        [
+         3,
+         3.14
+        ],
+        [
+         3,
+         2.52
+        ]
+       ],
+       "closed": true,
+       "id": "door-glass",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7,
+         1.12
+        ],
+        [
+         2.7,
+         3
+        ],
+        [
+         3.9,
+         3
+        ]
+       ],
+       "closed": false,
+       "id": "door-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.7
+        ],
+        [
+         4.5,
+         2.7
+        ],
+        [
+         4.5,
+         2.95
+        ],
+        [
+         4.4,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "mirror-arm",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.9,
+         0.74
+        ],
+        [
+         4.3,
+         0.74
+        ],
+        [
+         4.3,
+         1
+        ],
+        [
+         3.9,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "cab-step",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0.64
+        ],
+        [
+         1.2,
+         0.64
+        ],
+        [
+         1.2,
+         0.9
+        ],
+        [
+         0,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "fuel-tank",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.35,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.6,
+         0.9
+        ],
+        [
+         -2.05,
+         0.9
+        ],
+        [
+         -2.05,
+         2.75
+        ],
+        [
+         -2.6,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pedestal",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.05,
+         0.9
+        ],
+        [
+         -3.8,
+         0.9
+        ],
+        [
+         -3.8,
+         2.35
+        ],
+        [
+         -4.05,
+         2.35
+        ]
+       ],
+       "closed": true,
+       "id": "hinge-post",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.22,
+         1.3
+        ],
+        [
+         2.42,
+         1.3
+        ],
+        [
+         2.42,
+         3.35
+        ],
+        [
+         2.22,
+         3.35
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         3.35
+        ],
+        [
+         2.44,
+         3.35
+        ],
+        [
+         2.44,
+         3.45
+        ],
+        [
+         2.2,
+         3.45
+        ]
+       ],
+       "closed": true,
+       "id": "stack-cap",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.3798,
+         1.3701
+        ],
+        [
+         -0.3964,
+         1.1765
+        ],
+        [
+         -0.2634,
+         0.6429
+        ],
+        [
+         0.5129,
+         0.8364
+        ]
+       ],
+       "closed": true,
+       "id": "drive-housing",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.35,
+       "region": "drum-drive",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-belly",
+       "bone": "drum",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.4075,
+         0.5
+        ],
+        [
+         0.4857,
+         0.3333
+        ],
+        [
+         0.5546,
+         0.1667
+        ],
+        [
+         0.62,
+         0
+        ],
+        [
+         0.6854,
+         -0.1667
+        ],
+        [
+         0.7543,
+         -0.3333
+        ],
+        [
+         0.8325,
+         -0.5
+        ],
+        [
+         0.9925,
+         -0.5
+        ],
+        [
+         0.9143,
+         -0.3333
+        ],
+        [
+         0.8454,
+         -0.1667
+        ],
+        [
+         0.78,
+         0
+        ],
+        [
+         0.7146,
+         0.1667
+        ],
+        [
+         0.6457,
+         0.3333
+        ],
+        [
+         0.5675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-1",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.2575,
+         0.5
+        ],
+        [
+         1.3357,
+         0.3333
+        ],
+        [
+         1.4046,
+         0.1667
+        ],
+        [
+         1.47,
+         0
+        ],
+        [
+         1.5354,
+         -0.1667
+        ],
+        [
+         1.6043,
+         -0.3333
+        ],
+        [
+         1.6825,
+         -0.5
+        ],
+        [
+         1.8425,
+         -0.5
+        ],
+        [
+         1.7643,
+         -0.3333
+        ],
+        [
+         1.6954,
+         -0.1667
+        ],
+        [
+         1.63,
+         0
+        ],
+        [
+         1.5646,
+         0.1667
+        ],
+        [
+         1.4957,
+         0.3333
+        ],
+        [
+         1.4175,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-2",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.1075,
+         0.5
+        ],
+        [
+         2.1857,
+         0.3333
+        ],
+        [
+         2.2546,
+         0.1667
+        ],
+        [
+         2.32,
+         0
+        ],
+        [
+         2.3854,
+         -0.1667
+        ],
+        [
+         2.4543,
+         -0.3333
+        ],
+        [
+         2.5325,
+         -0.5
+        ],
+        [
+         2.6925,
+         -0.5
+        ],
+        [
+         2.6143,
+         -0.3333
+        ],
+        [
+         2.5454,
+         -0.1667
+        ],
+        [
+         2.48,
+         0
+        ],
+        [
+         2.4146,
+         0.1667
+        ],
+        [
+         2.3457,
+         0.3333
+        ],
+        [
+         2.2675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-3",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.9575,
+         0.5
+        ],
+        [
+         3.0357,
+         0.3333
+        ],
+        [
+         3.1046,
+         0.1667
+        ],
+        [
+         3.17,
+         0
+        ],
+        [
+         3.2354,
+         -0.1667
+        ],
+        [
+         3.3043,
+         -0.3333
+        ],
+        [
+         3.3825,
+         -0.5
+        ],
+        [
+         3.5425,
+         -0.5
+        ],
+        [
+         3.4643,
+         -0.3333
+        ],
+        [
+         3.3954,
+         -0.1667
+        ],
+        [
+         3.33,
+         0
+        ],
+        [
+         3.2646,
+         0.1667
+        ],
+        [
+         3.1957,
+         0.3333
+        ],
+        [
+         3.1175,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-4",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.8075,
+         0.5
+        ],
+        [
+         3.8857,
+         0.3333
+        ],
+        [
+         3.9546,
+         0.1667
+        ],
+        [
+         4.02,
+         0
+        ],
+        [
+         4.0854,
+         -0.1667
+        ],
+        [
+         4.1543,
+         -0.3333
+        ],
+        [
+         4.2325,
+         -0.5
+        ],
+        [
+         4.3925,
+         -0.5
+        ],
+        [
+         4.3143,
+         -0.3333
+        ],
+        [
+         4.2454,
+         -0.1667
+        ],
+        [
+         4.18,
+         0
+        ],
+        [
+         4.1146,
+         0.1667
+        ],
+        [
+         4.0457,
+         0.3333
+        ],
+        [
+         3.9675,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-5",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         1.15,
+         -1.12
+        ],
+        [
+         1.15,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-dome-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.85,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         2.85,
+         1.12
+        ]
+       ],
+       "closed": true,
+       "id": "drum-cone-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.1936,
+         0.4575
+        ],
+        [
+         5.4677,
+         0.598
+        ],
+        [
+         6.0058,
+         0.0932
+        ],
+        [
+         6.1026,
+         -0.2949
+        ],
+        [
+         5.4429,
+         -0.3357
+        ]
+       ],
+       "closed": true,
+       "id": "hopper",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.55,
+       "region": "hopper",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.14
+        ],
+        [
+         2.4,
+         -0.1
+        ],
+        [
+         2.4,
+         0.14
+        ],
+        [
+         0,
+         0.14
+        ]
+       ],
+       "closed": true,
+       "id": "chute-main",
+       "bone": "chute",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.3,
+         0
+        ],
+        [
+         1.3,
+         0.22
+        ],
+        [
+         0,
+         0.22
+        ]
+       ],
+       "closed": true,
+       "id": "chute-ext-folded",
+       "bone": "chute-ext",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-1",
+       "bone": "wheel-1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-2",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-3",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-4",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-1-5",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-2",
+       "bone": "wheel-2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-1",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-3",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-4",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-2-5",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-3",
+       "bone": "wheel-3",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-1",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-2",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-4",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-3-5",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-4",
+       "bone": "wheel-4",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "id": "hub-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0.2,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-1",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-2",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-3",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1176,
+       "cy": -0.1618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1902,
+       "cy": 0.0618,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "handhole-4-5",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0,
+       "region": "brakes",
+       "material": "cast-iron"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Frame, cab with chamfered roof and sloped screen, glazing, grille, mirror arm, step, fuel tank, drum with flights, hopper, drive housing, chute pair, wheels with brake drum, hub and five hand holes.",
+      "de": "Rahmen, Fahrerhaus mit abgeschrägtem Dach und geneigter Scheibe, Verglasung, Kühlerfeld, Spiegelarm, Tritt, Kraftstofftank, Trommel mit Wendelmarken, Trichter, Antriebsgehäuse, Rutschenpaar, Räder mit Bremstrommel, Nabe und fünf Handlöchern."
+     },
+     "retained": {
+      "en": "Door, mirror arm, step, tank, stack cap, hub and hand holes (drawn unfilled, they rotate with the wheel).",
+      "de": "Tür, Spiegelarm, Tritt, Tank, Rohrkappe, Nabe und Handlöcher (unausgefüllt gezeichnet, sie drehen mit dem Rad)."
+     },
+     "merged": {
+      "en": "Wheel studs and the tyre tread merge into the tyre disc.",
+      "de": "Radbolzen und Reifenprofil gehen in der Reifenscheibe auf."
+     },
+     "omitted": {
+      "en": "Door handle, lamps, tyre tread, hinges, rails.",
+      "de": "Türgriff, Leuchten, Reifenprofil, Scharniere, Geländer."
+     },
+     "thinElements": {
+      "en": "Mirror arm 0.2 m (2 mm), hand holes 0.1 m (1 mm) as outlines.",
+      "de": "Spiegelarm 0,2 m (2 mm), Handlöcher 0,1 m (1 mm) als Umriss."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:200 with detail lines in the 0.18 mm pen.",
+      "de": "Wie 1:200 mit Detaillinien im 0,18-mm-Stift."
+     },
+     "overlays": {
+      "en": "As 1:200; brake drum, hub and hand holes all carry the brakes region.",
+      "de": "Wie 1:200; Bremstrommel, Nabe und Handlöcher tragen die Bremsregion."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.5,
+         0.5
+        ],
+        [
+         -4.5,
+         0.9
+        ],
+        [
+         4.3,
+         0.9
+        ],
+        [
+         4.3,
+         0.42
+        ],
+        [
+         4.2,
+         0.42
+        ],
+        [
+         4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "frame",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.8,
+       "filled": true,
+       "tone": 0.4,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.4,
+         0.9
+        ],
+        [
+         2.4,
+         3.2
+        ],
+        [
+         2.52,
+         3.3
+        ],
+        [
+         4.08,
+         3.3
+        ],
+        [
+         4.2,
+         3.24
+        ],
+        [
+         4.44,
+         2.52
+        ],
+        [
+         4.5,
+         2.4
+        ],
+        [
+         4.5,
+         0.9
+        ]
+       ],
+       "closed": true,
+       "id": "cab",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         1.3
+        ],
+        [
+         4.5,
+         1.95
+        ],
+        [
+         4,
+         1.95
+        ],
+        [
+         4,
+         1.3
+        ]
+       ],
+       "closed": true,
+       "id": "front-grille",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "engine-bay",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.5
+        ],
+        [
+         4.14,
+         3.1
+        ],
+        [
+         3.9,
+         3.1
+        ],
+        [
+         3.9,
+         2.5
+        ]
+       ],
+       "closed": true,
+       "id": "windscreen",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.76,
+         2.5
+        ],
+        [
+         3.76,
+         3.12
+        ],
+        [
+         3,
+         3.12
+        ],
+        [
+         3,
+         2.5
+        ]
+       ],
+       "closed": true,
+       "id": "door-glass",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7,
+         1.12
+        ],
+        [
+         2.7,
+         3
+        ],
+        [
+         3.9,
+         3
+        ]
+       ],
+       "closed": false,
+       "id": "door-line",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "cab",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.6,
+         0.9
+        ],
+        [
+         -2.05,
+         0.9
+        ],
+        [
+         -2.05,
+         2.75
+        ],
+        [
+         -2.6,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pedestal",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.05,
+         0.9
+        ],
+        [
+         -3.8,
+         0.9
+        ],
+        [
+         -3.8,
+         2.35
+        ],
+        [
+         -4.05,
+         2.35
+        ]
+       ],
+       "closed": true,
+       "id": "hinge-post",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.22,
+         1.3
+        ],
+        [
+         2.42,
+         1.3
+        ],
+        [
+         2.42,
+         3.35
+        ],
+        [
+         2.22,
+         3.35
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.3798,
+         1.3701
+        ],
+        [
+         -0.3964,
+         1.1765
+        ],
+        [
+         -0.2634,
+         0.6429
+        ],
+        [
+         0.5129,
+         0.8364
+        ]
+       ],
+       "closed": true,
+       "id": "drive-housing",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.35,
+       "region": "drum-drive",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-belly",
+       "bone": "drum",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.3875,
+         0.5
+        ],
+        [
+         0.4657,
+         0.3333
+        ],
+        [
+         0.5346,
+         0.1667
+        ],
+        [
+         0.6,
+         0
+        ],
+        [
+         0.6654,
+         -0.1667
+        ],
+        [
+         0.7343,
+         -0.3333
+        ],
+        [
+         0.8125,
+         -0.5
+        ],
+        [
+         1.0125,
+         -0.5
+        ],
+        [
+         0.9343,
+         -0.3333
+        ],
+        [
+         0.8654,
+         -0.1667
+        ],
+        [
+         0.8,
+         0
+        ],
+        [
+         0.7346,
+         0.1667
+        ],
+        [
+         0.6657,
+         0.3333
+        ],
+        [
+         0.5875,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-1",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.2375,
+         0.5
+        ],
+        [
+         1.3157,
+         0.3333
+        ],
+        [
+         1.3846,
+         0.1667
+        ],
+        [
+         1.45,
+         0
+        ],
+        [
+         1.5154,
+         -0.1667
+        ],
+        [
+         1.5843,
+         -0.3333
+        ],
+        [
+         1.6625,
+         -0.5
+        ],
+        [
+         1.8625,
+         -0.5
+        ],
+        [
+         1.7843,
+         -0.3333
+        ],
+        [
+         1.7154,
+         -0.1667
+        ],
+        [
+         1.65,
+         0
+        ],
+        [
+         1.5846,
+         0.1667
+        ],
+        [
+         1.5157,
+         0.3333
+        ],
+        [
+         1.4375,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-2",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.0875,
+         0.5
+        ],
+        [
+         2.1657,
+         0.3333
+        ],
+        [
+         2.2346,
+         0.1667
+        ],
+        [
+         2.3,
+         0
+        ],
+        [
+         2.3654,
+         -0.1667
+        ],
+        [
+         2.4343,
+         -0.3333
+        ],
+        [
+         2.5125,
+         -0.5
+        ],
+        [
+         2.7125,
+         -0.5
+        ],
+        [
+         2.6343,
+         -0.3333
+        ],
+        [
+         2.5654,
+         -0.1667
+        ],
+        [
+         2.5,
+         0
+        ],
+        [
+         2.4346,
+         0.1667
+        ],
+        [
+         2.3657,
+         0.3333
+        ],
+        [
+         2.2875,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-3",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.9375,
+         0.5
+        ],
+        [
+         3.0157,
+         0.3333
+        ],
+        [
+         3.0846,
+         0.1667
+        ],
+        [
+         3.15,
+         0
+        ],
+        [
+         3.2154,
+         -0.1667
+        ],
+        [
+         3.2843,
+         -0.3333
+        ],
+        [
+         3.3625,
+         -0.5
+        ],
+        [
+         3.5625,
+         -0.5
+        ],
+        [
+         3.4843,
+         -0.3333
+        ],
+        [
+         3.4154,
+         -0.1667
+        ],
+        [
+         3.35,
+         0
+        ],
+        [
+         3.2846,
+         0.1667
+        ],
+        [
+         3.2157,
+         0.3333
+        ],
+        [
+         3.1375,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-4",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.7875,
+         0.5
+        ],
+        [
+         3.8657,
+         0.3333
+        ],
+        [
+         3.9346,
+         0.1667
+        ],
+        [
+         4,
+         0
+        ],
+        [
+         4.0654,
+         -0.1667
+        ],
+        [
+         4.1343,
+         -0.3333
+        ],
+        [
+         4.2125,
+         -0.5
+        ],
+        [
+         4.4125,
+         -0.5
+        ],
+        [
+         4.3343,
+         -0.3333
+        ],
+        [
+         4.2654,
+         -0.1667
+        ],
+        [
+         4.2,
+         0
+        ],
+        [
+         4.1346,
+         0.1667
+        ],
+        [
+         4.0657,
+         0.3333
+        ],
+        [
+         3.9875,
+         0.5
+        ]
+       ],
+       "closed": true,
+       "id": "flight-5",
+       "bone": "drum-spiral",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.75,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.05,
+         -0.3681
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.28,
+         -0.8119
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.65,
+         -1.0759
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         1.15,
+         -1.12
+        ],
+        [
+         1.15,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.65,
+         1.0759
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.28,
+         0.8119
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0.05,
+         0.3681
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-dome-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.85,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         2.85,
+         1.12
+        ]
+       ],
+       "closed": true,
+       "id": "drum-cone-cap",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drum",
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.1936,
+         0.4575
+        ],
+        [
+         5.4677,
+         0.598
+        ],
+        [
+         6.0058,
+         0.0932
+        ],
+        [
+         6.1026,
+         -0.2949
+        ],
+        [
+         5.4429,
+         -0.3357
+        ]
+       ],
+       "closed": true,
+       "id": "hopper",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.55,
+       "region": "hopper",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.14
+        ],
+        [
+         2.4,
+         -0.1
+        ],
+        [
+         2.4,
+         0.14
+        ],
+        [
+         0,
+         0.14
+        ]
+       ],
+       "closed": true,
+       "id": "chute-main",
+       "bone": "chute",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.3,
+         0
+        ],
+        [
+         1.3,
+         0.22
+        ],
+        [
+         0,
+         0.22
+        ]
+       ],
+       "closed": true,
+       "id": "chute-ext-folded",
+       "bone": "chute-ext",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.6,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-1",
+       "bone": "wheel-1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-1",
+       "bone": "wheel-1",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-2",
+       "bone": "wheel-2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-2",
+       "bone": "wheel-2",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-3",
+       "bone": "wheel-3",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-3",
+       "bone": "wheel-3",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "tyre-4",
+       "bone": "wheel-4",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "brake-drum-4",
+       "bone": "wheel-4",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "brakes",
+       "material": "cast-iron"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Frame band, cab, two glass panes, grille panel, the drum as belly with dome and cone caps and five flight marks, hopper, drive housing, chute with extension, four tyres with brake drums.",
+      "de": "Rahmenband, Fahrerhaus, zwei Glasscheiben, Kühlerfeld, die Trommel als Bauch mit Kuppen- und Konuskappe und fünf Wendelmarken, Trichter, Antriebsgehäuse, Rutsche mit Verlängerung, vier Reifen mit Bremstrommeln."
+     },
+     "retained": {
+      "en": "Door line, pillar between windscreen and door glass, grille, drive housing, flight marks that drift with drum rotation, brake drum inside each tyre.",
+      "de": "Türlinie, Pfosten zwischen Frontscheibe und Türglas, Kühlerfeld, Antriebsgehäuse, mit der Trommeldrehung wandernde Wendelmarken, Bremstrommel in jedem Reifen."
+     },
+     "merged": {
+      "en": "Windscreen and door glass are separate panes; mirrors, steps, tanks, hub and hand holes merge into the surrounding forms.",
+      "de": "Frontscheibe und Türglas sind getrennte Scheiben; Spiegel, Tritte, Tanks, Nabe und Handlöcher gehen in den umgebenden Formen auf."
+     },
+     "omitted": {
+      "en": "Mirrors, steps, tanks, hub, bolts, tread, hinges.",
+      "de": "Spiegel, Tritte, Tanks, Nabe, Schrauben, Profil, Scharniere."
+     },
+     "thinElements": {
+      "en": "Flight marks are 0.2 m (1 mm) wide; the stack 0.2 m (1 mm); chute 0.24 m (1.2 mm).",
+      "de": "Wendelmarken sind 0,2 m (1 mm) breit; das Rohr 0,2 m (1 mm); die Rutsche 0,24 m (1,2 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Tyres darkest, drum dark with lighter flight marks, cab mid-tone, glass lightest, brake drums mid-tone.",
+      "de": "Reifen am dunkelsten, Trommel dunkel mit helleren Wendelmarken, Fahrerhaus mittlerer Ton, Glas am hellsten, Bremstrommeln mittlerer Ton."
+     },
+     "overlays": {
+      "en": "Each region is drawn as its own form: cab, chassis frame, engine-bay grille, glazing, drum (belly and caps), drive housing, hopper, chute, exhaust stack, tyres and brake drums.",
+      "de": "Jede Region ist eine eigene Form: Fahrerhaus, Rahmen, Kühlerfeld, Verglasung, Trommel (Bauch und Kappen), Antriebsgehäuse, Trichter, Rutsche, Abgasrohr, Reifen und Bremstrommeln."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.5,
+         0.55
+        ],
+        [
+         -4.5,
+         0.9
+        ],
+        [
+         2.4,
+         0.9
+        ],
+        [
+         2.4,
+         3.22
+        ],
+        [
+         2.5,
+         3.3
+        ],
+        [
+         4.1,
+         3.3
+        ],
+        [
+         4.22,
+         3.22
+        ],
+        [
+         4.46,
+         2.5
+        ],
+        [
+         4.5,
+         2.4
+        ],
+        [
+         4.5,
+         0.42
+        ],
+        [
+         4.25,
+         0.42
+        ],
+        [
+         4.25,
+         0.62
+        ],
+        [
+         -4.2,
+         0.62
+        ],
+        [
+         -4.2,
+         0.55
+        ]
+       ],
+       "closed": true,
+       "id": "truck-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "regions": [
+        "cab",
+        "chassis",
+        "engine-bay"
+       ],
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.3,
+         2.46
+        ],
+        [
+         4.1,
+         3.06
+        ],
+        [
+         3.1,
+         3.06
+        ],
+        [
+         3.1,
+         2.46
+        ]
+       ],
+       "closed": true,
+       "id": "cab-glass",
+       "bone": "chassis",
+       "role": "glazing",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.85,
+       "region": "cab-glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.6,
+         0.9
+        ],
+        [
+         -2.05,
+         0.9
+        ],
+        [
+         -2.05,
+         2.75
+        ],
+        [
+         -2.6,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pedestal",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -4.05,
+         0.9
+        ],
+        [
+         -3.8,
+         0.9
+        ],
+        [
+         -3.8,
+         2.35
+        ],
+        [
+         -4.05,
+         2.35
+        ]
+       ],
+       "closed": true,
+       "id": "hinge-post",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chassis",
+       "material": "paint-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.22,
+         1.3
+        ],
+        [
+         2.42,
+         1.3
+        ],
+        [
+         2.42,
+         3.35
+        ],
+        [
+         2.22,
+         3.35
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.14,
+         -0.5999
+        ],
+        [
+         0.45,
+         -0.9699
+        ],
+        [
+         0.9,
+         -1.12
+        ],
+        [
+         3,
+         -1.12
+        ],
+        [
+         5.4,
+         -0.5
+        ],
+        [
+         5.4,
+         0.5
+        ],
+        [
+         3,
+         1.12
+        ],
+        [
+         0.9,
+         1.12
+        ],
+        [
+         0.45,
+         0.9699
+        ],
+        [
+         0.14,
+         0.5999
+        ],
+        [
+         0,
+         0
+        ]
+       ],
+       "closed": true,
+       "id": "drum-body",
+       "bone": "drum",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "drum",
+        "drum-drive"
+       ],
+       "material": "drum-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.1936,
+         0.4575
+        ],
+        [
+         5.4677,
+         0.598
+        ],
+        [
+         6.0058,
+         0.0932
+        ],
+        [
+         6.1026,
+         -0.2949
+        ],
+        [
+         5.4429,
+         -0.3357
+        ]
+       ],
+       "closed": true,
+       "id": "hopper",
+       "bone": "drum",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "hopper",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.14
+        ],
+        [
+         2.4,
+         -0.1
+        ],
+        [
+         2.4,
+         0.14
+        ],
+        [
+         0,
+         0.14
+        ]
+       ],
+       "closed": true,
+       "id": "chute-main",
+       "bone": "chute",
+       "role": "body",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.5,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.3,
+         0
+        ],
+        [
+         1.3,
+         0.22
+        ],
+        [
+         0,
+         0.22
+        ]
+       ],
+       "closed": true,
+       "id": "chute-ext-folded",
+       "bone": "chute-ext",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.6,
+       "region": "chute",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "wheel-1-disc",
+       "bone": "wheel-1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "wheel-2-disc",
+       "bone": "wheel-2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "wheel-3-disc",
+       "bone": "wheel-3",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.52,
+       "ry": 0.52,
+       "id": "wheel-4-disc",
+       "bone": "wheel-4",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One composed truck silhouette (frame, cab and bumper), the drum with its dome, belly and cone as one closed form, a hopper wedge, four wheel discs, a chute bar with folded extension and the exhaust stack.",
+      "de": "Eine zusammengesetzte Lkw-Silhouette (Rahmen, Fahrerhaus, Stoßfänger), die Trommel mit Kuppe, Bauch und Konus als eine geschlossene Form, ein Trichterkeil, vier Radscheiben, eine Rutschenleiste mit eingeklappter Verlängerung und das Abgasrohr."
+     },
+     "retained": {
+      "en": "Overall 9.0 x 3.95 m, 14 degree drum axis, cab-glass band, rear pedestal, the stack at 0.2 m (0.4 mm) and both chute parts.",
+      "de": "Gesamtmaß 9,0 x 3,95 m, 14 Grad Trommelachse, Glasband des Fahrerhauses, hinterer Lagerbock, das Abgasrohr mit 0,2 m (0,4 mm) und beide Rutschenteile."
+     },
+     "merged": {
+      "en": "Frame, cab, bumper and engine bay form one body; tyres and brake drums are one disc per wheel; the hydraulic drive housing is part of the drum form.",
+      "de": "Rahmen, Fahrerhaus, Stoßfänger und Motorraum bilden einen Körper; Reifen und Bremstrommeln sind je Rad eine Scheibe; das Hydraulikantriebsgehäuse gehört zur Trommelform."
+     },
+     "omitted": {
+      "en": "Spiral flights, seams, door, mirrors, tanks, rim details and the bumper step are dropped; they are below 0.2 mm or cannot be told apart at 1:500.",
+      "de": "Wendelmarkierung, Nähte, Tür, Spiegel, Tanks, Felgendetails und der Trittstufe am Stoßfänger entfallen; sie liegen unter 0,2 mm oder sind bei 1:500 nicht zu unterscheiden."
+     },
+     "thinElements": {
+      "en": "The stack (0.2 m) and the chute (0.24 to 0.28 m) are drawn at about real width, 0.4 to 0.56 mm; nothing is thickened.",
+      "de": "Das Rohr (0,2 m) und die Rutsche (0,24 bis 0,28 m) sind in etwa Realbreite gezeichnet, 0,4 bis 0,56 mm; nichts wird verdickt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body and cab mid-dark, drum dark, glass lightest, hopper and chute mid-tone, wheels darkest; pens 0.15 mm body, 0.13 mm glass.",
+      "de": "Körper und Fahrerhaus mitteldunkel, Trommel dunkel, Glas am hellsten, Trichter und Rutsche mittlerer Ton, Räder am dunkelsten; Stifte 0,15 mm Körper, 0,13 mm Glas."
+     },
+     "overlays": {
+      "en": "The truck-body form carries cab, chassis and engine-bay (merged); the drum form carries drum and drive; the wheel disc carries tyres and brakes.",
+      "de": "Die Lkw-Körperform trägt Fahrerhaus, Fahrgestell und Motorraum (zusammengefasst); die Trommelform trägt Trommel und Antrieb; die Radscheibe trägt Reifen und Bremsen."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "transit-agitating",
+    "title": {
+     "en": "Transit, drum agitating",
+     "de": "Fahrt, Trommel rührt"
+    },
+    "description": {
+     "en": "Driving to site with the full drum turning slowly, chute folded up on the drum, engine at part load.",
+     "de": "Fahrt zur Baustelle mit voller, langsam drehender Trommel, Rutsche hochgeklappt auf der Trommel, Motor in Teillast."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-1",
+     "contact-2",
+     "contact-3",
+     "contact-4"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "drum-drive": 0.2,
+      "driving": 0.5,
+      "braking": 0
+     },
+     "regions": {
+      "cab": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cab-glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "engine-bay": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "drum": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.65
+      },
+      "drum-drive": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1
+      },
+      "hopper": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "chute": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 32
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "concrete",
+      "kind": "carried",
+      "title": {
+       "en": "Fresh concrete in the drum (9 m3 at 2.4 t/m3 at full load)",
+       "de": "Frischbeton in der Trommel (9 m3 zu 2,4 t/m3 bei voller Ladung)"
+      },
+      "anchor": "drum-cog",
+      "fxN": 0,
+      "fyN": -211823.6,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "parked-off",
+    "title": {
+     "en": "Parked, everything off",
+     "de": "Geparkt, alles aus"
+    },
+    "description": {
+     "en": "Empty and washed out, engine off, drum still, chute stowed.",
+     "de": "Leer und ausgewaschen, Motor aus, Trommel steht, Rutsche verstaut."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-1",
+     "contact-2",
+     "contact-3",
+     "contact-4"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0,
+      "drum-drive": 0,
+      "driving": 0,
+      "braking": 0
+     },
+     "regions": {
+      "cab": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cab-glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "engine-bay": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "drum": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.65
+      },
+      "drum-drive": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1
+      },
+      "hopper": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "chute": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 32
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 0,
+      "radiator-air": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "charging",
+    "title": {
+     "en": "Charging at the plant",
+     "de": "Beladen im Werk"
+    },
+    "description": {
+     "en": "Standing under the batching plant hopper, drum at full charging speed, engine at part load.",
+     "de": "Stehend unter dem Mischwerk-Trichter, Trommel mit voller Beladedrehzahl, Motor in Teillast."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-1",
+     "contact-2",
+     "contact-3",
+     "contact-4"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "drum-drive": 1,
+      "driving": 0,
+      "braking": 0
+     },
+     "regions": {
+      "cab": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cab-glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "engine-bay": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "drum": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.65
+      },
+      "drum-drive": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1
+      },
+      "hopper": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "chute": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 32
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "concrete",
+      "kind": "carried",
+      "title": {
+       "en": "Fresh concrete in the drum (9 m3 at 2.4 t/m3 at full load)",
+       "de": "Frischbeton in der Trommel (9 m3 zu 2,4 t/m3 bei voller Ladung)"
+      },
+      "anchor": "drum-cog",
+      "fxN": 0,
+      "fyN": -127094.2,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "discharging",
+    "title": {
+     "en": "Discharging over the chute",
+     "de": "Entleeren über die Rutsche"
+    },
+    "description": {
+     "en": "Chute swung out and lowered, extension unfolded, drum turning at discharge speed, concrete half discharged.",
+     "de": "Rutsche ausgeschwenkt und abgesenkt, Verlängerung ausgeklappt, Trommel mit Entleerdrehzahl, Beton zur Hälfte entleert."
+    },
+    "bones": {
+     "chute": {
+      "angleDeg": 165
+     },
+     "chute-ext": {
+      "angleDeg": -180
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-1",
+     "contact-2",
+     "contact-3",
+     "contact-4"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "drum-drive": 0.7,
+      "driving": 0,
+      "braking": 0
+     },
+     "regions": {
+      "cab": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cab-glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "engine-bay": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "drum": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.65
+      },
+      "drum-drive": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1
+      },
+      "hopper": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "chute": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6,
+       "wettedness": 0.8
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 32
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "concrete",
+      "kind": "carried",
+      "title": {
+       "en": "Fresh concrete in the drum (9 m3 at 2.4 t/m3 at full load)",
+       "de": "Frischbeton in der Trommel (9 m3 zu 2,4 t/m3 bei voller Ladung)"
+      },
+      "anchor": "drum-cog",
+      "fxN": 0,
+      "fyN": -105911.8,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "chute-swing",
+    "title": {
+     "en": "Chute swinging out",
+     "de": "Rutsche schwenkt aus"
+    },
+    "description": {
+     "en": "Key pose of the discharge sequence: the chute is half way down, the extension half unfolded.",
+     "de": "Schlüsselpose der Entleerfolge: Rutsche auf halbem Weg nach unten, Verlängerung halb ausgeklappt."
+    },
+    "key": true,
+    "bones": {
+     "chute": {
+      "angleDeg": 80
+     },
+     "chute-ext": {
+      "angleDeg": -90
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-1",
+     "contact-2",
+     "contact-3",
+     "contact-4"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "drum-drive": 0.2,
+      "driving": 0,
+      "braking": 0
+     },
+     "regions": {
+      "cab": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cab-glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15
+      },
+      "engine-bay": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "drum": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.65
+      },
+      "drum-drive": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1
+      },
+      "hopper": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "chute": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.06,
+        "tempC": 32
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "concrete",
+      "kind": "carried",
+      "title": {
+       "en": "Fresh concrete in the drum (9 m3 at 2.4 t/m3 at full load)",
+       "de": "Frischbeton in der Trommel (9 m3 zu 2,4 t/m3 bei voller Ladung)"
+      },
+      "anchor": "drum-cog",
+      "fxN": 0,
+      "fyN": -211823.6,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "agitate-at-rest",
+    "title": {
+     "en": "Drum agitating at idle",
+     "de": "Trommel rührt im Leerlauf"
+    },
+    "description": {
+     "en": "A 10 s loop of the full drum turning at 6 rpm while the engine idles: the spiral flight marks drift one pitch per revolution and the idle exhaust and radiator air keep flowing.",
+     "de": "Eine Schleife von 10 s mit voller Trommel bei 6 U/min bei Motorleerlauf: Die Wendelmarken wandern je Umdrehung eine Steigung, Leerlaufabgas und Kühlerluft strömen weiter."
+    },
+    "durationS": 10,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 0.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.0425
+       }
+      }
+     },
+     {
+      "t": 1,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.085
+       }
+      }
+     },
+     {
+      "t": 1.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.1275
+       }
+      }
+     },
+     {
+      "t": 2,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.17
+       }
+      }
+     },
+     {
+      "t": 2.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.2125
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.255
+       }
+      }
+     },
+     {
+      "t": 3.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.2975
+       }
+      }
+     },
+     {
+      "t": 4,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.34
+       }
+      }
+     },
+     {
+      "t": 4.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.3825
+       }
+      }
+     },
+     {
+      "t": 5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.425
+       }
+      }
+     },
+     {
+      "t": 5.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.4675
+       }
+      }
+     },
+     {
+      "t": 6,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.51
+       }
+      }
+     },
+     {
+      "t": 6.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.5525
+       }
+      }
+     },
+     {
+      "t": 7,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.595
+       }
+      }
+     },
+     {
+      "t": 7.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.6375
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.68
+       }
+      }
+     },
+     {
+      "t": 8.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.7225
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.765
+       }
+      }
+     },
+     {
+      "t": 9.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.8075
+       }
+      }
+     },
+     {
+      "t": 9.9667,
+      "pose": "transit-agitating",
+      "ease": "step",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0.8472
+       }
+      }
+     },
+     {
+      "t": 10,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-1",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-2",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-3",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "contact-4",
+      "fromS": 0,
+      "toS": 10
+     }
+    ],
+    "phases": [
+     {
+      "id": "agitate",
+      "fromS": 0,
+      "toS": 10,
+      "title": {
+       "en": "Agitating at 6 rpm",
+       "de": "Rühren mit 6 U/min"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "operating",
+      "title": {
+       "en": "Engine idling, drum agitating",
+       "de": "Motor im Leerlauf, Trommel rührt"
+      },
+      "target": "engine-load"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.15
+       },
+       {
+        "t": 10,
+        "v": 0.15
+       }
+      ]
+     },
+     {
+      "target": "operating:drum-drive",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.2
+       },
+       {
+        "t": 10,
+        "v": 0.2
+       }
+      ]
+     },
+     {
+      "target": "emitter:exhaust-stack-jet",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:radiator-air",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "discharge-sequence",
+    "title": {
+     "en": "Start, discharge and shut down",
+     "de": "Anlassen, Entleeren und Abstellen"
+    },
+    "description": {
+     "en": "A 16 s sequence: key on, drum starts, the chute swings out and the extension unfolds, 9 m3 flow out while the drum turns at discharge speed, chute stows, engine off.",
+     "de": "Eine Folge von 16 s: Zündung, Trommel läuft an, Rutsche schwenkt aus und Verlängerung klappt aus, 9 m3 fließen bei Entleerdrehzahl heraus, Rutsche wird verstaut, Motor aus."
+    },
+    "durationS": 16,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 0.5,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 1,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 1.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 2,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 2.5,
+      "pose": "transit-agitating",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0.085
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "chute-swing",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 12.222
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0.17
+       }
+      }
+     },
+     {
+      "t": 3.5,
+      "pose": "chute-swing",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 42.778
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0.255
+       }
+      }
+     },
+     {
+      "t": 4,
+      "pose": "chute-swing",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 82.5
+       },
+       "chute-ext": {
+        "angleDeg": -28.125
+       },
+       "drum-spiral": {
+        "dx": 0.34
+       }
+      }
+     },
+     {
+      "t": 4.5,
+      "pose": "chute-swing",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 122.222
+       },
+       "chute-ext": {
+        "angleDeg": -90
+       },
+       "drum-spiral": {
+        "dx": 0.425
+       }
+      }
+     },
+     {
+      "t": 5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 152.778
+       },
+       "chute-ext": {
+        "angleDeg": -151.875
+       },
+       "drum-spiral": {
+        "dx": 0.51
+       }
+      }
+     },
+     {
+      "t": 5.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.595
+       }
+      }
+     },
+     {
+      "t": 6,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.68
+       }
+      }
+     },
+     {
+      "t": 6.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.765
+       }
+      }
+     },
+     {
+      "t": 6.9667,
+      "pose": "discharging",
+      "ease": "step",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.8443
+       }
+      }
+     },
+     {
+      "t": 7,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 7.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.085
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.17
+       }
+      }
+     },
+     {
+      "t": 8.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.255
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.34
+       }
+      }
+     },
+     {
+      "t": 9.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.425
+       }
+      }
+     },
+     {
+      "t": 10,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.51
+       }
+      }
+     },
+     {
+      "t": 10.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.595
+       }
+      }
+     },
+     {
+      "t": 11,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.68
+       }
+      }
+     },
+     {
+      "t": 11.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.765
+       }
+      }
+     },
+     {
+      "t": 11.9667,
+      "pose": "discharging",
+      "ease": "step",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.8443
+       }
+      }
+     },
+     {
+      "t": 12,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 12.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.085
+       }
+      }
+     },
+     {
+      "t": 13,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.17
+       }
+      }
+     },
+     {
+      "t": 13.5,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -180
+       },
+       "drum-spiral": {
+        "dx": 0.255
+       }
+      }
+     },
+     {
+      "t": 14,
+      "pose": "discharging",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 165
+       },
+       "chute-ext": {
+        "angleDeg": -133.333
+       },
+       "drum-spiral": {
+        "dx": 0.34
+       }
+      }
+     },
+     {
+      "t": 14.5,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 139.219
+       },
+       "chute-ext": {
+        "angleDeg": -46.667
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 15,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 82.5
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 15.5,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 25.781
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     },
+     {
+      "t": 16,
+      "pose": "parked-off",
+      "ease": "linear",
+      "bones": {
+       "chute": {
+        "angleDeg": 0
+       },
+       "chute-ext": {
+        "angleDeg": 0
+       },
+       "drum-spiral": {
+        "dx": 0
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-1",
+      "fromS": 0,
+      "toS": 16
+     },
+     {
+      "anchor": "contact-2",
+      "fromS": 0,
+      "toS": 16
+     },
+     {
+      "anchor": "contact-3",
+      "fromS": 0,
+      "toS": 16
+     },
+     {
+      "anchor": "contact-4",
+      "fromS": 0,
+      "toS": 16
+     }
+    ],
+    "phases": [
+     {
+      "id": "start",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Start-up",
+       "de": "Anlassen"
+      }
+     },
+     {
+      "id": "swing",
+      "fromS": 2,
+      "toS": 6,
+      "title": {
+       "en": "Chute swings out",
+       "de": "Rutsche schwenkt aus"
+      }
+     },
+     {
+      "id": "pour",
+      "fromS": 6,
+      "toS": 13,
+      "title": {
+       "en": "Pouring",
+       "de": "Entleeren"
+      }
+     },
+     {
+      "id": "stow",
+      "fromS": 13,
+      "toS": 16,
+      "title": {
+       "en": "Stowing and shutdown",
+       "de": "Verstauen und Abstellen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.5,
+      "kind": "ignition",
+      "title": {
+       "en": "Ignition",
+       "de": "Zündung"
+      },
+      "target": "exhaust-stack-jet"
+     },
+     {
+      "t": 2,
+      "kind": "operating",
+      "title": {
+       "en": "Drum drive engaged",
+       "de": "Trommelantrieb zugeschaltet"
+      },
+      "target": "drum-drive"
+     },
+     {
+      "t": 6.5,
+      "kind": "load-on",
+      "title": {
+       "en": "Concrete starts to leave the drum",
+       "de": "Beton verlässt die Trommel"
+      },
+      "target": "concrete"
+     },
+     {
+      "t": 15.5,
+      "kind": "shutdown",
+      "title": {
+       "en": "Engine off",
+       "de": "Motor aus"
+      },
+      "target": "exhaust-stack-jet"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.5,
+        "v": 0.15
+       },
+       {
+        "t": 2,
+        "v": 0.5
+       },
+       {
+        "t": 14,
+        "v": 0.5
+       },
+       {
+        "t": 15.5,
+        "v": 0.15
+       },
+       {
+        "t": 15.6,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:drum-drive",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 0.2
+       },
+       {
+        "t": 6,
+        "v": 0.7
+       },
+       {
+        "t": 13,
+        "v": 0.7
+       },
+       {
+        "t": 14,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:exhaust-stack-jet",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.5,
+        "v": 1
+       },
+       {
+        "t": 15.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:radiator-air",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 0.5,
+        "v": 1
+       },
+       {
+        "t": 15.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:concrete",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 6.5,
+        "v": 1
+       },
+       {
+        "t": 13,
+        "v": 0.05
+       },
+       {
+        "t": 16,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "region:chute:wettedness",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6.5,
+        "v": 0
+       },
+       {
+        "t": 7.5,
+        "v": 0.8
+       },
+       {
+        "t": 13,
+        "v": 0.8
+       },
+       {
+        "t": 14.5,
+        "v": 0.1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 30,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "engine-load",
+     "title": {
+      "en": "Engine load",
+      "de": "Motorlast"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Engine off",
+        "de": "Motor aus"
+       }
+      },
+      {
+       "v": 0.15,
+       "title": {
+        "en": "Idle",
+        "de": "Leerlauf"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Part load",
+        "de": "Teillast"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Rated power",
+        "de": "Nennleistung"
+       }
+      }
+     ]
+    },
+    {
+     "id": "drum-drive",
+     "title": {
+      "en": "Drum drive",
+      "de": "Trommelantrieb"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Stopped",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.2,
+       "title": {
+        "en": "Agitating",
+        "de": "Rühren"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Discharging",
+        "de": "Entleeren"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Charging, full speed",
+        "de": "Beladen, volle Drehzahl"
+       }
+      }
+     ]
+    },
+    {
+     "id": "driving",
+     "title": {
+      "en": "Road speed",
+      "de": "Fahrgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standing",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Urban, 30 km/h",
+        "de": "Stadt, 30 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Road, 60 km/h",
+        "de": "Landstraße, 60 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Braking",
+      "de": "Bremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Released",
+        "de": "Gelöst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Light braking",
+        "de": "Leichtes Bremsen"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full braking",
+        "de": "Vollbremsung"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "cab",
+     "title": {
+      "en": "Cab paintwork",
+      "de": "Lackierung des Fahrerhauses"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint-steel",
+     "areaM2": 24,
+     "characteristicLengthM": 2.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "paint-steel",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 5416,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 5400,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "cab-glazing",
+     "title": {
+      "en": "Cab glazing",
+      "de": "Verglasung des Fahrerhauses"
+     },
+     "kind": "glazing",
+     "model": "passive",
+     "material": "glass",
+     "areaM2": 4.5,
+     "characteristicLengthM": 1.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "pane",
+       "title": {
+        "en": "Safety glass 6 mm",
+        "de": "Sicherheitsglas 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.006,
+       "heatCapacityJM2K": 12600,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 12600,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "chassis",
+     "title": {
+      "en": "Frame, pedestals and tanks",
+      "de": "Rahmen, Lagerböcke und Tanks"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint-steel",
+     "areaM2": 12,
+     "characteristicLengthM": 1.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "rail",
+       "title": {
+        "en": "Steel plate 8 mm",
+        "de": "Stahlblech 8 mm"
+       },
+       "kind": "metal",
+       "material": "paint-steel",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 28888,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 28900,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "engine-bay",
+     "title": {
+      "en": "Engine compartment shell under the cab",
+      "de": "Motorraumhülle unter dem Fahrerhaus"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "paint-steel",
+     "areaM2": 3.2,
+     "characteristicLengthM": 1.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "shell",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "paint-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 4000
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "exhaust-stack",
+     "title": {
+      "en": "Exhaust pipe and silencer outlet",
+      "de": "Auspuffrohr und Schalldämpferausgang"
+     },
+     "kind": "exhaust",
+     "model": "operating",
+     "material": "exhaust-steel",
+     "areaM2": 0.8,
+     "characteristicLengthM": 0.15,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.8,
+     "layers": [
+      {
+       "id": "pipe",
+       "title": {
+        "en": "Steel plate 1 mm",
+        "de": "Stahlblech 1 mm"
+       },
+       "kind": "metal",
+       "material": "exhaust-steel",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0,
+       "heatCapacityJM2K": 5416,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 5400,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 5000
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "drum",
+     "title": {
+      "en": "Mixer drum shell",
+      "de": "Mischtrommelhülle"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "drum-paint",
+     "areaM2": 36,
+     "characteristicLengthM": 2.4,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.7,
+     "layers": [
+      {
+       "id": "shell",
+       "title": {
+        "en": "Steel plate 5 mm",
+        "de": "Stahlblech 5 mm"
+       },
+       "kind": "metal",
+       "material": "drum-paint",
+       "thicknessM": 0.005,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 18055,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 18000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "drum-drive",
+     "title": {
+      "en": "Hydraulic drum drive housing",
+      "de": "Hydraulikantriebsgehäuse der Trommel"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "paint-steel",
+     "areaM2": 2.5,
+     "characteristicLengthM": 0.8,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "housing",
+       "title": {
+        "en": "Steel plate 8 mm",
+        "de": "Stahlblech 8 mm"
+       },
+       "kind": "metal",
+       "material": "paint-steel",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 28888,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 28900,
+     "operating": {
+      "key": "drum-drive",
+      "heatW": 539.1
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "hopper",
+     "title": {
+      "en": "Charging hopper",
+      "de": "Einfülltrichter"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 3,
+     "characteristicLengthM": 0.8,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.7,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel plate 3 mm",
+        "de": "Stahlblech 3 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 10833,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 10800,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "chute",
+     "title": {
+      "en": "Discharge chute and extension",
+      "de": "Entladerutsche und Verlängerung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 4,
+     "characteristicLengthM": 0.5,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.8,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel plate 3 mm",
+        "de": "Stahlblech 3 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 10833,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 10800,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyre sidewalls and treads",
+      "de": "Reifenflanken und Laufflächen"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 10,
+     "characteristicLengthM": 1.04,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "rubber",
+       "title": {
+        "en": "Tyre rubber 12 mm",
+        "de": "Reifengummi 12 mm"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.08,
+       "heatCapacityJM2K": 22440,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 22440,
+     "operating": {
+      "key": "driving",
+      "heatW": 5000
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "brakes",
+     "title": {
+      "en": "Brake drums and hubs",
+      "de": "Bremstrommeln und Naben"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "cast-iron",
+     "areaM2": 2.4,
+     "characteristicLengthM": 0.6,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "iron",
+       "title": {
+        "en": "Cast iron 15 mm",
+        "de": "Gusseisen 15 mm"
+       },
+       "kind": "metal",
+       "material": "cast-iron",
+       "thicknessM": 0.015,
+       "resistanceM2KW": 0.0003,
+       "heatCapacityJM2K": 49680,
+       "source": "literature",
+       "reference": "ashrae-2021"
+      }
+     ],
+     "heatCapacityJM2K": 49680,
+     "operating": {
+      "key": "braking",
+      "heatW": 15000
+     },
+     "source": "authored-estimate"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "exhaust-stack-jet",
+     "kind": "exhaust",
+     "title": {
+      "en": "Exhaust jet of the vertical stack",
+      "de": "Abgasstrahl des senkrechten Auspuffrohrs"
+     },
+     "anchor": "stack-mouth",
+     "directionDeg": 90,
+     "diameterM": 0.15,
+     "operatingKey": "engine-load",
+     "volumeFlowM3S": 1,
+     "temperatureRiseK": 340,
+     "vapourKgPerKg": 0.04,
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "radiator-air",
+     "kind": "vent",
+     "title": {
+      "en": "Radiator cooling air leaving under the cab",
+      "de": "Kühlerabluft unter dem Fahrerhaus"
+     },
+     "anchor": "radiator-outlet",
+     "directionDeg": 190,
+     "diameterM": 0.9,
+     "operatingKey": "engine-load",
+     "volumeFlowM3S": 7.5,
+     "temperatureRiseK": 30,
+     "vapourKgPerKg": 0,
+     "source": "authored-estimate"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Engine class 330 kW (12.8 l diesel): exhaust about 0.5 kg/s at 360 C (rho 0.52 kg/m3) gives 1.0 m3/s through a 0.15 m tailpipe (57 m/s) and 0.04 kg/kg water vapour (Heywood 2018); flow and rise scale linearly with the engine level, so idle (0.15) emits 0.15 m3/s at +51 K.",
+     "de": "Motorklasse 330 kW (12,8-l-Diesel): Abgas etwa 0,5 kg/s bei 360 C (rho 0,52 kg/m3) ergibt 1,0 m3/s durch ein 0,15-m-Endrohr (57 m/s) und 0,04 kg/kg Wasserdampf (Heywood 2018); Volumenstrom und Erhöhung skalieren linear mit der Motorstufe, im Leerlauf (0,15) also 0,15 m3/s bei +51 K."
+    },
+    {
+     "en": "Radiator: about 280 kW of coolant heat at rated power, +30 K of air gives 7.5 m3/s; the air leaves under the cab. Heat into the shells at level 1: engine compartment 4 kW, exhaust pipe 5 kW, drum drive housing 1.5 kW (20 percent of 7.5 kW hydraulic power), tyres 5 kW (the sidewall share of about 42 kW rolling resistance at 60 km/h), brake drums 15 kW (retarder and service brake). All authored estimates.",
+     "de": "Kühler: etwa 280 kW Kühlwasserwärme bei Nennleistung, +30 K Luft ergibt 7,5 m3/s; die Luft tritt unter dem Fahrerhaus aus. Wärme in die Hüllen bei Stufe 1: Motorraum 4 kW, Auspuffrohr 5 kW, Antriebsgehäuse 1,5 kW (20 Prozent von 7,5 kW Hydraulikleistung), Reifen 5 kW (Flankenanteil von etwa 42 kW Rollwiderstand bei 60 km/h), Bremstrommeln 15 kW (Dauerbremse und Betriebsbremse). Alles Schätzungen."
+    },
+    {
+     "en": "The fresh concrete is a mass load only; its hydration heat and the drum wall contact are not modelled. Heat capacities are active shell masses (steel 5 mm 18 kJ/(m2 K)).",
+     "de": "Der Frischbeton ist nur eine Massenlast; Hydratationswärme und Wandkontakt der Trommel sind nicht modelliert. Wärmekapazitäten sind aktive Schalenmassen (Stahl 5 mm 18 kJ/(m2 K))."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.8066,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Four axle contact patches share the load as unilateral supports; the 21.6 t of concrete is a point load at the drum centre of gravity (9 m3 at 2.4 t/m3). The drum rotation is not an elevation joint; the flight marks are a drawing pattern.",
+     "de": "Vier Achsaufstandsflächen teilen die Last als einseitige Auflager; die 21,6 t Beton sind eine Einzellast im Trommelschwerpunkt (9 m3 zu 2,4 t/m3). Die Trommeldrehung ist kein Gelenk der Ansicht; die Wendelmarken sind ein Zeichenmuster."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "transit-agitating",
+   "defaultClip": "agitate-at-rest",
+   "defaultScale": 200,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

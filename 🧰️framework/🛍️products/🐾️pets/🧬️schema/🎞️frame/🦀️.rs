@@ -4,6 +4,8 @@
 //! @see ../🔣️.json — the normative contract
 
 use super::*;
+use super::stage::elapsed;
+use super::scalars::nullable;
 
 //#region 🔖️Frame
 /// 👓️ One eye as drawn: the pupil's offset from the centre of the white in pixels and how far the lid is shut (0 open, 1 shut).

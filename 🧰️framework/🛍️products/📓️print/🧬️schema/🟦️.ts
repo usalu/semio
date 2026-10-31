@@ -73,7 +73,7 @@ export type VizSchemaDocument = {
   readonly $id: string;
   readonly "x-semio-family-options": Readonly<Record<string, VizFamilyOptions>>;
   readonly "x-semio-demo-tables": readonly VizDemoTable[];
-  readonly "x-semio-option-syntax": Readonly<Record<string, Readonly<Record<string, VizOptionSyntaxDescriptor>>>>;
+  readonly definitions: { readonly OptionSyntaxCatalog: { readonly const: Readonly<Record<string, Readonly<Record<string, VizOptionSyntaxDescriptor>>>> } };
 };
 
 /** 🍃 One terminal entry of the handcrafted taxonomy, mirrored into `🖼️assets/🔣️viz-taxonomy.json`. */

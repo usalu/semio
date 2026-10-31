@@ -13,7 +13,8 @@ const stand = { kind: "pose", pose: "stand" } as const;
 
 describe("🧍️ figure", () => {
   it("is as wide in CSS millimetres as its paper scene at zoom 1 and scales with zoom", () => {
-    const expected = depict(evaluate(walker, stand), defaultDepictionOptions("dark-line", "en", 100));
+    const options = defaultDepictionOptions("dark-line", "en", 100);
+    const expected = depict(evaluate(walker, stand, options.representation), options);
     const { container, rerender } = render(<StaffageFigure {...base} view="dark-line" query={stand} />);
     const figure = container.querySelector<HTMLElement>("[data-staffage-figure]")!;
     expect(figure.style.width).toBe(`${expected.widthMm}mm`);
@@ -23,13 +24,16 @@ describe("🧍️ figure", () => {
     expect(1.8 * mmPerMetre({ denominator: 100 })).toBeCloseTo(18, 9);
   });
 
-  it("fits the parent in contain mode and keeps the paper aspect and the scene", () => {
+  it("fills the parent in contain mode without taking its size from the scene", () => {
     const { container } = render(<StaffageFigure {...base} view="light-line" fit="contain" query={stand} />);
     const figure = container.querySelector<HTMLElement>("[data-staffage-figure]")!;
     const w = Number(figure.getAttribute("data-width-mm"));
     const h = Number(figure.getAttribute("data-height-mm"));
+    expect(figure.style.position).toBe("absolute");
     expect(figure.style.width).toBe("100%");
-    expect(figure.style.aspectRatio.replace(/\s/gu, "")).toBe(`${w}/${h}`);
+    expect(figure.style.height).toBe("100%");
+    expect(figure.style.aspectRatio).toBe("");
+    expect(figure.style.overflow).toBe("hidden");
     const svg = figure.querySelector("svg")!;
     expect(svg.getAttribute("viewBox")).toBe(`0 0 ${w} ${h}`);
     expect(svg.getAttribute("preserveAspectRatio")).toBe("xMidYMid meet");

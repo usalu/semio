@@ -135,7 +135,7 @@ fn scrub_input(value: &Value) -> ScrubInput<Value> {
 #[test]
 fn scrub_ledger_replays_every_fixture_scenario() {
     let law = scrub_law();
-    let actor = ActorId(text(&law["actor"]).to_string());
+    let actor = ActorId(text(&law["actor"]).into());
     for scenario in law["scenarios"].as_array().expect("scenarios") {
         let mut ledger = ScrubLedger::<Value>::default();
         for (index, row) in scenario["steps"].as_array().expect("steps").iter().enumerate() {
@@ -199,7 +199,7 @@ fn explore_scrub_ledger(ledger: &ScrubLedger<Value>, alphabet: &[(&str, &str, Sc
             ScrubInput::Abort { .. } => false,
         };
         let mut next = ledger.reference_fork();
-        let step = next.send("w", tool, actor, base, input.clone(), HybridLogicalTimestamp { actor: 0, physical_ms: *sends as u64, logical: 0 }).expect("the scrub ledger never refuses");
+        let step = next.send("w", tool, actor, base, &mut Some(input.clone()), HybridLogicalTimestamp { actor: 0, physical_ms: *sends as u64, logical: 0 }).expect("the scrub ledger never refuses");
         *sends += 1;
         if late {
             assert_eq!((&step, &next), (&ToolStep::Idle, ledger), "a late input of the closed press changes nothing");
@@ -232,7 +232,7 @@ fn the_scrub_ledger_never_refuses_and_late_inputs_change_nothing() {
 
 #[test]
 fn a_persisted_scrub_of_another_chart_is_refused() {
-    let state = ScrubState { states: vec!["nowhere".into()], tool: "demo#set".into(), actor: "a".into(), gesture: "g".into(), base_revision: "r".into(), transaction: TransactionRef { id: "tx-0000000000000000".into(), tool: "demo#set".into() }, entries: vec![("0".into(), json!(1))] };
+    let state = ScrubState { states: vec!["nowhere".into()], tool: "demo#set".into(), actor: ActorId("a".into()), gesture: "g".into(), base_revision: "r".into(), transaction: TransactionRef { id: "tx-0000000000000000".into(), tool: "demo#set".into() }, entries: vec![("0".into(), json!(1))] };
     assert_eq!(Scrub::<Value>::resume(state.clone()).err(), Some(ToolRefusal::Closed));
     assert_eq!(Scrub::<Value>::resume(ScrubState { states: vec!["idle".into()], ..state }).err(), Some(ToolRefusal::Unclosed), "a resting scrub holding an open transaction");
 }

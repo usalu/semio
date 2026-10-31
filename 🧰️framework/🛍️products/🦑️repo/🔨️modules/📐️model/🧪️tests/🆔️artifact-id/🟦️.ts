@@ -3,7 +3,7 @@ import{test,expect}from"bun:test";
 import{mkdirSync,mkdtempSync,realpathSync,writeFileSync,unlinkSync,rmSync}from"node:fs";
 import{join}from"node:path";
 import{spawnSync}from"node:child_process";
-import Ajv from"ajv/dist/2020";
+import Ajv from"ajv";
 import schema from"../../🧬️schema/🆔️artifact-id/🔣️.json";
 import fixture from"../🧫️fixtures/🆔️artifact-id/🔣️.json";
 import{requireTestToolV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";

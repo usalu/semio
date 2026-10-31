@@ -1,0 +1,729 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "tilt-window",
+    "category": "components",
+    "title": {
+      "en": "Tilt Window",
+      "de": "Kippfenster"
+    },
+    "summary": {
+      "en": "A 1.2 m timber-framed sash with glazing, pinned at its bottom hinge and held by a head stay, tilting outward in the section plane.",
+      "de": "Ein 1,2 m hoher Holzflügel mit Verglasung, unten am Gelenk gelagert und oben durch einen Stützarm gehalten, kippt in der Schnittebene nach außen."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "window",
+      "tilt",
+      "glass",
+      "timber"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-338",
+          "citation": "EN 338:2016 Structural timber, strength classes: C24 mean density 420 kg/m3, E0,mean = 11 GPa."
+        },
+        {
+          "id": "en-572",
+          "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (E = 70 GPa, emissivity per EN 673 typical 0.84)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind actions on windows (suction on the external face; 0.8 kN/m2 estimate)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table A.1 densities (glass 25 kN/m3)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties (typical emissivity of glass and timber; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "The sash hinges at the bottom (the tilt position of a tilt-and-turn window). The stay is a head roller with horizontal normal.",
+        "de": "Der Flügel ist unten angeschlagen (Kippstellung eines Dreh-Kipp-Fensters). Der Stützarm ist eine obere Rolle mit waagerechter Normalen."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.2,
+      "widthM": 0.3,
+      "depthM": 0.9,
+      "massKg": 72.8
+    },
+    "materials": [
+      {
+        "id": "timber",
+        "title": {
+          "en": "Timber C24 frame",
+          "de": "Holzrahmen C24"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11000000000,
+        "source": "literature",
+        "reference": "en-338"
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Insulating glass 24 mm",
+          "de": "Isolierglas 24 mm"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 70000000000,
+        "source": "literature",
+        "reference": "en-572"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "sill",
+      "bones": [
+        {
+          "id": "sill",
+          "parent": null,
+          "title": {
+            "en": "Frame sill (rigid root)",
+            "de": "Blendrahmen (starre Wurzel)"
+          },
+          "x": -0.15,
+          "y": 0.05,
+          "angleDeg": 0,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "sash",
+          "parent": "sill",
+          "title": {
+            "en": "Sash, revolute at the bottom hinge",
+            "de": "Flügel, Drehgelenk am unteren Gelenk"
+          },
+          "x": 0.15,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 1.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 72.8,
+            "comX": 0.6,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.0081,
+            "secondMomentM4": 5.4675e-06,
+            "extremeFibreM": 0.045,
+            "material": "timber",
+            "title": {
+              "en": "Sash frame, equivalent section",
+              "de": "Flügelrahmen, Ersatzquerschnitt"
+            }
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "hinge",
+        "bone": "sash",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Bottom hinge, pin",
+          "de": "Unteres Gelenk, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "stay",
+        "bone": "sash",
+        "x": 1.2,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Head stay, horizontal roller",
+          "de": "Oberer Stützarm, waagerechte Rolle"
+        },
+        "support": "roller",
+        "normalDeg": 0
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "sill-block",
+          "bone": "sill",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.05,
+          "w": 0.3,
+          "h": 0.1,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-frame",
+          "bone": "sash",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.045,
+          "w": 1.2,
+          "h": 0.09,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-pane",
+          "bone": "sash",
+          "role": "glazing",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.92,
+          "kind": "rect",
+          "x": 0.05,
+          "y": -0.012,
+          "w": 1.1,
+          "h": 0.024,
+          "region": "pane-glass",
+          "material": "glass"
+        },
+        {
+          "id": "hinge-pin",
+          "bone": "sash",
+          "role": "detail",
+          "lod": 1,
+          "z": 5,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.02,
+          "ry": 0.02,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-glazing-bead",
+          "bone": "sash",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0.04,
+          "y": -0.03,
+          "w": 1.12,
+          "h": 0.06,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-pane-inner",
+          "bone": "sash",
+          "role": "glazing",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.05,
+          "y": -0.0,
+          "w": 1.1,
+          "h": 0.004,
+          "region": "pane-glass",
+          "material": "glass"
+        },
+        {
+          "id": "sash-spacer-top",
+          "bone": "sash",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 1.14,
+          "y": -0.012,
+          "w": 0.01,
+          "h": 0.024,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-spacer-bottom",
+          "bone": "sash",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.05,
+          "y": -0.012,
+          "w": 0.01,
+          "h": 0.024,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-handle",
+          "bone": "sash",
+          "role": "body",
+          "lod": 2,
+          "z": 5.5,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "rect",
+          "x": 0.62,
+          "y": 0.045,
+          "w": 0.1,
+          "h": 0.03,
+          "r": 0.004,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-seal",
+          "bone": "sash",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.04
+            ],
+            [
+              1.2,
+              0.04
+            ]
+          ],
+          "closed": false,
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sash-grain",
+          "bone": "sash",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.1 0.03 C 0.4 0.034 0.7 0.026 1.1 0.03",
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sill-grain",
+          "bone": "sill",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.02 0.01 C 0.1 0.02 0.2 0.0 0.28 0.01",
+          "region": "frame-timber",
+          "material": "timber"
+        },
+        {
+          "id": "sill-drip",
+          "bone": "sill",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.28,
+              -0.05
+            ],
+            [
+              0.28,
+              -0.02
+            ]
+          ],
+          "closed": false,
+          "region": "frame-timber",
+          "material": "timber"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "closed",
+        "title": {
+          "en": "Closed",
+          "de": "Geschlossen"
+        },
+        "description": {
+          "en": "Sash vertical, held by the head stay.",
+          "de": "Flügel senkrecht, vom oberen Stützarm gehalten."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilted-open",
+        "title": {
+          "en": "Tilted open 15 deg",
+          "de": "Gekippt 15 Grad"
+        },
+        "description": {
+          "en": "Sash tilted 15 degrees outward about the bottom hinge; self-weight moment taken by the stay.",
+          "de": "Flügel 15 Grad nach außen um das untere Gelenk gekippt; das Eigengewichtsmoment nimmt der Stützarm auf."
+        },
+        "bones": {
+          "sash": {
+            "angleDeg": 15
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "fully-tilted",
+        "title": {
+          "en": "Fully tilted with wind suction",
+          "de": "Voll gekippt mit Windsog"
+        },
+        "description": {
+          "en": "Sash at 30 degrees outward under 0.8 kN/m2 suction on the outer face over 0.9 m width.",
+          "de": "Flügel 30 Grad nach außen unter 0,8 kN/m² Windsog auf der Außenseite über 0,9 m Breite."
+        },
+        "bones": {
+          "sash": {
+            "angleDeg": 30
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "stay"
+        ],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "wind-suction",
+            "kind": "wind",
+            "title": {
+              "en": "Wind suction 720 N/m along the sash",
+              "de": "Windsog 720 N/m entlang des Flügels"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "sash",
+              "fromM": 0,
+              "toM": 1.2,
+              "wxNPerM": -623.5,
+              "wyNPerM": -360
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "tilt-open-close",
+        "title": {
+          "en": "Tilt open and close",
+          "de": "Kippen auf und zu"
+        },
+        "description": {
+          "en": "The sash tilts open to 15 degrees, to 30 degrees and returns smoothly to closed.",
+          "de": "Der Flügel kippt auf 15 Grad, dann auf 30 Grad und kehrt weich in die Schließlage zurück."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "tilted-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "tilted-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stay",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "open",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Tilting open",
+              "de": "Auskippen"
+            }
+          },
+          {
+            "id": "close",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "Closing",
+              "de": "Schließen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "motion",
+            "title": {
+              "en": "Maximum tilt",
+              "de": "Maximaler Kippwinkel"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "wind-pressure-pulse",
+        "title": {
+          "en": "Wind pressure pulse",
+          "de": "Windstoß"
+        },
+        "description": {
+          "en": "A suction gust pulses on the fully tilted sash for 4 seconds.",
+          "de": "Ein Sogstoß wirkt 4 Sekunden auf den voll gekippten Flügel."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "fully-tilted",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stay",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "gust",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Gust",
+              "de": "Windstoß"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "load-on",
+            "title": {
+              "en": "Gust peak",
+              "de": "Spitze des Windstoßes"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind-suction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "pane-glass",
+          "title": {
+            "en": "Insulating glass pane",
+            "de": "Isolierglasscheibe"
+          },
+          "kind": "glazing",
+          "material": "glass",
+          "model": "passive",
+          "areaM2": 1.08,
+          "characteristicLengthM": 1.2,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "frame-timber",
+          "title": {
+            "en": "Timber frame",
+            "de": "Holzrahmen"
+          },
+          "kind": "surface",
+          "material": "timber",
+          "model": "passive",
+          "areaM2": 0.4,
+          "characteristicLengthM": 0.09,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Glazing with solar absorption and long-wave exchange; the frame is a passive timber surface.",
+          "de": "Verglasung mit Sonnenabsorption und Langwellenaustausch; der Rahmen ist eine passive Holzoberfläche."
+        },
+        {
+          "en": "Glazing area is one face of the 0.9 m by 1.2 m pane.",
+          "de": "Verglasungsfläche ist eine Seite der 0,9 m mal 1,2 m Scheibe."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "hinge"
+      ],
+      "assumptions": [
+        {
+          "en": "Sash is one rigid body with a pin at the bottom hinge; the head stay is a horizontal roller that is active in every pose, so the system is statically determinate.",
+          "de": "Der Flügel ist ein starrer Körper mit Festlager am unteren Gelenk; der obere Stützarm ist eine waagerechte Rolle, in jeder Pose aktiv, das System ist statisch bestimmt."
+        },
+        {
+          "en": "The stay stiffness and mechanism are not measured; the wind is suction normal to the sash in the section plane, 0.8 kN/m2 over 0.9 m.",
+          "de": "Steifigkeit und Mechanismus des Stützarms sind nicht gemessen; der Wind ist Sog senkrecht zum Flügel in der Schnittebene, 0,8 kN/m² über 0,9 m."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "closed",
+      "defaultClip": "tilt-open-close",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

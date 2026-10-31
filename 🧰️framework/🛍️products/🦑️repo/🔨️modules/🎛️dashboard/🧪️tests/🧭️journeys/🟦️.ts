@@ -8,7 +8,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Workspace, get, plain, scenarios, semio, sleep, slug, type Task } from "./🧰️support/🟦️.ts";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 
 const feature = join(import.meta.dir, "🥒️.feature");

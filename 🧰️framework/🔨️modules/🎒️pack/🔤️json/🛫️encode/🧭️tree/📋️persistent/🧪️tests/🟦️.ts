@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 test("original persistent rows retain canonical logical array order",()=>{

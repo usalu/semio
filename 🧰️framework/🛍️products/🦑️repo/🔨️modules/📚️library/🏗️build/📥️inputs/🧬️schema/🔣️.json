@@ -27,5 +27,6 @@
         }
       }
     }
-  }
+  },
+  "description": "Input closure publication keeps final content-addressed paths and same-directory exclusive temporary siblings within the unchanged portable path limit, and removes the temporary on failed or cancelled effects."
 }

@@ -346,6 +346,7 @@ func NewProgressReporter(writer io.Writer) func(Progress) {
 // 🌳️FingerprintSource streams authored source identities and bytes in lexical path order.
 func FingerprintSource(ctx context.Context, root string, excluded func(string) bool, progress func(Progress)) (string, error) {
 	digest := sha256.New()
+	buffer := make([]byte, 32<<10)
 	visited := 0
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, failure error) error {
 		if err := ctx.Err(); err != nil {
@@ -395,7 +396,7 @@ func FingerprintSource(ctx context.Context, root string, excluded func(string) b
 		if err != nil {
 			return err
 		}
-		_, reading := io.Copy(digest, contextReader{ctx, file})
+		_, reading := io.CopyBuffer(digest, contextReader{ctx, file}, buffer)
 		return errors.Join(reading, file.Close())
 	})
 	if err != nil {

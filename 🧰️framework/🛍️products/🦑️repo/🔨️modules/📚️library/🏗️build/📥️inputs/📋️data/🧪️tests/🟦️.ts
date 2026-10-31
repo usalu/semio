@@ -9,7 +9,7 @@ import{compactSourceInputs,cargoLockInput}from"../../🟨️.mjs";
 /** 📥️ Requires actual compact producers to admit complete DATA before writer-directory or publication effects. */
 test("neutral actual graph inventory producers admit closed DATA before writer effects",()=>{const path=new URL("../../🟨️.mjs",import.meta.url),source=ts.createSourceFile(path.pathname,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true);for(const[name,capture]of[["compactSourceInputs","captureSourceInputInventoryV1"],["cargoLockInput","captureCargoLockInventoryV1"]]){const entry=source.statements.find((row):row is ts.FunctionDeclaration=>ts.isFunctionDeclaration(row)&&row.name?.text===name);if(!entry?.body)throw Error("Actual producer body required");const body=entry.body.getText(source);expect(body.indexOf(capture+"(")).toBeGreaterThanOrEqual(0);expect(body.indexOf(capture+"(")).toBeLessThan(body.indexOf("repositoryBuildGraphWriterDirectoryV1("));expect(body.indexOf(capture+"(")).toBeLessThan(body.indexOf("publishInputClosureV1("));}expect(()=>cargoLockInput("../Cargo.toml",process.cwd())).toThrow("Source input must be repository relative");expect(()=>compactSourceInputs(["{workspaceRoot}/../escape"],process.cwd())).toThrow("Source input must be repository relative");});
 
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{createHash}from"node:crypto";

@@ -1,5 +1,5 @@
 {
- "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Walk and advance of the membership frontier",
  "description": "The limits of the frontier walk: how many directories are listed concurrently, the age below which an entry stamp is too recent to trust, and the name of the root directory.",
  "definitions": {

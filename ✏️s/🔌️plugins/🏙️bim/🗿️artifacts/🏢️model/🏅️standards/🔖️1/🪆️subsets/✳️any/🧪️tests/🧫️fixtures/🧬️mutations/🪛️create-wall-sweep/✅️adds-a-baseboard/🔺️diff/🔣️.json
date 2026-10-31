@@ -2,18 +2,20 @@
   "wall_sweeps": {
     "ws-base": {
       "entry": "Created",
-      "height": 0.0,
-      "host": "w-south",
-      "inset": 0.0,
-      "material": "m-paint",
-      "name": "Baseboard",
-      "profile": {
-        "Rectangle": {
-          "depth": 0.1,
-          "width": 0.02
-        }
-      },
-      "side": "Left"
+      "value": {
+        "height": 0,
+        "host": "w-south",
+        "inset": 0,
+        "material": "m-paint",
+        "name": "Baseboard",
+        "profile": {
+          "Rectangle": {
+            "depth": 0.1,
+            "width": 0.02
+          }
+        },
+        "side": "Left"
+      }
     }
   }
 }

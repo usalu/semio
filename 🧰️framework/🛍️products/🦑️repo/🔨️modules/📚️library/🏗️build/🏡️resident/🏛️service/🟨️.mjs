@@ -1,3 +1,4 @@
+import {preparePrivateDirectoryV1} from "../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 /** 🏡 The resident repo service: one process per worktree and user that keeps graph, digests, memo and the file journal warm and answers many clients over one local socket. */
 import {createServer,connect} from "node:net";
 import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,renameSync,rmSync,writeFileSync} from "node:fs";
@@ -51,19 +52,14 @@ function atomicWrite(path,text,mode=0o600){
  renameSync(temporary,path);
 }
 
-function secureDirectory(path,posix){
- mkdirSync(path,{recursive:true,mode:0o700});
- if(!posix)return;
- const status=lstatSync(path);
- if(!status.isDirectory()||status.uid!==process.getuid?.()||(status.mode&0o077)!==0)throw new Error("Runtime directory "+path+" must be a private directory owned by the current user (mode 0700)");
-}
+
 
 /** 🏡 Creates the service; call `start()` then `closed`. */
 export function createResidentServiceV1(options){
- const{root,runtime,ports,log=()=>{},now=()=>Date.now(),environment=process.env,implementation,implementationPaths=[],requireCapability=true,backend="auto",watcherBinary,exclude={rooted:[],names:[]},fenceDirectory,onExit=()=>{}}=options;
+ const{root,runtime,ports,log=()=>{},now=()=>Date.now(),environment=process.env,implementation,implementationPaths=[],requireCapability=true,backend="auto",watcherBinary,opaqueBasenames,privateFence=false,failureMode="recover",exclude={rooted:[],names:[]},fenceDirectory,onExit=()=>{}}=options;
  const policy=Object.freeze({...POLICY_V1,...(options.policy??{})});
  const posix=process.platform!=="win32",instance=randomBytes(8).toString("hex"),startedAt=now();
- const filter=createFilterV1({rooted:[...exclude.rooted,fenceDirectory],names:exclude.names});
+ const filter=createFilterV1({rooted:[...exclude.rooted,fenceDirectory],names:exclude.names,opaqueBasenames});
  const state=createWorkspaceStateV1({root,instance,policy,filter,fence:fenceDirectory,now});
  const governor=createGovernorV1({maximumInFlight:policy.maximumInFlight,maximumQueued:policy.maximumQueued});
  const connections=new Set(),implementationSet=new Set(implementationPaths);
@@ -429,8 +425,8 @@ export function createResidentServiceV1(options){
  }
 
  async function listen(){
-  secureDirectory(dirname(runtime.directory),posix);
-  secureDirectory(runtime.directory,posix);
+  preparePrivateDirectoryV1(dirname(runtime.directory));
+  preparePrivateDirectoryV1(runtime.directory);
   const tryListen=()=>new Promise((resolve,reject)=>{
    server=createServer({allowHalfOpen:false},handleConnection);
    server.once("error",reject);
@@ -474,14 +470,14 @@ export function createResidentServiceV1(options){
   async start(){
    const phases={};let mark=performance.now();
    const lap=name=>{const at=performance.now();phases[name]=Math.round((at-mark)*1000)/1000;mark=at;};
-   secureDirectory(dirname(runtime.directory),posix);secureDirectory(runtime.directory,posix);
+   preparePrivateDirectoryV1(dirname(runtime.directory));preparePrivateDirectoryV1(runtime.directory);
    if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
    revocations=createRevocationRegistryV1(runtime.revoked,now);
    await listen();lap("listen");
    graphInfo=await ports.graph.load();state.configure(graphInfo);state.setEnvironmentSalt(await ports.graph.environmentDigest());state.setGeneration(graphInfo.generation??null);lap("graph");
    const restore=savedState();
-   watcher=createWatchSupervisorV1({root,policy,filter,rooted:[...exclude.rooted],names:exclude.names,binary:watcherBinary,backend,fenceDirectory,instance,onBatch,onLost,onTrust:trust=>{state.setTrust(trust.trust==="exact"?"exact":"verify");log("trust",JSON.stringify(trust));},log,restore});
+   watcher=createWatchSupervisorV1({root,policy,filter,rooted:[...exclude.rooted],names:exclude.names,opaqueBasenames,privateFence,failureMode,binary:watcherBinary,backend,fenceDirectory,instance,onBatch,onLost,onTrust:trust=>{state.setTrust(trust.trust==="exact"?"exact":"verify");log("trust",JSON.stringify(trust));},log,restore});
    const started=watcher.start();
    const listing=await ports.graph.listing({root,exclude,filter});lap("scan");
    state.load(listing);gateOpen();lap("load");

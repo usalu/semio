@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Conjunctive Retirement Type Support",
   "description": "Finite directed type conjunction: cycles retain support only when every reachable leaf supports controlled retirement. Query state is local to the current synchronous traversal; panics restore the exact prior frontier without allocation. Eight node slots bound test vocabulary only, not production traversal.",
   "type": "object",

@@ -21,11 +21,11 @@ import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨�
 import { openProjectFarmV1 } from "./🏊️project-farm/🟨️.mjs";
 import { awaitGrowingV1 } from "./🏊️project-farm/🏊️pool/🟨️.mjs";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
-let closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, inferenceCandidates,readBuildGeneratedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
+let closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1, resolveClosureRefsV1, inferenceCandidates,readBuildProducedCompileOutputV1,buildPath, yieldInferenceV1, catalogBuildContributionsV1, discoverNativeBuildOwnersV1, createScriptInputCache, POLICY, nativeCommandInputs, readTaxonomyProjectionV1, collectPlaygroundCatalog, PROJECT_BASENAME, playgroundSessionTargets, playgroundPreparationTargets, playgroundSiteTargetsForAdmissionV1, readToml, cargoTargets, componentBuildTargets, componentCrateRoots, projectAssemblyAuthorityV1, workspaceDataDirectory, projectWithDefaults, withNativePreparation, withReleasePipelinePreparation, loaded, readBunLockGraph, projectStampPathsV1;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({inferenceCandidates,readBuildGeneratedCompileOutputV1}=registry.ownerDiscovery);
+  ({inferenceCandidates,readBuildProducedCompileOutputV1}=registry.ownerDiscovery);
   ({ buildPath, POLICY, PROJECT_BASENAME, workspaceDataDirectory } = registry.coordinates);
   ({ yieldInferenceV1, createScriptInputCache, nativeCommandInputs, closureApiV1, closureHandleOfV1, closureHandleFromRecipeV1, deriveClosureFactV1 } = registry.scriptInputs);
   ({ catalogBuildContributionsV1, discoverNativeBuildOwnersV1, projectAssemblyAuthorityV1 } = registry.ownerDiscovery);
@@ -97,7 +97,7 @@ export function projectGeneratorContractsV1(workspaceRoot) {
 export function createProjectInferenceEnvironmentV1(session) {
   const { workspaceRoot, registry, projectsByRoot, componentRoots, contracts } = session, context = { workspaceRoot, registry, lateClosures: session.lateClosures === true }, scripts = createScriptInputCache(context), commandInputs = session.commandInputs?.closureRecipe ? closureHandleFromRecipeV1(session.commandInputs.closureRecipe) : session.commandInputs;
   if (contracts === null || typeof contracts !== "object" || Array.isArray(contracts)) throw refuseBuildV1("invalid","graph.generator-contracts-required");
-  scripts.generatedOutput = path => readBuildGeneratedCompileOutputV1(path, workspaceRoot, contracts, registry);
+  scripts.generatedOutput = path => readBuildProducedCompileOutputV1(path, workspaceRoot, contracts, registry);
   return { workspaceRoot, contracts, commandInputs, scripts, projectsByRoot: new Map(projectsByRoot), componentRoots, nativeCache: new Map(), nativeClosures: new Map(), context };
 }
 
@@ -158,7 +158,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const catalogContributions=setup.catalog,nativeCache=new Map(setup.nativeCache),nativeClosures=new Map(setup.nativeClosures);configFiles=setup.files;
   const late = !options?.ownerAdmission && options?.snapshot === true && typeof options?.onOwnerObservations === "function", rootsByName = new Map(), scripts = createScriptInputCache({ ...context, lateClosures: late });
   const contracts = projectGeneratorContractsV1(workspaceRoot);
-  scripts.generatedOutput=path=>readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
+  scripts.generatedOutput=path=>readBuildProducedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
   const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => !isOpaqueSourcePathV1(path) && path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");

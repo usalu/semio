@@ -1,9 +1,11 @@
 {
   "families": {
     "fam-rhs": {
-      "category": "Profile",
       "entry": "Created",
-      "name": "RHS 100"
+      "value": {
+        "category": "Profile",
+        "name": "RHS 100"
+      }
     }
   }
 }

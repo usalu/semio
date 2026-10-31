@@ -1,0 +1,5609 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "dairy-cow",
+    "category": "animals",
+    "title": {
+      "en": "Dairy Cow",
+      "de": "Milchkuh"
+    },
+    "summary": {
+      "en": "An adult Holstein-Friesian dairy cow of 650 kg with 1.45 m withers height: unguligrade cloven-hoofed skeleton with separate near and far limb chains, jointed neck, jaw, ears and tail with switch, a heavy barrel with rumen flank, a udder with its own skin region and a dewlap; four-beat walk, cud chewing, grazing, lying down and a lying pose resting on sternum, carpus and hocks, with a thermal model of a high-yielding cow.",
+      "de": "Eine erwachsene Holstein-Friesian-Milchkuh von 650 kg mit 1,45 m Widerristhöhe: zehenspitzengängiges Paarhufer-Skelett mit getrennten Gliedmaßenketten der nahen und fernen Seite, gegliedertem Hals, Unterkiefer, Ohren und Schwanz mit Quaste, schwerem Rumpf mit Pansenflanke, Euter mit eigener Hautregion und Triel; Schritt im Viertakt, Wiederkäuen, Weiden, Abliegen und eine Liegepose auf Brustbein, Vorderfußwurzel und Sprunggelenken, mit dem Wärmemodell einer Hochleistungskuh."
+    },
+    "tags": [
+      "animal",
+      "cattle",
+      "cow",
+      "dairy",
+      "quadruped",
+      "unguligrade",
+      "cloven-hoof",
+      "mammal",
+      "ruminant",
+      "gait",
+      "lying"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker (animals)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "dyce-2010",
+          "citation": "Dyce, K. M., Sack, W. O., Wensing, C. J. G. (2010). Textbook of Veterinary Anatomy, 4th ed. Saunders Elsevier. Bone proportions and joint ranges here are authored estimates guided by the ruminant chapters."
+        },
+        {
+          "id": "hildebrand-1976",
+          "citation": "Hildebrand, M. (1976). Analysis of tetrapod gaits: general considerations and symmetrical gaits. In: Herman, R. M. et al. (eds), Neural Control of Locomotion, Plenum Press, pp. 203-236."
+        },
+        {
+          "id": "krohn-1993",
+          "citation": "Krohn, C. C., Munksgaard, L. (1993). Behaviour of dairy cows kept in extensive (loose housing/pasture) or intensive (tie stall) environments. II. Lying and lying-down behaviour. Applied Animal Behaviour Science 37, 1-16. The sequence of the lie-down clip follows this description; its timing is authored."
+        },
+        {
+          "id": "beauchemin-1991",
+          "citation": "Beauchemin, K. A. (1991). Ingestion and mastication of feed by dairy cattle. Veterinary Clinics of North America: Food Animal Practice 7, 439-463. Chewing rate of about one cycle per second."
+        },
+        {
+          "id": "phillips-morris-2001",
+          "citation": "Phillips, C. J. C., Morris, I. D. (2001). The locomotion of dairy cows on floor surfaces with different frictional properties. Journal of Dairy Science 84, 623-628. Hoof friction coefficients here are authored estimates in the reported range."
+        },
+        {
+          "id": "kleiber-1947",
+          "citation": "Kleiber, M. (1947). Body size and metabolic rate. Physiological Reviews 27, 511-541; resting heat production about 3.4 W per kg^0.75."
+        },
+        {
+          "id": "nrc-2001",
+          "citation": "National Research Council (2001). Nutrient Requirements of Dairy Cattle, 7th revised edition. National Academy Press. Maintenance and walking energy requirements."
+        },
+        {
+          "id": "cigr-2002",
+          "citation": "CIGR (2002). 4th Report of Working Group on Climatization of Animal Houses: Heat and moisture production at animal and house levels. Research Centre Bygholm, Denmark; total heat production of dairy cows 5.6 W per kg^0.75 plus 22 W per kg of daily milk yield."
+        },
+        {
+          "id": "kadzere-2002",
+          "citation": "Kadzere, C. T., Murphy, M. R., Silanikove, N., Maltz, E. (2002). Heat stress in lactating dairy cows: a review. Livestock Production Science 77, 59-91. Respiration, skin temperature and heat balance of lactating cows."
+        },
+        {
+          "id": "meeh-1879",
+          "citation": "Meeh, K. (1879). Oberflächenmessungen des menschlichen Körpers. Zeitschrift für Biologie 15, 425-458; body surface A = k·M^(2/3)."
+        },
+        {
+          "id": "berman-2003",
+          "citation": "Berman, A. (2003). Effects of body surface area estimates on predicted energy requirements and heat stress. Journal of Dairy Science 86, 3605-3610. The coefficient here is an authored estimate inside the range of area estimates discussed there."
+        },
+        {
+          "id": "scholander-1950",
+          "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236."
+        },
+        {
+          "id": "cena-monteith-1975",
+          "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393."
+        },
+        {
+          "id": "gebremedhin-2001",
+          "citation": "Gebremedhin, K. G., Wu, B. (2001). A model of evaporative cooling of wet skin surface and fur layer. Journal of Thermal Biology 26. Guidance for wet-surface evaporation only; all values here are authored estimates."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, respiratory heat loss."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation drawn for the near (left) side of a cow facing right; the near flank is the rumen side. Far-side limbs and ear are separate bone chains drawn darker and behind. The cow is polled, so no horns are drawn. Bounds of the default pose include the head carried below the withers and the tail.",
+        "de": "Seitenansicht der nahen (linken) Seite einer nach rechts blickenden Kuh; die nahe Flanke ist die Pansenseite. Gliedmaßen und Ohr der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Kuh ist hornlos, daher werden keine Hörner gezeichnet. Die Umgrenzung der Standardpose enthält den unter dem Widerrist getragenen Kopf und den Schwanz."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.47,
+      "widthM": 2.57,
+      "depthM": 0.72,
+      "massKg": 650
+    },
+    "materials": [
+      {
+        "id": "white-hair",
+        "title": {
+          "en": "White short coat",
+          "de": "Weißes Kurzhaar"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.045,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "black-hair",
+        "title": {
+          "en": "Black short coat",
+          "de": "Schwarzes Kurzhaar"
+        },
+        "emissivity": 0.97,
+        "solarAbsorptivity": 0.88,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.045,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "bare-skin",
+        "title": {
+          "en": "Bare or thinly haired skin (muzzle, udder, lower legs, eyes)",
+          "de": "Nackte oder dünn behaarte Haut (Flotzmaul, Euter, Unterbeine, Augen)"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.65,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "claw-horn",
+        "title": {
+          "en": "Hoof horn",
+          "de": "Klauenhorn"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.8,
+        "source": "authored-estimate",
+        "reference": "dyce-2010"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis, hindquarters and hip joint",
+            "de": "Becken, Hinterhand und Hüftgelenk"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.25,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 20
+          },
+          "mass": {
+            "kg": 85,
+            "comX": -0.04,
+            "comY": -0.12,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "lumbar",
+          "parent": "pelvis",
+          "title": {
+            "en": "Lumbar spine and flank with rumen",
+            "de": "Lendenwirbelsäule und Flanke mit Pansen"
+          },
+          "x": 0.25,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -15,
+            "maxDeg": 20
+          },
+          "mass": {
+            "kg": 125,
+            "comX": 0.22,
+            "comY": -0.22,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "thorax",
+          "parent": "lumbar",
+          "title": {
+            "en": "Thoracic spine, ribcage and brisket",
+            "de": "Brustwirbelsäule, Brustkorb und Brustbein"
+          },
+          "x": 0.45,
+          "y": 0,
+          "angleDeg": 1,
+          "lengthM": 0.62,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -12,
+            "maxDeg": 12
+          },
+          "mass": {
+            "kg": 205.3,
+            "comX": 0.3,
+            "comY": -0.16,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "neck",
+          "parent": "thorax",
+          "title": {
+            "en": "Neck with dewlap",
+            "de": "Hals mit Triel"
+          },
+          "x": 0.55,
+          "y": 0.12,
+          "angleDeg": 5,
+          "lengthM": 0.68,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -75,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 40,
+            "comX": 0.34,
+            "comY": -0.02,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "neck",
+          "title": {
+            "en": "Head",
+            "de": "Kopf"
+          },
+          "x": 0.68,
+          "y": 0,
+          "angleDeg": -70,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 55
+          },
+          "mass": {
+            "kg": 25,
+            "comX": 0.22,
+            "comY": -0.02,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "jaw",
+          "parent": "head",
+          "title": {
+            "en": "Lower jaw",
+            "de": "Unterkiefer"
+          },
+          "x": 0.14,
+          "y": -0.07,
+          "angleDeg": 3,
+          "lengthM": 0.33,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -25,
+            "maxDeg": 3
+          },
+          "mass": {
+            "kg": 4,
+            "comX": 0.17,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "ear-n",
+          "parent": "head",
+          "title": {
+            "en": "Near ear",
+            "de": "Nahes Ohr"
+          },
+          "x": 0.03,
+          "y": 0.03,
+          "angleDeg": -126,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 50
+          },
+          "mass": {
+            "kg": 0.3,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "ear-f",
+          "parent": "head",
+          "title": {
+            "en": "Far ear",
+            "de": "Fernes Ohr"
+          },
+          "x": 0.03,
+          "y": 0.03,
+          "angleDeg": -126,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 50
+          },
+          "mass": {
+            "kg": 0.3,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "tail-1",
+          "parent": "pelvis",
+          "title": {
+            "en": "Tail root",
+            "de": "Schwanzwurzel"
+          },
+          "x": -0.27,
+          "y": 0.27,
+          "angleDeg": -100,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 1.4,
+            "comX": 0.15,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "tail-2",
+          "parent": "tail-1",
+          "title": {
+            "en": "Tail middle",
+            "de": "Schwanzmitte"
+          },
+          "x": 0.3,
+          "y": 0,
+          "angleDeg": 8,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 55
+          },
+          "mass": {
+            "kg": 0.8,
+            "comX": 0.22,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "tail-3",
+          "parent": "tail-2",
+          "title": {
+            "en": "Tail switch",
+            "de": "Schwanzquaste"
+          },
+          "x": 0.45,
+          "y": 0,
+          "angleDeg": 2,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -35,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 0.5,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "udder",
+          "parent": "pelvis",
+          "title": {
+            "en": "Udder",
+            "de": "Euter"
+          },
+          "x": 0.18,
+          "y": -0.4,
+          "angleDeg": -90,
+          "lengthM": 0.25,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -15,
+            "maxDeg": 95
+          },
+          "mass": {
+            "kg": 26,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "thigh-hf",
+          "parent": "pelvis",
+          "title": {
+            "en": "Far thigh (femur)",
+            "de": "Ferner Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -52,
+          "lengthM": 0.4,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 50
+          },
+          "mass": {
+            "kg": 22,
+            "comX": 0.17,
+            "comY": -0.07,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "shank-hf",
+          "parent": "thigh-hf",
+          "title": {
+            "en": "Far gaskin (tibia)",
+            "de": "Ferner Unterschenkel (Tibia)"
+          },
+          "x": 0.4,
+          "y": 0,
+          "angleDeg": -74,
+          "lengthM": 0.48,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 8.5,
+            "comX": 0.22,
+            "comY": -0.02,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "metatarsus-hf",
+          "parent": "shank-hf",
+          "title": {
+            "en": "Far hind cannon (hock to fetlock)",
+            "de": "Ferner Hinterfußwurzel bis Fesselgelenk (Röhrbein)"
+          },
+          "x": 0.48,
+          "y": 0,
+          "angleDeg": 40,
+          "lengthM": 0.29,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 3.3,
+            "comX": 0.15,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "hoof-hf",
+          "parent": "metatarsus-hf",
+          "title": {
+            "en": "Far hind pastern and cloven hoof",
+            "de": "Ferner Hinterfessel und Klaue"
+          },
+          "x": 0.29,
+          "y": 0,
+          "angleDeg": 34,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 2.4,
+            "comX": 0.08,
+            "comY": -0.04,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "thigh-hn",
+          "parent": "pelvis",
+          "title": {
+            "en": "Near thigh (femur)",
+            "de": "Naher Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -52,
+          "lengthM": 0.4,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 50
+          },
+          "mass": {
+            "kg": 22,
+            "comX": 0.17,
+            "comY": -0.07,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "shank-hn",
+          "parent": "thigh-hn",
+          "title": {
+            "en": "Near gaskin (tibia)",
+            "de": "Naher Unterschenkel (Tibia)"
+          },
+          "x": 0.4,
+          "y": 0,
+          "angleDeg": -74,
+          "lengthM": 0.48,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 8.5,
+            "comX": 0.22,
+            "comY": -0.02,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "metatarsus-hn",
+          "parent": "shank-hn",
+          "title": {
+            "en": "Near hind cannon (hock to fetlock)",
+            "de": "Naher Hinterfußwurzel bis Fesselgelenk (Röhrbein)"
+          },
+          "x": 0.48,
+          "y": 0,
+          "angleDeg": 40,
+          "lengthM": 0.29,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 3.3,
+            "comX": 0.15,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "hoof-hn",
+          "parent": "metatarsus-hn",
+          "title": {
+            "en": "Near hind pastern and cloven hoof",
+            "de": "Naher Hinterfessel und Klaue"
+          },
+          "x": 0.29,
+          "y": 0,
+          "angleDeg": 34,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 2.4,
+            "comX": 0.08,
+            "comY": -0.04,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "scapula-ff",
+          "parent": "thorax",
+          "title": {
+            "en": "Far shoulder blade",
+            "de": "Ferne Schulterblatt"
+          },
+          "x": 0.45,
+          "y": 0.27,
+          "angleDeg": -64,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 14,
+            "comX": 0.23,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "humerus-ff",
+          "parent": "scapula-ff",
+          "title": {
+            "en": "Far upper arm (humerus)",
+            "de": "Ferne Oberarm"
+          },
+          "x": 0.46,
+          "y": 0,
+          "angleDeg": -85,
+          "lengthM": 0.36,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 8,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "forearm-ff",
+          "parent": "humerus-ff",
+          "title": {
+            "en": "Far forearm (radius)",
+            "de": "Ferne Unterarm (Speiche)"
+          },
+          "x": 0.36,
+          "y": 0,
+          "angleDeg": 62,
+          "lengthM": 0.39,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 95
+          },
+          "mass": {
+            "kg": 5.5,
+            "comX": 0.2,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "cannon-ff",
+          "parent": "forearm-ff",
+          "title": {
+            "en": "Far fore cannon (carpus to fetlock)",
+            "de": "Ferne Vorderfußwurzel bis Fesselgelenk (Röhrbein)"
+          },
+          "x": 0.39,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.26,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -140,
+            "maxDeg": 12
+          },
+          "mass": {
+            "kg": 2.2,
+            "comX": 0.13,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "hoof-ff",
+          "parent": "cannon-ff",
+          "title": {
+            "en": "Far fore pastern and cloven hoof",
+            "de": "Ferne Vorderfessel und Klaue"
+          },
+          "x": 0.26,
+          "y": 0,
+          "angleDeg": 34,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -85,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 2.3,
+            "comX": 0.08,
+            "comY": -0.04,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "scapula-fn",
+          "parent": "thorax",
+          "title": {
+            "en": "Near shoulder blade",
+            "de": "Nahe Schulterblatt"
+          },
+          "x": 0.45,
+          "y": 0.27,
+          "angleDeg": -64,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 14,
+            "comX": 0.23,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "humerus-fn",
+          "parent": "scapula-fn",
+          "title": {
+            "en": "Near upper arm (humerus)",
+            "de": "Nahe Oberarm"
+          },
+          "x": 0.46,
+          "y": 0,
+          "angleDeg": -85,
+          "lengthM": 0.36,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 8,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "forearm-fn",
+          "parent": "humerus-fn",
+          "title": {
+            "en": "Near forearm (radius)",
+            "de": "Nahe Unterarm (Speiche)"
+          },
+          "x": 0.36,
+          "y": 0,
+          "angleDeg": 62,
+          "lengthM": 0.39,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 95
+          },
+          "mass": {
+            "kg": 5.5,
+            "comX": 0.2,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "cannon-fn",
+          "parent": "forearm-fn",
+          "title": {
+            "en": "Near fore cannon (carpus to fetlock)",
+            "de": "Nahe Vorderfußwurzel bis Fesselgelenk (Röhrbein)"
+          },
+          "x": 0.39,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.26,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -140,
+            "maxDeg": 12
+          },
+          "mass": {
+            "kg": 2.2,
+            "comX": 0.13,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        },
+        {
+          "id": "hoof-fn",
+          "parent": "cannon-fn",
+          "title": {
+            "en": "Near fore pastern and cloven hoof",
+            "de": "Nahe Vorderfessel und Klaue"
+          },
+          "x": 0.26,
+          "y": 0,
+          "angleDeg": 34,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -85,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 2.3,
+            "comX": 0.08,
+            "comY": -0.04,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "dyce-2010"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-hn",
+        "bone": "hoof-hn",
+        "x": 0.13,
+        "y": -0.052,
+        "kind": "contact",
+        "title": {
+          "en": "Sole of the near hind cloven hoof",
+          "de": "Sohle der nahen Hinterklaue"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.12,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-hf",
+        "bone": "hoof-hf",
+        "x": 0.13,
+        "y": -0.052,
+        "kind": "contact",
+        "title": {
+          "en": "Sole of the far hind cloven hoof",
+          "de": "Sohle der fernen Hinterklaue"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.12,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-fn",
+        "bone": "hoof-fn",
+        "x": 0.13,
+        "y": -0.052,
+        "kind": "contact",
+        "title": {
+          "en": "Sole of the near fore cloven hoof",
+          "de": "Sohle der nahen Vorderklaue"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.13,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-ff",
+        "bone": "hoof-ff",
+        "x": 0.13,
+        "y": -0.052,
+        "kind": "contact",
+        "title": {
+          "en": "Sole of the far fore cloven hoof",
+          "de": "Sohle der fernen Vorderklaue"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.13,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-carpus-fn",
+        "bone": "cannon-fn",
+        "x": 0.01,
+        "y": 0.05,
+        "kind": "contact",
+        "title": {
+          "en": "Front of the near carpus (kneeling)",
+          "de": "Vorderseite des nahen Vorderfußwurzelgelenks (Knien)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1,
+        "footprintWidthM": 0.12,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-carpus-ff",
+        "bone": "cannon-ff",
+        "x": 0.01,
+        "y": 0.05,
+        "kind": "contact",
+        "title": {
+          "en": "Front of the far carpus (kneeling)",
+          "de": "Vorderseite des fernen Vorderfußwurzelgelenks (Knien)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1,
+        "footprintWidthM": 0.12,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-hock-hn",
+        "bone": "metatarsus-hn",
+        "x": -0.035,
+        "y": -0.05,
+        "kind": "contact",
+        "title": {
+          "en": "Point of the near hock (lying)",
+          "de": "Sprunggelenkhöcker der nahen Hinterhand (Liegen)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.09,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-hock-hf",
+        "bone": "metatarsus-hf",
+        "x": -0.035,
+        "y": -0.05,
+        "kind": "contact",
+        "title": {
+          "en": "Point of the far hock (lying)",
+          "de": "Sprunggelenkhöcker der fernen Hinterhand (Liegen)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.09,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-sternum",
+        "bone": "thorax",
+        "x": 0.3,
+        "y": -0.525,
+        "kind": "contact",
+        "title": {
+          "en": "Sternum and brisket (lying)",
+          "de": "Brustbein und Brustspitze (Liegen)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.45,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "nose",
+        "bone": "head",
+        "x": 0.54,
+        "y": 0.0,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils",
+          "de": "Nasenlöcher"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "far-thigh",
+          "bone": "thigh-hf",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M 0.17 0.121 C 0.248 0.187 0.344 0.213 0.423 0.152 C 0.486 0.102 0.503 0.026 0.475 -0.041 C 0.389 -0.152 0.268 -0.209 0.128 -0.227 C 0.029 -0.239 -0.044 -0.219 -0.079 -0.166 C -0.054 -0.085 0.057 0.057 0.17 0.121 Z"
+        },
+        {
+          "id": "far-gaskin",
+          "bone": "shank-hf",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.05 0.06 C 0.05 0.075 0.18 0.055 0.3 0.042 L 0.44 0.034 C 0.48 0.03 0.5 0.0 0.5 -0.02 C 0.5 -0.06 0.48 -0.075 0.45 -0.07 L 0.3 -0.048 C 0.18 -0.085 0.05 -0.105 -0.04 -0.085 C -0.075 -0.05 -0.075 0.02 -0.05 0.06 Z"
+        },
+        {
+          "id": "far-hind-cannon",
+          "bone": "metatarsus-hf",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.03 0.035 L 0.05 0.032 L 0.29 0.024 C 0.31 0.02 0.31 -0.02 0.29 -0.026 L 0.06 -0.034 C 0.0 -0.04 -0.04 -0.05 -0.05 -0.03 C -0.055 0 -0.05 0.03 -0.03 0.035 Z"
+        },
+        {
+          "id": "far-hind-pastern",
+          "bone": "hoof-hf",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.034 -0.011 C 0.002 -0.046 0.023 -0.068 0.042 -0.084 C 0.059 -0.103 0.076 -0.11 0.084 -0.104 L 0.167 0.003 C 0.165 0.017 0.14 0.024 0.107 0.024 C 0.086 0.021 0.054 0.021 0.021 0.035 C -0.005 0.042 -0.04 0.006 -0.034 -0.011 Z"
+        },
+        {
+          "id": "far-hind-hoof",
+          "bone": "hoof-hf",
+          "role": "body",
+          "lod": 0,
+          "z": 1.05,
+          "filled": true,
+          "tone": 0.2,
+          "region": "hooves",
+          "material": "claw-horn",
+          "kind": "path",
+          "d": "M 0.036 -0.081 L 0.097 0.026 C 0.129 0.026 0.161 0.02 0.167 0.003 L 0.084 -0.104 C 0.067 -0.109 0.05 -0.098 0.036 -0.081 Z"
+        },
+        {
+          "id": "far-shoulder",
+          "bone": "scapula-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.05 -0.093 C -0.04 0.015 0.015 0.121 0.095 0.148 C 0.248 0.182 0.39 0.154 0.488 0.082 C 0.55 0.028 0.523 -0.026 0.487 -0.052 C 0.362 -0.123 0.236 -0.149 0.12 -0.157 C 0.03 -0.156 -0.023 -0.129 -0.05 -0.093 Z"
+        },
+        {
+          "id": "far-upper-arm",
+          "bone": "humerus-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.36,
+          "y1": 0.0,
+          "r0": 0.085,
+          "r1": 0.062
+        },
+        {
+          "id": "far-forearm",
+          "bone": "forearm-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.04 0.055 C 0.03 0.07 0.12 0.06 0.2 0.05 L 0.36 0.04 C 0.39 0.045 0.42 0.04 0.42 0.0 C 0.42 -0.04 0.4 -0.045 0.37 -0.04 L 0.2 -0.04 C 0.12 -0.06 0.03 -0.075 -0.04 -0.06 C -0.08 -0.03 -0.08 0.03 -0.04 0.055 Z"
+        },
+        {
+          "id": "far-fore-cannon",
+          "bone": "cannon-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.03 0.04 L 0.26 0.028 C 0.285 0.022 0.285 -0.022 0.26 -0.03 L -0.03 -0.04 C -0.045 -0.01 -0.045 0.01 -0.03 0.04 Z"
+        },
+        {
+          "id": "far-fore-pastern",
+          "bone": "hoof-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.0,
+          "filled": true,
+          "tone": 0.55,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.036 -0.012 C 0.002 -0.048 0.024 -0.072 0.044 -0.088 C 0.062 -0.108 0.08 -0.116 0.088 -0.109 L 0.175 0.003 C 0.174 0.018 0.146 0.025 0.113 0.025 C 0.091 0.022 0.057 0.022 0.022 0.036 C -0.005 0.044 -0.042 0.006 -0.036 -0.012 Z"
+        },
+        {
+          "id": "far-fore-hoof",
+          "bone": "hoof-ff",
+          "role": "body",
+          "lod": 0,
+          "z": 1.05,
+          "filled": true,
+          "tone": 0.2,
+          "region": "hooves",
+          "material": "claw-horn",
+          "kind": "path",
+          "d": "M 0.037 -0.085 L 0.101 0.027 C 0.135 0.028 0.169 0.021 0.175 0.003 L 0.088 -0.109 C 0.07 -0.115 0.053 -0.103 0.037 -0.085 Z"
+        },
+        {
+          "id": "far-ear",
+          "bone": "ear-f",
+          "role": "body",
+          "lod": 0,
+          "z": 2.0,
+          "filled": true,
+          "tone": 0.14,
+          "region": "ears",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M 0.0 0.025 C 0.06 0.065 0.15 0.06 0.21 0.0 C 0.15 -0.055 0.06 -0.055 0.0 -0.025 Z"
+        },
+        {
+          "id": "tail-root",
+          "bone": "tail-1",
+          "role": "body",
+          "lod": 0,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.14,
+          "region": "coat-tail",
+          "material": "black-hair",
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.3,
+          "y1": 0,
+          "r0": 0.04,
+          "r1": 0.032
+        },
+        {
+          "id": "tail-mid",
+          "bone": "tail-2",
+          "role": "body",
+          "lod": 0,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.14,
+          "region": "coat-tail",
+          "material": "black-hair",
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.45,
+          "y1": 0,
+          "r0": 0.032,
+          "r1": 0.022
+        },
+        {
+          "id": "tail-switch",
+          "bone": "tail-3",
+          "role": "body",
+          "lod": 0,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.93,
+          "region": "coat-tail",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M 0.0 0.018 C 0.06 0.022 0.12 0.055 0.22 0.055 C 0.3 0.055 0.35 0.025 0.35 0.0 C 0.35 -0.025 0.3 -0.055 0.22 -0.055 C 0.12 -0.055 0.06 -0.022 0.0 -0.018 Z"
+        },
+        {
+          "id": "trunk",
+          "bone": "lumbar",
+          "role": "body",
+          "lod": 0,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-trunk",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.52 0.3 C -0.35 0.34 -0.25 0.36 -0.13 0.35 C 0.05 0.32 0.25 0.27 0.45 0.275 C 0.7 0.3 0.83 0.35 0.95 0.36 C 1.09 0.37 1.19 0.32 1.25 0.22 C 1.3 0.1 1.3 -0.05 1.25 -0.17 C 1.22 -0.32 1.17 -0.42 1.08 -0.48 C 0.95 -0.53 0.77 -0.54 0.63 -0.52 C 0.49 -0.54 0.37 -0.55 0.29 -0.52 C 0.19 -0.48 0.13 -0.4 0.09 -0.3 L -0.01 -0.3 C -0.11 -0.38 -0.21 -0.46 -0.31 -0.52 C -0.37 -0.54 -0.42 -0.5 -0.45 -0.42 C -0.52 -0.26 -0.58 -0.06 -0.6 0.07 C -0.62 0.15 -0.6 0.25 -0.52 0.3 Z"
+        },
+        {
+          "id": "neck",
+          "bone": "neck",
+          "role": "body",
+          "lod": 0,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-head-neck",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M 0.075 0.214 C 0.293 0.181 0.507 0.118 0.693 0.068 C 0.76 0.031 0.747 -0.088 0.689 -0.162 C 0.573 -0.211 0.45 -0.238 0.344 -0.287 C 0.268 -0.339 0.23 -0.416 0.164 -0.469 C 0.098 -0.523 0.236 -0.356 0.237 -0.155 C 0.236 0.026 0.169 0.154 0.075 0.214 Z"
+        },
+        {
+          "id": "udder",
+          "bone": "udder",
+          "role": "body",
+          "lod": 0,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.7,
+          "region": "udder",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.1 -0.1176 C 0.04 -0.1344 0.18 -0.126 0.22 -0.0924 C 0.25 -0.042 0.24 0.0336 0.18 0.0756 C 0.12 0.105 0.02 0.1176 -0.1 0.1008 Z"
+        },
+        {
+          "id": "teat-front",
+          "bone": "udder",
+          "role": "body",
+          "lod": 1,
+          "z": 3.45,
+          "filled": true,
+          "tone": 0.62,
+          "region": "udder",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.18,
+          "y0": 0.05,
+          "x1": 0.31,
+          "y1": 0.05,
+          "r0": 0.02,
+          "r1": 0.016
+        },
+        {
+          "id": "teat-rear",
+          "bone": "udder",
+          "role": "body",
+          "lod": 1,
+          "z": 3.45,
+          "filled": true,
+          "tone": 0.62,
+          "region": "udder",
+          "material": "bare-skin",
+          "kind": "capsule",
+          "x0": 0.2,
+          "y0": -0.075,
+          "x1": 0.33,
+          "y1": -0.075,
+          "r0": 0.02,
+          "r1": 0.016
+        },
+        {
+          "id": "rumen-flank",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.8,
+          "region": "flank-rumen",
+          "material": "white-hair",
+          "kind": "ellipse",
+          "cx": 0.31,
+          "cy": -0.04,
+          "rx": 0.17,
+          "ry": 0.2
+        },
+        {
+          "id": "patch-rump",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.14,
+          "region": "coat-patches",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M -0.55 0.26 C -0.45 0.3 -0.2 0.33 0.05 0.29 C 0.05 0.1 -0.05 0.02 -0.17 0.04 C -0.3 0.06 -0.37 -0.06 -0.49 0 C -0.57 0.08 -0.59 0.18 -0.55 0.26 Z"
+        },
+        {
+          "id": "patch-barrel",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.14,
+          "region": "coat-patches",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M 0.25 0.27 C 0.35 0.28 0.49 0.27 0.57 0.27 C 0.59 0.16 0.55 0 0.47 -0.1 C 0.41 -0.16 0.35 -0.11 0.3 -0.14 C 0.23 -0.1 0.19 0.12 0.25 0.27 Z"
+        },
+        {
+          "id": "patch-chest",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.14,
+          "region": "coat-patches",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M 0.61 0.27 C 0.71 0.3 0.79 0.33 0.89 0.35 C 0.87 0.2 0.85 0.05 0.75 -0.02 C 0.67 -0.06 0.61 0 0.61 0.27 Z"
+        },
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 4.0,
+          "filled": true,
+          "tone": 0.16,
+          "region": "coat-patches",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M -0.04 0.1 C 0.1 0.108 0.25 0.088 0.36 0.072 C 0.43 0.066 0.49 0.075 0.52 0.055 C 0.545 0.03 0.545 -0.03 0.52 -0.06 C 0.47 -0.075 0.4 -0.065 0.34 -0.07 C 0.25 -0.09 0.15 -0.14 0.06 -0.15 C -0.03 -0.14 -0.07 -0.05 -0.06 0.04 Z"
+        },
+        {
+          "id": "blaze",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.93,
+          "region": "coat-head-neck",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M 0.04 0.09 C 0.14 0.098 0.26 0.08 0.4 0.066 C 0.42 0.04 0.4 0.03 0.36 0.034 C 0.26 0.05 0.14 0.058 0.05 0.05 Z"
+        },
+        {
+          "id": "muzzle",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 4.2,
+          "filled": true,
+          "tone": 0.5,
+          "region": "muzzle",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M 0.44 0.07 C 0.48 0.074 0.5 0.07 0.52 0.055 C 0.545 0.03 0.545 -0.03 0.52 -0.06 C 0.49 -0.066 0.46 -0.066 0.44 -0.062 C 0.46 -0.03 0.46 0.03 0.44 0.07 Z"
+        },
+        {
+          "id": "jaw",
+          "bone": "jaw",
+          "role": "body",
+          "lod": 0,
+          "z": 3.9,
+          "filled": true,
+          "tone": 0.55,
+          "region": "coat-head-neck",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.02 0.045 L 0.12 0.03 C 0.24 0.02 0.31 0.016 0.355 0.03 C 0.375 0.0 0.365 -0.03 0.34 -0.04 L 0.2 -0.05 C 0.1 -0.06 0.04 -0.09 -0.01 -0.07 C -0.05 -0.05 -0.05 0.02 -0.02 0.045 Z"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.04,
+          "region": "eyes",
+          "material": "bare-skin",
+          "kind": "ellipse",
+          "cx": 0.17,
+          "cy": 0.052,
+          "rx": 0.014,
+          "ry": 0.011
+        },
+        {
+          "id": "nostril",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.05,
+          "kind": "ellipse",
+          "cx": 0.515,
+          "cy": 0.03,
+          "rx": 0.012,
+          "ry": 0.007
+        },
+        {
+          "id": "mouth-line",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.3,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.53,
+              -0.04
+            ],
+            [
+              0.44,
+              -0.06
+            ],
+            [
+              0.34,
+              -0.07
+            ]
+          ]
+        },
+        {
+          "id": "near-ear",
+          "bone": "ear-n",
+          "role": "body",
+          "lod": 0,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.14,
+          "region": "ears",
+          "material": "black-hair",
+          "kind": "path",
+          "d": "M 0.0 0.025 C 0.06 0.065 0.15 0.06 0.21 0.0 C 0.15 -0.055 0.06 -0.055 0.0 -0.025 Z"
+        },
+        {
+          "id": "near-thigh",
+          "bone": "thigh-hn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M 0.17 0.121 C 0.248 0.187 0.344 0.213 0.423 0.152 C 0.486 0.102 0.503 0.026 0.475 -0.041 C 0.389 -0.152 0.268 -0.209 0.128 -0.227 C 0.029 -0.239 -0.044 -0.219 -0.079 -0.166 C -0.054 -0.085 0.057 0.057 0.17 0.121 Z"
+        },
+        {
+          "id": "near-gaskin",
+          "bone": "shank-hn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.05 0.06 C 0.05 0.075 0.18 0.055 0.3 0.042 L 0.44 0.034 C 0.48 0.03 0.5 0.0 0.5 -0.02 C 0.5 -0.06 0.48 -0.075 0.45 -0.07 L 0.3 -0.048 C 0.18 -0.085 0.05 -0.105 -0.04 -0.085 C -0.075 -0.05 -0.075 0.02 -0.05 0.06 Z"
+        },
+        {
+          "id": "near-hind-cannon",
+          "bone": "metatarsus-hn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.03 0.035 L 0.05 0.032 L 0.29 0.024 C 0.31 0.02 0.31 -0.02 0.29 -0.026 L 0.06 -0.034 C 0.0 -0.04 -0.04 -0.05 -0.05 -0.03 C -0.055 0 -0.05 0.03 -0.03 0.035 Z"
+        },
+        {
+          "id": "near-hind-pastern",
+          "bone": "hoof-hn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.034 -0.011 C 0.002 -0.046 0.023 -0.068 0.042 -0.084 C 0.059 -0.103 0.076 -0.11 0.084 -0.104 L 0.167 0.003 C 0.165 0.017 0.14 0.024 0.107 0.024 C 0.086 0.021 0.054 0.021 0.021 0.035 C -0.005 0.042 -0.04 0.006 -0.034 -0.011 Z"
+        },
+        {
+          "id": "near-hind-hoof",
+          "bone": "hoof-hn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.05,
+          "filled": true,
+          "tone": 0.22,
+          "region": "hooves",
+          "material": "claw-horn",
+          "kind": "path",
+          "d": "M 0.036 -0.081 L 0.097 0.026 C 0.129 0.026 0.161 0.02 0.167 0.003 L 0.084 -0.104 C 0.067 -0.109 0.05 -0.098 0.036 -0.081 Z"
+        },
+        {
+          "id": "near-shoulder",
+          "bone": "scapula-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.05 -0.093 C -0.04 0.015 0.015 0.121 0.095 0.148 C 0.248 0.182 0.39 0.154 0.488 0.082 C 0.55 0.028 0.523 -0.026 0.487 -0.052 C 0.362 -0.123 0.236 -0.149 0.12 -0.157 C 0.03 -0.156 -0.023 -0.129 -0.05 -0.093 Z"
+        },
+        {
+          "id": "near-upper-arm",
+          "bone": "humerus-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 0.36,
+          "y1": 0.0,
+          "r0": 0.085,
+          "r1": 0.062
+        },
+        {
+          "id": "near-forearm",
+          "bone": "forearm-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "coat-limbs",
+          "material": "white-hair",
+          "kind": "path",
+          "d": "M -0.04 0.055 C 0.03 0.07 0.12 0.06 0.2 0.05 L 0.36 0.04 C 0.39 0.045 0.42 0.04 0.42 0.0 C 0.42 -0.04 0.4 -0.045 0.37 -0.04 L 0.2 -0.04 C 0.12 -0.06 0.03 -0.075 -0.04 -0.06 C -0.08 -0.03 -0.08 0.03 -0.04 0.055 Z"
+        },
+        {
+          "id": "near-fore-cannon",
+          "bone": "cannon-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.03 0.04 L 0.26 0.028 C 0.285 0.022 0.285 -0.022 0.26 -0.03 L -0.03 -0.04 C -0.045 -0.01 -0.045 0.01 -0.03 0.04 Z"
+        },
+        {
+          "id": "near-fore-pastern",
+          "bone": "hoof-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.0,
+          "filled": true,
+          "tone": 0.9,
+          "region": "lower-legs",
+          "material": "bare-skin",
+          "kind": "path",
+          "d": "M -0.036 -0.012 C 0.002 -0.048 0.024 -0.072 0.044 -0.088 C 0.062 -0.108 0.08 -0.116 0.088 -0.109 L 0.175 0.003 C 0.174 0.018 0.146 0.025 0.113 0.025 C 0.091 0.022 0.057 0.022 0.022 0.036 C -0.005 0.044 -0.042 0.006 -0.036 -0.012 Z"
+        },
+        {
+          "id": "near-fore-hoof",
+          "bone": "hoof-fn",
+          "role": "body",
+          "lod": 0,
+          "z": 5.05,
+          "filled": true,
+          "tone": 0.22,
+          "region": "hooves",
+          "material": "claw-horn",
+          "kind": "path",
+          "d": "M 0.037 -0.085 L 0.101 0.027 C 0.135 0.028 0.169 0.021 0.175 0.003 L 0.088 -0.109 C 0.07 -0.115 0.053 -0.103 0.037 -0.085 Z"
+        },
+        {
+          "id": "flank-fold",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.07,
+              -0.1
+            ],
+            [
+              0.12,
+              -0.18
+            ],
+            [
+              0.15,
+              -0.26
+            ]
+          ]
+        },
+        {
+          "id": "hook-bone",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              -0.25,
+              0.33
+            ],
+            [
+              -0.17,
+              0.28
+            ],
+            [
+              -0.11,
+              0.2
+            ]
+          ]
+        },
+        {
+          "id": "ribs",
+          "bone": "lumbar",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.45,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.7,
+              0.2
+            ],
+            [
+              0.72,
+              -0.1
+            ],
+            [
+              0.74,
+              -0.38
+            ]
+          ]
+        },
+        {
+          "id": "ribs-2",
+          "bone": "lumbar",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.45,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.57,
+              0.18
+            ],
+            [
+              0.6,
+              -0.1
+            ],
+            [
+              0.62,
+              -0.4
+            ]
+          ]
+        },
+        {
+          "id": "milk-vein",
+          "bone": "lumbar",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.45,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.2,
+              -0.44
+            ],
+            [
+              0.35,
+              -0.46
+            ],
+            [
+              0.55,
+              -0.48
+            ]
+          ]
+        },
+        {
+          "id": "dewlap-fold",
+          "bone": "neck",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.306,
+              -0.263
+            ],
+            [
+              0.216,
+              -0.354
+            ],
+            [
+              0.148,
+              -0.427
+            ]
+          ]
+        },
+        {
+          "id": "neck-crest",
+          "bone": "neck",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.45,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.166,
+              0.124
+            ],
+            [
+              0.382,
+              0.071
+            ],
+            [
+              0.576,
+              0.01
+            ]
+          ]
+        },
+        {
+          "id": "hair-hock",
+          "bone": "shank-hn",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.45,
+          "kind": "poly",
+          "closed": false,
+          "points": [
+            [
+              0.1,
+              -0.03
+            ],
+            [
+              0.3,
+              -0.02
+            ]
+          ]
+        },
+        {
+          "id": "hind-dewclaws",
+          "bone": "hoof-hn",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "capsule",
+          "x0": -0.03,
+          "y0": -0.01,
+          "x1": 0.0,
+          "y1": -0.03,
+          "r0": 0.01,
+          "r1": 0.008
+        },
+        {
+          "id": "fore-dewclaws",
+          "bone": "hoof-fn",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "capsule",
+          "x0": -0.03,
+          "y0": -0.01,
+          "x1": 0.0,
+          "y1": -0.03,
+          "r0": 0.01,
+          "r1": 0.008
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "standing-chewing",
+        "title": {
+          "en": "Standing and chewing the cud",
+          "de": "Stehend beim Wiederkäuen"
+        },
+        "description": {
+          "en": "Standing square with the head carried below the withers, the near hind leg under the hip, the far hind leg forward and the far fore leg slightly behind; the jaw is half open in the rhythm of rumination and the ears rest sideways.",
+          "de": "Ruhiges Stehen mit unter dem Widerrist getragenem Kopf, nahem Hinterbein unter der Hüfte, fernem Hinterbein vorn und fernem Vorderbein leicht zurück; der Kiefer ist im Rhythmus des Wiederkäuens halb geöffnet, die Ohren stehen seitlich."
+        },
+        "bones": {
+          "jaw": {
+            "angleDeg": -4
+          },
+          "head": {
+            "angleDeg": 2
+          },
+          "tail-2": {
+            "angleDeg": 4
+          },
+          "tail-3": {
+            "angleDeg": 3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "thigh-hn": {
+            "angleDeg": 2.8
+          },
+          "shank-hn": {
+            "angleDeg": -4.9
+          },
+          "metatarsus-hn": {
+            "angleDeg": 2.1
+          },
+          "humerus-fn": {
+            "angleDeg": -0.2
+          },
+          "forearm-fn": {
+            "angleDeg": 0.5
+          },
+          "cannon-fn": {
+            "angleDeg": -0.3
+          },
+          "thigh-hf": {
+            "angleDeg": 13.6
+          },
+          "shank-hf": {
+            "angleDeg": -3.4
+          },
+          "metatarsus-hf": {
+            "angleDeg": -10.3
+          },
+          "humerus-ff": {
+            "angleDeg": -0.2
+          },
+          "forearm-ff": {
+            "angleDeg": -8.3
+          },
+          "cannon-ff": {
+            "angleDeg": 8.5
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-hf",
+          "contact-fn",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 2.95,
+          "emitters": {
+            "breath-nose": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "grazing-head-down",
+        "title": {
+          "en": "Grazing with the head down",
+          "de": "Weidend mit gesenktem Kopf"
+        },
+        "description": {
+          "en": "Neck and head lowered until the muzzle touches the sward, the front lower than the hindquarters; the near fore leg steps forward, the ears point forward and the jaw is open for the bite.",
+          "de": "Hals und Kopf gesenkt, bis das Flotzmaul den Rasen berührt, die Vorhand tiefer als die Hinterhand; das nahe Vorderbein steht vor, die Ohren zeigen nach vorn und der Kiefer ist zum Biss geöffnet."
+        },
+        "bones": {
+          "neck": {
+            "angleDeg": -42
+          },
+          "thorax": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 14
+          },
+          "ear-f": {
+            "angleDeg": 12
+          },
+          "tail-2": {
+            "angleDeg": 6
+          },
+          "jaw": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": 54
+          },
+          "thigh-hn": {
+            "angleDeg": 10.8
+          },
+          "shank-hn": {
+            "angleDeg": -4.9
+          },
+          "metatarsus-hn": {
+            "angleDeg": 2.1
+          },
+          "humerus-fn": {
+            "angleDeg": -7.5
+          },
+          "forearm-fn": {
+            "angleDeg": 59.8
+          },
+          "cannon-fn": {
+            "angleDeg": -41.3
+          },
+          "thigh-hf": {
+            "angleDeg": 20.3
+          },
+          "shank-hf": {
+            "angleDeg": -4.0
+          },
+          "metatarsus-hf": {
+            "angleDeg": -8.4
+          },
+          "humerus-ff": {
+            "angleDeg": -24.4
+          },
+          "forearm-ff": {
+            "angleDeg": 44.3
+          },
+          "cannon-ff": {
+            "angleDeg": -8.8
+          }
+        },
+        "root": {
+          "angleDeg": -8
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-hf",
+          "contact-fn",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 3.4,
+          "emitters": {
+            "breath-nose": 0.6
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lying-resting",
+        "title": {
+          "en": "Lying and resting",
+          "de": "Liegend ruhend"
+        },
+        "description": {
+          "en": "Lying on the sternum with the near fore leg folded under the chest on its carpus, the far fore leg stretched forward on the hoof and both hind legs folded beneath the haunches; the weight rests on the brisket, the carpus, the hocks and the hooves while the head stays raised and the cow ruminates.",
+          "de": "Liegen auf dem Brustbein, das nahe Vorderbein unter der Brust auf der Vorderfußwurzel eingeschlagen, das ferne Vorderbein gestreckt vorn auf der Klaue und beide Hinterbeine unter der Hinterhand angezogen; das Gewicht ruht auf Brustspitze, Vorderfußwurzel, Sprunggelenken und Klauen, der Kopf bleibt erhoben und die Kuh käut wieder."
+        },
+        "bones": {
+          "neck": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -4
+          },
+          "jaw": {
+            "angleDeg": -4
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "tail-1": {
+            "angleDeg": 30
+          },
+          "tail-2": {
+            "angleDeg": 40
+          },
+          "udder": {
+            "angleDeg": 85
+          },
+          "thorax": {
+            "angleDeg": -2.0
+          },
+          "thigh-hn": {
+            "angleDeg": 38
+          },
+          "shank-hn": {
+            "angleDeg": -40.0
+          },
+          "metatarsus-hn": {
+            "angleDeg": 51.2
+          },
+          "hoof-hn": {
+            "angleDeg": -49.2
+          },
+          "thigh-hf": {
+            "angleDeg": 27
+          },
+          "shank-hf": {
+            "angleDeg": -41.4
+          },
+          "metatarsus-hf": {
+            "angleDeg": 103.6
+          },
+          "hoof-hf": {
+            "angleDeg": -49.2
+          },
+          "humerus-fn": {
+            "angleDeg": -30.3
+          },
+          "forearm-fn": {
+            "angleDeg": 61.5
+          },
+          "cannon-fn": {
+            "angleDeg": -115.2
+          },
+          "hoof-fn": {
+            "angleDeg": -72.0
+          },
+          "humerus-ff": {
+            "angleDeg": 43.9
+          },
+          "forearm-ff": {
+            "angleDeg": 59.0
+          },
+          "cannon-ff": {
+            "angleDeg": -29.9
+          },
+          "hoof-ff": {
+            "angleDeg": -27.0
+          },
+          "tail-3": {
+            "angleDeg": 40
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-sternum",
+          "contact-carpus-fn",
+          "contact-ff",
+          "contact-hn",
+          "contact-hf",
+          "contact-hock-hn",
+          "contact-hock-hf"
+        ],
+        "thermal": {
+          "activityMet": 2.55,
+          "emitters": {
+            "breath-nose": 0.45
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "kneeling-front",
+        "title": {
+          "en": "Kneeling on the carpi",
+          "de": "Auf den Vorderfußwurzeln kniend"
+        },
+        "description": {
+          "en": "Mid-way through lying down: both fore legs are folded and the cow rests on the front of the carpi, the cannons and hooves tucked back, the head lowered and the hindquarters still raised on the extended hind legs.",
+          "de": "Mitten im Abliegen: beide Vorderbeine sind eingeschlagen und die Kuh ruht auf der Vorderseite der Vorderfußwurzeln, Röhrbeine und Klauen nach hinten gelegt, der Kopf gesenkt und die Hinterhand noch auf den gestreckten Hinterbeinen erhoben."
+        },
+        "bones": {
+          "neck": {
+            "angleDeg": -22
+          },
+          "head": {
+            "angleDeg": 14
+          },
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 10
+          },
+          "ear-f": {
+            "angleDeg": 8
+          },
+          "tail-2": {
+            "angleDeg": 8
+          },
+          "udder": {
+            "angleDeg": 4
+          },
+          "thigh-hn": {
+            "angleDeg": 21.2
+          },
+          "shank-hn": {
+            "angleDeg": -22.3
+          },
+          "metatarsus-hn": {
+            "angleDeg": 19.1
+          },
+          "hoof-hn": {
+            "angleDeg": -4.0
+          },
+          "thigh-hf": {
+            "angleDeg": 34.8
+          },
+          "shank-hf": {
+            "angleDeg": -22.3
+          },
+          "metatarsus-hf": {
+            "angleDeg": 5.5
+          },
+          "hoof-hf": {
+            "angleDeg": -4.0
+          },
+          "humerus-fn": {
+            "angleDeg": 10.9
+          },
+          "forearm-fn": {
+            "angleDeg": 22.1
+          },
+          "cannon-fn": {
+            "angleDeg": -107.0
+          },
+          "hoof-fn": {
+            "angleDeg": -72.0
+          },
+          "humerus-ff": {
+            "angleDeg": 10.9
+          },
+          "forearm-ff": {
+            "angleDeg": 22.1
+          },
+          "cannon-ff": {
+            "angleDeg": -107.0
+          },
+          "hoof-ff": {
+            "angleDeg": -72.0
+          }
+        },
+        "root": {
+          "angleDeg": -12
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-carpus-fn",
+          "contact-carpus-ff",
+          "contact-hn",
+          "contact-hf"
+        ],
+        "thermal": {
+          "activityMet": 3.3,
+          "emitters": {
+            "breath-nose": 0.7
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lowering-hindquarters",
+        "title": {
+          "en": "Lowering the hindquarters",
+          "de": "Hinterhand absenkend"
+        },
+        "description": {
+          "en": "Second half of lying down: the hind legs fold at stifle and hock and the haunches sink while the cow stays on its carpi.",
+          "de": "Zweite Hälfte des Abliegens: die Hinterbeine beugen sich in Knie und Sprunggelenk und die Hinterhand sinkt, die Kuh bleibt auf den Vorderfußwurzeln."
+        },
+        "key": true,
+        "bones": {
+          "neck": {
+            "angleDeg": -12
+          },
+          "head": {
+            "angleDeg": 10
+          },
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 8
+          },
+          "ear-f": {
+            "angleDeg": 6
+          },
+          "tail-1": {
+            "angleDeg": 10
+          },
+          "tail-2": {
+            "angleDeg": 10
+          },
+          "udder": {
+            "angleDeg": 25
+          },
+          "thigh-hn": {
+            "angleDeg": 39.1
+          },
+          "shank-hn": {
+            "angleDeg": -49.8
+          },
+          "metatarsus-hn": {
+            "angleDeg": 39.7
+          },
+          "hoof-hn": {
+            "angleDeg": -17.0
+          },
+          "thigh-hf": {
+            "angleDeg": 44.3
+          },
+          "shank-hf": {
+            "angleDeg": -49.5
+          },
+          "metatarsus-hf": {
+            "angleDeg": 34.2
+          },
+          "hoof-hf": {
+            "angleDeg": -17.0
+          },
+          "humerus-fn": {
+            "angleDeg": 3.3
+          },
+          "forearm-fn": {
+            "angleDeg": 33.1
+          },
+          "cannon-fn": {
+            "angleDeg": -117.5
+          },
+          "hoof-fn": {
+            "angleDeg": -72.0
+          },
+          "humerus-ff": {
+            "angleDeg": 3.3
+          },
+          "forearm-ff": {
+            "angleDeg": 33.1
+          },
+          "cannon-ff": {
+            "angleDeg": -117.5
+          },
+          "hoof-ff": {
+            "angleDeg": -72.0
+          }
+        },
+        "root": {
+          "angleDeg": -5
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-carpus-fn",
+          "contact-carpus-ff",
+          "contact-hn",
+          "contact-hf"
+        ],
+        "thermal": {
+          "activityMet": 3.3,
+          "emitters": {
+            "breath-nose": 0.7
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-0",
+        "title": {
+          "en": "Walk, phase 1 of 8",
+          "de": "Schritt, Phase 1 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 0/8 of the cycle; hooves on the ground: near hind, far hind, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 0/8 des Zyklus; Klauen am Boden: nahes Hinterbein, fernes Hinterbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "head": {
+            "angleDeg": 2.0
+          },
+          "tail-2": {
+            "angleDeg": -7.2
+          },
+          "tail-3": {
+            "angleDeg": -12.0
+          },
+          "thigh-hn": {
+            "angleDeg": 27.9
+          },
+          "shank-hn": {
+            "angleDeg": 2.1
+          },
+          "metatarsus-hn": {
+            "angleDeg": -30.0
+          },
+          "scapula-fn": {
+            "angleDeg": -10.8
+          },
+          "humerus-fn": {
+            "angleDeg": -0.8
+          },
+          "forearm-fn": {
+            "angleDeg": 41.8
+          },
+          "cannon-fn": {
+            "angleDeg": -52.3
+          },
+          "hoof-fn": {
+            "angleDeg": 3.2
+          },
+          "thigh-hf": {
+            "angleDeg": -10.3
+          },
+          "shank-hf": {
+            "angleDeg": -7.1
+          },
+          "metatarsus-hf": {
+            "angleDeg": 17.4
+          },
+          "scapula-ff": {
+            "angleDeg": 5.1
+          },
+          "humerus-ff": {
+            "angleDeg": 0.7
+          },
+          "forearm-ff": {
+            "angleDeg": 20.1
+          },
+          "cannon-ff": {
+            "angleDeg": -26.0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-hf",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-1",
+        "title": {
+          "en": "Walk, phase 2 of 8",
+          "de": "Schritt, Phase 2 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 1/8 of the cycle; hooves on the ground: near hind, far hind, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 1/8 des Zyklus; Klauen am Boden: nahes Hinterbein, fernes Hinterbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": 2.1
+          },
+          "head": {
+            "angleDeg": -0.1
+          },
+          "tail-1": {
+            "angleDeg": 5.7
+          },
+          "tail-2": {
+            "angleDeg": -0.1
+          },
+          "tail-3": {
+            "angleDeg": -8.7
+          },
+          "udder": {
+            "angleDeg": 2.8
+          },
+          "thorax": {
+            "angleDeg": 0.7
+          },
+          "lumbar": {
+            "angleDeg": -0.7
+          },
+          "thigh-hn": {
+            "angleDeg": 23.6
+          },
+          "shank-hn": {
+            "angleDeg": -7.8
+          },
+          "metatarsus-hn": {
+            "angleDeg": -15.8
+          },
+          "scapula-fn": {
+            "angleDeg": 4.2
+          },
+          "humerus-fn": {
+            "angleDeg": 15.3
+          },
+          "forearm-fn": {
+            "angleDeg": 35.7
+          },
+          "cannon-fn": {
+            "angleDeg": -88.2
+          },
+          "hoof-fn": {
+            "angleDeg": 4.7
+          },
+          "thigh-hf": {
+            "angleDeg": -26.2
+          },
+          "shank-hf": {
+            "angleDeg": 3.4
+          },
+          "metatarsus-hf": {
+            "angleDeg": 22.7
+          },
+          "scapula-ff": {
+            "angleDeg": -2.0
+          },
+          "humerus-ff": {
+            "angleDeg": -2.5
+          },
+          "forearm-ff": {
+            "angleDeg": 23.2
+          },
+          "cannon-ff": {
+            "angleDeg": -18.8
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-hf",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-2",
+        "title": {
+          "en": "Walk, phase 3 of 8",
+          "de": "Schritt, Phase 3 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 2/8 of the cycle; hooves on the ground: near hind, near fore, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 2/8 des Zyklus; Klauen am Boden: nahes Hinterbein, nahes Vorderbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": 3.0
+          },
+          "head": {
+            "angleDeg": -1.0
+          },
+          "tail-1": {
+            "angleDeg": 8.0
+          },
+          "tail-2": {
+            "angleDeg": 7.0
+          },
+          "tail-3": {
+            "angleDeg": -0.4
+          },
+          "udder": {
+            "angleDeg": 4.0
+          },
+          "thorax": {
+            "angleDeg": 1.0
+          },
+          "lumbar": {
+            "angleDeg": -1.0
+          },
+          "thigh-hn": {
+            "angleDeg": 15.3
+          },
+          "shank-hn": {
+            "angleDeg": -12.5
+          },
+          "metatarsus-hn": {
+            "angleDeg": -2.8
+          },
+          "scapula-fn": {
+            "angleDeg": 12
+          },
+          "humerus-fn": {
+            "angleDeg": 18.7
+          },
+          "forearm-fn": {
+            "angleDeg": 12.9
+          },
+          "cannon-fn": {
+            "angleDeg": -43.6
+          },
+          "thigh-hf": {
+            "angleDeg": -17.2
+          },
+          "shank-hf": {
+            "angleDeg": -10.3
+          },
+          "metatarsus-hf": {
+            "angleDeg": 43.4
+          },
+          "hoof-hf": {
+            "angleDeg": -25.4
+          },
+          "scapula-ff": {
+            "angleDeg": -9.1
+          },
+          "humerus-ff": {
+            "angleDeg": -2.8
+          },
+          "forearm-ff": {
+            "angleDeg": 21.7
+          },
+          "cannon-ff": {
+            "angleDeg": -9.9
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-fn",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-3",
+        "title": {
+          "en": "Walk, phase 4 of 8",
+          "de": "Schritt, Phase 4 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 3/8 of the cycle; hooves on the ground: near hind, near fore, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 3/8 des Zyklus; Klauen am Boden: nahes Hinterbein, nahes Vorderbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": 2.1
+          },
+          "head": {
+            "angleDeg": -0.1
+          },
+          "tail-1": {
+            "angleDeg": 5.7
+          },
+          "tail-2": {
+            "angleDeg": 10.0
+          },
+          "tail-3": {
+            "angleDeg": 8.2
+          },
+          "udder": {
+            "angleDeg": 2.8
+          },
+          "thorax": {
+            "angleDeg": 0.7
+          },
+          "lumbar": {
+            "angleDeg": -0.7
+          },
+          "thigh-hn": {
+            "angleDeg": 3.7
+          },
+          "shank-hn": {
+            "angleDeg": -12.3
+          },
+          "metatarsus-hn": {
+            "angleDeg": 8.6
+          },
+          "scapula-fn": {
+            "angleDeg": 12
+          },
+          "humerus-fn": {
+            "angleDeg": 4.8
+          },
+          "forearm-fn": {
+            "angleDeg": 15.5
+          },
+          "cannon-fn": {
+            "angleDeg": -32.3
+          },
+          "thigh-hf": {
+            "angleDeg": 13.9
+          },
+          "shank-hf": {
+            "angleDeg": -25.3
+          },
+          "metatarsus-hf": {
+            "angleDeg": 35.0
+          },
+          "hoof-hf": {
+            "angleDeg": -37.7
+          },
+          "scapula-ff": {
+            "angleDeg": -16.1
+          },
+          "humerus-ff": {
+            "angleDeg": 0.6
+          },
+          "forearm-ff": {
+            "angleDeg": 15.6
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-fn",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-4",
+        "title": {
+          "en": "Walk, phase 5 of 8",
+          "de": "Schritt, Phase 5 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 4/8 of the cycle; hooves on the ground: near hind, near fore, far hind.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 4/8 des Zyklus; Klauen am Boden: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "head": {
+            "angleDeg": 2.0
+          },
+          "tail-2": {
+            "angleDeg": 7.2
+          },
+          "tail-3": {
+            "angleDeg": 12.0
+          },
+          "thigh-hn": {
+            "angleDeg": -10.3
+          },
+          "shank-hn": {
+            "angleDeg": -7.1
+          },
+          "metatarsus-hn": {
+            "angleDeg": 17.4
+          },
+          "scapula-fn": {
+            "angleDeg": 5.1
+          },
+          "humerus-fn": {
+            "angleDeg": 0.7
+          },
+          "forearm-fn": {
+            "angleDeg": 20.1
+          },
+          "cannon-fn": {
+            "angleDeg": -26.0
+          },
+          "thigh-hf": {
+            "angleDeg": 27.9
+          },
+          "shank-hf": {
+            "angleDeg": 2.1
+          },
+          "metatarsus-hf": {
+            "angleDeg": -30.0
+          },
+          "scapula-ff": {
+            "angleDeg": -10.8
+          },
+          "humerus-ff": {
+            "angleDeg": -0.8
+          },
+          "forearm-ff": {
+            "angleDeg": 41.8
+          },
+          "cannon-ff": {
+            "angleDeg": -52.3
+          },
+          "hoof-ff": {
+            "angleDeg": 3.2
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-fn",
+          "contact-hf"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-5",
+        "title": {
+          "en": "Walk, phase 6 of 8",
+          "de": "Schritt, Phase 6 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 5/8 of the cycle; hooves on the ground: near hind, near fore, far hind.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 5/8 des Zyklus; Klauen am Boden: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": -2.1
+          },
+          "head": {
+            "angleDeg": 4.1
+          },
+          "tail-1": {
+            "angleDeg": -5.7
+          },
+          "tail-2": {
+            "angleDeg": 0.1
+          },
+          "tail-3": {
+            "angleDeg": 8.7
+          },
+          "udder": {
+            "angleDeg": -2.8
+          },
+          "thorax": {
+            "angleDeg": -0.7
+          },
+          "lumbar": {
+            "angleDeg": 0.7
+          },
+          "thigh-hn": {
+            "angleDeg": -26.2
+          },
+          "shank-hn": {
+            "angleDeg": 3.4
+          },
+          "metatarsus-hn": {
+            "angleDeg": 22.7
+          },
+          "scapula-fn": {
+            "angleDeg": -2.0
+          },
+          "humerus-fn": {
+            "angleDeg": -0.9
+          },
+          "forearm-fn": {
+            "angleDeg": 20.8
+          },
+          "cannon-fn": {
+            "angleDeg": -18.0
+          },
+          "thigh-hf": {
+            "angleDeg": 23.6
+          },
+          "shank-hf": {
+            "angleDeg": -7.8
+          },
+          "metatarsus-hf": {
+            "angleDeg": -15.8
+          },
+          "scapula-ff": {
+            "angleDeg": 4.2
+          },
+          "humerus-ff": {
+            "angleDeg": 16.3
+          },
+          "forearm-ff": {
+            "angleDeg": 33.5
+          },
+          "cannon-ff": {
+            "angleDeg": -86.9
+          },
+          "hoof-ff": {
+            "angleDeg": 4.7
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-hn",
+          "contact-fn",
+          "contact-hf"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-6",
+        "title": {
+          "en": "Walk, phase 7 of 8",
+          "de": "Schritt, Phase 7 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 6/8 of the cycle; hooves on the ground: near fore, far hind, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 6/8 des Zyklus; Klauen am Boden: nahes Vorderbein, fernes Hinterbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": -3.0
+          },
+          "head": {
+            "angleDeg": 5.0
+          },
+          "tail-1": {
+            "angleDeg": -8.0
+          },
+          "tail-2": {
+            "angleDeg": -7.0
+          },
+          "tail-3": {
+            "angleDeg": 0.4
+          },
+          "udder": {
+            "angleDeg": -4.0
+          },
+          "thorax": {
+            "angleDeg": -1.0
+          },
+          "lumbar": {
+            "angleDeg": 1.0
+          },
+          "thigh-hn": {
+            "angleDeg": -17.2
+          },
+          "shank-hn": {
+            "angleDeg": -10.3
+          },
+          "metatarsus-hn": {
+            "angleDeg": 43.4
+          },
+          "hoof-hn": {
+            "angleDeg": -25.4
+          },
+          "scapula-fn": {
+            "angleDeg": -9.1
+          },
+          "humerus-fn": {
+            "angleDeg": -0.3
+          },
+          "forearm-fn": {
+            "angleDeg": 18.4
+          },
+          "cannon-fn": {
+            "angleDeg": -9.0
+          },
+          "thigh-hf": {
+            "angleDeg": 15.3
+          },
+          "shank-hf": {
+            "angleDeg": -12.5
+          },
+          "metatarsus-hf": {
+            "angleDeg": -2.8
+          },
+          "scapula-ff": {
+            "angleDeg": 12
+          },
+          "humerus-ff": {
+            "angleDeg": 20.5
+          },
+          "forearm-ff": {
+            "angleDeg": 8.9
+          },
+          "cannon-ff": {
+            "angleDeg": -41.4
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-fn",
+          "contact-hf",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-phase-7",
+        "title": {
+          "en": "Walk, phase 8 of 8",
+          "de": "Schritt, Phase 8 von 8"
+        },
+        "description": {
+          "en": "Four-beat lateral-sequence walk at 7/8 of the cycle; hooves on the ground: near fore, far hind, far fore.",
+          "de": "Viertakt-Schritt in Seitenfolge bei 7/8 des Zyklus; Klauen am Boden: nahes Vorderbein, fernes Hinterbein, fernes Vorderbein."
+        },
+        "key": true,
+        "bones": {
+          "jaw": {
+            "angleDeg": -3
+          },
+          "ear-n": {
+            "angleDeg": 6
+          },
+          "ear-f": {
+            "angleDeg": 4
+          },
+          "neck": {
+            "angleDeg": -2.1
+          },
+          "head": {
+            "angleDeg": 4.1
+          },
+          "tail-1": {
+            "angleDeg": -5.7
+          },
+          "tail-2": {
+            "angleDeg": -10.0
+          },
+          "tail-3": {
+            "angleDeg": -8.2
+          },
+          "udder": {
+            "angleDeg": -2.8
+          },
+          "thorax": {
+            "angleDeg": -0.7
+          },
+          "lumbar": {
+            "angleDeg": 0.7
+          },
+          "thigh-hn": {
+            "angleDeg": 13.9
+          },
+          "shank-hn": {
+            "angleDeg": -25.3
+          },
+          "metatarsus-hn": {
+            "angleDeg": 35.0
+          },
+          "hoof-hn": {
+            "angleDeg": -37.7
+          },
+          "scapula-fn": {
+            "angleDeg": -16.1
+          },
+          "humerus-fn": {
+            "angleDeg": 2.4
+          },
+          "forearm-fn": {
+            "angleDeg": 13.2
+          },
+          "cannon-fn": {
+            "angleDeg": 0.5
+          },
+          "thigh-hf": {
+            "angleDeg": 3.7
+          },
+          "shank-hf": {
+            "angleDeg": -12.3
+          },
+          "metatarsus-hf": {
+            "angleDeg": 8.6
+          },
+          "scapula-ff": {
+            "angleDeg": 12
+          },
+          "humerus-ff": {
+            "angleDeg": 6.3
+          },
+          "forearm-ff": {
+            "angleDeg": 12.7
+          },
+          "cannon-ff": {
+            "angleDeg": -31.0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-fn",
+          "contact-hf",
+          "contact-ff"
+        ],
+        "thermal": {
+          "activityMet": 5.73,
+          "emitters": {
+            "breath-nose": 0.8
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "walk-cycle",
+        "title": {
+          "en": "Walking, four-beat lateral sequence",
+          "de": "Schritt im Viertakt in Seitenfolge"
+        },
+        "description": {
+          "en": "Lateral-sequence walk after Hildebrand: near hind, near fore, far hind, far fore touch down at quarter-cycle intervals; each hoof is on the ground 68 % of the cycle, so two to four hooves always carry, and the swinging hoof flexes hock or carpus to clear the ground.",
+          "de": "Schritt in Seitenfolge nach Hildebrand: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein, fernes Vorderbein setzen im Viertelzyklus auf; jede Klaue steht 68 % des Zyklus am Boden, sodass stets zwei bis vier Klauen tragen, und die schwingende Klaue beugt Sprunggelenk oder Vorderfußwurzel, um den Boden zu verlassen."
+        },
+        "durationS": 1.4,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 1.0294,
+        "keys": [
+          {
+            "t": 0.0,
+            "pose": "walk-phase-0",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.175,
+            "pose": "walk-phase-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.35,
+            "pose": "walk-phase-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.525,
+            "pose": "walk-phase-3",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.7,
+            "pose": "walk-phase-4",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.875,
+            "pose": "walk-phase-5",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.05,
+            "pose": "walk-phase-6",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.225,
+            "pose": "walk-phase-7",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-hn",
+            "fromS": 0.0,
+            "toS": 0.952
+          },
+          {
+            "anchor": "contact-fn",
+            "fromS": 0.35,
+            "toS": 1.302
+          },
+          {
+            "anchor": "contact-hf",
+            "fromS": 0.7,
+            "toS": 1.4
+          },
+          {
+            "anchor": "contact-hf",
+            "fromS": 0,
+            "toS": 0.252
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 1.05,
+            "toS": 1.4
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 0,
+            "toS": 0.602
+          }
+        ],
+        "phases": [
+          {
+            "id": "hn-strike",
+            "fromS": 0.0,
+            "toS": 0.35,
+            "title": {
+              "en": "Near hind hoof strikes",
+              "de": "Nahe Hinterklaue setzt auf"
+            }
+          },
+          {
+            "id": "fn-strike",
+            "fromS": 0.35,
+            "toS": 0.7,
+            "title": {
+              "en": "Near fore hoof strikes",
+              "de": "Nahe Vorderklaue setzt auf"
+            }
+          },
+          {
+            "id": "hf-strike",
+            "fromS": 0.7,
+            "toS": 1.05,
+            "title": {
+              "en": "Far hind hoof strikes",
+              "de": "Ferne Hinterklaue setzt auf"
+            }
+          },
+          {
+            "id": "ff-strike",
+            "fromS": 1.05,
+            "toS": 1.4,
+            "title": {
+              "en": "Far fore hoof strikes",
+              "de": "Ferne Vorderklaue setzt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near hind hoof touches down",
+              "de": "Nahe Hinterklaue setzt auf"
+            },
+            "target": "contact-hn"
+          },
+          {
+            "t": 0.952,
+            "kind": "contact-off",
+            "title": {
+              "en": "Near hind hoof lifts",
+              "de": "Nahe Hinterklaue hebt ab"
+            },
+            "target": "contact-hn"
+          },
+          {
+            "t": 0.35,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near fore hoof touches down",
+              "de": "Nahe Vorderklaue setzt auf"
+            },
+            "target": "contact-fn"
+          },
+          {
+            "t": 1.302,
+            "kind": "contact-off",
+            "title": {
+              "en": "Near fore hoof lifts",
+              "de": "Nahe Vorderklaue hebt ab"
+            },
+            "target": "contact-fn"
+          },
+          {
+            "t": 0.7,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far hind hoof touches down",
+              "de": "Ferne Hinterklaue setzt auf"
+            },
+            "target": "contact-hf"
+          },
+          {
+            "t": 0.252,
+            "kind": "contact-off",
+            "title": {
+              "en": "Far hind hoof lifts",
+              "de": "Ferne Hinterklaue hebt ab"
+            },
+            "target": "contact-hf"
+          },
+          {
+            "t": 1.05,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far fore hoof touches down",
+              "de": "Ferne Vorderklaue setzt auf"
+            },
+            "target": "contact-ff"
+          },
+          {
+            "t": 0.602,
+            "kind": "contact-off",
+            "title": {
+              "en": "Far fore hoof lifts",
+              "de": "Ferne Vorderklaue hebt ab"
+            },
+            "target": "contact-ff"
+          },
+          {
+            "t": 0,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 0.7,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath-nose",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 0.7,
+                "v": 0.9
+              },
+              {
+                "t": 1.4,
+                "v": 0.7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cud-chewing",
+        "title": {
+          "en": "Ruminating while standing",
+          "de": "Wiederkäuen im Stehen"
+        },
+        "description": {
+          "en": "The standing cow chews the cud at one jaw cycle per second (Beauchemin 1991) with a slight nod of the head, a flick of the near ear and a slow swish of the tail; nasal breathing at 24 breaths per minute.",
+          "de": "Die stehende Kuh käut mit einem Kieferzyklus pro Sekunde wieder (Beauchemin 1991), nickt leicht mit dem Kopf, schlägt einmal mit dem nahen Ohr und wedelt langsam mit dem Schwanz; Nasenatmung mit 24 Atemzügen pro Minute."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -3
+              },
+              "head": {
+                "angleDeg": 2.0
+              },
+              "tail-1": {
+                "angleDeg": 0.0
+              },
+              "tail-2": {
+                "angleDeg": -1.2
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 0.4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -13
+              },
+              "head": {
+                "angleDeg": 3.27
+              },
+              "tail-1": {
+                "angleDeg": 5.8
+              },
+              "tail-2": {
+                "angleDeg": 2.4
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -5
+              },
+              "head": {
+                "angleDeg": 3.36
+              },
+              "tail-1": {
+                "angleDeg": 10.1
+              },
+              "tail-2": {
+                "angleDeg": 6.4
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 1,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -3
+              },
+              "head": {
+                "angleDeg": 2.88
+              },
+              "tail-1": {
+                "angleDeg": 11.4
+              },
+              "tail-2": {
+                "angleDeg": 8.2
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 1.4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -13
+              },
+              "head": {
+                "angleDeg": 1.45
+              },
+              "tail-1": {
+                "angleDeg": 11.8
+              },
+              "tail-2": {
+                "angleDeg": 11.0
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 1.8,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -5
+              },
+              "head": {
+                "angleDeg": 0.53
+              },
+              "tail-1": {
+                "angleDeg": 9.2
+              },
+              "tail-2": {
+                "angleDeg": 12.0
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -3
+              },
+              "head": {
+                "angleDeg": 0.57
+              },
+              "tail-1": {
+                "angleDeg": 7.1
+              },
+              "tail-2": {
+                "angleDeg": 11.8
+              },
+              "ear-n": {
+                "angleDeg": 26
+              }
+            }
+          },
+          {
+            "t": 2.4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -13
+              },
+              "head": {
+                "angleDeg": 1.63
+              },
+              "tail-1": {
+                "angleDeg": 1.5
+              },
+              "tail-2": {
+                "angleDeg": 9.9
+              },
+              "ear-n": {
+                "angleDeg": 26
+              }
+            }
+          },
+          {
+            "t": 2.8,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -5
+              },
+              "head": {
+                "angleDeg": 3.03
+              },
+              "tail-1": {
+                "angleDeg": -4.4
+              },
+              "tail-2": {
+                "angleDeg": 6.5
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -3
+              },
+              "head": {
+                "angleDeg": 3.43
+              },
+              "tail-1": {
+                "angleDeg": -7.1
+              },
+              "tail-2": {
+                "angleDeg": 4.6
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 3.4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -13
+              },
+              "head": {
+                "angleDeg": 3.16
+              },
+              "tail-1": {
+                "angleDeg": -10.9
+              },
+              "tail-2": {
+                "angleDeg": 0.7
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 3.8,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -5
+              },
+              "head": {
+                "angleDeg": 1.81
+              },
+              "tail-1": {
+                "angleDeg": -12.0
+              },
+              "tail-2": {
+                "angleDeg": -2.4
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -3
+              },
+              "head": {
+                "angleDeg": 1.12
+              },
+              "tail-1": {
+                "angleDeg": -11.4
+              },
+              "tail-2": {
+                "angleDeg": -3.4
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 4.4,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -13
+              },
+              "head": {
+                "angleDeg": 0.5
+              },
+              "tail-1": {
+                "angleDeg": -8.2
+              },
+              "tail-2": {
+                "angleDeg": -3.9
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          },
+          {
+            "t": 4.8,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -5
+              },
+              "head": {
+                "angleDeg": 1.28
+              },
+              "tail-1": {
+                "angleDeg": -3.0
+              },
+              "tail-2": {
+                "angleDeg": -2.5
+              },
+              "ear-n": {
+                "angleDeg": 6
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-hn",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "contact-hf",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "contact-fn",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 0,
+            "toS": 5
+          }
+        ],
+        "phases": [
+          {
+            "id": "chew-a",
+            "fromS": 0,
+            "toS": 2.5,
+            "title": {
+              "en": "First breath cycle",
+              "de": "Erster Atemzyklus"
+            }
+          },
+          {
+            "id": "chew-b",
+            "fromS": 2.5,
+            "toS": 5,
+            "title": {
+              "en": "Second breath cycle with ear flick",
+              "de": "Zweiter Atemzyklus mit Ohrenschlag"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 1.125,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          },
+          {
+            "t": 2.5,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 3.625,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          },
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Near ear flicks",
+              "de": "Nahes Ohr schlägt"
+            },
+            "target": "ear-n"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath-nose",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3
+              },
+              {
+                "t": 1.125,
+                "v": 0.6
+              },
+              {
+                "t": 2.5,
+                "v": 0.3
+              },
+              {
+                "t": 3.625,
+                "v": 0.6
+              },
+              {
+                "t": 5,
+                "v": 0.3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lie-down",
+        "title": {
+          "en": "Lying down",
+          "de": "Abliegen"
+        },
+        "description": {
+          "en": "Non-looping transition after Krohn and Munksgaard (1993): the standing cow lowers its head and sniffs the floor, folds both fore legs and kneels on the carpi, then flexes the hind legs and sinks the haunches until the sternum, hocks and hooves rest on the ground, the far fore leg stretching forward. Contact spans overlap so the cow is supported at every instant.",
+          "de": "Nicht wiederholter Übergang nach Krohn und Munksgaard (1993): die stehende Kuh senkt den Kopf und beschnuppert den Boden, schlägt beide Vorderbeine ein und kniet auf den Vorderfußwurzeln, beugt dann die Hinterbeine und lässt die Hinterhand absinken, bis Brustbein, Sprunggelenke und Klauen auf dem Boden ruhen, das ferne Vorderbein streckt sich nach vorn. Die Kontaktspannen überlappen, sodass die Kuh in jedem Augenblick gestützt ist."
+        },
+        "durationS": 11,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "standing-chewing",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "neck": {
+                "angleDeg": -28
+              },
+              "head": {
+                "angleDeg": 22
+              },
+              "jaw": {
+                "angleDeg": -6
+              },
+              "ear-n": {
+                "angleDeg": 14
+              }
+            }
+          },
+          {
+            "t": 3.6,
+            "pose": "kneeling-front",
+            "ease": "smooth"
+          },
+          {
+            "t": 5.775,
+            "pose": "kneeling-front",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": 0.1886
+              },
+              "neck": {
+                "angleDeg": -15.5583
+              },
+              "head": {
+                "angleDeg": 11.9406
+              },
+              "jaw": {
+                "angleDeg": -2.8394
+              },
+              "ear-n": {
+                "angleDeg": 8.4989
+              },
+              "ear-f": {
+                "angleDeg": 6.6758
+              },
+              "tail-1": {
+                "angleDeg": 6.1204
+              },
+              "tail-2": {
+                "angleDeg": 6.8613
+              },
+              "tail-3": {
+                "angleDeg": -3.8376
+              },
+              "udder": {
+                "angleDeg": 15.2443
+              },
+              "thigh-hf": {
+                "angleDeg": 44.5057
+              },
+              "shank-hf": {
+                "angleDeg": -45.2581
+              },
+              "metatarsus-hf": {
+                "angleDeg": 22.2837
+              },
+              "hoof-hf": {
+                "angleDeg": -11.4605
+              },
+              "thigh-hn": {
+                "angleDeg": 36.0415
+              },
+              "shank-hn": {
+                "angleDeg": -45.6254
+              },
+              "metatarsus-hn": {
+                "angleDeg": 34.8842
+              },
+              "hoof-hn": {
+                "angleDeg": -11.4605
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 0.6297
+              },
+              "forearm-ff": {
+                "angleDeg": 26.205
+              },
+              "cannon-ff": {
+                "angleDeg": -122.6748
+              },
+              "hoof-ff": {
+                "angleDeg": -77.835
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": 8.2287
+              },
+              "forearm-fn": {
+                "angleDeg": 28.7068
+              },
+              "cannon-fn": {
+                "angleDeg": -116.983
+              },
+              "hoof-fn": {
+                "angleDeg": -73.5924
+              }
+            }
+          },
+          {
+            "t": 6.1875,
+            "pose": "kneeling-front",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": 0.1616
+              },
+              "neck": {
+                "angleDeg": -13.8775
+              },
+              "head": {
+                "angleDeg": 11.2608
+              },
+              "jaw": {
+                "angleDeg": -2.8981
+              },
+              "ear-n": {
+                "angleDeg": 8.2265
+              },
+              "ear-f": {
+                "angleDeg": 6.2829
+              },
+              "tail-1": {
+                "angleDeg": 7.9186
+              },
+              "tail-2": {
+                "angleDeg": 7.5115
+              },
+              "tail-3": {
+                "angleDeg": -3.2527
+              },
+              "udder": {
+                "angleDeg": 19.2032
+              },
+              "thigh-hf": {
+                "angleDeg": 45.4049
+              },
+              "shank-hf": {
+                "angleDeg": -49.0213
+              },
+              "metatarsus-hf": {
+                "angleDeg": 27.3685
+              },
+              "hoof-hf": {
+                "angleDeg": -13.8216
+              },
+              "thigh-hn": {
+                "angleDeg": 38.4852
+              },
+              "shank-hn": {
+                "angleDeg": -49.4341
+              },
+              "metatarsus-hn": {
+                "angleDeg": 37.9317
+              },
+              "hoof-hn": {
+                "angleDeg": -13.8216
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": -0.0649
+              },
+              "forearm-ff": {
+                "angleDeg": 28.1974
+              },
+              "cannon-ff": {
+                "angleDeg": -121.8652
+              },
+              "hoof-ff": {
+                "angleDeg": -76.1433
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": 6.4466
+              },
+              "forearm-fn": {
+                "angleDeg": 30.4458
+              },
+              "cannon-fn": {
+                "angleDeg": -116.6306
+              },
+              "hoof-fn": {
+                "angleDeg": -72.5078
+              }
+            }
+          },
+          {
+            "t": 6.325,
+            "pose": "kneeling-front",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": 0.0891
+              },
+              "neck": {
+                "angleDeg": -12.8809
+              },
+              "head": {
+                "angleDeg": 10.6464
+              },
+              "jaw": {
+                "angleDeg": -2.9508
+              },
+              "ear-n": {
+                "angleDeg": 8.1006
+              },
+              "ear-f": {
+                "angleDeg": 6.1131
+              },
+              "tail-1": {
+                "angleDeg": 9.0206
+              },
+              "tail-2": {
+                "angleDeg": 8.6526
+              },
+              "tail-3": {
+                "angleDeg": -1.7859
+              },
+              "udder": {
+                "angleDeg": 22.1481
+              },
+              "thigh-hf": {
+                "angleDeg": 45.0193
+              },
+              "shank-hf": {
+                "angleDeg": -49.6489
+              },
+              "metatarsus-hf": {
+                "angleDeg": 30.8796
+              },
+              "hoof-hf": {
+                "angleDeg": -15.457
+              },
+              "thigh-hn": {
+                "angleDeg": 39.0189
+              },
+              "shank-hn": {
+                "angleDeg": -50.0196
+              },
+              "metatarsus-hn": {
+                "angleDeg": 39.0317
+              },
+              "hoof-hn": {
+                "angleDeg": -15.457
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 1.2919
+              },
+              "forearm-ff": {
+                "angleDeg": 30.5118
+              },
+              "cannon-ff": {
+                "angleDeg": -119.8142
+              },
+              "hoof-ff": {
+                "angleDeg": -74.1166
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": 4.8811
+              },
+              "forearm-fn": {
+                "angleDeg": 31.7715
+              },
+              "cannon-fn": {
+                "angleDeg": -116.2975
+              },
+              "hoof-fn": {
+                "angleDeg": -72.1128
+              }
+            }
+          },
+          {
+            "t": 6.4,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth"
+          },
+          {
+            "t": 6.4625,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -0.1054
+              },
+              "neck": {
+                "angleDeg": -11.0483
+              },
+              "head": {
+                "angleDeg": 9.2615
+              },
+              "jaw": {
+                "angleDeg": -3.0529
+              },
+              "ear-n": {
+                "angleDeg": 7.8941
+              },
+              "ear-f": {
+                "angleDeg": 5.8936
+              },
+              "tail-1": {
+                "angleDeg": 11.0574
+              },
+              "tail-2": {
+                "angleDeg": 11.5808
+              },
+              "tail-3": {
+                "angleDeg": 2.1073
+              },
+              "udder": {
+                "angleDeg": 28.1685
+              },
+              "thigh-hf": {
+                "angleDeg": 43.3909
+              },
+              "shank-hf": {
+                "angleDeg": -49.0826
+              },
+              "metatarsus-hf": {
+                "angleDeg": 37.8659
+              },
+              "hoof-hf": {
+                "angleDeg": -18.701
+              },
+              "thigh-hn": {
+                "angleDeg": 39.0478
+              },
+              "shank-hn": {
+                "angleDeg": -49.2933
+              },
+              "metatarsus-hn": {
+                "angleDeg": 40.3127
+              },
+              "hoof-hn": {
+                "angleDeg": -18.701
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 5.7797
+              },
+              "forearm-ff": {
+                "angleDeg": 36.1417
+              },
+              "cannon-ff": {
+                "angleDeg": -121.9069
+              },
+              "hoof-ff": {
+                "angleDeg": -69.6246
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": 1.5263
+              },
+              "forearm-fn": {
+                "angleDeg": 34.5988
+              },
+              "cannon-fn": {
+                "angleDeg": -117.4363
+              },
+              "hoof-fn": {
+                "angleDeg": -71.995
+              }
+            }
+          },
+          {
+            "t": 6.6,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -0.348
+              },
+              "neck": {
+                "angleDeg": -8.8654
+              },
+              "head": {
+                "angleDeg": 7.5636
+              },
+              "jaw": {
+                "angleDeg": -3.1742
+              },
+              "ear-n": {
+                "angleDeg": 7.6516
+              },
+              "ear-f": {
+                "angleDeg": 5.6511
+              },
+              "tail-1": {
+                "angleDeg": 13.4829
+              },
+              "tail-2": {
+                "angleDeg": 15.2192
+              },
+              "tail-3": {
+                "angleDeg": 6.9585
+              },
+              "udder": {
+                "angleDeg": 35.4451
+              },
+              "thigh-hf": {
+                "angleDeg": 41.2927
+              },
+              "shank-hf": {
+                "angleDeg": -48.0999
+              },
+              "metatarsus-hf": {
+                "angleDeg": 46.2824
+              },
+              "hoof-hf": {
+                "angleDeg": -22.6061
+              },
+              "thigh-hn": {
+                "angleDeg": 38.9142
+              },
+              "shank-hn": {
+                "angleDeg": -48.1044
+              },
+              "metatarsus-hn": {
+                "angleDeg": 41.7072
+              },
+              "hoof-hn": {
+                "angleDeg": -22.6061
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 11.5166
+              },
+              "forearm-ff": {
+                "angleDeg": 43.2324
+              },
+              "cannon-ff": {
+                "angleDeg": -127.8162
+              },
+              "hoof-ff": {
+                "angleDeg": -64.1671
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": -2.5486
+              },
+              "forearm-fn": {
+                "angleDeg": 38.0431
+              },
+              "cannon-fn": {
+                "angleDeg": -117.1554
+              },
+              "hoof-fn": {
+                "angleDeg": -71.9952
+              }
+            }
+          },
+          {
+            "t": 6.7375,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -0.5923
+              },
+              "neck": {
+                "angleDeg": -6.6675
+              },
+              "head": {
+                "angleDeg": 5.8539
+              },
+              "jaw": {
+                "angleDeg": -3.2963
+              },
+              "ear-n": {
+                "angleDeg": 7.4074
+              },
+              "ear-f": {
+                "angleDeg": 5.407
+              },
+              "tail-1": {
+                "angleDeg": 15.925
+              },
+              "tail-2": {
+                "angleDeg": 18.8831
+              },
+              "tail-3": {
+                "angleDeg": 11.8437
+              },
+              "udder": {
+                "angleDeg": 42.7719
+              },
+              "thigh-hf": {
+                "angleDeg": 39.1795
+              },
+              "shank-hf": {
+                "angleDeg": -47.1094
+              },
+              "metatarsus-hf": {
+                "angleDeg": 54.7569
+              },
+              "hoof-hf": {
+                "angleDeg": -26.5381
+              },
+              "thigh-hn": {
+                "angleDeg": 38.7791
+              },
+              "shank-hn": {
+                "angleDeg": -46.9063
+              },
+              "metatarsus-hn": {
+                "angleDeg": 43.1108
+              },
+              "hoof-hn": {
+                "angleDeg": -26.5381
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 17.2981
+              },
+              "forearm-ff": {
+                "angleDeg": 50.3919
+              },
+              "cannon-ff": {
+                "angleDeg": -129.48160000000001
+              },
+              "hoof-ff": {
+                "angleDeg": -58.6719
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": -6.6517
+              },
+              "forearm-fn": {
+                "angleDeg": 41.5112
+              },
+              "cannon-fn": {
+                "angleDeg": -116.8669
+              },
+              "hoof-fn": {
+                "angleDeg": -71.9959
+              }
+            }
+          },
+          {
+            "t": 6.875,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -0.8373
+              },
+              "neck": {
+                "angleDeg": -4.4633
+              },
+              "head": {
+                "angleDeg": 4.1392
+              },
+              "jaw": {
+                "angleDeg": -3.4187
+              },
+              "ear-n": {
+                "angleDeg": 7.1625
+              },
+              "ear-f": {
+                "angleDeg": 5.1622
+              },
+              "tail-1": {
+                "angleDeg": 18.3742
+              },
+              "tail-2": {
+                "angleDeg": 22.5576
+              },
+              "tail-3": {
+                "angleDeg": 16.7431
+              },
+              "udder": {
+                "angleDeg": 50.1199
+              },
+              "thigh-hf": {
+                "angleDeg": 37.0602
+              },
+              "shank-hf": {
+                "angleDeg": -46.1159
+              },
+              "metatarsus-hf": {
+                "angleDeg": 63.256
+              },
+              "hoof-hf": {
+                "angleDeg": -30.4815
+              },
+              "thigh-hn": {
+                "angleDeg": 38.6435
+              },
+              "shank-hn": {
+                "angleDeg": -45.7046
+              },
+              "metatarsus-hn": {
+                "angleDeg": 44.5184
+              },
+              "hoof-hn": {
+                "angleDeg": -30.4815
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 23.0982
+              },
+              "forearm-ff": {
+                "angleDeg": 57.5809
+              },
+              "cannon-ff": {
+                "angleDeg": -134.2091
+              },
+              "hoof-ff": {
+                "angleDeg": -53.1607
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": -10.7667
+              },
+              "forearm-fn": {
+                "angleDeg": 44.9894
+              },
+              "cannon-fn": {
+                "angleDeg": -116.5769
+              },
+              "hoof-fn": {
+                "angleDeg": -71.9966
+              }
+            }
+          },
+          {
+            "t": 7.0125,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -1.0827
+              },
+              "neck": {
+                "angleDeg": -2.2549
+              },
+              "head": {
+                "angleDeg": 2.4214
+              },
+              "jaw": {
+                "angleDeg": -3.5414
+              },
+              "ear-n": {
+                "angleDeg": 6.9171
+              },
+              "ear-f": {
+                "angleDeg": 4.9169
+              },
+              "tail-1": {
+                "angleDeg": 20.8279
+              },
+              "tail-2": {
+                "angleDeg": 26.2389
+              },
+              "tail-3": {
+                "angleDeg": 21.6516
+              },
+              "udder": {
+                "angleDeg": 57.4816
+              },
+              "thigh-hf": {
+                "angleDeg": 34.9369
+              },
+              "shank-hf": {
+                "angleDeg": -45.1206
+              },
+              "metatarsus-hf": {
+                "angleDeg": 71.7709
+              },
+              "hoof-hf": {
+                "angleDeg": -34.4322
+              },
+              "thigh-hn": {
+                "angleDeg": 38.5077
+              },
+              "shank-hn": {
+                "angleDeg": -44.5006
+              },
+              "metatarsus-hn": {
+                "angleDeg": 45.9286
+              },
+              "hoof-hn": {
+                "angleDeg": -34.4322
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 28.9103
+              },
+              "forearm-ff": {
+                "angleDeg": 64.789
+              },
+              "cannon-ff": {
+                "angleDeg": -138.4696
+              },
+              "hoof-ff": {
+                "angleDeg": -47.6393
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": -14.8894
+              },
+              "forearm-fn": {
+                "angleDeg": 48.4741
+              },
+              "cannon-fn": {
+                "angleDeg": -116.2863
+              },
+              "hoof-fn": {
+                "angleDeg": -71.9973
+              }
+            }
+          },
+          {
+            "t": 7.15,
+            "pose": "lowering-hindquarters",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "lumbar": {
+                "angleDeg": 0
+              },
+              "thorax": {
+                "angleDeg": -1.3279
+              },
+              "neck": {
+                "angleDeg": -0.0482
+              },
+              "head": {
+                "angleDeg": 0.7048
+              },
+              "jaw": {
+                "angleDeg": -3.664
+              },
+              "ear-n": {
+                "angleDeg": 6.6719
+              },
+              "ear-f": {
+                "angleDeg": 4.6718
+              },
+              "tail-1": {
+                "angleDeg": 23.2798
+              },
+              "tail-2": {
+                "angleDeg": 29.9175
+              },
+              "tail-3": {
+                "angleDeg": 26.5565
+              },
+              "udder": {
+                "angleDeg": 64.8379
+              },
+              "thigh-hf": {
+                "angleDeg": 32.8152
+              },
+              "shank-hf": {
+                "angleDeg": -44.126
+              },
+              "metatarsus-hf": {
+                "angleDeg": 80.2795
+              },
+              "hoof-hf": {
+                "angleDeg": -38.38
+              },
+              "thigh-hn": {
+                "angleDeg": 38.372
+              },
+              "shank-hn": {
+                "angleDeg": -43.2975
+              },
+              "metatarsus-hn": {
+                "angleDeg": 47.3378
+              },
+              "hoof-hn": {
+                "angleDeg": -38.38
+              },
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 34.7176
+              },
+              "forearm-ff": {
+                "angleDeg": 71.9895
+              },
+              "cannon-ff": {
+                "angleDeg": -62.550799999999995
+              },
+              "hoof-ff": {
+                "angleDeg": -42.122
+              },
+              "scapula-fn": {
+                "angleDeg": 0
+              },
+              "humerus-fn": {
+                "angleDeg": -19.009
+              },
+              "forearm-fn": {
+                "angleDeg": 51.9562
+              },
+              "cannon-fn": {
+                "angleDeg": -115.9959
+              },
+              "hoof-fn": {
+                "angleDeg": -71.998
+              }
+            }
+          },
+          {
+            "t": 7.6,
+            "pose": "lying-resting",
+            "ease": "smooth",
+            "bones": {
+              "scapula-ff": {
+                "angleDeg": 0
+              },
+              "humerus-ff": {
+                "angleDeg": 50.3
+              },
+              "forearm-ff": {
+                "angleDeg": 90.1
+              },
+              "cannon-ff": {
+                "angleDeg": -67.5
+              },
+              "hoof-ff": {
+                "angleDeg": -27.0
+              }
+            }
+          },
+          {
+            "t": 9.0,
+            "pose": "lying-resting",
+            "ease": "smooth"
+          },
+          {
+            "t": 11,
+            "pose": "lying-resting",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -10
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-hn",
+            "fromS": 0,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-hf",
+            "fromS": 0,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-fn",
+            "fromS": 0,
+            "toS": 3.8
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 0,
+            "toS": 3.8
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 8.6,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-carpus-fn",
+            "fromS": 3.2,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-carpus-ff",
+            "fromS": 3.2,
+            "toS": 7.4
+          },
+          {
+            "anchor": "contact-hock-hn",
+            "fromS": 7.0,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-hock-hf",
+            "fromS": 7.0,
+            "toS": 11
+          },
+          {
+            "anchor": "contact-sternum",
+            "fromS": 7.8,
+            "toS": 11
+          }
+        ],
+        "phases": [
+          {
+            "id": "sniff",
+            "fromS": 0,
+            "toS": 2.5,
+            "title": {
+              "en": "Lowering the head and sniffing",
+              "de": "Kopf senken und schnuppern"
+            }
+          },
+          {
+            "id": "kneel",
+            "fromS": 2.5,
+            "toS": 4.5,
+            "title": {
+              "en": "Kneeling on the carpi",
+              "de": "Auf die Vorderfußwurzeln knien"
+            }
+          },
+          {
+            "id": "sink",
+            "fromS": 4.5,
+            "toS": 9.0,
+            "title": {
+              "en": "Sinking the hindquarters",
+              "de": "Hinterhand absenken"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 9.0,
+            "toS": 11,
+            "title": {
+              "en": "Settling and ruminating",
+              "de": "Zur Ruhe kommen und wiederkäuen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Near fore carpus touches down",
+              "de": "Nahe Vorderfußwurzel setzt auf"
+            },
+            "target": "contact-carpus-fn"
+          },
+          {
+            "t": 3.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far fore carpus touches down",
+              "de": "Ferne Vorderfußwurzel setzt auf"
+            },
+            "target": "contact-carpus-ff"
+          },
+          {
+            "t": 3.8,
+            "kind": "contact-off",
+            "title": {
+              "en": "Fore hooves lift",
+              "de": "Vorderklauen heben ab"
+            },
+            "target": "contact-fn"
+          },
+          {
+            "t": 7.0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Hocks touch down",
+              "de": "Sprunggelenke setzen auf"
+            },
+            "target": "contact-hock-hn"
+          },
+          {
+            "t": 7.8,
+            "kind": "contact-on",
+            "title": {
+              "en": "Sternum touches down",
+              "de": "Brustbein setzt auf"
+            },
+            "target": "contact-sternum"
+          },
+          {
+            "t": 7.4,
+            "kind": "contact-off",
+            "title": {
+              "en": "Far fore carpus lifts as the leg stretches forward",
+              "de": "Ferne Vorderfußwurzel hebt ab, das Bein streckt sich nach vorn"
+            },
+            "target": "contact-carpus-ff"
+          },
+          {
+            "t": 8.6,
+            "kind": "contact-on",
+            "title": {
+              "en": "Far fore hoof touches down in front",
+              "de": "Ferne Vorderklaue setzt vorn auf"
+            },
+            "target": "contact-ff"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 2.95
+              },
+              {
+                "t": 3.6,
+                "v": 3.6
+              },
+              {
+                "t": 6.4,
+                "v": 3.4
+              },
+              {
+                "t": 9,
+                "v": 2.55
+              },
+              {
+                "t": 11,
+                "v": 2.55
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath-nose",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 3.6,
+                "v": 0.8
+              },
+              {
+                "t": 6.4,
+                "v": 0.8
+              },
+              {
+                "t": 11,
+                "v": 0.45
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "graze-and-chew",
+        "title": {
+          "en": "Grazing, then chewing",
+          "de": "Weiden, dann Wiederkäuen"
+        },
+        "description": {
+          "en": "The cow lowers the head to the sward, takes three bites by tearing grass with a quick closing of the jaw, raises the head and chews the bolus standing.",
+          "de": "Die Kuh senkt den Kopf zum Rasen, nimmt drei Bissen, indem sie Gras mit raschem Kieferschluss abreißt, hebt den Kopf und kaut den Bissen im Stehen."
+        },
+        "durationS": 12,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "standing-chewing",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.2,
+            "pose": "grazing-head-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.2,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -14
+              }
+            }
+          },
+          {
+            "t": 3.7,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -2
+              },
+              "head": {
+                "angleDeg": 49
+              }
+            }
+          },
+          {
+            "t": 4.6,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -14
+              }
+            }
+          },
+          {
+            "t": 5.1,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -2
+              },
+              "head": {
+                "angleDeg": 49
+              }
+            }
+          },
+          {
+            "t": 6.0,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -14
+              }
+            }
+          },
+          {
+            "t": 6.5,
+            "pose": "grazing-head-down",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -2
+              },
+              "head": {
+                "angleDeg": 49
+              }
+            }
+          },
+          {
+            "t": 8.0,
+            "pose": "grazing-head-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 10.0,
+            "pose": "standing-chewing",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "standing-chewing",
+            "ease": "smooth",
+            "bones": {
+              "jaw": {
+                "angleDeg": -12
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-hn",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "contact-hf",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "contact-fn",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "contact-ff",
+            "fromS": 0,
+            "toS": 12
+          }
+        ],
+        "phases": [
+          {
+            "id": "lower",
+            "fromS": 0,
+            "toS": 2.2,
+            "title": {
+              "en": "Lowering the head",
+              "de": "Kopf senken"
+            }
+          },
+          {
+            "id": "bite",
+            "fromS": 2.2,
+            "toS": 8.0,
+            "title": {
+              "en": "Biting grass",
+              "de": "Gras abbeißen"
+            }
+          },
+          {
+            "id": "raise",
+            "fromS": 8.0,
+            "toS": 12,
+            "title": {
+              "en": "Raising the head and chewing",
+              "de": "Kopf heben und kauen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3.7,
+            "kind": "motion",
+            "title": {
+              "en": "First bite",
+              "de": "Erster Biss"
+            }
+          },
+          {
+            "t": 5.1,
+            "kind": "motion",
+            "title": {
+              "en": "Second bite",
+              "de": "Zweiter Biss"
+            }
+          },
+          {
+            "t": 6.5,
+            "kind": "motion",
+            "title": {
+              "en": "Third bite",
+              "de": "Dritter Biss"
+            }
+          },
+          {
+            "t": 0,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 1.125,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 2.95
+              },
+              {
+                "t": 2.2,
+                "v": 3.4
+              },
+              {
+                "t": 8,
+                "v": 3.4
+              },
+              {
+                "t": 12,
+                "v": 2.95
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath-nose",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 2.2,
+                "v": 0.6
+              },
+              {
+                "t": 8,
+                "v": 0.6
+              },
+              {
+                "t": 12,
+                "v": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 18,
+        "meanRadiantTempC": 18,
+        "relativeHumidity": 0.6,
+        "windMS": 0.3,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 2.8,
+      "regions": [
+        {
+          "id": "coat-trunk",
+          "title": {
+            "en": "White trunk coat",
+            "de": "Weißes Rumpffell"
+          },
+          "kind": "fur",
+          "material": "white-hair",
+          "model": "core-resistance",
+          "areaM2": 1.17,
+          "characteristicLengthM": 0.7,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.2,
+          "metabolicShare": 0.22,
+          "source": "authored-estimate",
+          "reference": "scholander-1950"
+        },
+        {
+          "id": "coat-patches",
+          "title": {
+            "en": "Black patches and head",
+            "de": "Schwarze Flecken und Kopf"
+          },
+          "kind": "fur",
+          "material": "black-hair",
+          "model": "core-resistance",
+          "areaM2": 1.3,
+          "characteristicLengthM": 0.7,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.2,
+          "metabolicShare": 0.25,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "flank-rumen",
+          "title": {
+            "en": "Rumen flank",
+            "de": "Pansenflanke"
+          },
+          "kind": "fur",
+          "material": "white-hair",
+          "model": "core-resistance",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.4,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.18,
+          "metabolicShare": 0.17,
+          "source": "authored-estimate",
+          "reference": "kadzere-2002"
+        },
+        {
+          "id": "coat-head-neck",
+          "title": {
+            "en": "Neck and dewlap coat",
+            "de": "Hals- und Trielfell"
+          },
+          "kind": "fur",
+          "material": "white-hair",
+          "model": "core-resistance",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.25,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.16,
+          "metabolicShare": 0.07,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "coat-limbs",
+          "title": {
+            "en": "Upper limb coat",
+            "de": "Fell der oberen Gliedmaßen"
+          },
+          "kind": "fur",
+          "material": "white-hair",
+          "model": "core-resistance",
+          "areaM2": 0.95,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.14,
+          "metabolicShare": 0.16,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "lower-legs",
+          "title": {
+            "en": "Thinly haired lower legs",
+            "de": "Dünn behaarte Unterbeine"
+          },
+          "kind": "skin",
+          "material": "bare-skin",
+          "model": "core-resistance",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.06,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.09,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "kadzere-2002"
+        },
+        {
+          "id": "hooves",
+          "title": {
+            "en": "Hooves",
+            "de": "Klauen"
+          },
+          "kind": "skin",
+          "material": "claw-horn",
+          "model": "core-resistance",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.22,
+          "metabolicShare": 0.005,
+          "source": "authored-estimate",
+          "reference": "dyce-2010"
+        },
+        {
+          "id": "udder",
+          "title": {
+            "en": "Udder skin",
+            "de": "Euterhaut"
+          },
+          "kind": "skin",
+          "material": "bare-skin",
+          "model": "core-resistance",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.06,
+          "metabolicShare": 0.08,
+          "source": "authored-estimate",
+          "reference": "kadzere-2002"
+        },
+        {
+          "id": "muzzle",
+          "title": {
+            "en": "Moist muzzle",
+            "de": "Feuchtes Flotzmaul"
+          },
+          "kind": "skin",
+          "material": "bare-skin",
+          "model": "core-resistance",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.6,
+          "metabolicShare": 0.01,
+          "source": "authored-estimate",
+          "reference": "gebremedhin-2001"
+        },
+        {
+          "id": "eyes",
+          "title": {
+            "en": "Eyes",
+            "de": "Augen"
+          },
+          "kind": "skin",
+          "material": "bare-skin",
+          "model": "core-resistance",
+          "areaM2": 0.002,
+          "characteristicLengthM": 0.04,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.04,
+          "wettedness": 1,
+          "metabolicShare": 0.002,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        },
+        {
+          "id": "ears",
+          "title": {
+            "en": "Ears",
+            "de": "Ohren"
+          },
+          "kind": "fur",
+          "material": "black-hair",
+          "model": "core-resistance",
+          "areaM2": 0.07,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.07,
+          "metabolicShare": 0.005,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        },
+        {
+          "id": "coat-tail",
+          "title": {
+            "en": "Tail and switch",
+            "de": "Schwanz und Quaste"
+          },
+          "kind": "fur",
+          "material": "black-hair",
+          "model": "core-resistance",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.05,
+          "coreTempC": 38.6,
+          "insulationM2KW": 0.12,
+          "metabolicShare": 0.008,
+          "source": "authored-estimate",
+          "reference": "cena-monteith-1975"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath-nose",
+          "kind": "breath",
+          "title": {
+            "en": "Nasal breathing",
+            "de": "Nasenatmung"
+          },
+          "anchor": "nose",
+          "directionDeg": 35,
+          "carries": "vapour",
+          "temperatureC": 34,
+          "velocityMS": 1.8,
+          "diameterM": 0.05,
+          "vapourKgPerKg": 0.034,
+          "periodS": 2.5,
+          "dutyFrom": 0.45,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "kadzere-2002"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Total coat area follows Meeh's law A = k·M^(2/3) with the authored coefficient k = 0.0706 m²/kg^(2/3), giving 5.30 m² for 650 kg; the regions sum to 5.30 m². Published Holstein area estimates differ by up to about 20 % (Berman 2003).",
+          "de": "Die gesamte Fellfläche folgt dem Meeh-Gesetz A = k·M^(2/3) mit dem geschätzten Koeffizienten k = 0,0706 m²/kg^(2/3), das ergibt 5,30 m² für 650 kg; die Regionen summieren sich zu 5,30 m². Veröffentlichte Flächenschätzungen für Holstein-Kühe weichen um bis zu etwa 20 % voneinander ab (Berman 2003)."
+        },
+        {
+          "en": "Insulation runs from the core (38.6 °C) to the outer coat surface and includes tissue and short summer coat; the values are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975). Udder, muzzle, eyes and lower legs are skin regions with small resistance.",
+          "de": "Die Dämmung läuft vom Körperkern (38,6 °C) zur Felloberfläche und umfasst Gewebe und kurzes Sommerfell; die Werte sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975). Euter, Flotzmaul, Augen und Unterbeine sind Hautregionen mit kleinem Widerstand."
+        },
+        {
+          "en": "Activity is expressed in the engine's 58.15 W/m² unit over 5.30 m². Standing and ruminating heat production of about 870 W (2.8 met) is twice Kleiber's 3.4 W/kg^0.75 (437 W) and follows a lactating cow of about 20 kg milk per day (CIGR 2002: 5.6 W/kg^0.75 plus 22 W per kg milk); walking adds about 1.2 kJ per metre (NRC 2001, 0.00045 Mcal per kg and km), lying is 10 % lower. All are authored estimates.",
+          "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine über 5,30 m² angegeben. Die Wärmeproduktion im Stehen und Wiederkäuen von etwa 870 W (2,8 met) ist doppelt so hoch wie Kleibers 3,4 W/kg^0,75 (437 W) und entspricht einer laktierenden Kuh mit etwa 20 kg Milch am Tag (CIGR 2002: 5,6 W/kg^0,75 plus 22 W je kg Milch); Gehen erhöht um etwa 1,2 kJ je Meter (NRC 2001, 0,00045 Mcal je kg und km), Liegen liegt 10 % niedriger. Alles sind Schätzwerte."
+        },
+        {
+          "en": "Black patches absorb about 0.88 and white coat about 0.4 of the solar radiation (authored estimates); the rumen flank carries a larger share of the metabolic heat because of fermentation.",
+          "de": "Schwarze Flecken absorbieren etwa 0,88 und weißes Fell etwa 0,4 der Sonnenstrahlung (Schätzwerte); die Pansenflanke trägt wegen der Gärung einen größeren Anteil der Stoffwechselwärme."
+        },
+        {
+          "en": "Resting respiration is 24 breaths per minute (period 2.5 s) through the nose with air leaving at 34 °C nearly saturated; rate and depth are authored estimates in the range given by Kadzere et al. (2002).",
+          "de": "Die Ruheatmung beträgt 24 Atemzüge pro Minute (Periode 2,5 s) durch die Nase, die Luft verlässt die Nüstern mit 34 °C fast gesättigt; Frequenz und Tiefe sind Schätzwerte im Bereich nach Kadzere et al. (2002)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Segments are rigid with authored masses summing to 650 kg, dominated by the trunk with its rumen; ground contacts come only from the pose and clip contact lists; hooves, carpi, hocks and the sternum carry the load unilaterally and share it by position.",
+          "de": "Segmente sind starr mit Massen von zusammen 650 kg, überwiegend im Rumpf mit dem Pansen; Bodenkontakte ergeben sich nur aus den Kontaktlisten der Posen und Clips; Klauen, Vorderfußwurzel, Sprunggelenke und Brustbein tragen einseitig und teilen die Last nach Lage."
+        },
+        {
+          "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.",
+          "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "standing-chewing",
+      "defaultClip": "walk-cycle",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,9 +1,66 @@
 {
   "version": 1,
+  "finalCompletion": {
+    "at": "2026-10-30T23:43:22Z",
+    "report": "final-completion-summary-2026-10-30.md",
+    "live": {
+      "frontend": {
+        "url": "http://127.0.0.1:6061/",
+        "status": 200,
+        "bytes": 4360,
+        "title": "Architecture and Technology · Architektur und Technologie"
+      },
+      "proctor": {
+        "url": "http://127.0.0.1:8791/instance",
+        "status": 200,
+        "bytes": 1332,
+        "id": "teaching-proctor",
+        "version": "0.1.0"
+      }
+    },
+    "units": {
+      "courseReact": { "files": 43, "passed": 1082 },
+      "architectureCourse": { "files": 19, "passed": 826 },
+      "course": { "files": 19, "passed": 595 },
+      "pets": { "files": 34, "passed": 1164 },
+      "petsReact": { "files": 9, "passed": 218 },
+      "architectureNonBrowser": { "files": 6, "passed": 125 },
+      "courseShellAndNavigation": { "files": 2, "passed": 64 }
+    },
+    "typecheck": {
+      "packages": [
+        "@semio-tech/course-react",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
+        "@teaching/architecture-course"
+      ],
+      "diagnostics": 0,
+      "nxOwners": [13408, 28639, 62827]
+    },
+    "proctorRust": {
+      "passed": 130,
+      "failed": 0,
+      "ignored": 0,
+      "check": 0,
+      "health": 0
+    },
+    "releaseSite": {
+      "directory": "dist/release/pages/course",
+      "files": 86,
+      "bytes": 4991648,
+      "problems": 0,
+      "maximumBytes": 5000000
+    },
+    "e2e": {
+      "rehearsal": { "passed": 85, "failed": 0, "boot": 1, "shared": 72, "exclusive": 12 },
+      "devExclusive": { "passed": 12, "failed": 0 },
+      "devQuizRuns": { "passed": 15, "failed": 0 }
+    }
+  },
   "scope": "Architecture course frontend and actual proctor backend; no clips.",
   "workspace": "/home/deck/semio",
   "ticket": "/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY",
-  "launchPolicy": "Pending ledger only. Recheck authoritative capacity and backend owner before any launch; one native compiler job at a time.",
+  "launchPolicy": "Course deploy gates in finalCompletion are complete. Do not relaunch them. Historical rows keep their last outcome. One native compiler job at a time still applies to any gate that was not part of this closing pass.",
   "environment": {
     "SEMIO_LANGUAGE": "en",
     "SEMIO_TICKET_DIR": "/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY"
@@ -95,8 +152,44 @@
       "environment": {
         "NX_DAEMON": "false"
       },
-      "status": "82275 terminal 130, deliberately released graph-wait memory; never reached Vitest. Same complete unit target pending.",
-      "log": "🗑️generated/course-unit-current.log"
+      "status": "81958 AUTHORITATIVE0: complete full normal unfiltered teaching target, all19files826tests passed/no skips, all6prerequisites+selectedNxsuccess. SDK2d17f319…b7c1. UI native/font and complete BOTH remain separate.",
+      "log": "🗑️generated/course-unit-focus-continuity.log",
+      "ownerHandle": 81958,
+      "interruptedOwnerHandle": 28199,
+      "interruption": {
+        "kind": "host-reboot",
+        "observedAt": "2026-10-29T23:37:08Z",
+        "bootId": "11220615-7932-4930-ae1a-7d7fd56ccf52",
+        "outerExitRecovered": false
+      },
+      "previousFullPassed": {
+        "ownerHandle": 25927,
+        "terminalExitCode": 0,
+        "tests": {
+          "passed": 824,
+          "failed": 0,
+          "total": 824
+        },
+        "files": {
+          "passed": 19,
+          "failed": 0,
+          "total": 19
+        },
+        "log": "🗑️generated/course-unit-after-host-reboot.log"
+      },
+      "terminalExitCode": 0,
+      "lastTerminalHandle": 81958,
+      "tests": {
+        "passed": 826,
+        "failed": 0,
+        "total": 826
+      },
+      "files": {
+        "passed": 19,
+        "failed": 0,
+        "total": 19
+      },
+      "capturedSdk": "2d17f319207c209e046439cf79075ae85b5c7cb46c212f72ce19c64581c6b7c1"
     },
     {
       "id": "course-semantic",
@@ -110,10 +203,33 @@
       "environment": {
         "NX_DAEMON": "false"
       },
-      "status": "Root39681 authoritative terminal1: five realprerequisites succeeded0/5cachehits; framework-rs:generate failed actualCargoE0119 duplicateRetireOwned meshdecoder State. NoTSC. Exactredundantmacro removed; Root81792 fullowningmeshlibtests live. Fullsemantic retry waits realrepair checks.",
-      "log": "🗑️generated/course-typecheck-dispatch-fixed.log",
-      "ownerHandle": 39681,
-      "terminalExitCode": 1
+      "status": "28639 authoritative terminal0 CURRENT: Full normal teaching TSC,6prerequisites+selected Nxsuccess+outercomplete,zero diagnostics",
+      "log": "🗑️generated/course-typecheck-profile-current.log",
+      "ownerHandle": 28639,
+      "lastTerminalHandle": 28639,
+      "previousSemanticReceipt": {
+        "ownerHandle": 71642,
+        "log": "🗑️generated/course-typecheck-adaptive-quality.log",
+        "status": "71642 authoritative terminal0, six prerequisites and zero diagnostics, before compiler wiring. Post-wire full course semantic check remains required.",
+        "terminalExitCode": 0,
+        "lastTerminalHandle": 15092
+      },
+      "lastTerminalExitCode": 0,
+      "terminalExitCode": 0,
+      "diagnostics": 0,
+      "capturedSdk": "26a3f321d16db03ac95176de853c5485d7faac6d19f547ebeba67c2a347a6b46",
+      "needsRerun": false,
+      "lastTerminalExit": 0,
+      "attemptHistory": [
+        {
+          "ownerHandle": 56696,
+          "outerExit": 1,
+          "innerNxStatus": 130,
+          "scope": "5prereqs passed; Cargo Source profile schema extent changed; selected TSC not run",
+          "log": "🗑️generated/course-typecheck-final-ui-current.log"
+        }
+      ],
+      "sdk": "ec8b27f8e65e927474ef027ecf5baedec49d558ecec1ef5c8f53182257ce6d5b"
     },
     {
       "id": "watcher-recovery",
@@ -127,8 +243,18 @@
       "environmentUnset": [
         "NX_DAEMON"
       ],
-      "status": "32120 terminal 130, deliberately released graph-wait memory; actual managed SDK assertions not run. Preserve fixture daemon failure coverage, invocation-local fallback and next-call-enabled assertions.",
-      "log": "🗑️generated/daemon-recovery-managed.log"
+      "status": "50132 authoritative130 at2026-10-30T01:49:44.933Z: deliberate priority cancellation of exactly owned unadmitted issuer131173/start605405, official waiter/no grant, exact argv/currentboot/logFD verified. No target laws ran. Its5229MB head request preceded2048MB website diagnostics. Full unchanged caller scope remains required, deferred until website diagnostic/semantic priorities; no service/peer signals or guard changes.",
+      "log": "🗑️generated/cold-caller-current-route-retry.log",
+      "ownerHandle": null,
+      "lastTerminalHandle": 50132,
+      "interruptedOwnerHandle": 45529,
+      "interruption": {
+        "kind": "host-reboot",
+        "observedAt": "2026-10-29T23:37:08Z",
+        "bootId": "11220615-7932-4930-ae1a-7d7fd56ccf52",
+        "outerExitRecovered": false
+      },
+      "terminalExitCode": 130
     },
     {
       "id": "full-browser",
@@ -147,9 +273,94 @@
       "environment": {
         "NX_DAEMON": "false"
       },
-      "status": "4072 terminal 130 under measured capacity pressure, no browser results. Both dev and release-rehearsal full projects required; no project/grep filter. Earlier 54529 terminal 1 handoff76; 66219 terminal130 confirmed watcher failure; 82206 terminal1 duplicate manifest.",
-      "log": "🗑️generated/full-e2e-current.log",
-      "scheduling": "Serial topologies with capacity-governed browser workers; --parallel=1 limits repository target concurrency, not Playwright workers."
+      "status": "GREEN. Rehearsal of release both-topology run 20261030T102602-1008322 passed 85/85 (boot 1, shared 72, exclusive 12). Dev topology 20261030T204911-1220686 passed exclusive 12/12. After the heading-hash repair, live-stack quiz-runs passed 15/15. Handle 55895 itself continued into dev-shared and is the historical four-failure run, not a new both-topology exit 0. See finalCompletion.",
+      "log": "🗑️generated/course-e2e-both-current-semantics.log",
+      "scheduling": "Serial topologies with capacity-governed browser workers; --parallel=1 limits repository target concurrency, not Playwright workers.",
+      "ownerHandle": 55895,
+      "artifactBytes": 4983520,
+      "artifactLimitBytes": 5000000,
+      "terminalExitCode": null,
+      "cancellationReason": "Known failing baseline; apply diagnosed Source repairs before full retry",
+      "previousFullOwner": {
+        "handle": 48540,
+        "exitCode": 130,
+        "status": "48540 authoritative terminal130: cooperative root cancellation after12provenfailures to apply causal repairs, NOT observation timeout. Shared59passed12failed/72 planned; boot1passed; ladder58/exclusive/dev unverified. Actual EN169673B/DE169861B match oracle and site4,981,501B passes unchanged5MB cap. Full unfiltered BOTH rerun required after repairs.",
+        "log": "🗑️generated/course-e2e-both-lossless-wired.log",
+        "partialShared": {
+          "passed": 59,
+          "failed": 12,
+          "planned": 72,
+          "unfinished": 1
+        }
+      },
+      "lastTerminalHandle": 83108,
+      "lastTerminalExitCode": 130,
+      "currentSite": {
+        "files": 85,
+        "bytes": 4983520,
+        "maximumBytes": 5000000,
+        "excludesReceipt": true
+      },
+      "rehearsalShared": {
+        "passed": 69,
+        "failed": 3,
+        "total": 72,
+        "durationMinutes": 25.4
+      },
+      "rehearsalExclusive": {
+        "passed": 5,
+        "failed": 1,
+        "didNotRun": 6,
+        "total": 12
+      },
+      "finalOutcomes": {
+        "planned": 170,
+        "passed": 95,
+        "failed": 13,
+        "unaccepted": 62,
+        "rehearsal": {
+          "bootPassed": 1,
+          "sharedPassed": 69,
+          "sharedFailed": 3,
+          "exclusivePassed": 5,
+          "exclusiveFailed": 1,
+          "exclusiveDidNotRun": 6
+        },
+        "dev": {
+          "bootPassed": 1,
+          "sharedPassed": 19,
+          "sharedFailed": 9,
+          "sharedWithoutOutcome": 44,
+          "exclusiveUnexecuted": 12
+        }
+      },
+      "previousAttempt83108": {
+        "ownerHandle": 83108,
+        "terminalExitCode": 130,
+        "finalOutcomes": {
+          "planned": 170,
+          "passed": 95,
+          "failed": 13,
+          "unaccepted": 62,
+          "rehearsal": {
+            "bootPassed": 1,
+            "sharedPassed": 69,
+            "sharedFailed": 3,
+            "exclusivePassed": 5,
+            "exclusiveFailed": 1,
+            "exclusiveDidNotRun": 6
+          },
+          "dev": {
+            "bootPassed": 1,
+            "sharedPassed": 19,
+            "sharedFailed": 9,
+            "sharedWithoutOutcome": 44,
+            "exclusiveUnexecuted": 12
+          }
+        },
+        "capturedSdk": "f36602004a3c8177be8f3704665f401cb8bb7e5210c200fc3d47c719b1ccb419",
+        "log": "🗑️generated/course-e2e-both-after-semantic-29337.log"
+      }
     },
     {
       "id": "persistent-dev",
@@ -166,10 +377,574 @@
       "environmentUnset": [
         "SEMIO_BUILD_MODE"
       ],
-      "status": "81722 authoritative terminal1 after actual572-project graph assembly and Nx graph publication: Original captured runtime entry provider required. No application listener created. Provider was installed only in command kernel, not separately received Nx authorizer request lifetime; causal fix pending.",
-      "log": "🗑️generated/course-dev-dispatch-fixed.log",
-      "ownerHandle": 81722,
-      "terminalExitCode": 1
+      "status": "87807 authoritative LIVE/BOTH HTTPREADY at2026-10-30T00:17:54Z:6061/200 bilingualArchitecture title,8791/instance200 teaching-proctor; authenticated10950/start34078 currentboot lineage. Same proctor-dev restored.42read recovery AUTH0 exact40run/fullsummaryroster/112answers/4000points/13badges,CORS; no full historical answer-body equality claim.",
+      "log": "🗑️generated/course-dev-after-host-reboot.log",
+      "ownerHandle": 87807,
+      "lastTerminalHandle": 1143,
+      "maintenance": {
+        "issuer": 1218548,
+        "signal": "SIGINT",
+        "at": "2026-10-29T20:40:54.471Z",
+        "reason": "Release sole actual shared bindings reader for required dependency publication",
+        "dataPreserved": true,
+        "restartRequired": false,
+        "restartQueued": false,
+        "restartAdmitted": true
+      },
+      "interruptedOwnerHandle": 4262,
+      "interruption": {
+        "kind": "host-reboot",
+        "observedAt": "2026-10-29T23:37:08Z",
+        "bootId": "11220615-7932-4930-ae1a-7d7fd56ccf52",
+        "outerExitRecovered": false
+      },
+      "readinessEvidence": "🗑️generated/managed-host-reboot-readiness.json",
+      "persistenceEvidence": "🗑️generated/proctor-http-host-reboot-restarted-2026-10-30.json"
+    },
+    {
+      "id": "assignment-quality-owner",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/architecture-course:test",
+        "--parallel=1",
+        "--",
+        "🧪️tests/📖️assignment-pdfs/🟦️.ts"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "status": "77220 authoritative0: actual14/14 assignment owner tests, all6prerequisites and outerNx success. New quality laws run through ordinaryNode/Vitest owner with original resource/hash assertions retained.",
+      "ownerHandle": 77220,
+      "log": "🗑️generated/assignment-quality-owning-suite-fixed.log",
+      "terminalExitCode": 0
+    },
+    {
+      "id": "pdf-representation-browser-oracle",
+      "cwd": ".",
+      "environment": {},
+      "ownerHandle": 91822,
+      "status": "91822 authoritative0: EN and DE each3pages/1505496pixels/32imageuses; exact visible text/fonts/operator IDs+args/images/fullHTMLCanvas equal before/after. Exactspec40eea22d/core32f83582, managedChromium156. Physical oracle, not compiler/gate acceptance.",
+      "log": "🗑️generated/pdf-representation-browser.log",
+      "terminalExitCode": 0
+    },
+    {
+      "id": "ui-regression-engine",
+      "argv": [
+        "repo",
+        "tools",
+        "exec",
+        "vitest",
+        "--",
+        "run",
+        "--config",
+        "existing course-react config",
+        "access",
+        "challenge-views",
+        "adaptive-layout"
+      ],
+      "ownerHandle": 93164,
+      "terminalExitCode": 0,
+      "status": "AUTHORITATIVE0:43/43 tests across3files passed after actual17392RED34pass9fail. Same config/files; normal owning suite and fullbrowser remain separate."
+    },
+    {
+      "id": "course-react-unit",
+      "argv": [
+        "repo",
+        "run",
+        "@semio-tech/course-react:test",
+        "--parallel=1"
+      ],
+      "ownerHandle": 58010,
+      "status": "58010 AUTHORITATIVE0: complete full normal unfiltered React43files1081tests passed181.17s with Nx+outer success, no skips. Corrected32/32 homeviewport,14/14 translation,17/17 adaptive included. Native font and full BOTH remain separate.",
+      "log": "🗑️generated/course-react-unit-scroll-shell-fixed.log",
+      "lastTerminalHandle": 58010,
+      "lastTerminalExitCode": 0,
+      "previousFullResult": {
+        "files": 43,
+        "passed": 1073,
+        "failed": 2,
+        "total": 1075
+      },
+      "interruptedOwnerHandle": 40610,
+      "interruption": {
+        "kind": "host-reboot",
+        "observedAt": "2026-10-29T23:37:08Z",
+        "bootId": "11220615-7932-4930-ae1a-7d7fd56ccf52",
+        "outerExitRecovered": false
+      },
+      "terminalExitCode": 0,
+      "audit": "react-full-owner-scope-2026-10-30.md",
+      "needsRerun": false,
+      "previousFullPassed": {
+        "ownerHandle": 98202,
+        "terminalExitCode": 0,
+        "tests": {
+          "passed": 1075,
+          "failed": 0,
+          "total": 1075
+        },
+        "files": {
+          "passed": 43,
+          "failed": 0,
+          "total": 43
+        },
+        "log": "🗑️generated/course-react-unit-schema-final.log"
+      },
+      "previousSourceFailure": {
+        "ownerHandle": 41493,
+        "terminalExitCode": 1,
+        "log": "🗑️generated/course-react-unit-focus-reveal.log"
+      },
+      "tests": {
+        "passed": 1081,
+        "failed": 0,
+        "total": 1081
+      },
+      "files": {
+        "passed": 43,
+        "failed": 0,
+        "total": 43
+      },
+      "previousFailedFull": {
+        "ownerHandle": 36856,
+        "terminalExitCode": 1,
+        "tests": {
+          "passed": 1077,
+          "failed": 2,
+          "total": 1079
+        },
+        "files": {
+          "passed": 41,
+          "failed": 2,
+          "total": 43
+        },
+        "log": "🗑️generated/course-react-unit-source-trace-camera.log"
+      },
+      "capturedSdk": "3aaf790ba447943a9ade776d6ab2773aa524c487979bb627cb2d35e57f3c0987"
+    },
+    {
+      "id": "course-react-semantic",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@semio-tech/course-react:typecheck",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "ownerHandle": 13408,
+      "log": "🗑️generated/course-react-typecheck-decoder-current.log",
+      "status": "13408 authoritative terminal0 CURRENT: Full normal CourseReact TSC,6prerequisites+selected Nxsuccess+outercomplete,zero diagnostics",
+      "interruptedOwnerHandle": 47945,
+      "interruption": {
+        "kind": "host-reboot",
+        "observedAt": "2026-10-29T23:37:08Z",
+        "bootId": "11220615-7932-4930-ae1a-7d7fd56ccf52",
+        "outerExitRecovered": false
+      },
+      "lastTerminalHandle": 13408,
+      "needsRerun": false,
+      "lastSuccessfulHistoricalHandle": 72909,
+      "attemptHistory": [
+        {
+          "ownerHandle": 95774,
+          "outerExit": 1,
+          "innerNxStatus": 130,
+          "scope": "Five prerequisites passed; ui-rs Source guard refused changed validator; selected TSC not run",
+          "log": "🗑️generated/course-react-typecheck-final-ui.log"
+        },
+        {
+          "ownerHandle": 19158,
+          "outerExit": 1,
+          "scope": "Global duplicate IFC Cargo project name during graph planning; selected TSC not run",
+          "log": "🗑️generated/course-react-typecheck-validator-frozen.log"
+        },
+        {
+          "ownerHandle": 65269,
+          "outerExit": 1,
+          "scope": "198-project graph assembled,44 closures expanded; Nx storage planning Rustup exact component request refusal; selected TSC not run",
+          "log": "🗑️generated/course-react-typecheck-ifc-corrected.log"
+        },
+        {
+          "ownerHandle": 20852,
+          "outerExit": 1,
+          "scope": "198-project graph complete; Foreign Rustup generation cannot be adopted; selected TSC not run",
+          "log": "🗑️generated/course-react-typecheck-rustup-corrected.log"
+        },
+        {
+          "ownerHandle": 70360,
+          "outerExit": 1,
+          "scope": "6 prerequisites passed; selected Source decoder guard failed; no semantic pass",
+          "log": "🗑️generated/course-react-typecheck-rustup-namespace.log"
+        }
+      ],
+      "lastTerminalExit": 0,
+      "sdk": "1cd27be24c7b493248466e752bead1eda738e0d23ff6d31d836e45b27d0e26e0"
+    },
+    {
+      "id": "records-browser-diagnostic",
+      "ownerHandle": 38090,
+      "log": "🗑️generated/records-browser-quiz-data-fixed.log",
+      "status": "38090 authoritative terminal0:actual2/2 ENDE browser tests passed2.8min, independent20orderedstage receipt audit.1920→375→1440→1920,16headers/roles/3rows,sort/focus/sameDOMfont/locales/16→24→16text/pageoverflow+strict fixtureerrors passed. Widefoldtrue/minimum0 proves content-driven fold. Scope limits: alltablesfolded, one numericcolumn toggled; full9project16specBOTH remains required.",
+      "lastTerminalHandle": 38090,
+      "lastTerminalExitCode": 0,
+      "terminalExitCode": 0
+    },
+    {
+      "id": "physics-original-diagnostic",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "tools",
+        "exec",
+        "playwright",
+        "--",
+        "test",
+        "--config",
+        "🎓️teaching/🏛️architecture/📚️course/🎭️e2e/🎚️config/🟦️.ts",
+        "--project=desktop",
+        "--grep",
+        "balanced pools rotate physics and preserve individual answers$"
+      ],
+      "environment": {
+        "PLAYWRIGHT_BASE_URL": "http://127.0.0.1:6061",
+        "TEACHING_ARCHITECTURE_COURSE_E2E_TOPOLOGY": "dev"
+      },
+      "ownerHandle": 41390,
+      "terminalExitCode": 0,
+      "log": "🗑️generated/physics-original-title-fixed.log",
+      "status": "41390 authoritative exit0: exact unchanged original full four-challenge physics case passed1test in2.0min on retained prototype stack. Diagnostic only; initial rehearsal/multiworker missing-hash cause remains unresolved and full unfiltered BOTH remains required.",
+      "tests": {
+        "passed": 1,
+        "failed": 0,
+        "total": 1
+      },
+      "previousAttempt": {
+        "ownerHandle": 49890,
+        "terminalExitCode": 1,
+        "testsDiscovered": 0,
+        "reason": "Anchored bare-title regex did not match Playwright full title; source case unchanged in corrected suffix selection."
+      }
+    },
+    {
+      "id": "vertical-adaptive-diagnostic",
+      "ownerHandle": 88684,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 13,
+        "failed": 0,
+        "total": 13
+      },
+      "files": 1,
+      "log": "🗑️generated/vertical-scroll-adaptive-green.log",
+      "status": "Complete selected adaptive owning file passed, including neutral geometry oracle and controlled-DOM binder law. Current full React and native browser scaling/convergence remain separate."
+    },
+    {
+      "id": "locked-title-browser-diagnostic",
+      "ownerHandle": 44330,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 1,
+        "failed": 0,
+        "total": 1
+      },
+      "log": "🗑️generated/locked-title-hidden-role.log",
+      "sourceSha256": "a11de217ebe45fdb341ee1e031cd1110d1c416c16f8b02a36f9166a6ef6fc927",
+      "status": "Exact original tagged bilingual keyboard/locked-topic case passed with explicit known-inert heading query and unchanged public locks/actions/budgets. Full BOTH remains separate."
+    },
+    {
+      "id": "presence-tiny-browser-diagnostic",
+      "ownerHandle": 10103,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 1,
+        "failed": 0,
+        "total": 1
+      },
+      "log": "🗑️generated/vertical-presence-progress.log",
+      "status": "Complete original cooperative-scroll case passed with original tiny entry/follow/actual card overflow/fraction mirror/reset/stop-follow assertions; high-level destination helper issues further real gestures only after measured inner-scroll progress. Full BOTH remains required.",
+      "previousAttempt": {
+        "ownerHandle": 46567,
+        "terminalExitCode": 1,
+        "log": "🗑️generated/vertical-original-browser.log"
+      }
+    },
+    {
+      "id": "native-prepared-owner-causal",
+      "ownerHandle": 51578,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 1,
+        "failed": 0,
+        "total": 1
+      },
+      "assertions": 32,
+      "log": "🗑️generated/native-reader-finite-preparation-expiry.log",
+      "status": "Full changed genuine Native lifecycle fixture retains preparation/consumer cancellation and proves naturally expired15s preparation leaves committed4096-byte consumer usable; all3independent cleanups used0/retiredtrue and childstatus/signals asserted. No manual expiry abort. Physical Darwin and continuous issuer/gateway/coalescing remain separate.",
+      "semantic": {
+        "ownerHandle": 67842,
+        "terminalExitCode": 0
+      },
+      "portable": {
+        "passed": 3,
+        "assertions": 13
+      },
+      "audit": "native-prepared-owner-independent-audit-2026-10-30.md",
+      "previousResult": {
+        "ownerHandle": 97141,
+        "terminalExitCode": 0,
+        "assertions": 20,
+        "log": "🗑️generated/mcp-reader-lifetime-native-prepared-owner.log"
+      }
+    },
+    {
+      "id": "native-storage-platform-full",
+      "argv": [
+        "repo",
+        "run",
+        "@semio-tech/framework-process:test-native-storage-platform",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "ownerHandle": null,
+      "lastTerminalHandle": 11681,
+      "terminalExitCode": 130,
+      "status": "Deliberate authenticated own pre-target graph deferral after known worker staging-path/failure-completion defect was identified. No test body ran. All three existing files plus new portable law remain required under original budgets/platforms after graph correction.",
+      "log": "🗑️generated/native-storage-platform-prepared-owner.log",
+      "receipt": "🗑️generated/native-storage-platform-priority-deferral.json"
+    },
+    {
+      "id": "presence-unit-node-diagnostic",
+      "ownerHandle": 7809,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      },
+      "files": 1,
+      "log": "🗑️generated/presence-handshake-node-owner.log",
+      "runtime": "registered-node",
+      "status": "Complete presence owning file under declared genuine Node runtime: allfiveWSoracle cases plus12-vector/SQLite progress law passed, no filters/skips/timeout changes. Full teaching target remains separate; earlier Bun compatibility oracle failures are retained.",
+      "audit": "presence-handshake-timeout-2026-10-30.md"
+    },
+    {
+      "id": "vertical-native-font",
+      "ownerHandle": 85399,
+      "status": "85399 AUTHORITATIVE0: both real native journeys completed9stages each(18total), exact focus/viewport/sameDOM,12equalactualRAF andzero writes in accepted window. Transient6→0windows settled under unchanged20s; no post-entry Vite restart. All16Sourcehashesmatch. FullBOTH and current semantics remain separate.",
+      "log": "🗑️generated/vertical-font-vf8.log",
+      "previousFailedOwner": {
+        "ownerHandle": 83297,
+        "terminalExitCode": 1
+      },
+      "sourceCheckpoint": "🗑️generated/vertical-font-vf8-source.json",
+      "audit": "vertical-font-native-proof-2026-10-30.md",
+      "lastTerminalHandle": 85399,
+      "terminalExitCode": 0,
+      "tests": {
+        "passed": 2,
+        "failed": 0,
+        "total": 2
+      },
+      "stages": 18,
+      "sourceFiles": 16,
+      "result": "🗑️generated/vertical-font-vf8-result.json"
+    },
+    {
+      "id": "ui-react-semantic",
+      "argv": [
+        "repo",
+        "run",
+        "@semio-tech/ui-react:typecheck",
+        "--parallel=1"
+      ],
+      "ownerHandle": 62827,
+      "status": "62827 authoritative terminal0 CURRENT: Full normal generic UI React TSC,selected Nxsuccess+outercomplete,zero diagnostics,36.6s;own component-test/fixture semantic scope included",
+      "needsRerun": false,
+      "lastTerminalHandle": 62827,
+      "lastTerminalExit": 0,
+      "log": "🗑️generated/ui-react-typecheck-focus-current.log",
+      "sdk": "ec8b27f8e65e927474ef027ecf5baedec49d558ecec1ef5c8f53182257ce6d5b"
+    },
+    {
+      "id": "phone-host-alignment",
+      "at": "2026-10-30T08:03:35.561Z",
+      "source": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/📱️phone/🟦️.ts",
+      "sha256": "4f2fa653a26db8696572b54300f06723c8c88df0c138cd101aa03bd38e0658b8",
+      "red": {
+        "ownerHandle": 40996,
+        "terminalExitCode": 1,
+        "failed": 1,
+        "assertion": "all five alignment values normal rather than safe center; all cut zero",
+        "log": "🗑️generated/phone-host-red.log"
+      },
+      "green": {
+        "ownerHandle": 83343,
+        "terminalExitCode": 0,
+        "passed": 1,
+        "seconds": 55.7,
+        "log": "🗑️generated/phone-host-green.log"
+      },
+      "scope": "complete unchanged original phone hierarchy swipe-and-quiz journey; retained real frontend/proctor",
+      "fullBothAccepted": false,
+      "fullPhoneProject": {
+        "ownerHandle": 31285,
+        "terminalExitCode": 0,
+        "passed": 2,
+        "failed": 0,
+        "projects": 1,
+        "specFiles": 1,
+        "filters": false,
+        "durationMinutes": 1.2,
+        "log": "🗑️generated/phone-project-current.log"
+      }
+    },
+    {
+      "id": "native-storage-full",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@semio-tech/framework-process:test-native-storage",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "ownerHandle": 12758,
+      "terminalExitCode": 0,
+      "log": "🗑️generated/native-storage-neutral-current-full.log",
+      "status": "12758 AUTHORITATIVE0 complete ordinary current Core native-storage: all59distinct selected files/59single reporter summaries/59filemarkers;307passed0failed15existingplatformskips14309assertions, Nx+outercomplete. Exact5physicalfamiliesremainin separate genuineRepo all3platform owner, whose34149 failedbeforetests graphnamespaceauthority; no aggregateNative/Darwin/Windowspass.",
+      "lastTerminalHandle": 12758,
+      "capturedSdk": "ac725e510fe5afa8bc66db58331908e6ec59c6885238b5c808896ce505f36602",
+      "declaredFiles": 59,
+      "failedFiles": 8,
+      "report": "native-storage-complete-metadata-analysis-2026-10-30.md",
+      "previousAttempt": {
+        "ownerHandle": 83689,
+        "terminalExitCode": 1,
+        "declaredFiles": 62,
+        "failedFiles": 13,
+        "log": "🗑️generated/native-storage-complete-metadata.log"
+      },
+      "waitFile": {
+        "passed": 5,
+        "failed": 0,
+        "assertions": 1099,
+        "seconds": 9.08
+      },
+      "result": "🗑️generated/native-storage-neutral-current-result.json",
+      "previousCurrent31574": {
+        "ownerHandle": 31574,
+        "terminalExitCode": 1,
+        "declaredFiles": 62,
+        "failedFiles": 8,
+        "log": "🗑️generated/native-storage-contracts-current-full.log"
+      },
+      "scopedStrictHandle": 90283,
+      "scopedStrictExitCode": 0,
+      "files": {
+        "passed": 59,
+        "failed": 0,
+        "total": 59
+      },
+      "tests": {
+        "passed": 307,
+        "failed": 0,
+        "skipped": 15,
+        "total": 322
+      },
+      "assertions": 14309
+    },
+    {
+      "id": "native-storage-contract-repairs",
+      "status": "Five repaired files passed inside genuine full normal31574: continuation file5/5/1099assert9.08s, persistent/sparse/recoveredguard/privatewiring accepted. Broader31574 remainsfailed8otherfiles. Scoped42898/20060/78965 receipts retainexactscope; no physicalDarwinclaim.",
+      "reports": [
+        "native-stale-contract-tests-repair-2026-10-30.md",
+        "native-lease-continuation-fixture-repair-2026-10-30.md"
+      ],
+      "fullStorageAccepted": false
+    },
+    {
+      "id": "native-reader-integration",
+      "ownerHandle": 23588,
+      "terminalExitCode": 0,
+      "outerAssertions": 26,
+      "scopedStrictHandle": 28600,
+      "scopedStrictExitCode": 0,
+      "report": "native-reader-integration-layer-2026-10-30.md",
+      "status": "Scoped actualgenuinecompiledNative integration passed undernormalregisteredowner; alloriginalinternalphysical/refusal/oraclelawsretained. PhysicalWindows/Darwin notinferredfromLinux. DedicatedWindows-capableordinarysuite newlyregistered/pendingactualwholeowner; earlierstandalonepassdoesnotestablishfullfamilyaggregate."
+    },
+    {
+      "id": "native-capacity-integration",
+      "ownerHandle": 59718,
+      "terminalExitCode": 0,
+      "outerAssertions": 13,
+      "scopedStrictHandle": 70193,
+      "scopedStrictExitCode": 0,
+      "report": "native-fixed-capacity-integration-layer-2026-10-30.md",
+      "status": "Scoped actualgenuinecompiledNative integration passed undernormalregisteredowner; alloriginalinternalphysical/refusal/oraclelawsretained. PhysicalWindows/Darwin notinferredfromLinux. DedicatedWindows-capableordinarysuite newlyregistered/pendingactualwholeowner; earlierstandalonepassdoesnotestablishfullfamilyaggregate."
+    },
+    {
+      "id": "native-conformance-integration",
+      "ownerHandle": 9490,
+      "terminalExitCode": 0,
+      "outerAssertions": 3,
+      "scopedStrictHandle": 30475,
+      "scopedStrictExitCode": 0,
+      "report": "native-conformance-integration-layer-2026-10-30.md",
+      "status": "Scoped actualgenuinecompiledNative integration passed undernormalregisteredowner; alloriginalinternalphysical/refusal/oraclelawsretained. PhysicalWindows/Darwin notinferredfromLinux. DedicatedWindows-capableordinarysuite newlyregistered/pendingactualwholeowner; earlierstandalonepassdoesnotestablishfullfamilyaggregate."
+    },
+    {
+      "id": "native-whole-integration",
+      "ownerHandle": 39621,
+      "terminalExitCode": 0,
+      "outerAssertions": 3,
+      "scopedStrictHandle": 79534,
+      "scopedStrictExitCode": 0,
+      "report": "native-whole-directory-integration-layer-2026-10-30.md",
+      "status": "Scoped actualgenuinecompiledNative integration passed undernormalregisteredowner; alloriginalinternalphysical/refusal/oraclelawsretained. PhysicalWindows/Darwin notinferredfromLinux. DedicatedWindows-capableordinarysuite newlyregistered/pendingactualwholeowner; earlierstandalonepassdoesnotestablishfullfamilyaggregate."
+    },
+    {
+      "id": "native-directory-integration",
+      "ownerHandle": 18185,
+      "terminalExitCode": 0,
+      "outerAssertions": 3,
+      "scopedStrictHandle": 40458,
+      "scopedStrictExitCode": 0,
+      "report": "native-whole-directory-integration-layer-2026-10-30.md",
+      "status": "Scoped actualgenuinecompiledNative integration passed undernormalregisteredowner; alloriginalinternalphysical/refusal/oraclelawsretained. PhysicalWindows/Darwin notinferredfromLinux. DedicatedWindows-capableordinarysuite newlyregistered/pendingactualwholeowner; earlierstandalonepassdoesnotestablishfullfamilyaggregate."
+    },
+    {
+      "id": "native-lifecycle-models",
+      "terminalExitCode": 0,
+      "operationOwner": 38455,
+      "operationTests": 11,
+      "commandOwner": 14373,
+      "commandTests": 6,
+      "status": "Complete normal operation38455 11/11 andcommand14373 6/6 passed withrealKernel controls/EX/tokens andactualSource-onlylifecycle. Corrected two test-only typing issues; Rootstrict90283passed entire36-file retained/current scope withzero diagnostics. No physicalDarwinsettlement claim.",
+      "scopedStrictHandle": 90283,
+      "scopedStrictExitCode": 0
+    },
+    {
+      "id": "native-storage-repository-full",
+      "ownerHandle": null,
+      "terminalExitCode": 1,
+      "argv": [
+        "repo",
+        "run",
+        "repo:test-build-native-storage",
+        "--parallel=1"
+      ],
+      "log": "🗑️generated/native-storage-repository-complete-owner.log",
+      "status": "34149 AUTHORITATIVE1 BEFORE ANY target tests after authorizers: Original funded graph publication namespace required; combinedguard actualpredicate unknown, not attributedtoWindowsrow. Backendowns narrowclosedfailurepredicate diagnostic, entirefunding/namespace/Original/refusal preserved. Actual5familyfocusedcompiledNative/strictpasses +WindowsownershipGREEN1/49 retained; wholeordinaryownerrequired.",
+      "lastTerminalHandle": 34149
     }
   ],
   "acceptance": [
@@ -184,7 +959,7 @@
   ],
   "runtimeTransition": {
     "review": "runtime-transition-2026-10-28.md",
-    "observedServiceOwnership": "not-probed",
+    "observedServiceOwnership": "Managed87807 retained and authoritative LIVE07:39:57UTC; HTTPfrontend6061 andproctor8791 return200/correcttitle+teaching-proctor. Issuer10950/start34078→manager66127 currentboot retained. Old4262 was reboot-interrupted, not current live.",
     "isolatedSmoke": {
       "mode": "release",
       "port": 18791,
@@ -204,9 +979,20 @@
       "mode": "prototype",
       "frontend": "http://127.0.0.1:6061/",
       "proctor": "http://127.0.0.1:8791/instance",
-      "ownerHandle": null,
+      "ownerHandle": 87807,
       "acquisition": "qualified proctor product through declared target dependency",
-      "reusePolicy": "Never stop reused services; both-ready command may return"
+      "reusePolicy": "Never stop reused services; both-ready command may return",
+      "backendOwnerHandle": 87807,
+      "backendStatus": "HTTP200 teaching-proctor07:39:57UTC; currentbackend497520 is directchild66127 afterlogged orderly Source-watch renewal. Earlier42queryrecovery0 proves40run/fullsummary identities112answers4000points13badges/CORS, not historicalfullanswerbodyequality.",
+      "frontendStatus": "HTTP 200 bilingual title, 4360 bytes, probed 2026-10-30T23:43:22Z. Proctor /instance HTTP 200 teaching-proctor 0.1.0.",
+      "budgetReport": "managed-stack-budget-2026-10-29.md",
+      "priorOwnerHandle": 68016,
+      "historicalLastTerminalHandle": 1143,
+      "historicalBackendLastTerminalHandle": 41024,
+      "interruptedOwnerHandle": 4262,
+      "readinessAt": "2026-10-30T07:39:57Z",
+      "currentBackendPid": 497520,
+      "renewalEvidence": "both-prelaunch-current-2026-10-30.md"
     },
     "releaseBrowser": {
       "topologies": [
@@ -216,7 +1002,23 @@
       "serial": true,
       "qualifiedProductRequired": true
     },
-    "phase": "NormalSource andNxexternal boundaries crossed. Root39681 terminal1 on actualmeshRustduplicate (fixed, owning81792live); preview81722 terminal1 capturedprovider missing in separateNxpublicationOriginal. Frontend fixes authenticated received-owner scope. Backend19402 retainedlive throughsharedgraph/capacity; no listener/application readiness. Fullunit/watcher/bothbrowser required."
+    "phase": "Architecture-course deploy gates in finalCompletion are green as of 2026-10-30T23:43:22Z. Frontend 6061 and proctor 8791 were HTTP 200 at that probe. Historical handles below keep their original scope. Cold-caller, Energy post laws, Darwin census, native coalescing, and the public university probe were not re-executed.",
+    "bindingDiagnostic": {
+      "ownerHandle": null,
+      "target": "@teaching/architecture-course:build-parametrization-en",
+      "configuration": "prototype",
+      "status": "Historical97168 normal English PDF target and all5prerequisites/outer0 published1501461bytes. That binding checkpoint predates adaptive/lossless changes and is not current artifact identity. Actual48540 normalized EN169673/DE169861 match oracle; fresh after-UI full producer/site verification remains required. No historical root cause inferred.",
+      "log": "🗑️generated/assignment-source-mismatch-attributed.log",
+      "lastTerminalHandle": 97168,
+      "terminalExitCode": 0
+    },
+    "printQuality": {
+      "status": "Adaptive600DPI minimum at actual fitted22x11mm placement, preserving16SVG identities/hashes/fullviewBoxes; ordinary assignment77220 passed14/14. Lossless current core passed independentChromium91822 both3page documents. Actual48540 compiler PDFs EN169673/DE169861 match oracle hashes; prior site4,981,501 passes unchanged5M cap. New after-UI full BOTH/site acceptance remains required.",
+      "report": "print-icon-quality-2026-10-29.md",
+      "browserOwnerHandle": null,
+      "lastBrowserOwnerHandle": 48540,
+      "currentBrowserStatus": "Rehearsal 85/85, dev exclusive 12/12, and dev quiz-runs 15/15 are green. Production publish staged 86 files and 4991648 bytes with 0 site problems. Prior 83108 remains historical."
+    }
   },
   "additionalRustChecks": [
     {
@@ -319,7 +1121,7 @@
         "--",
         "--test-threads=1"
       ],
-      "status": "45760 exited 1 before compiler/test execution. Visible, untruncated Cargo diagnostic status101 proves composition-publication inherits semio-framework-diagnostic from its declared ROOT workspace, but that workspace.dependencies entry is absent. Paths exist; this is manifest inheritance, not registry availability. Actual Part21 runtime remains unverified. No live handle.",
+      "status": "Superseded earlier45760 manifest failure: full Part21 owner59196 passed42/42 with zero failures/filters; helper52865 passed4native laws. See current acceptance evidence for exact scope.",
       "acceptance": "Require actual named test execution count at least one and zero failures.",
       "schedule": "Deferred; does not block the immediate proctor app retry after sole coordinated70992 passes."
     },
@@ -353,9 +1155,9 @@
       "id": "energy-original-zone-post",
       "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
       "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
-      "package": "semio-s-artifact-energy-model-snapshot",
+      "package": "semio-s-artifact-energy-model-snapshot-tests",
       "test": "energy_state_original_zone_receive_projection_and_inverse_preserve_paid_authority",
-      "status": "NOT EXECUTED. Corrected to actual snapshot owner: manifest lib entry mounts snapshot/state cfg(test) tests containing this exact law. Prior Root18221 selected schema package, which has only two unrelated async sanity tests, and stopped before compiler on genuine OS store-engine Source cap; it did not verify this law. Canonical snapshot full --lib observation pending.",
+      "status": "NOT EXECUTED. Current Source moved both laws from production state/lib into a registered dedicated snapshot-tests member. This combined unfiltered --lib command selects BOTH actual production snapshot and dedicated test carrier, preserving OS kernel protocol-laws/mutation-testing and Native testkit. Earlier snapshot-only command would miss the laws today. Exact current Source/mount evidence in energy-post-owner-current-2026-10-29.md.",
       "log": "🗑️generated/energy-original-zone-post-law.log",
       "argv": [
         "repo",
@@ -367,21 +1169,29 @@
         "test",
         "--manifest-path",
         "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "--package",
+        "semio-s-artifact-energy-model-snapshot",
+        "--package",
+        "semio-s-artifact-energy-model-snapshot-tests",
         "--lib",
-        "energy_state_original_zone_receive_projection_and_inverse_preserve_paid_authority",
+        "--no-fail-fast",
         "--",
         "--test-threads=1"
       ],
       "acceptance": "Require actual named test execution count at least one and zero failures.",
-      "schedule": "Full snapshot --lib unfiltered requires fresh capacity and native owner coordination; frontend main runtime has priority."
+      "schedule": "One full combined owning command after current runtime/unit priorities; do not run duplicate commands for the two names.",
+      "packages": [
+        "semio-s-artifact-energy-model-snapshot",
+        "semio-s-artifact-energy-model-snapshot-tests"
+      ]
     },
     {
       "id": "energy-sparse-branch-post",
       "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
       "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
-      "package": "semio-s-artifact-energy-model-snapshot",
+      "package": "semio-s-artifact-energy-model-snapshot-tests",
       "test": "energy_native_sparse_zone_path_rebuilds_only_its_pages_and_branch_and_restores_original_inverse_authority",
-      "status": "NOT EXECUTED. Corrected to actual snapshot owner: manifest lib entry mounts snapshot/state cfg(test) tests containing this exact law. Prior Root18221 selected schema package, which has only two unrelated async sanity tests, and stopped before compiler on genuine OS store-engine Source cap; it did not verify this law. Canonical snapshot full --lib observation pending.",
+      "status": "NOT EXECUTED. Current Source moved both laws from production state/lib into a registered dedicated snapshot-tests member. This combined unfiltered --lib command selects BOTH actual production snapshot and dedicated test carrier, preserving OS kernel protocol-laws/mutation-testing and Native testkit. Earlier snapshot-only command would miss the laws today. Exact current Source/mount evidence in energy-post-owner-current-2026-10-29.md.",
       "log": "🗑️generated/energy-sparse-branch-post-law.log",
       "argv": [
         "repo",
@@ -393,13 +1203,21 @@
         "test",
         "--manifest-path",
         "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "--package",
+        "semio-s-artifact-energy-model-snapshot",
+        "--package",
+        "semio-s-artifact-energy-model-snapshot-tests",
         "--lib",
-        "energy_native_sparse_zone_path_rebuilds_only_its_pages_and_branch_and_restores_original_inverse_authority",
+        "--no-fail-fast",
         "--",
         "--test-threads=1"
       ],
       "acceptance": "Require actual named test execution count at least one and zero failures.",
-      "schedule": "Full snapshot --lib unfiltered requires fresh capacity and native owner coordination; frontend main runtime has priority."
+      "schedule": "One full combined owning command after current runtime/unit priorities; do not run duplicate commands for the two names.",
+      "packages": [
+        "semio-s-artifact-energy-model-snapshot",
+        "semio-s-artifact-energy-model-snapshot-tests"
+      ]
     },
     {
       "id": "paged-map-erased-default",
@@ -450,7 +1268,7 @@
     "launchedSemantic": true
   },
   "browserPreparation": {
-    "status": "Source-reviewed only; no installation or browser launch performed.",
+    "status": "InstalledregisteredPlaywright hasactualnative/phone/recordsscopeproofs. Currentcompleteunchanged BOTH55895LIVE, all170/9projects16specs/bothtopologies; no currentcompletepass. Original priorfailed83108 retained, no hiddenfilters/skips/deadlinechanges.",
     "automatic": true,
     "entry": "runCourseEndToEnd -> ensureBrowser",
     "revisionAuthority": "Installed Playwright CLI's own playwright-core/browsers.json",

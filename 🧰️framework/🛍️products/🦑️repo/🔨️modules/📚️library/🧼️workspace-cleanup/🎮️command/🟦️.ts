@@ -5,7 +5,7 @@ import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { orchestratorBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { CachePruneScript } from "../../⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts";
-import {withJavascriptDependencyStorageV1,retireJavascriptDependencyPreservationsV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
+import {withJavascriptDependencyStorageV1,retireJavascriptDependencyPreservationsV1,readJavascriptDependencyPreservationPresenceV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { processTableSnapshot, ACTIVE_SEMIO_TECH_BUILD } from "../../🏃️process/📋️process-table/🟦️.ts";
@@ -117,6 +117,7 @@ export class CleanScript extends Script {
   private async runDependencyPreservationRetirement(dry:boolean):Promise<void> {
     if(dry)return;
     const control=scriptCompilerAdmissionControlV1(this.invocation,"clean:dependency-preservations",buildBudgetMs());
+    const presence=await readJavascriptDependencyPreservationPresenceV1(this.repoRoot,this.invocation,control);if(presence.state==="empty"){console.log("[clean] dependency-preservations retired=0 retained=0 entries=0");return;}
     const report=await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,control,(store,phase)=>retireJavascriptDependencyPreservationsV1(this.repoRoot,store,phase));
     if(!report)throw Error("Completed dependency preservation retirement required");
     console.log(`[clean] dependency-preservations retired=${report.retired.length} retained=${report.retained.length} entries=${report.entries}`);

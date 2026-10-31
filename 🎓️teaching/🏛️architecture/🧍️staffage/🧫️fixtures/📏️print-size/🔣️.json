@@ -1,37 +1,126 @@
 {
-  "description": "Paper sizes, level of detail, ISO 128 line weights, preset snapping and quantity formatting; expected values are authored by hand from contracts.md.",
+  "description": "Paper sizes, quantity formatting and text sizes; expected values are authored by hand.",
   "heightM": 1.8,
-  "sizesMm": [{ "denominator": 500, "mm": 3.6 }, { "denominator": 200, "mm": 9 }, { "denominator": 100, "mm": 18 }, { "denominator": 50, "mm": 36 }, { "denominator": 20, "mm": 90 }, { "denominator": 1, "mm": 1800 }],
-  "lod": [
-    { "denominator": 500, "lod": 0 }, { "denominator": 201, "lod": 0 }, { "denominator": 200, "lod": 1 }, { "denominator": 101, "lod": 1 },
-    { "denominator": 100, "lod": 2 }, { "denominator": 51, "lod": 2 }, { "denominator": 50, "lod": 3 }, { "denominator": 20, "lod": 3 }
-  ],
-  "lineWeightsMm": {
-    "500": { "body": 0.18, "detail": 0.13, "glazing": 0.13, "texture": null, "ground": 0.25 },
-    "200": { "body": 0.25, "detail": 0.13, "glazing": 0.13, "texture": 0.13, "ground": 0.35 },
-    "100": { "body": 0.35, "detail": 0.18, "glazing": 0.18, "texture": 0.13, "ground": 0.5 },
-    "50": { "body": 0.5, "detail": 0.25, "glazing": 0.25, "texture": 0.13, "ground": 0.7 }
-  },
-  "snapping": [
-    { "denominator": 1000, "preset": 500 }, { "denominator": 320, "preset": 500 }, { "denominator": 300, "preset": 200 }, { "denominator": 141, "preset": 100 },
-    { "denominator": 142, "preset": 200 }, { "denominator": 70, "preset": 50 }, { "denominator": 71, "preset": 100 }, { "denominator": 20, "preset": 50 }
+  "sizesMm": [
+    {
+      "denominator": 500,
+      "mm": 3.6
+    },
+    {
+      "denominator": 200,
+      "mm": 9
+    },
+    {
+      "denominator": 100,
+      "mm": 18
+    },
+    {
+      "denominator": 50,
+      "mm": 36
+    },
+    {
+      "denominator": 20,
+      "mm": 90
+    },
+    {
+      "denominator": 1,
+      "mm": 1800
+    }
   ],
   "quantities": [
-    { "value": 0, "unit": "N", "en": "0 N", "de": "0 N" },
-    { "value": 999, "unit": "N", "en": "999 N", "de": "999 N" },
-    { "value": 999.7, "unit": "N", "en": "1.00 kN", "de": "1,00 kN" },
-    { "value": 1250, "unit": "N", "en": "1.25 kN", "de": "1,25 kN" },
-    { "value": -45300, "unit": "N", "en": "-45.3 kN", "de": "-45,3 kN" },
-    { "value": 12.34, "unit": "Pa", "en": "12.3 Pa", "de": "12,3 Pa" },
-    { "value": 25000, "unit": "Pa", "en": "25.0 kPa", "de": "25,0 kPa" },
-    { "value": 2500000, "unit": "Pa", "en": "2.50 MPa", "de": "2,50 MPa" },
-    { "value": 850, "unit": "N·m", "en": "850 N·m", "de": "850 N·m" },
-    { "value": 12000, "unit": "N·m", "en": "12.0 kN·m", "de": "12,0 kN·m" },
-    { "value": 21.44, "unit": "°C", "en": "21.4 °C", "de": "21,4 °C" },
-    { "value": -3.2, "unit": "°C", "en": "-3.20 °C", "de": "-3,20 °C" },
-    { "value": 48.2, "unit": "W/m²", "en": "48.2 W/m²", "de": "48,2 W/m²" },
-    { "value": 97.4, "unit": "W", "en": "97.4 W", "de": "97,4 W" },
-    { "value": 1520, "unit": "W", "en": "1.52 kW", "de": "1,52 kW" }
+    {
+      "value": 0,
+      "unit": "N",
+      "en": "0 N",
+      "de": "0 N"
+    },
+    {
+      "value": 999,
+      "unit": "N",
+      "en": "999 N",
+      "de": "999 N"
+    },
+    {
+      "value": 999.7,
+      "unit": "N",
+      "en": "1.00 kN",
+      "de": "1,00 kN"
+    },
+    {
+      "value": 1250,
+      "unit": "N",
+      "en": "1.25 kN",
+      "de": "1,25 kN"
+    },
+    {
+      "value": -45300,
+      "unit": "N",
+      "en": "-45.3 kN",
+      "de": "-45,3 kN"
+    },
+    {
+      "value": 12.34,
+      "unit": "Pa",
+      "en": "12.3 Pa",
+      "de": "12,3 Pa"
+    },
+    {
+      "value": 25000,
+      "unit": "Pa",
+      "en": "25.0 kPa",
+      "de": "25,0 kPa"
+    },
+    {
+      "value": 2500000,
+      "unit": "Pa",
+      "en": "2.50 MPa",
+      "de": "2,50 MPa"
+    },
+    {
+      "value": 850,
+      "unit": "N·m",
+      "en": "850 N·m",
+      "de": "850 N·m"
+    },
+    {
+      "value": 12000,
+      "unit": "N·m",
+      "en": "12.0 kN·m",
+      "de": "12,0 kN·m"
+    },
+    {
+      "value": 21.44,
+      "unit": "°C",
+      "en": "21.4 °C",
+      "de": "21,4 °C"
+    },
+    {
+      "value": -3.2,
+      "unit": "°C",
+      "en": "-3.20 °C",
+      "de": "-3,20 °C"
+    },
+    {
+      "value": 48.2,
+      "unit": "W/m²",
+      "en": "48.2 W/m²",
+      "de": "48,2 W/m²"
+    },
+    {
+      "value": 97.4,
+      "unit": "W",
+      "en": "97.4 W",
+      "de": "97,4 W"
+    },
+    {
+      "value": 1520,
+      "unit": "W",
+      "en": "1.52 kW",
+      "de": "1,52 kW"
+    }
   ],
-  "text": { "annotationMm": 2.5, "labelMm": 1.8 }
+  "text": {
+    "annotationMm": 2.5,
+    "labelMm": 1.8
+  }
 }

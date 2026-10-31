@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.coms/repo/dashboard/registry.json",
   "title": "🎮️ Dashboard command registry",
   "description": "🎛️ Everything the dashboard can start is a registry command. Commands are discovered from build targets, the playground catalog, the repo domain and from the declarations this schema describes: `metadata.semio.dashboard` of a `📋️project.json` (`#/$defs/ProjectDeclaration`), `targets.<name>.metadata.semio.dashboard` (`#/$defs/TargetDeclaration`) and the `🎮️commands.json` of an open ticket (`#/$defs/TicketCommands`, the document this schema validates at its root). `#/$defs/ProjectManifest` validates the dashboard parts of a whole `📋️project.json`. The resolved outputs (`CommandId`, `RegistryEntry`, `TaskLabel`, `Ready`, `Launch`) are what `repo dashboard commands --json` and the daemon exchange.",
@@ -818,7 +818,7 @@
     },
     "Pair": {
       "type": "array",
-      "prefixItems": [
+      "items": [
         {
           "type": "string"
         },
@@ -826,8 +826,8 @@
           "type": "string"
         }
       ],
-      "items": false,
-      "minItems": 2
+      "minItems": 2,
+      "additionalItems": false
     },
     "TaskLabel": {
       "type": "object",
@@ -1267,25 +1267,25 @@
       "allOf": [
         {
           "not": {
-            "prefixItems": [
+            "minItems": 1,
+            "items": [
               {
                 "$ref": "#/$defs/SecondaryDeveloperGuiExecutable"
               }
-            ],
-            "minItems": 1
+            ]
           }
         },
         {
           "not": {
-            "prefixItems": [
-              {
-                "$ref": "#/$defs/SecondaryDeveloperGuiLauncher"
-              }
-            ],
             "minItems": 1,
             "contains": {
               "$ref": "#/$defs/SecondaryDeveloperGuiExecutable"
-            }
+            },
+            "items": [
+              {
+                "$ref": "#/$defs/SecondaryDeveloperGuiLauncher"
+              }
+            ]
           }
         }
       ]

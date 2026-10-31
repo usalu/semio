@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "keyword": "x-semio-description",
+  "cases": [
+    {
+      "value": {
+        "en": "Description",
+        "de": "Beschreibung"
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "en": "Description"
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "de": "Beschreibung"
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "en": "",
+        "de": "Beschreibung"
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "en": "Description",
+        "de": 1
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "en": "Description",
+        "de": "Beschreibung",
+        "fr": "Description"
+      },
+      "valid": false
+    }
+  ]
+}

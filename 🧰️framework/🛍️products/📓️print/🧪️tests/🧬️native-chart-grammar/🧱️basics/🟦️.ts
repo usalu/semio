@@ -34,7 +34,7 @@ import { compileVizProbeDocument, withCompiledVizProbeDocumentV1 } from "../../.
 import fixture from "../🔣️.json";
 import chartSchema from "../../../🧬️schema/🔣️.json";
 import nativeControlSchema from "../../../🧬️schema/✅️native-controls/🔣️.json";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import arrowVectors from "../➡️arrows.json";
 import { equal } from "../🧰️grammar-kit/🟦️.ts";
 

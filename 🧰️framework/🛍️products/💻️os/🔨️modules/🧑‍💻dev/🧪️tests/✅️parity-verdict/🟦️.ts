@@ -1,5 +1,5 @@
 /** 🧾️ Shared parity verdict evidence checked independently by JSON Schema. */
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { describe, expect, it } from "vitest";
 import { parityVerdict } from "../../⚖️parity/✅️verdict/🟦️.ts";
 import type { ParityPlaygroundReport } from "../../⚖️parity/📋️playground-report/🟦️.ts";

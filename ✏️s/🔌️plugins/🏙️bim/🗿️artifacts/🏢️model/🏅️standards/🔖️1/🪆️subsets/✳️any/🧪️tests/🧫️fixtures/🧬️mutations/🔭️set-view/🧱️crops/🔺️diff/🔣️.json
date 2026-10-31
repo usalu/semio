@@ -1,19 +1,21 @@
 {
   "views": {
     "v-ground": {
-      "crop": {
-        "value": {
-          "max": {
-            "x": 6.0,
-            "y": 4.0
-          },
-          "min": {
-            "x": 0.0,
-            "y": 0.0
+      "entry": "Patched",
+      "value": {
+        "crop": {
+          "value": {
+            "max": {
+              "x": 6,
+              "y": 4
+            },
+            "min": {
+              "x": 0,
+              "y": 0
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

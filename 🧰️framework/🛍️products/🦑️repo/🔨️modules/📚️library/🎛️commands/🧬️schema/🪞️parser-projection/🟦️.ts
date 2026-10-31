@@ -32,7 +32,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🟦️.ts
  */
 import { existsSync } from "node:fs";
-import { dirname, relative } from "node:path";
+import { dirname, relative, resolve, isAbsolute } from "node:path";
 import { join } from "node:path";
 import { EXPORT_NAME, codePointOrder, escapeRegExp, jsonString, jsonValue, type Dict } from "./🔡️json-text/🟦️.ts";
 import { declaredOptionalFields, declares, declaresParser, definesParser, existingHelper, importsParser, parserRange } from "./📖️declared-types/🟦️.ts";
@@ -40,7 +40,7 @@ import { Context, findOwner, parserKey, parserKeyParts, pointed, renderParser, t
 import { renderGraphql, renderProto, renderTsType, type Taken, type TypeScope } from "./📐️type-render/🟦️.ts";
 import { PARSER_REGION } from "./🚪️guard-helpers/🟦️.ts";
 import { LeafWriter } from "./✍️leaf-writer/🟦️.ts";
-import { ParserFiles, ParserHomes, ownedParserNames, pinnedParsers } from "./📍️parser-files/🟦️.ts";
+import { ParserFiles, ParserHomes, ownedParserNames, pinnedParsers, importedNames } from "./📍️parser-files/🟦️.ts";
 import { loadUnowned, unownedKey, type UnownedParser } from "./🧱️unowned/🟦️.ts";
 import { FORMATS, LEAF, SchemaCatalog, SourceStore, buildOwnerIndex, exportsOf, facetOf, helperPrefix, leafPath, portable, readDocument } from "./🗂️documents/🟦️.ts";
 
@@ -129,7 +129,7 @@ interface Entry {
   readonly typed: boolean;
   readonly parser: string | undefined;
   readonly local: ReadonlySet<string>;
-  readonly foreign: ReadonlySet<ParserKey>;
+  readonly foreign: ReadonlyMap<ParserKey,string>;
 }
 
 interface Plan {
@@ -184,7 +184,7 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
       needed.add(key);
       const text = sources.parsers(owner);
       for (const callee of [...entry.local].sort(codePointOrder)) if (!definesParser(text, callee) && !importsParser(text, callee)) stack.push(parserKey(owner, callee));
-      for (const foreignKey of sortedKeys(entry.foreign)) {
+      for (const foreignKey of sortedKeys(entry.foreign.keys())) {
         const [foreignOwner, callee] = parserKeyParts(foreignKey);
         if (!definesParser(sources.parsers(foreignOwner), callee)) stack.push(foreignKey);
       }
@@ -200,7 +200,7 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
       const [owner] = parserKeyParts(key);
       const missing = [
         ...[...entry.local].sort(codePointOrder).filter((name) => !available(owner, name)).map((name) => `parse${name}`),
-        ...sortedKeys(entry.foreign).map(parserKeyParts).filter(([foreignOwner, name]) => !available(foreignOwner, name)).map(([, name]) => `parse${name}`),
+        ...sortedKeys(entry.foreign.keys()).map(parserKeyParts).filter(([foreignOwner, name]) => !available(foreignOwner, name)).map(([, name]) => `parse${name}`),
       ];
       if (missing.length > 0) {
         refused.push(`parser ${parserKeyParts(key)[1]} ${portable(root, owner)} needs ${missing.join(", ")}`);
@@ -324,7 +324,9 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
             let typeText: string | undefined;
             if (!present && formats.has(format) && !(closing && format === TS)) {
               const taken: Taken = (other) => exports.has(other) || declares(format, sources.declarations(target), other) || declares(format, appended.join("\n"), other);
-              const rendered = rendererOf(format, name, definition, taken, scope);
+              const binding = format === TS ? importedNames(sources.read(target)).get(name) : undefined;
+              const origin = binding?.type && binding.spec.startsWith(".") ? relative(root, resolve(dirname(target), binding.spec)) : undefined;
+              const rendered = origin !== undefined ? !isAbsolute(origin) && origin !== ".." && !origin.startsWith("../") && !origin.startsWith("..\\") ? "export type { " + name + " } from " + jsonString(binding!.spec, false) + ";\n" : undefined : rendererOf(format, name, definition, taken, scope);
               if (rendered === undefined) {
                 refused.push(`${format} ${name} ${relativeTarget}`);
                 continue;
@@ -343,12 +345,12 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
               continue;
             }
             if (format === TS && (!declaresParser(source, name) || replaces(target, name))) {
-              const context = new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, true, document);
+              const context = new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, true, document, plan!.exports);
               const rendered = present ? renderParser(name, definition, context, declaredOptionalFields(sources.declarations(target), name)) : undefined;
               if (rendered === undefined && present) refused.push(`parser ${name} ${relativeTarget}`);
               const local = new Set(context.local);
               local.delete(name);
-              plan!.entries.set(name, { type: typeText, typed: present, parser: rendered, local, foreign: new Set(context.foreign) });
+              plan!.entries.set(name, { type: typeText, typed: present, parser: rendered, local, foreign: new Map(context.foreign) });
             }
           }
           if (format === TS || appended.length === 0 || mode !== "apply" || dry) continue;
@@ -383,7 +385,9 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
   for (const [target, plan] of plans) {
     const keep = kept.get(target)!;
     const distributes = spread.some((folder) => portable(root, target).startsWith(`${folder}/`));
-    if (keep.length === 0 && !distributes) continue;
+    const files = homes.files(target);
+    const promotions = [...plan.exports].filter(name => files.definingFile(name) !== undefined && files.definingFile(name) !== target && files.placementOf(name) === target);
+    if (keep.length === 0 && !distributes && promotions.length === 0) continue;
     const writer = new LeafWriter(sources, root, target, plan.helper, mode === "apply", specifiers, homes);
     for (const name of keep) {
       const entry = plan.entries.get(name)!;
@@ -401,6 +405,7 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
       }
     }
     if (distributes) writer.distribute(fresh.get(target)!);
+    writer.promote(promotions);
     for (const file of writer.finish()) touched.add(file);
   }
   return { mode, under, closing, added: added.entries(), filesTouched: touched.size, refused: [...refused], rustAbsent: [...rustAbsent], touched: [...touched].sort(codePointOrder) };
@@ -458,14 +463,15 @@ export function auditLeaves(options: Pick<ProjectionOptions, "root" | "under" | 
         const callsClosed = regions.some((row) => row.source.includes(`${helper}Closed(`)) && !new RegExp(`^export const ${escapeRegExp(helper)}Closed\\b`, "m").test(source);
         if (callsClosed || !source.includes(PARSER_REGION)) helperless.push(relativeTarget);
       }
-      for (const [name, definition] of exportsOf(document)) {
+      const exports=exportsOf(document),reserved=new Set(exports.keys());
+      for (const [name, definition] of exports) {
         const [first, ...extra] = regions.flatMap((row) => {
           const range = parserRange(row.source, name);
           return range === undefined || range[0] < row.region ? [] : [{ path: portable(root, row.file), text: row.source.slice(range[0], range[1]) }];
         });
         for (const row of extra) drift.push({ path: row.path, leaf: relativeTarget, name, reason: "duplicate", actual: row.text, expected: undefined });
         if (first === undefined) continue;
-        const context = (closed: boolean): Context => new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, closed, document);
+        const context = (closed: boolean): Context => new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, closed, document, reserved);
         const rendered = renderParser(name, definition, context(true), declaredOptionalFields(sources.declarations(target), name));
         if (rendered === first.text) continue;
         const open = rendered === undefined ? undefined : renderParser(name, definition, context(false), declaredOptionalFields(sources.declarations(target), name));

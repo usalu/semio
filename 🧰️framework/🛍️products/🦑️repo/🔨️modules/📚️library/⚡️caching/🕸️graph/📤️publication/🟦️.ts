@@ -8,7 +8,7 @@ import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modu
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withNxGraphCacheStoreV1,acquireNxGraphNamespaceV1,nxGraphNamespaceDirectoryV1,withNxGraphPublicationCapacityV1,withNxGraphPoolAdmissionV1,requireNxGraphCacheStoreV1,requireNxGraphNativeDirectoryV1,type NxGraphCacheStoreV1} from "../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {readNativeCallerAuthorityV1,callerRepositoryRootV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 export interface GraphPublicationFileV1 {readonly name:"project-graph.json"|"source-maps.json"|"file-map.json";readonly value:unknown}
 export interface GraphPublicationLeaseV1 {readonly directory:string;readonly toolingIdentity:string;readonly control:ResourceLeaseControl}
@@ -48,7 +48,7 @@ export async function publishGraphGenerationV1(graph:NxGraphCacheStoreV1,lease:G
 
 /** ⏳️ Forwards one authenticated publication caller until its owned journal capture settles. */
 export async function withGraphPublisherControlV1<T>(environment:Readonly<Record<string,string|undefined>>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
- return receiveScriptProcessRequestInvocationV1(environment,original=>{const control=scriptCompilerAdmissionControlV1(original,"nx:graph-publisher",0),workspace=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryRuntimeEntriesV1(workspace,original,control,()=>body(control));});
+ return receiveScriptProcessRequestInvocationV1(environment,original=>{const control=scriptCompilerAdmissionControlV1(original,"nx:graph-publisher",0),workspace=callerRepositoryRootV1(original.capabilities);return withRepositoryRuntimeEntriesV1(workspace,original,control,()=>body(control));});
 }
 
 export {withGraphPublicationLeaseV1,publishGraphTransactionV1,readGraphPublicationSnapshotV1,recoverGraphPublicationV1,graphPublicationFileAllocationV1};

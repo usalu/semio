@@ -2,16 +2,18 @@
   "stairs": {
     "s-1": {
       "entry": "Patched",
-      "flight": {
-        "LTurn": {
-          "split": 0.5,
-          "turn": "Left"
-        }
-      },
-      "top": {
-        "Storey": {
-          "offset": 0.0,
-          "storey": "st-first"
+      "value": {
+        "flight": {
+          "LTurn": {
+            "split": 0.5,
+            "turn": "Left"
+          }
+        },
+        "top": {
+          "Storey": {
+            "offset": 0,
+            "storey": "st-first"
+          }
         }
       }
     }

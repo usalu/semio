@@ -1,0 +1,26 @@
+[
+  {
+    "character": "x",
+    "count": 0,
+    "overflow": false,
+    "retained": 0
+  },
+  {
+    "character": "x",
+    "count": 8192,
+    "overflow": false,
+    "retained": 8192
+  },
+  {
+    "character": "x",
+    "count": 8193,
+    "overflow": true,
+    "retained": 8192
+  },
+  {
+    "character": "x",
+    "count": 16384,
+    "overflow": true,
+    "retained": 8192
+  }
+]

@@ -52,13 +52,32 @@
         "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
       ],
       "outputs": [],
       "options": {
         "cwd": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-object/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript/🧪️tests/🪶️sqlite/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
       }
     }
   }

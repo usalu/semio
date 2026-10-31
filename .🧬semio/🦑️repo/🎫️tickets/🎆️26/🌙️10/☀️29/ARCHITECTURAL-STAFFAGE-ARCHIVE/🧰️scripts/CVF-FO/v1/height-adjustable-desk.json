@@ -1,0 +1,1511 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "height-adjustable-desk",
+    "category": "furniture",
+    "title": {
+      "en": "Height-adjustable Desk",
+      "de": "Höhenverstellbarer Schreibtisch"
+    },
+    "summary": {
+      "en": "A two-column sit-stand desk: each T-foot carries a two-stage telescope (identical prismatic chains left and right) under a laminated top with a cross rail; a monitor and a laptop stand on it. Front elevation, length along x.",
+      "de": "Ein Sitz-Steh-Schreibtisch mit zwei Säulen: Jeder T-Fuß trägt eine zweistufige Teleskopsäule (links und rechts identische Schubgelenkketten) unter einer laminierten Platte mit Querträger; Monitor und Laptop stehen darauf. Vorderansicht, Länge entlang x."
+    },
+    "tags": [
+      "desk",
+      "office",
+      "height-adjustable",
+      "prismatic",
+      "steel",
+      "particleboard"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (objects worker)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "ashby-2011",
+          "citation": "Ashby, M. F. (2011). Materials Selection in Mechanical Design, 4th ed., Butterworth-Heinemann."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1: General rules (E = 210 GPa)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions, densities, self-weight, imposed loads for buildings."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation along the 1.6 m top. Heights are the top surface (0.72, 0.935, 1.15 m) with the top board 25 mm thick. Equipment loads are authored estimates (monitor 8 kg, laptop 2 kg); the laptop is a load without its own shape. Only the left column carries the top in the tree; the right column follows the same travel by pose.",
+        "de": "Seitenansicht entlang der 1,6 m Platte. Höhen sind die Plattenoberkante (0,72; 0,935; 1,15 m), Plattenstärke 25 mm. Gerätelasten sind Schätzungen (Monitor 8 kg, Laptop 2 kg); der Laptop ist eine Last ohne eigene Form. Nur die linke Säule trägt die Platte im Baum; die rechte folgt per Pose demselben Hub."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.18,
+      "widthM": 1.6,
+      "depthM": 0.8,
+      "massKg": 32.4
+    },
+    "materials": [
+      {
+        "id": "steel-desk",
+        "title": {
+          "en": "Painted steel",
+          "de": "Lackierter Stahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "source": "literature",
+        "reference": "en-1993-1-1"
+      },
+      {
+        "id": "particleboard-laminate",
+        "title": {
+          "en": "Laminated particleboard",
+          "de": "Laminierte Spanplatte"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 650,
+        "source": "literature",
+        "reference": "ashby-2011"
+      },
+      {
+        "id": "equipment-housing",
+        "title": {
+          "en": "Plastic and aluminium housing",
+          "de": "Kunststoff- und Aluminiumgehäuse"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 1100,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "foot-left",
+      "bones": [
+        {
+          "id": "foot-left",
+          "parent": null,
+          "title": {
+            "en": "Left T-foot",
+            "de": "Linker T-Fuß"
+          },
+          "x": 0.25,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.8,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "foot-right",
+          "parent": "foot-left",
+          "title": {
+            "en": "Right T-foot",
+            "de": "Rechter T-Fuß"
+          },
+          "x": 1.1,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.8,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "stage-left",
+          "parent": "foot-left",
+          "title": {
+            "en": "Left lower telescope stage",
+            "de": "Linke untere Teleskopstufe"
+          },
+          "x": 0,
+          "y": 0.05,
+          "angleDeg": 90,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 0.215
+          }
+        },
+        {
+          "id": "column-left",
+          "parent": "stage-left",
+          "title": {
+            "en": "Left telescoping column",
+            "de": "Linke Teleskopsäule"
+          },
+          "x": 0.2,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.445,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 0.215
+          },
+          "mass": {
+            "kg": 3.0,
+            "comX": 0.17,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "stage-right",
+          "parent": "foot-right",
+          "title": {
+            "en": "Right lower telescope stage",
+            "de": "Rechte untere Teleskopstufe"
+          },
+          "x": 0,
+          "y": 0.05,
+          "angleDeg": 90,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 0.215
+          }
+        },
+        {
+          "id": "column-right",
+          "parent": "stage-right",
+          "title": {
+            "en": "Right telescoping column",
+            "de": "Rechte Teleskopsäule"
+          },
+          "x": 0.2,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.445,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 0.215
+          },
+          "mass": {
+            "kg": 3.0,
+            "comX": 0.17,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "top",
+          "parent": "column-left",
+          "title": {
+            "en": "Desk top",
+            "de": "Tischplatte"
+          },
+          "x": 0.445,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 1.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 20.8,
+            "comX": 0.55,
+            "comY": 0.0125,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "ashby-2011"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-foot-left",
+        "bone": "foot-left",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left foot",
+          "de": "Linker Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "contact-foot-right",
+        "bone": "foot-right",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right foot",
+          "de": "Rechter Fuß"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.5
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "foot-left-plate",
+          "bone": "foot-left",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.25 0 L 0.25 0 L 0.25 0.008 C 0.25 0.016 0.2 0.016 0.12 0.016 L -0.12 0.016 C -0.2 0.016 -0.25 0.016 -0.25 0.008 Z",
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-glide-0",
+          "bone": "foot-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": -0.24,
+          "y": 0,
+          "w": 0.04,
+          "h": 0.005,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-glide-1",
+          "bone": "foot-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": 0.2,
+          "y": 0,
+          "w": 0.04,
+          "h": 0.005,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-sleeve",
+          "bone": "foot-left",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "rect",
+          "x": -0.032,
+          "y": 0.012,
+          "w": 0.064,
+          "h": 0.388,
+          "r": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-sleeve-collar",
+          "bone": "foot-left",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.18,
+          "kind": "rect",
+          "x": -0.036,
+          "y": 0.385,
+          "w": 0.072,
+          "h": 0.02,
+          "r": 0.003,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-sleeve-seam",
+          "bone": "foot-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.03
+            ],
+            [
+              0.0,
+              0.375
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-left-boss",
+          "bone": "foot-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.7,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "rect",
+          "x": -0.05,
+          "y": 0.012,
+          "w": 0.1,
+          "h": 0.04,
+          "r": 0.006,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-left-tube",
+          "bone": "stage-left",
+          "role": "body",
+          "lod": 0,
+          "z": 3.0,
+          "filled": true,
+          "tone": 0.42,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.027,
+          "w": 0.5,
+          "h": 0.054,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-left-groove",
+          "bone": "stage-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.41,
+              0.0
+            ],
+            [
+              0.5,
+              0.0
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-left-cap",
+          "bone": "stage-left",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.488,
+          "y": -0.029,
+          "w": 0.012,
+          "h": 0.058,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-left-tube",
+          "bone": "column-left",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.022,
+          "w": 0.445,
+          "h": 0.044,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-left-groove",
+          "bone": "column-left",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              0.0
+            ],
+            [
+              0.43,
+              0.0
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-left-bracket",
+          "bone": "column-left",
+          "role": "body",
+          "lod": 1,
+          "z": 2.7,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "rect",
+          "x": 0.41,
+          "y": -0.045,
+          "w": 0.035,
+          "h": 0.09,
+          "r": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-left-bolt",
+          "bone": "column-left",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.4275,
+          "cy": 0.03,
+          "rx": 0.004,
+          "ry": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-left-bolt-b",
+          "bone": "column-left",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.4275,
+          "cy": -0.03,
+          "rx": 0.004,
+          "ry": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-plate",
+          "bone": "foot-right",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.25 0 L 0.25 0 L 0.25 0.008 C 0.25 0.016 0.2 0.016 0.12 0.016 L -0.12 0.016 C -0.2 0.016 -0.25 0.016 -0.25 0.008 Z",
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-glide-0",
+          "bone": "foot-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": -0.24,
+          "y": 0,
+          "w": 0.04,
+          "h": 0.005,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-glide-1",
+          "bone": "foot-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": 0.2,
+          "y": 0,
+          "w": 0.04,
+          "h": 0.005,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-sleeve",
+          "bone": "foot-right",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.28,
+          "kind": "rect",
+          "x": -0.032,
+          "y": 0.012,
+          "w": 0.064,
+          "h": 0.388,
+          "r": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-sleeve-collar",
+          "bone": "foot-right",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.18,
+          "kind": "rect",
+          "x": -0.036,
+          "y": 0.385,
+          "w": 0.072,
+          "h": 0.02,
+          "r": 0.003,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-sleeve-seam",
+          "bone": "foot-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.03
+            ],
+            [
+              0.0,
+              0.375
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "foot-right-boss",
+          "bone": "foot-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.7,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "rect",
+          "x": -0.05,
+          "y": 0.012,
+          "w": 0.1,
+          "h": 0.04,
+          "r": 0.006,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-right-tube",
+          "bone": "stage-right",
+          "role": "body",
+          "lod": 0,
+          "z": 3.0,
+          "filled": true,
+          "tone": 0.42,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.027,
+          "w": 0.5,
+          "h": 0.054,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-right-groove",
+          "bone": "stage-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.41,
+              0.0
+            ],
+            [
+              0.5,
+              0.0
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "stage-right-cap",
+          "bone": "stage-right",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.488,
+          "y": -0.029,
+          "w": 0.012,
+          "h": 0.058,
+          "r": 0.002,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-right-tube",
+          "bone": "column-right",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.022,
+          "w": 0.445,
+          "h": 0.044,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-right-groove",
+          "bone": "column-right",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              0.0
+            ],
+            [
+              0.43,
+              0.0
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-right-bracket",
+          "bone": "column-right",
+          "role": "body",
+          "lod": 1,
+          "z": 2.7,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "rect",
+          "x": 0.41,
+          "y": -0.045,
+          "w": 0.035,
+          "h": 0.09,
+          "r": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-right-bolt",
+          "bone": "column-right",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.4275,
+          "cy": 0.03,
+          "rx": 0.004,
+          "ry": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "column-right-bolt-b",
+          "bone": "column-right",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.4275,
+          "cy": -0.03,
+          "rx": 0.004,
+          "ry": 0.004,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "top-board",
+          "bone": "top",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "rect",
+          "x": -0.25,
+          "y": 0,
+          "w": 1.6,
+          "h": 0.025,
+          "r": 0.004,
+          "region": "top-board",
+          "material": "particleboard-laminate"
+        },
+        {
+          "id": "top-edge",
+          "bone": "top",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.246,
+              0.0125
+            ],
+            [
+              1.346,
+              0.0125
+            ]
+          ],
+          "closed": false,
+          "region": "top-board",
+          "material": "particleboard-laminate"
+        },
+        {
+          "id": "top-grain",
+          "bone": "top",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.1 0.018 C 0.3 0.020 0.6 0.016 1.2 0.019",
+          "region": "top-board",
+          "material": "particleboard-laminate"
+        },
+        {
+          "id": "top-rail",
+          "bone": "top",
+          "role": "body",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": 0.0,
+          "y": -0.075,
+          "w": 1.1,
+          "h": 0.05,
+          "r": 0.003,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "top-rail-line",
+          "bone": "top",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.03,
+              -0.05
+            ],
+            [
+              1.07,
+              -0.05
+            ]
+          ],
+          "closed": false,
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "top-cable-tray",
+          "bone": "top",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.30 -0.075 L 0.30 -0.115 L 0.80 -0.115 L 0.80 -0.075",
+          "region": "steel-desk",
+          "material": "steel-desk"
+        },
+        {
+          "id": "top-keypad",
+          "bone": "top",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.3,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "rect",
+          "x": 1.17,
+          "y": -0.012,
+          "w": 0.09,
+          "h": 0.012,
+          "r": 0.003,
+          "region": "top-board",
+          "material": "particleboard-laminate"
+        },
+        {
+          "id": "monitor-base",
+          "bone": "top",
+          "role": "body",
+          "lod": 1,
+          "z": 5,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "rect",
+          "x": 0.26,
+          "y": 0.025,
+          "w": 0.18,
+          "h": 0.012,
+          "r": 0.005,
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "monitor-neck",
+          "bone": "top",
+          "role": "body",
+          "lod": 1,
+          "z": 5,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.335 0.037 L 0.365 0.037 L 0.362 0.15 L 0.338 0.15 Z",
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "monitor-panel",
+          "bone": "top",
+          "role": "body",
+          "lod": 1,
+          "z": 5.1,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.05,
+          "y": 0.12,
+          "w": 0.6,
+          "h": 0.34,
+          "r": 0.012,
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "monitor-screen",
+          "bone": "top",
+          "role": "glazing",
+          "lod": 1,
+          "z": 5.2,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": 0.065,
+          "y": 0.135,
+          "w": 0.57,
+          "h": 0.31,
+          "r": 0.004,
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "monitor-bezel-logo",
+          "bone": "top",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.3,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.32,
+              0.127
+            ],
+            [
+              0.38,
+              0.127
+            ]
+          ],
+          "closed": false,
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "laptop",
+          "bone": "top",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "rect",
+          "x": 0.7,
+          "y": 0.025,
+          "w": 0.25,
+          "h": 0.02,
+          "r": 0.003,
+          "region": "equipment",
+          "material": "equipment-housing"
+        },
+        {
+          "id": "laptop-seam",
+          "bone": "top",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.705,
+              0.034
+            ],
+            [
+              0.945,
+              0.034
+            ]
+          ],
+          "closed": false,
+          "region": "equipment",
+          "material": "equipment-housing"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "seated-height",
+        "title": {
+          "en": "Seated height",
+          "de": "Sitzhöhe"
+        },
+        "description": {
+          "en": "Top at 0.72 m for a seated user; monitor and laptop on the top.",
+          "de": "Platte auf 0,72 m für sitzende Nutzung; Monitor und Laptop auf der Platte."
+        },
+        "bones": {
+          "stage-left": {
+            "dy": 0.0
+          },
+          "column-left": {
+            "dx": 0.0
+          },
+          "stage-right": {
+            "dy": 0.0
+          },
+          "column-right": {
+            "dx": 0.0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-foot-left",
+          "contact-foot-right"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "monitor",
+            "kind": "equipment",
+            "title": {
+              "en": "Monitor (8 kg) on its stand",
+              "de": "Monitor (8 kg) auf Standfuß"
+            },
+            "bone": "top",
+            "x": 0.35,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -78.5,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "laptop",
+            "kind": "equipment",
+            "title": {
+              "en": "Laptop (2 kg)",
+              "de": "Laptop (2 kg)"
+            },
+            "bone": "top",
+            "x": 0.82,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -19.6,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "mid-height",
+        "title": {
+          "en": "Mid height",
+          "de": "Mittlere Höhe"
+        },
+        "description": {
+          "en": "Top at 0.935 m between sitting and standing.",
+          "de": "Platte auf 0,935 m zwischen Sitzen und Stehen."
+        },
+        "bones": {
+          "stage-left": {
+            "dy": 0.1075
+          },
+          "column-left": {
+            "dx": 0.1075
+          },
+          "stage-right": {
+            "dy": 0.1075
+          },
+          "column-right": {
+            "dx": 0.1075
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-foot-left",
+          "contact-foot-right"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "monitor",
+            "kind": "equipment",
+            "title": {
+              "en": "Monitor (8 kg) on its stand",
+              "de": "Monitor (8 kg) auf Standfuß"
+            },
+            "bone": "top",
+            "x": 0.35,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -78.5,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "laptop",
+            "kind": "equipment",
+            "title": {
+              "en": "Laptop (2 kg)",
+              "de": "Laptop (2 kg)"
+            },
+            "bone": "top",
+            "x": 0.82,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -19.6,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "standing-height",
+        "title": {
+          "en": "Standing height",
+          "de": "Stehhöhe"
+        },
+        "description": {
+          "en": "Top at 1.15 m for a standing user; monitor and laptop on the top.",
+          "de": "Platte auf 1,15 m für stehende Nutzung; Monitor und Laptop auf der Platte."
+        },
+        "bones": {
+          "stage-left": {
+            "dy": 0.215
+          },
+          "column-left": {
+            "dx": 0.215
+          },
+          "stage-right": {
+            "dy": 0.215
+          },
+          "column-right": {
+            "dx": 0.215
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-foot-left",
+          "contact-foot-right"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "monitor",
+            "kind": "equipment",
+            "title": {
+              "en": "Monitor (8 kg) on its stand",
+              "de": "Monitor (8 kg) auf Standfuß"
+            },
+            "bone": "top",
+            "x": 0.35,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -78.5,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "laptop",
+            "kind": "equipment",
+            "title": {
+              "en": "Laptop (2 kg)",
+              "de": "Laptop (2 kg)"
+            },
+            "bone": "top",
+            "x": 0.82,
+            "y": 0.025,
+            "fxN": 0,
+            "fyN": -19.6,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "raise-and-lower",
+        "title": {
+          "en": "Raise and lower",
+          "de": "Heben und Senken"
+        },
+        "description": {
+          "en": "The motorised columns raise the top from sitting to standing height and back, with smooth acceleration.",
+          "de": "Die motorisierten Säulen heben die Platte von Sitz- auf Stehhöhe und zurück, mit sanftem Anfahren."
+        },
+        "durationS": 8.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-height",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "standing-height",
+            "ease": "smooth"
+          },
+          {
+            "t": 8.0,
+            "pose": "seated-height",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-foot-left",
+            "fromS": 0,
+            "toS": 8.0
+          },
+          {
+            "anchor": "contact-foot-right",
+            "fromS": 0,
+            "toS": 8.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "raise",
+            "fromS": 0,
+            "toS": 4.0,
+            "title": {
+              "en": "Raising",
+              "de": "Heben"
+            }
+          },
+          {
+            "id": "lower",
+            "fromS": 4.0,
+            "toS": 8.0,
+            "title": {
+              "en": "Lowering",
+              "de": "Senken"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4.0,
+            "kind": "motion",
+            "title": {
+              "en": "Standing height reached",
+              "de": "Stehhöhe erreicht"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "load-on-surface",
+        "title": {
+          "en": "Laptop placed on the top",
+          "de": "Laptop wird auf die Platte gestellt"
+        },
+        "description": {
+          "en": "The laptop load ramps on while the top stays at sitting height.",
+          "de": "Die Laptoplast wird aufgebracht, während die Platte auf Sitzhöhe bleibt."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-height",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "seated-height",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-foot-left",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "contact-foot-right",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "placing",
+            "fromS": 0,
+            "toS": 4.0,
+            "title": {
+              "en": "Placing the laptop",
+              "de": "Laptop wird abgestellt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2.0,
+            "kind": "load-on",
+            "title": {
+              "en": "Laptop on the top",
+              "de": "Laptop auf der Platte"
+            },
+            "target": "laptop"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:laptop",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2.0,
+                "v": 1
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 22,
+        "meanRadiantTempC": 22,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "top-board",
+          "title": {
+            "en": "Desk top surface",
+            "de": "Plattenoberfläche"
+          },
+          "kind": "surface",
+          "material": "particleboard-laminate",
+          "model": "passive",
+          "areaM2": 1.28,
+          "characteristicLengthM": 0.8,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "steel-desk",
+          "title": {
+            "en": "Steel columns and feet",
+            "de": "Stahlsäulen und Füße"
+          },
+          "kind": "surface",
+          "material": "steel-desk",
+          "model": "passive",
+          "areaM2": 0.8,
+          "characteristicLengthM": 0.06,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "equipment",
+          "title": {
+            "en": "Monitor and laptop housings",
+            "de": "Monitor- und Laptopgehäuse"
+          },
+          "kind": "surface",
+          "material": "equipment-housing",
+          "model": "passive",
+          "areaM2": 0.55,
+          "characteristicLengthM": 0.45,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Indoor reference case; passive surfaces, no emitters and no solar gain.",
+          "de": "Innenraum-Referenzfall; passive Flächen, keine Emitter und kein Sonneneintrag."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "contact-foot-left",
+        "contact-foot-right"
+      ],
+      "assumptions": [
+        {
+          "en": "Rigid desk on two foot contacts; the columns carry the top and equipment loads in equilibrium with the feet.",
+          "de": "Starrer Tisch auf zwei Fußkontakten; die Säulen tragen Platte und Gerätelasten im Gleichgewicht mit den Füßen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "seated-height",
+      "defaultClip": "raise-and-lower",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

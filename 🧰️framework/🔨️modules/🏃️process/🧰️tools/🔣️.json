@@ -459,7 +459,15 @@
           "--version"
         ],
         "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
-      }
+      },
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ]
     },
     {
       "id": "node",
@@ -2723,6 +2731,185 @@
           "--version"
         ],
         "pattern": "([0-9]+\\.[0-9]+\\.[0-9]+)"
+      }
+    },
+    {
+      "id": "cargo-nextest",
+      "kind": "test-runner",
+      "summary": {
+        "en": "Pinned Rust test runner.",
+        "de": "Gepinnter Rust-Test-Runner."
+      },
+      "capabilities": [
+        "test"
+      ],
+      "commands": [
+        "cargo-nextest"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "pin": {
+        "state": "pinned",
+        "version": {
+          "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+          "format": "json",
+          "pointer": "/cargo/cargo-nextest/version"
+        },
+        "digests": {
+          "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+          "pointer": "/cargo/cargo-nextest/distributions",
+          "where": {},
+          "host": "host",
+          "sha256": "sha256",
+          "name": "archive",
+          "bytes": "bytes"
+        }
+      },
+      "provision": {
+        "kind": "bootstrap-asset",
+        "command": "repo tools setup cargo-nextest",
+        "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts"
+      },
+      "locate": [
+        {
+          "kind": "environment",
+          "name": "SEMIO_TOOL_CARGO_NEXTEST"
+        },
+        {
+          "kind": "provisioned",
+          "partition": "tools",
+          "segments": [
+            "native",
+            "cargo-nextest",
+            "{version}",
+            "{host}-{sha256:16}"
+          ],
+          "executable": "cargo-nextest"
+        }
+      ],
+      "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+      "adapterScope": [
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/**"
+      ],
+      "allowedCallers": [
+        "**"
+      ],
+      "environment": {
+        "mode": "inherit",
+        "pass": [
+          "CARGO_*",
+          "RUST*",
+          "NEXTEST_*",
+          "LLVM_*"
+        ],
+        "deny": [],
+        "set": {}
+      },
+      "capacity": {
+        "mode": "admit",
+        "operation": "command",
+        "kind": "build"
+      },
+      "probe": {
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^cargo-nextest ([0-9]+\\.[0-9]+\\.[0-9]+)"
+      }
+    },
+    {
+      "id": "cargo-llvm-cov",
+      "kind": "test-runner",
+      "summary": {
+        "en": "Pinned Rust coverage driver.",
+        "de": "Gepinnter Rust-Abdeckungstreiber."
+      },
+      "capabilities": [
+        "coverage"
+      ],
+      "commands": [
+        "cargo-llvm-cov"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "pin": {
+        "state": "pinned",
+        "version": {
+          "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+          "format": "json",
+          "pointer": "/cargo/cargo-llvm-cov/version"
+        },
+        "digests": {
+          "file": "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json",
+          "pointer": "/cargo/cargo-llvm-cov/distributions",
+          "where": {},
+          "host": "host",
+          "sha256": "sha256",
+          "name": "archive",
+          "bytes": "bytes"
+        }
+      },
+      "provision": {
+        "kind": "bootstrap-asset",
+        "command": "repo tools setup cargo-llvm-cov",
+        "installer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts"
+      },
+      "locate": [
+        {
+          "kind": "environment",
+          "name": "SEMIO_TOOL_CARGO_LLVM_COV"
+        },
+        {
+          "kind": "provisioned",
+          "partition": "tools",
+          "segments": [
+            "native",
+            "cargo-llvm-cov",
+            "{version}",
+            "{host}-{sha256:16}"
+          ],
+          "executable": "cargo-llvm-cov"
+        }
+      ],
+      "adapter": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+      "adapterScope": [
+        "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/**",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/**"
+      ],
+      "allowedCallers": [
+        "**"
+      ],
+      "environment": {
+        "mode": "inherit",
+        "pass": [
+          "CARGO_*",
+          "RUST*",
+          "NEXTEST_*",
+          "LLVM_*"
+        ],
+        "deny": [],
+        "set": {}
+      },
+      "capacity": {
+        "mode": "admit",
+        "operation": "command",
+        "kind": "build"
+      },
+      "probe": {
+        "arguments": [
+          "llvm-cov",
+          "--version"
+        ],
+        "pattern": "^cargo-llvm-cov ([0-9]+\\.[0-9]+\\.[0-9]+)"
       }
     }
   ]

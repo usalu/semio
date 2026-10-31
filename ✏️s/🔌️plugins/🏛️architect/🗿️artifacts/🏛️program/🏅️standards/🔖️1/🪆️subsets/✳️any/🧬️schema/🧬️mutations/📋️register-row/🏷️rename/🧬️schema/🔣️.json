@@ -17,8 +17,8 @@
     "register": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json#/$defs/RegisterKey",
       "x-semio-ui": {
-        "widget": "enum",
-        "role": "target",
+        "widget": "select",
+        "role": "value",
         "label": {
           "en": "Register",
           "de": "Register"
@@ -57,7 +57,7 @@
       "type": "string",
       "x-semio-ui": {
         "widget": "text",
-        "role": "payload",
+        "role": "value",
         "label": {
           "en": "New name",
           "de": "Neuer Name"

@@ -1,0 +1,1975 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "curtain-wall-bay",
+  "category": "components",
+  "title": {
+   "en": "Curtain Wall Bay",
+   "de": "Pfosten-Riegel-Fassadenfeld"
+  },
+  "summary": {
+   "en": "One 1.35 m wide, 3.30 m high mullion-transom bay of a curtain wall in elevation: 50 mm thermally broken aluminium mullions and transoms (U_f 2.0 and 2.2), a 6-16-6 argon insulating glass unit (U_g about 1.08) with warm-edge zone and an insulated spandrel panel (U about 0.31); every element is a conditioned layered region, sun and shade follow the pose sunlit fractions.",
+   "de": "Ein 1,35 m breites, 3,30 m hohes Pfosten-Riegel-Feld einer Vorhangfassade in der Ansicht: 50 mm breite thermisch getrennte Aluminiumpfosten und -riegel (U_f 2,0 und 2,2), eine Argon-Isolierverglasung 6-16-6 (U_g etwa 1.08) mit Warme-Kante-Randzone und ein gedämmtes Brüstungspaneel (U etwa 0.31); jedes Element ist eine konditionierte, geschichtete Region, Sonne und Schatten folgen den Besonnungsanteilen der Posen."
+  },
+  "tags": [
+   "component",
+   "facade",
+   "curtain-wall",
+   "mullion",
+   "glazing",
+   "spandrel",
+   "conditioned"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors (NW-C)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-13830",
+     "citation": "EN 13830:2015 Curtain walling, product standard (mullion-transom systems, wind load, thermal transmittance U_cw)."
+    },
+    {
+     "id": "en-iso-12631",
+     "citation": "EN ISO 12631:2017 Thermal performance of curtain walling, calculation of thermal transmittance (component method: U_g, U_f, psi_g, spandrel panels)."
+    },
+    {
+     "id": "en-iso-10077-2",
+     "citation": "EN ISO 10077-2:2017 Thermal performance of windows, doors and shutters, frames: thermally broken aluminium profiles U_f about 1.8 to 2.8 W/m2K (2.0 used for mullions, 2.2 for transoms)."
+    },
+    {
+     "id": "en-iso-10077-1",
+     "citation": "EN ISO 10077-1:2017: Ug 1.1 W/m2K for 6-16-6 argon low-e glazing, edge-of-glass linear transmittance psi_g 0.04 W/mK for a warm-edge spacer, edge zone 0.065 m."
+    },
+    {
+     "id": "en-572",
+     "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (density 2500 kg/m3, E 70 GPa)."
+    },
+    {
+     "id": "profile-catalogues",
+     "citation": "Manufacturer data for mullion-transom facade systems: mullion 50 x 150 mm about 5.5 kg/m, transom 50 x 100 about 4.5 kg/m, spandrel as enamelled 6 mm glass with 100 mm mineral wool and 1.5 mm steel back pan. Typical values consulted."
+    },
+    {
+     "id": "en-iso-6946",
+     "citation": "EN ISO 6946:2017 Building components, thermal resistance and transmittance (R_si 0.13, R_se 0.04 m2K/W)."
+    },
+    {
+     "id": "en-1998-1",
+     "citation": "EN 1998-1:2004 Eurocode 8, part 1, section 4.3.5: non-structural elements, horizontal seismic force F_a = S_a W_a gamma_a / q_a; 0.12 W_a is an authored estimate for a low-seismicity site, not a code evaluation."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and cuts."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, facade elevations, scales and symbols."
+    }
+   ],
+   "notes": {
+    "en": "Bay width 1.35 m centre to centre, extents 1.40 m including both mullion faces; storey height 3.30 m. Layer resistances follow EN ISO 12631 component method.",
+    "de": "Feldbreite 1,35 m von Mitte zu Mitte, Gesamtbreite 1,40 m einschließlich beider Pfostenansichten; Geschosshöhe 3,30 m. Die Schichtwiderstände folgen dem Komponentenverfahren nach EN ISO 12631."
+   }
+  },
+  "dimensions": {
+   "heightM": 3.3,
+   "widthM": 1.4,
+   "depthM": 0.15,
+   "massKg": 186.572
+  },
+  "materials": [
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "Thermally broken aluminium profile, powder coated grey",
+     "de": "Thermisch getrenntes Aluminiumprofil, grau pulverbeschichtet"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 2800,
+    "conductivityWmK": 160,
+    "specificHeatJKgK": 880,
+    "elasticModulusPa": 70000000000.0,
+    "strengthPa": 150000000.0,
+    "source": "literature",
+    "reference": "en-iso-10077-2"
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "Float glass 6 mm (low-e inside)",
+     "de": "Floatglas 6 mm (Low-E innen)"
+    },
+    "emissivity": 0.837,
+    "solarAbsorptivity": 0.1,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1.0,
+    "specificHeatJKgK": 750,
+    "elasticModulusPa": 70000000000.0,
+    "source": "literature",
+    "reference": "en-572"
+   },
+   {
+    "id": "spandrel-glass",
+    "title": {
+     "en": "Enamelled spandrel glass 6 mm, grey",
+     "de": "Emailliertes Brüstungsglas 6 mm, grau"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1.0,
+    "specificHeatJKgK": 750,
+    "elasticModulusPa": 70000000000.0,
+    "source": "literature",
+    "reference": "en-572"
+   },
+   {
+    "id": "wool",
+    "title": {
+     "en": "Mineral wool 035",
+     "de": "Mineralwolle 035"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 60,
+    "conductivityWmK": 0.035,
+    "specificHeatJKgK": 1030,
+    "source": "literature",
+    "reference": "en-iso-10077-1"
+   },
+   {
+    "id": "steel",
+    "title": {
+     "en": "Galvanised steel back pan 1.5 mm",
+     "de": "Verzinkte Stahlrückwand 1,5 mm"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "en-iso-6946"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "frame",
+   "bones": [
+    {
+     "id": "frame",
+     "parent": null,
+     "title": {
+      "en": "Mullion-transom frame (fixed root, hung from the slab)",
+      "de": "Pfosten-Riegel-Rahmen (feste Wurzel, an der Decke aufgehängt)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 1.4,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 57.85,
+      "comX": 0.7,
+      "comY": 1.65,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "profile-catalogues"
+     },
+     "section": {
+      "areaM2": 0.00135,
+      "secondMomentM4": 1.4e-06,
+      "extremeFibreM": 0.075,
+      "material": "aluminium",
+      "title": {
+       "en": "Mullion 50 x 150 mm, aluminium",
+       "de": "Pfosten 50 x 150 mm, Aluminium"
+      }
+     }
+    },
+    {
+     "id": "igu",
+     "parent": "frame",
+     "title": {
+      "en": "Insulated glazing unit 6-16-6",
+      "de": "Isolierglaseinheit 6-16-6"
+     },
+     "x": 0.05,
+     "y": 0.9,
+     "angleDeg": 0.0,
+     "lengthM": 1.3,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 95.65,
+      "comX": 0.65,
+      "comY": 1.175,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-572"
+     }
+    },
+    {
+     "id": "spandrel",
+     "parent": "frame",
+     "title": {
+      "en": "Insulated spandrel panel",
+      "de": "Gedämmtes Brüstungspaneel"
+     },
+     "x": 0.05,
+     "y": 0.05,
+     "angleDeg": 0.0,
+     "lengthM": 1.3,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 33.072,
+      "comX": 0.65,
+      "comY": 0.4,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "profile-catalogues"
+     }
+    },
+    {
+     "id": "cradle",
+     "parent": "frame",
+     "title": {
+      "en": "Maintenance cradle hook on the mid transom (massless)",
+      "de": "Wartungsgondel-Haken am mittleren Riegel (masselos)"
+     },
+     "x": 0.05,
+     "y": 0.875,
+     "angleDeg": 0.0,
+     "lengthM": 0.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 1.2999999999999998
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "head-anchor",
+    "bone": "frame",
+    "x": 0.7,
+    "y": 3.3,
+    "kind": "support",
+    "title": {
+     "en": "Slab anchor at the head, pin (hangs the bay)",
+     "de": "Deckenanker am Kopf, Festlager (hängt das Feld auf)"
+    },
+    "support": "pin"
+   },
+   {
+    "id": "base-guide",
+    "bone": "frame",
+    "x": 0.7,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Base guide, horizontal roller",
+     "de": "Fußführung, horizontales Rollenlager"
+    },
+    "support": "roller",
+    "normalDeg": 0
+   },
+   {
+    "id": "cradle-hook",
+    "bone": "cradle",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "load",
+    "title": {
+     "en": "Hook of the maintenance cradle",
+     "de": "Haken der Wartungsgondel"
+    }
+   },
+   {
+    "id": "igu-centre",
+    "bone": "igu",
+    "x": 0.65,
+    "y": 1.175,
+    "kind": "load",
+    "title": {
+     "en": "Centre of the glazing unit",
+     "de": "Mitte der Glaseinheit"
+    }
+   },
+   {
+    "id": "spandrel-centre",
+    "bone": "spandrel",
+    "x": 0.65,
+    "y": 0.4,
+    "kind": "load",
+    "title": {
+     "en": "Centre of the spandrel",
+     "de": "Mitte der Brüstung"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "frame",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.4,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "spandrel",
+       "bone": "spandrel",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "spandrel"
+       ],
+       "material": "spandrel-glass",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.05,
+       "w": 1.4,
+       "h": 0.85
+      },
+      {
+       "id": "vision",
+       "bone": "igu",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "glass-centre",
+        "glass-edge",
+        "mullion",
+        "transom"
+       ],
+       "material": "glass",
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.05,
+       "w": 1.4,
+       "h": 2.45
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Two filled blocks: a dark spandrel and a light vision field above it, outlined by the frame.",
+      "de": "Zwei gefüllte Blöcke: eine dunkle Brüstung und darüber das helle Sichtfeld, vom Rahmen umrissen."
+     },
+     "retained": {
+      "en": "Bay 1.40 x 3.30 m, spandrel 0.85 m high (1.7 mm), vision field 2.45 m.",
+      "de": "Feld 1,40 x 3,30 m, Brüstung 0,85 m hoch (1,7 mm), Sichtfeld 2,45 m."
+     },
+     "merged": {
+      "en": "Mullions (0.05 m = 0.1 mm), transoms and both glass zones are one block listing their regions; the 0.13 mm outline stands for the frame.",
+      "de": "Pfosten (0,05 m = 0,1 mm), Riegel und beide Glaszonen sind ein Block mit den Regionen; die 0,13-mm-Kontur steht für den Rahmen."
+     },
+     "omitted": {
+      "en": "Spacer line, reflections, individual members.",
+      "de": "Abstandhalterlinie, Reflexe, einzelne Profile."
+     },
+     "thinElements": {
+      "en": "The frame is the outline (0.13 mm = 0.065 m, wider than the real 0.05 m).",
+      "de": "Der Rahmen ist die Kontur (0,13 mm = 0,065 m, breiter als die realen 0,05 m)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Light glass, dark spandrel, black outline.",
+      "de": "Helles Glas, dunkle Brüstung, schwarze Kontur."
+     },
+     "overlays": {
+      "en": "Cells: spandrel, vision block (glass, frame merged).",
+      "de": "Zellen: Brüstung, Sichtblock (Glas und Rahmen zusammengefasst)."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "frame",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.4,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "spandrel",
+       "bone": "spandrel",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.65,
+       "region": "spandrel",
+       "material": "spandrel-glass",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.8
+      ,
+       "penMm": 0.296
+      },
+      {
+       "id": "glass",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "glass-centre",
+        "glass-edge"
+       ],
+       "material": "glass",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 2.35
+      ,
+       "penMm": 0.216
+      },
+      {
+       "id": "mullion-left",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "mullion-right",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 1.35,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "transom-base",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-mid",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.85,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-head",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 3.25,
+       "w": 1.3,
+       "h": 0.05
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The grid of a mullion-transom bay: two mullion bars, three transom bars, a filled spandrel and a light glass pane.",
+      "de": "Das Raster eines Pfosten-Riegel-Feldes: zwei Pfostenbalken, drei Riegelbalken, eine gefüllte Brüstung und eine helle Glasscheibe."
+     },
+     "retained": {
+      "en": "Mullions and transoms as filled bars of their real 0.05 m width (0.25 mm), spandrel 0.8 m, glass 2.35 m.",
+      "de": "Pfosten und Riegel als gefüllte Balken ihrer realen Breite 0,05 m (0,25 mm), Brüstung 0,8 m, Glas 2,35 m."
+     },
+     "merged": {
+      "en": "Both glass zones (centre and edge) are one pane.",
+      "de": "Beide Glaszonen (Mitte und Rand) sind eine Scheibe."
+     },
+     "omitted": {
+      "en": "Spacer line, reflections, spandrel box.",
+      "de": "Abstandhalterlinie, Reflexe, Brüstungskasten."
+     },
+     "thinElements": {
+      "en": "Frame members are filled at their real width, nothing thickened.",
+      "de": "Rahmenprofile sind in ihrer realen Breite gefüllt, nichts verdickt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Frame bars 0.1 mm outline, dark; glass 0.1 mm; spandrel dark.",
+      "de": "Rahmenbalken 0,1-mm-Kontur, dunkel; Glas 0,1 mm; Brüstung dunkel."
+     },
+     "overlays": {
+      "en": "Cells: spandrel, glass (centre and edge merged), mullions, transoms.",
+      "de": "Zellen: Brüstung, Glas (Mitte und Rand zusammengefasst), Pfosten, Riegel."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "frame",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.0
+        ],
+        [
+         1.4004999999999999,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "spandrel",
+       "bone": "spandrel",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.65,
+       "region": "spandrel",
+       "material": "spandrel-glass",
+       "kind": "rect",
+       "x": 0.0005,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.8
+      },
+      {
+       "id": "glass",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "regions": [
+        "glass-centre",
+        "glass-edge"
+       ],
+       "material": "glass",
+       "kind": "rect",
+       "x": 0.0005,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 2.35
+      },
+      {
+       "id": "mullion-left",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0005,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "mullion-right",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 1.3505,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "transom-base",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0505,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-mid",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0505,
+       "y": 0.85,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-head",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0505,
+       "y": 3.25,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "reflex-a",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "glass-centre",
+       "kind": "poly",
+       "points": [
+        [
+         0.2005,
+         -0.6
+        ],
+        [
+         0.4005,
+         -0.1
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "reflex-b",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "glass-centre",
+       "kind": "poly",
+       "points": [
+        [
+         0.3005,
+         -0.6
+        ],
+        [
+         0.5005,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Filled mullions and transoms of true width around a glass pane with two reflection strokes and a dark spandrel.",
+      "de": "Gefüllte Pfosten und Riegel in wahrer Breite um eine Glasscheibe mit zwei Reflexstrichen und eine dunkle Brüstung."
+     },
+     "retained": {
+      "en": "Mullions 0.5 mm, transoms 0.5 mm, reflection strokes, spandrel 0.8 m.",
+      "de": "Pfosten 0,5 mm, Riegel 0,5 mm, Reflexstriche, Brüstung 0,8 m."
+     },
+     "merged": {
+      "en": "Glass centre and edge zone are one pane.",
+      "de": "Glasmitte und Randzone sind eine Scheibe."
+     },
+     "omitted": {
+      "en": "Spacer line, spandrel box.",
+      "de": "Abstandhalterlinie, Brüstungskasten."
+     },
+     "thinElements": {
+      "en": "None thickened.",
+      "de": "Nichts verdickt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Frame outline 0.25 mm, glass strokes 0.1 mm.",
+      "de": "Rahmenkontur 0,25 mm, Glasstriche 0,1 mm."
+     },
+     "overlays": {
+      "en": "Cells: spandrel, glass, mullions, transoms.",
+      "de": "Zellen: Brüstung, Glas, Pfosten, Riegel."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "frame",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.4,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "spandrel",
+       "bone": "spandrel",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.65,
+       "region": "spandrel",
+       "material": "spandrel-glass",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.8
+      },
+      {
+       "id": "spandrel-box",
+       "bone": "spandrel",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "spandrel",
+       "kind": "rect",
+       "x": 0.06,
+       "y": 0.06,
+       "w": 1.18,
+       "h": 0.68
+      },
+      {
+       "id": "glass",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 1,
+       "filled": true,
+       "tone": 0.15,
+       "region": "glass-centre",
+       "material": "glass",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 2.35
+      },
+      {
+       "id": "spacer",
+       "bone": "igu",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "glass-edge",
+       "material": "glass",
+       "kind": "rect",
+       "x": 0.065,
+       "y": 0.065,
+       "w": 1.17,
+       "h": 2.22
+      },
+      {
+       "id": "mullion-left",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.0,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "mullion-right",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "mullion",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 1.35,
+       "y": 0.0,
+       "w": 0.05,
+       "h": 3.3
+      },
+      {
+       "id": "transom-base",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.0,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-mid",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.85,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "transom-head",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "transom",
+       "material": "aluminium",
+       "kind": "rect",
+       "x": 0.05,
+       "y": 3.25,
+       "w": 1.3,
+       "h": 0.05
+      },
+      {
+       "id": "reflex-a",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "glass-centre",
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         -0.6
+        ],
+        [
+         0.4,
+         -0.1
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "reflex-b",
+       "bone": "igu",
+       "role": "glazing",
+       "z": 3,
+       "filled": false,
+       "tone": 0.2,
+       "region": "glass-centre",
+       "kind": "poly",
+       "points": [
+        [
+         0.3,
+         -0.6
+        ],
+        [
+         0.5,
+         -0.1
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The full bay: mullions and transoms, the IGU with its edge-seal rectangle 0.065 m inside the glass edge, two reflection strokes, the spandrel with its shadow-box outline.",
+      "de": "Das volle Feld: Pfosten und Riegel, die Isolierverglasung mit ihrem Randverbund-Rechteck 0,065 m innerhalb des Glasrandes, zwei Reflexstriche, die Brüstung mit ihrem Schattenkastenumriss."
+     },
+     "retained": {
+      "en": "The edge zone (0.065 m, EN ISO 10077-1 convention) as its own line and region, the spandrel box inset 0.06 m.",
+      "de": "Die Randzone (0,065 m, Konvention nach EN ISO 10077-1) als eigene Linie und Region, der Brüstungskasten 0,06 m eingerückt."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Pressure plate screws, gaskets, thermal break (not visible in elevation).",
+      "de": "Pressleistenschrauben, Dichtungen, thermische Trennung (in der Ansicht nicht sichtbar)."
+     },
+     "thinElements": {
+      "en": "Members are filled at real width, nothing thickened.",
+      "de": "Profile sind in realer Breite gefüllt, nichts verdickt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Frame outline 0.35 mm, details 0.18 mm, reflexes 0.13 mm.",
+      "de": "Rahmenkontur 0,35 mm, Details 0,18 mm, Reflexe 0,13 mm."
+     },
+     "overlays": {
+      "en": "One cell per region: spandrel, glass centre, edge zone line, mullions, transoms.",
+      "de": "Eine Zelle je Region: Brüstung, Glasmitte, Randzonenlinie, Pfosten, Riegel."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "dead-load",
+    "title": {
+     "en": "Dead load, full sun",
+     "de": "Eigengewicht, volle Sonne"
+    },
+    "description": {
+     "en": "The bay hangs from the slab anchor under its own weight, sunlit.",
+     "de": "Das Feld hängt unter Eigengewicht am Deckenanker, besonnt."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "glass-centre": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "glass-edge": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "spandrel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "mullion": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "transom": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "cradle-at-mid",
+    "title": {
+     "en": "Cleaning cradle on the mid transom",
+     "de": "Reinigungsgondel am mittleren Riegel"
+    },
+    "description": {
+     "en": "A 0.8 kN maintenance cradle hangs from the mid transom at the bay centre.",
+     "de": "Eine 0,8-kN-Wartungsgondel hängt in der Feldmitte am mittleren Riegel."
+    },
+    "bones": {
+     "cradle": {
+      "dx": 0.6499999999999999
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "glass-centre": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "glass-edge": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "spandrel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "mullion": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "transom": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "cradle",
+      "kind": "equipment",
+      "title": {
+       "en": "Maintenance cradle hanging from the mid transom, 0.8 kN",
+       "de": "Wartungsgondel am mittleren Riegel, 0,8 kN"
+      },
+      "anchor": "cradle-hook",
+      "fxN": 0.0,
+      "fyN": -800,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "seismic-in-plane",
+    "title": {
+     "en": "In-plane seismic action",
+     "de": "Seismische Einwirkung in der Ebene"
+    },
+    "description": {
+     "en": "A horizontal in-plane force of 0.12 times the weight on glass and spandrel.",
+     "de": "Eine waagerechte Kraft in der Ebene von 0,12 mal Gewicht auf Glas und Brüstung."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "glass-centre": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "glass-edge": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "spandrel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "mullion": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "transom": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "seismic-igu",
+      "kind": "equipment",
+      "title": {
+       "en": "In-plane seismic force on the glass, 0.12 W",
+       "de": "Seismische Kraft in der Ebene auf das Glas, 0,12 W"
+      },
+      "anchor": "igu-centre",
+      "fxN": 112.59918,
+      "fyN": 0.0,
+      "source": "authored-estimate",
+      "reference": "en-1998-1"
+     },
+     {
+      "id": "seismic-spandrel",
+      "kind": "equipment",
+      "title": {
+       "en": "In-plane seismic force on the spandrel, 0.12 W",
+       "de": "Seismische Kraft in der Ebene auf die Brüstung, 0,12 W"
+      },
+      "anchor": "spandrel-centre",
+      "fxN": 38.93236,
+      "fyN": 0.0,
+      "source": "authored-estimate",
+      "reference": "en-1998-1"
+     }
+    ]
+   },
+   {
+    "id": "shaded-by-overhang",
+    "title": {
+     "en": "Upper part in the overhang shadow",
+     "de": "Oberer Teil im Dachüberstandsschatten"
+    },
+    "description": {
+     "en": "A roof overhang shades the upper 60 % of the glass and the frame; the spandrel stays sunlit.",
+     "de": "Ein Dachüberstand verschattet die oberen 60 % des Glases und den Rahmen; die Brüstung bleibt besonnt."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "glass-centre": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.4
+      },
+      "glass-edge": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.4
+      },
+      "spandrel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 1.0
+      },
+      "mullion": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.6
+      },
+      "transom": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.6
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "cradle-pass",
+    "title": {
+     "en": "Cradle moves along the transom",
+     "de": "Gondel fährt am Riegel entlang"
+    },
+    "description": {
+     "en": "The 0.8 kN cradle hook moves along the mid transom from the left to the right mullion.",
+     "de": "Der 0,8-kN-Gondelhaken fährt am mittleren Riegel vom linken zum rechten Pfosten."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "cradle-at-mid",
+      "ease": "smooth",
+      "bones": {
+       "cradle": {
+        "dx": 0.0
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "cradle-at-mid",
+      "ease": "smooth",
+      "bones": {
+       "cradle": {
+        "dx": 1.2999999999999998
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "pass",
+      "fromS": 0,
+      "toS": 8,
+      "title": {
+       "en": "Pass",
+       "de": "Überfahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "motion",
+      "title": {
+       "en": "Cradle at the bay centre",
+       "de": "Gondel in Feldmitte"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "shadow-rise",
+    "title": {
+     "en": "Building shadow climbs the bay",
+     "de": "Gebäudeschatten steigt am Feld hoch"
+    },
+    "description": {
+     "en": "The shadow of a neighbouring building rises over the bay: spandrel, glass and frame sunlit fractions fall and recover.",
+     "de": "Der Schatten eines Nachbargebäudes steigt über das Feld: die Besonnungsanteile von Brüstung, Glas und Rahmen fallen und erholen sich."
+    },
+    "durationS": 12,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "dead-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 12,
+      "pose": "dead-load",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "shadow",
+      "fromS": 0,
+      "toS": 12,
+      "title": {
+       "en": "Shadow rises",
+       "de": "Schatten steigt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6,
+      "kind": "thermal",
+      "title": {
+       "en": "Bay fully shaded",
+       "de": "Feld ganz im Schatten"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:spandrel:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 6,
+        "v": 0.0
+       },
+       {
+        "t": 12,
+        "v": 1.0
+       }
+      ]
+     },
+     {
+      "target": "region:glass-centre:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 1.0
+       }
+      ]
+     },
+     {
+      "target": "region:glass-edge:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 1.0
+       }
+      ]
+     },
+     {
+      "target": "region:mullion:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 1.0
+       }
+      ]
+     },
+     {
+      "target": "region:transom:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 1.0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "seismic-pulse",
+    "title": {
+     "en": "Seismic pulse",
+     "de": "Seismischer Impuls"
+    },
+    "description": {
+     "en": "The in-plane seismic force rises to its design value and falls again.",
+     "de": "Die seismische Kraft in der Ebene steigt auf ihren Bemessungswert und fällt wieder."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "seismic-in-plane",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "seismic-in-plane",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "pulse",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Pulse",
+       "de": "Impuls"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 3,
+      "kind": "load-on",
+      "title": {
+       "en": "Peak",
+       "de": "Spitze"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:seismic-igu",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 1
+       },
+       {
+        "t": 6,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:seismic-spandrel",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 1
+       },
+       {
+        "t": 6,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 0,
+    "meanRadiantTempC": 0,
+    "skyTempC": -12,
+    "groundTempC": 2,
+    "relativeHumidity": 0.8,
+    "windMS": 3,
+    "windDirectionDeg": 0,
+    "solarWM2": 300,
+    "diffuseFraction": 0.25,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "glass-centre",
+     "title": {
+      "en": "IGU centre of glass",
+      "de": "Isolierglas, Scheibenmitte"
+     },
+     "kind": "glazing",
+     "model": "conditioned",
+     "material": "glass",
+     "areaM2": 2.5974,
+     "characteristicLengthM": 2.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "pane-out",
+       "title": {
+        "en": "Outer pane 6 mm",
+        "de": "Außenscheibe 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "resistanceM2KW": 0.006,
+       "source": "literature",
+       "thicknessM": 0.006,
+       "heatCapacityJM2K": 11250,
+       "reference": "en-iso-10077-1"
+      },
+      {
+       "id": "cavity",
+       "title": {
+        "en": "Argon cavity 16 mm",
+        "de": "Argonzwischenraum 16 mm"
+       },
+       "kind": "air-gap",
+       "material": "glass",
+       "resistanceM2KW": 0.745,
+       "source": "literature",
+       "thicknessM": 0.016,
+       "heatCapacityJM2K": 14,
+       "reference": "en-iso-10077-1"
+      },
+      {
+       "id": "pane-in",
+       "title": {
+        "en": "Inner pane 6 mm, low-e",
+        "de": "Innenscheibe 6 mm, Low-E"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "resistanceM2KW": 0.006,
+       "source": "literature",
+       "thicknessM": 0.006,
+       "heatCapacityJM2K": 11250,
+       "reference": "en-iso-10077-1"
+      }
+     ],
+     "heatCapacityJM2K": 22500,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-10077-1"
+    },
+    {
+     "id": "glass-edge",
+     "title": {
+      "en": "IGU edge zone with warm-edge spacer",
+      "de": "Isolierglas, Randzone mit Warme-Kante-Abstandhalter"
+     },
+     "kind": "glazing",
+     "model": "conditioned",
+     "material": "glass",
+     "areaM2": 0.4576,
+     "characteristicLengthM": 0.065,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "pane-out",
+       "title": {
+        "en": "Outer pane 6 mm",
+        "de": "Außenscheibe 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "resistanceM2KW": 0.006,
+       "source": "literature",
+       "thicknessM": 0.006,
+       "heatCapacityJM2K": 11250,
+       "reference": "en-iso-10077-1"
+      },
+      {
+       "id": "spacer-cavity",
+       "title": {
+        "en": "Spacer-bridged cavity (psi_g 0.04 W/mK equivalent)",
+        "de": "Abstandhalter-überbrückter Zwischenraum (psi_g 0,04 W/mK äquivalent)"
+       },
+       "kind": "air-gap",
+       "material": "glass",
+       "resistanceM2KW": 0.399,
+       "source": "literature",
+       "thicknessM": 0.016,
+       "heatCapacityJM2K": 14,
+       "reference": "en-iso-10077-1"
+      },
+      {
+       "id": "pane-in",
+       "title": {
+        "en": "Inner pane 6 mm",
+        "de": "Innenscheibe 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "resistanceM2KW": 0.006,
+       "source": "literature",
+       "thicknessM": 0.006,
+       "heatCapacityJM2K": 11250,
+       "reference": "en-iso-10077-1"
+      }
+     ],
+     "heatCapacityJM2K": 22500,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "authored-estimate",
+     "reference": "en-iso-10077-1"
+    },
+    {
+     "id": "spandrel",
+     "title": {
+      "en": "Insulated spandrel panel",
+      "de": "Gedämmtes Brüstungspaneel"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "spandrel-glass",
+     "areaM2": 1.04,
+     "characteristicLengthM": 0.8,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "steel-pan",
+       "title": {
+        "en": "Steel back pan 1.5 mm",
+        "de": "Stahlrückwand 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "steel",
+       "resistanceM2KW": 3e-05,
+       "source": "literature",
+       "thicknessM": 0.0015,
+       "heatCapacityJM2K": 5299,
+       "reference": "en-iso-6946"
+      },
+      {
+       "id": "wool",
+       "title": {
+        "en": "Mineral wool 100 mm",
+        "de": "Mineralwolle 100 mm"
+       },
+       "kind": "insulation",
+       "material": "wool",
+       "resistanceM2KW": 2.857,
+       "source": "literature",
+       "thicknessM": 0.1,
+       "heatCapacityJM2K": 6180,
+       "reference": "en-iso-12631"
+      },
+      {
+       "id": "air",
+       "title": {
+        "en": "Air layer 20 mm",
+        "de": "Luftschicht 20 mm"
+       },
+       "kind": "air-gap",
+       "material": "wool",
+       "resistanceM2KW": 0.17,
+       "source": "literature",
+       "thicknessM": 0.02,
+       "heatCapacityJM2K": 24,
+       "reference": "en-iso-6946"
+      },
+      {
+       "id": "enamel",
+       "title": {
+        "en": "Enamelled glass 6 mm",
+        "de": "Emailliertes Glas 6 mm"
+       },
+       "kind": "glass",
+       "material": "spandrel-glass",
+       "resistanceM2KW": 0.006,
+       "source": "literature",
+       "thicknessM": 0.006,
+       "heatCapacityJM2K": 11250,
+       "reference": "en-iso-12631"
+      }
+     ],
+     "heatCapacityJM2K": 18800,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-12631"
+    },
+    {
+     "id": "mullion",
+     "title": {
+      "en": "Mullions (thermally broken aluminium)",
+      "de": "Pfosten (thermisch getrenntes Aluminium)"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "aluminium",
+     "areaM2": 0.33,
+     "characteristicLengthM": 0.05,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "cap",
+       "title": {
+        "en": "Pressure plate and cap 2 mm",
+        "de": "Pressleiste und Deckschale 2 mm"
+       },
+       "kind": "metal",
+       "material": "aluminium",
+       "resistanceM2KW": 1e-05,
+       "source": "literature",
+       "thicknessM": 0.002,
+       "heatCapacityJM2K": 4928,
+       "reference": "en-iso-10077-2"
+      },
+      {
+       "id": "break",
+       "title": {
+        "en": "Polyamide break with cavities (U_f 2.0 W/m2K)",
+        "de": "Polyamidsteg mit Kammern (U_f 2,0 W/m2K)"
+       },
+       "kind": "polymer",
+       "material": "aluminium",
+       "resistanceM2KW": 0.33,
+       "source": "literature",
+       "thicknessM": 0.03,
+       "heatCapacityJM2K": 45000,
+       "reference": "en-iso-10077-2"
+      }
+     ],
+     "heatCapacityJM2K": 4900,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-10077-2"
+    },
+    {
+     "id": "transom",
+     "title": {
+      "en": "Transoms (thermally broken aluminium)",
+      "de": "Riegel (thermisch getrenntes Aluminium)"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "aluminium",
+     "areaM2": 0.195,
+     "characteristicLengthM": 0.05,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "cap",
+       "title": {
+        "en": "Pressure plate and cap 2 mm",
+        "de": "Pressleiste und Deckschale 2 mm"
+       },
+       "kind": "metal",
+       "material": "aluminium",
+       "resistanceM2KW": 1e-05,
+       "source": "literature",
+       "thicknessM": 0.002,
+       "heatCapacityJM2K": 4928,
+       "reference": "en-iso-10077-2"
+      },
+      {
+       "id": "break",
+       "title": {
+        "en": "Polyamide break with cavities (U_f 2.2 W/m2K)",
+        "de": "Polyamidsteg mit Kammern (U_f 2,2 W/m2K)"
+       },
+       "kind": "polymer",
+       "material": "aluminium",
+       "resistanceM2KW": 0.284,
+       "source": "literature",
+       "thicknessM": 0.03,
+       "heatCapacityJM2K": 45000,
+       "reference": "en-iso-10077-2"
+      }
+     ],
+     "heatCapacityJM2K": 4900,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-10077-2"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Winter reference case: air 0 degC, sky -12 degC, wind 3 m/s, 300 W/m2 normal irradiance; interior 20 degC with R_si 0.13 m2K/W.",
+     "de": "Winter-Referenzfall: Luft 0 °C, Himmel -12 °C, Wind 3 m/s, 300 W/m2 Normalstrahlung; Innenraum 20 °C mit R_si 0,13 m2K/W."
+    },
+    {
+     "en": "Centre-of-glass U 1.08, edge zone 1.72, spandrel 0.31, mullion 2.00, transom 2.20 W/m2K; frame regions use the visible face area.",
+     "de": "U Scheibenmitte 1.08, Randzone 1.72, Brüstung 0.31, Pfosten 2.00, Riegel 2.20 W/m2K; die Rahmenregionen nutzen die sichtbare Ansichtsfläche."
+    },
+    {
+     "en": "Sun and shade come from the pose sunlit fractions (overhang or neighbouring building); the argon cavity and the spacer are lumped into the layer resistance.",
+     "de": "Sonne und Schatten kommen aus den Besonnungsanteilen der Posen (Dachüberstand oder Nachbargebäude); Argonraum und Abstandhalter sind im Schichtwiderstand zusammengefasst."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [
+    "head-anchor",
+    "base-guide"
+   ],
+   "assumptions": [
+    {
+     "en": "The bay hangs from a pin at the slab edge and is held horizontally at the foot; frame, glass and spandrel are rigid parts. Only in-plane actions can be represented; wind acts out of the plane and is not modelled.",
+     "de": "Das Feld hängt an einem Festlager am Deckenrand und ist am Fuß horizontal gehalten; Rahmen, Glas und Brüstung sind starre Teile. Nur Einwirkungen in der Ebene sind abbildbar; Wind wirkt senkrecht zur Ebene und ist nicht modelliert."
+    },
+    {
+     "en": "The seismic force 0.12 W is an authored estimate guided by EN 1998-1 for non-structural elements, not a code evaluation.",
+     "de": "Die seismische Kraft 0,12 W ist ein Schätzwert nach dem Vorbild von EN 1998-1 für nichttragende Bauteile, keine normgemäße Auswertung."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "dead-load",
+   "defaultClip": "shadow-rise",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

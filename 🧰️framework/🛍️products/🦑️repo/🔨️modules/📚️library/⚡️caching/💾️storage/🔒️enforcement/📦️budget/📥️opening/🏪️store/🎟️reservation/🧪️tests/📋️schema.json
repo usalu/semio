@@ -1,0 +1,107 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "bytes",
+    "cases",
+    "concurrentRequests"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "type": "string"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "receipt",
+          "allocations",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$"
+              }
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "owner",
+                "kind",
+                "bytes",
+                "phase"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{32}$"
+                },
+                "owner": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "phase": {
+                  "enum": [
+                    "reserved",
+                    "committed",
+                    "retiring"
+                  ]
+                }
+              }
+            }
+          },
+          "expected": {
+            "enum": [
+              "created",
+              "recovered",
+              "refused"
+            ]
+          },
+          "receiptAtGate": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$"
+          },
+          "publish": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "concurrentRequests": {
+      "const": 2
+    }
+  }
+}

@@ -31,7 +31,17 @@ class OriginalGuestLoanScript extends BundleScript{
 class OriginalInferenceWireSourceScript extends BundleScript{
  async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-original-inference-wire-source accepts no arguments");await advanceScriptInvocation(this.invocation,"test-original-inference-wire-source","running");await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"),"--test-name-pattern","original SDK wire carries business source and borrows all work authority"],this.repoRoot,"plugin:original-inference-wire-source",scriptInvocationBudget(this.invocation,Math.min(30000,testLevelBudgetMs())),{signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"test-original-inference-wire-source","running")});await advanceScriptInvocation(this.invocation,"test-original-inference-wire-source","complete");}
 }
-const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("support", SupportScript).register("test-tick-payload",TickPayloadSourceScript).register("test-original-guest-loan",OriginalGuestLoanScript).register("test-original-inference-wire-source",OriginalInferenceWireSourceScript);
+/** 🪶️ Checks closed SQLite snapshot wire fields against the actual native request and independent validators. */
+class SqliteSnapshotSchemaScript extends BundleScript {
+  async run(args:string[]):Promise<void>{
+    if(args.length)throw new Error("test-sqlite-snapshot-schema accepts no arguments");
+    await advanceScriptInvocation(this.invocation,"test-sqlite-snapshot-schema","running");
+    await runOwnedCommand(process.execPath,["test",fileURLToPath(new URL("../../🧬️schema/🪶️sqlite/🧪️tests/🟦️.ts",import.meta.url))],this.repoRoot,"plugin:sqlite-snapshot-schema",scriptInvocationBudget(this.invocation,Math.min(15000,testLevelBudgetMs())),{signal:this.invocation.control.signal,onProgress:()=>advanceScriptInvocation(this.invocation,"test-sqlite-snapshot-schema","running")});
+    await advanceScriptInvocation(this.invocation,"test-sqlite-snapshot-schema","complete");
+  }
+}
+
+const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("test-sqlite-snapshot-schema",SqliteSnapshotSchemaScript).register("support", SupportScript).register("test-tick-payload",TickPayloadSourceScript).register("test-original-guest-loan",OriginalGuestLoanScript).register("test-original-inference-wire-source",OriginalInferenceWireSourceScript);
 if (isMainModuleV1(import.meta.url) && process.argv[2] === "test") {
   const selected = process.argv[3];
   const root = resolve(import.meta.dirname, "../../../../../../.."), { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");

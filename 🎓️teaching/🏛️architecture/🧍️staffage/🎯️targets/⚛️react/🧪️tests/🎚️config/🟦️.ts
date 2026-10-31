@@ -26,6 +26,7 @@ export default defineConfig({
     name: "@teaching/staffage-react",
     environment: "jsdom",
     include: ["../../🧪️tests/*/🟦️.tsx"],
+    setupFiles: [resolve(dirname(fileURLToPath(import.meta.url)), "resolve-react.ts")],
     coverage: { include: ["🟦️.tsx", "📚️app/**/🟦️.tsx"] },
     passWithNoTests: false,
   },

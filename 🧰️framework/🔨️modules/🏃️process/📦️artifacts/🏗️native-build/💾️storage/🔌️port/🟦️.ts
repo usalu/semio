@@ -20,4 +20,4 @@ export type NativeStorageObservationPortV1=Pick<NativeStoragePortV1,"withOperati
 /** 📚️ Returns detached current journal DATA, never an allocation or a writer continuation. */
 export type NativeStorageJournalObservationV1=Readonly<{version:1;backing:NativeStorageBackingV1;state:NativeStorageStateV1;journalSha256:string;journalBytes:number}>;
 /** 🧱️ The directory, lease root, byte bounds and caller control one fixed native platform image is opened with. */
-export type NativeFixedPlatformOptionsV1=Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>;
+export type NativeFixedPlatformOptionsV1=Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;preparationControl?:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>;

@@ -1,0 +1,4744 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "external-venetian-blind",
+    "category": "components",
+    "title": {
+      "en": "External Venetian Blind",
+      "de": "Außenjalousie"
+    },
+    "summary": {
+      "en": "A 1.2 m wide external venetian blind (raffstore) of 17 aluminium Z-lamellae (90 mm wide, 80 mm pitch) in a 150 x 210 mm headrail box with guide rails and bottom rail, shown in vertical section in front of a double-glazed window in an insulated wall; retracted, lowered with slats horizontal, at 45 degrees or closed, with the shading effect on the glazing from the louvre geometry.",
+      "de": "Eine 1,2 m breite Außenjalousie (Raffstore) aus 17 Aluminium-Z-Lamellen (90 mm breit, 80 mm Abstand) in einer 150 x 210 mm großen Kastenblende mit Führungsschienen und Unterschiene, im Vertikalschnitt vor einem doppelt verglasten Fenster in einer gedämmten Wand; hochgezogen, abgelassen mit waagerechten, 45-Grad- oder geschlossenen Lamellen, mit der Verschattungswirkung auf die Verglasung aus der Lamellengeometrie."
+    },
+    "tags": [
+      "component",
+      "shading",
+      "blind",
+      "louvre",
+      "facade",
+      "mechanism",
+      "conditioned"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors (NW-C)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-13561",
+          "citation": "EN 13561:2015 External blinds and awnings, performance requirements including safety (wind resistance classes, operation). The wind pressure used here (0.3 kPa) is an authored estimate within the class 2 to 3 range; the class values were not verified."
+        },
+        {
+          "id": "en-14501",
+          "citation": "EN 14501:2021 Blinds and shutters, thermal and visual comfort, performance characteristics and classification (solar transmittance of the blind with glazing)."
+        },
+        {
+          "id": "blind-catalogues",
+          "citation": "Manufacturer data for external venetian blinds (raffstore) with Z-lamellae 90 mm, pitch about 80 mm, lamella thickness 0.4 to 0.5 mm aluminium (about 0.13 kg/m per lamella), headrail box 150 x 200 mm, bottom rail and lateral guide rails. Typical values consulted."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters: double glazing 4-16-4 with argon and low-e coating Ug about 1.1 W/m2K."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components, thermal resistance and transmittance (R_si 0.13, R_se 0.04 m2K/W)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials, hygrothermal properties: EPS 0.035 W/mK, aluminium 160 W/mK 880 J/kgK, glass 1.0 W/mK, clay block (light) 0.12 W/mK."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and cuts."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, types of drawings, scales and symbols."
+        },
+        {
+          "id": "louvre-geometry",
+          "citation": "Direct-beam transmission of a louvre array: tau = max(0, 1 - w sin(alpha + beta) / (p cos alpha)) for lamella width w, pitch p, solar profile angle alpha and lamella tilt beta (outer edge down positive), elementary geometry of parallel opaque strips (e.g. Kuhn, Bühler, Platzer 2000, Solar Energy 69 suppl. 6)."
+        }
+      ],
+      "notes": {
+        "en": "Glazing sunlit fractions are the direct-beam transmission of the louvre array at a reference solar profile angle of 35 degrees (tau = 1 - w sin(alpha + beta) / (p cos alpha)); diffuse light is not blocked.",
+        "de": "Die Besonnungsanteile der Verglasung sind die Direktstrahlungs-Durchlässigkeit der Lamellenfläche bei einem Referenz-Sonnenhöhenwinkel von 35 Grad (tau = 1 - w sin(alpha + beta) / (p cos alpha)); diffuses Licht wird nicht abgeschirmt."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.75,
+      "widthM": 0.42,
+      "depthM": 1.2,
+      "massKg": 364.48
+    },
+    "materials": [
+      {
+        "id": "aluminium",
+        "title": {
+          "en": "Anodised or lacquered aluminium, white",
+          "de": "Aluminium, eloxiert oder lackiert, weiß"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 2800,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 880,
+        "elasticModulusPa": 70000000000.0,
+        "strengthPa": 150000000.0,
+        "source": "literature",
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Float glass 4 mm",
+          "de": "Floatglas 4 mm"
+        },
+        "emissivity": 0.837,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1.0,
+        "specificHeatJKgK": 750,
+        "elasticModulusPa": 70000000000.0,
+        "source": "literature",
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "masonry",
+        "title": {
+          "en": "Insulated clay-block wall, rendered",
+          "de": "Gedämmte Ziegelwand, verputzt"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 800,
+        "conductivityWmK": 0.12,
+        "specificHeatJKgK": 1000,
+        "source": "literature",
+        "reference": "en-iso-10456"
+      },
+      {
+        "id": "eps",
+        "title": {
+          "en": "Expanded polystyrene",
+          "de": "Expandiertes Polystyrol"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 15,
+        "conductivityWmK": 0.035,
+        "specificHeatJKgK": 1450,
+        "source": "literature",
+        "reference": "en-iso-10456"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "facade",
+      "bones": [
+        {
+          "id": "facade",
+          "parent": null,
+          "title": {
+            "en": "Facade wall stubs with the window (fixed root)",
+            "de": "Fassadenwandstücke mit Fenster (feste Wurzel)"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 355.0,
+            "comX": -0.135,
+            "comY": 1.3,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-iso-10456"
+          }
+        },
+        {
+          "id": "box",
+          "parent": "facade",
+          "title": {
+            "en": "Headrail box with guide rails",
+            "de": "Kastenblende mit Führungsschienen"
+          },
+          "x": 0.0,
+          "y": 2.32,
+          "angleDeg": 0.0,
+          "lengthM": 0.15,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5.7,
+            "comX": 0.075,
+            "comY": 0.1,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "bottom-rail",
+          "parent": "facade",
+          "title": {
+            "en": "Bottom rail (lifts the stack)",
+            "de": "Unterschiene (hebt das Paket)"
+          },
+          "x": 0.105,
+          "y": 1.02,
+          "angleDeg": 0.0,
+          "lengthM": 0.09,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          },
+          "mass": {
+            "kg": 1.4,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slide-0",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 1",
+            "de": "Hub der Lamelle 1"
+          },
+          "x": 0.105,
+          "y": 2.325,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-1",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 2",
+            "de": "Hub der Lamelle 2"
+          },
+          "x": 0.105,
+          "y": 2.245,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-2",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 3",
+            "de": "Hub der Lamelle 3"
+          },
+          "x": 0.105,
+          "y": 2.165,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-3",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 4",
+            "de": "Hub der Lamelle 4"
+          },
+          "x": 0.105,
+          "y": 2.085,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-4",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 5",
+            "de": "Hub der Lamelle 5"
+          },
+          "x": 0.105,
+          "y": 2.005,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-5",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 6",
+            "de": "Hub der Lamelle 6"
+          },
+          "x": 0.105,
+          "y": 1.925,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-6",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 7",
+            "de": "Hub der Lamelle 7"
+          },
+          "x": 0.105,
+          "y": 1.845,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-7",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 8",
+            "de": "Hub der Lamelle 8"
+          },
+          "x": 0.105,
+          "y": 1.765,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-8",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 9",
+            "de": "Hub der Lamelle 9"
+          },
+          "x": 0.105,
+          "y": 1.685,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-9",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 10",
+            "de": "Hub der Lamelle 10"
+          },
+          "x": 0.105,
+          "y": 1.605,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-10",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 11",
+            "de": "Hub der Lamelle 11"
+          },
+          "x": 0.105,
+          "y": 1.525,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-11",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 12",
+            "de": "Hub der Lamelle 12"
+          },
+          "x": 0.105,
+          "y": 1.445,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-12",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 13",
+            "de": "Hub der Lamelle 13"
+          },
+          "x": 0.105,
+          "y": 1.365,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-13",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 14",
+            "de": "Hub der Lamelle 14"
+          },
+          "x": 0.105,
+          "y": 1.285,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-14",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 15",
+            "de": "Hub der Lamelle 15"
+          },
+          "x": 0.105,
+          "y": 1.205,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-15",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 16",
+            "de": "Hub der Lamelle 16"
+          },
+          "x": 0.105,
+          "y": 1.125,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slide-16",
+          "parent": "facade",
+          "title": {
+            "en": "Lift of slat 17",
+            "de": "Hub der Lamelle 17"
+          },
+          "x": 0.105,
+          "y": 1.045,
+          "angleDeg": 0.0,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 1.45
+          }
+        },
+        {
+          "id": "slat-0",
+          "parent": "slide-0",
+          "title": {
+            "en": "Slat 1 (top is 1) tilting about its centre",
+            "de": "Lamelle 1 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-1",
+          "parent": "slide-1",
+          "title": {
+            "en": "Slat 2 (top is 1) tilting about its centre",
+            "de": "Lamelle 2 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-2",
+          "parent": "slide-2",
+          "title": {
+            "en": "Slat 3 (top is 1) tilting about its centre",
+            "de": "Lamelle 3 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-3",
+          "parent": "slide-3",
+          "title": {
+            "en": "Slat 4 (top is 1) tilting about its centre",
+            "de": "Lamelle 4 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-4",
+          "parent": "slide-4",
+          "title": {
+            "en": "Slat 5 (top is 1) tilting about its centre",
+            "de": "Lamelle 5 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-5",
+          "parent": "slide-5",
+          "title": {
+            "en": "Slat 6 (top is 1) tilting about its centre",
+            "de": "Lamelle 6 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-6",
+          "parent": "slide-6",
+          "title": {
+            "en": "Slat 7 (top is 1) tilting about its centre",
+            "de": "Lamelle 7 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-7",
+          "parent": "slide-7",
+          "title": {
+            "en": "Slat 8 (top is 1) tilting about its centre",
+            "de": "Lamelle 8 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-8",
+          "parent": "slide-8",
+          "title": {
+            "en": "Slat 9 (top is 1) tilting about its centre",
+            "de": "Lamelle 9 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-9",
+          "parent": "slide-9",
+          "title": {
+            "en": "Slat 10 (top is 1) tilting about its centre",
+            "de": "Lamelle 10 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-10",
+          "parent": "slide-10",
+          "title": {
+            "en": "Slat 11 (top is 1) tilting about its centre",
+            "de": "Lamelle 11 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-11",
+          "parent": "slide-11",
+          "title": {
+            "en": "Slat 12 (top is 1) tilting about its centre",
+            "de": "Lamelle 12 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-12",
+          "parent": "slide-12",
+          "title": {
+            "en": "Slat 13 (top is 1) tilting about its centre",
+            "de": "Lamelle 13 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-13",
+          "parent": "slide-13",
+          "title": {
+            "en": "Slat 14 (top is 1) tilting about its centre",
+            "de": "Lamelle 14 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-14",
+          "parent": "slide-14",
+          "title": {
+            "en": "Slat 15 (top is 1) tilting about its centre",
+            "de": "Lamelle 15 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-15",
+          "parent": "slide-15",
+          "title": {
+            "en": "Slat 16 (top is 1) tilting about its centre",
+            "de": "Lamelle 16 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        },
+        {
+          "id": "slat-16",
+          "parent": "slide-16",
+          "title": {
+            "en": "Slat 17 (top is 1) tilting about its centre",
+            "de": "Lamelle 17 (oben ist 1), kippt um ihre Mitte"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 0.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -90,
+            "maxDeg": 35
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "blind-catalogues"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-foot",
+        "bone": "facade",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Wall foot, fixed in the slab",
+          "de": "Wandfuß, in der Decke eingespannt"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "blind-centre",
+        "bone": "facade",
+        "x": 0.105,
+        "y": 1.7,
+        "kind": "load",
+        "title": {
+          "en": "Centre of the lowered blind",
+          "de": "Mitte der abgelassenen Jalousie"
+        }
+      },
+      {
+        "id": "box-bracket",
+        "bone": "box",
+        "x": 0.0,
+        "y": 0.1,
+        "kind": "attachment",
+        "title": {
+          "en": "Box bracket on the head wall",
+          "de": "Kastenhalter an der Sturzwand"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "The lamellae pitch is 0.08 m (0.16 mm at 1:500) and a lamella is 0.012 m thick; every tilt state would print as the same grey strip, so the asset's purpose (lamella angle and shading) cannot be shown.",
+          "de": "Der Lamellenabstand beträgt 0,08 m (0,16 mm bei 1:500) und eine Lamelle ist 0,012 m dick; jeder Kippzustand würde als derselbe graue Streifen drucken, der Zweck des Assets (Lamellenwinkel und Verschattung) ist nicht darstellbar."
+        },
+        "limitingFeature": {
+          "en": "Lamella pitch 0.08 m (0.16 mm) and lamella thickness 0.012 m (0.024 mm).",
+          "de": "Lamellenabstand 0,08 m (0,16 mm) und Lamellendicke 0,012 m (0,024 mm)."
+        },
+        "limitingSizeM": 0.08,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "facade",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0.0
+                ],
+                [
+                  0.15,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-sill",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0,
+              "w": 0.27,
+              "h": 1.0
+            },
+            {
+              "id": "wall-head",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 2.25,
+              "w": 0.27,
+              "h": 0.5
+            },
+            {
+              "id": "glass",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.188,
+                  1.0
+                ],
+                [
+                  -0.188,
+                  2.25
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "box",
+              "bone": "box",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.171,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.15,
+              "h": 0.21
+            },
+            {
+              "id": "guide",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "box-and-rails",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.105,
+                  0.0
+                ],
+                [
+                  0.105,
+                  -1.29
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-0",
+              "bone": "slat-0",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-1",
+              "bone": "slat-1",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.141,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-2",
+              "bone": "slat-2",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-3",
+              "bone": "slat-3",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-4",
+              "bone": "slat-4",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-5",
+              "bone": "slat-5",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-6",
+              "bone": "slat-6",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-7",
+              "bone": "slat-7",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-8",
+              "bone": "slat-8",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-9",
+              "bone": "slat-9",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-10",
+              "bone": "slat-10",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-11",
+              "bone": "slat-11",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-12",
+              "bone": "slat-12",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-13",
+              "bone": "slat-13",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-14",
+              "bone": "slat-14",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-15",
+              "bone": "slat-15",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-16",
+              "bone": "slat-16",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bottom-rail",
+              "bone": "bottom-rail",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.4,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A cut facade stub below and above the window, the glazing as a line, the headrail box as a filled block and 17 lamella lines hanging from it with a bottom rail.",
+            "de": "Ein geschnittenes Fassadenstück unter und über dem Fenster, die Verglasung als Linie, die Kastenblende als gefüllter Block und 17 daran hängende Lamellenlinien mit Unterschiene."
+          },
+          "retained": {
+            "en": "All 17 lamellae at their real pitch 0.08 m (0.4 mm) and width 0.09 m, box 0.15 x 0.21 m, guide line, bottom rail, glass line between the wall stubs.",
+            "de": "Alle 17 Lamellen im echten Abstand 0,08 m (0,4 mm) und mit 0,09 m Breite, Kasten 0,15 x 0,21 m, Führungslinie, Unterschiene, Glaslinie zwischen den Wandstücken."
+          },
+          "merged": {
+            "en": "The wall layers (render, insulation, block) are one filled stub; box, guide rails and bottom rail share the region box-and-rails.",
+            "de": "Die Wandschichten (Putz, Dämmung, Block) sind ein gefülltes Stück; Kasten, Führungsschienen und Unterschiene teilen die Region box-and-rails."
+          },
+          "omitted": {
+            "en": "Lamella profile (Z-shape), cords, rollers, window frame.",
+            "de": "Lamellenprofil (Z-Form), Schnüre, Rollen, Fensterrahmen."
+          },
+          "thinElements": {
+            "en": "Each lamella (0.012 m real) is a 0.1 mm line (0.02 m at this scale); the IGU (0.024 m) is a 0.1 mm line. Named tilt poses keep the lines 0.28 mm apart or touching.",
+            "de": "Jede Lamelle (real 0,012 m) ist eine 0,1-mm-Linie (0,02 m in diesem Maßstab); die Isolierverglasung (0,024 m) eine 0,1-mm-Linie. Die benannten Kipp-Posen halten die Linien 0,28 mm auseinander oder berührend."
+          },
+          "hatching": {
+            "en": "None: no hatch inside the stubs, only tone.",
+            "de": "Keine: keine Schraffur in den Stücken, nur Ton."
+          },
+          "styles": {
+            "en": "Filled dark stubs and box, light lamella lines.",
+            "de": "Gefüllte dunkle Stücke und Kasten, leichte Lamellenlinien."
+          },
+          "overlays": {
+            "en": "Cells: wall stubs, glass line, box (with guide and rail), 17 lamellae that show the sunlit shading.",
+            "de": "Zellen: Wandstücke, Glaslinie, Kasten (mit Führung und Schiene), 17 Lamellen, die die besonnte Verschattung zeigen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "cut-masonry",
+            "title": {
+              "en": "Cut masonry",
+              "de": "Geschnittenes Mauerwerk"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "facade",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0.0
+                ],
+                [
+                  0.15,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "wall-sill",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "hatch": "cut-masonry",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0,
+              "w": 0.27,
+              "h": 1.0
+            },
+            {
+              "id": "wall-head",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "hatch": "cut-masonry",
+              "penMm": 0.18,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 2.25,
+              "w": 0.27,
+              "h": 0.5
+            },
+            {
+              "id": "glass",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.188,
+                  1.0
+                ],
+                [
+                  -0.188,
+                  2.25
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "box",
+              "bone": "box",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.331,
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.15,
+              "h": 0.21
+            },
+            {
+              "id": "guide",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "box-and-rails",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.105,
+                  0.0
+                ],
+                [
+                  0.105,
+                  -1.28
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-0",
+              "bone": "slat-0",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-1",
+              "bone": "slat-1",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.281,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-2",
+              "bone": "slat-2",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-3",
+              "bone": "slat-3",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-4",
+              "bone": "slat-4",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-5",
+              "bone": "slat-5",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-6",
+              "bone": "slat-6",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-7",
+              "bone": "slat-7",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-8",
+              "bone": "slat-8",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-9",
+              "bone": "slat-9",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-10",
+              "bone": "slat-10",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-11",
+              "bone": "slat-11",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-12",
+              "bone": "slat-12",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-13",
+              "bone": "slat-13",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-14",
+              "bone": "slat-14",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-15",
+              "bone": "slat-15",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-16",
+              "bone": "slat-16",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.4,
+              "region": "lamellae",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.045,
+                  0.0
+                ],
+                [
+                  0.045,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bottom-rail",
+              "bone": "bottom-rail",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.4,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.13,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.02,
+              "w": 0.09,
+              "h": 0.04
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Hatched cut wall stubs, the glazing line, a box with two guide lines, 17 lamellae as 0.13 mm lines and a filled bottom rail.",
+            "de": "Schraffierte geschnittene Wandstücke, die Glaslinie, ein Kasten mit zwei Führungslinien, 17 Lamellen als 0,13-mm-Linien und eine gefüllte Unterschiene."
+          },
+          "retained": {
+            "en": "Lamella pitch 0.8 mm, width 0.9 mm; guide rail slot 0.02 m between two lines; bottom rail 0.09 x 0.04 m.",
+            "de": "Lamellenabstand 0,8 mm, Breite 0,9 mm; Führungsschiene 0,02 m zwischen zwei Linien; Unterschiene 0,09 x 0,04 m."
+          },
+          "merged": {
+            "en": "Wall layers merged into one hatched stub.",
+            "de": "Wandschichten in einem schraffierten Stück zusammengefasst."
+          },
+          "omitted": {
+            "en": "Lamella profile, cords, window frame.",
+            "de": "Lamellenprofil, Schnüre, Fensterrahmen."
+          },
+          "thinElements": {
+            "en": "A 0.13 mm line equals the real 0.013 m lamella depth; the IGU is one 0.13 mm line instead of two (0.24 mm cannot separate).",
+            "de": "Eine 0,13-mm-Linie entspricht der realen Lamellentiefe von 0,013 m; die Isolierverglasung ist eine 0,13-mm-Linie statt zwei (0,24 mm lassen sich nicht trennen)."
+          },
+          "hatching": {
+            "en": "Cut masonry as 45 degree lines at 0.5 mm.",
+            "de": "Geschnittenes Mauerwerk als 45-Grad-Linien mit 0,5 mm."
+          },
+          "styles": {
+            "en": "Walls 0.18 mm, box 0.18 mm, lamellae 0.13 mm.",
+            "de": "Wände 0,18 mm, Kasten 0,18 mm, Lamellen 0,13 mm."
+          },
+          "overlays": {
+            "en": "As at 1:200 with the guide split into two lines.",
+            "de": "Wie bei 1:200, die Führung in zwei Linien geteilt."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "cut-masonry",
+            "title": {
+              "en": "Cut masonry",
+              "de": "Geschnittenes Mauerwerk"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          },
+          {
+            "id": "insulation",
+            "title": {
+              "en": "Insulation",
+              "de": "Dämmung"
+            },
+            "pattern": "stipple",
+            "angleDeg": 0,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "facade",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0.0
+                ],
+                [
+                  0.15,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "block-sill",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "hatch": "cut-masonry",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 0.0,
+              "w": 0.185,
+              "h": 1.0
+            },
+            {
+              "id": "insulation-sill",
+              "bone": "facade",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.7,
+              "region": "facade-wall",
+              "material": "eps",
+              "hatch": "insulation",
+              "kind": "rect",
+              "x": -0.085,
+              "y": 0.0,
+              "w": 0.085,
+              "h": 1.0
+            },
+            {
+              "id": "render-sill",
+              "bone": "facade",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "facade-wall",
+              "material": "masonry",
+              "penMm": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0075,
+                  0.0
+                ],
+                [
+                  -0.0075,
+                  1.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "block-head",
+              "bone": "facade",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "facade-wall",
+              "material": "masonry",
+              "hatch": "cut-masonry",
+              "penMm": 0.25,
+              "kind": "rect",
+              "x": -0.27,
+              "y": 2.25,
+              "w": 0.185,
+              "h": 0.5
+            },
+            {
+              "id": "insulation-head",
+              "bone": "facade",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.7,
+              "region": "facade-wall",
+              "material": "eps",
+              "hatch": "insulation",
+              "kind": "rect",
+              "x": -0.085,
+              "y": 2.25,
+              "w": 0.085,
+              "h": 0.5
+            },
+            {
+              "id": "render-head",
+              "bone": "facade",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "facade-wall",
+              "material": "masonry",
+              "penMm": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0075,
+                  2.25
+                ],
+                [
+                  -0.0075,
+                  2.75
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-a",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  1.0
+                ],
+                [
+                  -0.2,
+                  2.25
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-b",
+              "bone": "facade",
+              "role": "glazing",
+              "z": 2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "glazing-behind",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.176,
+                  1.0
+                ],
+                [
+                  -0.176,
+                  2.25
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "box",
+              "bone": "box",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": 0.0,
+              "y": 0.0,
+              "w": 0.15,
+              "h": 0.21
+            },
+            {
+              "id": "box-slot",
+              "bone": "box",
+              "role": "texture",
+              "z": 6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "box-and-rails",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03,
+                  0.015
+                ],
+                [
+                  0.12,
+                  0.015
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "guide-a",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "box-and-rails",
+              "kind": "poly",
+              "points": [
+                [
+                  0.095,
+                  0.0
+                ],
+                [
+                  0.095,
+                  -1.28
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "guide-b",
+              "bone": "box",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "box-and-rails",
+              "kind": "poly",
+              "points": [
+                [
+                  0.115,
+                  0.0
+                ],
+                [
+                  0.115,
+                  -1.28
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slat-0",
+              "bone": "slat-0",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.216
+             },
+            {
+              "id": "slat-1",
+              "bone": "slat-1",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.216
+             },
+            {
+              "id": "slat-2",
+              "bone": "slat-2",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.216
+             },
+            {
+              "id": "slat-3",
+              "bone": "slat-3",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-4",
+              "bone": "slat-4",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-5",
+              "bone": "slat-5",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-6",
+              "bone": "slat-6",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-7",
+              "bone": "slat-7",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-8",
+              "bone": "slat-8",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-9",
+              "bone": "slat-9",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-10",
+              "bone": "slat-10",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-11",
+              "bone": "slat-11",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-12",
+              "bone": "slat-12",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-13",
+              "bone": "slat-13",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.302
+             },
+            {
+              "id": "slat-14",
+              "bone": "slat-14",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.216
+             },
+            {
+              "id": "slat-15",
+              "bone": "slat-15",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.262
+             },
+            {
+              "id": "slat-16",
+              "bone": "slat-16",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "lamellae",
+              "material": "aluminium",
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.006,
+              "w": 0.09,
+              "h": 0.012
+            ,
+              "penMm": 0.216
+             },
+            {
+              "id": "bottom-rail",
+              "bone": "bottom-rail",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.4,
+              "region": "box-and-rails",
+              "material": "aluminium",
+              "penMm": 0.296,
+              "kind": "rect",
+              "x": -0.045,
+              "y": -0.02,
+              "w": 0.09,
+              "h": 0.04
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The vertical section of an external venetian blind in front of a double-glazed window in an insulated wall: layered wall stubs, IGU as two lines, headrail box with slot, guide rails and 17 lamellae as thin filled profiles tilting about their centres.",
+            "de": "Der Vertikalschnitt einer Außenjalousie vor einem doppelt verglasten Fenster in einer gedämmten Wand: geschichtete Wandstücke, Isolierverglasung als zwei Linien, Kastenblende mit Schlitz, Führungsschienen und 17 Lamellen als dünne gefüllte Profile, die um ihre Mitte kippen."
+          },
+          "retained": {
+            "en": "Wall layers (block 0.175 m, EPS 0.07 m, render 0.015 m as a 0.3 mm line), both glass panes, box slot, two guide lines, bottom rail.",
+            "de": "Wandschichten (Block 0,175 m, EPS 0,07 m, Putz 0,015 m), beide Glasscheiben, Kastenschlitz, zwei Führungslinien, Unterschiene."
+          },
+          "merged": {
+            "en": "Nothing merged.",
+            "de": "Nichts zusammengefasst."
+          },
+          "omitted": {
+            "en": "Z-curl of the lamella edges (drawn as 0.09 x 0.012 m bars), the argon gap, the spacer.",
+            "de": "Z-Kante der Lamellen (als Balken 0,09 x 0,012 m gezeichnet), Argonraum, Abstandhalter."
+          },
+          "thinElements": {
+            "en": "Lamellae are 0.24 mm bars (real 0.012 m): thin but printable.",
+            "de": "Lamellen sind 0,24-mm-Balken (real 0,012 m): dünn, aber druckbar."
+          },
+          "hatching": {
+            "en": "Cut masonry as lines at 0.5 mm, EPS as stipple.",
+            "de": "Geschnittenes Mauerwerk als Linien mit 0,5 mm, EPS als Punktierung."
+          },
+          "styles": {
+            "en": "Block outline 0.25 mm, box 0.35 mm, lamellae 0.13 mm.",
+            "de": "Blockkontur 0,25 mm, Kasten 0,35 mm, Lamellen 0,13 mm."
+          },
+          "overlays": {
+            "en": "One cell per region; each lamella is its own cell so tilt and shade stay readable.",
+            "de": "Eine Zelle je Region; jede Lamelle ist eine eigene Zelle, damit Kippung und Schatten lesbar bleiben."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "lowered-horizontal",
+        "title": {
+          "en": "Lowered, slats horizontal",
+          "de": "Abgelassen, Lamellen waagerecht"
+        },
+        "description": {
+          "en": "Blind lowered over the window with the slats flat; at 35 degrees sun elevation 21 % of the direct beam passes.",
+          "de": "Jalousie vor dem Fenster abgelassen, Lamellen flach; bei 35 Grad Sonnenhöhe tritt 21 % der Direktstrahlung durch."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.212
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "retracted",
+        "title": {
+          "en": "Retracted into the box",
+          "de": "In den Kasten hochgezogen"
+        },
+        "description": {
+          "en": "Blind raised, the lamellae stacked in the headrail box, glazing fully sunlit.",
+          "de": "Jalousie hochgezogen, Lamellen im Kasten gestapelt, Verglasung voll besonnt."
+        },
+        "bones": {
+          "bottom-rail": {
+            "dy": 1.3500000000000003
+          },
+          "slide-0": {
+            "dy": 0.19500000000000028
+          },
+          "slide-1": {
+            "dy": 0.26750000000000007
+          },
+          "slide-2": {
+            "dy": 0.3400000000000003
+          },
+          "slide-3": {
+            "dy": 0.4125000000000001
+          },
+          "slide-4": {
+            "dy": 0.4849999999999999
+          },
+          "slide-5": {
+            "dy": 0.5575000000000001
+          },
+          "slide-6": {
+            "dy": 0.6300000000000003
+          },
+          "slide-7": {
+            "dy": 0.7025000000000001
+          },
+          "slide-8": {
+            "dy": 0.7750000000000004
+          },
+          "slide-9": {
+            "dy": 0.8475000000000004
+          },
+          "slide-10": {
+            "dy": 0.9200000000000002
+          },
+          "slide-11": {
+            "dy": 0.9925000000000002
+          },
+          "slide-12": {
+            "dy": 1.065
+          },
+          "slide-13": {
+            "dy": 1.1375000000000002
+          },
+          "slide-14": {
+            "dy": 1.2100000000000004
+          },
+          "slide-15": {
+            "dy": 1.2825
+          },
+          "slide-16": {
+            "dy": 1.3550000000000002
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 0.05,
+              "sunlitFraction": 0.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "lowered-cut-off-45",
+        "title": {
+          "en": "Lowered, slats at 45 degrees",
+          "de": "Abgelassen, Lamellen 45 Grad"
+        },
+        "description": {
+          "en": "Slats tilted 45 degrees (outer edge down): no direct beam reaches the glazing at 35 degrees sun elevation.",
+          "de": "Lamellen 45 Grad geneigt (Außenkante unten): bei 35 Grad Sonnenhöhe erreicht keine Direktstrahlung die Verglasung."
+        },
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -45
+          },
+          "slat-1": {
+            "angleDeg": -45
+          },
+          "slat-2": {
+            "angleDeg": -45
+          },
+          "slat-3": {
+            "angleDeg": -45
+          },
+          "slat-4": {
+            "angleDeg": -45
+          },
+          "slat-5": {
+            "angleDeg": -45
+          },
+          "slat-6": {
+            "angleDeg": -45
+          },
+          "slat-7": {
+            "angleDeg": -45
+          },
+          "slat-8": {
+            "angleDeg": -45
+          },
+          "slat-9": {
+            "angleDeg": -45
+          },
+          "slat-10": {
+            "angleDeg": -45
+          },
+          "slat-11": {
+            "angleDeg": -45
+          },
+          "slat-12": {
+            "angleDeg": -45
+          },
+          "slat-13": {
+            "angleDeg": -45
+          },
+          "slat-14": {
+            "angleDeg": -45
+          },
+          "slat-15": {
+            "angleDeg": -45
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -45
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "lowered-closed",
+        "title": {
+          "en": "Lowered, slats closed",
+          "de": "Abgelassen, Lamellen geschlossen"
+        },
+        "description": {
+          "en": "Slats at 90 degrees: the blind is a closed screen.",
+          "de": "Lamellen bei 90 Grad: die Jalousie ist ein geschlossener Schirm."
+        },
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -90
+          },
+          "slat-1": {
+            "angleDeg": -90
+          },
+          "slat-2": {
+            "angleDeg": -90
+          },
+          "slat-3": {
+            "angleDeg": -90
+          },
+          "slat-4": {
+            "angleDeg": -90
+          },
+          "slat-5": {
+            "angleDeg": -90
+          },
+          "slat-6": {
+            "angleDeg": -90
+          },
+          "slat-7": {
+            "angleDeg": -90
+          },
+          "slat-8": {
+            "angleDeg": -90
+          },
+          "slat-9": {
+            "angleDeg": -90
+          },
+          "slat-10": {
+            "angleDeg": -90
+          },
+          "slat-11": {
+            "angleDeg": -90
+          },
+          "slat-12": {
+            "angleDeg": -90
+          },
+          "slat-13": {
+            "angleDeg": -90
+          },
+          "slat-14": {
+            "angleDeg": -90
+          },
+          "slat-15": {
+            "angleDeg": -90
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -90
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "closed-in-gust",
+        "title": {
+          "en": "Closed in a wind gust",
+          "de": "Geschlossen in einer Windböe"
+        },
+        "description": {
+          "en": "Closed screen under 0.3 kPa wind pressure, pushed against the facade.",
+          "de": "Geschlossener Schirm unter 0,3 kPa Winddruck, gegen die Fassade gedrückt."
+        },
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -90
+          },
+          "slat-1": {
+            "angleDeg": -90
+          },
+          "slat-2": {
+            "angleDeg": -90
+          },
+          "slat-3": {
+            "angleDeg": -90
+          },
+          "slat-4": {
+            "angleDeg": -90
+          },
+          "slat-5": {
+            "angleDeg": -90
+          },
+          "slat-6": {
+            "angleDeg": -90
+          },
+          "slat-7": {
+            "angleDeg": -90
+          },
+          "slat-8": {
+            "angleDeg": -90
+          },
+          "slat-9": {
+            "angleDeg": -90
+          },
+          "slat-10": {
+            "angleDeg": -90
+          },
+          "slat-11": {
+            "angleDeg": -90
+          },
+          "slat-12": {
+            "angleDeg": -90
+          },
+          "slat-13": {
+            "angleDeg": -90
+          },
+          "slat-14": {
+            "angleDeg": -90
+          },
+          "slat-15": {
+            "angleDeg": -90
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -90
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "wind-gust",
+            "kind": "wind",
+            "title": {
+              "en": "Wind pressure 0.3 kPa on the lowered blind (0.5 kN)",
+              "de": "Winddruck 0,3 kPa auf die abgelassene Jalousie (0,5 kN)"
+            },
+            "anchor": "blind-centre",
+            "fxN": -504,
+            "fyN": 0.0,
+            "source": "authored-estimate",
+            "reference": "en-13561"
+          }
+        ]
+      },
+      {
+        "id": "lift-1",
+        "title": {
+          "en": "Lift 1",
+          "de": "Hub 1"
+        },
+        "description": {
+          "en": "In-between key pose of lifting.",
+          "de": "Zwischenpose des Hochziehens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.3600000000000001
+          },
+          "slide-11": {
+            "dy": 0.0025000000000001688
+          },
+          "slide-12": {
+            "dy": 0.07500000000000018
+          },
+          "slide-13": {
+            "dy": 0.1475000000000002
+          },
+          "slide-14": {
+            "dy": 0.2200000000000002
+          },
+          "slide-15": {
+            "dy": 0.2925000000000002
+          },
+          "slide-16": {
+            "dy": 0.3650000000000002
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.413
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "lift-2",
+        "title": {
+          "en": "Lift 2",
+          "de": "Hub 2"
+        },
+        "description": {
+          "en": "In-between key pose of lifting.",
+          "de": "Zwischenpose des Hochziehens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.7000000000000002
+          },
+          "slide-7": {
+            "dy": 0.05250000000000021
+          },
+          "slide-8": {
+            "dy": 0.12500000000000044
+          },
+          "slide-9": {
+            "dy": 0.19750000000000023
+          },
+          "slide-10": {
+            "dy": 0.27000000000000024
+          },
+          "slide-11": {
+            "dy": 0.34250000000000025
+          },
+          "slide-12": {
+            "dy": 0.41500000000000026
+          },
+          "slide-13": {
+            "dy": 0.48750000000000027
+          },
+          "slide-14": {
+            "dy": 0.5600000000000003
+          },
+          "slide-15": {
+            "dy": 0.6325000000000003
+          },
+          "slide-16": {
+            "dy": 0.7050000000000003
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.605
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "lift-3",
+        "title": {
+          "en": "Lift 3",
+          "de": "Hub 3"
+        },
+        "description": {
+          "en": "In-between key pose of lifting.",
+          "de": "Zwischenpose des Hochziehens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 1.0400000000000003
+          },
+          "slide-2": {
+            "dy": 0.03000000000000025
+          },
+          "slide-3": {
+            "dy": 0.10250000000000004
+          },
+          "slide-4": {
+            "dy": 0.17499999999999982
+          },
+          "slide-5": {
+            "dy": 0.24750000000000005
+          },
+          "slide-6": {
+            "dy": 0.3200000000000003
+          },
+          "slide-7": {
+            "dy": 0.39250000000000007
+          },
+          "slide-8": {
+            "dy": 0.4650000000000003
+          },
+          "slide-9": {
+            "dy": 0.5375000000000003
+          },
+          "slide-10": {
+            "dy": 0.6100000000000001
+          },
+          "slide-11": {
+            "dy": 0.6825000000000001
+          },
+          "slide-12": {
+            "dy": 0.7549999999999999
+          },
+          "slide-13": {
+            "dy": 0.8275000000000001
+          },
+          "slide-14": {
+            "dy": 0.9000000000000004
+          },
+          "slide-15": {
+            "dy": 0.9724999999999999
+          },
+          "slide-16": {
+            "dy": 1.0450000000000002
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.797
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "lift-4",
+        "title": {
+          "en": "Lift 4",
+          "de": "Hub 4"
+        },
+        "description": {
+          "en": "In-between key pose of lifting.",
+          "de": "Zwischenpose des Hochziehens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 1.28
+          },
+          "slide-0": {
+            "dy": 0.125
+          },
+          "slide-1": {
+            "dy": 0.1974999999999998
+          },
+          "slide-2": {
+            "dy": 0.27
+          },
+          "slide-3": {
+            "dy": 0.3424999999999998
+          },
+          "slide-4": {
+            "dy": 0.4149999999999996
+          },
+          "slide-5": {
+            "dy": 0.4874999999999998
+          },
+          "slide-6": {
+            "dy": 0.56
+          },
+          "slide-7": {
+            "dy": 0.6324999999999998
+          },
+          "slide-8": {
+            "dy": 0.7050000000000001
+          },
+          "slide-9": {
+            "dy": 0.7775000000000001
+          },
+          "slide-10": {
+            "dy": 0.8499999999999999
+          },
+          "slide-11": {
+            "dy": 0.9224999999999999
+          },
+          "slide-12": {
+            "dy": 0.9949999999999997
+          },
+          "slide-13": {
+            "dy": 1.0675
+          },
+          "slide-14": {
+            "dy": 1.1400000000000001
+          },
+          "slide-15": {
+            "dy": 1.2124999999999997
+          },
+          "slide-16": {
+            "dy": 1.285
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.932
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilt-1",
+        "title": {
+          "en": "Tilt -30",
+          "de": "Kippung -30"
+        },
+        "description": {
+          "en": "In-between key pose of tilting.",
+          "de": "Zwischenpose des Kippens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": 30
+          },
+          "slat-1": {
+            "angleDeg": 30
+          },
+          "slat-2": {
+            "angleDeg": 30
+          },
+          "slat-3": {
+            "angleDeg": 30
+          },
+          "slat-4": {
+            "angleDeg": 30
+          },
+          "slat-5": {
+            "angleDeg": 30
+          },
+          "slat-6": {
+            "angleDeg": 30
+          },
+          "slat-7": {
+            "angleDeg": 30
+          },
+          "slat-8": {
+            "angleDeg": 30
+          },
+          "slat-9": {
+            "angleDeg": 30
+          },
+          "slat-10": {
+            "angleDeg": 30
+          },
+          "slat-11": {
+            "angleDeg": 30
+          },
+          "slat-12": {
+            "angleDeg": 30
+          },
+          "slat-13": {
+            "angleDeg": 30
+          },
+          "slat-14": {
+            "angleDeg": 30
+          },
+          "slat-15": {
+            "angleDeg": 30
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": 30
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.88
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilt-2",
+        "title": {
+          "en": "Tilt 20",
+          "de": "Kippung 20"
+        },
+        "description": {
+          "en": "In-between key pose of tilting.",
+          "de": "Zwischenpose des Kippens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -20
+          },
+          "slat-1": {
+            "angleDeg": -20
+          },
+          "slat-2": {
+            "angleDeg": -20
+          },
+          "slat-3": {
+            "angleDeg": -20
+          },
+          "slat-4": {
+            "angleDeg": -20
+          },
+          "slat-5": {
+            "angleDeg": -20
+          },
+          "slat-6": {
+            "angleDeg": -20
+          },
+          "slat-7": {
+            "angleDeg": -20
+          },
+          "slat-8": {
+            "angleDeg": -20
+          },
+          "slat-9": {
+            "angleDeg": -20
+          },
+          "slat-10": {
+            "angleDeg": -20
+          },
+          "slat-11": {
+            "angleDeg": -20
+          },
+          "slat-12": {
+            "angleDeg": -20
+          },
+          "slat-13": {
+            "angleDeg": -20
+          },
+          "slat-14": {
+            "angleDeg": -20
+          },
+          "slat-15": {
+            "angleDeg": -20
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -20
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilt-3",
+        "title": {
+          "en": "Tilt 30",
+          "de": "Kippung 30"
+        },
+        "description": {
+          "en": "In-between key pose of tilting.",
+          "de": "Zwischenpose des Kippens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -30
+          },
+          "slat-1": {
+            "angleDeg": -30
+          },
+          "slat-2": {
+            "angleDeg": -30
+          },
+          "slat-3": {
+            "angleDeg": -30
+          },
+          "slat-4": {
+            "angleDeg": -30
+          },
+          "slat-5": {
+            "angleDeg": -30
+          },
+          "slat-6": {
+            "angleDeg": -30
+          },
+          "slat-7": {
+            "angleDeg": -30
+          },
+          "slat-8": {
+            "angleDeg": -30
+          },
+          "slat-9": {
+            "angleDeg": -30
+          },
+          "slat-10": {
+            "angleDeg": -30
+          },
+          "slat-11": {
+            "angleDeg": -30
+          },
+          "slat-12": {
+            "angleDeg": -30
+          },
+          "slat-13": {
+            "angleDeg": -30
+          },
+          "slat-14": {
+            "angleDeg": -30
+          },
+          "slat-15": {
+            "angleDeg": -30
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -30
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilt-4",
+        "title": {
+          "en": "Tilt 60",
+          "de": "Kippung 60"
+        },
+        "description": {
+          "en": "In-between key pose of tilting.",
+          "de": "Zwischenpose des Kippens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -60
+          },
+          "slat-1": {
+            "angleDeg": -60
+          },
+          "slat-2": {
+            "angleDeg": -60
+          },
+          "slat-3": {
+            "angleDeg": -60
+          },
+          "slat-4": {
+            "angleDeg": -60
+          },
+          "slat-5": {
+            "angleDeg": -60
+          },
+          "slat-6": {
+            "angleDeg": -60
+          },
+          "slat-7": {
+            "angleDeg": -60
+          },
+          "slat-8": {
+            "angleDeg": -60
+          },
+          "slat-9": {
+            "angleDeg": -60
+          },
+          "slat-10": {
+            "angleDeg": -60
+          },
+          "slat-11": {
+            "angleDeg": -60
+          },
+          "slat-12": {
+            "angleDeg": -60
+          },
+          "slat-13": {
+            "angleDeg": -60
+          },
+          "slat-14": {
+            "angleDeg": -60
+          },
+          "slat-15": {
+            "angleDeg": -60
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -60
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "tilt-5",
+        "title": {
+          "en": "Tilt 75",
+          "de": "Kippung 75"
+        },
+        "description": {
+          "en": "In-between key pose of tilting.",
+          "de": "Zwischenpose des Kippens."
+        },
+        "key": true,
+        "bones": {
+          "bottom-rail": {
+            "dy": 0.0
+          },
+          "slat-0": {
+            "angleDeg": -75
+          },
+          "slat-1": {
+            "angleDeg": -75
+          },
+          "slat-2": {
+            "angleDeg": -75
+          },
+          "slat-3": {
+            "angleDeg": -75
+          },
+          "slat-4": {
+            "angleDeg": -75
+          },
+          "slat-5": {
+            "angleDeg": -75
+          },
+          "slat-6": {
+            "angleDeg": -75
+          },
+          "slat-7": {
+            "angleDeg": -75
+          },
+          "slat-8": {
+            "angleDeg": -75
+          },
+          "slat-9": {
+            "angleDeg": -75
+          },
+          "slat-10": {
+            "angleDeg": -75
+          },
+          "slat-11": {
+            "angleDeg": -75
+          },
+          "slat-12": {
+            "angleDeg": -75
+          },
+          "slat-13": {
+            "angleDeg": -75
+          },
+          "slat-14": {
+            "angleDeg": -75
+          },
+          "slat-15": {
+            "angleDeg": -75
+          },
+          "slide-16": {
+            "dy": 0.0050000000000001155
+          },
+          "slat-16": {
+            "angleDeg": -75
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "lamellae": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "box-and-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "glazing-behind": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "facade-wall": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "raise-lower",
+        "title": {
+          "en": "Raise and lower",
+          "de": "Hochziehen und Ablassen"
+        },
+        "description": {
+          "en": "The bottom rail rises and the lamellae stack up into the box one after the other; the blind is then lowered again.",
+          "de": "Die Unterschiene steigt und die Lamellen stapeln sich nacheinander im Kasten; danach wird die Jalousie wieder abgelassen."
+        },
+        "durationS": 22,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "lift-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "lift-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "lift-3",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "lift-4",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "retracted",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "lift-4",
+            "ease": "smooth"
+          },
+          {
+            "t": 16,
+            "pose": "lift-3",
+            "ease": "smooth"
+          },
+          {
+            "t": 18,
+            "pose": "lift-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 20,
+            "pose": "lift-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 22,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "raise",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Raising",
+              "de": "Hochziehen"
+            }
+          },
+          {
+            "id": "lower",
+            "fromS": 12,
+            "toS": 22,
+            "title": {
+              "en": "Lowering",
+              "de": "Ablassen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 10,
+            "kind": "motion",
+            "title": {
+              "en": "Fully retracted",
+              "de": "Ganz hochgezogen"
+            }
+          },
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Fully lowered",
+              "de": "Ganz abgelassen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:glazing-behind:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.212
+              },
+              {
+                "t": 4,
+                "v": 0.4
+              },
+              {
+                "t": 8,
+                "v": 0.8
+              },
+              {
+                "t": 10,
+                "v": 1.0
+              },
+              {
+                "t": 12,
+                "v": 1.0
+              },
+              {
+                "t": 16,
+                "v": 0.7
+              },
+              {
+                "t": 20,
+                "v": 0.35
+              },
+              {
+                "t": 22,
+                "v": 0.212
+              }
+            ]
+          },
+          {
+            "target": "region:lamellae:exposedFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 6,
+                "v": 0.5
+              },
+              {
+                "t": 10,
+                "v": 0.05
+              },
+              {
+                "t": 12,
+                "v": 0.05
+              },
+              {
+                "t": 18,
+                "v": 0.7
+              },
+              {
+                "t": 22,
+                "v": 1.0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tilt-sweep",
+        "title": {
+          "en": "Tilt sweep",
+          "de": "Kippbewegung"
+        },
+        "description": {
+          "en": "The lamellae tilt from slightly upward through horizontal and cut-off to closed and back; the sunlit fraction of the glazing follows the louvre geometry.",
+          "de": "Die Lamellen kippen von leicht aufwärts über waagerecht und Sonnenschutzstellung bis geschlossen und zurück; der Besonnungsanteil der Verglasung folgt der Lamellengeometrie."
+        },
+        "durationS": 22,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "tilt-1",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "tilt-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "lowered-cut-off-45",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "tilt-5",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "lowered-closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "tilt-5",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "lowered-cut-off-45",
+            "ease": "smooth"
+          },
+          {
+            "t": 16,
+            "pose": "tilt-2",
+            "ease": "smooth"
+          },
+          {
+            "t": 18,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          },
+          {
+            "t": 20,
+            "pose": "tilt-1",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "close",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Closing the slats",
+              "de": "Lamellen schließen"
+            }
+          },
+          {
+            "id": "open",
+            "fromS": 10,
+            "toS": 22,
+            "title": {
+              "en": "Opening the slats",
+              "de": "Lamellen öffnen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 10,
+            "kind": "motion",
+            "title": {
+              "en": "Slats closed",
+              "de": "Lamellen geschlossen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:glazing-behind:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.88
+              },
+              {
+                "t": 2,
+                "v": 0.212
+              },
+              {
+                "t": 4,
+                "v": 0.0
+              },
+              {
+                "t": 6,
+                "v": 0.0
+              },
+              {
+                "t": 8,
+                "v": 0.0
+              },
+              {
+                "t": 10,
+                "v": 0.0
+              },
+              {
+                "t": 12,
+                "v": 0.0
+              },
+              {
+                "t": 14,
+                "v": 0.0
+              },
+              {
+                "t": 16,
+                "v": 0.0
+              },
+              {
+                "t": 18,
+                "v": 0.212
+              },
+              {
+                "t": 20,
+                "v": 0.88
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sun-and-shade",
+        "title": {
+          "en": "Sun moves over the facade",
+          "de": "Sonne wandert über die Fassade"
+        },
+        "description": {
+          "en": "A cloud shadow crosses the lowered blind; the glazing, lamella and wall sunlit fractions dip and recover.",
+          "de": "Ein Wolkenschatten zieht über die abgelassene Jalousie; die Besonnungsanteile von Verglasung, Lamellen und Wand sinken und erholen sich."
+        },
+        "durationS": 10,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          },
+          {
+            "t": 10,
+            "pose": "lowered-horizontal",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "shadow",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Shadow",
+              "de": "Schatten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "thermal",
+            "title": {
+              "en": "Deepest shade",
+              "de": "Tiefster Schatten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:lamellae:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 5,
+                "v": 0.1
+              },
+              {
+                "t": 10,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "region:glazing-behind:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.212
+              },
+              {
+                "t": 5,
+                "v": 0.02
+              },
+              {
+                "t": 10,
+                "v": 0.212
+              }
+            ]
+          },
+          {
+            "target": "region:facade-wall:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 5,
+                "v": 0.08
+              },
+              {
+                "t": 10,
+                "v": 0.8
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 32,
+        "meanRadiantTempC": 36,
+        "skyTempC": 21,
+        "groundTempC": 50,
+        "relativeHumidity": 0.4,
+        "windMS": 1.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 850,
+        "diffuseFraction": 0.12,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "lamellae",
+          "title": {
+            "en": "Venetian lamellae",
+            "de": "Jalousielamellen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium",
+          "areaM2": 3.672,
+          "characteristicLengthM": 0.09,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "lam-sheet",
+              "title": {
+                "en": "Aluminium strip 0.45 mm",
+                "de": "Aluminiumband 0,45 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium",
+              "resistanceM2KW": 0.0,
+              "source": "literature",
+              "thicknessM": 0.00045,
+              "heatCapacityJM2K": 1109,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 1100,
+          "source": "literature",
+          "reference": "blind-catalogues"
+        },
+        {
+          "id": "box-and-rails",
+          "title": {
+            "en": "Headrail box, guide rails and bottom rail",
+            "de": "Kastenblende, Führungsschienen und Unterschiene"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "aluminium",
+          "areaM2": 1.2,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "box-wall",
+              "title": {
+                "en": "Aluminium extrusion 1.5 mm",
+                "de": "Aluminiumprofil 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "aluminium",
+              "resistanceM2KW": 1e-05,
+              "source": "literature",
+              "thicknessM": 0.0015,
+              "heatCapacityJM2K": 3696,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 3700,
+          "source": "literature",
+          "reference": "blind-catalogues"
+        },
+        {
+          "id": "glazing-behind",
+          "title": {
+            "en": "Double glazing behind the blind",
+            "de": "Doppelverglasung hinter der Jalousie"
+          },
+          "kind": "glazing",
+          "model": "conditioned",
+          "material": "glass",
+          "areaM2": 1.5,
+          "characteristicLengthM": 1.23,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "pane-out",
+              "title": {
+                "en": "Outer pane 4 mm",
+                "de": "Außenscheibe 4 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "cavity",
+              "title": {
+                "en": "Argon cavity 16 mm",
+                "de": "Argonzwischenraum 16 mm"
+              },
+              "kind": "air-gap",
+              "material": "glass",
+              "resistanceM2KW": 0.73,
+              "source": "literature",
+              "thicknessM": 0.016,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "pane-in",
+              "title": {
+                "en": "Inner pane 4 mm, low-e",
+                "de": "Innenscheibe 4 mm, Low-E"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.004,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 7500,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 15000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "literature",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "facade-wall",
+          "title": {
+            "en": "Insulated wall above and below the window",
+            "de": "Gedämmte Wand über und unter dem Fenster"
+          },
+          "kind": "wall",
+          "model": "conditioned",
+          "material": "masonry",
+          "areaM2": 1.8,
+          "characteristicLengthM": 0.5,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "plaster",
+              "title": {
+                "en": "Gypsum plaster 15 mm",
+                "de": "Gipsputz 15 mm"
+              },
+              "kind": "masonry",
+              "material": "masonry",
+              "resistanceM2KW": 0.026,
+              "source": "literature",
+              "thicknessM": 0.015,
+              "heatCapacityJM2K": 19500,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "block",
+              "title": {
+                "en": "Light clay block 175 mm",
+                "de": "Leichtziegel 175 mm"
+              },
+              "kind": "masonry",
+              "material": "masonry",
+              "resistanceM2KW": 1.45833,
+              "source": "literature",
+              "thicknessM": 0.175,
+              "heatCapacityJM2K": 140000,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "eps",
+              "title": {
+                "en": "EPS 70 mm",
+                "de": "EPS 70 mm"
+              },
+              "kind": "insulation",
+              "material": "eps",
+              "resistanceM2KW": 2.0,
+              "source": "literature",
+              "thicknessM": 0.07,
+              "heatCapacityJM2K": 1522,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "render",
+              "title": {
+                "en": "Mineral render 10 mm",
+                "de": "Mineralputz 10 mm"
+              },
+              "kind": "masonry",
+              "material": "masonry",
+              "resistanceM2KW": 0.0125,
+              "source": "literature",
+              "thicknessM": 0.01,
+              "heatCapacityJM2K": 18000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 60000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "literature",
+          "reference": "en-iso-6946"
+        }
+      ],
+      "emitters": [],
+      "passengers": [],
+      "assumptions": [
+        {
+          "en": "Summer reference case (hot sun: 32 degC, 850 W/m2); interior 20 degC (cooled), R_si 0.13 m2K/W.",
+          "de": "Sommer-Referenzfall (heiße Sonne: 32 °C, 850 W/m2); Innenraum 20 °C (gekühlt), R_si 0,13 m2K/W."
+        },
+        {
+          "en": "The sunlit fraction of the glazing is the direct-beam transmission of the louvres at a 35 degree solar profile angle for w = 0.09 m and p = 0.08 m: 1.0 retracted, 0.21 with flat slats, 0 at 45 and 90 degrees; the blind is a separate passive region that absorbs what the glazing does not see.",
+          "de": "Der Besonnungsanteil der Verglasung ist die Direktstrahlungs-Durchlässigkeit der Lamellen bei 35 Grad Sonnenhöhenwinkel für w = 0,09 m und p = 0,08 m: 1,0 hochgezogen, 0,21 bei flachen Lamellen, 0 bei 45 und 90 Grad; die Jalousie ist eine eigene passive Region, die aufnimmt, was die Verglasung nicht sieht."
+        },
+        {
+          "en": "U of the glazing 1.1 W/m2K (EN ISO 10077-1) and of the wall 0.27 W/m2K; the convective and radiative coupling of the air gap between blind and glass is left to the surface model.",
+          "de": "U der Verglasung 1,1 W/m2K (EN ISO 10077-1) und der Wand 0,27 W/m2K; die konvektive und Strahlungskopplung des Luftspalts zwischen Jalousie und Glas bleibt dem Oberflächenmodell überlassen."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-foot"
+      ],
+      "assumptions": [
+        {
+          "en": "The wall stubs form the rigid fixed root; box, bottom rail and every lamella are masses at their poses (lamella pack positions are exact).",
+          "de": "Die Wandstücke bilden die starre, eingespannte Wurzel; Kasten, Unterschiene und jede Lamelle sind Massen in ihren Posen (Lamellenpaketpositionen sind exakt)."
+        },
+        {
+          "en": "Wind of 0.3 kPa on the 1.2 x 1.4 m screen is an authored estimate; EN 13561 class values were not verified.",
+          "de": "Wind von 0,3 kPa auf den 1,2 x 1,4 m großen Schirm ist ein Schätzwert; die Klassenwerte der EN 13561 wurden nicht geprüft."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "lowered-horizontal",
+      "defaultClip": "raise-lower",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

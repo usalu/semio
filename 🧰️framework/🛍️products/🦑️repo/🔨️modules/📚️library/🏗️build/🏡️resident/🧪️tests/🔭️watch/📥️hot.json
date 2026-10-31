@@ -1,0 +1,13 @@
+{
+  "directories": [
+    "lib/deep"
+  ],
+  "files": {
+    "lib/deep/f.ts": "f"
+  },
+  "expected": [
+    "lib",
+    "lib/deep",
+    "lib/deep/f.ts"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "method": "compiler",
+      "calls": 1,
+      "milliseconds": 11
+    },
+    {
+      "method": "cfg",
+      "calls": 2,
+      "milliseconds": 3
+    },
+    {
+      "method": "sourceInputs",
+      "calls": 2,
+      "milliseconds": 5
+    },
+    {
+      "method": "capture",
+      "calls": 35,
+      "milliseconds": 7
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 {
   "sheets": {
     "sh-1": {
-      "drawn_by": "UG",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "drawn_by": "UG"
+      }
     }
   }
 }

@@ -121,7 +121,7 @@ export function courseSiteBuildPlan(repoRoot: string, bundleRoot: string, mode: 
 /** 🔨️ Builds the site for the original caller's mode under the plan's owner. The product lives in the products store behind a store receipt, so a warm `build` is a cache hit and never reaches here. */
 export async function buildCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
   const mode = courseOriginalBuildModeV1(invocation, "dev");
-  await withCourseAssignmentPdfsV1(repoRoot, invocation, runtimeChannels => buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), runtimeChannels, invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-site", 0), signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) }));
+  await withCourseAssignmentPdfsV1(repoRoot, invocation, (runtimeChannels, control) => buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), runtimeChannels, invocation, control, signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) }));
 }
 
 /** 🚚️ Reads the release site `build` published, under immutable custody, and exports a separately validated CDN artifact. It builds nothing: the cached `build` task is its prerequisite. */

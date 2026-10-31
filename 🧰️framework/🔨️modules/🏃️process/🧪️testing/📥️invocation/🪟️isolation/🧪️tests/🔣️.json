@@ -1,0 +1,9 @@
+[
+  { "body": 2000, "scope": "body", "file": null, "age": 9000, "original": null, "budget": 2000 },
+  { "body": 2000, "scope": "body", "file": null, "age": 9000, "original": 500, "budget": 500 },
+  { "body": 2000, "scope": "file", "file": 20000, "age": 5000, "original": null, "budget": 15000 },
+  { "body": 2000, "scope": "file", "file": 20000, "age": 5000, "original": 7000, "budget": 7000 },
+  { "body": 2000, "scope": "file", "file": 20000, "age": 20000, "original": null, "budget": null },
+  { "body": 2000, "scope": "file", "file": 1000, "age": 0, "original": null, "budget": null },
+  { "body": 2000, "scope": "body", "file": null, "age": 0, "original": 0, "budget": null }
+]

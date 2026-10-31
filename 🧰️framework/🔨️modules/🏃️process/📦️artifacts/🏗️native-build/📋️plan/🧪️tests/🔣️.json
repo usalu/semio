@@ -1,0 +1,473 @@
+{
+  "version": 1,
+  "identity": [
+    {
+      "id": "same-plan",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": true
+    },
+    {
+      "id": "changed-source",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-mode",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "release",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-toolchain",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 2",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-compiler",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 2",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-product",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "other",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-root",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/other",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "changed-configuration",
+      "left": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "windows-drive-normalization",
+      "left": {
+        "root": "C:\\repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "win32"
+      },
+      "right": {
+        "root": "C:/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "win32"
+      },
+      "equal": true
+    },
+    {
+      "id": "windows-unc-normalization",
+      "left": {
+        "root": "\\\\server\\share\\repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "win32"
+      },
+      "right": {
+        "root": "//server/share/repo",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "win32"
+      },
+      "equal": true
+    },
+    {
+      "id": "posix-unicode-distinct",
+      "left": {
+        "root": "/r/é",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/r/é",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "posix-case-distinct",
+      "left": {
+        "root": "/repo/Case",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo/case",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    },
+    {
+      "id": "posix-backslash-distinct",
+      "left": {
+        "root": "/repo\\part",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "right": {
+        "root": "/repo/part",
+        "mode": "prototype",
+        "product": "semio-os-mcp",
+        "compiler": "cargo 1",
+        "toolchain": "rustc 1",
+        "configuration": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "platform": "linux"
+      },
+      "equal": false
+    }
+  ],
+  "lifecycle": [
+    {
+      "id": "cold-producer",
+      "consumerCancelled": false,
+      "producerState": "absent",
+      "producerPlan": null,
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "produce"
+    },
+    {
+      "id": "same-plan-joins",
+      "consumerCancelled": false,
+      "producerState": "running",
+      "producerPlan": "same",
+      "producerSettled": false,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "join"
+    },
+    {
+      "id": "distinct-plan-independent",
+      "consumerCancelled": false,
+      "producerState": "running",
+      "producerPlan": "other",
+      "producerSettled": false,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "produce"
+    },
+    {
+      "id": "cancel-consumer-only",
+      "consumerCancelled": true,
+      "producerState": "running",
+      "producerPlan": "same",
+      "producerSettled": false,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "cancel"
+    },
+    {
+      "id": "cancel-producer-still-owned",
+      "consumerCancelled": false,
+      "producerState": "cancel-requested",
+      "producerPlan": "same",
+      "producerSettled": false,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "join"
+    },
+    {
+      "id": "settled-producer-still-held",
+      "consumerCancelled": false,
+      "producerState": "cancel-requested",
+      "producerPlan": "same",
+      "producerSettled": true,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "join"
+    },
+    {
+      "id": "settled-producer-takeover",
+      "consumerCancelled": false,
+      "producerState": "cancel-requested",
+      "producerPlan": "same",
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "produce"
+    },
+    {
+      "id": "matching-publication-rechecked",
+      "consumerCancelled": false,
+      "producerState": "completed",
+      "producerPlan": "same",
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "matching",
+      "publicationRechecked": true,
+      "expected": "consume"
+    },
+    {
+      "id": "matching-publication-not-rechecked",
+      "consumerCancelled": false,
+      "producerState": "absent",
+      "producerPlan": null,
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "matching",
+      "publicationRechecked": false,
+      "expected": "recheck"
+    },
+    {
+      "id": "cancel-before-consume",
+      "consumerCancelled": true,
+      "producerState": "absent",
+      "producerPlan": null,
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "matching",
+      "publicationRechecked": true,
+      "expected": "cancel"
+    },
+    {
+      "id": "stale-publication-rebuild",
+      "consumerCancelled": false,
+      "producerState": "absent",
+      "producerPlan": null,
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "stale",
+      "publicationRechecked": true,
+      "expected": "produce"
+    },
+    {
+      "id": "foreign-owner-refusal",
+      "consumerCancelled": false,
+      "producerState": "absent",
+      "producerPlan": null,
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "foreign",
+      "publicationRechecked": true,
+      "expected": "refuse"
+    },
+    {
+      "id": "failed-producer-unsettled",
+      "consumerCancelled": false,
+      "producerState": "failed",
+      "producerPlan": "same",
+      "producerSettled": false,
+      "custodyReleased": false,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "join"
+    },
+    {
+      "id": "failed-producer-released",
+      "consumerCancelled": false,
+      "producerState": "failed",
+      "producerPlan": "same",
+      "producerSettled": true,
+      "custodyReleased": true,
+      "publication": "absent",
+      "publicationRechecked": false,
+      "expected": "produce"
+    }
+  ]
+}

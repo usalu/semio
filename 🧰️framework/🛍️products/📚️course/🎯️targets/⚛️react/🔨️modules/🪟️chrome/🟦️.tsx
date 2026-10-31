@@ -28,8 +28,11 @@ CardAction.displayName = "CardAction";
 
 /** 🃏️ One quiz card: a `<section>` named by its title chip's heading, `card` naming its place for styles and tests,
  * `anchor` the presence landmark cursors are relative to. A card of the overview opens its page: its heading is a
- * link to `href` (the keyboard and assistive-technology way) and a pointer click anywhere but on a control calls
- * `onOpen`; it takes the pointer although the card layer above the glass lets it pass, and `revealed` lifts it while
+ * link to `href` (the keyboard and assistive-technology way). An ordinary primary click on that link opens the page
+ * through `onOpen` and writes the link's hash: the card's own click ignores controls, and a hash navigation can finish
+ * without a `hashchange` the address is still listening for, while `onOpen` can be dropped when the overview is not
+ * taking openings. A pointer click anywhere but on a control also calls `onOpen`. The card takes the
+ * pointer although the card layer above the glass lets it pass, and `revealed` lifts it while
  * its page shows clear behind it. `topic` names what the card is about for the pets (`data-pet-topic`: a key among the
  * grounds of their menagerie that they may match, never a thing they may lift). */
 export function CourseCard(props: {
@@ -66,14 +69,21 @@ export function CourseCard(props: {
         props.href === undefined ? (
           props.title
         ) : (
-          <a href={props.href} className="course-card-link text-inherit no-underline hover:underline focus-visible:underline">
+          <a
+            href={props.href}
+            className="course-card-link text-inherit no-underline hover:underline focus-visible:underline"
+            onClick={(event) => {
+              if (onOpen === undefined || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              onOpen();
+            }}
+          >
             {props.title}
           </a>
         )
       }
       footerLeft={props.footerLeft}
       footerRight={props.footerRight}
-      className={cn("pointer-events-auto", onOpen !== undefined && "cursor-pointer transition-transform duration-200", props.revealed && "-translate-y-0.5", props.className)}
+      className={cn("pointer-events-auto", onOpen !== undefined && "cursor-pointer", props.className)}
       bodyClassName={props.bodyClassName}
       contentClassName="flex h-full min-h-0 flex-col gap-double"
     >
@@ -259,12 +269,57 @@ export const TABLE = {
   cell: { role: "cell" },
 } as const;
 
-/** 🗄️ The frame of a table that folds into records in a card narrower than `fold` rem: its container and, should the
- * unfolded table still be wider than it, its sideways scroll. */
+/** 🗄️ Retains one semantic table and folds it below its reading tier or whenever its actual columns exceed their frame. */
 export function Records(props: { readonly fold: number; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "className" | "role" | "tabIndex" | "aria-labelledby" | "aria-describedby">): ReactElement {
   const { fold, children, className, ...rest } = props;
+  const host = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const frame = host.current;
+    const view = frame?.ownerDocument.defaultView;
+    if (!frame || !view) return;
+    let disposed = false;
+    let scheduled: number | undefined;
+    let table: HTMLTableElement | null = null;
+    let resize: ResizeObserver | undefined;
+    const measure = (): void => {
+      scheduled = undefined;
+      if (disposed) return;
+      const next = frame.querySelector<HTMLTableElement>(":scope > table.course-fold");
+      if (next !== table) {
+        if (table) resize?.unobserve(table);
+        table = next;
+        if (table) resize?.observe(table);
+      }
+      frame.removeAttribute("data-folded");
+      if (!table) return;
+      const minimum = view.getComputedStyle(table).getPropertyValue("--course-records-minimum-fold").trim() === "1";
+      frame.toggleAttribute("data-folded", minimum || table.scrollWidth > frame.clientWidth);
+    };
+    const queue = (): void => {
+      if (!disposed && scheduled === undefined) scheduled = view.requestAnimationFrame(measure);
+    };
+    resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(queue);
+    resize?.observe(frame);
+    const content = new MutationObserver(queue);
+    content.observe(frame, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class", "style", "hidden"] });
+    const appearance = new MutationObserver(queue);
+    for (const element of new Set([frame.ownerDocument.documentElement, frame.ownerDocument.body, frame.closest(".course-app")])) if (element) appearance.observe(element, { attributes: true, attributeFilter: ["class", "style"] });
+    const fonts = frame.ownerDocument.fonts;
+    fonts?.addEventListener("loadingdone", queue);
+    view.addEventListener("resize", queue);
+    measure();
+    return () => {
+      disposed = true;
+      if (scheduled !== undefined) view.cancelAnimationFrame(scheduled);
+      resize?.disconnect();
+      content.disconnect();
+      appearance.disconnect();
+      fonts?.removeEventListener("loadingdone", queue);
+      view.removeEventListener("resize", queue);
+    };
+  }, [fold]);
   return (
-    <div {...rest} className={cn("course-records", className)} style={{ ["--course-fold" as string]: fold } as CSSProperties}>
+    <div {...rest} ref={host} className={cn("course-records", className)} style={{ ["--course-fold" as string]: fold } as CSSProperties}>
       {children}
     </div>
   );

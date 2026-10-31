@@ -2,7 +2,9 @@
   "leaders": {
     "lead-1": {
       "entry": "Patched",
-      "text": "Brick 365"
+      "value": {
+        "text": "Brick 365"
+      }
     }
   }
 }

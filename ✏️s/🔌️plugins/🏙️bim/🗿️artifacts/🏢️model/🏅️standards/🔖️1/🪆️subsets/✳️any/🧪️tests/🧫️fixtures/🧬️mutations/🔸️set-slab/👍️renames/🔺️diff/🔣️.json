@@ -2,7 +2,9 @@
   "slabs": {
     "sl-ground": {
       "entry": "Patched",
-      "name": "Basement slab"
+      "value": {
+        "name": "Basement slab"
+      }
     }
   }
 }

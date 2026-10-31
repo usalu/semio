@@ -1,13 +1,19 @@
 /** 🔗️ Contract: a project record names the command closure it used instead of carrying its rows. A new import in the closure moves the roster but leaves the record valid; the roster is the one the independent Python walker, esbuild and Bun's bundler find; a question whose answer moves makes the record stale; a process that starts later, without entries, finds the same record valid. */
 import{afterAll,expect,test}from"bun:test";
-import{mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync}from"node:fs";
+import{mkdirSync,rmSync,writeFileSync}from"node:fs";
 import{createRequire}from"node:module";
-import{tmpdir}from"node:os";
 import{dirname,join,relative}from"node:path";
 import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
 import fixture from"./🔣️.json";
 import fixtureSchema from"./🧬️schema/🔣️.json";
+
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{declareLibraryBuildTestEnvelopeV1}from"../../../../../🧪️testing/🪪️native-birth/🟦️.ts";
+const repository=await privateRepositoryWorkspaceV1("graph");
+declareLibraryBuildTestEnvelopeV1({suite:"build-inference"});
+import{requireTestToolV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
+const pythonTool=requireTestToolV1("python");
 
 const inference=await import("../../🟨️.mjs"),{cacheInternals,createScriptInputCache,libraryBootstrap}=inference as any;
 await libraryBootstrap;
@@ -15,13 +21,13 @@ const observation=await import("../../../../👁️observation/🟨️.mjs") as 
 const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const write=(root:string,files:Readonly<Record<string,string|undefined>>)=>{for(const[path,text]of Object.entries(files)){if(text===undefined)continue;mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);}};
-const python=(root:string,entry:string)=>{const result=Bun.spawnSync(["python3","-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),root,entry,JSON.stringify(fixture.question)]);return JSON.parse(result.stdout.toString()) as {closure:string[];answer:boolean};};
+const python=(root:string,entry:string)=>{const result=Bun.spawnSync([pythonTool,"-I",fileURLToPath(new URL("./🐍️.py",import.meta.url)),root,entry,JSON.stringify(fixture.question)]);return JSON.parse(result.stdout.toString()) as {closure:string[];answer:boolean};};
 const esbuildClosure=async(root:string,entry:string)=>{const result=await createRequire(import.meta.url)("esbuild").build({entryPoints:[join(root,entry)],absWorkingDir:root,bundle:true,write:false,platform:"node",format:"esm",metafile:true,logLevel:"silent",outfile:"out.js"});return Object.keys(result.metafile.inputs).map((path:string)=>path.replace(/^\.\//u,"")).sort();};
 
 test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true}).validate(fixtureSchema,fixture)).toBe(true);});
 
-test("a record names its closure; the closure moves without staling it unless the answer it was given moves",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"late-closure-"));roots.push(root);
+test("a record names its closure; the closure moves without staling it unless the answer it was given moves",async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("late-closure-");roots.push(root);
  write(root,fixture.files);
  const cachePath=join(root,"np","project.json"),entry=join(root,fixture.entry);
  let computations=0,rowsOfRecord=0;
@@ -44,10 +50,10 @@ test("a record names its closure; the closure moves without staling it unless th
   expect(value.answer,step.name).toBe(step.answer);expect(independent.answer,step.name).toBe(step.answer);
   expect(await esbuildClosure(root,fixture.entry),step.name).toEqual(roster);
  }
-});
+}));
 
-test("groups made from different recipes with the same files are merged and numbered as the direct inference numbers them",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"late-groups-"));roots.push(root);write(root,fixture.files);
+test("groups made from different recipes with the same files are merged and numbered as the direct inference numbers them",async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("late-groups-");roots.push(root);write(root,fixture.files);
  const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root),entry=join(root,fixture.entry);
  const first=await api.closureOf([entry],[],"test-discovery"),second=await api.closureOf([entry,join(root,"tools/a.mjs")],[],"test-discovery"),third=await api.closureOf([join(root,"tools/c.mjs")],[],"test-discovery");
  const marker=(list:any)=>scriptInputs.closureHandleOfV1(list);
@@ -60,10 +66,10 @@ test("groups made from different recipes with the same files are merged and numb
  expect(bound.namedInputs.commandSources0).toEqual([...direct].sort());expect(bound.namedInputs.commandSources1).toEqual([...other].sort());
  expect(bound.targets.build.inputs).toEqual(["default","commandSources0","commandSources0","commandSources1"]);
  expect(rows.length).toBeGreaterThan(0);expect("closureRecipes"in bound||"symbolicGroups"in bound).toBe(false);
-});
+}));
 
-test("the source groups of a TypeScript artifact package name their command closure too, and the files they resolve to are those of the direct inference",async()=>{
- const root=mkdtempSync(join(realpathSync(tmpdir()),"late-artifact-"));roots.push(root);
+test("the source groups of a TypeScript artifact package name their command closure too, and the files they resolve to are those of the direct inference",async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("late-artifact-");roots.push(root);
  write(root,{"pkg/📦️packages/t/📋️project.json":"{}","pkg/📦️packages/t/📜️script.ts":"import \"./a.mjs\";\n","pkg/🟦️.ts":"import \"./b.mjs\";\n","pkg/a.mjs":"export const a=1;\n","pkg/b.mjs":"export const b=2;\n","package.json":"{}"});
  const json={name:"artifact",root:"pkg/📦️packages/t",tags:["role:artifact","language:typescript"],targets:{}},assembly=await import("../../🧱️project-assembly/🟨️.mjs") as any;
  const late=createScriptInputCache({workspaceRoot:root,lateClosures:true}),direct=createScriptInputCache({workspaceRoot:root});
@@ -75,4 +81,4 @@ test("the source groups of a TypeScript artifact package name their command clos
  expect(flat(symbolic.artifactSources)).toEqual(plain.artifactSources);
  const expand=(list:any[]):string[]=>[...new Set(list.flatMap(item=>typeof item==="string"&&Array.isArray(plain[item])?expand(plain[item]):[JSON.stringify(item)]))].sort();
  expect(expand(flat(symbolic.artifactCommandSources))).toEqual(expand(plain.artifactCommandSources));
-});
+}));

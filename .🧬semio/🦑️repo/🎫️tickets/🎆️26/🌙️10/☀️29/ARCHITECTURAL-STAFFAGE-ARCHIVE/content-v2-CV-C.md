@@ -1,0 +1,38 @@
+# Content report CV-C (components, v1 to v2)
+
+Assets: `S/🗂️catalog/🧱️components/<id>/🔣️.json` for cantilever-balcony, glulam-beam, steel-column, stair-flight, sliding-door, tilt-window, glass-balustrade, tied-canopy.
+Scratch scripts (idempotent, load the saved v1 copies): `T/🧰️scripts/CV-C/` (`lib.py`, `build_*.py`, `preview.py`, `v1/`). Evidence images: `T/🗑️generated/CV-C/*.png`.
+
+## Status of verification
+
+- The catalog check CLI and `🖨️preview` were not ready (no `core-v2-status.md`, no bun), so the official `check` was NOT run. Own checks (`lib.validate`): shape ids unique, bones/regions/hatches resolve, no role without pen, every thermal region drawn at every authored scale, every pose binds every region, default-pose bounding box of every authored scale equals `dimensions` (tolerance max(2 %, 15 mm)). All eight print VALID.
+- Own SVG-to-PNG preview (rsvg-convert, default pose, print size and zoom) was looked at for: balcony 1:50/100/200, beam 1:100, column 1:50, stair 1:50/100/500, door 1:50, window 1:50, balustrade 1:50, canopy 1:50. The 7 views, clip instants and the real print-suitability check remain to be done once the tools run.
+- Printing assumptions used while designing: office-laser profile (stroke 0.1, gap 0.15, feature 0.2, hatch 0.4 mm).
+
+## Common changes
+
+- v1-only fields removed (`geometry`, `lod`); `representations` with all four keys; thermal rebuilt as v2 (regions with geometry, sky view factor, layers, heat capacity; `diffuseFraction`, sky/ground temperatures); every pose binds every region (`exposedFraction`, `sunlitFraction`); `operating` removed from poses.
+- Sun versus shade via pose `sunlitFraction` (top/glass in sun, soffit/jamb/under-canopy parts partly or fully shaded). New clip `sun-and-shade` (track `region:<id>:sunlitFraction`) on balcony, sliding door, tilt window.
+- Conditioned elements (interior 20 degC, R_si 0.13): window glass centre, glass edge zone (psi_g 0.04), timber sash, sill; sliding door glass, frame, track, jambs (single 10 mm glass U about 5.9, hollow steel U about 2.9); balcony wall and thermal-break module; canopy wall and anchor plates. Winter reference case (0 degC, sky -12, 3 m/s, 300 W/m2) for window, door and canopy; mild sunny day for the rest. Thermal bridges are approximated by regions with equivalent resistances (authored estimates, EN ISO 10211/10077-1 cited).
+- New references: DIN ISO 128-50, DIN 1356-1, EN ISO 6946, EN ISO 10456, EN ISO 10077-1, EN ISO 10211, EN 12898, EN ISO 13786 (lambda/c/emissivity values are the standard design values). Passive heat capacities use half the 24 h penetration depth (EN ISO 13786) for concrete/timber, full thickness for steel/glass.
+- Hatches: concrete stipple, cut steel lines 45 degrees, cut timber cross 45 degrees, timber longitudinal lines 0 degrees, break module lines; insulation as explicit DIN zigzag lines (hatch patterns have no zigzag). Reinforcement as pen lines at true bar diameter.
+- Pens (paper mm): 1:500 body 0.13; 1:200 body 0.18, detail/glazing 0.1; 1:100 body 0.25, detail 0.13, texture/glazing 0.1; 1:50 body 0.35, detail 0.18, texture 0.1, glazing 0.13. Thin parts use per-shape `penMm` equal to their real width where possible.
+
+## Per asset
+
+- **cantilever-balcony**: rig corrected (railing post now top-mounted at slab x 1.45, length 1.1 m, mass 6.355 kg, anchor `railing-top` at 1.1; dims 1.8 x 1.3, 756.36 kg). 1:500 one poché L + one railing line; 1:200 wall, break block, slab, post line; 1:100 hatched wall core, zigzag insulation, break block, slab, post, handrail; 1:50 all layers, bars, drip, base plate, bolts, mid-rail. Regions: slab-top/soffit/edge, railing-steel, wall-face and thermal-break (both conditioned, thermal bridge ~0.10 W/mK).
+- **glulam-beam**: dims 8.0 x 0.62 (bearing plates included); new region bearing-steel. 1:500 bar; 1:200 bar + bearing lines; 1:100 grain hatch (every 2nd glue line); 1:50 14 glue lines, six finger-joint symbols (pitch exaggerated, declared).
+- **steel-column**: regions flange / web chamber / base-plate / cap-plate (flanges sunlit 60 %, web chambers 30 %). 1:500 outline with plate step-outs; 1:200 bar + plates; 1:100 + stiffeners; 1:50 flange bands, web with fillet lines, stiffeners, nuts, bolts, splice marker. Symbol `section-plan` (HEB 200 cut, true-extent).
+- **stair-flight**: dims 3.885 x 2.9 (rise 12 x 241.7 mm, going 300 mm, HEA 160 stringer, open risers). 1:500 stepped solid; 1:200 stringer band + 12 tread lines; 1:100 hatched stringer + 12 treads; 1:50 flange lines, treads with grain, 12 gussets. Symbol `flight-plan`. Known v1 defect (stringer drawn skewed in bone frame, treads misaligned) removed: all drawn in world frame, treads on the pitch line.
+- **sliding-door**: single glazing kept (v1 10 mm toughened). Leaf redrawn (frame, glass, two hanger plates, handle); v1 mid "mullion" removed (there was no transom). Hidden carriage not drawn. 1:500 U-portal + leaf rectangle; 1:200/100/50 progressively. Symbol `sliding-door-plan`. Other bays of the opening are not modelled.
+- **tilt-window**: orientation made physical: room on the left, sash tilts inward (v1 said outward); wind load renamed `wind-pressure` (it pushes the sash toward the room), poses/clip texts updated; dims 0.3 x 1.25. Glass 4-16-4 with edge zone region and sill region. **1:500 unavailable** (24 mm glass = 0.05 mm, sash 0.18 mm) with alternatives scale 200 and symbols `window-plan`, `tilt-opening-sign`. 1:200 glass as 0.1 mm line between rail blocks; 1:100; 1:50 with rebates, spacers, two pane lines, cross-hatched timber. Handle not drawn (sits on the side stile outside the section).
+- **glass-balustrade**: **1:500 unavailable** (glass 21.5 mm = 0.04 mm) with alternatives scale 200 and symbol `balustrade-plan`. 1:200 glass line + shoe + handrail circle; 1:100; 1:50 slotted hatched shoe, gaskets, PVB line, bolts, hatched handrail.
+- **tied-canopy**: dims 3.14 x 6.0; wall now conditioned (concrete 300, wool 180, render 20) plus anchor-plate region as thermal bridge, glass roof added as region (not in rig mass, noted in assumptions). 1:500 three shapes (wall, beam, strut line); 1:200 two-layer wall, beam, glass line, 0.3 mm strut line; 1:100 hatched wall, four glass panels, strut polygon, pins; 1:50 reinforcement, plates with pads, flange lines, capsule strut with clevises.
+
+## Remaining doubts / for the coordinator
+
+- Official check and print suitability not run; possible min-gap/min-feature findings: window 1:200 rails (0.45 x 0.3 mm), balustrade 1:200 handrail circle (0.21 mm), balcony 1:50 base plate (0.24 mm), stair 1:100 treads touching the stringer at one corner.
+- Plan symbols carry geometry in `plan` with `elevation: []`; their coordinates are plan metres and I bound them to a bone without rotating (the column and stair bones are rotated in elevation) - the engine must not apply the elevation bone transform to symbol plan shapes. `tilt-opening-sign` uses `elevation` for a facade view, which differs from the asset's section elevation; the apex-at-hinge convention should be confirmed against DIN 1356-1.
+- Manifest needs syncing: dimensions (balcony 1.8 x 1.3, beam 8.0 x 0.62, stair 3.885 x 2.9, canopy 6.0 x 3.14, window 0.3 x 1.25), representations status, symbols, new clip `sun-and-shade`, window `wind-pressure` ids, glass-balustrade/tilt-window 1:500 unavailable.
+- Window/door glass thermal build-up (4-16-4) differs from the structural glass mass model (24 mm solid); edge-zone and frame equivalent resistances are authored estimates.
+- `heatCapacityJM2K` for conditioned regions is the outer-layer share; layer-level capacities are given for reference.

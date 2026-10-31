@@ -2,7 +2,11 @@
   "name": "@semio-tech/norm-din4108",
   "$schema": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "projectType": "library",
-  "tags": ["language:typescript", "role:artifact", "family:norm"],
+  "tags": [
+    "language:typescript",
+    "role:artifact",
+    "family:norm"
+  ],
   "targets": {
     "build": {
       "executor": "repo:script",
@@ -12,8 +16,13 @@
         "forwardAllArgs": true
       },
       "cache": true,
-      "inputs": ["production", "^production"],
-      "outputs": ["{projectRoot}/.🧾️store/build.json"]
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
     },
     "check": {
       "executor": "repo:script",
@@ -30,6 +39,15 @@
         "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
       }
     }
   }

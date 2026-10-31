@@ -2,7 +2,9 @@
   "curtain_walls": {
     "cw-1": {
       "entry": "Patched",
-      "name": "North facade"
+      "value": {
+        "name": "North facade"
+      }
     }
   }
 }

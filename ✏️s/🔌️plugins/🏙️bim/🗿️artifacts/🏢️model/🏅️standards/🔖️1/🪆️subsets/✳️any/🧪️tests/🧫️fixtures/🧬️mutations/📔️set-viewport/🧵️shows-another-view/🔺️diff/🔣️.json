@@ -2,7 +2,9 @@
   "viewports": {
     "vp-1": {
       "entry": "Patched",
-      "view": "v-section"
+      "value": {
+        "view": "v-section"
+      }
     }
   }
 }

@@ -22,7 +22,9 @@
     "families",
     "effective_properties",
     "components",
-    "mep"
+    "mep",
+    "analytical_members",
+    "structural_analysis"
   ],
   "properties": {
     "element_solids": {

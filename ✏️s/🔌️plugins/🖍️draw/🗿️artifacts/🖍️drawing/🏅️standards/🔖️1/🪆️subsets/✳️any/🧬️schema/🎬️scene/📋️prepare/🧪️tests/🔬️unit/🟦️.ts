@@ -8,8 +8,7 @@ import {unicodeSourceBytes} from "../../../../../🧪️tests/🧫️fixtures/�
 import ancestryRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🔣️.json";
 import addressRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🛂️addresses/🔣️.json";
 import { validateSceneSourceAddress } from "../../../🗺️plan-model/🟦️.ts";
-import Ajv from "ajv/dist/2020.js";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
+import Ajv from "ajv";
 import sharp from "sharp";
 import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
 import invalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/⚠️invalid/🔣️.json";
@@ -27,7 +26,7 @@ import { booleansPathsSchema as curveSchema } from "@semio-tech/framework/2d/boo
 import documentTraceSchema from "../../../🔍️trace/🧬️schema/🔣️.json";
 import { traceSchema as bitmapTraceSchema } from "@semio-tech/framework/2d/trace/schema";
 import traceRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🔍️trace/🔣️.json";
-const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(rasterSchema);for(const s of [flatSchema,regionSchema,curveSchema,booleanSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validateRasterProgress=ajv.compile({$ref:schema.$id+"#/definitions/rasterProgress"});
+const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(rasterSchema);for(const s of [flatSchema,regionSchema,curveSchema,booleanSchema,bitmapTraceSchema,documentTraceSchema])ajv.addSchema(s);const validate=ajv.compile(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),validateRasterProgress=ajv.compile({$ref:schema.$id+"#/definitions/rasterProgress"});
 const resolutionLimits={maxWork:10000000,trace:traceRows[0]!.limits,booleans:{tolerance:.005,epsilon:1e-8,maxDepth:32,maxReferences:256,maxEdges:65536,maxParameters:262144,maxAtomicEdges:65536,maxSegments:65536,maxRetainedSegments:262144,maxWork:10000000}};
 const viewport={width:2,height:1,origin:[0,0] as [number,number],tolerance:.01,maxPixels:100,maxSourceBytes:10000};
 test("boolean reference space independently preserves its parent and result transform",()=>{
@@ -99,7 +98,7 @@ import relationRows from "../../../../../🧪️tests/🧫️fixtures/🎬️sce
 import relationSchema from "../../🧭️selection/🧬️schema/🔣️.json";
 import {sceneSelectionRelation} from "../../🟦️.ts";
 test("prepared scene selection ancestry preserves unlocked outer groups and unsigned locks",()=>{
- const independent=new Ajv({strict:true}).addMetaSchema(draft7),validate=independent.compile(relationSchema),validateResult=independent.compile({$ref:relationSchema.$id+"#/definitions/result"});
+ const independent=new Ajv({strict:true}),validate=independent.compile(relationSchema),validateResult=independent.compile({$ref:relationSchema.$id+"#/definitions/result"});
  for(const row of relationRows){const {name,expected,...input}=row;expect(validate(input),name).toBe(true);const result=sceneSelectionRelation(input.sourcePath,input.lockedAncestors,input.selectedPaths);expect(validateResult(result),name).toBe(true);expect(result,name).toEqual(expected);
  const root=new Group(),chain:Group[]=[];let parent=root;for(const index of input.sourcePath){const child=new Group();child.userData.index=index;parent.add(child);chain.push(child);parent=child;}for(let depth=0;depth<chain.length;depth++)chain[depth]!.userData.locked=Math.floor(input.lockedAncestors/2**depth)%2===1;
  const actual=chain.at(-1)!;let locked=false;for(let at:Group|null=actual;at&&at!==root;at=at.parent as Group|null)locked ||= at.userData.locked===true;
@@ -111,7 +110,7 @@ test("prepared scene selection ancestry preserves unlocked outer groups and unsi
 
 import relationInvalids from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️selection/⚠️invalid/🔣️.json";
 test("prepared scene selection refuses invalid unused addresses and bounded capacity",()=>{
- const validate=new Ajv({strict:true}).addMetaSchema(draft7).compile(relationSchema);
+ const validate=new Ajv({strict:true}).compile(relationSchema);
  for(const row of relationInvalids){const{name,schemaAccepted,...input}=row;expect(validate(input),name).toBe(schemaAccepted);expect(()=>sceneSelectionRelation(input.sourcePath,input.lockedAncestors,input.selectedPaths),name).toThrow();}
  const source=[0,1]as const,selected=[[0]]as const;expect(sceneSelectionRelation(source,0,selected)).toEqual({pickable:true,boundsSelection:0});expect(source).toEqual([0,1]);expect(selected).toEqual([[0]]);
  for(const value of [NaN,Infinity,-1,.5])expect(()=>sceneSelectionRelation([0],value,[])).toThrow();

@@ -471,7 +471,34 @@
         },
         "maximumSelectors": 256,
         "maximumSelectorBytes": 4096,
-        "maximumSerializedBytes": 1048576
+        "maximumSerializedBytes": 1048576,
+        "nextestProfilePrefixes": [
+          [
+            "nextest"
+          ],
+          [
+            "llvm-cov",
+            "nextest"
+          ],
+          [
+            "llvm-cov",
+            "nextest-archive"
+          ]
+        ],
+        "nextestSnapshotPrefixes": [
+          [
+            "nextest",
+            "run"
+          ],
+          [
+            "nextest",
+            "list"
+          ],
+          [
+            "llvm-cov",
+            "nextest"
+          ]
+        ]
       }
     },
     "Settings": {
@@ -812,6 +839,54 @@
         "browser-canvas",
         "browser-module"
       ]
+    },
+    "NextestModeFlagCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "args",
+        "head",
+        "accept"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "head": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "tail": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        },
+        "accept": {
+          "type": "boolean"
+        },
+        "prebuilt": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

@@ -203,7 +203,10 @@
             ]
           }
         }
-      }
+      },
+      "dependsOn": [
+        "test-catalog-exports"
+      ]
     },
     "generate": {
       "executor": "repo:script",
@@ -246,6 +249,44 @@
             "version": 1,
             "class": "diagnostic",
             "reason": "reads-caller-input"
+          }
+        }
+      }
+    },
+    "test-catalog-exports": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "generate"
+      ],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "repo ./📜️script.ts catalog-exports-test",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/📦️public-exports/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/📚️catalog/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/📚️catalog/🧩️plugins/🟦️.ts",
+            "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/📚️catalog/🎮️playgrounds/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/package.json"
+            ]
           }
         }
       }

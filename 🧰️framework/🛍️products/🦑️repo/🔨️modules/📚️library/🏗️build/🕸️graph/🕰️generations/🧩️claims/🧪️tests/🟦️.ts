@@ -1,5 +1,5 @@
 import{expect,test}from"bun:test";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{mkdirSync,mkdtempSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";

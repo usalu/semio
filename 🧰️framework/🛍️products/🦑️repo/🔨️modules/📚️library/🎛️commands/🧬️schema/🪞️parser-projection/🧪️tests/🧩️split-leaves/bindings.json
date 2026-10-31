@@ -1,0 +1,26 @@
+{
+  "localMinimum": 0,
+  "foreignMinimum": 10,
+  "values": [
+    {
+      "x": -1
+    },
+    {
+      "x": 0
+    },
+    {
+      "x": 9
+    },
+    {
+      "x": 10
+    },
+    {
+      "x": "10"
+    },
+    {
+      "x": 10,
+      "extra": true
+    },
+    null
+  ]
+}

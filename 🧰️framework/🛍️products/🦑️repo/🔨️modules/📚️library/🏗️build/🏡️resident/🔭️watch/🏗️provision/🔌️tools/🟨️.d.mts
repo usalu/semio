@@ -1,2 +1,1 @@
-export function toolsPartitionWritableV1(root:string):boolean;
-export function ensureResidentWatcherV1(root?:string,options?:{signal?:AbortSignal;progress?:(phase:"compile"|"ready")=>void;environment?:Readonly<Record<string,string|undefined>>}):Promise<string>;
+export function ensureResidentWatcherV1(root?:string,options?:{signal?:AbortSignal;workRoot?:string;writable?:()=>boolean|Promise<boolean>;progress?:(phase:"compile"|"ready")=>void;environment?:Readonly<Record<string,string|undefined>>}):Promise<string>;

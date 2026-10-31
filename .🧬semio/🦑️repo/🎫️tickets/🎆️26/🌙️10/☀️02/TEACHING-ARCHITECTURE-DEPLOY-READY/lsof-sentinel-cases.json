@@ -1,0 +1,22 @@
+[
+  {
+    "name": "recursive",
+    "status": 1,
+    "accepted": false
+  },
+  {
+    "name": "recursive-or-owned-pid",
+    "status": 1,
+    "accepted": false
+  },
+  {
+    "name": "recursive-or-held-sentinel",
+    "status": 1,
+    "accepted": false
+  },
+  {
+    "name": "owned-pid-only",
+    "status": 0,
+    "accepted": false
+  }
+]

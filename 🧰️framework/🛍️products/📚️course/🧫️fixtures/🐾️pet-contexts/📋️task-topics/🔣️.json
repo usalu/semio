@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "markerTag": "DIV",
+  "rowTag": "LI",
+  "listTag": "OL",
+  "card": "course-tasks",
+  "rows": [
+    {
+      "prop": "heating/u-values",
+      "label": "U-values"
+    },
+    {
+      "prop": "heating/heating-load-and-demand",
+      "label": "Heating load"
+    }
+  ],
+  "cases": [
+    {
+      "id": "open",
+      "locked": false
+    },
+    {
+      "id": "first-task-locked",
+      "locked": true
+    }
+  ]
+}

@@ -444,6 +444,24 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🌐️ Proves localized schema annotations through the canonical locale contract. */
+class SchemaDescriptionScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("test-schema-description accepts no arguments");
+  const source=fileURLToPath(new URL("../../🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/🧪️tests/🟦️.ts",import.meta.url));
+  await runOwnedCommand(process.execPath,["test",source],this.root,"framework:schema-description",cmdBudgetMs(process.env),{signal:this.invocation.control.signal});
+ }
+}
+
+/** 🏷️ Executes neutral native panel identities and staged action-choice contracts. */
+class ManifestResolutionScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("test-manifest-resolution accepts no arguments");
+  const files=["../../🔨️modules/🛂️manifest/🧪️tests/🏷️panel-tabs/🟦️.ts","../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🔽️choices/🟦️.ts"];
+  await runOwnedCommand(process.execPath,["test",...files.map(path=>fileURLToPath(new URL(path,import.meta.url)))],this.root,"framework:manifest-resolution",cmdBudgetMs(process.env));
+ }
+}
+
 /** 📝️ Executes neutral staged-form schemas, exact edits and source query custody. */
 class StagedFormScript extends BundleScript {
   async run(args:string[]):Promise<void>{
@@ -484,6 +502,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-staged-form", StagedFormScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-manifest-resolution", ManifestResolutionScript).register("test-schema-description", SchemaDescriptionScript).register("test-staged-form", StagedFormScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

@@ -2,7 +2,9 @@
   "zones": {
     "z-night": {
       "entry": "Patched",
-      "occupancy_density": 0.04
+      "value": {
+        "occupancy_density": 0.04
+      }
     }
   }
 }

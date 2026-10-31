@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "charge",
+    "policySha256",
+    "capacityCases",
+    "quoteCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "charge": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "policySha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "capacityCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "charges",
+          "effectiveCapacityBytes",
+          "requestedBytes",
+          "namespaceBytes",
+          "namespaceLimits",
+          "extraBytes",
+          "availableBytes",
+          "admitted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "bytes",
+                "phase",
+                "owner",
+                "kind"
+              ],
+              "properties": {
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "phase": {
+                  "enum": [
+                    "reserved",
+                    "committed",
+                    "retiring"
+                  ]
+                },
+                "owner": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "effectiveCapacityBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "requestedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "namespaceBytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "namespaceLimits": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "extraBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "availableBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "quoteCases": {
+      "type": "array",
+      "minItems": 18,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "request",
+          "status",
+          "requestedBytes",
+          "admitted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "request": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "effectiveCapacityBytes",
+              "state",
+              "parentIdentity",
+              "childDirectory",
+              "namespaceDirectory",
+              "childPresent",
+              "birthDirectoryPresent"
+            ],
+            "properties": {
+              "effectiveCapacityBytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "state": {
+                "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/State"
+              },
+              "parentIdentity": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "childDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "namespaceDirectory": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "childPresent": {
+                "type": "boolean"
+              },
+              "birthDirectoryPresent": {
+                "type": "boolean"
+              }
+            }
+          },
+          "status": {
+            "enum": [
+              "new",
+              "funded",
+              "protected"
+            ]
+          },
+          "requestedBytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

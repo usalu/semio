@@ -1,0 +1,7292 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "tram",
+  "category": "vehicles",
+  "title": {
+   "en": "Low-Floor Tram Section",
+   "de": "Niederflur-Straßenbahnabschnitt"
+  },
+  "summary": {
+   "en": "A section of a 100 % low-floor articulated tram: a cab end module (9.0 m) with powered bogie and trailing bogie, the articulation bellows and a suspended middle module, with plug-sliding doors, a pantograph that raises and lowers, traction motors, brake resistor and discs, and roof air conditioning.",
+   "de": "Ein Abschnitt einer 100-%-Niederflur-Gelenkstraßenbahn: ein Endmodul mit Fahrerstand (9,0 m) mit angetriebenem Drehgestell und Laufdrehgestell, Gelenkbalg und ein eingehängtes Mittelmodul, mit Schwenkschiebetüren, hebe- und senkbarem Stromabnehmer, Fahrmotoren, Bremswiderstand und -scheiben sowie Dachklimaanlage."
+  },
+  "tags": [
+   "vehicle",
+   "tram",
+   "rail",
+   "low-floor",
+   "articulated",
+   "electric",
+   "pantograph"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-VE (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-13803",
+     "citation": "EN 13803:2017 Railway applications, Track alignment design parameters, track gauges 1435 mm and wider (wheel and rail dimensions of tramways)."
+    },
+    {
+     "id": "en-50163",
+     "citation": "EN 50163:2004 Railway applications, Supply voltages of traction systems (nominal 600 V and 750 V DC) and contact wire height conventions of tramways."
+    },
+    {
+     "id": "en-13452",
+     "citation": "EN 13452-1:2003 Railway applications, Mass transit brake systems: performance requirements (brake energy, resistor and friction brake duty)."
+    },
+    {
+     "id": "vdv-154",
+     "citation": "VDV-Schrift 154 / BOStrab (Verordnung ueber den Bau und Betrieb der Strassenbahnen): vehicle gauge, floor height 300 to 400 mm for low-floor tramways, door widths."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 26 Heat, Air and Moisture Control: surface convection, radiation properties and U-values of glazing and sheet metal."
+    },
+    {
+     "id": "limpert-1999",
+     "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Ch. 5: brake energy, disc and drum temperature rise."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    }
+   ],
+   "notes": {
+    "en": "Typical 100 % low-floor tram section (width 2.40 m, wheel diameter 0.60 m, floor 0.35 m, 750 V DC, 480 kW); dimensions, masses and heat data are authored class values (authored-estimate). Wheelsets roll with theta = -x / r (r 0.30 m). Pantograph raised: collector 5.0 m above the rail.",
+    "de": "Typischer Abschnitt einer 100-%-Niederflur-Straßenbahn (Breite 2,40 m, Raddurchmesser 0,60 m, Fußboden 0,35 m, 750 V Gleichstrom, 480 kW); Abmessungen, Massen und Wärmedaten sind selbst gesetzte Klassenwerte (authored-estimate). Die Radsätze rollen mit theta = -x / r (r 0,30 m). Stromabnehmer angelegt: Schleifleiste 5,0 m über der Schiene."
+   }
+  },
+  "dimensions": {
+   "heightM": 5,
+   "widthM": 15.45,
+   "depthM": 2.4,
+   "massKg": 20000
+  },
+  "materials": [
+   {
+    "id": "paint",
+    "title": {
+     "en": "Painted aluminium and GRP body",
+     "de": "Lackierter Aluminium- und GFK-Aufbau"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2000,
+    "conductivityWmK": 100,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "Laminated and toughened glass",
+     "de": "Verbund- und Einscheibensicherheitsglas"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.15,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "interior-trim",
+    "title": {
+     "en": "Interior lining",
+     "de": "Innenverkleidung"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 300,
+    "conductivityWmK": 0.1,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "steel-wheel",
+    "title": {
+     "en": "Wheel tyre steel",
+     "de": "Radreifenstahl"
+    },
+    "emissivity": 0.7,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7850,
+    "conductivityWmK": 45,
+    "source": "literature",
+    "reference": "incropera-2011"
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "Brake disc cast iron",
+     "de": "Graugussbremsscheibe"
+    },
+    "emissivity": 0.65,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7200,
+    "conductivityWmK": 46,
+    "source": "literature",
+    "reference": "limpert-1999"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Bellows fabric and rubber",
+     "de": "Balgstoff und Gummi"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1200,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "motor-steel",
+    "title": {
+     "en": "Traction motor housing",
+     "de": "Fahrmotorgehäuse"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.85,
+    "densityKgM3": 7200,
+    "conductivityWmK": 46,
+    "source": "authored-estimate",
+    "reference": "en-13452"
+   },
+   {
+    "id": "resistor-steel",
+    "title": {
+     "en": "Resistor box stainless steel",
+     "de": "Widerstandsgehäuse Edelstahl"
+    },
+    "emissivity": 0.6,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7900,
+    "conductivityWmK": 16,
+    "source": "authored-estimate",
+    "reference": "en-13452"
+   },
+   {
+    "id": "carbon",
+    "title": {
+     "en": "Collector strip carbon",
+     "de": "Schleifleiste Kohle"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1800,
+    "conductivityWmK": 25,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "pan-alloy",
+    "title": {
+     "en": "Pantograph aluminium arms",
+     "de": "Stromabnehmer-Aluminiumarme"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.45,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "body-end",
+   "bones": [
+    {
+     "id": "body-end",
+     "parent": null,
+     "title": {
+      "en": "End module with cab",
+      "de": "Endmodul mit Fahrerstand"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 9,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8300,
+      "comX": 5,
+      "comY": 1.5,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "gangway",
+     "parent": "body-end",
+     "title": {
+      "en": "Articulation bellows",
+      "de": "Gelenkbalg"
+     },
+     "x": 0,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.9,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 300,
+      "comX": 0,
+      "comY": 1.4,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "body-mid",
+     "parent": "body-end",
+     "title": {
+      "en": "Suspended middle module",
+      "de": "Eingehängtes Mittelmodul"
+     },
+     "x": 0,
+     "y": 0.3,
+     "angleDeg": 180,
+     "lengthM": 5.55,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -3,
+      "maxDeg": 3
+     },
+     "mass": {
+      "kg": 3900,
+      "comX": 2.8,
+      "comY": 1.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "bogie-f",
+     "parent": "body-end",
+     "title": {
+      "en": "Powered front bogie",
+      "de": "Angetriebenes vorderes Drehgestell"
+     },
+     "x": 7.2,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 1.8,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.06,
+      "maxM": 0.06
+     },
+     "mass": {
+      "kg": 2900,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "bogie-r",
+     "parent": "body-end",
+     "title": {
+      "en": "Trailing bogie under the articulation",
+      "de": "Laufdrehgestell unter dem Gelenk"
+     },
+     "x": 1.9,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 1.8,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.06,
+      "maxM": 0.06
+     },
+     "mass": {
+      "kg": 1900,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "ws-f1",
+     "parent": "bogie-f",
+     "title": {
+      "en": "Front bogie wheelset 1",
+      "de": "Radsatz 1 des Vordergestells"
+     },
+     "x": -0.9,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 550,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-13803"
+     }
+    },
+    {
+     "id": "ws-f2",
+     "parent": "bogie-f",
+     "title": {
+      "en": "Front bogie wheelset 2",
+      "de": "Radsatz 2 des Vordergestells"
+     },
+     "x": 0.9,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 550,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-13803"
+     }
+    },
+    {
+     "id": "ws-r1",
+     "parent": "bogie-r",
+     "title": {
+      "en": "Rear bogie wheelset 1",
+      "de": "Radsatz 1 des Hintergestells"
+     },
+     "x": -0.9,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 550,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-13803"
+     }
+    },
+    {
+     "id": "ws-r2",
+     "parent": "bogie-r",
+     "title": {
+      "en": "Rear bogie wheelset 2",
+      "de": "Radsatz 2 des Hintergestells"
+     },
+     "x": 0.9,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 550,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-13803"
+     }
+    },
+    {
+     "id": "pan-lower",
+     "parent": "body-end",
+     "title": {
+      "en": "Pantograph lower arm",
+      "de": "Stromabnehmer-Unterarm"
+     },
+     "x": 2.6,
+     "y": 3.55,
+     "angleDeg": 22,
+     "lengthM": 1.9,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 5
+     },
+     "mass": {
+      "kg": 70,
+      "comX": 0.95,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "pan-upper",
+     "parent": "pan-lower",
+     "title": {
+      "en": "Pantograph upper arm",
+      "de": "Stromabnehmer-Oberarm"
+     },
+     "x": 1.9,
+     "y": 0,
+     "angleDeg": 136,
+     "lengthM": 1.9,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 50
+     },
+     "mass": {
+      "kg": 60,
+      "comX": 0.95,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "pan-head",
+     "parent": "pan-upper",
+     "title": {
+      "en": "Collector head",
+      "de": "Schleifleiste"
+     },
+     "x": 1.9,
+     "y": 0,
+     "angleDeg": -158,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 5
+     },
+     "mass": {
+      "kg": 30,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-a1",
+     "parent": "body-end",
+     "title": {
+      "en": "Door leaf A1",
+      "de": "Türflügel A1"
+     },
+     "x": 3.5,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.6500000000000004,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 180,
+      "minM": 0,
+      "maxM": 0.6
+     },
+     "mass": {
+      "kg": 85,
+      "comX": 0.3250000000000002,
+      "comY": 1.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-a2",
+     "parent": "body-end",
+     "title": {
+      "en": "Door leaf A2",
+      "de": "Türflügel A2"
+     },
+     "x": 4.15,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.6499999999999995,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.6
+     },
+     "mass": {
+      "kg": 85,
+      "comX": 0.32499999999999973,
+      "comY": 1.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-b1",
+     "parent": "body-end",
+     "title": {
+      "en": "Door leaf B1",
+      "de": "Türflügel B1"
+     },
+     "x": -4,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.6499999999999999,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 180,
+      "minM": 0,
+      "maxM": 0.6
+     },
+     "mass": {
+      "kg": 85,
+      "comX": 0.32499999999999996,
+      "comY": 1.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-b2",
+     "parent": "body-end",
+     "title": {
+      "en": "Door leaf B2",
+      "de": "Türflügel B2"
+     },
+     "x": -3.35,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.6499999999999999,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.6
+     },
+     "mass": {
+      "kg": 85,
+      "comX": 0.32499999999999996,
+      "comY": 1.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-f1",
+    "bone": "bogie-f",
+    "x": -0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front wheelset 1 contact",
+     "de": "Aufstandspunkt Radsatz vorn 1"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.014,
+    "frictionCoefficient": 0.3
+   },
+   {
+    "id": "contact-f2",
+    "bone": "bogie-f",
+    "x": 0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front wheelset 2 contact",
+     "de": "Aufstandspunkt Radsatz vorn 2"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.014,
+    "frictionCoefficient": 0.3
+   },
+   {
+    "id": "contact-r1",
+    "bone": "bogie-r",
+    "x": -0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Rear wheelset 1 contact",
+     "de": "Aufstandspunkt Radsatz hinten 1"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.014,
+    "frictionCoefficient": 0.3
+   },
+   {
+    "id": "contact-r2",
+    "bone": "bogie-r",
+    "x": 0.9,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Rear wheelset 2 contact",
+     "de": "Aufstandspunkt Radsatz hinten 2"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.012,
+    "footprintWidthM": 0.014,
+    "frictionCoefficient": 0.3
+   },
+   {
+    "id": "resistor-vent",
+    "bone": "body-end",
+    "x": 5.5,
+    "y": 3.62,
+    "kind": "emitter",
+    "title": {
+     "en": "Brake resistor fan outlet",
+     "de": "Ventilatorauslass Bremswiderstand"
+    }
+   },
+   {
+    "id": "hvac-vent",
+    "bone": "body-mid",
+    "x": -3.5,
+    "y": 3.62,
+    "kind": "emitter",
+    "title": {
+     "en": "Roof air-conditioning outlet",
+     "de": "Auslass der Dachklimaanlage"
+    }
+   },
+   {
+    "id": "floor-aisle",
+    "bone": "body-end",
+    "x": 3.5,
+    "y": 0.45,
+    "kind": "load",
+    "title": {
+     "en": "Aisle load point of the end module",
+     "de": "Lastpunkt Gang des Endmoduls"
+    }
+   },
+   {
+    "id": "floor-aisle-mid",
+    "bone": "body-mid",
+    "x": -3.5,
+    "y": 0.45,
+    "kind": "load",
+    "title": {
+     "en": "Aisle load point of the middle module",
+     "de": "Lastpunkt Gang des Mittelmoduls"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f1",
+       "bone": "ws-f1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-f1",
+       "bone": "ws-f1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.07,
+       "ry": 0.07,
+       "id": "hub-f1",
+       "bone": "ws-f1",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.75,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f2",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-f2",
+       "bone": "ws-f2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.07,
+       "ry": 0.07,
+       "id": "hub-f2",
+       "bone": "ws-f2",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.75,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r1",
+       "bone": "ws-r1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-r1",
+       "bone": "ws-r1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.07,
+       "ry": 0.07,
+       "id": "hub-r1",
+       "bone": "ws-r1",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.75,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r2",
+       "bone": "ws-r2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-r2",
+       "bone": "ws-r2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.07,
+       "ry": 0.07,
+       "id": "hub-r2",
+       "bone": "ws-r2",
+       "role": "detail",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.75,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         0.3
+        ],
+        [
+         -0.45,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "motor-f",
+       "bone": "bogie-f",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "traction-motors",
+       "material": "motor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         0.3
+        ],
+        [
+         -0.45,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "motor-r",
+       "bone": "bogie-r",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "traction-motors",
+       "material": "motor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0.28
+        ],
+        [
+         0.63,
+         0.28
+        ],
+        [
+         0.63,
+         0.3
+        ],
+        [
+         0.6393,
+         0.3823
+        ],
+        [
+         0.6666,
+         0.4605
+        ],
+        [
+         0.7107,
+         0.5307
+        ],
+        [
+         0.7693,
+         0.5893
+        ],
+        [
+         0.8395,
+         0.6334
+        ],
+        [
+         0.9177,
+         0.6607
+        ],
+        [
+         1,
+         0.67
+        ],
+        [
+         1.0823,
+         0.6607
+        ],
+        [
+         1.1605,
+         0.6334
+        ],
+        [
+         1.2307,
+         0.5893
+        ],
+        [
+         1.2893,
+         0.5307
+        ],
+        [
+         1.3334,
+         0.4605
+        ],
+        [
+         1.3607,
+         0.3823
+        ],
+        [
+         1.37,
+         0.3
+        ],
+        [
+         2.43,
+         0.28
+        ],
+        [
+         2.43,
+         0.3
+        ],
+        [
+         2.4393,
+         0.3823
+        ],
+        [
+         2.4666,
+         0.4605
+        ],
+        [
+         2.5107,
+         0.5307
+        ],
+        [
+         2.5693,
+         0.5893
+        ],
+        [
+         2.6395,
+         0.6334
+        ],
+        [
+         2.7177,
+         0.6607
+        ],
+        [
+         2.8,
+         0.67
+        ],
+        [
+         2.8823,
+         0.6607
+        ],
+        [
+         2.9605,
+         0.6334
+        ],
+        [
+         3.0307,
+         0.5893
+        ],
+        [
+         3.0893,
+         0.5307
+        ],
+        [
+         3.1334,
+         0.4605
+        ],
+        [
+         3.1607,
+         0.3823
+        ],
+        [
+         3.17,
+         0.3
+        ],
+        [
+         5.93,
+         0.28
+        ],
+        [
+         5.93,
+         0.3
+        ],
+        [
+         5.9393,
+         0.3823
+        ],
+        [
+         5.9666,
+         0.4605
+        ],
+        [
+         6.0107,
+         0.5307
+        ],
+        [
+         6.0693,
+         0.5893
+        ],
+        [
+         6.1395,
+         0.6334
+        ],
+        [
+         6.2177,
+         0.6607
+        ],
+        [
+         6.3,
+         0.67
+        ],
+        [
+         6.3823,
+         0.6607
+        ],
+        [
+         6.4605,
+         0.6334
+        ],
+        [
+         6.5307,
+         0.5893
+        ],
+        [
+         6.5893,
+         0.5307
+        ],
+        [
+         6.6334,
+         0.4605
+        ],
+        [
+         6.6607,
+         0.3823
+        ],
+        [
+         6.67,
+         0.3
+        ],
+        [
+         7.73,
+         0.28
+        ],
+        [
+         7.73,
+         0.3
+        ],
+        [
+         7.7393,
+         0.3823
+        ],
+        [
+         7.7666,
+         0.4605
+        ],
+        [
+         7.8107,
+         0.5307
+        ],
+        [
+         7.8693,
+         0.5893
+        ],
+        [
+         7.9395,
+         0.6334
+        ],
+        [
+         8.0177,
+         0.6607
+        ],
+        [
+         8.1,
+         0.67
+        ],
+        [
+         8.1823,
+         0.6607
+        ],
+        [
+         8.2605,
+         0.6334
+        ],
+        [
+         8.3307,
+         0.5893
+        ],
+        [
+         8.3893,
+         0.5307
+        ],
+        [
+         8.4334,
+         0.4605
+        ],
+        [
+         8.4607,
+         0.3823
+        ],
+        [
+         8.47,
+         0.3
+        ],
+        [
+         9.2,
+         0.28
+        ],
+        [
+         9.4,
+         0.4
+        ],
+        [
+         9.45,
+         0.55
+        ],
+        [
+         9.45,
+         1.5
+        ],
+        [
+         9.4,
+         1.65
+        ],
+        [
+         8.55,
+         3
+        ],
+        [
+         8.35,
+         3.4
+        ],
+        [
+         0.45,
+         3.4
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6,
+         0.02
+        ],
+        [
+         0.45,
+         0.02
+        ],
+        [
+         0.45,
+         -3.1
+        ],
+        [
+         6,
+         -3.1
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.15
+        ],
+        [
+         0.45,
+         0.15
+        ],
+        [
+         0.45,
+         2.95
+        ],
+        [
+         -0.45,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         1.25
+        ],
+        [
+         3.3,
+         1.25
+        ],
+        [
+         3.3,
+         2.75
+        ],
+        [
+         0.9,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e1",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5,
+         1.25
+        ],
+        [
+         6.55,
+         1.25
+        ],
+        [
+         6.55,
+         2.75
+        ],
+        [
+         5,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e2",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6.7,
+         1.25
+        ],
+        [
+         8,
+         1.25
+        ],
+        [
+         8,
+         2.75
+        ],
+        [
+         6.7,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e3",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         8.15,
+         1.25
+        ],
+        [
+         8.4,
+         1.25
+        ],
+        [
+         8.5,
+         2.75
+        ],
+        [
+         8.15,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-cab",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.85,
+         -0.95
+        ],
+        [
+         4.25,
+         -0.95
+        ],
+        [
+         4.25,
+         -2.45
+        ],
+        [
+         5.85,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m1",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.55,
+         -0.95
+        ],
+        [
+         0.85,
+         -0.95
+        ],
+        [
+         0.85,
+         -2.45
+        ],
+        [
+         2.55,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m2",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-a1",
+       "bone": "door-a1",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-a2",
+       "bone": "door-a2",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-b1",
+       "bone": "door-b1",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-b2",
+       "bone": "door-b2",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.7
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.7
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.25,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3,
+         3.4
+        ],
+        [
+         2.9,
+         3.4
+        ],
+        [
+         2.9,
+         3.55
+        ],
+        [
+         2.3,
+         3.55
+        ]
+       ],
+       "closed": true,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.64
+        ],
+        [
+         4.5,
+         3.64
+        ]
+       ],
+       "closed": true,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.2,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.36
+        ],
+        [
+         5.2,
+         -3.36
+        ]
+       ],
+       "closed": true,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.8,
+         3.46
+        ],
+        [
+         4.8,
+         3.58
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-r0",
+       "bone": "body-end",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.2,
+         3.46
+        ],
+        [
+         5.2,
+         3.58
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-r1",
+       "bone": "body-end",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.6,
+         3.46
+        ],
+        [
+         5.6,
+         3.58
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-r2",
+       "bone": "body-end",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6,
+         3.46
+        ],
+        [
+         6,
+         3.58
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-r3",
+       "bone": "body-end",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.8,
+         -3.16
+        ],
+        [
+         4.8,
+         -3.3
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-h0",
+       "bone": "body-mid",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.1,
+         -3.16
+        ],
+        [
+         4.1,
+         -3.3
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-h1",
+       "bone": "body-mid",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         3.4,
+         -3.16
+        ],
+        [
+         3.4,
+         -3.3
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-h2",
+       "bone": "body-mid",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7,
+         -3.16
+        ],
+        [
+         2.7,
+         -3.3
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-h3",
+       "bone": "body-mid",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2,
+         -3.16
+        ],
+        [
+         2,
+         -3.3
+        ]
+       ],
+       "closed": false,
+       "id": "louvre-h4",
+       "bone": "body-mid",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.3,
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         9.3,
+         0.85
+        ],
+        [
+         9.45,
+         0.9
+        ],
+        [
+         9.45,
+         1.1
+        ],
+        [
+         9.3,
+         1.05
+        ]
+       ],
+       "closed": true,
+       "id": "headlamp",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full side elevation with louvred roof boxes, pantograph with insulated base, door leaves with glass, bellows, motor blocks, wheels with brake discs and hubs, head lamp.",
+      "de": "Vollständige Seitenansicht mit Lamellen der Dachkästen, Stromabnehmer mit Isolatorfuß, Türflügel mit Glas, Balg, Motorblöcke, Räder mit Bremsscheiben und Naben, Scheinwerfer."
+     },
+     "retained": {
+      "en": "All printable parts.",
+      "de": "Alle druckbaren Teile."
+     },
+     "merged": {
+      "en": "Bogie frame and motor are one block.",
+      "de": "Drehgestellrahmen und Motor sind ein Block."
+     },
+     "omitted": {
+      "en": "Wipers, seals, handrails, bolts.",
+      "de": "Wischer, Dichtungen, Haltestangen, Schrauben."
+     },
+     "thinElements": {
+      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.7 (real 1.2) mm; lamellae 0.13 mm.",
+      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,7 (real 1,2) mm gezeichnet; Lamellen 0,13 mm."
+     },
+     "hatching": {
+      "en": "None; material is tone only.",
+      "de": "Keine; das Material zeigt sich nur über den Ton."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass lightest, bellows and wheels dark, roof boxes distinct.",
+      "de": "Aufbau mittlerer Ton, Glas am hellsten, Balg und Räder dunkel, Dachkästen abgesetzt."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled).",
+      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert)."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f1",
+       "bone": "ws-f1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-f1",
+       "bone": "ws-f1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f2",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-f2",
+       "bone": "ws-f2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r1",
+       "bone": "ws-r1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-r1",
+       "bone": "ws-r1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r2",
+       "bone": "ws-r2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "region": "wheelsets",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "id": "disc-r2",
+       "bone": "ws-r2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         0.3
+        ],
+        [
+         -0.45,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "motor-f",
+       "bone": "bogie-f",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "traction-motors",
+       "material": "motor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         -0.02
+        ],
+        [
+         0.45,
+         0.3
+        ],
+        [
+         -0.45,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "motor-r",
+       "bone": "bogie-r",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "region": "traction-motors",
+       "material": "motor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0.28
+        ],
+        [
+         0.6,
+         0.28
+        ],
+        [
+         0.6,
+         0.3
+        ],
+        [
+         0.61,
+         0.389
+        ],
+        [
+         0.6396,
+         0.4736
+        ],
+        [
+         0.6873,
+         0.5494
+        ],
+        [
+         0.7506,
+         0.6127
+        ],
+        [
+         0.8264,
+         0.6604
+        ],
+        [
+         0.911,
+         0.69
+        ],
+        [
+         1,
+         0.7
+        ],
+        [
+         1.089,
+         0.69
+        ],
+        [
+         1.1736,
+         0.6604
+        ],
+        [
+         1.2494,
+         0.6127
+        ],
+        [
+         1.3127,
+         0.5494
+        ],
+        [
+         1.3604,
+         0.4736
+        ],
+        [
+         1.39,
+         0.389
+        ],
+        [
+         1.4,
+         0.3
+        ],
+        [
+         2.4,
+         0.28
+        ],
+        [
+         2.4,
+         0.3
+        ],
+        [
+         2.41,
+         0.389
+        ],
+        [
+         2.4396,
+         0.4736
+        ],
+        [
+         2.4873,
+         0.5494
+        ],
+        [
+         2.5506,
+         0.6127
+        ],
+        [
+         2.6264,
+         0.6604
+        ],
+        [
+         2.711,
+         0.69
+        ],
+        [
+         2.8,
+         0.7
+        ],
+        [
+         2.889,
+         0.69
+        ],
+        [
+         2.9736,
+         0.6604
+        ],
+        [
+         3.0494,
+         0.6127
+        ],
+        [
+         3.1127,
+         0.5494
+        ],
+        [
+         3.1604,
+         0.4736
+        ],
+        [
+         3.19,
+         0.389
+        ],
+        [
+         3.2,
+         0.3
+        ],
+        [
+         5.9,
+         0.28
+        ],
+        [
+         5.9,
+         0.3
+        ],
+        [
+         5.91,
+         0.389
+        ],
+        [
+         5.9396,
+         0.4736
+        ],
+        [
+         5.9873,
+         0.5494
+        ],
+        [
+         6.0506,
+         0.6127
+        ],
+        [
+         6.1264,
+         0.6604
+        ],
+        [
+         6.211,
+         0.69
+        ],
+        [
+         6.3,
+         0.7
+        ],
+        [
+         6.389,
+         0.69
+        ],
+        [
+         6.4736,
+         0.6604
+        ],
+        [
+         6.5494,
+         0.6127
+        ],
+        [
+         6.6127,
+         0.5494
+        ],
+        [
+         6.6604,
+         0.4736
+        ],
+        [
+         6.69,
+         0.389
+        ],
+        [
+         6.7,
+         0.3
+        ],
+        [
+         7.7,
+         0.28
+        ],
+        [
+         7.7,
+         0.3
+        ],
+        [
+         7.71,
+         0.389
+        ],
+        [
+         7.7396,
+         0.4736
+        ],
+        [
+         7.7873,
+         0.5494
+        ],
+        [
+         7.8506,
+         0.6127
+        ],
+        [
+         7.9264,
+         0.6604
+        ],
+        [
+         8.011,
+         0.69
+        ],
+        [
+         8.1,
+         0.7
+        ],
+        [
+         8.189,
+         0.69
+        ],
+        [
+         8.2736,
+         0.6604
+        ],
+        [
+         8.3494,
+         0.6127
+        ],
+        [
+         8.4127,
+         0.5494
+        ],
+        [
+         8.4604,
+         0.4736
+        ],
+        [
+         8.49,
+         0.389
+        ],
+        [
+         8.5,
+         0.3
+        ],
+        [
+         9.2,
+         0.28
+        ],
+        [
+         9.4,
+         0.4
+        ],
+        [
+         9.45,
+         0.55
+        ],
+        [
+         9.45,
+         1.5
+        ],
+        [
+         9.4,
+         1.65
+        ],
+        [
+         8.55,
+         3
+        ],
+        [
+         8.35,
+         3.4
+        ],
+        [
+         0.45,
+         3.4
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6,
+         0.02
+        ],
+        [
+         0.45,
+         0.02
+        ],
+        [
+         0.45,
+         -3.1
+        ],
+        [
+         6,
+         -3.1
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.15
+        ],
+        [
+         0.45,
+         0.15
+        ],
+        [
+         0.45,
+         2.95
+        ],
+        [
+         -0.45,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         1.25
+        ],
+        [
+         3.3,
+         1.25
+        ],
+        [
+         3.3,
+         2.75
+        ],
+        [
+         0.9,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e1",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5,
+         1.25
+        ],
+        [
+         8,
+         1.25
+        ],
+        [
+         8,
+         2.75
+        ],
+        [
+         5,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e2",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         8.15,
+         1.25
+        ],
+        [
+         8.4,
+         1.25
+        ],
+        [
+         8.5,
+         2.75
+        ],
+        [
+         8.15,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-cab",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.85,
+         -0.95
+        ],
+        [
+         4.25,
+         -0.95
+        ],
+        [
+         4.25,
+         -2.45
+        ],
+        [
+         5.85,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m1",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.55,
+         -0.95
+        ],
+        [
+         0.85,
+         -0.95
+        ],
+        [
+         0.85,
+         -2.45
+        ],
+        [
+         2.55,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m2",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-a1",
+       "bone": "door-a1",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-a2",
+       "bone": "door-a2",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-b1",
+       "bone": "door-b1",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.12,
+         0.95
+        ],
+        [
+         0.53,
+         0.95
+        ],
+        [
+         0.53,
+         2.25
+        ],
+        [
+         0.12,
+         2.25
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-glass-b2",
+       "bone": "door-b2",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.3
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.25,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3,
+         3.4
+        ],
+        [
+         2.9,
+         3.4
+        ],
+        [
+         2.9,
+         3.55
+        ],
+        [
+         2.3,
+         3.55
+        ]
+       ],
+       "closed": true,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.64
+        ],
+        [
+         4.5,
+         3.64
+        ]
+       ],
+       "closed": true,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.2,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.36
+        ],
+        [
+         5.2,
+         -3.36
+        ]
+       ],
+       "closed": true,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         9.3,
+         0.85
+        ],
+        [
+         9.45,
+         0.9
+        ],
+        [
+         9.45,
+         1.1
+        ],
+        [
+         9.3,
+         1.05
+        ]
+       ],
+       "closed": true,
+       "id": "headlamp",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "material": "glass"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Body shells with arches 0.10 m clear of the wheels, the side windows of the front half merged into one pane, door leaves with glass, bellows, roof boxes, pantograph, wheels with brake discs, motor blocks in the bogies and the head lamp.",
+      "de": "Aufbauhüllen mit Radläufen im Abstand von 0,10 m zu den Rädern, die Seitenfenster der vorderen Hälfte zu einer Scheibe zusammengefasst, Türflügel mit Glas, Balg, Dachkästen, Stromabnehmer, Räder mit Bremsscheiben, Motorblöcke in den Drehgestellen und der Scheinwerfer."
+     },
+     "retained": {
+      "en": "Everything above 0.1 m.",
+      "de": "Alles über 0,1 m."
+     },
+     "merged": {
+      "en": "Bogie frame and motor are one block.",
+      "de": "Drehgestellrahmen und Motor sind ein Block."
+     },
+     "omitted": {
+      "en": "Handrails, wipers, seals.",
+      "de": "Haltestangen, Wischer, Dichtungen."
+     },
+     "thinElements": {
+      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.3 (real 0.6) mm; lamellae 0.13 mm.",
+      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,3 (real 0,6) mm gezeichnet; Lamellen 0,13 mm."
+     },
+     "hatching": {
+      "en": "None; material is tone only.",
+      "de": "Keine; das Material zeigt sich nur über den Ton."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass lightest, bellows and wheels dark, roof boxes distinct.",
+      "de": "Aufbau mittlerer Ton, Glas am hellsten, Balg und Räder dunkel, Dachkästen abgesetzt."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled).",
+      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert)."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f1",
+       "bone": "ws-f1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.17,
+       "ry": 0.17,
+       "id": "disc-f1",
+       "bone": "ws-f1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f2",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.17,
+       "ry": 0.17,
+       "id": "disc-f2",
+       "bone": "ws-f2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r1",
+       "bone": "ws-r1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.17,
+       "ry": 0.17,
+       "id": "disc-r1",
+       "bone": "ws-r1",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r2",
+       "bone": "ws-r2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.17,
+       "ry": 0.17,
+       "id": "disc-r2",
+       "bone": "ws-r2",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.55,
+       "region": "brake-discs",
+       "material": "cast-iron"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0.28
+        ],
+        [
+         0.58,
+         0.28
+        ],
+        [
+         0.58,
+         0.3
+        ],
+        [
+         0.5905,
+         0.3935
+        ],
+        [
+         0.6216,
+         0.4822
+        ],
+        [
+         0.6716,
+         0.5619
+        ],
+        [
+         0.7381,
+         0.6284
+        ],
+        [
+         0.8178,
+         0.6784
+        ],
+        [
+         0.9065,
+         0.7095
+        ],
+        [
+         1,
+         0.72
+        ],
+        [
+         1.0935,
+         0.7095
+        ],
+        [
+         1.1822,
+         0.6784
+        ],
+        [
+         1.2619,
+         0.6284
+        ],
+        [
+         1.3284,
+         0.5619
+        ],
+        [
+         1.3784,
+         0.4822
+        ],
+        [
+         1.4095,
+         0.3935
+        ],
+        [
+         1.42,
+         0.3
+        ],
+        [
+         2.38,
+         0.28
+        ],
+        [
+         2.38,
+         0.3
+        ],
+        [
+         2.3905,
+         0.3935
+        ],
+        [
+         2.4216,
+         0.4822
+        ],
+        [
+         2.4716,
+         0.5619
+        ],
+        [
+         2.5381,
+         0.6284
+        ],
+        [
+         2.6178,
+         0.6784
+        ],
+        [
+         2.7065,
+         0.7095
+        ],
+        [
+         2.8,
+         0.72
+        ],
+        [
+         2.8935,
+         0.7095
+        ],
+        [
+         2.9822,
+         0.6784
+        ],
+        [
+         3.0619,
+         0.6284
+        ],
+        [
+         3.1284,
+         0.5619
+        ],
+        [
+         3.1784,
+         0.4822
+        ],
+        [
+         3.2095,
+         0.3935
+        ],
+        [
+         3.22,
+         0.3
+        ],
+        [
+         5.88,
+         0.28
+        ],
+        [
+         5.88,
+         0.3
+        ],
+        [
+         5.8905,
+         0.3935
+        ],
+        [
+         5.9216,
+         0.4822
+        ],
+        [
+         5.9716,
+         0.5619
+        ],
+        [
+         6.0381,
+         0.6284
+        ],
+        [
+         6.1178,
+         0.6784
+        ],
+        [
+         6.2065,
+         0.7095
+        ],
+        [
+         6.3,
+         0.72
+        ],
+        [
+         6.3935,
+         0.7095
+        ],
+        [
+         6.4822,
+         0.6784
+        ],
+        [
+         6.5619,
+         0.6284
+        ],
+        [
+         6.6284,
+         0.5619
+        ],
+        [
+         6.6784,
+         0.4822
+        ],
+        [
+         6.7095,
+         0.3935
+        ],
+        [
+         6.72,
+         0.3
+        ],
+        [
+         7.68,
+         0.28
+        ],
+        [
+         7.68,
+         0.3
+        ],
+        [
+         7.6905,
+         0.3935
+        ],
+        [
+         7.7216,
+         0.4822
+        ],
+        [
+         7.7716,
+         0.5619
+        ],
+        [
+         7.8381,
+         0.6284
+        ],
+        [
+         7.9178,
+         0.6784
+        ],
+        [
+         8.0065,
+         0.7095
+        ],
+        [
+         8.1,
+         0.72
+        ],
+        [
+         8.1935,
+         0.7095
+        ],
+        [
+         8.2822,
+         0.6784
+        ],
+        [
+         8.3619,
+         0.6284
+        ],
+        [
+         8.4284,
+         0.5619
+        ],
+        [
+         8.4784,
+         0.4822
+        ],
+        [
+         8.5095,
+         0.3935
+        ],
+        [
+         8.52,
+         0.3
+        ],
+        [
+         9.2,
+         0.28
+        ],
+        [
+         9.4,
+         0.4
+        ],
+        [
+         9.45,
+         0.55
+        ],
+        [
+         9.45,
+         1.5
+        ],
+        [
+         9.4,
+         1.65
+        ],
+        [
+         8.55,
+         3
+        ],
+        [
+         8.35,
+         3.4
+        ],
+        [
+         0.45,
+         3.4
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6,
+         0.02
+        ],
+        [
+         0.45,
+         0.02
+        ],
+        [
+         0.45,
+         -3.1
+        ],
+        [
+         6,
+         -3.1
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.15
+        ],
+        [
+         0.45,
+         0.15
+        ],
+        [
+         0.45,
+         2.95
+        ],
+        [
+         -0.45,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         1.25
+        ],
+        [
+         3.3,
+         1.25
+        ],
+        [
+         3.3,
+         2.75
+        ],
+        [
+         0.9,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e1",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5,
+         1.25
+        ],
+        [
+         6.55,
+         1.25
+        ],
+        [
+         6.55,
+         2.75
+        ],
+        [
+         5,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e2",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6.7,
+         1.25
+        ],
+        [
+         8,
+         1.25
+        ],
+        [
+         8,
+         2.75
+        ],
+        [
+         6.7,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-e3",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         8.15,
+         1.25
+        ],
+        [
+         8.4,
+         1.25
+        ],
+        [
+         8.5,
+         2.75
+        ],
+        [
+         8.15,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "pane-cab",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.85,
+         -0.95
+        ],
+        [
+         4.25,
+         -0.95
+        ],
+        [
+         4.25,
+         -2.45
+        ],
+        [
+         5.85,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m1",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.55,
+         -0.95
+        ],
+        [
+         0.85,
+         -0.95
+        ],
+        [
+         0.85,
+         -2.45
+        ],
+        [
+         2.55,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "pane-m2",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.18
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.18
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.25,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": 0,
+       "r0": 0.03,
+       "r1": 0.03,
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3,
+         3.4
+        ],
+        [
+         2.9,
+         3.4
+        ],
+        [
+         2.9,
+         3.55
+        ],
+        [
+         2.3,
+         3.55
+        ]
+       ],
+       "closed": true,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.64
+        ],
+        [
+         4.5,
+         3.64
+        ]
+       ],
+       "closed": true,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.2,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.36
+        ],
+        [
+         5.2,
+         -3.36
+        ]
+       ],
+       "closed": true,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Body shells with open wheel arches 0.12 m (0.6 mm) clear of the tyres, individual panes separated by 0.25 m pillars, door leaves, bellows, roof boxes, pantograph and wheel discs with brake discs.",
+      "de": "Aufbauhüllen mit offenen Radläufen im Abstand von 0,12 m (0,6 mm) zu den Rädern, einzelne Scheiben mit 0,25 m breiten Pfosten, Türflügel, Balg, Dachkästen, Stromabnehmer und Radscheiben mit Bremsscheiben."
+     },
+     "retained": {
+      "en": "Everything above 0.2 m.",
+      "de": "Alles über 0,2 m."
+     },
+     "merged": {
+      "en": "Wheel and motor share one disc.",
+      "de": "Rad und Motor teilen sich eine Scheibe."
+     },
+     "omitted": {
+      "en": "Handles, lamps, wipers, bogie frames.",
+      "de": "Griffe, Leuchten, Wischer, Drehgestellrahmen."
+     },
+     "thinElements": {
+      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.18 (real 0.3) mm; lamellae 0.13 mm.",
+      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,18 (real 0,3) mm gezeichnet; Lamellen 0,13 mm."
+     },
+     "hatching": {
+      "en": "None; material is tone only.",
+      "de": "Keine; das Material zeigt sich nur über den Ton."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass lightest, bellows and wheels dark, roof boxes distinct.",
+      "de": "Aufbau mittlerer Ton, Glas am hellsten, Balg und Räder dunkel, Dachkästen abgesetzt."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled).",
+      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert)."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f1",
+       "bone": "ws-f1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "brake-discs",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-f2",
+       "bone": "ws-f2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "brake-discs",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r1",
+       "bone": "ws-r1",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "brake-discs",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.3,
+       "ry": 0.3,
+       "id": "wheel-r2",
+       "bone": "ws-r2",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "wheelsets",
+        "brake-discs",
+        "traction-motors"
+       ],
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         0.28
+        ],
+        [
+         9.2,
+         0.28
+        ],
+        [
+         9.4,
+         0.4
+        ],
+        [
+         9.45,
+         0.55
+        ],
+        [
+         9.45,
+         1.5
+        ],
+        [
+         9.4,
+         1.65
+        ],
+        [
+         8.55,
+         3
+        ],
+        [
+         8.35,
+         3.4
+        ],
+        [
+         0.45,
+         3.4
+        ]
+       ],
+       "closed": true,
+       "id": "shell-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      ,
+       "penMm": 0.243
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         6,
+         0.02
+        ],
+        [
+         0.45,
+         0.02
+        ],
+        [
+         0.45,
+         -3.1
+        ],
+        [
+         6,
+         -3.1
+        ]
+       ],
+       "closed": true,
+       "id": "shell-mid",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         0.15
+        ],
+        [
+         0.45,
+         0.15
+        ],
+        [
+         0.45,
+         2.95
+        ],
+        [
+         -0.45,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "gangway",
+       "bone": "gangway",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "gangway",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.9,
+         1.25
+        ],
+        [
+         8.3,
+         1.25
+        ],
+        [
+         8.45,
+         2.75
+        ],
+        [
+         0.9,
+         2.75
+        ]
+       ],
+       "closed": true,
+       "id": "window-band-end",
+       "bone": "body-end",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.85,
+         -0.95
+        ],
+        [
+         0.7,
+         -0.95
+        ],
+        [
+         0.7,
+         -2.45
+        ],
+        [
+         5.85,
+         -2.45
+        ]
+       ],
+       "closed": true,
+       "id": "window-band-mid",
+       "bone": "body-mid",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.88,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a1",
+       "bone": "door-a1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-a2",
+       "bone": "door-a2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b1",
+       "bone": "door-b1",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         -0.02
+        ],
+        [
+         0.65,
+         -0.02
+        ],
+        [
+         0.65,
+         2.4
+        ],
+        [
+         0,
+         2.4
+        ]
+       ],
+       "closed": true,
+       "id": "leaf-b2",
+       "bone": "door-b2",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "doors",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-lower",
+       "bone": "pan-lower",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         1.9,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "pan-upper",
+       "bone": "pan-upper",
+       "role": "body",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "pantograph",
+       "material": "pan-alloy",
+       "penMm": 0.13
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.25,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": 0,
+       "r0": 0.06,
+       "r1": 0.06,
+       "id": "pan-head",
+       "bone": "pan-head",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.2,
+       "region": "pantograph",
+       "material": "carbon"
+      ,
+       "penMm": 0.243
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3,
+         3.4
+        ],
+        [
+         2.9,
+         3.4
+        ],
+        [
+         2.9,
+         3.55
+        ],
+        [
+         2.3,
+         3.55
+        ]
+       ],
+       "closed": true,
+       "id": "pan-base",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "pantograph",
+       "material": "pan-alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         4.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.4
+        ],
+        [
+         6.5,
+         3.64
+        ],
+        [
+         4.5,
+         3.64
+        ]
+       ],
+       "closed": true,
+       "id": "resistor-box",
+       "bone": "body-end",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "brake-resistor",
+       "material": "resistor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         5.2,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.1
+        ],
+        [
+         1.4,
+         -3.36
+        ],
+        [
+         5.2,
+         -3.36
+        ]
+       ],
+       "closed": true,
+       "id": "hvac-box",
+       "bone": "body-mid",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hvac-unit",
+       "material": "paint"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Two body silhouettes (end module without arches and middle module) joined by one bellows block, wheel discs overlapping the sill, one window band per module, door leaves and a pantograph of two strokes and a head.",
+      "de": "Zwei Aufbausilhouetten (Endmodul ohne Radläufe und Mittelmodul), verbunden durch einen Balgblock, Radscheiben über der Schwelle, ein Fensterband je Modul, Türflügel und ein Stromabnehmer aus zwei Strichen und Kopf."
+     },
+     "retained": {
+      "en": "Bodies, glass bands, door leaves, bellows, wheels, resistor, air-conditioning unit, pantograph.",
+      "de": "Aufbauten, Glasbänder, Türflügel, Balg, Räder, Widerstand, Klimagerät, Stromabnehmer."
+     },
+     "merged": {
+      "en": "Wheelset, brake disc and motor share one wheel disc; panels and roof share the body shell.",
+      "de": "Radsatz, Bremsscheibe und Motor teilen sich eine Radscheibe; Bleche und Dach teilen die Aufbauhülle."
+     },
+     "omitted": {
+      "en": "Pillars, bogie frames, lamps, handrails, wipers.",
+      "de": "Pfosten, Drehgestellrahmen, Leuchten, Haltestangen, Wischer."
+     },
+     "thinElements": {
+      "en": "Pantograph arms 0.06 m wide are drawn as strokes of 0.13 (real 0.12) mm; lamellae 0.13 mm.",
+      "de": "Stromabnehmerarme von 0,06 m Breite werden als Striche von 0,13 (real 0,12) mm gezeichnet; Lamellen 0,13 mm."
+     },
+     "hatching": {
+      "en": "None; material is tone only.",
+      "de": "Keine; das Material zeigt sich nur über den Ton."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass lightest, bellows and wheels dark, roof boxes distinct.",
+      "de": "Aufbau mittlerer Ton, Glas am hellsten, Balg und Räder dunkel, Dachkästen abgesetzt."
+     },
+     "overlays": {
+      "en": "Merged shapes list their regions; the middle module is cut at its rear end (continuation not modelled).",
+      "de": "Zusammengefasste Formen führen ihre Regionen; das Mittelmodul ist am hinteren Ende abgeschnitten (Fortsetzung nicht modelliert)."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "tram-plan",
+    "title": {
+     "en": "Tram section plan symbol",
+     "de": "Straßenbahnabschnitt-Grundrisszeichen"
+    },
+    "description": {
+     "en": "True-extent plan: end module, bellows, middle module and the collector frame.",
+     "de": "Grundriss in wahrer Ausdehnung: Endmodul, Balg, Mittelmodul und Stromabnehmerrahmen."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.45,
+         -1.2
+        ],
+        [
+         8.8,
+         -1.2
+        ],
+        [
+         9.45,
+         -0.7
+        ],
+        [
+         9.45,
+         0.7
+        ],
+        [
+         8.8,
+         1.2
+        ],
+        [
+         0.45,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "plan-end",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -6,
+         -1.2
+        ],
+        [
+         -0.45,
+         -1.2
+        ],
+        [
+         -0.45,
+         1.2
+        ],
+        [
+         -6,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "plan-mid",
+       "bone": "body-end",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.45,
+         -1
+        ],
+        [
+         0.45,
+         -1
+        ],
+        [
+         0.45,
+         1
+        ],
+        [
+         -0.45,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "plan-bellows",
+       "bone": "body-end",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2,
+         -0.6
+        ],
+        [
+         3.2,
+         -0.6
+        ],
+        [
+         3.2,
+         0.6
+        ],
+        [
+         2,
+         0.6
+        ]
+       ],
+       "closed": false,
+       "id": "plan-pantograph",
+       "bone": "body-end",
+       "role": "body",
+       "z": 5,
+       "filled": false,
+       "tone": 0.3,
+       "material": "pan-alloy",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres: length 15.45 m, width 2.40 m, cut at the rear of the middle module.",
+     "de": "Modellmeter: Länge 15,45 m, Breite 2,40 m, am Ende des Mittelmoduls abgeschnitten."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "running",
+    "title": {
+     "en": "Running at 30 km/h, pantograph raised",
+     "de": "Fahrt mit 30 km/h, Stromabnehmer angelegt"
+    },
+    "description": {
+     "en": "Doors closed, pantograph in contact with the wire at 5.0 m, traction at half power, air conditioning in climate control.",
+     "de": "Türen geschlossen, Stromabnehmer am Fahrdraht in 5,0 m Höhe, Traktion mit halber Leistung, Klimaanlage im Klimabetrieb."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.6,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 0,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "at-stop-doors-open",
+    "title": {
+     "en": "At the stop, doors open",
+     "de": "An der Haltestelle, Türen offen"
+    },
+    "description": {
+     "en": "Standing with all four door pairs open (0.55 m per leaf), traction ready, pantograph raised.",
+     "de": "Stehend mit allen vier Türpaaren offen (0,55 m je Flügel), Traktion bereit, Stromabnehmer angelegt."
+    },
+    "bones": {
+     "door-a1": {
+      "dx": -0.55
+     },
+     "door-a2": {
+      "dx": 0.55
+     },
+     "door-b1": {
+      "dx": -0.55
+     },
+     "door-b2": {
+      "dx": 0.55
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.05,
+      "rolling": 0,
+      "braking": 0.05,
+      "hvac": 0.9
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 1,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -2521.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "braking-stop",
+    "title": {
+     "en": "Emergency braking",
+     "de": "Schnellbremsung"
+    },
+    "description": {
+     "en": "Brake resistor and friction discs at full effort after 50 km/h; resistor fan running; pantograph raised.",
+     "de": "Bremswiderstand und Reibscheiben mit voller Wirkung nach 50 km/h; Widerstandslüfter läuft; Stromabnehmer angelegt."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0,
+      "rolling": 0.3,
+      "braking": 0.05,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 1,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "depot-pantograph-down",
+    "title": {
+     "en": "Depot, pantograph lowered",
+     "de": "Depot, Stromabnehmer abgesenkt"
+    },
+    "description": {
+     "en": "Everything off and cold, pantograph folded to 3.75 m, doors closed.",
+     "de": "Alles aus und kalt, Stromabnehmer auf 3,75 m eingefahren, Türen geschlossen."
+    },
+    "bones": {
+     "pan-lower": {
+      "angleDeg": -19
+     },
+     "pan-upper": {
+      "angleDeg": 44
+     },
+     "pan-head": {
+      "angleDeg": -25
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0,
+      "rolling": 0,
+      "braking": 0,
+      "hvac": 0
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 0,
+      "hvac-vent": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-start",
+    "title": {
+     "en": "Run loop start",
+     "de": "Fahrschleife start"
+    },
+    "description": {
+     "en": "Technical key of the run loop: wheelsets have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Radsätze haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "ws-f1": {
+      "angleDeg": 0
+     },
+     "ws-f2": {
+      "angleDeg": 0
+     },
+     "ws-r1": {
+      "angleDeg": 0
+     },
+     "ws-r2": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.6,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 0,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "loop-mid",
+    "title": {
+     "en": "Run loop mid",
+     "de": "Fahrschleife mid"
+    },
+    "description": {
+     "en": "Technical key of the run loop: wheelsets have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Radsätze haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "ws-f1": {
+      "angleDeg": -1080
+     },
+     "ws-f2": {
+      "angleDeg": -1080
+     },
+     "ws-r1": {
+      "angleDeg": -1080
+     },
+     "ws-r2": {
+      "angleDeg": -1080
+     }
+    },
+    "root": {
+     "x": 5.6549,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.6,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 0,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "loop-end",
+    "title": {
+     "en": "Run loop end",
+     "de": "Fahrschleife end"
+    },
+    "description": {
+     "en": "Technical key of the run loop: wheelsets have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Radsätze haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "ws-f1": {
+      "angleDeg": -2160
+     },
+     "ws-f2": {
+      "angleDeg": -2160
+     },
+     "ws-r1": {
+      "angleDeg": -2160
+     },
+     "ws-r2": {
+      "angleDeg": -2160
+     }
+    },
+    "root": {
+     "x": 11.3097,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.6,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 0,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "stop-in",
+    "title": {
+     "en": "Arriving at 30 km/h",
+     "de": "Anfahrt mit 30 km/h"
+    },
+    "description": {
+     "en": "Technical key: enters the stop clip at 30 km/h.",
+     "de": "Technische Schlüsselstellung: Einfahrt in den Halt-Clip mit 30 km/h."
+    },
+    "key": true,
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.2,
+      "rolling": 0.6,
+      "braking": 0.3,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 1,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   },
+   {
+    "id": "stop-out",
+    "title": {
+     "en": "Stopped at the platform",
+     "de": "Am Bahnsteig zum Stillstand gekommen"
+    },
+    "description": {
+     "en": "Technical key: stopped after 28.9 m of braking at 1.2 m/s2, doors still closed.",
+     "de": "Technische Schlüsselstellung: nach 28,9 m Bremsweg bei 1,2 m/s2 zum Stillstand gekommen, Türen noch geschlossen."
+    },
+    "key": true,
+    "bones": {
+     "ws-f1": {
+      "angleDeg": -5519.4934264269305
+     },
+     "ws-f2": {
+      "angleDeg": -5519.4934264269305
+     },
+     "ws-r1": {
+      "angleDeg": -5519.4934264269305
+     },
+     "ws-r2": {
+      "angleDeg": -5519.4934264269305
+     }
+    },
+    "root": {
+     "x": 28.9,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f1",
+     "contact-f2",
+     "contact-r1",
+     "contact-r2"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.05,
+      "rolling": 0,
+      "braking": 0.3,
+      "hvac": 0.9
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "gangway": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "traction-motors": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "wheelsets": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.05,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "brake-discs": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "brake-resistor": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "pantograph": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      }
+     },
+     "emitters": {
+      "resistor-fan": 1,
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-end",
+      "kind": "occupant",
+      "title": {
+       "en": "Passengers in the end module",
+       "de": "Fahrgäste im Endmodul"
+      },
+      "bone": "body-end",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body-end",
+       "fromM": 1,
+       "toM": 8,
+       "wxNPerM": 0,
+       "wyNPerM": -3922.7
+      },
+      "source": "authored-estimate",
+      "reference": "vdv-154"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "run-loop",
+    "title": {
+     "en": "Run loop at 30 km/h",
+     "de": "Fahrschleife mit 30 km/h"
+    },
+    "description": {
+     "en": "Six wheel turns (11.31 m) per cycle at 8.33 m/s: all four wheelsets roll with theta = -x / r, the root advances one cycle length every loop, traction at half power.",
+     "de": "Sechs Radumdrehungen (11.31 m) pro Zyklus mit 8,33 m/s: alle vier Radsätze rollen mit theta = -x / r, die Wurzel rückt je Schleife um eine Zykluslänge vor, Traktion mit halber Leistung."
+    },
+    "durationS": 1.3577,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "loop-start",
+      "ease": "linear"
+     },
+     {
+      "t": 0.6788,
+      "pose": "loop-mid",
+      "ease": "linear"
+     },
+     {
+      "t": 1.3577,
+      "pose": "loop-end",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f1",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-f2",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r1",
+      "fromS": 0,
+      "toS": 1.3577
+     },
+     {
+      "anchor": "contact-r2",
+      "fromS": 0,
+      "toS": 1.3577
+     }
+    ],
+    "phases": [
+     {
+      "id": "cruise",
+      "fromS": 0,
+      "toS": 1.3577,
+      "title": {
+       "en": "Steady run",
+       "de": "Gleichmäßige Fahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "operating",
+      "title": {
+       "en": "Traction at half power",
+       "de": "Traktion mit halber Leistung"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 1.3577,
+        "v": 0.5
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 1.3577,
+        "v": 0.6
+       }
+      ]
+     },
+     {
+      "target": "emitter:hvac-vent",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1.3577,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "stop-and-open-doors",
+    "title": {
+     "en": "Brake at the stop and open the doors",
+     "de": "An der Haltestelle bremsen und Türen öffnen"
+    },
+    "description": {
+     "en": "The tram brakes at 1.2 m/s2 from 30 km/h to rest over 28.9 m (6.9 s) with the brake resistor, then all door pairs slide open.",
+     "de": "Die Straßenbahn bremst mit 1,2 m/s2 von 30 km/h in 28,9 m (6,9 s) bis zum Stillstand mit dem Bremswiderstand, dann gleiten alle Türpaare auf."
+    },
+    "durationS": 14,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stop-in",
+      "ease": "out"
+     },
+     {
+      "t": 6.94,
+      "pose": "stop-out",
+      "ease": "linear"
+     },
+     {
+      "t": 8,
+      "pose": "stop-out",
+      "ease": "smooth",
+      "bones": {
+       "ws-f1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-f2": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r2": {
+        "angleDeg": -5519.4934264269305
+       }
+      }
+     },
+     {
+      "t": 9.5,
+      "pose": "stop-out",
+      "ease": "smooth",
+      "bones": {
+       "ws-f1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-f2": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r2": {
+        "angleDeg": -5519.4934264269305
+       },
+       "door-a1": {
+        "dx": -0.55
+       },
+       "door-a2": {
+        "dx": 0.55
+       },
+       "door-b1": {
+        "dx": -0.55
+       },
+       "door-b2": {
+        "dx": 0.55
+       }
+      }
+     },
+     {
+      "t": 14,
+      "pose": "stop-out",
+      "ease": "linear",
+      "bones": {
+       "ws-f1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-f2": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r1": {
+        "angleDeg": -5519.4934264269305
+       },
+       "ws-r2": {
+        "angleDeg": -5519.4934264269305
+       },
+       "door-a1": {
+        "dx": -0.55
+       },
+       "door-a2": {
+        "dx": 0.55
+       },
+       "door-b1": {
+        "dx": -0.55
+       },
+       "door-b2": {
+        "dx": 0.55
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f1",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-f2",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r1",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r2",
+      "fromS": 0,
+      "toS": 14
+     }
+    ],
+    "phases": [
+     {
+      "id": "brake",
+      "fromS": 0,
+      "toS": 6.94,
+      "title": {
+       "en": "Braking to rest",
+       "de": "Bremsen bis zum Stillstand"
+      }
+     },
+     {
+      "id": "doors",
+      "fromS": 8,
+      "toS": 9.5,
+      "title": {
+       "en": "Doors open",
+       "de": "Türen öffnen"
+      }
+     },
+     {
+      "id": "dwell",
+      "fromS": 9.5,
+      "toS": 14,
+      "title": {
+       "en": "Passenger exchange",
+       "de": "Fahrgastwechsel"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6.94,
+      "kind": "motion",
+      "title": {
+       "en": "Standstill",
+       "de": "Stillstand"
+      }
+     },
+     {
+      "t": 8,
+      "kind": "motion",
+      "title": {
+       "en": "Doors start to open",
+       "de": "Türen beginnen zu öffnen"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:braking",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 3,
+        "v": 0.7
+       },
+       {
+        "t": 6.94,
+        "v": 0.3
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 14,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.2
+       },
+       {
+        "t": 1,
+        "v": 0
+       },
+       {
+        "t": 6.94,
+        "v": 0
+       },
+       {
+        "t": 14,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 6.94,
+        "v": 0
+       },
+       {
+        "t": 14,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:resistor-fan",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:hvac-vent",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 14,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "pantograph-cycle",
+    "title": {
+     "en": "Lower and raise the pantograph",
+     "de": "Stromabnehmer senken und heben"
+    },
+    "description": {
+     "en": "At standstill in the depot the pantograph is lowered to 3.75 m in 3 s, rests, and is raised again to the wire at 5.0 m; traction current collection stops in between.",
+     "de": "Im Stand im Depot wird der Stromabnehmer in 3 s auf 3,75 m gesenkt, ruht und wird wieder an den Fahrdraht in 5,0 m gehoben; die Stromabnahme der Traktion setzt dazwischen aus."
+    },
+    "durationS": 12,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "running",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "running",
+      "ease": "smooth"
+     },
+     {
+      "t": 4,
+      "pose": "depot-pantograph-down",
+      "ease": "linear"
+     },
+     {
+      "t": 7,
+      "pose": "depot-pantograph-down",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "running",
+      "ease": "linear"
+     },
+     {
+      "t": 12,
+      "pose": "running",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f1",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-f2",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r1",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r2",
+      "fromS": 0,
+      "toS": 12
+     }
+    ],
+    "phases": [
+     {
+      "id": "lower",
+      "fromS": 1,
+      "toS": 4,
+      "title": {
+       "en": "Pantograph lowers",
+       "de": "Stromabnehmer senkt"
+      }
+     },
+     {
+      "id": "raise",
+      "fromS": 7,
+      "toS": 10,
+      "title": {
+       "en": "Pantograph raises",
+       "de": "Stromabnehmer hebt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "shutdown",
+      "title": {
+       "en": "Traction off",
+       "de": "Traktion aus"
+      }
+     },
+     {
+      "t": 10,
+      "kind": "ignition",
+      "title": {
+       "en": "Wire contact restored",
+       "de": "Fahrdrahtkontakt hergestellt"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 1,
+        "v": 0.05
+       },
+       {
+        "t": 2,
+        "v": 0
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 10,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 0.05
+       }
+      ]
+     },
+     {
+      "target": "operating:hvac",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.7
+       },
+       {
+        "t": 4,
+        "v": 0
+       },
+       {
+        "t": 10,
+        "v": 0.7
+       },
+       {
+        "t": 12,
+        "v": 0.7
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "traction",
+     "title": {
+      "en": "Traction power",
+      "de": "Fahrleistung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.05,
+       "title": {
+        "en": "Ready, standing",
+        "de": "Bereit, stehend"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Cruising",
+        "de": "Reisefahrt"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full power 480 kW",
+        "de": "Volle Leistung 480 kW"
+       }
+      }
+     ]
+    },
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.6,
+       "title": {
+        "en": "About 30 km/h",
+        "de": "Etwa 30 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 50 km/h",
+        "de": "Etwa 50 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Braking (resistor and friction)",
+      "de": "Bremsen (Widerstand und Reibung)"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Service braking",
+        "de": "Betriebsbremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Emergency braking from 50 km/h",
+        "de": "Schnellbremsung aus 50 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "hvac",
+     "title": {
+      "en": "Roof air conditioning",
+      "de": "Dachklimaanlage"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Ventilation",
+        "de": "Lüftung"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Climate control",
+        "de": "Klimatisierung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Maximum",
+        "de": "Maximum"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "body-panels",
+     "title": {
+      "en": "Painted side and end panels",
+      "de": "Lackierte Seiten- und Stirnwände"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "paint",
+     "areaM2": 55,
+     "characteristicLengthM": 2.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium skin 1.5 mm",
+        "de": "Lackierte Aluminiumhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 50 mm",
+        "de": "Mineralwolle-Verkleidung 50 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.05,
+       "resistanceM2KW": 1.25,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "roof",
+     "title": {
+      "en": "Roof panel",
+      "de": "Dachblech"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "paint",
+     "areaM2": 36,
+     "characteristicLengthM": 2.4,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium skin 1.5 mm",
+        "de": "Lackierte Aluminiumhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 50 mm",
+        "de": "Mineralwolle-Verkleidung 50 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.05,
+       "resistanceM2KW": 1.25,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "glazing",
+     "title": {
+      "en": "Window band and cab glazing",
+      "de": "Fensterband und Fahrerstandverglasung"
+     },
+     "kind": "glazing",
+     "model": "conditioned",
+     "material": "glass",
+     "areaM2": 26,
+     "characteristicLengthM": 1.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "pane-out",
+       "title": {
+        "en": "Toughened glass 6 mm",
+        "de": "Einscheibensicherheitsglas 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.006,
+       "heatCapacityJM2K": 11000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "gap",
+       "title": {
+        "en": "Air gap 12 mm",
+        "de": "Luftspalt 12 mm"
+       },
+       "kind": "air-gap",
+       "material": "glass",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.15,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "pane-in",
+       "title": {
+        "en": "Toughened glass 6 mm",
+        "de": "Einscheibensicherheitsglas 6 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.006,
+       "heatCapacityJM2K": 11000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 22000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "doors",
+     "title": {
+      "en": "Plug-sliding door leaves",
+      "de": "Schwenkschiebetürflügel"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "paint",
+     "areaM2": 11,
+     "characteristicLengthM": 1.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium skin 1.5 mm",
+        "de": "Lackierte Aluminiumhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 50 mm",
+        "de": "Mineralwolle-Verkleidung 50 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.05,
+       "resistanceM2KW": 1.25,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "gangway",
+     "title": {
+      "en": "Articulation bellows",
+      "de": "Gelenkbalg"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "rubber",
+     "areaM2": 9,
+     "characteristicLengthM": 1.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "fabric",
+       "title": {
+        "en": "Rubber-coated fabric 8 mm",
+        "de": "Gummiertes Gewebe 8 mm"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.04,
+       "heatCapacityJM2K": 3000,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 3000,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "traction-motors",
+     "title": {
+      "en": "Traction motors and bogie frames",
+      "de": "Fahrmotoren und Drehgestellrahmen"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "motor-steel",
+     "areaM2": 4.5,
+     "characteristicLengthM": 0.5,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.15,
+     "layers": [],
+     "heatCapacityJM2K": 20000,
+     "operating": {
+      "key": "traction",
+      "heatW": 11765.6
+     },
+     "source": "authored-estimate",
+     "reference": "en-13452"
+    },
+    {
+     "id": "wheelsets",
+     "title": {
+      "en": "Steel wheels and axles",
+      "de": "Stahlräder und Achsen"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "steel-wheel",
+     "areaM2": 3.5,
+     "characteristicLengthM": 0.6,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [],
+     "heatCapacityJM2K": 22000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 600
+     },
+     "source": "authored-estimate",
+     "reference": "en-13803"
+    },
+    {
+     "id": "brake-discs",
+     "title": {
+      "en": "Friction brake discs",
+      "de": "Reibbremsscheiben"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "cast-iron",
+     "areaM2": 1.6,
+     "characteristicLengthM": 0.6,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.2,
+     "layers": [],
+     "heatCapacityJM2K": 22000,
+     "operating": {
+      "key": "braking",
+      "heatW": 15703.1
+     },
+     "source": "authored-estimate",
+     "reference": "en-13452"
+    },
+    {
+     "id": "brake-resistor",
+     "title": {
+      "en": "Roof brake resistor box",
+      "de": "Dach-Bremswiderstandskasten"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "resistor-steel",
+     "areaM2": 3.2,
+     "characteristicLengthM": 1.8,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 9000,
+     "operating": {
+      "key": "braking",
+      "heatW": 30000
+     },
+     "source": "authored-estimate",
+     "reference": "en-13452"
+    },
+    {
+     "id": "hvac-unit",
+     "title": {
+      "en": "Roof air-conditioning unit",
+      "de": "Dachklimagerät"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "paint",
+     "areaM2": 7,
+     "characteristicLengthM": 2.8,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 6000,
+     "operating": {
+      "key": "hvac",
+      "heatW": 3000
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "pantograph",
+     "title": {
+      "en": "Pantograph arms and collector",
+      "de": "Stromabnehmerarme und Schleifleiste"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "pan-alloy",
+     "areaM2": 1.1,
+     "characteristicLengthM": 0.06,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 3000,
+     "operating": {
+      "key": "traction",
+      "heatW": 300
+     },
+     "source": "authored-estimate",
+     "reference": "en-50163"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "resistor-fan",
+     "kind": "fan",
+     "title": {
+      "en": "Brake resistor cooling air",
+      "de": "Kühlluft des Bremswiderstands"
+     },
+     "anchor": "resistor-vent",
+     "directionDeg": 90,
+     "diameterM": 0.7,
+     "operatingKey": "braking",
+     "volumeFlowM3S": 2,
+     "temperatureRiseK": 55,
+     "vapourKgPerKg": 0,
+     "source": "authored-estimate",
+     "reference": "en-13452"
+    },
+    {
+     "id": "hvac-vent",
+     "kind": "vent",
+     "title": {
+      "en": "Roof air-conditioning exhaust air",
+      "de": "Abluft der Dachklimaanlage"
+     },
+     "anchor": "hvac-vent",
+     "directionDeg": 90,
+     "diameterM": 0.9,
+     "operatingKey": "hvac",
+     "volumeFlowM3S": 2.5,
+     "temperatureRiseK": 20,
+     "vapourKgPerKg": 0,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Heat at level 1: traction motors 12 kW (losses of 480 kW at 93 %, about a third leaves through the housing), friction brake discs 30 kW and brake resistor box 30 kW surface release (about 150 kW resistor duty of which 120 kW leaves with the cooling air), air conditioning 3 kW, wheels 0.6 kW, collector 0.3 kW. Emergency braking from 50 km/h: 0.5 * 20 t * 13.9 m/s squared = 1.9 MJ in 5 s (EN 13452-1). Authored estimates.",
+     "de": "Wärme bei Stufe 1: Fahrmotoren 12 kW (Verluste von 480 kW bei 93 %, etwa ein Drittel über das Gehäuse), Reibbremsscheiben 30 kW und Bremswiderstandskasten 30 kW Oberflächenabgabe (rund 150 kW Widerstandsleistung, davon 120 kW mit der Kühlluft), Klimaanlage 3 kW, Räder 0,6 kW, Schleifleiste 0,3 kW. Schnellbremsung aus 50 km/h: 0,5 * 20 t * (13,9 m/s)^2 = 1,9 MJ in 5 s (EN 13452-1). Selbst gesetzte Schätzwerte."
+    },
+    {
+     "en": "Resistor fan: 150 kW * 0.8 = 120 kW into 2.0 m3/s of air (rho 1.1 kg/m3, cp 1006 J/(kg K)) gives 55 K. Air-conditioning outlet: about 55 kW rejected heat of a 40 kW cooling load into 2.5 m3/s gives 20 K. Both scale linearly with their operating level.",
+     "de": "Widerstandslüfter: 150 kW * 0,8 = 120 kW in 2,0 m3/s Luft (rho 1,1 kg/m3, cp 1006 J/(kg K)) ergibt 55 K. Klimaauslass: etwa 55 kW abgeführte Wärme bei 40 kW Kühlleistung in 2,5 m3/s ergibt 20 K. Beide skalieren linear mit ihrer Betriebsstufe."
+    },
+    {
+     "en": "The asset is a section: end module with cab (9.0 m), articulation (0.9 m) and a suspended middle module cut after 5.55 m; the continuation is not modelled. The middle module hangs from the end module, which stands on its two bogies; the centre of mass lies between the bogies.",
+     "de": "Das Asset ist ein Ausschnitt: Endmodul mit Fahrerstand (9,0 m), Gelenk (0,9 m) und ein eingehängtes Mittelmodul, nach 5,55 m abgeschnitten; die Fortsetzung wird nicht modelliert. Das Mittelmodul hängt am Endmodul, das auf seinen beiden Drehgestellen steht; der Schwerpunkt liegt zwischen den Drehgestellen."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Rigid bodies on four unilateral wheel-rail contacts; the middle module hangs from the end module through the articulation, whose pitch is limited to 3 degrees.",
+     "de": "Starre Körper auf vier einseitigen Rad-Schiene-Kontakten; das Mittelmodul hängt über das Gelenk am Endmodul, dessen Nicken auf 3 Grad begrenzt ist."
+    },
+    {
+     "en": "Door leaves are projected plug-sliding doors; the pantograph is a two-arm linkage whose raised geometry (22 and 158 degrees, 1.9 m arms) puts the collector 5.0 m above the rail.",
+     "de": "Türflügel sind projizierte Schwenkschiebetüren; der Stromabnehmer ist ein Zweiarmgestänge, dessen angelegte Geometrie (22 und 158 Grad, 1,9-m-Arme) die Schleifleiste 5,0 m über der Schiene hält."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "running",
+   "defaultClip": "run-loop",
+   "defaultScale": 200,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

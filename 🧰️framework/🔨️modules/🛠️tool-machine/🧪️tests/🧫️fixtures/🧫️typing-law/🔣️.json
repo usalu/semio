@@ -262,13 +262,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "H"
-                    }
+                    "at": 0,
+                    "text": "H"
                   }
                 ]
               }
@@ -314,13 +311,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "Hi"
-                    }
+                    "at": 0,
+                    "text": "Hi"
                   }
                 ]
               }
@@ -366,13 +360,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "Hi!"
-                    }
+                    "at": 0,
+                    "text": "Hi!"
                   }
                 ]
               }
@@ -398,13 +389,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "Hi!"
-                    }
+                    "at": 0,
+                    "text": "Hi!"
                   }
                 ]
               }
@@ -480,13 +468,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -545,13 +530,10 @@
                   "id": "tx-d070e25d9a2f9d25",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 1,
-                      "text": "b"
-                    }
+                    "at": 1,
+                    "text": "b"
                   }
                 ]
               }
@@ -624,13 +606,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "ab"
-                    }
+                    "at": 0,
+                    "text": "ab"
                   }
                 ]
               }
@@ -689,13 +668,10 @@
                   "id": "tx-3e37545791df2087",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 10,
-                      "text": "x"
-                    }
+                    "at": 10,
+                    "text": "x"
                   }
                 ]
               }
@@ -768,13 +744,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "q"
-                    }
+                    "at": 0,
+                    "text": "q"
                   }
                 ]
               }
@@ -859,13 +832,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -924,13 +894,10 @@
                   "id": "tx-3e37545791df2087",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 1,
-                      "text": "b"
-                    }
+                    "at": 1,
+                    "text": "b"
                   }
                 ]
               }
@@ -981,13 +948,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -1049,13 +1013,10 @@
                   "id": "tx-3e37545791df2087",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "b"
-                    }
+                    "at": 0,
+                    "text": "b"
                   }
                 ]
               }
@@ -1101,13 +1062,10 @@
                   "id": "tx-3e37545791df2087",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "b"
-                    }
+                    "at": 0,
+                    "text": "b"
                   }
                 ]
               },
@@ -1119,13 +1077,10 @@
                   "id": "tx-93ad74783258f7ab",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 5,
-                      "text": "c"
-                    }
+                    "at": 5,
+                    "text": "c"
                   }
                 ]
               }
@@ -1222,13 +1177,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -1269,7 +1221,7 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": []
+                "net": []
               }
             },
             "provisional": []
@@ -1329,13 +1281,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "x"
-                    }
+                    "at": 0,
+                    "text": "x"
                   }
                 ]
               }
@@ -1381,13 +1330,10 @@
                   "id": "tx-81c50921006ee139",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 3,
-                      "text": "y"
-                    }
+                    "at": 3,
+                    "text": "y"
                   }
                 ]
               },
@@ -1399,13 +1345,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "x"
-                    }
+                    "at": 0,
+                    "text": "x"
                   }
                 ]
               }
@@ -1502,13 +1445,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -1566,12 +1506,9 @@
                   "id": "tx-08305e60ffd95984",
                   "tool": "demo#textEdit"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "text": "query"
-                    }
+                    "text": "query"
                   }
                 ]
               }
@@ -1621,13 +1558,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               }
@@ -1673,13 +1607,10 @@
                   "id": "tx-22fa3e9845d13fe3",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "a"
-                    }
+                    "at": 0,
+                    "text": "a"
                   }
                 ]
               },
@@ -1691,13 +1622,10 @@
                   "id": "tx-81c50921006ee139",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "b"
-                    }
+                    "at": 0,
+                    "text": "b"
                   }
                 ]
               }
@@ -1747,13 +1675,10 @@
                   "id": "tx-81c50921006ee139",
                   "tool": "demo#textSplice"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "at": 0,
-                      "text": "b"
-                    }
+                    "at": 0,
+                    "text": "b"
                   }
                 ]
               }
@@ -1803,12 +1728,9 @@
                   "id": "tx-73a0effc40eab38f",
                   "tool": "demo#textEdit"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "text": "m"
-                    }
+                    "text": "m"
                   }
                 ]
               }
@@ -1852,12 +1774,9 @@
                   "id": "tx-73a0effc40eab38f",
                   "tool": "demo#textEdit"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "text": "ma"
-                    }
+                    "text": "ma"
                   }
                 ]
               }
@@ -1901,12 +1820,9 @@
                   "id": "tx-73a0effc40eab38f",
                   "tool": "demo#textEdit"
                 },
-                "entries": [
+                "net": [
                   {
-                    "key": "0",
-                    "mutation": {
-                      "text": "match"
-                    }
+                    "text": "match"
                   }
                 ]
               }

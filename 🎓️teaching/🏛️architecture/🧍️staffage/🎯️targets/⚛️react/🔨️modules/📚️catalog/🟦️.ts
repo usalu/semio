@@ -1,17 +1,20 @@
 /** 📚️ The catalog of the archive: the manifest, one lazily loaded and validated document per category, and the rows the pages read.
  *
  * Each category file is its own chunk, loaded when a page needs it. Every asset passes `validateAsset` before it is offered; one that fails, or one the manifest plans but nobody has authored, stays in its place as an
- * unavailable row with the reason, and never stops the rest. Loading reports progress per asset, yields to the browser between assets and can be cancelled; a cancelled load leaves the category idle so it can be retried.
- * Once every category is loaded `validateManifest` checks the whole archive.
+ * unavailable row with the reason, and never stops the rest. Loading reports progress per asset, yields to the browser every eight assets and can be cancelled; a cancelled load leaves the category idle so it can be retried.
+ * Once every category is loaded `validateManifest` checks the whole archive against every loaded document, including one `validateAsset` rejected.
  *
  * @see ../🔎️search/🟦️.ts — `Row`
  * @see ../../../../🗂️catalog/🔣️.json — the manifest
  */
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { CATEGORIES, validateAsset, validateManifest } from "@teaching/staffage";
-import type { Asset, CategoryDocument, CategoryEntry, CategoryId, Issue, JobControl, Manifest, ManifestEntry, Slug, Text } from "@teaching/staffage";
+import { CATEGORIES, SCALE_DENOMINATORS, validateAsset, validateManifest } from "@teaching/staffage";
+import type { Asset, AssetDocument, CategoryEntry, CategoryId, Issue, JobControl, Manifest, ManifestEntry, Slug, Text } from "@teaching/staffage";
 import manifestDocument from "../../../../🗂️catalog/🔣️.json";
 import { namedPoses, type Row } from "../🔎️search/🟦️.ts";
+
+/** 📚️ The assets of one category folder, gathered from its one-file-per-asset documents. */
+export type CategoryDocument = { readonly assets: readonly Asset[] };
 
 /** 🔌️ Where catalog documents come from; the app bundles them, tests inject their own. */
 export interface CatalogSource {
@@ -19,17 +22,20 @@ export interface CatalogSource {
   readonly category: (entry: CategoryEntry, signal?: AbortSignal) => Promise<CategoryDocument | null>;
 }
 
-const documents = import.meta.glob<CategoryDocument>("../../../../🗂️catalog/*/🔣️.json", { import: "default" });
+const documents = import.meta.glob<AssetDocument>("../../../../🗂️catalog/*/*/🔣️.json", { import: "default" });
 const stripSelectors = (path: string): string => path.replaceAll("️", "");
 
-/** 📦️ The catalog bundled with the site: the manifest inline, each category file a chunk of its own; a category whose file does not exist yet loads as `null`. */
+/** 📦️ The catalog bundled with the site: the manifest inline, each asset file a chunk of its own, gathered per category folder; a category without asset files loads as `null`. */
 export const bundledCatalog: CatalogSource = {
   manifest: async () => manifestDocument as unknown as Manifest,
   category: async (entry, signal) => {
     signal?.throwIfAborted();
-    const wanted = stripSelectors(entry.file);
-    const key = Object.keys(documents).find((path) => stripSelectors(path).endsWith(`/${wanted}`));
-    return key === undefined ? null : await documents[key]!();
+    const wanted = `/${stripSelectors(entry.folder)}/`;
+    const keys = Object.keys(documents).filter((path) => stripSelectors(path).includes(wanted)).sort();
+    if (keys.length === 0) return null;
+    const loaded = await Promise.all(keys.map((key) => documents[key]!()));
+    signal?.throwIfAborted();
+    return { assets: loaded.map((document) => document.asset) };
   },
 };
 
@@ -51,12 +57,22 @@ const tx = (en: string, de: string): Text => ({ en, de });
 const isAbort = (error: unknown): boolean => error instanceof DOMException && error.name === "AbortError";
 
 const yieldToBrowser = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+const assetIssues = new WeakMap<Asset, readonly Issue[]>();
+const PROGRESS_STRIDE = 8;
 
-function entryOf(asset: Asset): ManifestEntry {
-  return { id: asset.id, category: asset.category, title: asset.title, heightM: asset.dimensions.heightM, widthM: asset.dimensions.widthM, poses: namedPoses(asset).map((pose) => pose.id), clips: asset.clips.map((clip) => clip.id), analytics: [asset.thermal.regions.length > 0 ? "thermal" : null, "structural"].filter((item): item is "thermal" | "structural" => item !== null), viewpoints: asset.presentation.viewpoints, exports: asset.exports, distinction: asset.summary, completion: asset.completion };
+function cachedValidateAsset(asset: Asset): readonly Issue[] {
+  const hit = assetIssues.get(asset);
+  if (hit !== undefined) return hit;
+  const issues = validateAsset(asset);
+  assetIssues.set(asset, issues);
+  return issues;
 }
 
-type Loaded = { readonly assets: ReadonlyMap<Slug, Asset>; readonly invalid: ReadonlyMap<Slug, readonly Issue[]>; readonly extra: readonly Asset[] };
+function entryOf(asset: Asset): ManifestEntry {
+  return { id: asset.id, category: asset.category, title: asset.title, heightM: asset.dimensions.heightM, widthM: asset.dimensions.widthM, poses: namedPoses(asset).map((pose) => pose.id), clips: asset.clips.map((clip) => clip.id), representations: Object.fromEntries(SCALE_DENOMINATORS.map((denominator) => [`${denominator}`, asset.representations[`${denominator}`]!.status])) as ManifestEntry["representations"], symbols: asset.symbols.map((symbol) => symbol.id), analytics: [asset.thermal.regions.length > 0 ? "thermal" : null, asset.thermal.emitters.length > 0 ? "transport" : null, "structural"].filter((item): item is "thermal" | "transport" | "structural" => item !== null), viewpoints: asset.presentation.viewpoints, exports: asset.exports, distinction: asset.summary, completion: asset.completion };
+}
+
+type Loaded = { readonly assets: ReadonlyMap<Slug, Asset>; readonly allAssets: ReadonlyMap<Slug, Asset>; readonly invalid: ReadonlyMap<Slug, readonly Issue[]>; readonly extra: readonly Asset[] };
 
 /** 🏪️ The catalog store: `loadManifest`, `loadCategory`, `loadAll`; read through {@link useCatalog}. */
 export class CatalogStore {
@@ -68,7 +84,7 @@ export class CatalogStore {
   readonly #source: CatalogSource;
   readonly #validate: (asset: Asset) => readonly Issue[];
 
-  constructor(source: CatalogSource, validate: (asset: Asset) => readonly Issue[] = validateAsset) {
+  constructor(source: CatalogSource, validate: (asset: Asset) => readonly Issue[] = cachedValidateAsset) {
     this.#source = source;
     this.#validate = validate;
   }
@@ -151,15 +167,17 @@ export class CatalogStore {
       const document = await this.#source.category(entry, signal);
       signal.throwIfAborted();
       if (document === null) {
-        this.#loaded.set(id, { assets: new Map(), invalid: new Map(), extra: [] });
+        this.#loaded.set(id, { assets: new Map(), allAssets: new Map(), invalid: new Map(), extra: [] });
         return this.#category(id, { state: "ready", done: planned, total: planned, absent: true });
       }
       const assets = new Map<Slug, Asset>();
+      const allAssets = new Map<Slug, Asset>();
       const invalid = new Map<Slug, readonly Issue[]>();
       const total = document.assets.length;
       for (const [index, asset] of document.assets.entries()) {
-        await yieldToBrowser();
+        if (index % PROGRESS_STRIDE === 0) await yieldToBrowser();
         signal.throwIfAborted();
+        allAssets.set(asset.id, asset);
         let issues: readonly Issue[];
         try {
           issues = this.#validate(asset);
@@ -169,10 +187,10 @@ export class CatalogStore {
         if (issues.length === 0) assets.set(asset.id, asset);
         else invalid.set(asset.id, issues);
         progress?.(index + 1, total, asset.title);
-        this.#category(id, { state: "loading", done: index + 1, total });
+        if ((index + 1) % PROGRESS_STRIDE === 0) this.#category(id, { state: "loading", done: index + 1, total }, false);
       }
       const known = new Set(manifest.entries.map((candidate) => candidate.id));
-      this.#loaded.set(id, { assets, invalid, extra: [...assets.values()].filter((asset) => !known.has(asset.id)) });
+      this.#loaded.set(id, { assets, allAssets, invalid, extra: [...assets.values()].filter((asset) => !known.has(asset.id)) });
       this.#category(id, { state: "ready", done: total, total });
     } catch (error) {
       if (isAbort(error) || signal.aborted) return this.#running.get(id)?.controller.signal === signal || !this.#running.has(id) ? this.#category(id, IDLE) : undefined;
@@ -180,8 +198,14 @@ export class CatalogStore {
     }
   }
 
-  #category(id: CategoryId, progress: CategoryProgress): void {
-    this.#set({ categories: { ...this.#snapshot.categories, [id]: progress } });
+  #category(id: CategoryId, progress: CategoryProgress, rebuild = true): void {
+    const categories = { ...this.#snapshot.categories, [id]: progress };
+    if (!rebuild) {
+      this.#snapshot = { ...this.#snapshot, categories };
+      for (const listener of [...this.#listeners]) listener();
+      return;
+    }
+    this.#set({ categories });
   }
 
   #set(patch: Partial<CatalogSnapshot>): void {
@@ -207,7 +231,9 @@ export class CatalogStore {
 
   #issues(snapshot: CatalogSnapshot): readonly Issue[] | null {
     if (snapshot.manifest === null || !snapshot.manifest.categories.every((category) => snapshot.categories[category.id].state === "ready")) return null;
-    return validateManifest(snapshot.manifest, snapshot.rows.flatMap((row) => (row.asset === undefined ? [] : [row.asset])));
+    const authored: Asset[] = [];
+    for (const loaded of this.#loaded.values()) for (const asset of loaded.allAssets.values()) authored.push(asset);
+    return validateManifest(snapshot.manifest, authored);
   }
 }
 

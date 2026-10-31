@@ -1,0 +1,217 @@
+{
+ "id": "parcel-jet",
+ "oracle": "scipy.integrate.solve_ivp (RK45, rtol 1e-10) re-integrating the documented parcel ODE with an independent psychrometric implementation; closed-form top-hat round-jet law u = U0/(1 + 2 alpha x / r0)",
+ "tolerances": {
+  "positionM": 0.002,
+  "relative": 0.005,
+  "excessK": 0.05,
+  "condensateGKg": 0.02,
+  "analyticRelative": 0.01
+ },
+ "turbulence": {
+  "intensity": 0,
+  "floorMS": 1e-06,
+  "lagrangianTimeS": 1
+ },
+ "alphaJet": 0.076,
+ "alphaPlume": 0.116,
+ "cases": [
+  {
+   "id": "momentum-jet",
+   "emitter": {
+    "volumeFlowM3S": 0.05,
+    "temperatureRiseK": 2,
+    "diameterM": 0.05,
+    "vapourKgPerKg": 0.004318
+   },
+   "ages": [
+    0.05,
+    0.1,
+    0.2,
+    0.4
+   ]
+  },
+  {
+   "id": "hot-jet",
+   "emitter": {
+    "volumeFlowM3S": 0.05,
+    "temperatureRiseK": 150,
+    "vapourKgPerKg": 0.07,
+    "diameterM": 0.05
+   },
+   "ages": [
+    0.1,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  {
+   "id": "condensing-puff",
+   "emitter": {
+    "volumeFlowM3S": 0.0005,
+    "temperatureRiseK": 29,
+    "vapourKgPerKg": 0.033,
+    "diameterM": 0.0124
+   },
+   "ages": [
+    0.1,
+    0.3,
+    0.6,
+    1.0,
+    2.0
+   ]
+  }
+ ],
+ "expected": {
+  "momentum-jet": [
+   {
+    "ageS": 0.05,
+    "x": 1.2977998825303647,
+    "y": 0.5000278036691853,
+    "ux": -6.257371889576088,
+    "uy": 0.0008679949852068499,
+    "radiusM": 0.10146435358503844,
+    "excessK": 0.4914598380487911,
+    "vapourExcessKgPerKg": 5.4853522767741095e-06,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 0.1,
+    "x": 1.0362610875132394,
+    "y": 0.500081230955242,
+    "ux": -4.493581705372305,
+    "uy": 0.001246660235111628,
+    "radiusM": 0.14125525825482466,
+    "excessK": 0.35293056962092706,
+    "vapourExcessKgPerKg": 3.9391743168583696e-06,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 0.2,
+    "x": 0.6622711968714353,
+    "y": 0.5002339653147649,
+    "ux": -3.2027151771463083,
+    "uy": 0.001777067625978398,
+    "radiusM": 0.19815257030541786,
+    "excessK": 0.2515448138694172,
+    "vapourExcessKgPerKg": 2.807571820703271e-06,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 0.4,
+    "x": 0.13039212398680294,
+    "y": 0.5006683006473199,
+    "ux": -2.2736418632225037,
+    "uy": 0.0025231195458056102,
+    "radiusM": 0.2790865073143878,
+    "excessK": 0.17857448497288697,
+    "vapourExcessKgPerKg": 1.993125355356784e-06,
+    "condensateKgPerKg": 0.0
+   }
+  ],
+  "hot-jet": [
+   {
+    "ageS": 0.1,
+    "x": 1.1400452020087104,
+    "y": 0.5058530865619354,
+    "ux": -3.855098877402519,
+    "uy": 0.09008557829348314,
+    "radiusM": 0.136382491814213,
+    "excessK": 23.770419148764056,
+    "vapourExcessKgPerKg": 0.009946936651025591,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 0.5,
+    "x": 0.18002071229161282,
+    "y": 0.5675389840452613,
+    "ux": -1.7311969747441602,
+    "uy": 0.2026566483607878,
+    "radiusM": 0.2956098349985011,
+    "excessK": 10.72379853054141,
+    "vapourExcessKgPerKg": 0.004466839161809207,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 1.0,
+    "x": -0.5293614721895538,
+    "y": 0.6895943488141952,
+    "ux": -1.1945028469106582,
+    "uy": 0.2798058386125074,
+    "radiusM": 0.421567665353206,
+    "excessK": 7.407922179800103,
+    "vapourExcessKgPerKg": 0.003082059507563565,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 2.0,
+    "x": -1.4912214769670533,
+    "y": 1.020023211370337,
+    "ux": -0.7936446482412587,
+    "uy": 0.37195923055329144,
+    "radiusM": 0.6090286400272709,
+    "excessK": 4.926227062341779,
+    "vapourExcessKgPerKg": 0.0020477640886878675,
+    "condensateKgPerKg": 0.0
+   }
+  ],
+  "condensing-puff": [
+   {
+    "ageS": 0.1,
+    "x": 1.6583027307371316,
+    "y": 0.5019073894079719,
+    "ux": -0.8549725893459491,
+    "uy": 0.030244152984902312,
+    "radiusM": 0.02876401501645848,
+    "excessK": 8.202531895873566,
+    "vapourExcessKgPerKg": 0.005073120581368355,
+    "condensateKgPerKg": 0.0008623381726986333
+   },
+   {
+    "ageS": 0.3,
+    "x": 1.5326349453554573,
+    "y": 0.5104881198321786,
+    "ux": -0.4945749696209558,
+    "uy": 0.052979238794586055,
+    "radiusM": 0.04925889540556531,
+    "excessK": 4.514767266575065,
+    "vapourExcessKgPerKg": 0.003032713992338899,
+    "condensateKgPerKg": 0.00039901436558380173
+   },
+   {
+    "ageS": 0.6,
+    "x": 1.4107619731248022,
+    "y": 0.529420404095446,
+    "ux": -0.3430488601800051,
+    "uy": 0.07147698632497493,
+    "radiusM": 0.07024667006424282,
+    "excessK": 2.8151866767850526,
+    "vapourExcessKgPerKg": 0.002232972166925809,
+    "condensateKgPerKg": 0.00014628231466541324
+   },
+   {
+    "ageS": 1.0,
+    "x": 1.292637320954996,
+    "y": 0.5610794959280679,
+    "ux": -0.2580168523923097,
+    "uy": 0.08548576927428521,
+    "radiusM": 0.09180452541622655,
+    "excessK": 1.8482933157318948,
+    "vapourExcessKgPerKg": 0.0017887869945980772,
+    "condensateKgPerKg": 0.0
+   },
+   {
+    "ageS": 2.0,
+    "x": 1.0867610714213076,
+    "y": 0.657413791216531,
+    "ux": -0.16807729390269358,
+    "uy": 0.10511284223226408,
+    "radiusM": 0.1330116965659233,
+    "excessK": 1.2046492885342692,
+    "vapourExcessKgPerKg": 0.0011652513184027937,
+    "condensateKgPerKg": 0.0
+   }
+  ]
+ }
+}

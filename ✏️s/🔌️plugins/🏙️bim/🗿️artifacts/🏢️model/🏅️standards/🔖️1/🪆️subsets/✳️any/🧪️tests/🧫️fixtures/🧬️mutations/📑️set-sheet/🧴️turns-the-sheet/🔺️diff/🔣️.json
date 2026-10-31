@@ -2,7 +2,9 @@
   "sheets": {
     "sh-1": {
       "entry": "Patched",
-      "orientation": "Portrait"
+      "value": {
+        "orientation": "Portrait"
+      }
     }
   }
 }

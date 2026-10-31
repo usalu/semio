@@ -1,8 +1,40 @@
 {
-  "internalFiles": [".semio-artifact.json"],
-  "addedFiles": ["_headers"],
+  "internalFiles": [
+    ".semio-artifact.json"
+  ],
+  "addedFiles": [
+    "_headers"
+  ],
   "cases": [
-    { "id": "release", "origin": "https://semio.iek.uni-hannover.de" },
-    { "id": "rehearsal", "origin": "http://127.0.0.1:8891" }
+    {
+      "id": "release",
+      "origin": "https://semio.iek.uni-hannover.de"
+    },
+    {
+      "id": "rehearsal",
+      "origin": "http://127.0.0.1:8891"
+    }
+  ],
+  "assignmentFiles": [
+    "assignments/architecture-parametric-parametrization-en.pdf",
+    "assignments/architecture-parametric-parametrization-de.pdf"
+  ],
+  "pdf": "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 72 72] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n184\n%%EOF\n",
+  "assignmentCases": [
+    {
+      "id": "present",
+      "replacement": "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 72 72] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n184\n%%EOF\n",
+      "problem": null
+    },
+    {
+      "id": "missing",
+      "replacement": null,
+      "problem": " is missing"
+    },
+    {
+      "id": "invalid",
+      "replacement": "not a PDF",
+      "problem": " is not a PDF"
+    }
   ]
 }

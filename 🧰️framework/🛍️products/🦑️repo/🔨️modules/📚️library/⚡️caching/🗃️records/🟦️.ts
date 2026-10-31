@@ -14,7 +14,7 @@ const PENDING_FLUSH_BYTES = schema.definitions.Limits.const.pendingFlushBytes;
 
 /** 🔌️ Packs keep at most this many read descriptors open across every store of the process: the least recently read one is closed first, so a graph that visits thousands of project stores never exhausts the descriptor table. */
 export const RECORD_STORE_DESCRIPTOR_LIMIT = schema.definitions.Limits.const.descriptorLimit;
-const openDescriptors = new Map<string, () => void>();
+const openDescriptors = new Map<symbol, () => void>();
 
 /** 📦️ A store holding more packs than this is compacted into one pack once its writer flushed, so every process that adds records no longer leaves a pack and an index behind for good. */
 export const RECORD_STORE_PACK_LIMIT = 4;
@@ -84,11 +84,11 @@ function packName(): string {
 export interface RecordStorePublicationV1 {readonly peakBytes:number;readonly retainedDeltaBytes:number}
 export interface RecordStoreOptionsV1 {readonly publication?:(plan:RecordStorePublicationV1,write:()=>void)=>boolean}
 
-function writePack(directory:string,records:Iterable<readonly[string,Uint8Array]>,options:RecordStoreOptionsV1,retiredBytes=0,retire=()=>{}):RecordStoreIndex|undefined {
+function writePack(directory:string,records:Iterable<readonly[string,Uint8Array]>,options:RecordStoreOptionsV1,retiredBytes=0,retire=()=>{},beforeWrite=()=>{}):RecordStoreIndex|undefined {
  const values=[...records],name=packName(),packPath=join(directory,`${name}.pack`),temporary=`${packPath}.${randomBytes(4).toString("hex")}.tmp`,rows:[string,number,number,string][]=[];let offset=0;
  for(const[key,value]of values){rows.push([key,offset,value.byteLength,valueDigest(value)]);offset+=value.byteLength;}
  const index:RecordStoreIndex={format:RECORD_STORE_FORMAT,pack:name,packBytes:offset,records:rows},image=JSON.stringify(index),indexPath=join(directory,`${name}.idx`),indexTemporary=`${indexPath}.${randomBytes(4).toString("hex")}.tmp`,bytes=offset+Buffer.byteLength(image);
- const write=()=>{const fd=openSync(temporary,"wx");try{for(const[,value]of values)for(let written=0;written<value.byteLength;)written+=writeSync(fd,value,written,value.byteLength-written);}finally{closeSync(fd);}renameSync(temporary,packPath);writeFileSync(indexTemporary,image,{flag:"wx"});renameSync(indexTemporary,indexPath);retire();};
+ const write=()=>{beforeWrite();const fd=openSync(temporary,"wx");try{for(const[,value]of values)for(let written=0;written<value.byteLength;)written+=writeSync(fd,value,written,value.byteLength-written);}finally{closeSync(fd);}renameSync(temporary,packPath);writeFileSync(indexTemporary,image,{flag:"wx"});renameSync(indexTemporary,indexPath);retire();};
  if(options.publication?!options.publication({peakBytes:bytes,retainedDeltaBytes:bytes-retiredBytes},write):(write(),false))return undefined;
  return index;
 }
@@ -98,11 +98,21 @@ function removeQuietly(path: string): void {
   try { rmSync(path, { force: true }); } catch {}
 }
 
+class ChangedRecordRetirementV1 extends Error {}
+
+/** 🔏️ Captures only existing ordinary immutable pack leaves; absent snapshot leaves have already been retired. */
+function recordRetirementLeafV1(path:string):Readonly<{bytes:number;identity:string}>|undefined {
+  let row;try{row=lstatSync(path,{bigint:true});}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return;throw error;}
+  const bytes=Number(row.size);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1n||!Number.isSafeInteger(bytes))throw Error("Ordinary finite record retirement leaf required");
+  return {bytes,identity:[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":")};
+}
+
 /** 📂️ Opens the store rooted at `directory` (created on demand), loading every complete pack index present. */
 export function openRecordStore(directory: string, options:RecordStoreOptionsV1={}): RecordStore {
   const root = resolve(directory);
   mkdirSync(root, { recursive: true });
   const locations = new Map<string, Location>(), packs = new Set<string>(), descriptors = new Map<string, number | null>();
+  const descriptorKeys = new Map<string, symbol>();
   const pending = new Map<string, Uint8Array>(), accessed = new Set<string>(), damaged = new Set<string>();
   let hits = 0, misses = 0, puts = 0, pendingBytes = 0;
   const now = Date.now();
@@ -132,16 +142,17 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
   }
   const release = (pack: string): void => {
     const fd = descriptors.get(pack);
-    openDescriptors.delete(`${root}\0${pack}`);
+    const key=descriptorKeys.get(pack);if(key!==undefined)openDescriptors.delete(key);
+    descriptorKeys.delete(pack);
     descriptors.delete(pack);
     if (typeof fd === "number") { try { closeSync(fd); } catch {} }
   };
   const descriptor = (pack: string): number | null => {
-    const key = `${root}\0${pack}`, held = descriptors.get(pack);
-    if (typeof held === "number") { openDescriptors.delete(key); openDescriptors.set(key, () => release(pack)); return held; }
+    const held = descriptors.get(pack),key=descriptorKeys.get(pack);
+    if (typeof held === "number") { openDescriptors.delete(key!); openDescriptors.set(key!, () => release(pack)); return held; }
     if (held === null) return null;
     while (openDescriptors.size >= RECORD_STORE_DESCRIPTOR_LIMIT) { const [oldest, evict] = openDescriptors.entries().next().value!; openDescriptors.delete(oldest); evict(); }
-    try { const fd = openSync(join(root, `${pack}.pack`), "r"); descriptors.set(pack, fd); openDescriptors.set(key, () => release(pack)); return fd; }
+    try { const fd = openSync(join(root, `${pack}.pack`), "r"),key=Symbol(); descriptors.set(pack, fd);descriptorKeys.set(pack,key); openDescriptors.set(key, () => release(pack)); return fd; }
     catch { descriptors.set(pack, null); return null; }
   };
   const read = (key: string): Uint8Array | undefined => {
@@ -158,13 +169,23 @@ export function openRecordStore(directory: string, options:RecordStoreOptionsV1=
   };
   const rewrite = (keys: Iterable<string>): void => {
     store.flush();
-    const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of [...keys].sort()) { const value = read(key); if (value !== undefined) yield [key, value]; } };
-    const retired=[...packs],retiredBytes=retired.reduce((sum,pack)=>sum+statSync(join(root,`${pack}.idx`)).size+statSync(join(root,`${pack}.pack`)).size,0);
-    const index=writePack(root,live(),options,retiredBytes,()=>{for(const pack of retired){release(pack);for(const suffix of["idx","pack"])rmSync(join(root,`${pack}.${suffix}`));packs.delete(pack);}});
-    if(!index)return;
-    locations.clear();
-    for (const [key, offset, length, digest] of index.records) locations.set(key, { pack: index.pack, offset, length, digest });
-    packs.add(index.pack);
+    const capturedKeys=[...keys].sort();
+    const live = function* (): Generator<readonly [string, Uint8Array]> { for (const key of capturedKeys) { const value = read(key); if (value !== undefined) yield [key, value]; } };
+    for(let attempt=0;attempt<schema.definitions.Limits.const.retirementAttempts;attempt++){
+      const retired=[...packs],leaves=retired.flatMap(pack=>["idx","pack"].map(suffix=>{const path=join(root,pack+"."+suffix);return {path,original:recordRetirementLeafV1(path)};}));
+      const beforeWrite=()=>{for(const leaf of leaves)if(recordRetirementLeafV1(leaf.path)?.identity!==leaf.original?.identity)throw new ChangedRecordRetirementV1("Record retirement snapshot changed");};
+      let index:RecordStoreIndex|undefined;
+      try{index=writePack(root,live(),options,leaves.reduce((sum,leaf)=>sum+(leaf.original?.bytes??0),0),()=>{
+        for(const pack of retired)release(pack);
+        for(const leaf of leaves)if(leaf.original)try{rmSync(leaf.path);}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}
+        for(const pack of retired)packs.delete(pack);
+      },beforeWrite);}catch(error){if(error instanceof ChangedRecordRetirementV1)continue;throw error;}
+      if(!index)return;
+      locations.clear();
+      for(const[key,offset,length,digest]of index.records)locations.set(key,{pack:index.pack,offset,length,digest});
+      packs.add(index.pack);return;
+    }
+    throw Error("Record retirement snapshot did not stabilize");
   };
   const store: RecordStore = {
     has(key) { return pending.has(key) || locations.has(key) && !damaged.has(key); },

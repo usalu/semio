@@ -1,0 +1,54 @@
+{
+  "files": {
+    "entry.ts": "new URL(\"./target.ts\",import.meta.url);\n",
+    "target.ts": "import \"./nested.ts\";\n",
+    "nested.ts": "export const n=1;\n"
+  },
+  "cases": [
+    {
+      "id": "ordinary-module",
+      "resources": [],
+      "expected": [
+        "entry.ts",
+        "nested.ts",
+        "target.ts"
+      ],
+      "memoFiles": 3
+    },
+    {
+      "id": "unrelated-resource-one",
+      "resources": [
+        "unrelated-one.json"
+      ],
+      "expected": [
+        "entry.ts",
+        "nested.ts",
+        "target.ts"
+      ],
+      "memoFiles": 3
+    },
+    {
+      "id": "unrelated-resource-two",
+      "resources": [
+        "unrelated-two.json"
+      ],
+      "expected": [
+        "entry.ts",
+        "nested.ts",
+        "target.ts"
+      ],
+      "memoFiles": 3
+    },
+    {
+      "id": "target-data",
+      "resources": [
+        "target.ts"
+      ],
+      "expected": [
+        "entry.ts",
+        "target.ts"
+      ],
+      "memoFiles": 3
+    }
+  ]
+}

@@ -197,6 +197,58 @@
         "🔣️.json": "739a7a300921a8d0ed5763844fe69c56a5d945fb2737805b12ccfa4ff88482ab"
       }
     },
+    "app.architect.program.config": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "5f8e6650aabfe219fa9517e4d785aab589947619aad51203a3fa055a792e2c40",
+        "🛰️.proto": "a6d7ec4d6e39600deff921e03ffed05005312a023d3e9a003981a68a2ca536b4",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "37f6194974b521d10de9927c4cb1246c5d9ca65b7a2d57e8d7481ba231dfb168"
+      }
+    },
+    "app.architect.program.presence": {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "206f641c3fbad44c28992a57574c93880cb09ce3f9fb9551b2a34c982c14dd7f",
+        "🛰️.proto": "ff6af3aa460bbbc372d0cb9fbd54246e945795edcc238a9102fd9b21d313a2ca",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "78612ade38eca5df7e7ae68176f09f1136eba4147e4cbba531a6c718aca0c78c"
+      }
+    },
     "app.bim.model.config": {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
       "level": "surface-state-lane",
@@ -223,6 +275,25 @@
         "🦀️.rs": "20c0c9ac76cc54dcfbb65bc7e3546bd6e108a01b7575b7f402371a886d461bdf"
       }
     },
+    "app.bim.model.plan-window-config": {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️plan/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "d8b532098356f0a481fddaff68a63e6971e84508b6cfc58e258a6ba646f80473",
+        "🔣️.json": "22de61a56c901e36fd4f3f19009a3ef56f5790bbc58cc279e07ec70e08f29ffd",
+        "🛰️.proto": "b2838d04221218bfea2fdeea092def81eed78dbc13d5b2e67c0708b16a83d679",
+        "🟦️.ts": "13586fc74c9d7e038dfc52503c0b5ce43b28d98415ce6c739f0c120e65bc4328"
+      }
+    },
     "app.bim.model.presence": {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
       "level": "surface-state-lane",
@@ -244,6 +315,63 @@
         "🦀️.rs": "81c6d6e9cd59589f198a80a7a835a6e641304404e7bbdc0c03a4742a59f5e9e7"
       }
     },
+    "app.bim.model.schedule-window-config": {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧮️schedule/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "dd740f44443b69bfafd1cb3647bebf56afc3b02371e871ce1afcd762c73c5ea2",
+        "🔣️.json": "29dbf030ca6c93e8a5303621311810e2a76a034c7ed4bb3cd07cf698a8f313e4",
+        "🛰️.proto": "0af27b161f553a447aa37dd3b43f699fd26b443f525ccaa004a5acd3067340f3",
+        "🟦️.ts": "c737e76967bdbb525694315030bff19a0097d42ef1d907f2f808093ac30cdb7d"
+      }
+    },
+    "app.bim.model.section-window-config": {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️section/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "8115210c0c637f3a7da945a8702df4cb97453bffb9b9f22085b73b62138a0042",
+        "🔣️.json": "7f5efb122d18667856328fde28c09e381288d57cec9f34bbf27ed44256e72c82",
+        "🛰️.proto": "bddca163c7a8a17eddcfb9e46257a2a1a87a24af7f8de042204dc481b93147da",
+        "🟦️.ts": "0d251b94d43e677d3cf1966cbbe54dde2d7997e24f3dcd8c14127275619fa6d2"
+      }
+    },
+    "app.bim.model.sheet-window-config": {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📄️sheet/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "84afa2f9cdcedc115e8b470a82f7bbfb03ea2c779789f2559564c111ad992d6c",
+        "🔣️.json": "d7b665b6ddbd044cba59f8fbbb1828e5bf7dd39e6bc2e546f245c6d42e519b77",
+        "🛰️.proto": "cf31afe69e74b43159db5feb50f35c32b9f60b11075f439ba6f8008a7a5eec37",
+        "🟦️.ts": "eaa2ffc56efa6e7a59b772b3ec5b9026102dbf414254d150690d3f2befa687ad"
+      }
+    },
     "app.bim.model.window-transient": {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema",
       "level": "surface-state-lane",
@@ -261,6 +389,30 @@
         "🔣️.json": "04e75c7a678511764df55672f3a8c96909055c127992a4c12d4049ab4ab51b1c",
         "🛰️.proto": "a34130e061a5a8d91d953bc061ac0c03926c167b04d2efbacc07cd1bac50df65",
         "🟦️.ts": "3fe40eba53b971890d57dc8b88e076c5eedf9f138341de1beb26e989ae11160d"
+      }
+    },
+    "app.bim.model.world-window-config": {
+      "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️world/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "BimWorldProjection": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "1084f98b0324152a1184c1fe0710284af97cdd9628b0a1cdc16acb775792c11f",
+        "🔣️.json": "a0911d0fc8831a07ac856cbd8dc8f4b9f0144a0d3119215dc75aaf9194e2c420",
+        "🛰️.proto": "ed4475ee63e507ef07d4058ff28e06eefe79ab0a0cb4b87ae7b01f9f17836430",
+        "🟦️.ts": "674a84e91b6939313ecd9359a259234f5a5ba3aa052b1881c2b089433f33b950"
       }
     },
     "app.block.2d.config": {
@@ -367,6 +519,42 @@
         "🛰️.proto": "2d32f5557aed6c707de62dfc1fd499aaec06cf3045aee352ae9309e865107700",
         "🟦️.ts": "739a079e3b3264b9a74cae250d2c81f0addb19b87e52a190683f228884b18dce",
         "🦀️.rs": "c86f771979a74578192783818960d80c0dc07784970ec2c2c3b4bba5b344f052"
+      }
+    },
+    "app.block.3d.world-window.transient": {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️world/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Block3dBrushPreview": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Block3dWorldWindowTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Vec3": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.block.3d.world-window.transient.mutation.set-brush-preview"
+      ],
+      "hashes": {
+        "🔗️.graphql": "801791710180a78618f6b7a69fa2eb0900bf6a4db70a006bfd5282dba42563bf",
+        "🔣️.json": "e3eaa0d49a2bad64e366917fe680550740edbae778e8614835764a7f3ca0db2d",
+        "🛰️.proto": "508b0d839b2a8345d8ec832e129ce45282626d8076ee20147577c9185d16e721",
+        "🟦️.ts": "0291fcd8de0f2ada19b718d763b7e3769173946338135472706b7109eb4d0906",
+        "🧬️mutations/🔣️.json": "7c6c7dc99d066166a49f94298e428044ef549d207eb377eadad0a0bfb1531e1a",
+        "🧬️mutations/🦀️.rs": "97207a5e7a2394bf443531ca5b606d4fe9fe95ba3e6428dbff29dc91de559898"
       }
     },
     "app.block.3d.world-window.transient.mutation.set-brush-preview": {
@@ -496,7 +684,7 @@
         "🔣️.json": "03882ed2865ee8bc10da3c865abf19547926e554c3002782afa9f6fdc64ed510",
         "🛰️.proto": "38e80c313d55edf96f86f7a9d45524130bcb9ae36a61f208b218d33ebd5cc459",
         "🟦️.ts": "82aa9a7d97309e11b299f2c43bdac30c86cbc4437902313d666f402684f20be6",
-        "🦀️.rs": "3f2c2771fac370d16866ff7d80d6706777f22f2543509b39cef6c80f48244e0b"
+        "🦀️.rs": "57969eb7d097ba6229f545a40ee47eeb219f7b7038d369564bd38a0f6c1584d1"
       }
     },
     "app.dag.dag.config": {
@@ -692,6 +880,70 @@
         "🦀️.rs": "0fcc1e02e736d9c09aa31394aa885a3787ee756c6700a714da2f7c9f26d4bee5"
       }
     },
+    "app.draw.drawing.presence": {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "0a3f142a2c9fad7bb32895cdbcf29ea11a7a2ae8aa9499e2785d422f323c8caa",
+        "🛰️.proto": "db2c2af25951243505f3b80f619610e8400c01ca56a996e3127a06dbeae1b468",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "5f3a22cbf98edbe52b947dae81b9d717a1d995089278e90cdda7e35746ea2be9"
+      }
+    },
+    "app.drawing.drawing.canvas-window-config": {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "92e4d62e31876426acee52bd4997b6537097d368c7c347c99630f8fd4af8e5b5",
+        "🔣️.json": "45a845d3f71898380017e2fd393a89c0fe273db968d70e929b005c44d644e599",
+        "🛰️.proto": "1f700c6de21d4f33adf96dd0168a14589885a6b49edd151b16624820a643ba0a",
+        "🟦️.ts": "5f620d594638a92d72b721573132622c9ecb022812338a0310c0eed71a2fe6ce"
+      }
+    },
+    "app.drawing.drawing.canvas-window-transient": {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️canvas/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "0b2aa3383bf093e4e125cd3ca4dc85e7e9c9a375d1ad8602c761ff49fbed33be",
+        "🔣️.json": "40eb3ea41d15cc339cbc9905b7f7b92166838f92cc2c09d02b9a2d0826643c18",
+        "🛰️.proto": "21118b39c75b490eb351710d04a4263db755daf117a2c02ba993b1c2a2b7da2f",
+        "🟦️.ts": "7d9e7be1d2914c96b20f3e7f822530355653a8a85be9d23002ee3b5e5b59b8ed"
+      }
+    },
     "app.drawing.drawing.presence": {
       "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema",
       "level": "surface-state-lane",
@@ -711,6 +963,25 @@
         "🛰️.proto": "10d09dbf0217e05640cdbb40e0c160d2ec2555f529814478ea98ebe23eebb43f",
         "🟦️.ts": "360f2fbc350a32777db006c57d8355dc107ede6b82f67697de5805659e00b6e2",
         "🦀️.rs": "323ffeefc1c5f0c94df440c4f551d0cdda827dbcc88aaa1c9d5bcf54cb5a04f8"
+      }
+    },
+    "app.drawing.drawing.viewer-canvas-window-config": {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "bf3bf49ebb8c40fbcd757f21c0e37929500865f4da03b8510df8d325c3bac2b4",
+        "🔣️.json": "5174479b3b05e191b7dde3044647df41fbc6d8d7a26786d7c4f159afcb76eb66",
+        "🛰️.proto": "b8627532de3928a747b7ff6c45c9575f17e586c8175943a2a18ece8849239609",
+        "🟦️.ts": "922704fb71c2586e4a39f2b17af6a8d0db752d2a590c9645df983537a5be4bf7"
       }
     },
     "app.energy.model.config": {
@@ -780,6 +1051,39 @@
         "🔣️.json": "9cf92ab97cfe8fb58e863c1d5f23b40418d76b202e3e9ab010ee66b6446e0590"
       }
     },
+    "app.energy.model.model3d-viewer-window.config": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "EnergyModelViewerWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.energy.model.model3d-viewer-window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔗️.graphql": "e440d3e745b7ce9e5e0d6d376835ea738288c3d8c24adfc80c561e640950cf50",
+        "🔣️.json": "f2034bc8acc6b9b4c99140df008c900f2ae9017f23a8539f47aca00a3a399f0d",
+        "🛰️.proto": "bbb309c76f9589afe52e34fe1ea4759110f030d7e9577d1fb3939215cbcc5aff",
+        "🟦️.ts": "b97a65b9064f3fe5c01f0733979a3e36ff8365035f72920fc2e978ab0bf52a03",
+        "🦀️.rs": "90e26527807b11dceec66c1778e5df04dba2f69e43bf27df027d46323ed64f79",
+        "🧬️mutations/🔗️.graphql": "1ea735407d16b70b9b95ef367bca7a621af0454807d62b97e37aec8888d169dc",
+        "🧬️mutations/🔣️.json": "bea695d28dca5abe83c02f0bbc48bf0ba9b81fafc1c12b136fa6e39288e7b1d8",
+        "🧬️mutations/🛰️.proto": "c7a93a6993e08258e8763ad157c10fc8202af2625a882cd4acc47c40abddd212",
+        "🧬️mutations/🟦️.ts": "e95649648ce6757bf468fc805cb4bedb50c15b6184ac344aba0d4766839bf98f",
+        "🧬️mutations/🦀️.rs": "ff10d43eaa5527211399d02d722d4d16344ba1d777caa69bbd1c58c38783c33c"
+      }
+    },
     "app.energy.model.model3d-viewer-window.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -796,6 +1100,39 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "0aee19a544e81d1f7347bf561bdb34e05e3ce8559c11b30d71a31bdde4c99ebc"
+      }
+    },
+    "app.energy.model.model3d-window.config": {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "EnergyModelWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.energy.model.model3d-window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔗️.graphql": "9681b6baf8913569a2432e1e77c9d3b456b697321bf1232a457d9d9b5ac4c261",
+        "🔣️.json": "2ea116927714ddff1c58a21f8f15aa02826265bb8a23c477bf4d4c1c2d906def",
+        "🛰️.proto": "2ed76c9d73f06adae574d3daa4ab9ba54969c50eb916d53138d8c631b000fa2c",
+        "🟦️.ts": "6d7cc02e84358f6100c30d6572c761d7262d906bad98c99d4f800ae6415efb4b",
+        "🦀️.rs": "7b65bd43182c2c85a27ef3164dbebc087bcf62c879d30955b2ae1821710a8a1c",
+        "🧬️mutations/🔗️.graphql": "99fb94ee16f2ea95b213be2f09dff4ac5b79fed29306a0c5323d0ba7a7a9ea71",
+        "🧬️mutations/🔣️.json": "0fce7e0cd8fb5c9e7ea9cfb1c61aa9923f6f4a8fa42446ef5d65d0c96568a77f",
+        "🧬️mutations/🛰️.proto": "17129c9809a1692eb0bc3df313c2cb7b4c4d468586fa771141340715ff9ab887",
+        "🧬️mutations/🟦️.ts": "b311c0a890a245e142251de41c7be3d728208026c8330693113942c4793fa648",
+        "🧬️mutations/🦀️.rs": "6aec69f203d1c2fc4f7600de9ff2bebabe8eb38a159f98aa3e18bf707f6818d0"
       }
     },
     "app.energy.model.model3d-window.config.mutation.set-camera": {
@@ -840,6 +1177,244 @@
         "🛰️.proto": "3727e1ae738e7857a63577a6ade232237d8851c76e81b89b8b8cf36fc5426a2d",
         "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
         "🦀️.rs": "fe39fc30cb2647d4266c945e7e93f8d4db6eef3323593886da735d7091123a61"
+      }
+    },
+    "app.fem.2d.config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "874dcac9c2f0fff1934bf558fde4ea2d48b34b361b71c7ad60bf13983ff83aec",
+        "🛰️.proto": "f706d10b91e46675c4891cc1189237904e8de3fdc1a1e332fb600d7531762352",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "33f24f90ee7a1f78d5eb61d1c3ae0a8722821930210b5e57940383d56a201c7e"
+      }
+    },
+    "app.fem.2d.model-window-config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Fem2dModelWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "401cd07bb495ad86257e55b1db73fc7940729245253078a459d68e8ecbef4e32",
+        "🔣️.json": "b9755e3e2c84460ebc2561c192afd406313acd749ef11351a0f79b8388abdff3",
+        "🛰️.proto": "e1a3ebbdd0e5e5f6f46e815a6795b15fd5131bf5a41e9be892416b324cccca37",
+        "🟦️.ts": "b88c37e354e4137908d0c47d04ba6661a94ca2767cd9ecb83b70159ecf4ebd9b",
+        "🦀️.rs": "14b481d3d1cbee41b627d6e159ade618ae7fbba94cf63936be71d5314b9e3e3a"
+      }
+    },
+    "app.fem.2d.presence": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "69adcd0453f249b6d1ddc59a0ff15cef0335994cc9cd9e9041b9d59a1fafb55e",
+        "🛰️.proto": "7670037a110c74995ec2ade7d185d994a8eea5b69c3754aeb93c33bf161fd74e",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "7da6e323ab13b8cdda4c3ab4a28ad6493f2e1d756d5b91e0af2ed6f96fee43d1"
+      }
+    },
+    "app.fem.2d.results-window-config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Fem2dResultsWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "fe3c5ed711fded810dff98a8036ee1d0e1d3e2cdc015f454feb17a7af8b60404",
+        "🔣️.json": "3544c7213df823e4e0d20d99670918bd7a2994d301218ad617c3509505689f08",
+        "🛰️.proto": "e48f1629e7656f15d5ffcf2089949a7f10828e2ec0110be6de3193ba9f06bfa1",
+        "🟦️.ts": "43d7c96aa977a4b99573ebffd964994d99ddaffaf583ec3cdf92a9d6b8d49050",
+        "🦀️.rs": "62456e6f9e285d419f47437d4621d9dc8ab6562b8e5b031119def42d37e93d56"
+      }
+    },
+    "app.fem.3d.config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "b5453c899219c879b690569b2789aa0681b0e3ecd0222af631524cad3112262f",
+        "🛰️.proto": "1d0149d13964b3545909ed9d107dd4ab071ac37b0e1ee06eed3294de8f87c614",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "7b1d7e2d0223a80eaecb425a64486ed8629be90796ade18b0276b56aa9faafa7"
+      }
+    },
+    "app.fem.3d.model-window-config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Fem3dGumballConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Fem3dModelWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "6bc5605e58ee169c7995f01107acb0e5dbf88c944b2057d191630b2201e287ce",
+        "🔣️.json": "a3933581580d835fc678506f2c6f3c04cf2a9fc207969c66c405c0599c72a606",
+        "🛰️.proto": "a585b86ccb7f38025cbbfa43b8cf03b9ab20d0adb66935486591674f6d77af52",
+        "🟦️.ts": "fbe974ae44354d488a0299892a29a21d82a2382051271ba64e425456a4e8b7d3",
+        "🦀️.rs": "0ce91e1723af6aa84c6bc1c82e35ffbb8e30882636b698bcf9837b6c861ae8fe"
+      }
+    },
+    "app.fem.3d.presence": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "ff1e64d686a6658c8f31466d6d60254092d7e67767da40163f2f0f702590d135",
+        "🛰️.proto": "fc492298145f42555a04dbe6d14df9525b4da9ae2a71c59047572cc1304b59b1",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "90bd38aaf0faedb72bc814e41be43413971c1d7f8d3941bdc82ca4590906e6ba"
+      }
+    },
+    "app.fem.3d.results-window-config": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Fem3dResultsWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "3b0be9895df53ceaf6bba26d8bc0e9fc18d4e8001f59b0115d904f698db57fd6",
+        "🔣️.json": "8463c9d733629efd32b2a075029febf34291db454155841eb07fad739c34a21f",
+        "🛰️.proto": "523c4469401cb462431a53e300ee9298a76b261174c1a6ec2fd98eb9be1f32d1",
+        "🟦️.ts": "f17a61de1b0761854d7b8ba7644a597f78b6cdab335e4df8a82d2fad5f895de6",
+        "🦀️.rs": "f906eff08a77853b2fc3127204cd6e1f69e7f47193c143946c7bf632b01aefe1"
+      }
+    },
+    "app.flow.flow.config": {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "005164c49fc641bb7266cb19cfc5c808fd3a6a41a70f378c441480e32bcb39ac",
+        "🛰️.proto": "066845ab88bcdc38362186174fc5c1eb2a61b3d071ea49ca15f81f4631b26a20",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "1ae7bcceaab60aa6758b0fbd01bf2cb4ab70cf9bfe161ed8797dcbc5bb9dcb84"
       }
     },
     "app.flow.flow.presence": {
@@ -991,6 +1566,56 @@
         "🦀️.rs": "2792318f8b8b8bad31f100091749dd578aa498a81dd0725080d6aec3b17b783a"
       }
     },
+    "app.gis.gismap.config": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "be37789ac6faab9a9b979b64847ac2d3235102598e725c1abf243ba722199d1e",
+        "🛰️.proto": "2e1c9f3a7f68c35faf59d3b73d81eb97f5c5d641bda13ce019e9abad6853843a",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "67ecc5abbd5d3bdfc78f8d230cf780eec89d752b977d5ba8f698a4dfeb03665a"
+      }
+    },
+    "app.gis.gismap.map-viewer-window.config": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "GisMapViewerWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.gis.gismap.map-viewer-window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔣️.json": "c5681c400ca4960c7ad8be0f6ea598dd101d8c1da494be6c8b1ba44d6d714d7f",
+        "🦀️.rs": "bba7059a001cae999f6320ffbfb673c1c7edee8df1368c921ffb96b7c9469842",
+        "🧬️mutations/🔣️.json": "7066d6f91fb5f696d357f80bdd0285e7f8af3b1b5ed567b1e598b2d6de9f829c",
+        "🧬️mutations/🦀️.rs": "ec153609b1500a64c860bda7d1bbecd5a093337a3d6fbf10738e8c473a4ebedc"
+      }
+    },
     "app.gis.gismap.map-viewer-window.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -1007,6 +1632,116 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "6a299afaa8837f523e5baec4fc34eb29102ad5946d8f9754c3883b1af8f78d68"
+      }
+    },
+    "app.gis.gismap.presence": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "b47d6941ef33b906908e31480b94014ab6e24e0874e04fc3c24013dfcfb023b6",
+        "🛰️.proto": "65e74a94fb62ea83eff916372cc125dd4411447330828a7a386efb3198affcc8",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "83b9ca2c7c7ba815b26fac5b99fbb6a3cc9ad25e1f5a13d39608b8de70f77992"
+      }
+    },
+    "app.gis.gisterrain.config": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "ba6fca39652fee68cd1e3d5a0035f8a7f18426eb2143bb123f7acce0a1646807",
+        "🛰️.proto": "12306be42c3caaf18a937847b2b601acb5ec7b3657b43ca46b592683edc7c398",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "f5add007d631344ff9984de6a097e88073487ce9a4023332ae840fabc9955613"
+      }
+    },
+    "app.gis.gisterrain.presence": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "2aab71422b10ae4dd035edf983212f1fa47a4727148b8a1d851ba11afe5e1a6b",
+        "🛰️.proto": "00c39b3e01590e8b7675353235a7cf7adbf61944a122806df45a9c3c4cb9f3f3",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "be77571171144e93c821f73683c2d9e486d3bb9a4a21b2e2425a9da53d707831"
+      }
+    },
+    "app.gis.gisterrain.window.config": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "GisTerrainWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.gis.gisterrain.window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔗️.graphql": "2dde1720c921b0349fbd83bb9b2b77e2753671ed8a272069186c4f8b0f434a7d",
+        "🔣️.json": "4af647e49fd6cb42f6c2502d44ee3fc664990b7d7ce3c6b1d14d7c150be5d39a",
+        "🔺️diff/🔣️.json": "657f1c8e8d3217ad77d16b38554fe60bd850f27de747f80d75690e59817a2c9c",
+        "🔺️diff/🦀️.rs": "00b425aeeb81e2d1736cb593403b9d5613c4a6781b7dffe817c6df5421db757c",
+        "🛰️.proto": "6631454693762d65f36c80803bb42d0b15176389d230002528b6e7fcc60ef805",
+        "🟦️.ts": "2c7f1c3d9e2faa49478ec51be31b0eb5ab7a4b2de22f126680af2e4b1dc26fb9",
+        "🦀️.rs": "ca6cc32ccef0edea9e4d29f925de990656cd04e9b7fad6420817483cbb41469f",
+        "🧬️mutations/🔣️.json": "2a9a9c8ea6f635061d94dd76decf8cfeddc64282adb53b4ce6cf6391bd33d391",
+        "🧬️mutations/🦀️.rs": "a4ce2039a343e31eab471a99978ed63291d04f4a7a693b63eb85a4024735ef03"
       }
     },
     "app.gis.gisterrain.window.config.mutation.set-camera": {
@@ -1139,6 +1874,58 @@
         "🦀️.rs": "de90cc8fb9f525780b7e9ada946052c374402d542c935f8af23bc3367895acf3"
       }
     },
+    "app.imperative.procedure.config": {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "73dcfe5908242dace7a566cb49504463773eec59df72c739436bf5ca68d47bf6",
+        "🛰️.proto": "1ccfaca0bb9fc47b9ac20afaf3caef1073e3e5a1843435757b0b20a8c1b58339",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "0c5d33b13028596baef8db896e956d84139bb0a642d1e9db6ef3e586ac19e880"
+      }
+    },
+    "app.imperative.procedure.presence": {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e61d8c11ec0f060d852793da549cdb509218cdaed62db7e75e80a27112a4955e",
+        "🛰️.proto": "23d789161b0b00d698026e799ca817d2bc50913fb584832bfc6aadb06c91bc33",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "9a2598cd4070f97e3310dafe803e9cdd5ec45df0281c43afdb68c28b98d7df13"
+      }
+    },
     "app.layout.layout.config": {
       "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema",
       "level": "surface-state-lane",
@@ -1243,6 +2030,63 @@
         "🦀️.rs": "7fccbc6e7a6cc818138fbfe7b68d9817a4c5f7962aa8ef54be365d63c3fcfa83"
       }
     },
+    "app.mathematical.equation.config": {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "614eef0be83fdfe178e994142a40d64385cbb7ea1742a4a810bde8e2adada0cc",
+        "🛰️.proto": "e84d6d201042db751a7d8df8c7a75cd1715cd124188a30edeff73f5951c02011",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "02bd7adc3d1f64e9b0acf38c9024fdbd86575457086860f23ecab0f74b9db109"
+      }
+    },
+    "app.mathematical.equation.graph-window.config": {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "EquationGraphWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.mathematical.equation.graph-window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔗️.graphql": "e4c940805436159da77dc51c0783eb19ccec5c8dbe927d115ea7e49fba340238",
+        "🔣️.json": "899f9d8be31560977eb5a28147b36f622c01df90638a1c25bbb4fd66b16df86d",
+        "🛰️.proto": "b1587438d3714ef7292f351d9ba94cfde2060e389c708013c4782b6590e20bbf",
+        "🟦️.ts": "9740b73c89b7f44f1822080c2c82b08f8dbb1bc11e5a50a9b9e1ddf5b325b211",
+        "🦀️.rs": "afdb34a45ae5cd7cf51abebf92ce695f7f3e8066fe07fc9ec10bad3aa2e61101",
+        "🧬️mutations/🔣️.json": "07b4d4cee16f765d43b01e773826b8fb13ca786de3876a1c69b6bf1b559a96ad",
+        "🧬️mutations/🟦️.ts": "74d091d6bae9377f0f115aa5584434ff2942866843a5f322dc8970e69b06fd92",
+        "🧬️mutations/🦀️.rs": "35598d0bf3b7e02590e0eab9714fef18767d2771a46de90333585ed636e058c2"
+      }
+    },
     "app.mathematical.equation.graph-window.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🎚️config/🧬️schema/🧬️mutations/🎥️cam/🧬️schema",
       "level": "mutation-leaf",
@@ -1259,6 +2103,32 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "46107d7c3ea49c5f21d873516ed889ef7f6a85006841740781037a7eb768cecd"
+      }
+    },
+    "app.mathematical.equation.presence": {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "7451435d8ca1ab12115f2a22ee2e97d174fb92a36fa174b643a86138f979cb52",
+        "🛰️.proto": "72de1375d58c8048db60b02b0c586d035d128356361a3503a8ac4b80f1cc68fb",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "7fbf3edee9aed0d149ebdcfe41576c220ba5faafb582c9cf61ccad55781c3dc3"
       }
     },
     "app.norm.din16798.config": {
@@ -2375,7 +3245,7 @@
         "🟦️.ts": "82adfeeca053e4b0e06ab4f10e4e75247ca2eef6e5ff83336cd32d9c37b25549",
         "🦀️.rs": "22a92b7c5994e37d2373828e4ff81b548bac9e419721a02f6e235c9e547d7a3b",
         "🧬️mutations/🔣️.json": "d6d30d1d6dad815ee516ff348473ab55e6f8c7bd335b379154e8fe47b09153e3",
-        "🧬️mutations/🦀️.rs": "e24a805d328019e9570145898a24da708bc4a17a3ce7f69b8acb2d72e622ede4"
+        "🧬️mutations/🦀️.rs": "7bb01d90ba7e30a6339bb88d86f679254e317c9cb994f01d38396cb4e304846f"
       }
     },
     "app.procedural.3d.config.mutation.set-camera": {
@@ -2570,6 +3440,46 @@
         "🔣️.json": "ae6a5e5dd3947d4db4e7e61e571472118d549ce28f1e284ba1279285a80bd7db"
       }
     },
+    "app.procedural.3d.viewer.config": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto",
+        "📜️wit": "📜️.wit"
+      },
+      "exports": {
+        "Generation3dViewCamera": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Generation3dViewConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.procedural.3d.viewer.config.mutation.set-active-example",
+        "app.procedural.3d.viewer.config.mutation.set-lod-mode",
+        "app.procedural.3d.viewer.config.mutation.set-preview-camera",
+        "app.procedural.3d.viewer.config.mutation.set-show-mode",
+        "app.procedural.3d.viewer.config.mutation.set-sun"
+      ],
+      "hashes": {
+        "📜️.wit": "d2bf1cd99c67b71baff84ee8c48aba00da1d2e85cd46a68d19135a65960e09d2",
+        "🔗️.graphql": "663023546390c9535ac016c1096b81187c8ad627c6df5b17ae344535b2e12d75",
+        "🔣️.json": "184f4cc605da9ebabd7b7968384a358418f1162edd8b31ded7ac038045da832a",
+        "🛰️.proto": "6ee594828314fbb07f1710e5bf21ed9aedb0d633ea41cc4a2edb7b517f3d17b4",
+        "🟦️.ts": "14d536127ed63496801f37563a1d60d0d052d0ffe02d2f8ab5a2938526673112",
+        "🦀️.rs": "cbf4ddef59515ee8f01f5c3281c3499f9b9acc38d82189d856b03d35ad730ae2",
+        "🧬️mutations/🔣️.json": "baeb53566ae57c088a9c51594780973f7283aa130539c66356cbea720a3acf69",
+        "🧬️mutations/🦀️.rs": "9f0c208a53b491fd15ef688731ac35bbd092d56e54593140526df19364a7fe3f"
+      }
+    },
     "app.procedural.3d.viewer.config.mutation.set-active-example": {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🎨️set-active-example/🧬️schema",
       "level": "mutation-leaf",
@@ -2664,6 +3574,39 @@
         "🔣️.json": "0cd8881d5b8d01e9b4433cc5b0aee67ee2537e135ff264734b5a5dcbd95308fb"
       }
     },
+    "app.procedural.3d.viewer.presence": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto",
+        "📜️wit": "📜️.wit"
+      },
+      "exports": {
+        "Generation3dViewPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.procedural.3d.viewer.presence.mutation.set-preview-camera",
+        "app.procedural.3d.viewer.presence.mutation.set-show-mode"
+      ],
+      "hashes": {
+        "📜️.wit": "bef7b79224afa080beccea39c0776e277ed0145daeeaec2ae9f76002fb1c3e60",
+        "🔗️.graphql": "ce6f3ef0e5d5f5d7268b916e41e915e3980d9725d47b460735f27f06f517cd87",
+        "🔣️.json": "740f86213aff1d07871d30f26eaa5eee4e74c50e8de5fb40f8f47626ed014b61",
+        "🛰️.proto": "7e0103d0928e25d4e885ca469132964d2394534e9a936d336b9dbde726db7735",
+        "🟦️.ts": "acdddfbe252b5e0cb603c193a0c4482a2718b8f74747f7b75538c6db19d9eb77",
+        "🦀️.rs": "b4a8f11f663f17cb2c22ac82dc638da3a571dbb0ef6c2d0e4bfaa262eb88594e",
+        "🧬️mutations/🔣️.json": "f372cf0fad988ffdb1586ff4e923ac9f1cc6010adb6014cf10cfccf1f04f5141",
+        "🧬️mutations/🦀️.rs": "c18b3627d160cf0393bc487891923a134ba6f69ee2ad6c85eea0351b19281183"
+      }
+    },
     "app.procedural.3d.viewer.presence.mutation.set-preview-camera": {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/📷️set-preview-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -2702,6 +3645,28 @@
         "🔣️.json": "73f503fcb5800fe4f4658b9bae629cc1b9f7ebe6379eac2480075578aeadb18d"
       }
     },
+    "app.procedural.3d.viewer.transient": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "Generation3dViewTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.procedural.3d.viewer.transient.mutation.set-preview-eval"
+      ],
+      "hashes": {
+        "🔣️.json": "12f3150e0212aa15a496a318f82e8ce6ad1c3ca85dd6484d6ed3cce8a2b75a10",
+        "🧬️mutations/🔣️.json": "ccb17ad0222abfdb0a1565e4348cefac44cf42ba4630b54e5bf52a5ebed91f20",
+        "🧬️mutations/🦀️.rs": "77a92b8b0a4d06964f90bd23bea6a8f885c4e6cdb13838a79e43325b007342a2"
+      }
+    },
     "app.procedural.3d.viewer.transient.mutation.set-preview-eval": {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👁️set-preview-eval/🧬️schema",
       "level": "mutation-leaf",
@@ -2718,6 +3683,153 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "12229607fbc3cc1717dbbd422807f2a50fbef56577ce14b27e7f3b85583b583c"
+      }
+    },
+    "app.procedural.3d.window.procedural-preview.transient": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "Generation3dPreviewWindowTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "6f45d7fb9e4decd9544690ca36582e44bcd58d9b8e0ad57df3f1f42571c0cafb",
+        "🔣️.json": "ffda27c4fee378b7624949448f19b3a2b7f8ca15d05262fc642e422e07308813",
+        "🛰️.proto": "0858407996dbd20244c7e582c9dcc681e25a1f436ee427b911294ebd1376bde9",
+        "🟦️.ts": "7542f4ab00f7ead97e140d1e3e799e023c931f4aad2137b25cb95a5ef4f53bc2",
+        "🦀️.rs": "7e209648b8bc79535a53c5a7f4f26a0764a271c2f35f57ee6ce8b1c350b13d4c"
+      }
+    },
+    "app.procedural.generation2d.config": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "e0f46f075f5cf9bf5b002b072c53e84fafde1e81b1c16a19ff2ddc8f25bbbcfb",
+        "🛰️.proto": "fc42dfa3c1ed34746fc4ab4fd8ed6eac770eebde20ff31bfc836630df802b031",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "2e378b79d56a78d54b7184fe0661659557c7af7ea14ec119e44418ee7d84d7d2"
+      }
+    },
+    "app.procedural.generation2d.edit-preview-window-config": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto",
+        "📜️wit": "📜️.wit"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "📜️.wit": "238b676708d7e3a046eb4454abad99888b5de52e19f91a465931e3bf52b9e705",
+        "🔗️.graphql": "eaaebf547dbf8629b340a044cba9018bc4b37ecb322e9c66be0e03b0e6c7dad8",
+        "🔣️.json": "a9ee9104634d3548ee40a39a32ba6c869b3123d26ad4ce1d8f3fb9a4f2bf15f3",
+        "🛰️.proto": "1190750d6ddb52c007bccd34d1013cbe7607948eb34a993b85146159144161f2",
+        "🟦️.ts": "90db3dc758f9d489003237d6517cebe93ef1f2fa696c09b6478370a9a8446917",
+        "🦀️.rs": "3da9afcef4431ca8fad9ae50cb8410065d82b637a6b78fb77a55034f2dcf5cf8"
+      }
+    },
+    "app.procedural.generation2d.generate-preview-window-config": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto",
+        "📜️wit": "📜️.wit"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "📜️.wit": "417450a79bc15bbec9a11ff5393feb9d3a0bc5ce372dd40e1a8e3d1fadf308be",
+        "🔗️.graphql": "25164b4290a6c495eb014fa669cad1742064d3338e77afae64a85e129b4529c1",
+        "🔣️.json": "5d5f61bc9e56eca9c8b9b11a50b62e6c8f34e130aa452c950ff7bc946b8efce2",
+        "🛰️.proto": "e3808c0ef67dfbfe9f90a16820846b7ced4db88042af32b9414c61fe50a80189",
+        "🟦️.ts": "aa8c60ae92318ba876f325ef197ff435f98347d02a4614ab9dd0eb6947b69b93",
+        "🦀️.rs": "1701782725070fe2beffc1a0158b96ffc69d187d69f43b6b39c6a00c8707ded8"
+      }
+    },
+    "app.procedural.generation2d.main-window-config": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto",
+        "📜️wit": "📜️.wit"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "📜️.wit": "69c5e5fee70b857c3d02b2fa8fcffd666478bb74783a5e770d050ea123b1b7a3",
+        "🔗️.graphql": "84636c7374ebf78054e21a0505957ff4371d7a6b4a8a8262102ec0da00294d47",
+        "🔣️.json": "fd2d60131792fa8981b29b2e33e23cf24188f6e56f2eded6bb1ea31a484c9ca0",
+        "🛰️.proto": "93a5baa9c248e674375a23f101eaa6854b068904b31d709641701c4a064a8858",
+        "🟦️.ts": "3fd80392413ff72610ad63e95df01ca60d4c76300a113fd943ccf1fe2a1176b6",
+        "🦀️.rs": "d30a1dd3caa4fcc31a4a170124f4f4b95419b3d6010cdb99db6cf7a8fe49358e"
+      }
+    },
+    "app.procedural.generation2d.presence": {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "4f797d9eb4e16d921d06c4d086d3876dc5b2c6696049a487088bc4f862314001",
+        "🛰️.proto": "cb735601b034bcb0a111f89e99974f9ec0cc415698be7cb8ed4a51bbd66c4d13",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "dd86b3651228131281e5394729709a60f82c481aa2d838ca4f669d1c3d5b9b09"
       }
     },
     "app.process.3d.config": {
@@ -2770,6 +3882,214 @@
         "🛰️.proto": "87ce0e197048be10bf06f51a55da0265e8e7d7036bcdca0295bb2301085499da",
         "🟦️.ts": "1e1ceb9b6c888a3776e0eaac19b4dc89e812fd08ba3081c9e392a0124c903724",
         "🦀️.rs": "9b694f975826f485f13b00e9dda7d82646dca6c86d52e984732b17b2f2101b12"
+      }
+    },
+    "app.process.process3d.config": {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "20c37e71797d2fed2db75ee18ffb9174b94d321d2ed1491040d708ce77d5b336",
+        "🛰️.proto": "0d8b7b5488dcb49ad28daa6d45d2568cf6434a65840a2dbfc25cbe0321314612",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "865f7d2edeb31657170396dbc6b7fd538483cf1b25027a33e94cae3d0cf1230e"
+      }
+    },
+    "app.process.process3d.presence": {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "0c193a8aaa041a19c9ee2368bed24b6fda6de524a850575675438b93d904666f",
+        "🛰️.proto": "0e7b537582c43a2c0b2a3db6510facd650f4143d9dc4371ee976b397adb18968",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "95fd49d204a208e6a700109fbeb55b9597ee7e421ed9ef5d18c6c390ef1f0a07"
+      }
+    },
+    "app.puzzle.2d.config": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "5de14e71635d950c2fe82f66e7fc9d9549dd78f63aa55daa54ca8ec3728fad1f",
+        "🛰️.proto": "679fe3ad7edf489cb160c764addba4d2e6f2f165f20da34a6555d1b07613dce5",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "6205fb8de74dfd86622651cfb52802e00a70bd5c7bb914aa7451dda93c35faf4"
+      }
+    },
+    "app.puzzle.2d.presence": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "5fd0d4e2d3d75fc8b4d71e7ebc8ec7dcd83cf7cf02ead65d5eab7e807eaf2b73",
+        "🛰️.proto": "73f94c366267d3ee9249877e3eba38ad018dd834c9fe3767d50c40ed11fd33d8",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "8c97b6f4c472d37a8189915fda152c1c7fce6a5212e1e4a676a180637993b1d1"
+      }
+    },
+    "app.puzzle.3d.config": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "fdbe521db72d38fdec2be56338bbbffd8f3440494bb2585ae72c3f561b57f70d",
+        "🛰️.proto": "f93f83b50205a9dad6e92ea5627f2b206e00f908380ca9f3a3c14c3d37c33e26",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "d457ba14adc56b2336579601ff5a0d52b8e01897995d941863b056de6458a8ea"
+      }
+    },
+    "app.puzzle.3d.presence": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e321c195d447e73b9a4080ad453615be211c2de76213549d6368b355bb662fdb",
+        "🛰️.proto": "c61b57175bf0f98e27bc4a5b9110a4ee6f7c0106e67dc72b0eed2b1c48f748c1",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "5deabcc258062d797845f9685c0be445529ca7353ae4d49015b1c4b15590fbfe"
+      }
+    },
+    "app.puzzle.5d.config": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "316269d82683279fbe4315b62f30c880f2ff1cf6a5067c278966fbfd362936bd",
+        "🛰️.proto": "ba863a2e91b2d7d688a47e9c361f0f5b96abc8abbf982df96b629ec3cf40c728",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "7020abf4b4dfb4fb078e8b0ea46ce093271c11ea5f1347765d00227c4b577416"
+      }
+    },
+    "app.puzzle.5d.presence": {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "9baf7797658e66c37537c962a744cfa81cf96f1717a937cb3e6f33dba5d3bdd1",
+        "🛰️.proto": "757bab7e25fcb4ae391c2cb50688d17b9ecc7ea209c3c4c16bc2bd2c1d646887",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "8c35d6a845790a1e82e165218f3e4dfa886cbded11b661037181902478c1a203"
       }
     },
     "app.puzzle.puzzle2d.config": {
@@ -2918,6 +4238,36 @@
         "🦀️.rs": "85495c8d9a66d723470977770b4a91f45144f96cf9f871d8e449816efebec327"
       }
     },
+    "app.reasoning.wires.canvas-window-transient": {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "WiresCanvasTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.reasoning.wires.canvas-window-transient.mutation.set-drag"
+      ],
+      "hashes": {
+        "🔗️.graphql": "57fdcc8a31b448a4c9323b17c4b4a4b45e1475fb9109fdefa6be7a4b0a2331d4",
+        "🔣️.json": "11b1b128225f8a818d3f98ebdd5f1bc0018cb1401e6e1ea08b5660604a6f17ff",
+        "🛰️.proto": "da72c1ebcd4cef6896be4d18ff9895e71125d13d616d6391b7e079a79e258372",
+        "🟦️.ts": "15c42af7c687d26b95f59d63466e20c113ded612b06d88e68a5ec2517f7cd471",
+        "🦀️.rs": "b6b54bb2ac75f0eb2500e80e5ed23a06bd090f125eda3b7043a88435557e878c",
+        "🧬️mutations/🔣️.json": "7514ccab9e111f730858d2efa85ba50034a924a8b4f1b0f4780751b1a1cf694e",
+        "🧬️mutations/🦀️.rs": "46e417125b63d4247a00de877af6ed8a063a1587461d86fc570acc77044d564a"
+      }
+    },
     "app.reasoning.wires.canvas-window-transient.mutation.set-drag": {
       "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧬️schema/🧬️mutations/🖱️drag/🧬️schema",
       "level": "mutation-leaf",
@@ -2936,6 +4286,39 @@
         "🔣️.json": "e20e04b113bc116d2126f3cada5aa0520357164421186ee6ba5864a3193c15d9"
       }
     },
+    "app.reasoning.wires.canvas-window.config": {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "WiresCanvasWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.reasoning.wires.canvas-window.config.mutation.set-camera"
+      ],
+      "hashes": {
+        "🔗️.graphql": "dea5d75260aa833b2722d773ce9fc1748dc66614417a551ab66a9342afa04f24",
+        "🔣️.json": "56fa0c685bdf13babcee500826c50526ec0d360f3080febe16f3c112c9e99d9a",
+        "🛰️.proto": "e7a0ed0ed4c301a5118a108501388a30a2bc59476256a691b1857b954222889d",
+        "🟦️.ts": "e9f71ea17743d3c24800a2c58d748e78616164a6739d819e02f07c868dcf9801",
+        "🦀️.rs": "ac78a968c38d4543839d00695bb606947ee2347f9c843c4ef6b6406ee037ee41",
+        "🧬️mutations/🔗️.graphql": "05db295b18fb3967daf119f377ac7d2b1644a4fa4278d5989ed3551b2d7e716e",
+        "🧬️mutations/🔣️.json": "38933d5b0c44f2371624c0cd58275d9b16bc3086b78760df093af10eab4e6f55",
+        "🧬️mutations/🛰️.proto": "d2858f6d10661fdaeecbf7305ded654adcaf61178fd726572a9db070005c7a94",
+        "🧬️mutations/🟦️.ts": "aeb33dc1597e904a523e06b97367ccb7523691fabdae8fd3eaef47e2e88c9cf7",
+        "🧬️mutations/🦀️.rs": "a44ece7ac584f89f19b785a8664cc9c625f36e698c54bebc90026c0a13f1ddad"
+      }
+    },
     "app.reasoning.wires.canvas-window.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🎚️config/🧬️schema/🧬️mutations/🎥️camera/🧬️schema",
       "level": "mutation-leaf",
@@ -2952,6 +4335,110 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "79dfef50ef5a2b20e4615c08c636f612d76f8b624ccf58e52e346ea1b1adb848"
+      }
+    },
+    "app.reasoning.wires.config": {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "92b9637fde2e840255e7b956667f44d015970eafe32fb9ccc03972414f9fcf0a",
+        "🛰️.proto": "31874a2da0a88828bfef2aab71d9244a15cb00764555612f6a2f9e9a55ada79a",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "1ec037d397fcbab1bc7cdeaa36247d7f6b28b5cc45e86ee9eb96ad9b2451d31a"
+      }
+    },
+    "app.reasoning.wires.presence": {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "2735679f152b8f006fe02b54d1ba10e4e2cf2c04979d182565d9cedfcdeb11d1",
+        "🛰️.proto": "347359fe8772afe8dc3a4deff16626a25c9b3bab5e728f4ef9a4b2c34f4e5fd8",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "1a46b245456f091879f8f9a1146b2135789f82eb7a21a3dbd0a5b7ef3bd9877c"
+      }
+    },
+    "app.remodel.remodeling.config": {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "4fba6a6af35509d1d2633e45e5eac2871bf4c479dd6ac662317a7a4ccbcf5a1e",
+        "🛰️.proto": "431fd054bc555e16b7b44611d50fd4a8b6369422d8f47de6b387146301828d83",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "ae4758a8933503d94877c35f1f911e77ed3da2c4877b84e63effece0c674a34d"
+      }
+    },
+    "app.remodel.remodeling.presence": {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "e9c3cf0fcc4006fe687afbb1c9685a70c1af9dc11b39cd7e79ea2326f62997f0",
+        "🛰️.proto": "c9e9cbd113a0e3c63be43685bbe78ac432e3d41bef55cf2bd1b6fea7d11fd549",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "69730ea67e1ea506b9185d7b2a399af70c8da22b9e9cb7b0acf61ce81b04559c"
       }
     },
     "app.sequence.sequence.config": {
@@ -5380,6 +6867,40 @@
         "🔣️.json": "0a0e23ce1e59eb5bcfcaa32d3b698aadfe765e9cbbf522c4f47825361d10c9e3"
       }
     },
+    "app.trinity.jack.graph-window.config": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "JackGraphWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.trinity.jack.graph-window.config.mutation.set-camera",
+        "app.trinity.jack.graph-window.config.mutation.set-lod-mode"
+      ],
+      "hashes": {
+        "🔗️.graphql": "db24927ec214cce5fae96a2389e38cf1784c4be77fdac21bc26d7de8ce13854e",
+        "🔣️.json": "9cc7f34b1b374e90a7db4de3d8cbf5e8f15ca25cc6868e8aef55d2f44019dfa8",
+        "🛰️.proto": "afdb6f284a351267e5959d62743b690adfda10646a14f6c497e22d9e4e1c1713",
+        "🟦️.ts": "6b28fdcb14b60145abf77af2f4d72b9938e72cdc7923538b104b73ae661a59cf",
+        "🦀️.rs": "bbee67b0ae4d0d3b2667436c3830950eca6595c1a128ff65f65b7b5c8b8885db",
+        "🧬️mutations/🔗️.graphql": "cdcded7e6f5d98a5af8104d88ba2e0f1b287c807e5aaaff3b2be3cb3139f15f1",
+        "🧬️mutations/🔣️.json": "5ba936b3af0732fcd63f18d183437b09b4dc3b4b2d9d8188482de15834448961",
+        "🧬️mutations/🛰️.proto": "7a7702aa5f51221b2004dd166939a36219ba2754d772140da26861851e8e7675",
+        "🧬️mutations/🟦️.ts": "2cf8a4f712b0f12ef06ea540ec4442cf22ebea525cf809a62fec38534c9ba65a",
+        "🧬️mutations/🦀️.rs": "79b960be7ea20eee574543d4dbcf509e3cb985b8b76ba4bd2a5d9ade591b85fa"
+      }
+    },
     "app.trinity.jack.graph-window.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️graph/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -5432,6 +6953,40 @@
         "🦀️.rs": "637235a39dc03c658ef445bc10d284a7b95e8aebb55d235251a9c7b110e68598"
       }
     },
+    "app.trinity.jack.results-window.transient": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "JackResultsWindowTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.trinity.jack.results-window.transient.mutation.replace-query-result",
+        "s.trinity.jack"
+      ],
+      "hashes": {
+        "🔗️.graphql": "e1044480d3dd5f9b42139084c913967d62eb4faf10bcdf10e3f347e6ebd6aafe",
+        "🔣️.json": "3ccbe22c184037b50c03880c00c36e3558b428d03f56770ace0d149e7a90dfed",
+        "🛰️.proto": "54f16efc75c9fd2ea0023619ea7d18db380d1dd35d1dd04c339739cc6d523627",
+        "🟦️.ts": "b69b924c4f96a33b0df27a0a62d19704410e02abc0c84311b161d5fc01a21a43",
+        "🦀️.rs": "6146a6a97231b9291da73577867241a58100fe2bcfac8984575c774437c93b84",
+        "🧬️mutations/🔗️.graphql": "d641372e177c67bc8d9bda9ab94d696922afd06b0448f419a048cd125b29ac03",
+        "🧬️mutations/🔣️.json": "01189e76a7954b33395d921a47e1be84ed60f0a9bd373961929b4fa905c54b7b",
+        "🧬️mutations/🛰️.proto": "52289c8294849db4e684de3519db71b8a75de140d997f460c75ac03113138e84",
+        "🧬️mutations/🟦️.ts": "59506b34dfa3b5a20cc741dca54c06d36902660fd9ec2e31d5917dde8e18970c",
+        "🧬️mutations/🦀️.rs": "184a6deb3e7bb31be649647ae17b7e8c1c92752c76475301b5e4d684f196b2ae"
+      }
+    },
     "app.trinity.jack.results-window.transient.mutation.replace-query-result": {
       "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema/🧬️mutations/📊️query-result/🧬️schema",
       "level": "mutation-leaf",
@@ -5450,6 +7005,58 @@
       ],
       "hashes": {
         "🔣️.json": "157f310fc1c0393a1887809710f1ea7fdc3263ebd04afaa8b6819673f2b2f012"
+      }
+    },
+    "app.trinity.rewriting.config": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "626663ab6b272b17eb4a9441cf0920fcbaaa8da708d817da25ed61fcd29d11e3",
+        "🛰️.proto": "e03a58c39d86c65aa0e97038f7c84183051cb88a6ba6b246d6ad5f49d662027d",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "126d03abf45eaddb35ad52be83418d43cf418c959317a655fd14d3c7b2b60773"
+      }
+    },
+    "app.trinity.rewriting.presence": {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "57f3a64ebde5765dfe991e5a8b7e948592d90f693d5c06884272d8a82b5b81ee",
+        "🛰️.proto": "f79c2d5615ac635c3a1ae234198616c3dc6e5be5c3482e5f82fc9ff45e9f1368",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "2439ae88e80d22cdba2604d2c25460069a1373de2b5c373c68611d364b0718f2"
       }
     },
     "app.trinity.rewriting.window.config.mutation.set-camera": {
@@ -5802,6 +7409,127 @@
         "🦀️.rs": "58b4ee4e69bae6025c2cb9c1f9b3eae5f850186b69a322a55b18649530c98b6e"
       }
     },
+    "app.writer.main-window.config": {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "WriterMainWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.writer.writer.window.main.config.mutation.set-camera",
+        "app.writer.writer.window.main.config.mutation.set-editor-settings"
+      ],
+      "hashes": {
+        "🔗️.graphql": "08f794dd910d9941e0cad50f54624731c9faa87e1309c2dc339c7b2cfc4e0704",
+        "🔣️.json": "4a80c82a29cc9baca3d0581582cd9ae1f236119d1b17af0af328933f6603121c",
+        "🛰️.proto": "08876240121a5d686d33a78d6dcf190d9eabdc3f2534a6e16cf2c21eded8cfe1",
+        "🟦️.ts": "2eae0f8752adedf981171b42ca62f38df7bd733fd45053f1a8c198cc275195c9",
+        "🦀️.rs": "caaebcba3eb8f41878f06737862bbeec0401338c4115a5c028c2453bb1e2f6e9",
+        "🧬️mutations/🔗️.graphql": "ccdade5f70ea724441962da822bb91fc64453dbaf9a2dd7f841422e3e48a8078",
+        "🧬️mutations/🔣️.json": "88c478996d8ff7dc43fdfad697a0ec470fd9cd33509a121e5b5b2b1c856bf0af",
+        "🧬️mutations/🛰️.proto": "76049ea04b82e51945a54a23bc32f61d7f597ada6568760e1164489009fbe86b",
+        "🧬️mutations/🟦️.ts": "857cbabf661874c130bceec146ce01a7bd1fa69457da9acfad881fe59f0b0db1",
+        "🧬️mutations/🦀️.rs": "e5569618fb4db7e897a3f6665981c12abbff84228d6261893fdebaabb0e2ca00"
+      }
+    },
+    "app.writer.main-window.transient": {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "WriterMainWindowTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "app.writer.writer.window.main.transient.mutation.set-editor-selection",
+        "app.writer.writer.window.main.transient.mutation.set-engagement-input",
+        "app.writer.writer.window.main.transient.mutation.set-lint-generation"
+      ],
+      "hashes": {
+        "🔗️.graphql": "1ca33ddf427eebcca4536b2f31d5143c26b8090b949103c8ff0c6f85644defa6",
+        "🔣️.json": "fe1a42856d15f6525c5e5310487c9ef8c39e2a687bf51390207efedbe347e206",
+        "🛰️.proto": "b59c70f485938e74ec5e697f73f495aa2fd85839f90d327be57ec0ab7376606d",
+        "🟦️.ts": "1d56bc503d3cfa1167065b571be78adf86a226d33b1e38ba0d2d718d518308d2",
+        "🦀️.rs": "97aee7d29298437a3502b46e57e4234e237fcf8cb7f33ba10161e239aa5bb773",
+        "🧬️mutations/🔗️.graphql": "2f5ae900dbe192ddede4813c58d893d9270b79a1968072816bcccf1c62fea9d7",
+        "🧬️mutations/🔣️.json": "e6627481c6a10a11debf32a373982cb84c7a5426395ddffc31bf6ac1cd57dd6f",
+        "🧬️mutations/🛰️.proto": "fee92f690e433cb314d57e88c4b20f15f94c1f8cc8b0c7876fe4c1094b582ddb",
+        "🧬️mutations/🟦️.ts": "e4023f47e33083ef8b1e9d5dc60fb2b71cd6d0d5b44ed00847834ad698a7389b",
+        "🧬️mutations/🦀️.rs": "fbd5fed4ab21200bfeca8cfc91f7f2be4e3e9846b3c0ee728bb206c640b484d5"
+      }
+    },
+    "app.writer.writer.config": {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "958df01a0df86ce00205764c1f7bcbf1549a2aaed7a3922f3e333aa3606c5e34",
+        "🔣️.json": "d72686a232a2fa3bdcd8ff06d90bc3d6d412e866c3a8dfaf9ae2beda5a9de387",
+        "🛰️.proto": "2b697d2d2a5c8b6208d2a8d452a944dd172d24796cbd86a0227978cfbdb0b7ba",
+        "🟦️.ts": "496c58a8ff2c553a139c08aa36f08c35c3e4677bf5cc4fede53ac8fd94f22f5a",
+        "🦀️.rs": "3947f41b105edfd7a6f36787b0cf552e70e2137a73daabcf4e88d21880bf92ef"
+      }
+    },
+    "app.writer.writer.presence": {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema",
+      "level": "surface-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "NoPresence": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "03205b5c0f4e44d96aa164430d1d5ff6952fee8c4cdd52a0d20ed58b6e2296a6",
+        "🔣️.json": "fa4ad9f5edc50bc747a7c5e530a6d4439023e7ee99cf78082a9253ff3a8d4937",
+        "🛰️.proto": "5fac97894ce43a6a3b6a326a1dafe8db8b32189b9a5416f920c7508903df06ed",
+        "🟦️.ts": "95cef63b921224e262de7c610ede9fdfa7538714e45ff77ce7c2f0efc7c5ae19",
+        "🦀️.rs": "73b03e21f90341a42583078709bd505e40e986613b349ea4523f3db9ff4b8bb2"
+      }
+    },
     "app.writer.writer.window.main.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config/🧬️schema/🧬️mutations/📷️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -5903,6 +7631,32 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "17d5ea4ad42c3049cfe82ad05ae398fc7241e43a8a3b50c86002ff9d063d3ede"
+      }
+    },
+    "forms": {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "FormsTryWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "try-window-config"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "7d67cc0a0f4ae9aaa16bd4fa519ec4a28a77f996f27f136d5f4875008bcc1b3a",
+        "🔣️.json": "bec749b151cd5d3a93e55d76e6da6997da5b743e33fe35188f21fc14660641fd",
+        "🛰️.proto": "760bf7a10469aabd6dadf41f40863173ba7afdda746509bfda8307923fe054cf",
+        "🟦️.ts": "803acd86d7f0ad8819e31f7bcbdbf6186af0a47fefa46c1c643d84025593b190",
+        "🦀️.rs": "06158c969aab4eb29f8f968ad952beac93c765ea40658b68b1c56bf84c53596d"
       }
     },
     "framework.abi": {
@@ -7505,7 +9259,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "2e2703433e68222d74db344d4d1878d3bd73b4c2288f011b07432e9299b14253"
+        "🔣️.json": "ecaca0d0f9d9840c49d036842226502c48d37845e1b9a20c96f3d63efaa387b0"
       }
     },
     "framework.os.store.presence.retirement.fixtures.mutation.set-value": {
@@ -7538,7 +9292,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0d72173cc22f2159a40be7bd1db90ef522d37986a0188ee2b1db293a7dfebb3e"
+        "🔣️.json": "f02efa5578f85b568e4b3d74e7b0d58e15055a9b838d0d94f57f790c3cd85432"
       }
     },
     "framework.pack.intrinsic.retained": {
@@ -7572,7 +9326,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e80ef1dbf6dd20cabcd3457c403495117fbd55cc85da2ae4d1c3ac3fab17ed8a"
+        "🔣️.json": "a6072b5a7a4c999418a108940df78a4f21654bc95b57879b9d3cba48aae9edee"
       }
     },
     "framework.pack.value": {
@@ -7618,7 +9372,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "7289c32336498597a53a7ae4135e00d39450b85c80dc4363c62138df641f6281"
+        "🔣️.json": "d3f70df2d0c9f936bf4ffd6809116a8e545b03ed1c8d0d3cc016887cc28721f7"
       }
     },
     "framework.pixels": {
@@ -7959,6 +9713,19 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "632a36aa149a37e96e720661f8afb1dfab96862d6a7ef4155e7b64b3e6e0900d"
+      }
+    },
+    "framework.process.watchdog.linux": {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "58357f64a6d4b6d8030118df81e4411ee6d6397ce02429fa8e9b7ae65a81c29e"
       }
     },
     "framework.product.course": {
@@ -8945,8 +10712,8 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "eb53ab38446f46b1291bbae2b06b75d35d462205510e050250eb961c39faf600",
-        "🟦️.ts": "1fa080614ebc871521b472add488709aac54670b9e2065ba0944af3c5459ba9c",
-        "🦀️.rs": "e343c72ffe001d1a9344edb60bdc3c53d5f2b7f438022bbb10e81a09e60de89b"
+        "🟦️.ts": "2e6c272fb8ba9aaf8bf682e33bbb12ca9871c61f5233f59d5aad952284a4e281",
+        "🦀️.rs": "25968220b2d27d8906273ac9f57ac2438e969164910c3e3cbaef03664ca74036"
       }
     },
     "framework.public-invocation": {
@@ -9012,7 +10779,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f329f2ec7003aa642e296fbeed135eb269bb2058a3b0c1bd0ae392d6096358d4"
+        "🔣️.json": "f15052353e3393efe13cd2344c73c21fb7f22a566734239d972124d7e65e9b0b"
       }
     },
     "framework.replication.mutation.foreign": {
@@ -9385,7 +11152,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0aed5140d33e5ef5728a9d069f70236685c8ee9ae9bbcc85de81fec5bf611e4c"
+        "🔣️.json": "dc0cb5d14b8b812a15bbef03330e93d6c095c878778181f8481e2716930fd847"
       }
     },
     "framework.test": {
@@ -10007,7 +11774,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "63028ee07be03791df84c937504d3779aa131b26d1804bd500b0573885af3beb"
+        "🔣️.json": "83ca1657acfac1e8addaa0ce4e267b3c0d0a9fcec88c54cb2b9099d2930d1eb9"
       }
     },
     "framework.tool-run": {
@@ -10657,7 +12424,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "dec799128ad18ad5b2078b0c92400bf1d5a9397642512b24637d42c89cbe57c0"
+        "🔣️.json": "8cfb66cee290c65b36587c0122531c7d795a3c126a216cbe565932d5eabc8482"
       }
     },
     "framework.value.codec.path": {
@@ -12394,7 +14161,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "02c83ca2dc18fa4041cf5b459bf801e86409c17efafab6d963fc035c19c88b88"
+        "🔣️.json": "f4dd128074cc4a6f9adbf6c382e680eaadb3990be39cef12b1152f8945d24bd3"
       }
     },
     "os.config.mutation.admit-local-document": {
@@ -13598,7 +15365,7 @@
       ],
       "hashes": {
         "🔣️.json": "ec2fbbcadafd5c7760a32b32314ba0870c65d2736f815cf109101ca6720dc994",
-        "🦀️.rs": "b12b9351c6effa6dffe1f51b2203394251aa4f9a8dd89e61fe698085d9e10472"
+        "🦀️.rs": "9617ffadf723c84f3022aaad91ab14671d7904247f52b218226b6963ed9de61f"
       }
     },
     "os.directory.access-policy": {
@@ -15640,7 +17407,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "7ddca28d7b8756e42009863c00bbc7766a8b6499f7e4fe867ad1601ed9e855b5"
+        "🔣️.json": "3b7f9314a4cdfd1af0363f620c7eeecaca9197b14589faf7950ef0c9d4a027ba"
       }
     },
     "os.plugin.playground.composition.path": {
@@ -16651,7 +18418,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0332d851a302972886580ae24ad5e8e1d72f5d05cc50d6075a6ab31bec3b425a"
+        "🔣️.json": "6679fd7d5c618dc9771dfac0764756914f4a4102dc16372e5dd0c54517183f0a"
       }
     },
     "os.store.child.owner": {
@@ -16951,7 +18718,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "2a0fa1b72bbb7a973d91a5a1e81758e614dff2a11cefde79e47722c196f33d97"
+        "🔣️.json": "640e26974a2c629dc9497a0b58555d97da2dcc37d18b999866556dc25037e8b4"
       }
     },
     "os.store.operation-wire.output": {
@@ -16970,7 +18737,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "5abb94e74e821641ee784b16a7a5de8f9e4b8178723e440587e2a624f8a0c530",
+        "🔣️.json": "2bfe79b3cc79770a50f7e23de47246bdff4c1bb3bf966119891d673520bc753b",
         "🟦️.ts": "20df7e9e3cf55ab51c24467404309ae9a40546520c75756606d585b2f9e236ab"
       }
     },
@@ -18137,15 +19904,15 @@
       },
       "dependsOn": [],
       "hashes": {
-        "💡️inferences/🔣️.json": "bee04a37fbfc532669dc6ea0b1af9f1f600ed825c73ec2a89932721c2fa3feda",
+        "💡️inferences/🔣️.json": "8cebc4270fb3336777b67e31e9ec864b0456565466dac46b58fd56c7dde3ce5a",
         "💡️inferences/🟦️.ts": "4fcdad6446a1b0ff89a3fba355ec7835bc4e6ea5ba80e05aadf2b04b09433fbc",
         "💡️inferences/🦀️.rs": "c295630e57a73f6ce918085c29796997f7ac0429a993e894ba71454ff116a415",
-        "📸️snapshot/🔣️.json": "b09c75402f60338c05e784c38a6d323e483f555c3f179975745221037f175361",
+        "📸️snapshot/🔣️.json": "1ce062b9f20e6674490d87fb3b08d520b51488246d3900852a9f05512f42c8f8",
         "📸️snapshot/🟦️.ts": "a0c2cc63cd835ebeb3f9575f09f80a40527ad552027dae4e465fc44a38434000",
         "📸️snapshot/🦀️.rs": "79f00e2c087efc8b0fce28ab55aaeb313a4a9a3108f8caee836b8a593a4de01d",
-        "🔣️.json": "f96007bc6b46ed33850707a2eb0c7223365870d5b4f98069cc291dfd8f14515b",
-        "🟦️.ts": "648a39202af9a3b84504009930c0c9a9238b20671ab5f84bb4a73d177c8fb836",
-        "🧬️mutations/🔣️.json": "e45a28c298c67c13abafe6ca5ac4e09b4e6ee30345d2d43018cae3eac4bc3358",
+        "🔣️.json": "d02c42ba3fa987478799e469057c040ef5666e702025b8ef06a882b9d94a785d",
+        "🟦️.ts": "515346ebde3079dc16594cc88252cabc9098a6e2dd320c7003bff9e15e4e53c7",
+        "🧬️mutations/🔣️.json": "cc9e1e9ab71e36ed00dd8668205e266960a4c3e12ea05d4af7aa14695bbbce04",
         "🧬️mutations/🟦️.ts": "de2393d41ce275ea21aed1f6b2eff312ea5ba6ed54d3d25a29bfee4b76425565",
         "🧬️mutations/🦀️.rs": "a1f51262dad8deb325efae3cca45221ce691c3dcedd21d9b4a5e4966b8b5cbde"
       }
@@ -18344,6 +20111,32 @@
         "🔣️.json": "a4565c9ad234e64d2ce4ae2238ef214188066e23270d4cbdf3d6bb21a8f018eb"
       }
     },
+    "repo.build.cpu-profile": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "efbe95c3a02afc4030188e5d197069c57ff23424b11330e6a4c6fcd932b72018"
+      }
+    },
+    "repo.build.runtime-entry-admission": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "48db4061909e9c9ad8283c7cc3a5ae14111321989ac3e4304342aafabd0c55fe"
+      }
+    },
     "repo.cache": {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧭️package-inventory/🧬️schema",
       "level": "product-module",
@@ -18359,7 +20152,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f68a9b8d049d18f21e90d558fb58bcb5524f44b175d8980a8644500d4632a56a"
+        "🔣️.json": "69c8f80496516bf38171eb31340793b38827ad89ff2d8daa8353c9c2c35215c8"
       }
     },
     "repo.client.mcp": {
@@ -18699,7 +20492,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "99f647c803d4ce635755f5d7a2f4fba9c5f84546476f2e96b8d5f63a729c9143"
+        "🔣️.json": "70f322239a02917d6820ee65ac76634b4dc024c9c1f74a240d64e1c42afd4a75"
       }
     },
     "repo.dashboard": {
@@ -18712,7 +20505,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "64be5e103282d0963f14c8009a12d77c9978f6cde950d786f477ea2c3ec706f4"
+        "🔣️.json": "61e7085758408f83431fcdf6906c78d30a94bac83511e36b97365388d1c0d05c"
       }
     },
     "repo.discovery.runtime": {
@@ -18980,7 +20773,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a6cb8ae2a3d8577de97c0674ed2d038e7c8db7c4fbcd6ed632c685a5f4de45d0"
+        "🔣️.json": "c1eea9be1ced6893d8ecc1cedc41c9ed71b3740cb1c6b7c1ccd4b93082c16df8"
       }
     },
     "repo.graphql": {
@@ -19055,6 +20848,19 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "376715898961b26b5d66bb1940cf6b3f50597196216f6bf003b0ee428ed97447"
+      }
+    },
+    "repo.library.build.resident.ports.native-tools": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔌️ports/🧰️native-tools/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {},
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "778df7258045c597054fffcf06f26cad9b4a4d81304543d056d7e28cc3a49405"
       }
     },
     "repo.library.caching": {
@@ -19224,6 +21030,28 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "d20cea82668346548fa48b079e1a14106405a71ac01c2efc7ddfd84bab7970a5"
+      }
+    },
+    "repo.library.root-test-birth": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🌱️birth/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "Case": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Protocol": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "0151a0164ec19666345b2f538e42cb9e23663a86f673924eff6fdf0d648c2d97"
       }
     },
     "repo.library.workspaces": {
@@ -20011,7 +21839,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "3673482204115ac5c2a4b47292c77f22d1a4ce8b4382bb81e4af6547d726fa27"
+        "🔣️.json": "b1ad036ca4bc91e67174f81f3f6c6a4b2f9d8ca3c8b5078488b16796fdde4e33"
       }
     },
     "repo.native.observe": {
@@ -20589,7 +22417,25 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6b208a937070f44286407dbef82c14bb1c504cb8e9b939a90261200e89873bce"
+        "🔣️.json": "f28f2a86c54c8151853bd4e9298898f264ecdd420ab65e614600a2abfc2e688d"
+      }
+    },
+    "repo.test.storage": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🧬️schema",
+      "level": "product-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "TestStorage": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "7383813dafaad99fcebc478224e558a160a6cd61ab10ca6cedabcf86aacfc987"
       }
     },
     "repo.testing": {
@@ -20745,7 +22591,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "7c945ed32ccb9fd220d40ba8e45325e4cab19d42e3720182ca7ca1882e234725"
+        "🔣️.json": "1d7782c0c5c125e647776e5dac698cc725585fc47f999a9e2a8cb286d634b2ba"
       }
     },
     "repo.todos": {
@@ -20791,7 +22637,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "55cfb920d4ef5b7a427a52f8610817819916afb340aaa487624104627a207cd5"
+        "🔣️.json": "395c623e626d733b98a4982db49c8ac87bc7a8335027af7b144d58eb1b1fa5ce"
       }
     },
     "s.animate.presentation": {
@@ -23163,19 +25009,19 @@
         "💡️inferences/🟦️.ts": "51edeac692961480c97073ed4e6d1e583d411e2a9362cde81ed6d78fa4222768",
         "💡️inferences/🦀️.rs": "6a23ac508464b1d98d2692d22c9d193a6a3d2e951bf13577f28f9767fbb30e2c",
         "📸️snapshot/🔗️.graphql": "a2173af0fee71640aa4bbb59517febfa0db92002467093e8899250254ffdb48d",
-        "📸️snapshot/🔣️.json": "506a0ea4bcc21d7a334fa948dea3b992f49496a0fde6fbcc874aa103baf180cf",
+        "📸️snapshot/🔣️.json": "a1597d4a071ffbaeb57c00f29f7bdde2f9d71711340c2a66d50085bef133c228",
         "📸️snapshot/🛰️.proto": "f9054b7cf3b536a05aac85ceb7e81b930ea3e6261e7d2586f0ca09a93611b355",
-        "📸️snapshot/🟦️.ts": "432e42966ad8e79c763104d026e079baaf805f8c8116c490080b3e5a447ab32d",
+        "📸️snapshot/🟦️.ts": "568a55baa73baf31b986aae2bef05c5d1c865ceef8ef75a286c9314831f8020e",
         "📸️snapshot/🦀️.rs": "1a35043f0e5da0097a74f4acf5dbce25eb69c16fd5f97c6b998e3ff89d93fa60",
         "🔗️.graphql": "6c60459fe8db9d015a263730e2ecb71ef778d4cf3e5a76ec70288f1d7d92b6cd",
-        "🔣️.json": "29b8b702c17d77d438a5975436a7902a38e2d3317a9d442bb2ae1aee2aa4f5ef",
+        "🔣️.json": "18021e7c34b256451a7139487ee6ccca3cd92446f39227f26e88906d953de78a",
         "🔺️diff/🔗️.graphql": "d2a6f0a1713dd2b186ddf6b338bc2f71041421d0a1559145c5da3c380c54d793",
-        "🔺️diff/🔣️.json": "3edd8f875fbb21bedcb7c0e7960a3ab0d321dfebe1264a86f8302a36f6149bf3",
+        "🔺️diff/🔣️.json": "f1d3d5f901c886b4b451099b439d6354f362cbf6e3933093c5779e7c3d60c824",
         "🔺️diff/🛰️.proto": "e31130ed819f8547361366eadda686df692e04b0fa4df98ecff5e279f639746b",
-        "🔺️diff/🟦️.ts": "1208f18e7f396b1f59af5d93b8b36310623da99f7c538aef7d93acce311ebcb2",
+        "🔺️diff/🟦️.ts": "f6cb5458664d368c5776d0283a57bede79ee5ddb017a622a7e2e184ba076339f",
         "🔺️diff/🦀️.rs": "4f62f4a00445191f2b918863d92d8ed9f59044cb69cee85f7a498807ad302feb",
         "🛰️.proto": "e0eefa072be93729534f4d49b872002a8948198f9eaeb8db7ed1de0b3a0f6fbd",
-        "🟦️.ts": "75271beebd74c0e88d36e4ade82d6c6a2456012d6328d1f19e9abcc702a9dbcd",
+        "🟦️.ts": "e4f3c2fa5de472c4ebf3d9848646bee586ed2937d27cfd98ad62094fa72012ee",
         "🦀️.rs": "707f1c8459c264808520c36f6ac97670b08e468ffe1eac3311cf8559122ecc49",
         "🧬️mutations/🔗️.graphql": "fc195105abc8a3b77afe33aeb338bd39a46ce35a7749a37284fd97de8fc7afa6",
         "🧬️mutations/🔣️.json": "4102711aa9cea2b1e3ede9a2d49db1e37d80b6f90d6fa869b5faf6207fd5d41f",
@@ -23199,7 +25045,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4317288560bf8c377c10b874cc88d0fa52d1af351c204d158fda3a395e02c52e"
+        "🔣️.json": "015683856d8f3e1c2e9e5306e7f4854c0f2bb015dc9a17f0f816972a8fa3bdb8"
       }
     },
     "s.architect.program.mutation.connect-trace": {
@@ -23217,7 +25063,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "8de61626aa92b35396c9bdb34ffef3c091f8749015d4441c0c723dfee0061b16"
+        "🔣️.json": "96c38661edfbb52b169c373ce720e8a2c866ce4ebfe0c80e310df6b44b2acf5f"
       }
     },
     "s.architect.program.mutation.create-register-row": {
@@ -23237,7 +25083,7 @@
         "s.architect.program"
       ],
       "hashes": {
-        "🔣️.json": "60671b2173f8ccbbdfb462e2d152681e398adbf6a6cb0a257bd325bf74a6eff5"
+        "🔣️.json": "bb2d9c2c3781ed7c14a4b4bc2d6adb51c3dce7849ad74929476d6cfc9bfcf318"
       }
     },
     "s.architect.program.mutation.delete-register-row": {
@@ -23257,7 +25103,7 @@
         "s.architect.program"
       ],
       "hashes": {
-        "🔣️.json": "a0dd03cee44e30645207dee44b005ed17f09ae7a659df39a8bb949f0b7475930"
+        "🔣️.json": "245f3791bcb2446f9d038aa6f27349c0c278483672a992d1527e1935ceba19f2"
       }
     },
     "s.architect.program.mutation.disconnect-adjacency": {
@@ -23367,7 +25213,7 @@
         "s.architect.program"
       ],
       "hashes": {
-        "🔣️.json": "313ed5af0a0880466e6bb8c2cc89edf408cb37f455385d3ce5903a128fa3bb43"
+        "🔣️.json": "e8199797dbc04266abfb5df7ffc4398dc478fae1f691ef8f7dafe04511f5fb22"
       }
     },
     "s.architect.program.mutation.replace-governance": {
@@ -23441,7 +25287,7 @@
         "s.architect.program"
       ],
       "hashes": {
-        "🔣️.json": "4569fd50cd72321b32c7adc6314c0a0f5ffbb874957098349610d7c09bec6887"
+        "🔣️.json": "8c491d69276e1c6ccb3d33e369bf0c66ee04a60aaa6d6b9b0717ba4ffab5e2fe"
       }
     },
     "s.bim.model": {
@@ -33759,12 +35605,12 @@
         "💡️inferences/🔣️.json": "e9a8f8febd9aeeadfbef3432db9421df4a5a6363f27298533d4c45a390f0ee7a",
         "💡️inferences/🛰️.proto": "22dd69571faa3cb80bba2aacbcffa0c067aa0ccdfb0712bdf77a307eb21ece7e",
         "💡️inferences/🟦️.ts": "a0fb4576f6b87cd0d1a6d2a650a8cf0b51abcd975de28e0596983d1da74a4593",
-        "💡️inferences/🦀️.rs": "325f45a29dfd6b8b6ba9956127f6c2410168ebfb950998020c5855a329d8a6ab",
+        "💡️inferences/🦀️.rs": "057c8257080d3e4cdf113644cc3c8ceb61a08fe38f02339ca7a26704f904730f",
         "📸️snapshot/🔗️.graphql": "71233e9a906d7735028271649932f42ecb0507dd24b25629fda576046817f721",
         "📸️snapshot/🔣️.json": "e8e6c9286badbc569fb74a7606d93043ff80927e8afb400f6ef0eb05d203df15",
         "📸️snapshot/🛰️.proto": "a28f51063239934bb25fd4b6501781a21cebaa36e8ba0bcdd735ec609e9765fa",
         "📸️snapshot/🟦️.ts": "7e257d1771717a81750893431a6181f8bc308ff5edcdea0f22f3f4b3c5459c24",
-        "📸️snapshot/🦀️.rs": "a729210fca18474aedf4e92e301f268f069bbe77ec7ba3b80e0cd0bb5ae21078",
+        "📸️snapshot/🦀️.rs": "e253971440dabc5d6829e8debd845227a2f7cd0c7eeb93323c68593e4123e324",
         "🔗️.graphql": "a413264d6861b6734050f9943ab7b27c9f7844d4287e6b55a10f65dde1db846a",
         "🔣️.json": "d379e8676182212f834b53f94ca3649d446f0a62c0a4edb898c7585de6054945",
         "🔺️diff/🔗️.graphql": "9f45ee11ef3314c991bd410e940ef3607496f16dde4df403412dedc19932e543",
@@ -33774,12 +35620,12 @@
         "🔺️diff/🦀️.rs": "7fb8a058b60b4f7aaccf281680b3eebf94d669a4d181b16a5f6e1dce817a70e4",
         "🛰️.proto": "b04dec86b7de8500a608f92b13cd84edef79ea2c8b21fddcd47969d8bdc170bf",
         "🟦️.ts": "81c18ff3ab8df86807f144dd02ebe493d684f3745bb3f50928a41aa5d7e17d6c",
-        "🦀️.rs": "1b0ce004a2b9ea397d5619992f061404aaf1776356c879281dab76807c4f44a3",
+        "🦀️.rs": "0e61ef3f122aa44b7fc16481611266860cdbbfa202d4831cfa367ec4ffd35435",
         "🧬️mutations/🔗️.graphql": "1cbac3f9887f58e3248a7f16e807f424fd600ef348b63100d7e3d2b456e6f3be",
         "🧬️mutations/🔣️.json": "6f04247708c91ebb869a68bb14ac0dc14d326efffe80732fb9ffb16da1ed635a",
         "🧬️mutations/🛰️.proto": "018b1ad4d3d60f9a0cee349de345d5d6de3d26e89aff803b4a6b7fea2283e480",
         "🧬️mutations/🟦️.ts": "5f3f68b4224cb67f24887c135bf4690f826f01d801ef134c7586953fc0335910",
-        "🧬️mutations/🦀️.rs": "54ce99778a5bb87c75fa4ce64ab467e432f78fec6a0d1eafcedcf740f403a535"
+        "🧬️mutations/🦀️.rs": "27a2aaa9b02550f1b8883ebfc0d9ccef24f9e44838be69e8927be6e3c1039547"
       }
     },
     "s.energy.model.mutation.add-air-loop-terminal-zone": {
@@ -33797,7 +35643,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "541510e0c2d1e03fb6f917baf24249f9d6ac7cc051a4a4c71c85764b51b8ece6"
+        "🔣️.json": "0a2259c2f143cb138c6a82e3350527733779dc67108fe64872e14eba912662cd"
       }
     },
     "s.energy.model.mutation.add-annual-schedule-holiday": {
@@ -33815,7 +35661,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "9ec44ed1414b7fa2d80234e68be89c7e94b1f5892a7f90b34bdcc7851a5763a0"
+        "🔣️.json": "ac460677fe9d10355f6bd2dde23a77c876da2dc4b012f8628a4bec84786cda79"
       }
     },
     "s.energy.model.mutation.add-construction-layer": {
@@ -33833,7 +35679,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "db7218200d0732b8b719f7b3815d1832244137a6ec71e6925fba0dc9aa86cee2"
+        "🔣️.json": "a0695c3077e5bb622548510430160aeb9cf8fbc0771ebad3c389600fcab921b3"
       }
     },
     "s.energy.model.mutation.add-electrical-load-center-battery": {
@@ -33851,7 +35697,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "5cf16a54fc3a3236d00f62ba4f20346a426507b97935c29a9d950e77f983198d"
+        "🔣️.json": "67f7750a2ce829eeef3aafe371827fb89216af9fdaa3a4be4155408d5afbe568"
       }
     },
     "s.energy.model.mutation.add-electrical-load-center-pv": {
@@ -33869,7 +35715,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b52d7f7b7fa5a82a31b9f2cece3a0aae80ac99d2b2584a6d5c5fc9d5508ad01c"
+        "🔣️.json": "6421e013076588bab0f10d54a4147671bb20e14819a751d18aa7127fb975c626"
       }
     },
     "s.energy.model.mutation.add-output-variable": {
@@ -33905,7 +35751,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "1e8e5946cba88632cbd726d34489479a11723d43c8b47bb307de16e338ded7ef"
+        "🔣️.json": "97c1493b6fd5d673b47966172fd5481b1a77f419447040f9b0d5e4c539b009b2"
       }
     },
     "s.energy.model.mutation.add-space-list-member": {
@@ -33923,7 +35769,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "8a39a53bafcb4d826a6ba8b8240833101e003e6ffa8ee100a03910da677337b2"
+        "🔣️.json": "27fe52b8b08e484c9565316b45eb5c41d47e51d0a38782aa2a3df3425c30aadc"
       }
     },
     "s.energy.model.mutation.add-thermal-enclosure-zone": {
@@ -33941,7 +35787,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "8d756ea42ec729767b9bb13122e228a0f4f8cc8619b026108fd9076bea3798a4"
+        "🔣️.json": "67aed5f55ec7474fcde9d208b2dc337427512b5df542724c1e69ebf9c46382d3"
       }
     },
     "s.energy.model.mutation.bind-fenestration-glazing-construction": {
@@ -33959,7 +35805,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "bb140108e7eddca3361d31b2a81623a5e574a271461d7df8b34ba66e62255c2e"
+        "🔣️.json": "9f8432e07f32c206e5e8ac8ef953526038c121dd70ee667f462a9cb0a46030a2"
       }
     },
     "s.energy.model.mutation.bind-weather-file": {
@@ -34069,7 +35915,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f681bc47e28b52c11b21765111eabab418653f3a693f3285be163a2f59dce775"
+        "🔣️.json": "bbd7a98a5541946a0c8b7e3b668b3636edf91b92b288bcd489a0e9b18f63f59a"
       }
     },
     "s.energy.model.mutation.change-battery-capacity": {
@@ -34195,7 +36041,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e9eee270b5c3bc3831acef0a681e4a885777c74d8cc92104c4d984f8c4c55224"
+        "🔣️.json": "54c40169040541d56ad985ea0979f3cf228ac558be978ef3bb0e4654bacb2112"
       }
     },
     "s.energy.model.mutation.change-daylight-zone-glare-limit": {
@@ -34735,7 +36581,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c309ea406a408287a8a873d5a22c4a0e3e880820afda338313fd1f1a9791625c"
+        "🔣️.json": "7d259471040c43cdb6d486e32792cdbfa398f0a8d1a0c6c918393bc0bb90312c"
       }
     },
     "s.energy.model.mutation.change-glazing-material-infrared-transmittance": {
@@ -34897,7 +36743,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "305d47fd53b91f5bf3dd6e26a308eedf0cb14a8c9b58db2e7ed9680a396575a1"
+        "🔣️.json": "2e44329a5b122c08641ed68d8f4a5456003293362eb222b02239217acb9e57ec"
       }
     },
     "s.energy.model.mutation.change-ground-deep": {
@@ -34933,7 +36779,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c2818b13fd6bef1eb726b389ba1d90ba3ba0cb6c02e699f93b5c4569c34e1b80"
+        "🔣️.json": "8f0ca3ecef15b3c1f6d11c719e1ae01d13ff208d54b997401040f3f4a1327d67"
       }
     },
     "s.energy.model.mutation.change-humidistat-dehumidifying-setpoint-schedule": {
@@ -35041,7 +36887,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d9b5b895dac45d956aa4e35f0a27b0eba822c5abe3f858ac504edf20928c77db"
+        "🔣️.json": "2ce8c82542dce431d07cb21591c7103b35dc459b59f203ccbbe40b2b65c812b6"
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-max-heating-capacity": {
@@ -35059,7 +36905,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "103ac0b0a80600dad2e6db587c3ada1554764900561f094a11275dbf0ed99af5"
+        "🔣️.json": "040d259d8d235fa543f7b9637206b87adb52dae1836caf86cfb5210f81aa4a03"
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-max-heating-supply-air-temp": {
@@ -36337,7 +38183,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c0e82f8966073db57b883e09eb29d0ae7e2c825a59ad7ddba899ccf3dd8844a9"
+        "🔣️.json": "40bdee4c83330c572266fcf4c77b4f620def600e190181c687ca60149f0d744a"
       }
     },
     "s.energy.model.mutation.change-shading-surface-transmittance-schedule": {
@@ -36355,7 +38201,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "412c019dd15d4fd87ced9e50fb1b4f53b7d5ddd65954f919d2d31fadc74747a8"
+        "🔣️.json": "1f90f2130db86fd404fad45af2fd47a25ed64018f52c86fd842329c37ac00169"
       }
     },
     "s.energy.model.mutation.change-shw-system-heater-capacity": {
@@ -36715,7 +38561,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6ec254d795bc2a0e7055cf50bfe3b3d37f72e0af5f87e8c7a130331618d7f435"
+        "🔣️.json": "eb652da50fc1977e3465d243abb8422b82350347f69dcb8582ca48146e9dce94"
       }
     },
     "s.energy.model.mutation.change-surface-class": {
@@ -37003,7 +38849,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "aaf8d4be0ffb2776f17bd3deb424a5673bd993419db5509ce2c8c34c356a6413"
+        "🔣️.json": "47448968620268b15c873f811a36f6b3aee6916244cbdd7253336dc4128043e3"
       }
     },
     "s.energy.model.mutation.change-zone-conditioned": {
@@ -37183,7 +39029,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "ad3cf9d0323e3ee9cc377f8c41557699ea67fff4d3f1b459da3db193afac760d"
+        "🔣️.json": "c0c49e55baf62411c0b53d8e0d4b1c19d3e4c14cba3f6c66cad997b00c59868d"
       }
     },
     "s.energy.model.mutation.connect-referenced-model": {
@@ -37221,7 +39067,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c03bace37ba9a71e83513441f6d2af361d113f3709d161f1f1be8b45811a85fc"
+        "🔣️.json": "2704561fc6d26aaaa68583971705ef19ab3243f8af3b1fba00fc3b61b632d0d6"
       }
     },
     "s.energy.model.mutation.create-air-loop": {
@@ -37653,7 +39499,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "93dbfb14067f0c4307a8f52a49097e44286b4ede9028ad3ebf87cfc1941d6e4d"
+        "🔣️.json": "a275b0aacf05c6034768888b01b6cdc3cb3cd0415f74f43d926d55b7d2d9379b"
       }
     },
     "s.energy.model.mutation.create-shading-surface": {
@@ -37779,7 +39625,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0b381251516ce60b15aff47d190e4e0d9c9b778eb1a90768533a053a5901f102"
+        "🔣️.json": "a2ac809be05fe2a2e1139b3aa7ebf352d509e02c413f9c521239869cb8b271d1"
       }
     },
     "s.energy.model.mutation.create-thermal-enclosure": {
@@ -38103,7 +39949,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f27d3fb8f80e44369a8d172aad8964fe95637d37d6d528e240fda33c70be3ab9"
+        "🔣️.json": "1c4ebc858c6b1f5cadfb1717a2f67f3cf6a5f3ecccfbf7ac20572a5a89325cb2"
       }
     },
     "s.energy.model.mutation.delete-humidistat": {
@@ -38337,7 +40183,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0d03a84fd043d7b4b9a869b46cb2012c6b4d6cb31fa19c712fa8ceb1b3ee7433"
+        "🔣️.json": "490ecd91533ec0f5953b230e4d14e50d6f86c16ba8483ecc6afb23d83697eea6"
       }
     },
     "s.energy.model.mutation.delete-shading-surface": {
@@ -38625,7 +40471,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "01bb955b995de0a537228783be6f1f4dc74470ac1d761d497c69b1a950946afb"
+        "🔣️.json": "9a79fc8fed360bfb46c980da17deb45cc878d7b5fac445afa832985a735c808e"
       }
     },
     "s.energy.model.mutation.insert-annual-schedule-rule": {
@@ -38643,7 +40489,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a1ea4b142467727e8fb51267b808ab8c5addfab9caf0568f8b399b02d0c05331"
+        "🔣️.json": "1c218a51ed4fe789ef98321ba3492a0f2dafe8e9c8472bfd61b427d053681905"
       }
     },
     "s.energy.model.mutation.remove-air-loop-terminal-zone": {
@@ -38661,7 +40507,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "64662a85fcc42bfa66881bb0375177bd2c6cb80ba86129426ff87c8a11926fe5"
+        "🔣️.json": "56b86564162f29e51178db9db1e52910da96337ef87ce2fc11187ad94104d416"
       }
     },
     "s.energy.model.mutation.remove-annual-schedule-holiday": {
@@ -38679,7 +40525,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d0896ffab5294f373e7cba42504f8c0d76d3600ae1b3bbc475eb8aa6a06cccd9"
+        "🔣️.json": "99a8faff3df1afde889c7eca31d000e7050be8df1e95fec48d9749264ab1dad7"
       }
     },
     "s.energy.model.mutation.remove-annual-schedule-rule": {
@@ -38697,7 +40543,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d2d12af1e1546dcc1557f3eab89dada30dc6380c13db99d713dbf98c57ae28aa"
+        "🔣️.json": "0031a2c79a8e729cfe07dc712d99a2ee0d190070b25e9ea1b83ce1e358966a66"
       }
     },
     "s.energy.model.mutation.remove-construction-layer": {
@@ -38715,7 +40561,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b96b9926be021330fee1a302487b885b144053895cce858a35774a7b9dd99366"
+        "🔣️.json": "d952c71c2069351e7cf9ae6da793b561cb20a7ee3e976fd94f579392035715f7"
       }
     },
     "s.energy.model.mutation.remove-electrical-load-center-battery": {
@@ -38733,7 +40579,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "eeab5178854a5e80ee4c6aee4b3399dc298b16521ae15f39fc56a95720283e0d"
+        "🔣️.json": "042fc150e78ef71275365940c333153c2c338ee03efa59a51e6b23ac574557ee"
       }
     },
     "s.energy.model.mutation.remove-electrical-load-center-pv": {
@@ -38751,7 +40597,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "8324e41c066598c879eb9ad54a14c1c80f35529c0002fff77319fe4231596a7c"
+        "🔣️.json": "bbb22c144bd7800218a32dec9e2bd1c9be8a586bee889d3ee842f748f22ddee0"
       }
     },
     "s.energy.model.mutation.remove-output-variable": {
@@ -38787,7 +40633,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "42f73b13a54a55572ae87d66915511f325e8ecb028425643805c15a1e1626c7b"
+        "🔣️.json": "d4d7a218b4e44264ddb020e697d69e30918ad0c83aa9ca2d6734d9762acb2819"
       }
     },
     "s.energy.model.mutation.remove-space-list-member": {
@@ -38805,7 +40651,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4a96ab00c61664d77b86724470e3706db3d16a969d34efaeb8cc813a1732bb7d"
+        "🔣️.json": "abe480e06c09934a0448acf7ecb8f38ee55922a7975385b4311fb7e9f64e14c6"
       }
     },
     "s.energy.model.mutation.remove-thermal-enclosure-zone": {
@@ -38823,7 +40669,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "0694cdf25075b3139ebb219f99e020879ad3cf4693c36d83c13b12673b8b1a9d"
+        "🔣️.json": "39d6c95bc2b887fb8a501a34de596a43ee22dd72a5e8aef2c0bb27028a1efadc"
       }
     },
     "s.energy.model.mutation.rename-air-loop": {
@@ -39129,7 +40975,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "66d5b7a7c8cae3d69b4be86121f46a3546a332821d76d601f7a100c6750c560b"
+        "🔣️.json": "a02e13cfc923697b7e9d0f9037c14c8da3a26a862fada48c3bee950f6d909303"
       }
     },
     "s.energy.model.mutation.reorder-construction-layers": {
@@ -39147,7 +40993,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "9d63624c0d9a450421d56530392e28dbb922288ac744cb350c5da5710a6916e7"
+        "🔣️.json": "2745b756c95253cd4fe55639c70fae46e2b3269e09d75a4dc3987f04aca83884"
       }
     },
     "s.energy.model.mutation.replace-airflow-network": {
@@ -39183,7 +41029,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "814dea3e5a443979d1143d11021f87894702357ad1dc1f9df2264705ba37b076"
+        "🔣️.json": "dc18734d30eeaa2a6dc944ac64fe36c3a4e2d5ceeb75ce17afedbebda4517fdb"
       }
     },
     "s.energy.model.mutation.replace-fenestration-vertices": {
@@ -39201,7 +41047,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "65a1bb6f00ad879039e535a8a3369108867847ac429566e8e54f5fbeaa113de9"
+        "🔣️.json": "667f579c0ee8f87edecdf86a60cd2cb768b4b033ac40e0c4a2b79fb7b363a340"
       }
     },
     "s.energy.model.mutation.replace-setpoint-manager-kind": {
@@ -39219,7 +41065,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "ce03bde6afebf90c1d82a58d796e81e4e5202c5cee32e1f1418075df5c6df030"
+        "🔣️.json": "6e3e87db4a6e452aad8bda1b762bf69430eda03a1c720cb041357d1fc9637343"
       }
     },
     "s.energy.model.mutation.replace-shading-surface-vertices": {
@@ -41447,22 +43293,22 @@
         "📸️snapshot/🔣️.json": "9f84a508b716383cbd97e3df414eeb45747d7832dbdba09cd14df2d961e3a949",
         "📸️snapshot/🛰️.proto": "6502b90e47a6b6ef528846558a360ad52c9ac6c3fb88d1e6421f32e440282703",
         "📸️snapshot/🟦️.ts": "ee21e3a2d1596935e49376e5cba5850dccf964ed6b1b42293e23a4fe2b13b530",
-        "📸️snapshot/🦀️.rs": "ab2b7bdf1dde33dabd487b4d02eb2bbe0b7ce66ebf20ffc43715b0fa519e18a4",
+        "📸️snapshot/🦀️.rs": "8f139b1bde5c6b81aef10ad143da2ea5768a11bfbd43fb58374b169bc1cf33b1",
         "🔗️.graphql": "1031a91cf08a64d62438ced32e1cdec34c3c926516990cce92bb197f7d5ff5f7",
         "🔣️.json": "00fd8afa2f0fab5f598773c546315bb2134e9adf3b66c73d9c2dfd63c115cd4a",
         "🔺️diff/🔗️.graphql": "9218d9ff89f2005f577bce53a69b6c76aadd004ef62e24b4295319ce6ac1a775",
         "🔺️diff/🔣️.json": "c33d933fde28fb1ba3328d2c45be2a26f661c167bf24e87c8e34d8b39a1e8924",
         "🔺️diff/🛰️.proto": "b9639ed87b30fe2bb52476aae5fc5d90ad3d76add90a0048c99589c0dc787507",
         "🔺️diff/🟦️.ts": "bb2e6349c501b9889b97d498247cb8e16d41fca693ebdf87b012b354f7251889",
-        "🔺️diff/🦀️.rs": "12e2dc40298a6d6c454281a1bd20a1faff4cc8a9ae98d906c4585349dfb987e5",
+        "🔺️diff/🦀️.rs": "00c3d0cc7af612a7598bff17787ac060d63df3da6785a0d1096dca520c94f688",
         "🛰️.proto": "9003d0cc41c475e37d2fd6e8ae40288407a46eecb8ec33ea0c3e44e2b1181f36",
         "🟦️.ts": "d79a5e4f78604f42673545ac182e539b074d43014f1166b3cc6d0ccb1c56d891",
-        "🦀️.rs": "85cf8e04491ec5172e245d91c36f03683b2e25776c06e1b0f82e1d4f43e5f753",
+        "🦀️.rs": "f528b04d57d4ae759ea8863d18fd74ee3671f21c75bb264b89045d5be9282815",
         "🧬️mutations/🔗️.graphql": "e2d78805a141fbd0246df470451fbd4d8fa730022726573a36a8a3c6a400bf55",
         "🧬️mutations/🔣️.json": "a063dbe475378328eb2e076dd395284aee732426a40d6b2635fa55bbde75a9f9",
         "🧬️mutations/🛰️.proto": "2cf14f5477e510625cad559c222aa440a8b3d32706dd31c6b9e2c89a8d5ce718",
         "🧬️mutations/🟦️.ts": "d32605ba2722b7cc674dcc97c2c27c48be07ac139bf77299b0f921586abac1c2",
-        "🧬️mutations/🦀️.rs": "dfb3773e4c40f65cc4e61b0d3b5c30e9b33049073e68a340e669e1c54b5f1261"
+        "🧬️mutations/🦀️.rs": "be6e4148b6f22759c00edb3c83cd0fbca595720ea31ccbfe10f65b23aa80ec61"
       }
     },
     "s.fem.fem3d": {
@@ -41825,14 +43671,14 @@
         "📸️snapshot/🔣️.json": "85555c05624c40937feeba494fd806d2c3403b788c29e9060832af045c21e491",
         "📸️snapshot/🛰️.proto": "157eebcb176b0736939f20b9f714547b908232e83597ab7aaf11209dbaef61c9",
         "📸️snapshot/🟦️.ts": "acba914aa8dac429a0383da8fad54d45a20dad4632d34798d724f8ffd4b3faa7",
-        "📸️snapshot/🦀️.rs": "923ac56d230c31e901ed3895e60a45548e2d9d469ea2169e240abf18425797b4",
+        "📸️snapshot/🦀️.rs": "60397ad3033edd987842398fc4a557280f266a7bf988e9aa636d0ee84c9d6610",
         "🔗️.graphql": "71f15841b8617144edb3bd679a9af4d09ec525d54cde32402c65f28869b915fa",
         "🔣️.json": "b2bb32835389ef619ee4b1d7567a77746af71790d625c5355b6e7185d4a67123",
         "🔺️diff/🔗️.graphql": "c26f79f8093f893a13c7eb7df7b98a7d9d261dd0094f66f231b9b35a667bd027",
         "🔺️diff/🔣️.json": "afcad097ef139692aac098af038c5b31a225e512ac9f1b6d4a93a6156a1ebf85",
         "🔺️diff/🛰️.proto": "5af78f3d591abbd7604c7f325f08d1f598e89b9e6ef92c83c5e0935b0fcd3753",
         "🔺️diff/🟦️.ts": "fd3af2974d6c20b08b003799df48b9a4dbfb79aace8a6849dcd81a1b06194ee5",
-        "🔺️diff/🦀️.rs": "ba17c8c78fbbdfebca4bac515d0f21596590147f963a26d2410797f0bb49044c",
+        "🔺️diff/🦀️.rs": "ae18939f4a25412366bb014d949dd032fe4109fa681fceb0ffac110bef9cd232",
         "🛰️.proto": "1c1cc9338449a20ba8c0fb46decfae1726f64f199a4274d683629b25db9a7d6c",
         "🟦️.ts": "b77cff83038b5d579f6c5f9dc9b1005ebf14738794c2e04656baaa244b1b4b82",
         "🦀️.rs": "2b0b60081d9a74c04a6447a37f5e100efe907f45b4e27f9543bac2b0acd93b7d",
@@ -41840,7 +43686,41 @@
         "🧬️mutations/🔣️.json": "bf02b4055a3ad826b90765c7bd10bf4fb279bbbb2ddb3205aca4135f2f076a31",
         "🧬️mutations/🛰️.proto": "82b26cf41de4c126eca4e3d75083e5416882731699a15322d608940770fd5cfc",
         "🧬️mutations/🟦️.ts": "a1dd77c7a2f60d991bf999ff2187f2955411a8656225db4d39a6908998caa5eb",
-        "🧬️mutations/🦀️.rs": "589a911120d08f51300f35a4cd94975431bb8b396545bd1cee12a4fe934994e8"
+        "🧬️mutations/🦀️.rs": "7d01b142adff2d879e32de81f4c8a248d277d79197c49564eb7063b02764c5f1"
+      }
+    },
+    "s.fem.results-window.transient": {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🫧️transient/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "FemPlaybackClock": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "FemResultsWindowTransient": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.fem.results-window.transient.mutation.set-playback-clock"
+      ],
+      "hashes": {
+        "🔗️.graphql": "6a8a5792ed53e1d1540dac404b41aa67f276d32393fd8894e1f6a4f73bf550bc",
+        "🔣️.json": "a4a783cd2ea3d1fc675ad9d1d4e7691e635598bc8c92a4ac83f392c29e26d81e",
+        "🛰️.proto": "65876276f6b8f108210f14393882aa5eeeb1ba84862751a99623b193443a74c5",
+        "🟦️.ts": "5c0865395a6920f01cc403df448b5ac1db3acdde44bacdd80e259a8686015132",
+        "🦀️.rs": "d12455b6dea0f8d89d6f841330af4ec9888eeeb8f2ac9bd5455bf7a252433d31",
+        "🧬️mutations/🔣️.json": "a83b87dd1fc5d92ef8d058e7534500eae43476156a6fbc1d3f484d9ab8247a07",
+        "🧬️mutations/🦀️.rs": "19ba544ab725429db51c6fd8a7005eadbd105a9805a2430c9c355f3d4663324b"
       }
     },
     "s.fem.results-window.transient.mutation.set-playback-clock": {
@@ -41866,8 +43746,8 @@
       }
     },
     "s.flow.flow": {
-      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
-      "level": "artifact-standard-subset",
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧬️schema",
+      "level": "window-state-lane",
       "facetKind": "🧬️data",
       "formats": {
         "🦀️rust": "🦀️.rs",
@@ -41877,56 +43757,18 @@
         "🛰️protobuf": "🛰️.proto"
       },
       "exports": {
-        "FlowArtifact": {
+        "FlowMainWindowConfig": {
           "file": "🔣️.json",
-          "facet": "artifact"
-        },
-        "FlowDiff": {
-          "file": "🔺️diff/🔣️.json",
-          "facet": "diff"
-        },
-        "FlowInference": {
-          "file": "💡️inferences/🔣️.json",
-          "facet": "inference"
-        },
-        "FlowSnapshot": {
-          "file": "📸️snapshot/🔣️.json",
-          "facet": "snapshot"
-        },
-        "FlowTopology": {
-          "file": "💡️inferences/🔣️.json",
-          "facet": "inference"
+          "facet": "main-window-config"
         }
       },
-      "dependsOn": [
-        "framework.schema.artifact-reference.child"
-      ],
+      "dependsOn": [],
       "hashes": {
-        "💡️inferences/🔗️.graphql": "a831a211b5363269c636594dc3cda981438976797255453c0b72e6bd629245a7",
-        "💡️inferences/🔣️.json": "1f41d9b263cf7744ea0fd49db0a478e60c7c23b693fc2c54ab5641cb8debb737",
-        "💡️inferences/🛰️.proto": "8eec01af8306c679e3c783be7c07ab591d2d10246f524e7a14e4d825aeae687d",
-        "💡️inferences/🟦️.ts": "c6f5d3ab407da09ae5c60165682e57c71c790276bf8b2284766e5d2f99fbd020",
-        "💡️inferences/🦀️.rs": "cfdb92e4c5a6fa86c5c82ff904eea735612ca89b61fd88a154c2079b92598305",
-        "📸️snapshot/🔗️.graphql": "8de0173a96d2f93230ee837e86257f1ed24d192c82dda10d9f2a810e1fcec8b0",
-        "📸️snapshot/🔣️.json": "774147046da066bc4aa8c98c0255680520895aab76eac46e9e1361054623f6ea",
-        "📸️snapshot/🛰️.proto": "9bc2b89ce60c965413b3210f3448f4c410da1ae9a7b9788bb48671c6b1346380",
-        "📸️snapshot/🟦️.ts": "7d35a8c1247bb3717754fcdd0d9689d9e3f33a949039242cc2f692da217a37f0",
-        "📸️snapshot/🦀️.rs": "0829c328fe298c2ce000ad6ab9e5add092799c6d1cff2f7e6bf4eae7fd0ad3e3",
-        "🔗️.graphql": "2a0e9b42bcee843ae77598705130364f32db152392db5becf6d89b14b8b93ad2",
-        "🔣️.json": "877dc1bc3dfb34be00a9a89ba1df823f29170aa9e606d1f959627af87b0f3ddf",
-        "🔺️diff/🔗️.graphql": "9bd7e8cafa39eece8bb89a309256a48269ef33d0a640d63ea3dbf907407a1724",
-        "🔺️diff/🔣️.json": "eda0717c646f15bf01eeaa335852647f9dee15895d02fc5c44ec7182e5dc26f0",
-        "🔺️diff/🛰️.proto": "a3ed488e9cfdec50a4bca5fc0729207aad4218452ea1e1305834ff66ca3ec58d",
-        "🔺️diff/🟦️.ts": "cabac132e9c0fdc053b0f3f37bd86b4f2302465abe4941c8fb7de168f7d73991",
-        "🔺️diff/🦀️.rs": "322d3d38093b5683abfee42124eaa2f013aeb64c2d60106f8efab31e6c912a90",
-        "🛰️.proto": "863b2d80e9c4923e13a8d13fa4bad2a396c7ffe079682911a66bd21fab6882b4",
-        "🟦️.ts": "4ac2cf81f37efe2eeffb5ea5dac5fb46a439bfd8256f6aaa73a4d07c446d653d",
-        "🦀️.rs": "73891a57d90fbea7daa780317d0384224bbef55a9dda90680167f4c93c7aca0a",
-        "🧬️mutations/🔗️.graphql": "291e7008df7fc765043b4b739748752fc872a911156f50786bdabca276a9c03e",
-        "🧬️mutations/🔣️.json": "ee86267291900d678aea97e5d73f32ea9b2ec6fc954720a5f289af543ed9ef4f",
-        "🧬️mutations/🛰️.proto": "9940744611b237bb762e458808b935e0e5ad69157d88e8bfac9acd18965fe6c3",
-        "🧬️mutations/🟦️.ts": "6f4945efd6969bf080aec968a13ab1f47eae0949c17c689357ba68199c818915",
-        "🧬️mutations/🦀️.rs": "8384d91a96ec24aa20f401857036e7b98431c7562f753ed6d58f1e4cc1e1a3d3"
+        "🔗️.graphql": "4ffc90cf07b6119cc7d7404c8ddbfea03d709af64b874af6253778f3d790ff03",
+        "🔣️.json": "38e9af583aebfc29365715f02e32a50f6f35bea33403ebeb569ce5cc84568ebc",
+        "🛰️.proto": "83ec5697fbecdcd95058f6aac2d336e9a782eaf2ead3f9d9e1935816c02c39a3",
+        "🟦️.ts": "645b6e41ffae0e0cc7b128fa54c84852900ef3263a616bf2938c7c0bb6d92ebd",
+        "🦀️.rs": "185c32a6e283692b2725c1224a6c11193ad76ff15de89b0de5846e5da1fdee39"
       }
     },
     "s.forms.forms": {
@@ -43372,7 +45214,7 @@
         "🧬️mutations/🔣️.json": "bf21accaee873d9b1c1a5a6796119b001779f6c19d73bee53081008f81d303e6",
         "🧬️mutations/🛰️.proto": "e0991d497ff5173c19bc6d9e7e3394459e1b3b342aa37cc1d2e143e76cc7f263",
         "🧬️mutations/🟦️.ts": "efcfbbab1a1a04ec495842df85df7fec813d96292ecdd75ff9fbb37575420cfb",
-        "🧬️mutations/🦀️.rs": "a3c7b536c4f4229e13cd53bf0cad6a97a9353774babbb1b701078a88592c7ce0"
+        "🧬️mutations/🦀️.rs": "cfde4d6e9d7f3cade41c9329b83f2aa8d8d23be5b033ba6ce15596fdfe9bc2a0"
       }
     },
     "s.layout.layout.editor.engine.export.source": {
@@ -44622,7 +46464,7 @@
         "🔺️diff/🔣️.json": "92b1bd6bb72e52bf2c98bfa667c1715936d42291e14946897724848c4fba8cda",
         "🔺️diff/🛰️.proto": "2a0c76c4d1f9a042f741ed41e19cde017bd5fbb9c0b8b6f2251bbe7ae1cc0087",
         "🔺️diff/🟦️.ts": "118c7dc55a9238cbeccbc3e506934a7b4b2565636ff8db07f8ce0af988150e07",
-        "🔺️diff/🦀️.rs": "6aee30fab4ea1edcad97a91aea2df95b944091073e78c8ae324888d2455db699",
+        "🔺️diff/🦀️.rs": "caecff8fa68aab70f8b7b9646786523a57994e3c9be92648aac491c22e584180",
         "🛰️.proto": "a36b6a38d7fb6041388eb477d954e819aed60dba8d95eec46248b06c3bf38749",
         "🟦️.ts": "a56e30c2346bd1d70b8560dbc213048c56c5e88b17f57c4de828c912315888e1",
         "🦀️.rs": "b5c0e0b69706e17a697bed4401a9ae2a578b3cc1ef5d2d0545ef304cd0ae387b",
@@ -44736,9 +46578,11 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.lowpoly.lowpoly"
+      ],
       "hashes": {
-        "🔣️.json": "4f044773743a565d33a7ac42adb2f0ac795a1d99a4d698103d0013c5bbeff14a"
+        "🔣️.json": "a1c922620d27bb92a9b90a93165e677f5fc8310c3b3a935ae773294f54a020f2"
       }
     },
     "s.lowpoly.lowpoly.mutation.create-object": {
@@ -44754,9 +46598,11 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.lowpoly.lowpoly"
+      ],
       "hashes": {
-        "🔣️.json": "d75f9f9c04ac5854fedc56398cf4b6020bce0350466a82dd6d172aa3a8d175c7"
+        "🔣️.json": "d2e69def90ccd37386945a0602eb2e5eab493004831bd768c00c9dddbe909fa8"
       }
     },
     "s.lowpoly.lowpoly.mutation.delete-mesh": {
@@ -64150,7 +65996,7 @@
         "🔺️diff/🔣️.json": "970c58195c1736cb5ecfcabe08189b6f3790024ae3b0123a19b52d762de1f9d8",
         "🔺️diff/🛰️.proto": "77373e28f91091313180ea1e23c31f8c2220e07548dda5ba9b43d81aecbe6581",
         "🔺️diff/🟦️.ts": "d873bce0a396afa48b3ae6654b331a32a27aa89911b82fa9bc86c27ba2a4fa7b",
-        "🔺️diff/🦀️.rs": "7a176d99a150406e87f73d16f680962c2e08f0ede7d49f879b6452f6b1b05c22",
+        "🔺️diff/🦀️.rs": "f8910b4bb8395a9a86d2c9ed0e90482db8922e8fb9f81e1e3bf96537fb73ac47",
         "🛰️.proto": "9e41b2d0817258fb63340726370be21003960a9da17308a82e4cb55d83bd9f00",
         "🟦️.ts": "bec4257a13755dd5c54bc3b91f74915f922fc78e96c173bd719d9b2fe1a9c91c",
         "🦀️.rs": "ffd258fd144c5582b5ef103a9aa9c0037e841541baa25656b82ad78ed9e9953a",
@@ -70365,7 +72211,7 @@
         "🔺️diff/🔣️.json": "24a67f4e9024484dcd036b88c49cc5dc74bfbd80acc15bc397dbc658d5679a0f",
         "🔺️diff/🛰️.proto": "0a6b38097a91cc6a7bad2a1d79554eb47e2b0db46f9542b46bf6ffce4e4a7d3f",
         "🔺️diff/🟦️.ts": "b8d9c0b55b0da1a617aadd93554da5651b1d53f474cdd51453a79ac1c14794df",
-        "🔺️diff/🦀️.rs": "fb77d506ed83a451f63a5b288a624bec8547557c116dbf94bb90a8f28630c7ed",
+        "🔺️diff/🦀️.rs": "eb2bc5bd889d2f316cac66656ca8adf539c7b721e70428eed4d87ee8ef46adad",
         "🛰️.proto": "3e3766c9728524d16d28ed5e31d96b449639f3fe8a5e34cdac9eb8b1721dfe05",
         "🟦️.ts": "7cb4a9330e2d2c5de9033359982f55cd506d663027b3eea3785419df1f59e902",
         "🦀️.rs": "5ff11697669997cb8b52add8b0bc17a4aac2cc95dea1f5f7406a6318e05f9223",
@@ -71339,9 +73185,11 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "framework.value.bytes"
+      ],
       "hashes": {
-        "🔣️.json": "d2d25100afb1eb21547c2f12cfc102ef245521b96404956b3dfc97be65477033"
+        "🔣️.json": "6111c59ac8fff9cb558a7482165aecadcf1740713751c130c34404844e1a438d"
       }
     },
     "s.stdio.bcf.2.1.markup.mutation.set-topic-markup": {
@@ -86930,7 +88778,7 @@
         "📸️snapshot/🔣️.json": "4a63e227b54a236ef48259fa4035a67c5b3b8d83a425e73c69cf7b3e11545a3e",
         "📸️snapshot/🛰️.proto": "aa725b2c690f1037f74cb1b3f77d8d5ce2d1a4d18acf9f8283156f4d02ccf85e",
         "📸️snapshot/🟦️.ts": "cb1a5ba1da3551eee45234ab61b9e315c0017b0c16869461ccc63928ff8e3d87",
-        "📸️snapshot/🦀️.rs": "eedd51a3ae73197e56c889e79fdf3fbb284d7b54ed0a99f3625a1661cc576c07",
+        "📸️snapshot/🦀️.rs": "06cdf0805d11072e7df35c9d1048a431023165d8c170c7114040ae6e995ee225",
         "🔗️.graphql": "05c0170c6018eede67e51cc96bf64a49018bb8d1a4101b5a82ba8a4e00c2e268",
         "🔣️.json": "a239e448f702aaf31ca474a43a135889974be4869c971ee61ea5b41b4d18b7c5",
         "🔺️diff/🔗️.graphql": "ae79248400a7b2a3181d87956319dc0378dfa6c7bee4e6ad678727de43693645",
@@ -87223,7 +89071,7 @@
         "📸️snapshot/🔣️.json": "c4962ff7aa8b453d963f29426ce140dbaf633214ecf6196aadc880f1e6790c7b",
         "📸️snapshot/🛰️.proto": "9130ae9f929ab6be1b15eabc7f05ac67f563961109aa2b31302cfaa2ae0d6fa6",
         "📸️snapshot/🟦️.ts": "c5b780af6edb99a5f774e0666a732dde32d99badf2271ca62e98c1c0b27d791b",
-        "📸️snapshot/🦀️.rs": "27365714b450c562d992fa5b68408e38108e1b09376d8933bffc44cf8f11bc98",
+        "📸️snapshot/🦀️.rs": "fb83e23b935e14ade187bc9285228343288ddf81e47e76a2ce96ac093f6793e9",
         "🔗️.graphql": "bf65f4afed7c0f9b3413cef9ec57d9f34b09bca87952f5223e2f62f9305cf707",
         "🔣️.json": "6f6349a0430053201a92d3e7cf7064fc6fcf0d167007f078bd56f46f41d264dc",
         "🔺️diff/🔗️.graphql": "503f88a3a58beb9c17a433434f5956803bcdb2c31db82fd07aa97fafd0b9d074",
@@ -87983,7 +89831,7 @@
         "📸️snapshot/🔣️.json": "feb4e6952ec03c47001931625845d577a7a336b2feece8264906931d3dcf2857",
         "📸️snapshot/🛰️.proto": "092ab42fea38a3cf3a80cf074f712ba6392938cc1cfa51846e6eb2d0d4b92f32",
         "📸️snapshot/🟦️.ts": "c2395dcd330b81ebd985ddb7a0508c8b5ff7486b7f40aa3923d7eb7d26565b82",
-        "📸️snapshot/🦀️.rs": "ef3d9f519c6338b1c7b0de1fc83e616d34c3281759fd2b90297c1a9d991ab4cc",
+        "📸️snapshot/🦀️.rs": "6c76bc64ba79360787395f04a4e99b73995593b454b0b2490a53dc96eedbe66a",
         "🔗️.graphql": "25f921b05e5080dedd02c620f1593fc145ee5e697f8116dec5a91f2d9af2773a",
         "🔣️.json": "c68ab6a4063ffd11992576b0a2dc2e9b1279048db16a91fbf1557d1b54105568",
         "🔺️diff/🔗️.graphql": "81d7101aa7e24aab5c54fe56f94b03b6ab0c184fa15e7c311bd109fcd316b130",
@@ -88358,7 +90206,7 @@
         "📸️snapshot/🔣️.json": "128c175d90c893bd9dcf59161faf0e27b407681b82038ce60e7ab1d6d94fe601",
         "📸️snapshot/🛰️.proto": "8956886b182d22ef0f95406b03c4943369cd4a683ba5769364d57068bf9d71ab",
         "📸️snapshot/🟦️.ts": "5b4b6b02d2350417355b48466cfed8dfeb99866603c119471c56f4beff117bd6",
-        "📸️snapshot/🦀️.rs": "8a7bf70d0de2aec40133e8fe533aed6c632fd37dacc6a7e6fd298ba9d2fd40df",
+        "📸️snapshot/🦀️.rs": "f10f2f778899210dda3e2761486f807d83721e74a7d266ca014785569e29a4e7",
         "🔗️.graphql": "6b247cd0cc0048e0c03b76d15d3b047b9ed1b656612a3246e12f3f6866202be0",
         "🔣️.json": "4d80c41c391e9630cdd370d9e31ce9e983d94563b9d930884dcca6376dfabac9",
         "🔺️diff/🔗️.graphql": "34dcfb587ebd2eafb31d1eac02530752dea47e7dc094f395b14a8a0ad90a273c",
@@ -88747,7 +90595,7 @@
         "📸️snapshot/🔣️.json": "5183397a87a2fa73eaa5d7a80fe1cc84c266516ce00da9a70060978789e0a62d",
         "📸️snapshot/🛰️.proto": "a3e7a73672f0300c39dc0e6daf132e1a31aa9ca17004b1d7ff4040cacf71cae9",
         "📸️snapshot/🟦️.ts": "e49d4f91c077dac0459f3ba41bade2121b338539a6de7a3f85b20ef9b4562ff0",
-        "📸️snapshot/🦀️.rs": "60a36e8b362163f46c92037974ad82906b441e369feb2c2b01292b34b7cfee95",
+        "📸️snapshot/🦀️.rs": "ff4873732a0ffa4f29e421fc8d911212c8dbc0a2b334b359d4c4bb4cbedd26de",
         "🔗️.graphql": "c15043a93be2d96571a0c244a1eac707330b81a8171989ee824e7166fbbd64c7",
         "🔣️.json": "4bcaefdc9324cb7a9605506f6b6f0e1b467507995c3f5819b482803e18295307",
         "🔺️diff/🔗️.graphql": "ae24bf3a9cfa37339e9f99eea25616f0eafa5a345a14d7a2001f3cc9a7db66c7",
@@ -89277,7 +91125,7 @@
         "📸️snapshot/🔣️.json": "6f0249234308d9c306af39e4ff9b27a6c423f175620a92d59088bb780b67fba5",
         "📸️snapshot/🛰️.proto": "f7dd06413d33e8c1f72007e6f342f9a1e7e7db5d258ed09df5e638f86055ae12",
         "📸️snapshot/🟦️.ts": "33864c6c800461e156bd1f7b69e2a490cb7d386d22ef4b313053ac2db28b03b5",
-        "📸️snapshot/🦀️.rs": "5d60351b5b42a717c5b00a2c07efcc10511081fb28b32c36800fc568b283a05a",
+        "📸️snapshot/🦀️.rs": "c35819b621742afdbf4d5ac99b90f310fcdabd39bbbcad72fe9a452b543622a1",
         "🔗️.graphql": "be2e7ab21b9256448b13444be54ec33379ae8ff6519c0b2de0ceaf806f70350e",
         "🔣️.json": "d717edf44f42d0f8267f8ad0e0f1e666d85a0df7753f97f2bdc539a5ccacba11",
         "🔺️diff/🔗️.graphql": "ebfdb7f250c55592e27834928dbd37a8b6ce4db0eed25dd2fab08cef83073b7e",
@@ -90111,7 +91959,7 @@
         "📸️snapshot/🔣️.json": "8040f791c9c34a3b6003dab154b0266188379db7fc0d661517865019c0373f1e",
         "📸️snapshot/🛰️.proto": "8ce7b7f47d54a40a46e728a7f01080628035e8f3ff1476d578f00815091223f5",
         "📸️snapshot/🟦️.ts": "495f586cab024665a6e284ecca7de2ddb5d2336f31b72267b4b746d4f625bda6",
-        "📸️snapshot/🦀️.rs": "d466ddd8fb6a6ee4553c4e10273921b278111dc85e151fefd1e3bccd556f8c3b",
+        "📸️snapshot/🦀️.rs": "8f782ceeea5b9f4b74c5a2034bcbb7edd56b24da139ca5a42f91196021645f86",
         "🔗️.graphql": "e754d49d9d3f5bfc7068bcb7ccd6850d9f79964a4123d97acaa1b1eb0db53c21",
         "🔣️.json": "81b7874a6b6980ca0df1bbf94a37d008424c63a875afd8467f897623627a1587",
         "🔺️diff/🔗️.graphql": "2aa3533edb6d7e663a0dd29b6ee239a3a1ed782e3ecd20f83bea840f312f20f5",
@@ -90671,7 +92519,7 @@
         "📸️snapshot/🔣️.json": "06384779eaaa1eca2f7a4bf7d554c16acc734e651facc4f71c4429cdaaf364ea",
         "📸️snapshot/🛰️.proto": "04e09df2b5de8cd5ed2ddfeac2cda87d9e8ee4d6e166bc7e82aad5a5d9e22870",
         "📸️snapshot/🟦️.ts": "ff09826d7b706dbbba6b9099a36308c313406f59a0dc0a9948a08083f0360ddf",
-        "📸️snapshot/🦀️.rs": "9dab30597a08ab1cc8e108528135393ba9456916750269f80587d7743affc741",
+        "📸️snapshot/🦀️.rs": "2396a80272dd8bfe6fbf3fcc5d2bb0bfd6695f12cc73d13396c568d97c724765",
         "🔗️.graphql": "925b0015243d6f0ed6af05a9b6dfd3bec745a28528d1d2ba712b3909a4824a43",
         "🔣️.json": "471e6e88d081ab31d6d89ab1126eaf87df0d4c277c64a75670efd1899427224b",
         "🔺️diff/🔗️.graphql": "ae104774e8528abe6920e14d2cf6139bc3c340b19845e64f282e5bb271f210ce",
@@ -90984,14 +92832,14 @@
         "📸️snapshot/🔣️.json": "2144092f9643c5360afbb24b8b0b6f1982dfa0d2ccd25da63da2d71cb13056a9",
         "📸️snapshot/🛰️.proto": "b84eb46c672c981d920feaf568c29e3197377af7655d4ae84a6002e203ec56ea",
         "📸️snapshot/🟦️.ts": "5f2230c183bb0c6e80d4f86aa4a7e4a302048ee57ad60c3414275ce0482b9c59",
-        "📸️snapshot/🦀️.rs": "83770bc8b3b709f5334194fdba431525a383d684e2b5dfae7d354de4e868810e",
+        "📸️snapshot/🦀️.rs": "257581e618f3ea81b5842224bb9df31c350d6d2700888ef7f63ea4368e678da7",
         "🔗️.graphql": "2430121c661326056a7e002968900fc554a5dc23b5cc955e4015b8a0e07738a1",
         "🔣️.json": "936ce2540a54c4312670ba52ee37623f10099fa0752451192c56443361320a85",
         "🔺️diff/🔗️.graphql": "18101e686f9b5005fc0774787648530bdccaeba2b4c63fa94fa88a3d13c5a576",
         "🔺️diff/🔣️.json": "af80f6c08e808262dc493ffd6b2d9962294f220caff85dab1d098cd78d5e1cf1",
         "🔺️diff/🛰️.proto": "512b1d9341257b8827b858d6636ddcd4e6555f73b686caeae79d02e9d91785aa",
         "🔺️diff/🟦️.ts": "b65c13b47a6252bcdb4620585614f7784069a498f293ab335209697db2c2f449",
-        "🔺️diff/🦀️.rs": "a66401c8e4e08f64ad7048b578426082c28eb749a4245fa2015dc85d26e2a7a2",
+        "🔺️diff/🦀️.rs": "8542b0ee0a0ebc3a8a13511cb8bd1a0b8d49f178742638815d8be07bcc97ad4d",
         "🛰️.proto": "be0a41b6862e88916e484390f178f2ab435933323d0020e36396fa4e2b4f043c",
         "🟦️.ts": "ae615a7613f07bc97b414ed60413461752f38170b30157a1a7630870b8e13004",
         "🦀️.rs": "b59f1b96205f960928172be7cdf39d965555ae18c6fa0e0077e3e3bef9768251",
@@ -91336,7 +93184,7 @@
         "📸️snapshot/🔣️.json": "ae765936f50470cc0657e57eebef44128f2919f220ee3c6b05832c5fcb60f9e1",
         "📸️snapshot/🛰️.proto": "13a526e8a7b0c399523bb7348be71d8ab3d989d8c3a304aff23f8f0d93f8262b",
         "📸️snapshot/🟦️.ts": "1af71d3137dea633aba836ec808b37e06faab89deea04c5cdcca64d461a21efb",
-        "📸️snapshot/🦀️.rs": "dab0f3a6da5600ea9344a235910344c85b1739c72f33936cd5ae25f96496fa45",
+        "📸️snapshot/🦀️.rs": "80a0d27278e981636e0497c65ad63ac51bc565e770a47a001608c51b2582fd04",
         "🔗️.graphql": "3e7c1147abc593e39ff62faf8b907e1d2f47fdb0015e541bee328d1357a022ed",
         "🔣️.json": "04c89f895cdb6a48d9460af4f0b26ce85907db089218bc84794a1b6553c6bafd",
         "🔺️diff/🔗️.graphql": "a826c97db665176a2cc6f722600b6475ac4bc3d037f461a58566cb7314e05a27",
@@ -91789,7 +93637,7 @@
         "📸️snapshot/🔣️.json": "b7b27beca7734c947ba1274f5c107e12029f7cad9ee3640275f79551b733e992",
         "📸️snapshot/🛰️.proto": "f875ff6f0b025540b9f6dc7868eeaaba683bb3148515cf55487d2e935500c9bf",
         "📸️snapshot/🟦️.ts": "8165cd1a37a9e934d1894c1874359e4b76365ef5420747c22539cb559cca9d04",
-        "📸️snapshot/🦀️.rs": "20615ce7dc60cdbd0e8b89795c1049a6a345150967de827b2e1547526602bd5e",
+        "📸️snapshot/🦀️.rs": "50104da1c458c8b00494dcc6cba8a2333bfd2283815501ca1c92b45d50c7c081",
         "🔗️.graphql": "871b6b62a81717673658780f346e2c2e436e8036e38b3f33b4b3b709e838231d",
         "🔣️.json": "5eada9b5e2cd386e622c61fb1fdb09babcdd8989a6c45b5342aa3f3aebe52cae",
         "🔺️diff/🔗️.graphql": "a54eaa708b8d2365f7f6f5b779a0c347a4b14101e45c438f44797ca3de714a65",
@@ -92205,14 +94053,14 @@
         "📸️snapshot/🔣️.json": "18994de46e1efebc0cf71a899829d7f8af26e214f9aaa1ae5374eb0bf2f2d5b1",
         "📸️snapshot/🛰️.proto": "d7e8601970c7fae0ca925b2b08325e6acbe05a40e19662150cd39475c6115604",
         "📸️snapshot/🟦️.ts": "c2c54ac0ffa65853b1bf3d39aeb72583bbb56cf484c43d6a64277a8508c08124",
-        "📸️snapshot/🦀️.rs": "588f8634214baeb60c3f323dfd1f811e46307faa4a52de29e5bc936d06a0055e",
+        "📸️snapshot/🦀️.rs": "769ace97e9447e319767ea831a06cadde1e81fd344d191c8ee401cad8598fcbc",
         "🔗️.graphql": "401fdbdae1e8a5e7ada4f2c5d967f4cd66ac0907bbb6756962f071e77caae86b",
         "🔣️.json": "d6e8be698f2981a81ed846c0d6832b0545d35c6ac8c02bb5be6d07dfacf90ea6",
         "🔺️diff/🔗️.graphql": "3d6b8656ebaee84f9200158a5a43d7d6aab6b30d1277286dde23aeedd6745d33",
         "🔺️diff/🔣️.json": "b5f80ee6c7d769554a0fea0d98ba3f3b55dba1701b4f19e10e188497a666c4d6",
         "🔺️diff/🛰️.proto": "6b9850e901c80934cebb8ae3980b6f2ccbef451f74e5fc17069423e1b9ac3203",
         "🔺️diff/🟦️.ts": "f070b65e5d09291152a78504ffd52ddff3cdbfeb7e1e0ef72978f2b568fab0be",
-        "🔺️diff/🦀️.rs": "db52e067ad1a79c1f4c4051745e79a9ce7ce35808185d2d92fbcdc4a77a4c469",
+        "🔺️diff/🦀️.rs": "5fb0a06a4e2ee70ff4ef0b29aafb59ce9681beed0c4e98f31e89bda7546fcb07",
         "🛰️.proto": "5087b397829c71bd3b0898514414e2febb223469311306ced5843d691dda49c7",
         "🟦️.ts": "eba8d1fde4261e8fef96ba115068a7236c98452a2c483a3525102dae62f1b991",
         "🦀️.rs": "cc5f47e89c2389ca2906c80d0254bf45080ce21c9b4da49758e30f0554ddd515",
@@ -92448,7 +94296,7 @@
         "📸️snapshot/🔣️.json": "c24b271791db173c78b56add4741bb6bc852024af12d5e4cca16bb1581255814",
         "📸️snapshot/🛰️.proto": "73100a45dbdcadd99124c46a007e01e6b9828e3a9b3cd30e262d6e22d34502e9",
         "📸️snapshot/🟦️.ts": "f4c783987b5ce08b9008965831123b6989e13eca47f0c24a208b52a2cc9b0d37",
-        "📸️snapshot/🦀️.rs": "2eca25a7187d1647e60c6015176e35bdd255c66aa02c2dbc185e4a74bf4889da",
+        "📸️snapshot/🦀️.rs": "d3c575911c041fdf0089518b9fbf69580be65a725d5cd41b72eacd897434afe9",
         "🔗️.graphql": "86d2f1d222371f1e353bfdc9c973c485535dbc6a17e3e72b970f3e30439083fb",
         "🔣️.json": "83082ec02ab05a1ea74b362de40b5bf2296106f93628b13e29ffb398c6a7c5b0",
         "🔺️diff/🔗️.graphql": "7365ada61f5affe9ebdb95a272e03613a4657edd7bf82afbc8fe5c98bdd31cd2",
@@ -92794,7 +94642,7 @@
         "📸️snapshot/🔣️.json": "d82dcd939ae002d58e9538c62eb9b590f90f7dbcdeaf392fdd2bbfa56a1e41fc",
         "📸️snapshot/🛰️.proto": "bae4edcc50aed794682b0b0680ddc1c8ed983e4dc3857e694469d6863ec3a670",
         "📸️snapshot/🟦️.ts": "f88a63cee13d2254d4f53ec935538e0a59a2ed2002944b1e83d42f2a67292845",
-        "📸️snapshot/🦀️.rs": "7a06bb98384ac00f7bb5a6c697e9daa392ad296217f2145193aaea40743500a3",
+        "📸️snapshot/🦀️.rs": "afcebb459d72797626025191053a4f4d344601cfc4eb3bb39b2beed91869a99a",
         "🔗️.graphql": "85ae0204eceef1b940bcd902002339309e0487aa033ef13b8b2d52b210ef255b",
         "🔣️.json": "88b0e08c5722b0d4dbe842f2f2d808648cb015235fc28adb199c7d5b3f68a75f",
         "🔺️diff/🔗️.graphql": "7fade42fdea1802000681c9074825a5a874ccc34233aa0cfa66b8e138dda0e7d",
@@ -93044,7 +94892,7 @@
         "📸️snapshot/🔣️.json": "e53dbecc5556d80f806c25b4fea28faea1cba9652cf267398eba4844efd784f3",
         "📸️snapshot/🛰️.proto": "1882bab04ced813676345a2ed247f4172f83314432593670dd2d97735f297646",
         "📸️snapshot/🟦️.ts": "404db475995f8aca7af3819eb9d1ab1d485c2ff70874c04d30e5eb6b78ba8787",
-        "📸️snapshot/🦀️.rs": "9c38fac68d8fb03da7a92d6323c98e7c2f9a92f5bbefaeed330561ad5dc0ca2d",
+        "📸️snapshot/🦀️.rs": "f328509e7adacf6b37501491372f6de2c257fae838b5795a78941a01c846cb7f",
         "🔗️.graphql": "2f8328c84323f59eb0857ba665a6a8a1cf3d114ad3b2fa7a0298690f48194074",
         "🔣️.json": "9fe9e3747d495d6b45650a67d354490a9a372a7f6a93312fd898c4b2bd3a3fd2",
         "🔺️diff/🔗️.graphql": "e15c6114176baef5f9fc46e1d23b6bf2a626bbcbbff86f3b773485d2c00b95a9",
@@ -93288,7 +95136,7 @@
         "📸️snapshot/🔣️.json": "57693beeef1a7359ccf124c1e1aa104202bf12655eeaad80cf088a4ff20b900d",
         "📸️snapshot/🛰️.proto": "40c0366a05f5674737afc45f4f72301be27eb5a4c68b5299f020ce2b8c126112",
         "📸️snapshot/🟦️.ts": "bf0adedd84542aaccce509fad4094f67d46aa8163c7c6f89c4a80e13ca18857e",
-        "📸️snapshot/🦀️.rs": "e22f1878cc87d78ae2c37911b81094b5f141a4f225c10fb8df9ad633883666d7",
+        "📸️snapshot/🦀️.rs": "6e0a71a884d502ee62690943f2bee741958662ebeaa2a835bccb6919ca7fd8fe",
         "🔗️.graphql": "fd276958de5975f764dc876386ed1ffb745847d296c741568578bde72b20a05f",
         "🔣️.json": "b3a38940839692bd8af6f88bde1fab6da9879e6de8275d7ac288ff5b58fe0a8e",
         "🔺️diff/🔗️.graphql": "be4a19c1020195a09f3d9466d65669d443019b26224b946b23db11eb1c6d7f2f",
@@ -93542,7 +95390,7 @@
         "📸️snapshot/🔣️.json": "eb0fd2497595a458757759573aec4086dd99958724119f3988b8faac6ea53e04",
         "📸️snapshot/🛰️.proto": "20b4c465612d96dababfb3937d5fe48c243734a2a0ab1703ed13d898af190091",
         "📸️snapshot/🟦️.ts": "7ce3c00f08e96905f8da0e8d7d7b83e2430200b9294bdc0d8bf681ec74c414fa",
-        "📸️snapshot/🦀️.rs": "1446cfc4fcd471b03d42093503446463ce7535ad5a2e7024c8dc1471a440eaf6",
+        "📸️snapshot/🦀️.rs": "f38b494c87ab99fbe1c64b3706c84c17740122c0c0372c5c80f087a30f93a18b",
         "🔗️.graphql": "d8482b8bd78d4c266279dc6038e7e1b83905738fb297a3fb76864e10b3afe424",
         "🔣️.json": "b44945b6e44f50adca391b4e070479a42649e8b337123ec94770501c5a4bb0fc",
         "🔺️diff/🔗️.graphql": "39760cca2e948d6134309e092e60a602c7a882c65d2e043311f3bbd2d7ba63e3",
@@ -98786,7 +100634,7 @@
         "🔺️diff/🦀️.rs": "1b021e492eeb57c21c1cc70fbf301127a24956b90aa1ad3ae8f022e5d0bcc768",
         "🛰️.proto": "69d9d812eac914a2f8f3b7162bab9a492c8f561637d92b68b4a41a2e111d3b3e",
         "🟦️.ts": "6872917a3c348d4a827bf3b9a92173a366900423582191edf8d0b6d6c65128b1",
-        "🦀️.rs": "9432d7845d8b9621ba591faf9b047f15ba3a586eb2ee37e96abadc94fd8f8ce3",
+        "🦀️.rs": "db84351c05939c6ef51c97dce3437b2dbf5e6f1cce92698e63e14fc6ff1cad87",
         "🧬️mutations/🔗️.graphql": "073ba5fd4f63800213974416e74ebb765264c79f98862fc60e8946d539ad4fa9",
         "🧬️mutations/🔣️.json": "8c0cbdcd5913a21cc37b1daa4684df0747f6e6782c7aacc8bb80b14147aabf56",
         "🧬️mutations/🛰️.proto": "14b1ba4ec03f3f7c5c5c329504c6e737b8fdb20a6c22c34ec591e913c8f5aa87",
@@ -101032,6 +102880,43 @@
         "🔣️.json": "0859b2860a55782ba72ba8636119afabc21d63b6f9c19292b9b72b4198fcd179"
       }
     },
+    "window.gis.map.config": {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "MapWindowConfigDiff": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        }
+      },
+      "dependsOn": [
+        "window.gis.map.config.mutation.set-camera",
+        "window.gis.map.config.mutation.set-layer-stroke-scale",
+        "window.gis.map.config.mutation.set-layer-visibility",
+        "window.gis.map.config.mutation.set-lod-mode",
+        "window.gis.map.config.mutation.set-render-mode",
+        "window.gis.map.config.mutation.set-vector-style"
+      ],
+      "hashes": {
+        "🔗️.graphql": "c31793533605c5adf224f22a55db7e908b0d0bf44fcd2216f3c94812b71fa621",
+        "🔣️.json": "5308ba0eb2622ccb823f0b0df440d39dfe17a81ac81994618a567c3ea246f30a",
+        "🔺️diff/🔣️.json": "ebee1491cd9220def14e69aee4c03cf8f2dd2e16d7552a92debb7d17526bdbb9",
+        "🔺️diff/🦀️.rs": "1e664b783ccca5e563fd20118192debafa39629f7fe34c6928584f98c4e7033b",
+        "🛰️.proto": "a05db96017dcd29e2f683dc8c331794fb6c31e87a04069cbdeb25821d1261c6e",
+        "🟦️.ts": "d1838f0395fd9c5beb7614c916d92fc127c108454bf10b27b28fc863e1868a89",
+        "🦀️.rs": "e578026fbac430ca77c1e069f1cec37b62e495a83683441c830d4e682d201ee2",
+        "🧬️mutations/🔣️.json": "791e6ea748595a375ae8f22300be6d77579adc0603b213884c427bffed4a8069",
+        "🧬️mutations/🦀️.rs": "b9c0beacc0359b56ef36acf3210a0b34549c1c1b92faa43c2a00abc3764d484d"
+      }
+    },
     "window.gis.map.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -101138,6 +103023,86 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "f563b5eebdf932d21a868d1f2d3cf09b8240da9512d37a95cfb3065d9d97e9f5"
+      }
+    },
+    "window.remodel.remodeling.frames.config": {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "RemodelingFrameCursor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RemodelingFramesWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "9b54ca8edd8b2d4240346b2cb9b113b2bd0c212093b64f2ab2439ff0f0170278",
+        "🔣️.json": "f4c8d15077bc7dae5a07b325b5672ce84e5f768e259956b8fc3b55e7fc1973ac",
+        "🛰️.proto": "ea170d10e0d56112f3bd3862987c777b3f2435496f45a56fc1e94fc1f6d4a4a5",
+        "🟦️.ts": "3d3253b859c6c9ab6f874ff5cbf0e0c8b86f86c56cfefd9282d84996e9a7d7e9"
+      }
+    },
+    "window.remodel.remodeling.model.config": {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "RemodelingLayerVisibility": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RemodelingModelWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "8fc06667b0d1b2f1c68e851f91fac1b19e63c23e9ac056522b690e3e4736e73f",
+        "🔣️.json": "90471cb085822a62a90cc31131f47073b074b4f111bbf0922eb540c292ecafce",
+        "🛰️.proto": "7e929bdd80e1b7d779b14a667b4114a35306fccde71753b74c8bd41e77ad0e39",
+        "🟦️.ts": "68d2e7243cf3fc8a940a77899ccfd856530921d3e4055e692e3229db0ec3fb46"
+      }
+    },
+    "window.remodel.remodeling.report.config": {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema",
+      "level": "window-state-lane",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "RemodelingReportWindowConfig": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "1fc07cd09d0270cad61ccffd89a37b37f885e8947026a74682d8d88f2e0be3cd",
+        "🔣️.json": "4034c6333003fc7a9e55fad22e4ec4170cf12b752071143e10a26419fa06a6d1",
+        "🛰️.proto": "00a2a9d073c61c731b71f731914efd19089c20bee51dc30834842aca9dac8bc7",
+        "🟦️.ts": "6fc83a0af456720f3b25cc259819f952d2ee8008d18c150847036110723b781c"
       }
     }
   }

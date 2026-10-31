@@ -539,3 +539,171 @@ Full public relocated fixed disposable lifecycle43092 authoritative0,1test11asse
 Root39681 authoritatively terminal1 after five successful realprerequisites,0/5cachehits. MainTSC was notrun: framework-rs:generate failed actualCargoE0119 meshcanonicaldecoder State duplicateRetireOwned. Root removed exact redundant macro only and owns fullmesh--lib81792 currentRustcompilation. Frontend81722 separately terminal1 after graphpublication: Original captured runtime entry provider required. Actualprovider only bound in kernel, while separate received Nxpublication/nativeowners lacked thatscope; frontend owns authenticated request-owner repair with actualcompiledrequest regression. No global fallback or guardreset.
 
 Backend19402 remains independently live, no8791 readiness; kept sameowner through normal frontdoor-onlypeergraphwait and capacityreadmission. Root instructed ownership-preserving duplicateavoidance only if another actuallyready owned8791service proves redundant. Source/fairnessaudit found waitinggraph-farm retainspreview session and separatepeerwaiters; no lostOriginal/deadlock inferred. BrowserfullsuiteSourcecoexistence audit confirms isolatedephemeralports/freshdata, owned-onlycleanup, noadditionaloverrides needed. Publicfrontend02:01UTC200, publicproctortimeout10s; nohostidentity/connector found ormutationattempted.
+
+## Resume And Current Native Boundary — 2026-10-29T11:51:49.276Z
+
+No app is running. Previous backend19402 is authoritative terminal1, inner124 watchdog despite observedCPU/I/O; no unchangedretry. Frontend3received-owner binders now have genuinecompiledcontrol26744 exit0/1pass7assertions; realNativepublisher/fixed/graph modes remainrequired andblocked by actualchargeEX→native-storageEX orderfailure. RootLinux separately reproduced that order after properRootCLIbirth; it is not classifiedas merecontention.
+
+BackendactualTDDordercandidate is Sourcefrozen2tests198assertions: atomicNative uniqueowner acquisition/recovery+commit first, repositoryreceiptgate performsnoNativecalls, release thenfinalNative/imagechecks. Independentreview foundno concreteSourceorder/racedefect; physicalNativeproofpending. RootLinux hasONEcanonicaldaemonproofpriority, frontendholdsONEfullrequestfixture until slotclear. No Sourcecaps/ranks/guards/refunds/reset changed.
+
+Rootfixedactualregistrybootstrapcollision by removingonlyextraneousrepo-cache-retire declaration; actualparser+strictAjv2020 validate3804remainingrows andactualcanonicalmanifest. Rootmesh81792 full46tests passed; earlierfiveprerequisite targets succeeded butcourseTSCneverran. OtherRoots own frameworkgenerator/emptygeneratedmanifest andRecordsStoreconcurrencyrepairs, no overlappingcourseedits.
+
+## Physical Request And Inspection Results — 2026-10-29T12:21:11.036Z
+
+Frontend1171 authoritatively exited1 after94s: control1/7passed, actualpublisher crossed missing-provider and previouslease-order guards, then childfunding reservedappend refused Native storage capacity exhausted. Fixed/native modes didnotrun. The actualrequested namespace child charge is67,239,936B. CurrentNx capacitypreflight checks physicalroster/statfs, not durableall-phaseNativeallocationheadroom; descriptorpresence can incorrectly implyzeroadditionalfunding. Staticfacts are in nx-funded-capacity-audit; actualused/remaining remainunknown.
+
+Supportedinventory50524 authoritatively exited1 before its callback at92s Originaldeadline. It heldrealimage/mappingreaders andwaitedjournalEX withoutchargeEX. Postexitqueue observationempty cannotidentifyearlierblocker. ExistingallocationobserversallrequireEX; noreadonlyexisting-image allocationport wasfound. Backend nowowns freshboundedexisting-onlySHjournalDATAread API, using actualimage/privatebinding, stablebytes/reducer andstrictmissing/partial/foreignrefusal; no init/cache/repair/authority. Frontendpreparesgenuinepartition-image inventorythroughthat API afteractualgreen. No repeatedEXprobe/capraise/manualcleanup.
+
+LinuxRoot36194 daemonproof authoritativeterminal1 on110sresource-loandeadline, graphinventoryprogress andnooldorderfailure. Its failedprofileattempt80596 wascooperativelystoppedonlybyownowner afteractualcapturedchildshowedBUN_OPTIONSstrippedbyexistingdeny; guardpreserved, noactualchildprofileclaimed. NativeSourcefreezeexplicitlyreleasedafterissuerandchildgone. LinuxRoot ownsclosedactual-driverCPUprofile support andinventoryperformance; no courseNativejobcurrentlylives.
+
+## Existing Shared Journal Reader Physical Proof — 2026-10-29T12:38:15.771Z
+
+Frontend96996 authoritative exit0:1test/23assertions,2.67s. Actualcanonical Sourcecompile/inheritedOriginal/productionbinder/registeredNativeimage; twoSHreaders coexist, realinheritednonwaitingEXwriter refuses whileSHheld andacquiresafterrelease. Snapshot includes exactbytes/hash/events/effectivecap/allactivephases; physicaljournalSHA/bytes/inode/size/mtime unchanged. Threeisolatedmissing/partial/foreignnegativechildren exit1 asrequired. Purefreshreplaytest separatelypassed. No init/cache/repair/EX/authority addedbyreader.
+
+Backendexported observeExistingNativeStorageStateV1 viaCoreexistingpublicstoragefacade andfrozeSource. The actualCpartition wrapper is nottheprivateplatformimage key: frontendcorrectlyuses existingwithRepositoryPartitionOperationV1 toreceivecanonicalregisteredimage andactualphase beforeobserver. No brandguard relaxed. ONEactualNxSHinventory11986 nowlive, generated/runtime-entry-nx-pool-sh-inventory.log; noownerreservation/oldEXobserver, nofullpublisherorpreviewretry. Actualcurrentused/remainingawaitthatresult. Rootprofile28265mayoverlapnormalSH/writeradmission; noquiescenceclaimed.
+
+## Actual Nx Shared Admission Block — 2026-10-29T12:44:06.129Z
+
+Inventory11986 authoritatively exited1 at92.60s before snapshot, Original Script process deadline exhausted. At4s actualPID1030681 heldnximageSH andmappingSH andqueuedtheEXACTNativejournalresourcein SHmode. It usedthepropercanonicalpartition-operation imageandnewexisting-onlyread API, withoutownerreservation/EXobserver. Therefore actualused/remaining remainUNKNOWN; the newreadportis notclaimed tohave producedpoolstate. No unchangedretry/cleanup/limitincrease.
+
+Peerprofile28265 actualcapturedchildflagsverifiedbeforeeval, BUN_OPTIONSremainsdenied. Its currentprogress includedEXwait on sameNativeidentitylinux66312anchor2039658volume2039657. This mayblockbothoperations; exactowner remainsunproven. Backendnowowns boundedtimedpublicregistry/queue plus exactkernel/proclockFDmetadata investigation, withno rawDBcontent/env/prune/signals or stale/deathinference. Rootinspectionofacceptedcleanuploans showsordinaryguardreleasedandcleanupreacquireslater; no assumptionthatloanretainsEXisused. Readerphysical96996 1/23 remainsvalidisolatedproof, allimagesretiredthroughownedAPIs. Noapp/backend/site currentlyready.
+
+## Genuine Pool Funding Snapshot — 2026-10-29T12:51:04.874Z
+
+Changed-state sameSHinventory76716 authoritatively exited0:1test/7assertions,2.80s. The profilinggenerator28265 had authoritatively completed0 and releasedjournalwriter; retry retainedsameOriginal/deadlines/guards andpropercanonicalimage/read-onlyAPI. Actualcap/backing/effective1610612736; used1545469952; remaining65142784; nextcanonicalchild67239936; exactshortfall2097152B. Sequence71,21627journalbytes,71events. FullgenuineobservedJSON generated/nx-pool-observed.json.
+
+Allocations:16active rows, onecommittedrepository:nx-store536870912B and15namespacecharges67239936B each;14committedphysicalchildrenexist, onereservedchildabsent. Reservededeccb0949c4ef0b5ca1aa7bc02df49d/shard4e4345 remainscharged/protected; absentchild isnotdeath/retirementauthority. No state/cache/claimmutation. Frontendowns actualpressurepreflightTDD againsttheseobservedfigures, preservinglogical/physicalbounds andfinalNativeguard, routinginsufficiency toexistingstrictidlevictimretirement. No fullpublisher/previewretry untilthatcandidatepasses.
+
+## Persistent Backend And Pressure Candidate Checkpoint
+
+Root independently observed actual8791 /instance HTTP200 with exact teaching-proctor;6061 refused. Backend owns live41024 and strengthened smoke0 (ten quizzes, en/de, browser origins/CORS). Frontend runtime wiring passed3tests124assertions plus existing graph/output capacity2tests42assertions. Read-only independent runtime audit reactivated; full physical request regression then managed frontend launch remain next. Full course semantic/unit/watcher/both browser gates are not completed.
+
+## Physical Pressure Run And Exact Fixture Root Mismatch
+
+Actual unfiltered request suite97152 log records1pass3fail across4tests/10assertions6.67s; owner terminal poll is frontend responsibility. Publication progressed beyond acquireNxGraphNamespaceV1 and then refused Original funded graph publication namespace required. Root source review found request fixture graphRoot derived repositoryCachePartitionRootV1(workspace,graph), whereas actual withNxGraphCacheStoreV1 opens nx and supplies base.root. The public guard compares real store.root against forwarded environment and directory; production normal binders already use actual graph.root. Frontend owns fixture correction and one changed-cause rerun, preserving guards; audit worker checks scope. No application readiness is inferred.
+
+## Real Request Progress And Full Course Semantic Ownership
+
+97152 terminal1 was followed by canonical fixture-root14793 terminal1; actual public publisher completed5assertions before ordinaryfixed failed inherited Original parent envelope. Fixture correction now distinguishes forwarded resource envelopes from same-process invocation envelopes. Subsequent47188 terminal1 completed actualpublisher+fixed modes (five checks each), then exact Nativebinding guard exposed missing SEMIO_NX_GRAPH_DIAGNOSTIC_DIRECTORY. Frontend owns canonical helper derivation; no productionguard changes. Rootfullcourse typecheck60268 launched normal target with --parallel=1/NX_DAEMON=false, authoritativelylive during actualgraphfacts244852 and819inputclosures verification. ActualTSC still unproven; no restart/timeoutrelaxation.
+
+## Full Actual Request Log Green
+
+68160 same final corrected fixture log reports3pass0fail31assertions67.53s, with actual control, publish, fixed, native and shared inventory branches. Frontend owns authoritative terminal poll. Root60268 remains authoritativelylive, advancing to Nx storage planning and built-in lease sweep after complete graph assembly. Frontend directed to normal managed dev after terminal confirmation under normal capacity governance; no approval wait. No complete pressure-eviction claim yet: audit compares journal inventory evidence without raw reads.
+
+## Current Binding Failure After Control And Exit Repairs
+
+1143 authoritatively exited1 beforedev-site: eight prerequisites succeeded, both assignmentPDF tasks refused Current expected JavaScript dependency binding required (read-context30/storage390/withCurrentBunWorkspaceOwnership cjs514). NewSDK14ce4ca87 wasderivednormally and contains minimalcontinuous-exitcondition; this failure is prerequisiteexit, not yet an actualselectedcontinuous-childexit regression. Frontend owns exact Sourceownerbinding/lifecycle trace; Low and LinuxRoot notified. No link/cache/receipt mutation or unchangedretry. Completeunit99366 remainsowned by backendagent; focuseddeployment53929 passed41/41. Backend41024 ended on its inheritedonehourCargo commandbudget (authoritativeterminal1), so formerliveavailability claimsarewithdrawn whilehistoricalHTTPproof remainsvalid.
+
+## Current Source Drift Diagnostic And Stable Checkpoints
+
+35703 authoritatively exited1 afterSourceadmission/inference, beforePDF: admittedhelper capture refused stale build.closure.source-differs. Exact failedbundle metadata1555rows vsstablecurrentphysicalreads found4mismatches (NodeNativeTS, schemaValidatorTS, cachingsuitesJSON, graphpinSchemaJSON); LinuxRoot confirmed legitimate14:48–14:54coauthor edits and stablecheckpoints. Exactc5rowstillunidentified. Frontendadded boundedpath/expectedSHA/observedSHA toall3unchangedguards andbilingualcatalog, real compiled physicalmismatch TDD2tests30assertions actualgreen. Fresh97168 SAMEcanonicalEnglishPDFtarget islive, Sourcecapturepassed, inputclosureverification1744/1980observed; no servicesready.
+
+Read-only architecture audit finds compiledSDK has selectivevalidatedSource text DATA, not a generic all-admitted-byte port. Its sourceBytes physicalreread+SHArefusal therefore remains intentional undercurrentcontract. NofreshOriginal, fallback, liveSource recapture or guardrelaxation was introduced. Currentnextstep remains exactnormalproducerdiagnostic fromstableSource, not an architecturalbypass.
+
+## Verified Diagnostic Wait During Shared Publication
+
+97168 remainedauthoritativelylive and advanced through1980closureverification (including a normalrevalidationcycle) then94/94projectinference. Rootcapacitysample hadonlythis3584MBjob andnowaiters. ParentRoot reported actualpublication50028 terminal0:439Sourcefiles (165schemas,273consumers,vocabulary), followed by frozenSource/read-onlypostproof. This publication happened after97168Sourceadmission; anyfuturefreshnessrefusal mustrecordexactpath/hash ratherthanbe called a guardbug. No rollback, Sourceguardrelaxation, manualSDKoverride or observation-timeout restart. Frontendretains97168. No currentwebsite/backendlisteners, fullgoalstillactive/unproven.
+
+## Canonical PDF Producer Green And Managed Stack Retry
+
+97168 authoritatively exited0. Normal Nx build-parametrization-en and all five prerequisites succeeded; producer and enclosingrepo stagescomplete. It passed the prior parser/Source/binding boundaries with freshSDKnamespace55c93c4cd96c6a25234ed3f6c8b9042632af6055f2dfb93647a9534167ca2355. Read-onlypublishedartifactinspection found a regular nonsymlink1,501,461byte PDF with%PDF-1.5header/%%EOF. This isactualnormalproducerproof, nota claim thathistoricalanonymousparser orbindingcausewasidentified.
+
+Frontendimmediately launched SAMEfullnormalmanageddev68016 undernormalgovernor, log generated/course-dev-source-stable.log; freshheadroom9510MB/onegrant/nowaiters. It retains68016 foractualfrontend/backendreadiness. Nootherproctororfrontend launched; fullunit/watcher/bothbrowserstillrequired.
+
+## Actual Managed Pair And Rendered Browser Milestone
+
+Workers initiallyreportedaccountusagefailures; RootreadtheirhandlesasunknownbutverifiedHTTPinstead ofrestarting. FreshHTTP6061/HTML200 and8791/instance200 confirmed bothservices; frontendthenrecovered68016originalhandleauthoritativelyLIVE/BOTHREADY. Unitownerrecovered33103AUTHORITATIVE0:821/821tests,19/19files,all6prereq/Nx/outer success. PostrestartregisteredHTTPread-only42requests recoveredall40runs112answers4000points13badges, provingpersistenceacross41024expiry→normalmanagedrestart.
+
+RootactualpersistentPlaywright74113AUTHORITATIVE0:twoexistingintro/languagecases passed1.1minutes againstretainedpair, no servicestop/control endpoint. Rootthenlaunched73818 exactcompleteunfilteredBOTHtopology release/serial gate, with no externalproctortarget/filters. Backendowns30943currentSourcefulltypechecknormalqueue. Keep68016alive; no completioninferredfromsupplementalchecks.
+
+## Verified Managed Lifetime Policy
+
+Frontendread-onlychecked68016ownedtree rootPID1218516 andstabledevrouter/devsite/Vite descendants at16:18:09UTC: ownerrepository:build, maximumElapsedMilliseconds0, deadlineEpochMillisecondsnull/remainingnull; named budgetoverridesabsent. It emitted/storedonlythese publicpolicyfields, noenvironment/capabilities. Sourceagrees defaultbuildbudget0, compilerAdmissionBudget(null)0 andownedtimeout0disabled. ManagedproctoruseslaunchOwnedspawn, notformerCargo-runonehourbudget. No deadline wasraised orprocessrestarted. Cancellation/failure remainspossible; actualcurrentownership/readiness stillrequired.
+
+## Current SDK Cold Caller Result
+
+3418 authoritative terminal1 after SDKdf38 refresh. Actual cold Node Native core compiled and loaded with qualified key10e9814227e5537d, resolving missingcc failure. Complete caller suite4pass7fail22assert: first30s timeout after Nativeimage/journal/SDKverification/graphinventory and EXnamespace wait; secondary Originalclosed cascades. Backend investigating timing/holder attribution, no deadline increase/unchanged retry. Full BOTH browser5625 remains live under NX_DAEMON=false; persistent68016 freshly confirmed live with bothHTTP200.
+
+## Current Additional Verification Handles
+
+Frontend owns15092 current full course typecheck after rehearsal fix; same live handle, normal governor. Root owns16334 canonical selected-continuous-failure check using reviewed port0/proctor8791/watchoff/prototype invocation, currently normal memory admission wait, generated/continuous-selected-failure-integration.log. It has not reached selected target and proves no failure propagation yet. No capacity override/duplicate launch.
+
+15092 authoritative terminal0: actual current course TSC, all6prerequisites successful, zeroTSdiagnostics, normalNx/outercomplete. Rehearsal PDF wrapper/tests are semantically verified; future size repair requires appropriate verification.
+
+16334 terminal1 beforeselecteddev on PDFprototype retainedpublication conflict; no selectedexitproof. Existing leaseorder guards preserved live68016consumers. Frontend/Low ownsprintsizeTDD; backend ownsnativeprofileinstrumentation and followingonefullcaller. Root16334no longerlive; no Root-owned runningexec.
+
+## Adaptive Print and Real Node Helper Evidence
+
+After physical inspection measured the English 512-pixel PDF at310251bytes, frontend introduced per-icon minimum600DPI buckets. Genuine RED was0pass2fail5assertions; GREEN was2tests181assertions, independently reviewed. Widths are12×272,2×336,2×352, with all original vector identities. Root identified missing ordinary test discovery; frontend wired quality laws into assignment-pdfs and launched normal affected owner85976. No new PDF producer or browser was started before the runtime checkpoint.
+
+Actual Node declared helper test71044 exited0:2tests15assertions in1.468s, including allocate/activate/observe/deactivate/inactive-observe and restored filesystem identity. Low reviewed closed environment, Source proof and same-Original startup scope. Existing interactive/environment regressions and full cold-caller still required.
+
+## Current Full Gates Admitted
+
+87054 retained its original handle through normal capacity admission and stale sealed-graph rechecks. It reached the actual complete test-e2e target with ten prerequisites on SDK706549d3; release styling passed. Independent log audit attributed repeated verification to stale prior facts, without claiming ongoing edits or a stall.
+
+40304 retained its original handle through fair admission and reached Native journal/replay and actual Nx daemon graph calculation on the same SDK. Neither gate has a passing acceptance result yet. Corrected assignment owner77220 remains live and queued; full typecheck and full units follow it. No Source, limit, queue or process ownership was changed to obtain admission.
+
+## Lossless Transform and Observer Checkpoint
+
+The pure PDF transform ran against stable actual English and German adaptive snapshots under the registered Node runtime. It exited0: English189121→169691bytes and German189309→169881bytes, saving38858bytes together, more than the measured20397-byte site overage. Only ticket/generated candidate outputs were written; published files and input snapshot hashes were unchanged. This is physical transformation evidence, not full page or compiler acceptance.
+
+The actual input exposed a compact-dictionary serialization bug before compiler wiring; whitespace-delimited replacements and corresponding fixtures corrected it. Focused tests reached6tests58assertions for classic/streamxref, ObjStm/type2 preservation, indirect/shared Length, generations/free entries and independent decoded images. Cooperative progress/cancellation and the full Node page oracle remain in progress. Bun-native canvas crashed; a separate Node oracle ended143 without a diagnosed cause. Neither result is treated as page-pixel acceptance.
+
+The verification observer's precise TS2352 correction split synchronous and asynchronous timing without a generic Promise cast. Actual strict semantic validation passed173files with zero diagnostics, and focused tests passed3tests18assertions. Original SourceReadContext/control/receiver behavior remains;66194 retains its original queue handle and will capture the corrected Source. No optimization or deadline increase has been applied.
+
+The current representation source passed7focused tests102assertions after adding bounded cooperative parser checkpoints throughout Syntax and xref/object scans. The ordinary-capacity registered Node page oracle42979 is now live and queued (2048MB); log pdf-representation-node-oracle.log. Its prior143 outcome remains unattributed. No duplicate raster job, compiler wiring or full browser retry has occurred. Final progress/cancellation review and independent full-page result remain required.
+
+## Current Progress and Live Verification
+
+Fresh18:12:04UTC HTTP probes returned200 for both the real frontend6061 and proctor8791 with exact expected identities. Manager68016 retained its original live handle; evidence is generated/managed-pair-print-checkpoint.json.
+
+Current lossless representation focused tests passed7tests102assertions. Independent Source review found every Syntax construction carries the cooperative pulse, long parse/row scans have bounded checkpoints, and the pulse reports closed progress phases, yields and checks the same signal before/after. No concrete remaining progress/format blocker was identified. This is not final readiness: Node actual-page oracle42979 and ordinary Print check27221 are live/queued, and compiler wiring remains pending. The oracle's common/local image-cache adapter was corrected before admission; prior143 remains unattributed.
+
+Measurement66194 is now admitted and actually verifying367of828inputclosures. No SDK verification aggregate exists yet. It retains the typed original-context instrumentation and all validation; no production optimization or new measurement job was started. Corrected course owner77220 remains queued before its planned full typecheck and unfiltered unit sequence.
+
+## Signal and Oracle Diagnostics
+
+Root reproduced the CLI signal collapse with a real self-SIGKILL Node child:143 before correction,137 after. Focused neutral11-vector/Ajv/SQLite signal test passed1/23; the independent old bunx alias failure remains visible. Shared alias schema/parity changes are deferred during captured Print proofs. The changed oracle16766 is queued with accurate signals, timestamped phases, bounded memory observations and repaired cancellation/drain; no prior143 attribution.
+
+Measurement66194 exited1 with actual data disproving Source verification as the dominant30-second cost. Failed Node verification began28.836seconds into the child and consumed1.145seconds before cancellation. New full measurement1293 is admitted and carries unchanged-operation wall spans for the earlier gap. No reader optimization has been applied.
+
+## Observed Print Type Fix
+
+Ordinary semantic27221 exited1 with exactly one real TS18048 diagnostic (possibly missing physical object). Frontend added an explicit object guard without a cast or diagnostic suppression. Focused92325 exited0 with8tests105assertions. Normal semantic retry58640 retains its handle; coreSHA32f83582e306bc9cf8be70b863e62d353cbf4ed11bd60c1775d8065df5a15463. Oracle16766 remains queued and will record actual core/runner hashes; PDF units49989 and course typecheck71642 are retained. No compiler wiring or page-preservation claim.
+
+1293 remains authoritatively live after all830closures verified, now normal peer-generation68 yield/reexecution. Outer-process spans show Source capture96–132ms, publication7–13ms and command5–7ms; these are not the target cold Node process and do not establish its28-second gap.
+
+## Actual PDF Unit Owner and Baseline Renderer Failure
+
+49989 exited0 authoritatively: complete existing PDF module and new representation tests passed20tests234assertions, Nx and outer complete. The repaired Node oracle16766 separately exited139 while rendering the unchanged original English page2, before normalized input; exact timestamp/image readiness/memory evidence is in pdf-oracle-native-crash-2026-10-29.md. No OOM or normalizer-caused fault is claimed. Ticket-only browser oracle inputs now reuse registered Chromium/PDFjs with every page check retained; not launched before review.
+
+## Registered Browser Document Oracle
+
+91822 is the one registered Playwright/managed Chromium oracle. Exact specSHA40eea22ddafa2ef396dbeb5fee74552581f37c26487dc98a137f24abdcbe5613 includes final loading-task cleanup and an additional exact visible-text comparison, not only generated-ID normalization. It uses ephemeral loopback routes for the existing PDFjs module/worker/assets, both actual original/normalized EN/DE documents and every bounded page/text/font/operator/image/full-HTMLCanvas check. No native canvas, producer, page exclusion, system browser or executable override. Review is clear, actual execution result pending; full course BOTH gate remains separate.
+
+The final Chromium document spec40eea22d… was independently rechecked after both loading-cleanup and exact visible-text fixes. Registered browser oracle91822 remains live/queued. Full course typecheck71642 has been admitted and is in build preparation, not yet an observed semantic pass. Measured caller1293 retained its handle across the normal loader-free peer wait and run readmission, with no target Node-law spans yet.
+
+## Continuation — 2026-10-29T19:30:28.086Z
+
+Previous approval-only turn made no implementation progress. This continuation revalidated fullbrowser48540 through its authoritative live handle, retained all three delegated workers, reconciled stale current-status/gate records with completed PDF browser oracle91822 and pre-wire typecheck71642, and recorded terminal caller1293 with its measured20925.572ms pre-birth store gap. Backend prepared neutral red/green lower-store spans and launched changed full caller54413; frontend confirmed post-wire Print semantic58640 terminal0 and full unfiltered course units5938 live. No deadline, artifact guard, capacity, source-admission policy or unowned process was changed. Fullbrowser reached actual586-project graph plan; real normalized producer/site/browser results remain pending.
+
+## Actual Site Acceptance And Browser Failures — 2026-10-29T19:46:28.696Z
+
+Full48540 remains authoritative live. Both actual normalized compiler outputs exactly match the independent browser oracle: EN169673bytes/DE169861bytes. Actual86-file site4,981,501bytes excluding receipt passes unchanged5,000,000byte cap by18,499bytes. Qualified backend and all10 prerequisites completed before rehearsal browser execution. Rehearsal boot passed and72shared tests run without filters. Two actual failures so far: physics learner panel remains closed after reload; perfect-all-quizzes feedback helper selects authored item by nonunique label and expects Flatten explanation for an actually selected Graft row. The independent auditor found duplicate Zone data transformation labels across tree operation identities; product result rows use actual item IDs. Root assigned the auditor stable-ID test association design and frontend the learner panel product trace. Exact assertions/deadlines remain intact, no Source edits or duplicate browser retries were launched. Backend changed-span full caller54413 independently remains retained.
+
+## Repair Execution Checkpoint — 2026-10-29T20:18:39.708Z
+
+Root exact-owned48540 was deliberately cooperatively canceled130 after12provenfailurestoapplycausalrepairs. Baselinepartialscope is shared59pass12fail/72planned, boot1pass, ladder58/exclusive/dev unverified. Root schema-first neutral feedback fixture and six actual component laws are on disk; independent audit caught and corrected inherited3keys/cards for2items before actual test execution. Combined normal access+feedback RED51495 is retained live, queued. Frontend Records RED33271 and passive physics observation12039 retained live. Backend pet neutral selection corpus preserves historicalactualbrowserRED and actual oldselectorRED, then passes5drop/4roster Ajv+Lodash oracle including odd401width correction; actual fullbrowser regression remains required.
+
+Outdated unadmitted fullunit5938 was deliberately cooperatively canceled130 by its owner to prioritize small causal repair gates; no unit executed. Exactmanaged68016 remains live and healthy. Final full unfiltered course units and typecheck are deferred until finished fixes, not removed. No production Source patched before actual RED or scoped physics observation checkpoint.
+
+## Tool Reconnect And Causal Publication Maintenance — 2026-10-29T20:43:26.793Z
+
+Previous observation was a verified wait. Tool reconnect lost old exec handles, but actual root51495 OSissuer1504845 was authenticated LIVE with exact2-file course-react argv; no duplicate was launched. Oldphysics12039 settled with actual navigationPASS (sameconnectedanchor/defaultPreventedfalse/#learner/paneopened), but testFAIL in teardown on ERR_NETWORK_CHANGED. Original48540 navigation failure remains unproven.
+
+Officialleases identified a concrete own blocker: manageddevsite1226070 was the sole shared javascript-dependency-bindings reader while root51495 had prepared a new generation. Actuallivecapturedmanagedissuer1218548, not vanishedouterlauncher1218516, was authenticated through complete listener/managerancestry. Exactrestart/data manifest was saved beforecooperativeSIGINT20:40:54.471. All8ownedprocesses/listenersclosed20:41:14; persistedstandardproctor.sqlite remains dev66312/inode1876412/3891200bytes. Root51495child1579451 immediately acquired bindingsEX20:40:54.752 andcontinuesverification. No forcedlease release/datareset/unownedprocesssignal occurred. Currentavailability claim is withdrawn whilemaintenancecontinues. Afterpublication/repairs, same normaldevprototype6061/8791 restart andexisting40run/42HTTP read-only persistenceproof are mandatory.
+
+## Regression Preparation To Watcher Toolchain Boundary — 2026-10-29T20:58:24.721Z
+
+Previous turn included real publication progress. Actual51495/33271 now settled before target tests on two distinct new watcher toolchain prerequisites (Cargo101 missingcc; Cargo1 Rustup no-toolchain). Canonical Source/cwd/pin/environment gaps and current peer fix are documented in watcher-toolchain-boundary-audit-2026-10-29.md and watcher-toolchain-resolution-2026-10-29.md. No unchanged retry or global rustup/PATH mutation. One combined3-fileRED is next after peer causal proof; independent audit flagged environment-layer preservation before that checkpoint.

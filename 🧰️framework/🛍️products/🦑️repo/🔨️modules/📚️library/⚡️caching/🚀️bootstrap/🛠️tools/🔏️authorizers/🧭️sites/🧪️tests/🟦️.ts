@@ -1,4 +1,8 @@
-import{expect,test}from"bun:test";
+import{expect,test,spyOn}from"bun:test";
+import ts from"typescript";
+import{TranspilerV1}from"../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🔬️source/🟦️.ts";
+import parserFixture from"./🧫️fixtures/📍️parser.json";
+import parserSchema from"./🧬️schema/📍️parser.json";
 import Ajv from"ajv";
 import{spawnSync}from"node:child_process";
 import{createHash}from"node:crypto";
@@ -48,4 +52,16 @@ test("the catalog path names the schema file and the table reader refuses altere
  expect(file.split(sep).join("/").endsWith("/"+closureRefusalCatalogPathV1),closureRefusalCatalogPathV1).toBe(true);
  expect(closureRefusalCatalogTableV1(encoded,sha,hash)).toEqual(closureRefusalMessagesV1);
  for(const[name,table]of[["wrong hash",closureRefusalCatalogTableV1(encoded,hash(bare),hash)],["absent bytes",closureRefusalCatalogTableV1(undefined,sha,hash)],["absent hash",closureRefusalCatalogTableV1(encoded,undefined,hash)],["not base64",closureRefusalCatalogTableV1("not base64!",sha,hash)],["no messages",closureRefusalCatalogTableV1(bare.toString("base64"),hash(bare),hash)],["not json",closureRefusalCatalogTableV1(open.toString("base64"),hash(open),hash)]] as const)expect(table,name).toBeUndefined();
+});
+
+/** 📍️ Parser failures keep their exact original identity and expose the actual Source coordinate. */
+test("actual scanner failures preserve engine identity and surface bounded Source coordinates",()=>{
+ expect(new Ajv({strict:true}).validate(parserSchema,parserFixture)).toBe(true);
+ for(const row of parserFixture.cases){
+  const source=ts.createSourceFile(row.path,row.source,ts.ScriptTarget.Latest,true,row.loader==="ts"?ts.ScriptKind.TS:ts.ScriptKind.JS),diagnostics=(source as ts.SourceFile&{parseDiagnostics:readonly ts.Diagnostic[]}).parseDiagnostics;
+  expect(diagnostics.length>0,row.path).toBe(row.invalid);
+  let original:unknown,caught:unknown,message:string|undefined;const method=row.path.endsWith(".cts")?"scanImports":"scan",implementation=TranspilerV1.prototype[method],witness=spyOn(TranspilerV1.prototype,method).mockImplementation(function(this:TranspilerV1,text:string){try{return implementation.call(this,text)as never;}catch(error){original=error;message=(error as Error).message;throw error;}});
+  try{try{closureLiteralSitesV1(row.path,row.source);}catch(error){caught=error;}}finally{witness.mockRestore();}
+  if(row.invalid){expect(caught).toBe(original);expect(Object.getPrototypeOf(caught)).toBe(Object.getPrototypeOf(original));const error=caught as Error&{sourcePath:string;sourceLoader:string};expect(error.sourcePath).toBe(row.path);expect(error.sourceLoader).toBe(row.loader);expect(error.message).toStartWith(message!);expect(error.message).toContain(JSON.stringify(row.path));expect(error.message).toContain("loader="+row.loader);expect(error.message.split("\n")).toHaveLength(1);}else expect(caught).toBeUndefined();
+ }
 });

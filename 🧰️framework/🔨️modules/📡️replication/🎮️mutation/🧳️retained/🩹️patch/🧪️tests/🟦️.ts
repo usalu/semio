@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {applyPatch,compare} from "fast-json-patch";
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "./🧫️fixtures/schema.json" with {type:"json"};

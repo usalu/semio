@@ -3,7 +3,8 @@
  */
 import { BARE_TYPE_NAME, EXPORT_NAME, asDict, has, isDict, jsonString, jsonValue, keyText, orderedEntries, truthy, type Dict } from "../🔡️json-text/🟦️.ts";
 import { aliasMembers, aliasText, aliasVariants, declaredTypes, definesParser, importsParser, instantiatesGeneric, memberTypes, normalizeType, reexportedBinding, splitTop, unionMembers } from "../📖️declared-types/🟦️.ts";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
+import {createHash} from "node:crypto";
 import { isAny, nullableOf } from "../📐️type-render/🟦️.ts";
 
 //#region 🔖️Context
@@ -52,14 +53,16 @@ export class Context {
     readonly promised: ReadonlySet<ParserKey>,
     readonly closed = true,
     readonly document?: Dict,
+    readonly reserved:ReadonlySet<string> = index.get(documentId??"")?.exports??new Set(),
     readonly resolving = new Set<string>(),
-    readonly foreign = new Set<ParserKey>(),
+    readonly foreign = new Map<ParserKey,string>(),
     readonly redirect?: Owner,
+    readonly receiver = target,
   ) {}
 
   /** 👁️ The context in which the nodes of another document are rendered: it reads that document, names its parsers as imports of the referring leaf, and shares the callees and the cycle guard of this one. */
   viewOf(owner: Owner, document: Dict | undefined): Context {
-    return new Context(this.helper, typeof document?.$id === "string" ? document.$id : undefined, this.index, owner.ts, [], this.sources, this.promised, this.closed, document, this.resolving, this.foreign, owner);
+    return new Context(this.helper, typeof document?.$id === "string" ? document.$id : undefined, this.index, owner.ts, [], this.sources, this.promised, this.closed, document, this.reserved, this.resolving, this.foreign, owner, this.receiver);
   }
 
   get own(): string {
@@ -80,7 +83,7 @@ function locateParser(name: string, context: Context): string | undefined {
   }
   for (const sibling of context.siblings) {
     if (sibling !== context.target && (definesParser(context.sources.read(sibling), name) || context.promised.has(parserKey(sibling, name)))) {
-      context.foreign.add(parserKey(sibling, name));
+      context.foreign.set(parserKey(sibling, name), `parse${name}`);
       return name;
     }
   }
@@ -118,6 +121,15 @@ export function pointed(pointer: string, document: Dict | undefined): Dict | und
   return isDict(node) ? node : undefined;
 }
 
+
+/** 🪪️ Keeps foreign parser origins distinct from names reserved by the receiving schema. */
+function foreignParserBinding(owner:Owner,name:string,context:Context):string{
+ const local=context.reserved.has(name)||context.promised.has(parserKey(context.receiver,name))||definesParser(context.sources.read(context.receiver),name);
+ if(owner.ts===context.receiver||!local)return `parse${name}`;
+ const origin=owner.specifier??relative(dirname(context.receiver),owner.ts).replaceAll("\\","/");
+ return `parse${name}$${createHash("sha256").update(origin).digest("hex")}`;
+}
+
 function referenceCall(reference: string, access: string, at: string, context: Context, path: string, depth: number): string | undefined {
   const hash = reference.indexOf("#");
   const document = hash < 0 ? reference : reference.slice(0, hash);
@@ -145,9 +157,9 @@ function referenceCall(reference: string, access: string, at: string, context: C
   const arguments_ = owner?.shared && signature !== null && signature[1] === undefined ? access : `${access}, ${at}`;
   if (owner !== undefined) {
     if (!owner.exports.has(target)) return undefined;
-    context.foreign.add(parserKey(owner.ts, target));
+    context.foreign.set(parserKey(owner.ts, target), foreignParserBinding(owner,target,context));
   } else context.local.add(target);
-  return `${owner !== undefined ? `parse${target}` : calleeOf(target, context)}(${arguments_})`;
+  return `${owner !== undefined ? context.foreign.get(parserKey(owner.ts,target))! : calleeOf(target, context)}(${arguments_})`;
 }
 //#endregion 🔖️Context
 
@@ -387,8 +399,8 @@ export function parserExpression(node: Dict, access: string, path: string, conte
   if (kind === undefined && isAny(node)) return access;
   if (kind === "string") return `${helper}String(${access}, ${at}${boundsText(node, ["minLength", "maxLength", "pattern"])})`;
   if (kind === "boolean") return `${helper}Boolean(${access}, ${at})`;
-  if (kind === "integer") return `${helper}Integer(${access}, ${at}${boundsText(node, ["minimum", "maximum"])})`;
-  if (kind === "number") return `${helper}Number(${access}, ${at}${boundsText(node, ["minimum", "maximum"])})`;
+  if (kind === "integer") return `${helper}Integer(${access}, ${at}${boundsText(node, ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"])})`;
+  if (kind === "number") return `${helper}Number(${access}, ${at}${boundsText(node, ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum"])})`;
   if (kind === "array") return arrayExpression(node, access, path, context, depth, declared);
   if (kind === "object") return objectExpression(node, access, path, context, depth, declared);
   return undefined;

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/renderer/engine/flow-add-widget/schema.json",
   "title": "FlowAddWidget",
   "description": "➕️ The add-node record of a flow canvas (the `addWidget` verb): the widget kind, the descriptor fields of its catalogue row and the world position; the owner mints the id.",

@@ -1,34 +1,38 @@
 {
   "walls": {
     "w-east": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 2.0,
-            "y": 6.0
-          },
-          "start": {
-            "x": 2.0,
-            "y": 0.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 2,
+              "y": 6
+            },
+            "start": {
+              "x": 2,
+              "y": 0
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     },
     "w-south": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 10.0,
-            "y": 0.0
-          },
-          "start": {
-            "x": 2.0,
-            "y": 0.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 10,
+              "y": 0
+            },
+            "start": {
+              "x": 2,
+              "y": 0
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

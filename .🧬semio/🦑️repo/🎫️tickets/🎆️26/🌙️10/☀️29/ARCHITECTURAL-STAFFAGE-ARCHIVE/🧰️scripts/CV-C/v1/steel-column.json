@@ -1,0 +1,858 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "steel-column",
+    "category": "components",
+    "title": {
+      "en": "Steel Column",
+      "de": "Stahlstütze"
+    },
+    "summary": {
+      "en": "A 3.0 m HEB 200 steel column on a fixed footing, loaded axially, eccentrically and by lateral wind.",
+      "de": "Eine 3,0 m hohe Stahlstütze HEB 200 auf eingespanntem Fuß, axial, außermittig und unter Windlast belastet."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "steel",
+      "column",
+      "buckling"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10365",
+          "citation": "EN 10365:2017 Hot rolled steel channels, I and H sections, dimensions and section properties: HEB 200 A = 78.1 cm2, I_y = 5696 cm4."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (density 7850 kg/m3)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3, Part 1-1: E = 210 GPa for structural steel."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind actions (peak velocity pressure and force coefficient for an I-section column; 0.8 kN/m2 x 2.0 x 0.2 m as an estimate)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity of painted steel; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "HEB 200 column of 3.0 m height on a fixed footing; the cap carries the axial load.",
+        "de": "HEB-200-Stütze von 3,0 m Höhe auf eingespanntem Fuß; der Kopf trägt die Normalkraft."
+      }
+    },
+    "dimensions": {
+      "heightM": 3.0,
+      "widthM": 0.3,
+      "depthM": 0.2,
+      "massKg": 183.9
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "column",
+      "bones": [
+        {
+          "id": "column",
+          "parent": null,
+          "title": {
+            "en": "Column (rigid root on the footing)",
+            "de": "Stütze (starre Wurzel auf dem Fuß)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 183.93,
+            "comX": 1.5,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10365"
+          },
+          "section": {
+            "areaM2": 0.00781,
+            "secondMomentM4": 5.696e-05,
+            "extremeFibreM": 0.1,
+            "material": "steel",
+            "title": {
+              "en": "HEB 200",
+              "de": "HEB 200"
+            }
+          }
+        },
+        {
+          "id": "eccentric-carrier",
+          "parent": "column",
+          "title": {
+            "en": "Eccentric load carrier (massless)",
+            "de": "Exzentrischer Lastträger (masselos)"
+          },
+          "x": 3,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.2,
+            "maxM": 0.2
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "footing",
+        "bone": "column",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Fixed footing",
+          "de": "Eingespannter Fuß"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "cap",
+        "bone": "column",
+        "x": 3,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Column head, axial load",
+          "de": "Stützenkopf, Normalkraft"
+        }
+      },
+      {
+        "id": "eccentric-point",
+        "bone": "eccentric-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Eccentric load point",
+          "de": "Außermittiger Lastangriff"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "column-flange",
+          "bone": "column",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "rect",
+          "x": 0.02,
+          "y": -0.1,
+          "w": 2.98,
+          "h": 0.2,
+          "region": "column-surface",
+          "material": "steel"
+        },
+        {
+          "id": "column-web",
+          "bone": "column",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": 0.02,
+          "y": -0.02,
+          "w": 2.98,
+          "h": 0.04,
+          "region": "column-surface",
+          "material": "steel"
+        },
+        {
+          "id": "base-plate",
+          "bone": "column",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.15,
+          "w": 0.02,
+          "h": 0.3,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "flange-edge-a",
+          "bone": "column",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              0.085
+            ],
+            [
+              2.98,
+              0.085
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "fillet-line-a",
+          "bone": "column",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.15,
+              0.0675
+            ],
+            [
+              2.85,
+              0.0675
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "stiffener-a",
+          "bone": "column",
+          "role": "body",
+          "lod": 2,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              0.1
+            ],
+            [
+              0.02,
+              0.15
+            ],
+            [
+              0.14,
+              0.1
+            ]
+          ],
+          "closed": true,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "anchor-nut-a",
+          "bone": "column",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": 0.02,
+          "y": 0.113,
+          "w": 0.018,
+          "h": 0.024,
+          "r": 0.002,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "anchor-bolt-a",
+          "bone": "column",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              0.125
+            ],
+            [
+              0.075,
+              0.125
+            ]
+          ],
+          "closed": false,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "flange-edge-b",
+          "bone": "column",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              -0.085
+            ],
+            [
+              2.98,
+              -0.085
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "fillet-line-b",
+          "bone": "column",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.15,
+              -0.0675
+            ],
+            [
+              2.85,
+              -0.0675
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "stiffener-b",
+          "bone": "column",
+          "role": "body",
+          "lod": 2,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              -0.1
+            ],
+            [
+              0.02,
+              -0.15
+            ],
+            [
+              0.14,
+              -0.1
+            ]
+          ],
+          "closed": true,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "anchor-nut-b",
+          "bone": "column",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "rect",
+          "x": 0.02,
+          "y": -0.137,
+          "w": 0.018,
+          "h": 0.024,
+          "r": 0.002,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "anchor-bolt-b",
+          "bone": "column",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0.02,
+              -0.125
+            ],
+            [
+              0.075,
+              -0.125
+            ]
+          ],
+          "closed": false,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "cap-plate",
+          "bone": "column",
+          "role": "body",
+          "lod": 1,
+          "z": 4,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 2.98,
+          "y": -0.12,
+          "w": 0.02,
+          "h": 0.24,
+          "r": 0.002,
+          "region": "base-plate",
+          "material": "steel"
+        },
+        {
+          "id": "web-hatch",
+          "bone": "column",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.4000 0.0075 L 0.4600 0.0675 M 0.4000 -0.0525 L 0.5200 0.0675 M 0.4450 -0.0675 L 0.5800 0.0675 M 0.5050 -0.0675 L 0.6400 0.0675 M 0.5650 -0.0675 L 0.7000 0.0675 M 0.6250 -0.0675 L 0.7600 0.0675 M 0.6850 -0.0675 L 0.8200 0.0675 M 0.7450 -0.0675 L 0.8800 0.0675 M 0.8050 -0.0675 L 0.9000 0.0275 M 0.8650 -0.0675 L 0.9000 -0.0325"
+        },
+        {
+          "id": "section-mark",
+          "bone": "column",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              1.5,
+              -0.14
+            ],
+            [
+              1.5,
+              0.14
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "splice-line",
+          "bone": "column",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              1.5,
+              -0.1
+            ],
+            [
+              1.5,
+              0.1
+            ]
+          ],
+          "closed": false,
+          "region": "column-surface",
+          "material": "steel"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "axial-self-weight",
+        "title": {
+          "en": "Axial load",
+          "de": "Normalkraft"
+        },
+        "description": {
+          "en": "Concentric 250 kN axial load from the beam above plus self-weight.",
+          "de": "Zentrische Normalkraft 250 kN vom Träger darüber zuzüglich Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "axial-cap",
+            "kind": "live",
+            "title": {
+              "en": "Axial reaction 250 kN",
+              "de": "Auflagerkraft 250 kN"
+            },
+            "anchor": "cap",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "eccentric-load",
+        "title": {
+          "en": "Eccentric load",
+          "de": "Außermittige Last"
+        },
+        "description": {
+          "en": "The 250 kN axial load acts 0.1 m off the column axis.",
+          "de": "Die Normalkraft 250 kN greift 0,1 m außerhalb der Stützenachse an."
+        },
+        "bones": {
+          "eccentric-carrier": {
+            "dy": -0.1
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "axial-eccentric",
+            "kind": "live",
+            "title": {
+              "en": "Eccentric axial load 250 kN",
+              "de": "Außermittige Normalkraft 250 kN"
+            },
+            "anchor": "eccentric-point",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "lateral-wind",
+        "title": {
+          "en": "Lateral wind",
+          "de": "Horizontaler Winddruck"
+        },
+        "description": {
+          "en": "Concentric axial load plus wind on the column, 320 N/m in the direction of +x.",
+          "de": "Zentrische Normalkraft plus Winddruck auf die Stütze, 320 N/m in +x-Richtung."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "axial-cap",
+            "kind": "live",
+            "title": {
+              "en": "Axial reaction 250 kN",
+              "de": "Auflagerkraft 250 kN"
+            },
+            "anchor": "cap",
+            "fxN": 0,
+            "fyN": -250000,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "wind-column",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on column 320 N/m",
+              "de": "Winddruck auf die Stütze 320 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "column",
+              "fromM": 0,
+              "toM": 3,
+              "wxNPerM": 320,
+              "wyNPerM": 0
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The axial load rises smoothly from zero to 250 kN.",
+          "de": "Die Normalkraft steigt weich von null auf 250 kN."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "axial-self-weight",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "axial-self-weight",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Axial load at full value",
+              "de": "Normalkraft vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:axial-cap",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "eccentric-load-sweep",
+        "title": {
+          "en": "Eccentric load sweep",
+          "de": "Wandern der außermittigen Last"
+        },
+        "description": {
+          "en": "The load moves from the column axis to 0.1 m eccentricity, so the base moment grows from zero to 25 kN m.",
+          "de": "Die Last wandert von der Stützenachse auf 0,1 m Exzentrizität; das Fußmoment wächst von null auf 25 kN m."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "eccentric-load",
+            "ease": "smooth",
+            "bones": {
+              "eccentric-carrier": {
+                "dy": 0
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "eccentric-load",
+            "ease": "smooth",
+            "bones": {
+              "eccentric-carrier": {
+                "dy": -0.1
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "sweep",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Sweep",
+              "de": "Wanderung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 6,
+            "kind": "motion",
+            "title": {
+              "en": "Eccentricity 0.1 m",
+              "de": "Exzentrizität 0,1 m"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "column-surface",
+          "title": {
+            "en": "Column steel surface",
+            "de": "Stützenoberfläche Stahl"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 2.4,
+          "characteristicLengthM": 3,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "base-plate",
+          "title": {
+            "en": "Base plate",
+            "de": "Fußplatte"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "HEB 200 surface taken as 0.8 m2 per metre of length (all faces, estimate).",
+          "de": "Oberfläche HEB 200 mit 0,8 m² je Meter Länge angesetzt (alle Seiten, Schätzung)."
+        },
+        {
+          "en": "Passive steel surface in the reference environment with solar absorption.",
+          "de": "Passive Stahloberfläche in der Referenzumgebung mit Sonnenabsorption."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "footing"
+      ],
+      "assumptions": [
+        {
+          "en": "Fixed footing, free head with axial and lateral loads; HEB 200 with A = 78.1 cm2 and I_y = 5696 cm4; second-order (buckling) effects are not included in the statics.",
+          "de": "Eingespannter Fuß, freier Kopf mit Normal- und Horizontallasten; HEB 200 mit A = 78,1 cm² und I_y = 5696 cm⁴; Effekte zweiter Ordnung (Knicken) sind in der Statik nicht enthalten."
+        },
+        {
+          "en": "Wind is a distributed load of 320 N/m (0.8 kN/m2 with force coefficient 2.0 over 0.2 m), an estimate.",
+          "de": "Wind ist eine Streckenlast von 320 N/m (0,8 kN/m² mit Kraftbeiwert 2,0 über 0,2 m), eine Schätzung."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "eccentric-load",
+      "defaultClip": "eccentric-load-sweep",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

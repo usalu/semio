@@ -11,8 +11,8 @@ import { SqliteDatabaseV1 } from "../../../../../../../../📦️packages/🟦�
 
 /** 📏️ Counts only declared optional leaves on the original enforcing device. */
 function inventoryV1(root,control){
- const base=join(root,"inference"),pending=[base],device=lstatSync(root).dev,optional=new RegExp(quotaSchema.optionalPath,"u");let entries=0,bytes=0;
- while(pending.length){checkResourceLeaseControl(control);if(++entries>schema.protocol.inventoryEntryLimit)throw Error("Finite optional graph inventory exceeded");const path=pending.pop();let row;try{row=lstatSync(path);}catch(error){if(error.code==="ENOENT")continue;throw error;}if(row.isSymbolicLink()||row.dev!==device)throw Error("Original optional graph physical ancestry required");if(row.isDirectory()){for(const name of readdirSync(path))pending.push(join(path,name));continue;}if(!optional.test(relative(base,path).split(sep).join("/")))continue;if(!row.isFile()||row.nlink!==1)throw Error("Original optional graph regular leaf required");bytes+=row.size;}
+ const base=join(root,"inference"),pending=[base],device=lstatSync(root).dev,optional=new RegExp(quotaSchema.definitions.OptionalPath.const,"u");let entries=0,bytes=0;
+ while(pending.length){checkResourceLeaseControl(control);if(++entries>schema.definitions.Protocol.const.inventoryEntryLimit)throw Error("Finite optional graph inventory exceeded");const path=pending.pop();let row;try{row=lstatSync(path);}catch(error){if(error.code==="ENOENT")continue;throw error;}if(row.isSymbolicLink()||row.dev!==device)throw Error("Original optional graph physical ancestry required");if(row.isDirectory()){for(const name of readdirSync(path))pending.push(join(path,name));continue;}if(!optional.test(relative(base,path).split(sep).join("/")))continue;if(!row.isFile()||row.nlink!==1)throw Error("Original optional graph regular leaf required");bytes+=row.size;}
  return bytes;
 }
 
@@ -31,8 +31,8 @@ async function databaseV1(path){
 
 /** 📒️ Holds operation custody across durable intent, physical mutation and clean accounting. */
 export async function openBuildGraphOptionalLedgerV1(options){
- const {image,control,leaseDirectory,maximumBytes,minimumAvailableBytes}=options,protocol=schema.protocol;
- if(!options||Object.keys(options).sort().join()!=="control,image,leaseDirectory,maximumBytes,minimumAvailableBytes"||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>quotaSchema.policy.maximumBytes||!Number.isSafeInteger(minimumAvailableBytes)||minimumAvailableBytes<0)throw Error("Closed physical optional graph ledger required");
+ const {image,control,leaseDirectory,maximumBytes,minimumAvailableBytes}=options,protocol=schema.definitions.Protocol.const;
+ if(!options||Object.keys(options).sort().join()!=="control,image,leaseDirectory,maximumBytes,minimumAvailableBytes"||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>quotaSchema.definitions.DefaultPolicy.const.maximumBytes||!Number.isSafeInteger(minimumAvailableBytes)||minimumAvailableBytes<0)throw Error("Closed physical optional graph ledger required");
  checkResourceLeaseControl(control);await image.recheck();const root=image.root,path=requireNativeStoragePathV1(root,join(root,protocol.filename)),gatePath=requireNativeStoragePathV1(root,join(root,protocol.gateFilename)),backing=await image.port.observe({version:1,root,leaseDirectory,capacityBytes:image.maximumPhysicalBytes,maximumWorkspaceBytes:image.filesystemBytes,maximumArtifactBytes:image.filesystemBytes},control);if(!backing||backing.root!==root||backing.maximumPhysicalBytes!==image.maximumPhysicalBytes)throw Error("Original enforcing optional graph image required");
  const check=()=>checkResourceLeaseControl(control),inventory=()=>inventoryV1(root,control),available=()=>{const space=nativeStatfsSyncV1(root);return space.bavail*space.bsize;},journalBound=bytes=>protocol.maximumJournalHeaderBytes+bytes/protocol.pageBytes*(protocol.pageBytes+protocol.journalPageOverheadBytes),metadataPeak=protocol.maximumDatabaseBytes+protocol.maximumGateDatabaseBytes+journalBound(protocol.maximumDatabaseBytes)+journalBound(protocol.maximumGateDatabaseBytes);
  check();const parent=lstatSync(root);if(!parent.isDirectory()||parent.isSymbolicLink()||realpathSync(root)!==root)throw Error("Original optional ledger ancestry required");

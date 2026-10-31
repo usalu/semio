@@ -1,0 +1,56 @@
+[
+  {
+    "name": "same-device-owned",
+    "root": true,
+    "control": true,
+    "storage": true,
+    "custody": true,
+    "lose": false,
+    "expected": true
+  },
+  {
+    "name": "foreign-root",
+    "root": false,
+    "control": true,
+    "storage": true,
+    "custody": true,
+    "lose": false,
+    "expected": false
+  },
+  {
+    "name": "expired-control",
+    "root": true,
+    "control": false,
+    "storage": true,
+    "custody": true,
+    "lose": false,
+    "expected": false
+  },
+  {
+    "name": "unissued-storage",
+    "root": true,
+    "control": true,
+    "storage": false,
+    "custody": true,
+    "lose": false,
+    "expected": false
+  },
+  {
+    "name": "foreign-store",
+    "root": true,
+    "control": true,
+    "storage": true,
+    "custody": false,
+    "lose": false,
+    "expected": false
+  },
+  {
+    "name": "lost-after-build",
+    "root": true,
+    "control": true,
+    "storage": true,
+    "custody": true,
+    "lose": true,
+    "expected": false
+  }
+]

@@ -1,7 +1,12 @@
+import hotTree from "./📥️hot.json";
+import restartProtocol from "./📥️restart.json";
+import startupCorpus from "./📥️startup.json";
+import Ajv from "ajv";
+import {Database} from "bun:sqlite";
 import {afterAll,describe,expect,test} from "bun:test";
 import {EventEmitter} from "node:events";
 import {PassThrough} from "node:stream";
-import {appendFileSync,mkdirSync,renameSync,rmSync,writeFileSync,lstatSync} from "node:fs";
+import {appendFileSync,mkdirSync,renameSync,rmSync,writeFileSync,lstatSync,symlinkSync} from "node:fs";
 import {spawn,spawnSync} from "node:child_process";
 import {createWatchSupervisorV1} from "../../🔭️watch/🟨️.mjs";
 import {POLICY_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
@@ -26,11 +31,12 @@ describe.skipIf(!native)("native watcher",()=>{
   const root=tempRoot("watch-basic-");roots.push(root);writeTree(root,{"src/a.ts":"a","src/old.ts":"o"});
   const{supervisor,seen}=make(root);const state=await supervisor.start();
   expect(state.trust).toBe("exact");
-  writeFileSync(root+"/src/new.ts","n");appendFileSync(root+"/src/a.ts","x");rmSync(root+"/src/old.ts");renameSync(root+"/src/new.ts",root+"/src/moved.ts");mkdirSync(root+"/lib/deep",{recursive:true});writeFileSync(root+"/lib/deep/f.ts","f");
+  writeFileSync(root+"/src/new.ts","n");appendFileSync(root+"/src/a.ts","x");rmSync(root+"/src/old.ts");renameSync(root+"/src/new.ts",root+"/src/moved.ts");for(const directory of hotTree.directories)mkdirSync(root+"/"+directory,{recursive:true});writeTree(root,hotTree.files);
   mkdirSync(root+"/node_modules/x",{recursive:true});writeFileSync(root+"/node_modules/x/y.js","y");mkdirSync(root+"/.git",{recursive:true});writeFileSync(root+"/.git/HEAD","h");
   await supervisor.fence();await supervisor.drained();
   const paths=new Set(seen.map(r=>r[2]));
-  for(const expected of["src/a.ts","src/old.ts","src/moved.ts","lib","lib/deep/f.ts"])expect(paths.has(expected)).toBe(true);
+  expect(new Ajv({strict:true}).validate({type:"object",additionalProperties:false,required:["directories","files","expected"],properties:{directories:{type:"array",items:{type:"string"}},files:{type:"object",additionalProperties:{type:"string"}},expected:{type:"array",items:{type:"string"}}}},hotTree)).toBe(true);
+  for(const expected of["src/a.ts","src/old.ts","src/moved.ts",...hotTree.expected])expect(paths.has(expected),expected).toBe(true);
   expect(seen.find(r=>r[2]==="lib")![1]).toBe(1);
   expect([...paths].some(p=>p.includes("node_modules")||p.startsWith(".git"))).toBe(false);
   await supervisor.stop();
@@ -71,22 +77,25 @@ describe.skipIf(!native)("native watcher",()=>{
   const exited=new Promise<number|null>(resolve=>child.once("exit",resolve));
   child.stdin.end();
   expect(await Promise.race([exited,sleep(2000).then(()=>"timeout")])).toBe(0);
-  const script=`import {spawn} from "node:child_process";const c=spawn(${JSON.stringify(WATCHER)},["watch","--root",${JSON.stringify(root)}],{stdio:["pipe","pipe","ignore"]});c.stdout.once("data",()=>{console.log(c.pid);setTimeout(()=>process.kill(process.pid,"SIGKILL"),50);});`;
-  const out=await new Promise<string>(resolve=>{const p=spawn("bun",["-e",script],{stdio:["ignore","pipe","ignore"]});let text="";p.stdout.on("data",c=>text+=c);p.on("exit",()=>resolve(text.trim()));});
-  const pid=Number(out);expect(pid).toBeGreaterThan(1);
+  const script=`import {spawn} from "node:child_process";const c=spawn(${JSON.stringify(WATCHER)},["watch","--root",${JSON.stringify(root)}],{stdio:["pipe","pipe","ignore"]});c.stdout.once("data",()=>{process.stdout.write(String(c.pid)+"\\n",()=>setTimeout(()=>process.kill(process.pid,"SIGKILL"),50));});`;
+  const out=await new Promise<{stdout:string;stderr:string}>((resolve,reject)=>{const p=spawn(process.execPath,["-e",script],{env:{...process.env,FORCE_COLOR:"1"},stdio:["ignore","pipe","pipe"]});let stdout="",stderr="";p.stdout.on("data",c=>stdout+=c);p.stderr.on("data",c=>stderr+=c);p.on("error",reject);p.on("close",()=>resolve({stdout:stdout.trim(),stderr}));});
+  const pid=Number(out.stdout);expect(pid,out.stderr).toBeGreaterThan(1);
   expect(await waitFor(()=>{try{process.kill(pid,0);return false;}catch{return true;}},3000)).toBe(true);
  },15000);
 
- test("a restarted watcher replays what happened while it was away",async()=>{
+ test("restart replays persistent history or explicitly requires independent reconciliation",async()=>{
   const root=tempRoot("watch-replay-");roots.push(root);mkdirSync(root+"/src");
   const first=make(root);await first.supervisor.start();writeFileSync(root+"/src/a","1");await first.supervisor.fence();await first.supervisor.drained();
   const saved={cursor:first.supervisor.state().cursor,uuid:first.supervisor.state().uuid};await first.supervisor.stop();
   for(let i=0;i<30;i++)writeFileSync(root+"/src/off"+i,"x");
   await sleep(300);
   const second=make(root,{restore:saved});const state=await second.supervisor.start();
-  expect(state.replay).toBe(true);
-  expect(await waitFor(()=>second.seen.filter(r=>r[2].startsWith("src/off")).length>=30,3000)).toBe(true);
-  expect(second.losses).toEqual([]);
+  await second.supervisor.drained();const db=new Database(":memory:");try{
+   expect(new Ajv({strict:true}).validate({type:"array",items:{type:"object",additionalProperties:false,required:["backend","history"],properties:{backend:{enum:["inotify","rdcw","fsevents"]},history:{type:"boolean"}}}},restartProtocol)).toBe(true);
+   const row=restartProtocol.find(row=>row.backend===state.backend);expect(row).toBeDefined();const oracle=db.query("SELECT ?1 AND length(?2)>0 AND length(?3)>0 replay").get(row!.history?1:0,saved.cursor,saved.uuid) as {replay:number};expect(state.replay).toBe(Boolean(oracle.replay));
+   if(state.replay){expect(await waitFor(()=>second.seen.filter(r=>r[2].startsWith("src/off")).length>=30,3000)).toBe(true);expect(second.losses).toEqual([]);}
+   else{expect(second.losses).toEqual(["restart:"]);const scan=spawnSync(WATCHER,["scan","--root",root,"--exclude",".git","--exclude-name","node_modules"],{encoding:"utf8"});expect(scan.status).toBe(0);const actual=JSON.parse(scan.stdout).members.map((row:[string,number])=>row[0]).filter((path:string)=>path.startsWith("src/off")).sort(),expected=[...snapshot(root,path=>filter.excluded(path)).files.keys()].filter(path=>path.startsWith("src/off")).sort();expect(actual).toEqual(expected);expect(expected).toHaveLength(30);}
+  }finally{db.close();}
   await second.supervisor.stop();
  });
 
@@ -131,6 +140,40 @@ function fakeChild(script:(child:any)=>void){
 }
 const frame=(child:any,value:unknown)=>child.stdout.write(JSON.stringify(value)+"\n");
 const ready={v:1,t:"ready",backend:"fsevents",root:"/x",cursor:"1",uuid:"U",replay:false,latencyMs:5,native:true};
+
+describe("funded startup lifecycle model",()=>{
+ for(const row of startupCorpus.cases)test(row.name,async()=>{
+  const db=new Database(":memory:"),root=tempRoot("watch-start-");roots.push(root);
+  const abort=new AbortController();if(row.abort===0)abort.abort(Error("owner cancelled"));
+  const born=performance.now();let launched=0,readyTimer:ReturnType<typeof setTimeout>|undefined;
+  const remaining=()=>row.remaining===null?null:Math.max(0,row.remaining-(performance.now()-born));
+  const expected=db.query("select (?1 is not null and ?1>0 and ?2<?1 and (?3 is null or ?3>?2)) accepted").get(row.remaining,row.ready,row.abort) as {accepted:number};
+  expect(Boolean(expected.accepted)).toBe(row.accepted);
+  const{supervisor}=make(root,{policy:{...policy,fenceTimeoutMilliseconds:startupCorpus.fenceMilliseconds},startupControl:{signal:abort.signal,remainingMilliseconds:remaining},binary:"scripted-model",spawnProcess:()=>{
+   launched++;const child=fakeChild(child=>{readyTimer=setTimeout(()=>frame(child,ready),row.ready);});
+   child.stdin.end=()=>{clearTimeout(readyTimer);queueMicrotask(()=>child.emit("exit",0));};return child;
+  }});
+  const cancel=row.abort!==null&&row.abort>0?setTimeout(()=>abort.abort(Error("owner cancelled")),row.abort):undefined;
+  try{
+   const state=await supervisor.start();expect(state.backend==="fsevents").toBe(row.accepted);expect(launched>0).toBe(row.launched);
+   expect(state.trust).not.toBe("exact");
+   if(row.accepted)expect(supervisor.stats.fenceMisses).toBe(1);
+  }finally{clearTimeout(cancel);await supervisor.stop();db.close();}
+ });
+ test("retired timers and frames cannot settle a later launch",async()=>{
+  const root=tempRoot("watch-start-generation-");roots.push(root);const timing=startupCorpus.lifecycle,timers:ReturnType<typeof setTimeout>[]=[];let launches=0;
+  const{supervisor}=make(root,{policy:{...policy,fenceTimeoutMilliseconds:timing.fence},binary:"scripted-model",spawnProcess:()=>{
+   const generation=++launches,child=fakeChild(child=>{
+    timers.push(setTimeout(()=>frame(child,{...ready,cursor:generation===1?"first":"second"}),generation===1?timing.firstReady:timing.secondReady));
+    if(generation===1){timers.push(setTimeout(()=>child.emit("exit",1),timing.firstExit));timers.push(setTimeout(()=>frame(child,{...ready,cursor:"stale"}),timing.staleReady));}
+   });child.stdin.end=()=>queueMicrotask(()=>child.emit("exit",0));return child;
+  }});
+  const born=performance.now();try{
+   await supervisor.start();await sleep(Math.max(0,timing.checkpoint-(performance.now()-born)));expect(supervisor.state().cursor).toBe("first");
+   await sleep(Math.max(0,timing.settled-(performance.now()-born)));expect(launches).toBe(2);expect(supervisor.state().cursor).toBe("second");
+  }finally{timers.forEach(clearTimeout);await supervisor.stop();}
+ });
+});
 
 describe("supervisor against a scripted watcher",()=>{
  test("a watch limit makes the trust permanent verify: unwatched directories can never be vouched for",async()=>{
@@ -182,5 +225,24 @@ describe("supervisor against a scripted watcher",()=>{
    const{supervisor}=make(root,{backend});const state=await supervisor.start();
    expect(state.trust).not.toBe("exact");expect((await supervisor.fence()).ok).toBe(false);await supervisor.stop();
   }
+ });
+});
+
+describe("strict workspace watch custody",()=>{
+ test("private physical fence ancestry refuses symlinks before any native launch",async()=>{
+  const root=tempRoot("watch-fence-link-"),outside=tempRoot("watch-outside-");roots.push(root,outside);symlinkSync(outside,root+"/private",process.platform==="win32"?"junction":"dir");let launches=0;
+  const{supervisor}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",fenceDirectory:"private/f",spawnProcess:()=>{launches++;throw Error("Unowned native launch");}});
+  try{await expect(supervisor.start()).rejects.toThrow("No-follow");expect(launches).toBe(0);}finally{await supervisor.stop();}
+ });
+
+ test("a missing physical canary refuses startup without a portable backend",async()=>{
+  const root=tempRoot("watch-strict-");roots.push(root);let launches=0;
+  const{supervisor}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",spawnProcess:()=>{launches++;return fakeChild(child=>frame(child,ready));}});
+  try{await expect(supervisor.start()).rejects.toThrow("physical canary");expect(supervisor.state().backend).toBe("fsevents");expect(supervisor.state().trust).toBe("verify");expect(launches).toBe(1);}finally{await supervisor.stop();}
+ });
+ test("a native coverage loss permanently refuses every later fence",async()=>{
+  const root=tempRoot("watch-strict-loss-");roots.push(root);
+  const{supervisor,losses}=make(root,{binary:"fake",privateFence:true,failureMode:"terminal",spawnProcess:()=>fakeChild(child=>{frame(child,ready);frame(child,{v:1,t:"lost",at:1,reason:"registration-error",scope:"source"});})});
+  try{await expect(supervisor.start()).rejects.toThrow("coverage");await expect(supervisor.fence()).rejects.toThrow("coverage");expect(losses).toEqual(["registration-error:source"]);expect(supervisor.state().trust).toBe("verify");}finally{await supervisor.stop();}
  });
 });

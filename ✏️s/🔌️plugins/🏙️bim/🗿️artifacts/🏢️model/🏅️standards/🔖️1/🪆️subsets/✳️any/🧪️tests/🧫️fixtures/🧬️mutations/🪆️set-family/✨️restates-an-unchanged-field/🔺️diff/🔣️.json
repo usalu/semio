@@ -1,8 +1,10 @@
 {
   "families": {
     "fam-table": {
-      "category": "Equipment",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "category": "Equipment"
+      }
     }
   }
 }

@@ -17703,10 +17703,12 @@ dependencies = [
  "semio-framework-plugin-scrub-host",
  "semio-framework-plugin-time-travel",
  "semio-framework-plugin-tool-run",
+ "semio-framework-plugin-tool-run-operations",
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-config-mutation",
  "semio-framework-plugin-window-transient",
  "semio-framework-tool-machine",
+ "semio-framework-tool-typing-edit",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-value",
@@ -20500,6 +20502,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-typing-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-decl-emission",
+ "semio-framework-plugin-tool-run",
+ "semio-framework-tool-machine",
+ "semio-framework-tool-typing-edit",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-plugin-window-config"
 version = "0.1.0"
 dependencies = [
@@ -21953,6 +21970,16 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
+]
+
+[[package]]
+name = "semio-framework-tool-typing-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-tool-machine",
+ "semio-framework-value",
 ]
 
 [[package]]

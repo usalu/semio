@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import actor from "../../../📤️receipt/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };

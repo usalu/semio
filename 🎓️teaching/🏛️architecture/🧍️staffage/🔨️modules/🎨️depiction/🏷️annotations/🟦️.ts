@@ -5,7 +5,7 @@
  * @see ../../📐️units/🟦️.ts — text sizes and line weights
  * @see ../../🔗️contracts/🟦️.ts — {@link Legend}
  */
-import { formatNumber, decimalsFor, lineWeightMm, LABEL_TEXT_MM, ANNOTATION_TEXT_MM } from "../../📐️units/🟦️.ts";
+import { formatNumber, decimalsFor, LABEL_TEXT_MM, ANNOTATION_TEXT_MM, ANNOTATION_PEN_MM } from "../../📐️units/🟦️.ts";
 import type { Legend } from "../../🔗️contracts/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
 import { mix, wrap } from "../🖍️palette/🟦️.ts";
@@ -36,7 +36,7 @@ export function dimensionLine(canvas: Canvas, ctx: Ctx): void {
   const { state, k, language, colours, options } = ctx;
   const box = canvas.box;
   if (box === null) return;
-  const w = lineWeightMm(options.scale, "detail") ?? 0.13;
+  const w = ANNOTATION_PEN_MM;
   const stroke = { color: colours.ink, widthMm: w, cap: "butt" as const };
   const x = box.maxX + 3;
   const top = -state.bounds.maxY * k;
@@ -59,7 +59,7 @@ export function scaleBar(canvas: Canvas, ctx: Ctx, x: number, y: number): number
   const metres = scaleBarMetres(options.scale.denominator);
   const n = segmentsFor(metres);
   const step = (metres * k) / n;
-  const w = lineWeightMm(options.scale, "detail") ?? 0.13;
+  const w = ANNOTATION_PEN_MM;
   const height = 1.2;
   for (let i = 0; i < n; i++) {
     const pts = [{ x: x + i * step, y }, { x: x + (i + 1) * step, y }, { x: x + (i + 1) * step, y: y + height }, { x: x + i * step, y: y + height }];
@@ -98,7 +98,7 @@ export function legendColour(legend: Legend, value: number): string {
 /** 🧾️ A legend block: title with unit, colour bar with min / centre / max ticks, sign convention and interpretation; returns the height used. */
 export function legendBlock(canvas: Canvas, ctx: Ctx, legend: Legend, id: string, x: number, y: number): number {
   const { language, colours, options } = ctx;
-  const w = lineWeightMm(options.scale, "detail") ?? 0.13;
+  const w = ANNOTATION_PEN_MM;
   canvas.text("legend", `${id}:title`, { x, y: y + ANNOTATION_TEXT_MM }, `${legend.title[language]} [${legend.unit}]`, ANNOTATION_TEXT_MM, colours.ink, { weight: "bold" });
   const barY = y + ANNOTATION_TEXT_MM + 1.6;
   const barH = 2.4;
@@ -119,7 +119,13 @@ export function legendBlock(canvas: Canvas, ctx: Ctx, legend: Legend, id: string
     canvas.text("legend", `${id}:tick-label-${i}`, { x: tx + (i === 0 ? 0.4 : i === ticks.length - 1 ? -0.4 : 0), y: barY + barH + 2.6 }, formatNumber(value, Math.min(decimals, 4), language), LABEL_TEXT_MM, colours.ink, { anchor: i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle" });
   });
   let cursor = barY + barH + 2.6 + 1.2;
-  const lines = [...wrap(legend.convention[language], LEGEND_WRAP), ...wrap(legend.interpretation[language], LEGEND_WRAP)];
+  const de = language === "de";
+  const lines = [
+    ...wrap(legend.convention[language], LEGEND_WRAP),
+    ...wrap(legend.interpretation[language], LEGEND_WRAP),
+    ...(legend.conditions === undefined ? [] : wrap(`${de ? "Bedingungen" : "Conditions"}: ${legend.conditions[language]}`, LEGEND_WRAP)),
+    ...(legend.assumptions ?? []).flatMap((assumption) => wrap(`${de ? "Annahme" : "Assumption"}: ${assumption[language]}`, LEGEND_WRAP)),
+  ];
   lines.forEach((line, i) => {
     cursor += 2.6;
     canvas.text("legend", `${id}:line-${i}`, { x, y: cursor }, line, LABEL_TEXT_MM, colours.ink);

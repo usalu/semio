@@ -36,6 +36,14 @@ describe("course shell", () => {
     expect(open).toHaveBeenCalledTimes(openings);
   });
 
+
+  it("opens the card when its heading link is clicked with a plain primary click", async () => {
+    const open = vi.fn();
+    render(<CourseCard id="card-title" card="learner" href="#learner" title="Learner" icon={null} onOpen={open} />);
+    await userEvent.setup().click(screen.getByRole("link", { name: "Learner" }));
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
   it.each(fixture.locales)("opens the $locale course with a dedicated quiz section", ({ locale, home, quizzes }) => {
     const language = locale as "en" | "de";
     const session = { open: vi.fn(), refreshLeaderboard: vi.fn(async () => ({ answered: true })), refreshCrowd: vi.fn(async () => undefined) } as unknown as CourseSession;

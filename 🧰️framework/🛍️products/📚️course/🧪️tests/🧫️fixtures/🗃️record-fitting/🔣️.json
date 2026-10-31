@@ -1,0 +1,30 @@
+[
+  {
+    "name": "sixteen German headers in a wide card",
+    "available": 1800,
+    "content": 2434,
+    "minimum": false,
+    "folded": true
+  },
+  {
+    "name": "all columns fit in a wider card",
+    "available": 2600,
+    "content": 2434,
+    "minimum": false,
+    "folded": false
+  },
+  {
+    "name": "minimum reading tier still folds a short table",
+    "available": 420,
+    "content": 300,
+    "minimum": true,
+    "folded": true
+  },
+  {
+    "name": "exact fit remains a table",
+    "available": 900,
+    "content": 900,
+    "minimum": false,
+    "folded": false
+  }
+]

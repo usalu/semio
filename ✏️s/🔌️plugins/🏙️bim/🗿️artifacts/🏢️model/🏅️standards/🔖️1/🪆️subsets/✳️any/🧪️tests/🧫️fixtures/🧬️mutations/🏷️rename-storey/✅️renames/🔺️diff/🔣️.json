@@ -2,7 +2,9 @@
   "storeys": {
     "st-first": {
       "entry": "Patched",
-      "name": "Upper Floor"
+      "value": {
+        "name": "Upper Floor"
+      }
     }
   }
 }

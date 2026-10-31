@@ -1,0 +1,14 @@
+# Source Capture Parser Attribution — 2026-10-29
+
+Read current canonical capture, memo, literal-site scanner and runtime-host adapters without executing parser/probe/gate. source.capture profile encloses captureNxAuthorizerSourcesV1; source.served emits only after memo replay returns or full capture finishes, so its absence does not localize one file. Fresh capture handles JSON via JSON.parse, runtime DATA discovery via bounded filesystem/regex, bare package location through runtimeResolveV1 (Bun.resolveSync), and literal sites via Transpiler. Memo implementation identity hashes configured Source bytes plus runtimeKey; no transform is present there. Imported adapters may still parse on lazy module load.
+
+Concrete untagged seam: closureLiteralSitesV1 creates new TranspilerV1 on line16 outside its try. Only scan/scanImports on line17 receive sourcePath/sourceLoader diagnostics. Transpiler constructor calls requireRuntimeMember, which can cold-load runtime adapter through createRequire; Bun adapter then cold-loads tooling module through createRequire and constructs actual Bun.Transpiler with loader/target/defines. Any constructor or lazy-module parse error can therefore arise during source.capture without the scanner annotation. A probe whose runtime adapter/tooling are already loaded may not reproduce that cold path even if it scans/transforms every captured file successfully.
+
+Next useful actual observation is bounded phase attribution around constructor/adapter/tooling load versus scan, retaining the exact exception rather than guessing a source from anonymous input.ts:2. Capture manifest/import bytes, generated loader full parse and memo proof remain distinct evidence; no stale memo or invalid captured file is established by this Source trace. Root/backend received exact seams. No Source edit, diagnostic retry, cache mutation or heavy execution performed.
+
+
+## Later Current Capture And Metadata Overlay Scope
+
+Root35703 passed source.capture/source.served and entered graph planning. The prior anonymous parser failure therefore remains historical/unattributed; no constructor catch/Source churn is warranted without actual recurrence.
+
+Read canonical Bun captured loader115–118 for the proposed dependency-binding metadata-overlay hypothesis. capturedFs spreads real fs and overrides readFileSync/readFile/promises readFile; lstatSync and realpathSync remain real functions in this implementation. Its captured Source image checks do not synthesize ancestor-directory metadata. Thus this particular loader cannot alone explain a real symlink appearing as a synthetic directory. No second metadata overlay implementation was located in the bounded inspected framework production Source; a distinct generated Node/compiler loader needs its exact owner path before concluding equivalence. Actual35703 binding coordinates remain necessary; no guard change/probe/repair was performed.

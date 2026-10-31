@@ -137,7 +137,7 @@ test("undefined optional lanes remain absent during sequential composition", () 
 });
 
 test("mutation and diff decimal transports satisfy their schema-first contracts", async () => {
-  const {default:Ajv}=await import("ajv/dist/2020.js"),ajv=new Ajv({strict:false});
+  const {default:Ajv}=await import("ajv"),ajv=new Ajv({strict:false});
   const snapshotSchema=await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json();ajv.addSchema(snapshotSchema);
   ajv.addSchema(await Bun.file(new URL("../../🧬️schema/🏷️templates/✍️apply/🔣️.json",import.meta.url)).json());
   const diffSchema=await Bun.file(new URL("../../🧬️schema/🔺️diff/🔣️.json",import.meta.url)).json();ajv.addSchema(diffSchema);
@@ -232,7 +232,7 @@ test("base-free absorption refuses malformed coordinate identity and overlap dom
 
 
 test("omitted complex fields admit native transport and restore canonical empty collections",async()=>{
- const before=graph();before.entities=[{id:BigInt(fixture.omittedComplex.id),name:fixture.omittedComplex.name,args:fixture.omittedComplex.args.map(value=>({kind:"integer",value:BigInt(value.value)}))}];const{default:Ajv}=await import("ajv/dist/2020.js"),validate=new Ajv({strict:false}).compile(await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json());expect(validate(wire(before))).toBe(true);
+ const before=graph();before.entities=[{id:BigInt(fixture.omittedComplex.id),name:fixture.omittedComplex.name,args:fixture.omittedComplex.args.map(value=>({kind:"integer",value:BigInt(value.value)}))}];const{default:Ajv}=await import("ajv"),validate=new Ajv({strict:false}).compile(await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json());expect(validate(wire(before))).toBe(true);
  const canonical=applyIfcDiff(before,{}),mutation={mutation:"setEntityArg" as const,id:1n,index:0,value:integer(8)},diff=ifcMutationDiff(before,mutation),after=applyIfcMutation(before,mutation);expect(canonical.entities[0]!.complex).toEqual([]);expect(after.entities[0]!.complex).toEqual([]);expect(applyIfcDiff(after,inverseIfcDiff(before,diff))).toEqual(canonical);
  const oracle=applyPatch(wire(before),[{op:"add",path:"/entities/0/complex",value:[]},{op:"replace",path:"/entities/0/args/0/value",value:"8"}]).newDocument;expect(wire(after)).toEqual(oracle);const history=await IfcEditHistory.create(before);await history.executeAsync(mutation,0);await history.undoAsync(1);expect(history.snapshot).toEqual(canonical);
 });

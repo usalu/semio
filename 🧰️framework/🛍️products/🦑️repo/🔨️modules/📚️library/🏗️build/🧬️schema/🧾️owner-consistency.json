@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Build Owner Registry Consistency Cases V1",
   "description": "Language-agnostic cases for the law that every manifest-bearing module has exactly one row in the build owner registry and every row names a live manifest. A file value is raw text, or a JSON value that is serialized as the file text. A finding is written `kind:subject` where the subject is the owner name when the finding has one and the path otherwise.",
   "type": "object",

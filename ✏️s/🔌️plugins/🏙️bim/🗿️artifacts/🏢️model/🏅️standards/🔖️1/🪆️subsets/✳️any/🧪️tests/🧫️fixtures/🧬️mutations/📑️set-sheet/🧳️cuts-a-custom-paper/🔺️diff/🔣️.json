@@ -2,10 +2,12 @@
   "sheets": {
     "sh-1": {
       "entry": "Patched",
-      "paper": {
-        "Custom": {
-          "height": 400.0,
-          "width": 600.0
+      "value": {
+        "paper": {
+          "Custom": {
+            "height": 400,
+            "width": 600
+          }
         }
       }
     }

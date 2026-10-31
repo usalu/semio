@@ -1,0 +1,16 @@
+import {readFileSync,lstatSync} from "node:fs";
+import {readdir,lstat,writeFile,mkdir,mkdtemp,rm} from "node:fs/promises";
+import {join,resolve} from "node:path";
+import ts from "typescript";
+import {transformSync} from "esbuild";
+import _ from "lodash";
+import {evaluateExtractedFunctionV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🧩️extracted-function/🟦️.ts";
+import {nativeDirectoryProtocolV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📋️contract/🟦️.ts";
+const owner=resolve("🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🟦️.ts"),source=ts.createSourceFile(owner,readFileSync(owner,"utf8"),ts.ScriptTarget.Latest,true),code=(name:string)=>transformSync(source.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text===name)!.getText(source),{loader:"ts",format:"cjs"}).code,protocol=nativeDirectoryProtocolV1(),append=evaluateExtractedFunctionV1(code("appendNativeDirectoryEntryV1"),"appendNativeDirectoryEntryV1",{protocol}),area=await mkdtemp(join(resolve(process.argv[2]!),"walk-bench-")),files:string[]=[],directories:string[]=[area],samples:{name:string;wallMilliseconds:number;row:unknown;statCalls:number}[]=[];
+try{
+ for(let group=0;group<64;group++){const directory=join(area,"d"+group);await mkdir(directory);directories.push(directory);for(let file=0;file<256;file++){const p=join(directory,"f"+file);if(p.length>256)throw Error("Bounded benchmark path required");files.push(p);}}
+ let cursor=0;await Promise.all(Array.from({length:16},async()=>{for(let i=cursor++;i<files.length;i=cursor++)await writeFile(files[i]!,"data");}));
+ const expected=[...directories,...files],oracle=expected.reduce((sum,path)=>{const value=lstatSync(path,{bigint:true});sum.allocatedBytes+=Number(value.blocks)*512;sum.logicalBytes+=value.isFile()?Number(value.size):0;sum.entries++;return sum;},{allocatedBytes:0,logicalBytes:0,entries:0});
+ for(let round=0;round<3;round++)for(const name of round%2?["append","join"]:["join","append"]){const calls:string[]=[],port={list:(path:string)=>readdir(path),stat:async(path:string)=>{calls.push(path);return lstat(path,{bigint:true});}},walk=evaluateExtractedFunctionV1(code("measureNativeDirectoryUsageAsyncV1"),"measureNativeDirectoryUsageAsyncV1",{protocol,resolve,join,systemWalk:port,vanished:(error:{code?:string})=>["ENOENT","ENOTDIR"].includes(error?.code??""),appendNativeDirectoryEntryV1:name==="append"?append:(prefix:string,leaf:string)=>join(prefix,leaf)}),start=performance.now(),row=await walk(area,{port});const elapsed=performance.now()-start;if(JSON.stringify(row)!==JSON.stringify(oracle)||_.xor(calls,expected).length||calls.length!==expected.length)throw Error("Actual walker entry/byte/stat oracle mismatch");samples.push({name,wallMilliseconds:elapsed,row,statCalls:calls.length});}
+ console.log(JSON.stringify({version:1,scope:"actual extracted walker, identical bounded scratch and all stat paths, private path dependency comparison only; not Native authority",samples,summaries:["join","append"].map(name=>({name,medianMilliseconds:_.sortBy(samples.filter(row=>row.name===name),"wallMilliseconds")[1]!.wallMilliseconds})),oracle}));
+}finally{await rm(area,{recursive:true,force:true});}

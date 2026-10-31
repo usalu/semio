@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/machine.json",
+      "sha256": "ec6dbe6feb02a16a1fced8b2a916928fdb903e5dad8bfa4fe96c4809237db327",
+      "pointer": "",
+      "value": {
+        "schema": "IFC4X3_ADD2",
+        "complete": false,
+        "valid": true,
+        "results": [],
+        "diagnostics": []
+      },
+      "ajv": false,
+      "owned": true,
+      "ajvErrors": [
+        {
+          "instancePath": "/valid",
+          "schemaPath": "#/allOf/0/then/properties/valid/const",
+          "keyword": "const",
+          "params": {
+            "allowedValue": false
+          },
+          "message": "must be equal to constant"
+        }
+      ],
+      "ownedErrors": [],
+      "cause": "owned compileJsonSchemaSubset does not enforce if/then/else"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🪪️bindings/🧬️schema/🔣️.json",
+      "sha256": "cdc940f3699d716d14fab423729ad2e05b428a615a0a31c10bd917e6a9508cbb",
+      "pointer": "",
+      "value": {
+        "channel": "ownedDeclaration",
+        "contributor": "a",
+        "artifactKind": null,
+        "apps": [],
+        "schema": "a",
+        "dialect": "a",
+        "nativeIdentity": {
+          "kind": "typed",
+          "owner": "a"
+        },
+        "sqliteSchema": "a",
+        "factory": "a"
+      },
+      "ajv": false,
+      "owned": true,
+      "ajvErrors": [
+        {
+          "instancePath": "/artifactKind",
+          "schemaPath": "#/allOf/2/then/properties/artifactKind/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        }
+      ],
+      "ownedErrors": [],
+      "cause": "owned compileJsonSchemaSubset does not enforce if/then/else"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️rust-source-direction/🔣️.json",
+      "sha256": "639332ea596669980efa1e4ca23a4ef017e5e2409d82e54bd75a9f4a41a4aaec",
+      "pointer": "/$defs/participationProjection",
+      "value": {
+        "target": {
+          "kind": "source",
+          "path": ""
+        },
+        "crateRoot": "",
+        "manifestPath": "",
+        "modulePath": [],
+        "sourceScope": [],
+        "mount": "root",
+        "state": "denied",
+        "reason": null
+      },
+      "ajv": false,
+      "owned": true,
+      "ajvErrors": [
+        {
+          "instancePath": "",
+          "schemaPath": "#/oneOf/0/additionalProperties",
+          "keyword": "additionalProperties",
+          "params": {
+            "additionalProperty": "crateRoot"
+          },
+          "message": "must NOT have additional properties"
+        },
+        {
+          "instancePath": "/reason",
+          "schemaPath": "#/oneOf/1/allOf/0/else/properties/reason/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "#/oneOf/1/allOf/0/if",
+          "keyword": "if",
+          "params": {
+            "failingKeyword": "else"
+          },
+          "message": "must match \"else\" schema"
+        },
+        {
+          "instancePath": "",
+          "schemaPath": "#/oneOf",
+          "keyword": "oneOf",
+          "params": {
+            "passingSchemas": null
+          },
+          "message": "must match exactly one schema in oneOf"
+        }
+      ],
+      "ownedErrors": [],
+      "cause": "owned compileJsonSchemaSubset does not enforce if/then/else"
+    }
+  ]
+}

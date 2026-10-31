@@ -1,3 +1,9 @@
+import _ from "lodash";
+import carryFixture from "../🐕️pet-walk/🧰️pet-kit/🤏️carry/🧪️tests/🔣️.json";
+import {observeCarryTransportV1} from "../🐕️pet-walk/🧰️pet-kit/🤏️carry/🧪️tests/🟦️.ts";
+import geometry from "../🐕️pet-walk/📐️geometry/🔣️.json";
+import geometrySchema from "../🐕️pet-walk/📐️geometry/🧬️schema/🔣️.json";
+import {dropColumnV1,activeQuizIdsV1} from "../🐕️pet-walk/📐️geometry/🟦️.ts";
 /** 🐾️ The pets of the site fit its quizzes. Every species document and the ensemble of the architecture menagerie are
  * accepted by the draft-07 contract of the pets product through a third-party validator (ajv) and by the product's own
  * validators, and the menagerie the site ships is the one those documents assemble to, without an issue. Every ground a
@@ -379,4 +385,18 @@ describe("custom parachutes", () => {
     expect(speciesIssues(species)).toEqual([]);
     expect(validSpecies(species) ? [] : validSpecies.errors).toEqual([]);
   });
+});
+
+/** 📏️ The measured browser fixture selection agrees with an independent collection oracle. */
+it("pet browser geometry rejects short falls and limits measurements to the actual authored grid",()=>{
+ expect(new Ajv({strict:true}).compile(geometrySchema)(geometry)).toBe(true);
+ for(const row of geometry.drops){const columns=_.range(80,row.width-80,8).map(x=>{const floor=_.min(row.edges.filter(edge=>edge.left<=x&&edge.right>=x&&edge.top>row.top+40).map(edge=>edge.top))??Infinity;return{x,floor,y:Math.max(row.top,floor-row.height)};}).filter(value=>Number.isFinite(value.floor)&&value.floor-value.y>row.minimum),clear=columns.filter(value=>row.others.every(body=>value.x<body.left-row.reach||value.x>body.right+row.reach)),oracle=_.maxBy(clear.length?clear:columns,"floor")??null;expect(oracle,row.id).toEqual(row.expected);expect(dropColumnV1(row)??null,row.id).toEqual(oracle);}
+ for(const row of geometry.rosters){const refused=!row.observed.length||_.uniq(row.observed).length!==row.observed.length||_.difference(row.observed,row.authored).length>0;expect(refused,row.id).toBe(row.refused);if(refused)expect(()=>activeQuizIdsV1(row.observed,row.authored)).toThrow("Actual current authored quiz grid required");else expect(activeQuizIdsV1(row.observed,row.authored)).toEqual(row.expected);}
+});
+
+
+it("retains the default drag path and batches only lively trusted-input transport",async()=>{
+ expect(carryFixture.version).toBe(1);expect(carryFixture.cases.map(row=>row.mode)).toEqual(["default","paced","continuous"]);
+ const from={x:_.mean([carryFixture.body.left,carryFixture.body.right]),y:_.mean([carryFixture.body.top,carryFixture.body.bottom])};
+ for(const row of carryFixture.cases){const observed=await observeCarryTransportV1({...row,body:carryFixture.body,target:carryFixture.target});expect(observed.buttons).toEqual(["down"]);expect(observed.moves).toHaveLength(row.moves);expect(observed.frames).toHaveLength(row.frameCalls);expect(_.sum(observed.frames)).toBe(row.frames);expect(observed.moves[0]).toEqual(from);expect(observed.moves.at(-1)).toEqual(carryFixture.target);if(row.mode==="continuous"){expect(observed.moves[1]).toEqual({...carryFixture.target,steps:24});expect(observed.frames).toEqual([10]);}else expect(observed.moves.slice(1,25)).toEqual(_.range(1,25).map(step=>({x:from.x+(carryFixture.target.x-from.x)*step/24,y:from.y+(carryFixture.target.y-from.y)*step/24})));}
 });

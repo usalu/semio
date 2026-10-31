@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "symlink",
+      "matches": true,
+      "accepted": true
+    },
+    {
+      "kind": "symlink",
+      "matches": false,
+      "accepted": false
+    },
+    {
+      "kind": "directory",
+      "matches": false,
+      "accepted": false
+    },
+    {
+      "kind": "file",
+      "matches": false,
+      "accepted": false
+    }
+  ],
+  "unicode": {
+    "repetitions": 300,
+    "expectedPoints": 256
+  }
+}

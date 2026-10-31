@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    {"id":"plan-without-production","scope":"artifact-plan","production":false,"writer":true,"enter":false,"refused":false},
+    {"id":"declared-production-needs-writer","scope":"artifact-plan","production":true,"writer":true,"enter":false,"refused":true},
+    {"id":"actual-production-enters-writer","scope":"artifact-plan","production":true,"writer":true,"enter":true,"refused":false},
+    {"id":"compiler-still-needs-writer","scope":"compiler","production":false,"writer":true,"enter":false,"refused":true},
+    {"id":"compiler-enters-writer","scope":"compiler","production":false,"writer":true,"enter":true,"refused":false},
+    {"id":"port-without-writer","scope":"artifact-plan","production":true,"writer":false,"enter":true,"refused":false}
+  ]
+}

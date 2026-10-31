@@ -1,0 +1,12 @@
+const fs=require("node:fs"),path=require("node:path"),crypto=require("node:crypto"),ts=require("typescript");
+const directory=__dirname,inventory=JSON.parse(fs.readFileSync(path.join(directory,"🗑️generated/schema-definitions-inventory.json"),"utf8")),candidates=new Map(inventory.results.map(row=>[path.resolve(row.path),row.path]));
+const text=fs.readFileSync(path.join(directory,"🗑️generated/schema-definitions-product-consumers.bin"),"utf8"),matches=[...text.matchAll(/([^\0\n]+)\0(\d+)\0([^\n]*)\n/g)],files=[...new Set(matches.map(m=>m[1]))],memo=new Map();
+function dependencies(file,seen=new Set()){
+ if(candidates.has(file))return new Set([candidates.get(file)]);if(seen.has(file))return new Set();if(memo.has(file))return memo.get(file);seen=new Set(seen);seen.add(file);let source;try{source=fs.readFileSync(file,"utf8");}catch{return new Set();}const result=new Set(),ast=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true);
+ const literals=[];function collect(node){if(ts.isStringLiteralLike(node))literals.push(node.text);ts.forEachChild(node,collect);}collect(ast);
+ for(const literal of literals){const choices=[path.resolve(path.dirname(file),literal),path.resolve(literal)];for(const choice of choices)if(candidates.has(choice))result.add(candidates.get(choice));}
+ for(const node of ast.statements){if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteral(node.moduleSpecifier)){const spec=node.moduleSpecifier.text;if(spec.startsWith(".")){const name=path.resolve(path.dirname(file),spec),choices=[name,name+".ts",path.join(name,"🟦️.ts")],found=choices.find(p=>fs.existsSync(p)&&fs.lstatSync(p).isFile());if(found)for(const candidate of dependencies(found,seen))result.add(candidate);}}}
+ memo.set(file,result);return result;
+}
+const rows=[];for(const file of files){if(!fs.existsSync(file))continue;const deps=[...dependencies(path.resolve(file))];if(deps.length){const bytes=fs.readFileSync(file);rows.push({path:file,sha256:crypto.createHash("sha256").update(bytes).digest("hex"),schemas:deps,matches:matches.filter(m=>m[1]===file).map(m=>({line:Number(m[2]),text:m[3]}))});}}
+fs.writeFileSync(path.join(directory,"🗑️generated/schema-definitions-consumer-closure.json"),JSON.stringify({version:1,searched:files.length,consumers:rows},null,2)+"\n");console.log(JSON.stringify({searched:files.length,consumers:rows.length,rows:rows.map(({path,schemas,matches})=>({path,schemas,matches:matches.length}))}));

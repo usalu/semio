@@ -1,5 +1,9 @@
 # Acceptance Reconciliation Recommendation
 
+## Historical Snapshot Notice
+
+This is an earlier read-only audit, retained for chronology. Its pending statuses are superseded by the refreshed acceptance snapshot, current JSON and completion-gap-matrix-current-2026-10-29.md. It does not describe present service availability.
+
 Read-only comparison of acceptance opening table, current completion JSON and superseding execution/report evidence. No gate, handle poll or edit to acceptance/ledger. Status below is a snapshot of those records, not a fresh operational observation.
 
 ## Specific Contradictions To Supersede At The Top

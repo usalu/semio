@@ -3,7 +3,7 @@ import ts from"typescript";
 import{readFileSync,writeFileSync}from"node:fs";
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{createHash}from"node:crypto";
 import{mkdtemp,mkdir,writeFile,readFile,rm,link,symlink,stat,copyFile}from"node:fs/promises";
 import{join,win32,resolve}from"node:path";

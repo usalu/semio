@@ -1,0 +1,172 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "trace",
+    "before",
+    "nativeSpan",
+    "profileCases",
+    "wallSpans"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "trace": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "enum": [
+          "receive",
+          "admit",
+          "native",
+          "entries",
+          "store",
+          "birth",
+          "lease",
+          "body",
+          "lease:close",
+          "birth:close",
+          "store:close",
+          "entries:close"
+        ]
+      }
+    },
+    "before": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "native",
+          "materialized",
+          "store"
+        ]
+      }
+    },
+    "nativeSpan": {
+      "const": "nx.daemon.native"
+    },
+    "profileCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "failure",
+          "duration",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "disabled-success",
+              "enabled-success",
+              "enabled-failure"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "off",
+              "json"
+            ]
+          },
+          "failure": {
+            "type": "boolean"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "rows": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "anyOf": [
+                  {
+                    "const": "nx.daemon.native"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "wallSpans": {
+      "const": [
+        [
+          "nx.runtime-entry.capture",
+          [
+            "captureCompilerBuildSourceClosureV1",
+            "captureBuildSourceClosureV1"
+          ]
+        ],
+        [
+          "nx.runtime-entry.publication",
+          [
+            "buildSourceClosureTextV1"
+          ]
+        ],
+        [
+          "nx.runtime-entry.command",
+          [
+            "readCapturedRuntimeEntryCommandV1"
+          ]
+        ],
+        [
+          "nx.daemon.store",
+          [
+            "order.store"
+          ]
+        ],
+        [
+          "nx.daemon.birth",
+          [
+            "order.birth"
+          ]
+        ],
+        [
+          "nx.daemon.lease",
+          [
+            "order.lease"
+          ]
+        ],
+        [
+          "nx.store.image-open",
+          [
+            "openRepositoryCacheStoreImageV1"
+          ]
+        ],
+        [
+          "nx.store.reservation",
+          [
+            "repositoryCacheStoreReservationV1"
+          ]
+        ],
+        [
+          "nx.store.body-recheck",
+          [
+            "storage.recheck"
+          ]
+        ]
+      ]
+    }
+  }
+}

@@ -30,7 +30,7 @@ function disposeAll(): void { for (const sandbox of [...live.values()]) sandbox.
 
 /** 🏁️ Registers a callback for the end of the current test file, because some test runners end their process without running exit handlers. */
 function atTestEnd(callback: () => void): void {
-  try { runtimeTestApiV1()?.afterAll(callback); } catch {}
+  try { runtimeTestApiV1()?.afterAll(done => { callback(); done(); }); } catch {}
 }
 
 /** 📁️ Creates a unique sandbox under the root of the current agent session below the short host-wide parent (the session decides the root, so concurrent agents never share a directory and a gone session takes its sandboxes with it); it is detached, released and removed on disposal and when the process exits, and abandoned siblings of dead processes are reclaimed first. */

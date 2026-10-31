@@ -4,6 +4,8 @@
 //! @see ../🔣️.json — the normative contract
 
 use super::*;
+use super::scalars::nullable;
+use super::menagerie_and_terrain::meeting;
 
 //#region 🔖️Stage
 /// 🕰️ A tick of the stage clock on the wire: a whole number that is not negative (the contract's `minimum: 0`); in memory it is [`Ticks`], because it is subtracted from points in time that may lie ahead of it.

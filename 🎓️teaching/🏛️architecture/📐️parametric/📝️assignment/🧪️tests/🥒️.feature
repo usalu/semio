@@ -39,7 +39,7 @@ Feature: One parametrization exercise spans two matrices and one complete sixtee
     Then all sixteen exact canonical SVG paths are distinct within and across the tables
     And every source is bound to its family, variant, viewBox, path count and SHA256 hash
     And each table alternates dwelling capsule and ellipsoid capsule
-    And the authored resource plan derives 2048-pixel PNG resources from those unchanged SVGs
+    And the authored resource plan derives full-viewBox PNG resources from those unchanged SVGs at the smallest 16-pixel width bucket meeting 600 DPI in the 22 by 11 millimeter print box
     And global vertices one to eight repeat Table A and nine to sixteen repeat Table B
     And one horizontal oval spans the full text width with its vertical radius fixed at 53 millimetres
     And the complete graph contains all 240 ordered arcs including all 128 arcs between tables

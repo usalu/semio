@@ -1,4 +1,4 @@
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { describe, expect, it } from "vitest";
 import { hostTemporalFormatSchema as schema, hostTemporalFormatFixture as fixture } from "@semio-tech/ui/testing/fixtures";
 import {

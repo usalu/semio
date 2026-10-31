@@ -1,20 +1,22 @@
 {
   "walls": {
     "w-arc": {
-      "axis": {
-        "Arc": {
-          "bulge": 0.5,
-          "end": {
-            "x": 8.0,
-            "y": 2.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 2.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Arc": {
+            "bulge": 0.5,
+            "end": {
+              "x": 8,
+              "y": 2
+            },
+            "start": {
+              "x": 0,
+              "y": 2
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

@@ -380,9 +380,14 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                     let variant_attrs = parse_variant_attrs(&variant.attrs)?;
                     let wire_variant = variant_wire_name(&variant_ident.to_string(), &variant_attrs.rename, &container.rename_all);
                     let arm: syn::Result<proc_macro2::TokenStream> = match (&variant.fields, &container.content) {
-                        (Fields::Unit, Some(_)) => Ok(quote! {
-                            #wire_variant => Self::#variant_ident,
-                        }),
+                        (Fields::Unit, Some(_)) => {
+                            let deny_check = if container.deny_unknown_fields {
+                                deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)
+                            } else {
+                                quote! {}
+                            };
+                            Ok(quote! { #wire_variant => { #deny_check Self::#variant_ident }, })
+                        }
                         (Fields::Unit, None) => {
                             let deny_check = if container.deny_unknown_fields {
                                 deny_unknown_keys(&quote! { __entries }, std::slice::from_ref(tag), &value_crate)

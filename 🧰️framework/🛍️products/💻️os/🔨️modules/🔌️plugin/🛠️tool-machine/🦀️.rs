@@ -257,7 +257,7 @@ impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + Col
     /// 🧾️ Every open press's and run's provisional leaves in the overlay's fold order, in value form — what a derived view
     /// (a preview evaluated by a retained job) folds onto the committed document it reads; empty while nothing is open.
     pub fn provisional_values(&self) -> Vec<DslValue> {
-        let typing = self.typing.windows().filter_map(|window| self.typing.open(window)).flat_map(|state| state.entries.iter().map(|(_, leaf)| leaf));
+        let typing = self.typing.windows().filter_map(|window| self.typing.open(window)).flat_map(|state| state.net.iter());
         self.presses.provisional().filter_map(PressLeaf::member).chain(self.gestures.provisional()).chain(typing).map(semio_framework_value::ToValue::to_value).collect()
     }
 
@@ -300,7 +300,7 @@ impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + Col
         for window in self.typing.windows() {
             let state = self.typing.open(window).expect("a listed run is open");
             let checkpoint = running.clone();
-            if !state.entries.iter().all(|(_, leaf)| fold_leaf(committed, &mut running, &mut displaced, leaf)) {
+            if !state.net.iter().all(|leaf| fold_leaf(committed, &mut running, &mut displaced, leaf)) {
                 displaced.extend(std::mem::replace(&mut running, checkpoint));
                 conflicts.push(window.to_string());
             }

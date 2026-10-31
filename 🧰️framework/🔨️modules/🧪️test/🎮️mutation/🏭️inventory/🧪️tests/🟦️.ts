@@ -5,11 +5,11 @@ import {readFileSync} from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json";
 import wireSchema from "../../../🧬️schema/🔣️.json";
 import policySchema from "../🧬️schema/🎛️policy/🔣️.json";
-const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020");
+const require=createRequire(import.meta.url),Ajv=require("ajv");
 
 test("mutation inventory projections agree with independent SQLite and the runtime wire contract",()=>{
  const ajv=new Ajv({strict:true});
- const validateWire=ajv.compile({$schema:"https://json-schema.org/draft/2020-12/schema",$defs:wireSchema.$defs,$ref:"#/$defs/RuntimeMutationInventory"});
+ const validateWire=ajv.compile({$schema:wireSchema.$schema,$defs:wireSchema.$defs,$ref:"#/$defs/RuntimeMutationInventory"});
  for(const row of fixture.cases){expect(sqliteInventory(row)).toEqual(row.expected);expect(validateWire(row.expected)).toBe(true);}
 });
 test("resource policy requires finite positive work, owned bytes and time",()=>{

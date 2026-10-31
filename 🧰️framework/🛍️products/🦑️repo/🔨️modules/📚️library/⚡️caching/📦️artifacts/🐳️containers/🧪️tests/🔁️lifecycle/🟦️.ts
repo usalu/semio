@@ -92,7 +92,7 @@ export async function testDevcontainerDashboardOwnership(workspace: string): Pro
     assert.equal(container.mounts.some((mount: string) => mount.includes(state)), false, state);
   }
   assert.equal("SEMIO_GITKRAKEN_WORKSPACE_NAME" in container.containerEnv, false);
-  const policy=fixture.dashboardOnly.automaticHooks,require=createRequire(import.meta.url),validate=new(require("ajv/dist/2020").default)({strict:true}).compile(JSON.parse(readFileSync(join(import.meta.dir,"../../🔁️lifecycle/🧬️schema/🔣️.json"),"utf8")));
+  const policy=fixture.dashboardOnly.automaticHooks,require=createRequire(import.meta.url),validate=new(require("ajv").default)({strict:true}).compile(JSON.parse(readFileSync(join(import.meta.dir,"../../🔁️lifecycle/🧬️schema/🔣️.json"),"utf8")));
   assert.equal(validate(policy),true,JSON.stringify(validate.errors));
   const {Database}=await import("bun:sqlite"),database=new Database(":memory:");
   try{

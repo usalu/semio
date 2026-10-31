@@ -5,12 +5,14 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import type { Asset } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation } from "../../🧬️schema/🟦️.ts";
 import { clipOf, evaluate, poseOf } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const fixture = read("../../🧫️fixtures/🧮️evaluation-state/🔣️.json");
-const asset = read("../../🧫️fixtures/🚶️reference-walker/🔣️.json") as Asset;
+const asset = read("../../🧫️fixtures/👤️sample-figure/🔣️.json").asset as Asset;
+const at100 = { kind: "scale", scale: { denominator: 100 } } as const;
+const drawing = (asset.representations["100"] as AuthoredRepresentation).geometry;
 
 describe("🧮️ evaluation state", () => {
   it("is bit-for-bit deterministic", () => {
@@ -21,19 +23,19 @@ describe("🧮️ evaluation state", () => {
   });
 
   it("flattens capsules and ellipses finely enough and keeps authored order", () => {
-    const state = evaluate(asset, { kind: "pose", pose: "stand" });
+    const state = evaluate(asset, { kind: "pose", pose: "stand" }, at100);
     state.shapes.elevation.forEach((evaluated, index) => {
-      expect(evaluated.shape.id).toBe(asset.geometry.elevation[index]!.id);
+      expect(evaluated.shape.id).toBe(drawing.elevation[index]!.id);
       const kind = evaluated.shape.kind;
       if (kind === "capsule") expect(evaluated.rings[0]!.length).toBeGreaterThanOrEqual(fixture.ringMinimums.capsule);
       if (kind === "ellipse") expect(evaluated.rings[0]!.length).toBeGreaterThanOrEqual(fixture.ringMinimums.ellipse);
       expect(evaluated.closed).toBe(evaluated.shape.kind === "poly" ? evaluated.shape.closed : true);
     });
-    expect(state.shapes.plan.length).toBe(asset.geometry.plan!.length);
+    expect(state.shapes.plan.length).toBe((drawing.plan ?? []).length);
   });
 
   it("stands the pose on the ground and reports bounds that match the nominal dimensions", () => {
-    const state = evaluate(asset, { kind: "pose", pose: fixture.boundsPose });
+    const state = evaluate(asset, { kind: "pose", pose: fixture.boundsPose }, at100);
     expect(state.bounds.minY).toBeLessThan(0.005);
     expect(state.bounds.minY).toBeGreaterThan(-0.05);
     expect(state.bounds.maxY - state.bounds.minY).toBeCloseTo(asset.dimensions.heightM, 1);
@@ -76,7 +78,7 @@ describe("🧮️ evaluation state", () => {
   });
 
   it("reports unknown ids with the available ones", () => {
-    expect(() => poseOf(asset, fixture.unknown.pose)).toThrow(/reference-walker.*stand/);
+    expect(() => poseOf(asset, fixture.unknown.pose)).toThrow(/sample-figure.*stand/);
     expect(() => evaluate(asset, { kind: "clip", clip: fixture.unknown.clip, timeS: 0 })).toThrow(/walk, idle-breathing/);
   });
 });

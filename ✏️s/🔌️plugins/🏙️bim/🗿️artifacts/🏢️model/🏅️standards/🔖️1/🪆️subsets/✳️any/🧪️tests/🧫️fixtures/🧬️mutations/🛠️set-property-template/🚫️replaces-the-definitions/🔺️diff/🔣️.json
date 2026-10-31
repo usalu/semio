@@ -2,22 +2,24 @@
   "property_templates": {
     "pt-door": {
       "entry": "Patched",
-      "properties": [
-        {
-          "allowed": [],
-          "kind": "Text",
-          "name": "Reference",
-          "required": true
-        },
-        {
-          "allowed": [],
-          "kind": "Length",
-          "maximum": 2.5,
-          "minimum": 0.7,
-          "name": "Width",
-          "required": false
-        }
-      ]
+      "value": {
+        "properties": [
+          {
+            "allowed": [],
+            "kind": "Text",
+            "name": "Reference",
+            "required": true
+          },
+          {
+            "allowed": [],
+            "kind": "Length",
+            "maximum": 2.5,
+            "minimum": 0.7,
+            "name": "Width",
+            "required": false
+          }
+        ]
+      }
     }
   }
 }

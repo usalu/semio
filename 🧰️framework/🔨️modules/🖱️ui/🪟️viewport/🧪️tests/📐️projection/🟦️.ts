@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import jsonPatch from "fast-json-patch";
 import { Matrix4, OrthographicCamera, PerspectiveCamera } from "three";
 import schema from "../../🧊️3d/🧬️schema/🔣️.json" with { type: "json" };

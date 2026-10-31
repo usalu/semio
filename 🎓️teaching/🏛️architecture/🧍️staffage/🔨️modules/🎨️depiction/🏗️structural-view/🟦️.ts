@@ -9,7 +9,7 @@
  */
 import type { Slug, Text } from "../../../🧬️schema/🟦️.ts";
 import type { DiagramStation, EvaluatedState, Fill, Legend, MemberDiagram, Point, Reaction, StructuralResult, WorldForce } from "../../🔗️contracts/🟦️.ts";
-import { formatNumber, formatQuantity, lineWeightMm, LABEL_TEXT_MM, ANNOTATION_TEXT_MM } from "../../📐️units/🟦️.ts";
+import { formatNumber, formatQuantity, LABEL_TEXT_MM, ANNOTATION_TEXT_MM, ANNOTATION_PEN_MM } from "../../📐️units/🟦️.ts";
 import { freeBody, structuralLegend, type StructuralQuantity } from "../../🏗️structure/🟦️.ts";
 import { type Canvas, type Ctx, Labels, labelBudget } from "../🧱️canvas/🟦️.ts";
 import { overlayColours, type Scale, divergingColour, legendOf, mix, toneColour, tx, type Theme } from "../🖍️palette/🟦️.ts";
@@ -102,7 +102,7 @@ const local = (f: Frame, a: number, b: number): Vec => add(f.origin, add(scaleVe
 
 function drawSupports(canvas: Canvas, ctx: Ctx, result: StructuralResult, pressure: { readonly colour: (v: number) => string } | null): void {
   const { colours, options } = ctx;
-  const w = lineWeightMm(options.scale, "detail") ?? 0.13;
+  const w = ANNOTATION_PEN_MM;
   const stroke = { color: colours.ink, widthMm: w * 1.6, join: "miter" as const };
   for (const r of result.reactions) {
     const anchor = ctx.state.anchors[r.anchor]?.anchor;

@@ -192,6 +192,36 @@
         "receipt-removed",
         "capsule-removed"
       ]
+    },
+    "PresenceObservation": {
+      "description": "A bounded readonly Source-parent census; it grants no mutation authority.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "state",
+        "parents",
+        "entries"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "state": {
+          "enum": [
+            "empty",
+            "present"
+          ]
+        },
+        "parents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

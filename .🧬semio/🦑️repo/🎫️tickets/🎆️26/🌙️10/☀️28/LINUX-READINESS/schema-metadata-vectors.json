@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "optional quota default values",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json",
+      "pointer": "/definitions/OptionalQuota/definitions/DefaultPolicy/const",
+      "expected": {
+        "maximumBytes": 1073741824,
+        "lowWaterBytes": 536870912,
+        "minimumAvailableBytes": 1073741824,
+        "retirementWindowMilliseconds": 15000
+      }
+    },
+    {
+      "name": "optional quota protocol",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json",
+      "pointer": "/definitions/OptionalQuota/definitions/Protocol/const",
+      "expected": {
+        "retirementBatchEntries": 64
+      }
+    },
+    {
+      "name": "print scalar option descriptor",
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "pointer": "/definitions/OptionSyntaxCatalog/const/scale/nice",
+      "expected": {
+        "syntax": "scalar"
+      }
+    },
+    {
+      "name": "print repeated record descriptor",
+      "path": "🧰️framework/🛍️products/📓️print/🧬️schema/🔣️.json",
+      "pointer": "/definitions/OptionSyntaxCatalog/const/transform~1group/columns",
+      "expected": {
+        "syntax": "records",
+        "items": "identifier"
+      }
+    }
+  ]
+}

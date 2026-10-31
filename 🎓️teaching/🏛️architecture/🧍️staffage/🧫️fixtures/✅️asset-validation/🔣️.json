@@ -1,5 +1,5 @@
 {
- "description": "Broken variants of the reference walker; every case applies its JSON-patch-like operations (path segments `id=<slug>` select the array element with that id, `-` appends) and must report at least the listed codes. The unpatched asset and manifest must report none.",
+ "description": "Broken variants of the sample figure (semio.staffage/v2); every case applies its JSON-patch-like operations (path segments `id=<slug>` select the array element with that id, `-` appends) and must report at least the listed codes. The unpatched asset and manifest must report none.",
  "patchPaths": "RFC 6901 pointers with the id= selector",
  "cases": [
   {
@@ -72,7 +72,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation/id=head/bone",
+     "path": "/representations/100/geometry/elevation/id=head/bone",
      "value": "ghost"
     }
    ],
@@ -85,7 +85,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation/id=head/region",
+     "path": "/representations/100/geometry/elevation/id=head/region",
      "value": "ghost"
     }
    ],
@@ -98,7 +98,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation/id=head/material",
+     "path": "/representations/100/geometry/elevation/id=head/material",
      "value": "ghost"
     }
    ],
@@ -178,7 +178,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/thermal/emitters/id=breath/anchor",
+     "path": "/thermal/emitters/id=nose-breath/anchor",
      "value": "ghost"
     }
    ],
@@ -427,7 +427,7 @@
    "patch": [
     {
      "op": "remove",
-     "path": "/thermal/regions/id=shoes/source"
+     "path": "/thermal/regions/id=feet/source"
     }
    ],
    "expectCodes": [
@@ -439,7 +439,7 @@
    "patch": [
     {
      "op": "remove",
-     "path": "/thermal/emitters/id=breath/source"
+     "path": "/thermal/emitters/id=nose-breath/source"
     }
    ],
    "expectCodes": [
@@ -463,38 +463,12 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation",
+     "path": "/representations/100/geometry/elevation",
      "value": []
     }
    ],
    "expectCodes": [
     "elevation-empty"
-   ]
-  },
-  {
-   "name": "height deviates by more than 5 percent",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/dimensions/heightM",
-     "value": 2.5
-    }
-   ],
-   "expectCodes": [
-    "dimension-height"
-   ]
-  },
-  {
-   "name": "width deviates by more than 10 percent",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/dimensions/widthM",
-     "value": 0.8
-    }
-   ],
-   "expectCodes": [
-    "dimension-width"
    ]
   },
   {
@@ -546,43 +520,6 @@
    ],
    "expectCodes": [
     "text-empty"
-   ]
-  },
-  {
-   "name": "thermal region bound by no shape",
-   "patch": [
-    {
-     "op": "add",
-     "path": "/thermal/regions/-",
-     "value": {
-      "id": "orphan",
-      "title": {
-       "en": "Orphan",
-       "de": "Waise"
-      },
-      "kind": "surface",
-      "material": "skin",
-      "model": "passive",
-      "areaM2": 0.1,
-      "characteristicLengthM": 0.1,
-      "source": "authored-estimate"
-     }
-    }
-   ],
-   "expectCodes": [
-    "region-unbound"
-   ]
-  },
-  {
-   "name": "core-resistance region without core temperature",
-   "patch": [
-    {
-     "op": "remove",
-     "path": "/thermal/regions/id=head-skin/coreTempC"
-    }
-   ],
-   "expectCodes": [
-    "thermal-parameter-missing"
    ]
   },
   {
@@ -692,16 +629,18 @@
   {
    "name": "supports make gaps legitimate",
    "patch": [
-   {
-    "op": "replace",
-    "path": "/structure/supports",
-    "value": ["contact-l"]
-   },
-   {
-    "op": "remove",
-    "path": "/clips/id=walk/contacts/2"
-   }
-  ],
+    {
+     "op": "replace",
+     "path": "/structure/supports",
+     "value": [
+      "contact-l"
+     ]
+    },
+    {
+     "op": "remove",
+     "path": "/clips/id=walk/contacts/2"
+    }
+   ],
    "expectCodes": [],
    "expectAbsent": [
     "unsupported-instant"
@@ -724,24 +663,352 @@
    "expectCodes": [
     "unsupported-instant"
    ]
+  },
+  {
+   "name": "thermal region drawn by no shape",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/100/geometry/elevation/id=head"
+    },
+    {
+     "op": "remove",
+     "path": "/representations/100/geometry/elevation/id=neck"
+    }
+   ],
+   "expectCodes": [
+    "region-undrawn"
+   ]
+  },
+  {
+   "name": "body region without body parameters",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal/regions/id=head/body"
+    }
+   ],
+   "expectCodes": [
+    "thermal-parameter-missing"
+   ]
+  },
+  {
+   "name": "height deviates from the drawing",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/dimensions/heightM",
+     "value": 2.5
+    }
+   ],
+   "expectCodes": [
+    "extent-height"
+   ]
+  },
+  {
+   "name": "width deviates from the drawing",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/dimensions/widthM",
+     "value": 2.5
+    }
+   ],
+   "expectCodes": [
+    "extent-width"
+   ]
+  },
+  {
+   "name": "scale left undecided",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/500"
+    }
+   ],
+   "expectCodes": [
+    "rep-undecided"
+   ]
+  },
+  {
+   "name": "representation key and denominator disagree",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/200/denominator",
+     "value": 100
+    }
+   ],
+   "expectCodes": [
+    "rep-key-mismatch"
+   ]
+  },
+  {
+   "name": "unavailable decision without alternatives",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/500/alternatives",
+     "value": []
+    }
+   ],
+   "expectCodes": [
+    "alternative-missing"
+   ]
+  },
+  {
+   "name": "alternative scale is not authored",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/500/alternatives",
+     "value": [
+      {
+       "kind": "scale",
+       "denominator": 500
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "alternative-unresolved"
+   ]
+  },
+  {
+   "name": "alternative symbol does not exist",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/500/alternatives",
+     "value": [
+      {
+       "kind": "symbol",
+       "symbol": "ghost"
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "alternative-unresolved"
+   ]
+  },
+  {
+   "name": "valid range excludes its own denominator",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/100/validRange",
+     "value": {
+      "minDenominator": 110,
+      "maxDenominator": 140
+     }
+    }
+   ],
+   "expectCodes": [
+    "valid-range"
+   ]
+  },
+  {
+   "name": "valid ranges overlap",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/100/validRange",
+     "value": {
+      "minDenominator": 60,
+      "maxDenominator": 200
+     }
+    }
+   ],
+   "expectCodes": [
+    "valid-range-overlap"
+   ]
+  },
+  {
+   "name": "decision missing",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/100/decisions/omitted"
+    }
+   ],
+   "expectCodes": [
+    "decision-missing"
+   ]
+  },
+  {
+   "name": "pen in model metres",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/100/pens/body",
+     "value": 0.0003
+    }
+   ],
+   "expectCodes": [
+    "pen-units"
+   ]
+  },
+  {
+   "name": "body pen is null",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/100/pens/body",
+     "value": null
+    }
+   ],
+   "expectCodes": [
+    "pen-required"
+   ]
+  },
+  {
+   "name": "default scale is not authored",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/presentation/defaultScale",
+     "value": 500
+    }
+   ],
+   "expectCodes": [
+    "default-scale-unavailable"
+   ]
+  },
+  {
+   "name": "unavailable decision without limiting size",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/500/limitingSizeM",
+     "value": 0
+    }
+   ],
+   "expectCodes": [
+    "limiting-size"
+   ]
+  },
+  {
+   "name": "symbol shape not on the root bone",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/symbols/id=position-dot/geometry/elevation/0/bone",
+     "value": "head"
+    }
+   ],
+   "expectCodes": [
+    "symbol-bone"
+   ]
   }
  ],
  "manifest": {
   "$schema": "../🧬️schema/🔣️.json",
-  "version": "semio.staffage/v1",
+  "version": "semio.staffage/v2",
   "categories": [
    {
     "id": "humans",
     "emoji": "👤",
     "title": {
-     "en": "Humans",
-     "de": "Menschen"
+     "en": "humans",
+     "de": "humans"
     },
     "description": {
-     "en": "People",
-     "de": "Menschen"
+     "en": "humans",
+     "de": "humans"
     },
-    "file": "humans/🔣️.json"
+    "folder": "humans"
+   },
+   {
+    "id": "animals",
+    "emoji": "👤",
+    "title": {
+     "en": "animals",
+     "de": "animals"
+    },
+    "description": {
+     "en": "animals",
+     "de": "animals"
+    },
+    "folder": "animals"
+   },
+   {
+    "id": "vegetation",
+    "emoji": "👤",
+    "title": {
+     "en": "vegetation",
+     "de": "vegetation"
+    },
+    "description": {
+     "en": "vegetation",
+     "de": "vegetation"
+    },
+    "folder": "vegetation"
+   },
+   {
+    "id": "furniture",
+    "emoji": "👤",
+    "title": {
+     "en": "furniture",
+     "de": "furniture"
+    },
+    "description": {
+     "en": "furniture",
+     "de": "furniture"
+    },
+    "folder": "furniture"
+   },
+   {
+    "id": "objects",
+    "emoji": "👤",
+    "title": {
+     "en": "objects",
+     "de": "objects"
+    },
+    "description": {
+     "en": "objects",
+     "de": "objects"
+    },
+    "folder": "objects"
+   },
+   {
+    "id": "vehicles",
+    "emoji": "👤",
+    "title": {
+     "en": "vehicles",
+     "de": "vehicles"
+    },
+    "description": {
+     "en": "vehicles",
+     "de": "vehicles"
+    },
+    "folder": "vehicles"
+   },
+   {
+    "id": "machinery",
+    "emoji": "👤",
+    "title": {
+     "en": "machinery",
+     "de": "machinery"
+    },
+    "description": {
+     "en": "machinery",
+     "de": "machinery"
+    },
+    "folder": "machinery"
+   },
+   {
+    "id": "components",
+    "emoji": "👤",
+    "title": {
+     "en": "components",
+     "de": "components"
+    },
+    "description": {
+     "en": "components",
+     "de": "components"
+    },
+    "folder": "components"
    }
   ],
   "collections": [
@@ -756,17 +1023,17 @@
      "de": "Alles"
     },
     "assets": [
-     "reference-walker"
+     "sample-figure"
     ]
    }
   ],
   "entries": [
    {
-    "id": "reference-walker",
+    "id": "sample-figure",
     "category": "humans",
     "title": {
-     "en": "Reference walker",
-     "de": "Referenz-Fußgänger"
+     "en": "Sample figure",
+     "de": "Beispielfigur"
     },
     "heightM": 1.73,
     "widthM": 0.37,
@@ -783,8 +1050,18 @@
      "idle-breathing",
      "bag-swing"
     ],
+    "representations": {
+     "50": "authored",
+     "100": "authored",
+     "200": "authored",
+     "500": "unavailable"
+    },
+    "symbols": [
+     "position-dot"
+    ],
     "analytics": [
      "thermal",
+     "transport",
      "structural"
     ],
     "viewpoints": [
@@ -864,8 +1141,8 @@
       "id": "ghost",
       "category": "humans",
       "title": {
-       "en": "Reference walker",
-       "de": "Referenz-Fußgänger"
+       "en": "Sample figure",
+       "de": "Beispielfigur"
       },
       "heightM": 1.73,
       "widthM": 0.37,
@@ -882,8 +1159,18 @@
        "idle-breathing",
        "bag-swing"
       ],
+      "representations": {
+       "50": "authored",
+       "100": "authored",
+       "200": "authored",
+       "500": "unavailable"
+      },
+      "symbols": [
+       "position-dot"
+      ],
       "analytics": [
        "thermal",
+       "transport",
        "structural"
       ],
       "viewpoints": [
@@ -920,11 +1207,11 @@
      "op": "add",
      "path": "/entries/-",
      "value": {
-      "id": "reference-walker",
+      "id": "sample-figure",
       "category": "humans",
       "title": {
-       "en": "Reference walker",
-       "de": "Referenz-Fußgänger"
+       "en": "Sample figure",
+       "de": "Beispielfigur"
       },
       "heightM": 1.73,
       "widthM": 0.37,
@@ -941,8 +1228,18 @@
        "idle-breathing",
        "bag-swing"
       ],
+      "representations": {
+       "50": "authored",
+       "100": "authored",
+       "200": "authored",
+       "500": "unavailable"
+      },
+      "symbols": [
+       "position-dot"
+      ],
       "analytics": [
        "thermal",
+       "transport",
        "structural"
       ],
       "viewpoints": [

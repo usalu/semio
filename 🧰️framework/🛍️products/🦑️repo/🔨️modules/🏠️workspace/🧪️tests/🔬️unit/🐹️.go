@@ -4,6 +4,9 @@ package workspace
 
 import (
 	"encoding/json"
+	"context"
+	"runtime"
+	"time"
 	"io"
 	"os"
 	"os/exec"
@@ -496,4 +499,115 @@ func TestToolCommandMarksRegisteredRunsAndDropsIdeInjections(t *testing.T) {
 	if plain := ToolCommand("echo", "x"); plain.Env != nil {
 		t.Fatal("an unregistered command must keep the process environment")
 	}
+}
+
+func TestDeclaredInvocationProjectionMatchesSharedCorpus(t *testing.T) {
+	directory := FixtureOrigin
+	if directory == "" { t.Fatal("sandbox fixture origin required") }
+	for {
+		if _, err := os.Stat(filepath.Join(directory, "MODULE.bazel")); err == nil { break }
+		parent := filepath.Dir(directory)
+		if parent == directory { t.Fatal("repository fixture root required") }
+		directory = parent
+	}
+	text, err := os.ReadFile(filepath.Join(directory, "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🔎️resolve/📣️invocations/🔣️.json"))
+	if err != nil { t.Fatal(err) }
+	var corpus struct {
+		Projections []struct { Commands []string; Invocations []registeredInvocation; Requested string; Selected string; Prefix []string }
+		Invalid []json.RawMessage
+		InvalidLists []json.RawMessage
+	}
+	if err := json.Unmarshal(text, &corpus); err != nil { t.Fatal(err) }
+	if len(corpus.Projections) != 8 { t.Fatal("complete shared invocation projections required") }
+	for _, row := range corpus.Projections {
+		tool := registeredTool{Commands: row.Commands, Invocations: row.Invocations}
+		if !validRegisteredInvocations(toolRegistryDocument{Tools: []registeredTool{tool}}) { t.Fatal("valid invocation refused") }
+		selected, prefix := registeredToolInvocation(tool, row.Requested)
+		if selected != row.Selected || strings.Join(prefix, "\x00") != strings.Join(row.Prefix, "\x00") { t.Fatalf("invocation projection = %q %q", selected, prefix) }
+		if len(prefix) > 0 { prefix[0] = "changed"; if tool.Invocations[0].Prefix[0] == "changed" { t.Fatal("invocation prefix was aliased") } }
+	}
+	for _, invalid := range corpus.Invalid {
+		var invocation registeredInvocation
+		if json.Unmarshal(invalid, &invocation) == nil && validRegisteredInvocations(toolRegistryDocument{Tools: []registeredTool{{Commands: []string{"bun", "bunx"}, Invocations: []registeredInvocation{invocation}}}}) { t.Fatal("invalid invocation admitted") }
+	}
+	for _, invalid := range corpus.InvalidLists {
+		bytes, err := json.Marshal(map[string]any{"tools": []any{map[string]any{"id": "fixture", "commands": []string{"bun", "bunx"}, "invocations": invalid}}})
+		if err != nil { t.Fatal(err) }
+		var document toolRegistryDocument
+		if json.Unmarshal(bytes, &document) == nil && validRegisteredInvocations(document) { t.Fatal("invalid invocation list admitted") }
+	}
+}
+
+func TestMappedRegisteredCommandKeepsPrefixBeforeCallerArguments(t *testing.T) {
+	arguments := []string{"--version"}
+	command := ToolCommand("bunx", arguments...)
+	if len(command.Args) != 3 || command.Args[1] != "x" || command.Args[2] != "--version" { t.Fatalf("mapped argv = %q", command.Args) }
+	if arguments[0] != "--version" { t.Fatal("caller arguments were mutated") }
+	if !strings.Contains(strings.Join(command.Env, "\n"), "SEMIO_TOOL_RUN=bun") { t.Fatal("registered invocation environment required") }
+}
+
+func TestRegisteredWindowsInvocationArguments(t *testing.T) {
+	checkWindowsBatchEncodingMatchesSharedOracle(t)
+	native, nativeArgs, nativeRefusal := registeredToolCommandArguments("C:/bin/bun.exe", []string{"x"}, []string{"a\"b", "%VALUE%", "two words"}, true, "cmd.exe")
+	if nativeRefusal != nil || native != "C:/bin/bun.exe" || !reflect.DeepEqual(nativeArgs, []string{"x", "a\"b", "%VALUE%", "two words"}) { t.Fatal("ordinary native executable argv changed") }
+	plain, plainArgs, plainRefusal := registeredToolCommandArguments("C:/bin/explicit.cmd", nil, []string{"%VALUE%"}, false, "cmd.exe")
+	if plainRefusal != nil || plain != "C:/bin/explicit.cmd" || !reflect.DeepEqual(plainArgs, []string{"%VALUE%"}) { t.Fatal("explicit or guard-off routing changed") }
+	arguments := []string{"package"}
+	program, actual, refusal := registeredToolCommandArguments("C:/bin/bun.cmd", []string{"x"}, arguments, true, "C:/Windows/System32/cmd.exe")
+	if refusal != nil || program != "C:/Windows/System32/cmd.exe" || len(actual) != 5 || !reflect.DeepEqual(actual[:4], []string{"/d", "/v:off", "/s", "/c"}) { t.Fatalf("batch invocation = %q %q", program, actual) }
+	if arguments[0] != "package" { t.Fatal("caller arguments changed") }
+	var document toolRegistryDocument
+	if json.Unmarshal([]byte(`{"tools":[{"id":"bun","commands":["bun","bunx"],"invocations":null}]}`), &document) == nil { t.Fatal("explicit null invocation policy admitted") }
+}
+
+func checkWindowsBatchEncodingMatchesSharedOracle(t *testing.T) {
+	directory := FixtureOrigin
+	if directory == "" { t.Fatal("sandbox fixture origin required") }
+	for {
+		if _, err := os.Stat(filepath.Join(directory, "MODULE.bazel")); err == nil { break }
+		parent := filepath.Dir(directory)
+		if parent == directory { t.Fatal("repository root required") }
+		directory = parent
+	}
+	text, err := os.ReadFile(filepath.Join(directory, "🧰️framework/🔨️modules/🏃️process/🧰️tools/🧪️tests/🔎️resolve/📣️invocations/🪟️batch/🔣️.json"))
+	if err != nil { t.Fatal(err) }
+	var corpus struct { Cases []struct { ID string; Program string; Args []string; Accepted bool; Expected *string; Reason string } }
+	if err := json.Unmarshal(text, &corpus); err != nil { t.Fatal(err) }
+	for _, row := range corpus.Cases {
+		line, refusal := registeredBatchFragment(row.Program, row.Args)
+		if row.Accepted { if refusal != nil || row.Expected == nil || line != *row.Expected { t.Fatalf("%s: encoding %q refusal %v", row.ID, line, refusal) } } else {
+			capability, ok := refusal.(*ToolCapabilityError)
+			if !ok || capability.Reason != row.Reason { t.Fatalf("%s: typed refusal %v", row.ID, refusal) }
+		}
+	}
+}
+
+func TestWindowsInvocationRecorder(t *testing.T) {
+	if os.Getenv("SEMIO_TEST_WINDOWS_RECORDER") != "1" { return }
+	for index, value := range os.Args { if value == "--" { if err := json.NewEncoder(os.Stdout).Encode(os.Args[index+1:]); err != nil { os.Exit(2) }; os.Exit(0) } }
+	os.Exit(3)
+}
+
+func TestWindowsRegisteredBatchLiteralArguments(t *testing.T) {
+ if runtime.GOOS != "windows" { t.Skip("physical Windows process required") }
+ root := filepath.Join(t.TempDir(), "space Ω^ folder")
+ if err := os.MkdirAll(root, 0700); err != nil { t.Fatal(err) }
+ executable, err := os.Executable()
+ if err != nil { t.Fatal(err) }
+ script := filepath.Join(root, "recorder.cmd")
+ if err := os.WriteFile(script, []byte("@echo off\r\n\""+executable+"\" -test.run=TestWindowsInvocationRecorder -- %*\r\n"), 0600); err != nil { t.Fatal(err) }
+ t.Setenv("SEMIO_TOOL_BUN", script)
+ t.Setenv("SEMIO_TEST_WINDOWS_RECORDER", "1")
+ ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+ defer cancel()
+ arguments := []string{"two words", "Grüße Ω", "a&b|c(d)^e!f", "", "C:\\path\\"}
+ command := ToolCommandContext(ctx, "bunx", arguments...)
+ output, err := command.Output()
+ if err != nil { t.Fatalf("physical batch: %v", err) }
+ var observed []string
+ if err := json.Unmarshal(output, &observed); err != nil { t.Fatal(err) }
+ if !reflect.DeepEqual(observed, append([]string{"x"}, arguments...)) { t.Fatalf("literal batch argv = %q", observed) }
+ for _, refused := range []string{"a\"b", "%PATH%", "line\nnext"} {
+  if _, ok := ToolCommandContext(ctx, "bunx", refused).Err.(*ToolCapabilityError); !ok { t.Fatal("unsupported batch input must be a typed prelaunch refusal") }
+ }
 }

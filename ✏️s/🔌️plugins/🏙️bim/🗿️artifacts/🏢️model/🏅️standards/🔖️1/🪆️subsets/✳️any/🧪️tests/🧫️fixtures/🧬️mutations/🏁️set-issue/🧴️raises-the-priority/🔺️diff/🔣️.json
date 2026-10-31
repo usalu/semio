@@ -2,7 +2,9 @@
   "issues": {
     "i-1": {
       "entry": "Patched",
-      "priority": "Critical"
+      "value": {
+        "priority": "Critical"
+      }
     }
   }
 }

@@ -9,7 +9,7 @@
  * @see ../../🧬️schema/🎮️registry/🔣️.json
  */
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, relative } from "node:path";

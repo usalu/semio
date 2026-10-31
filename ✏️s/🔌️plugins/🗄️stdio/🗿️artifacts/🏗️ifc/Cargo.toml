@@ -3,6 +3,16 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+  "📐️geometry/🕳️rings/📦️packages/🦀️rust",
+  "📐️geometry/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🧩️components/*/*/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📚️catalog/🧩️components/*/*/📦️packages/🦀️rust",
+  "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/🧩️components/*/*/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/📦️packages/🦀️rust",
+  "📚️catalog/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/📦️packages/🦀️rust",
   "🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",

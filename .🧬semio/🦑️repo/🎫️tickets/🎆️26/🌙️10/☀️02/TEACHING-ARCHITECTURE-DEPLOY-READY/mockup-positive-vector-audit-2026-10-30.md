@@ -1,0 +1,7 @@
+# Mockup Positive Vector Audit
+
+Actual fullReact73624 executed43files/1075tests:1073passed, twofailed. The mockups:15 failure is a test selection error. Its positive rendering loop selects every fixture ID beginning widget-, including widget-kind, which is explicitly valid:false/schemaValid:false and contains unsupported widget kind browser. It then derives expected DOM attribute kind from the fixture ID suffix, while production correctly emits each actual node.widget.kind. The five valid parameter/component/slider/panel/plugin vectors agree with this production contract.
+
+Correct the positive renderer selection to require fixture validity as well as the intended widget group, with explicit complete five-kind coverage. Preserve the invalid widget-kind DATA and independent schema/semantic rejection tests; do not add a production browser/kind fallback or delete the negative case. Existing slider position/range, panel lines and plugin label assertions remain required. No Source edit or execution performed by this audit; frontend owns the correction.
+
+Final test-only Source b2c70e8787daa805bf8566a0827635bf23f128cd0eb4f7ca983dc54d17dac58f independently reviewed: positive filter requires valid and schemaValid and widget prefix, with exact five supported IDs. Original rendering/slider/panel/plugin and bilingual/keyboard/accessibility assertions remain; negative widget-kind fixture is untouched. No further static defect found, no separate execution launched.

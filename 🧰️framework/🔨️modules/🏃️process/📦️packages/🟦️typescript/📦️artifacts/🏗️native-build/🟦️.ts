@@ -6,3 +6,9 @@ export { CARGO_WORKSPACE_PROVIDER_V1, observeCargoPreparationSourceV1, observeCa
 export type { CargoLockEnsureRequestV1, CargoLockOutcomeV1, CargoWorkspaceProviderV1, CargoWorkspaceScopeV1, CargoWorkspacePackageV1, CargoPreparationInputKindV1 } from "../../../../🦀️cargo-workspace/🟦️.ts";
 export { ensureCargoLockV1, cargoLockReceiptPathV1, cargoLockReceiptCurrentV1, cargoLockManifestsV1 } from "../../../../🦀️cargo-workspace/🔒️lock/🟦️.ts";
 export type { CargoLockPortV1, CargoLockRequestV1, CargoLockRunV1, CargoLockLanguageV1 } from "../../../../🦀️cargo-workspace/🔒️lock/🟦️.ts";
+
+export { withCargoArtifactPlanV1 } from "../../../../📦️artifacts/🏗️native-build/🟦️.ts";
+export type { CargoArtifactPlanV1 } from "../../../../📦️artifacts/🏗️native-build/🟦️.ts";
+
+export { actualCargoCompilerPlanningPortV1 } from "../../../../📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+export type { CargoCompilerPlanningPortV1 } from "../../../../📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";

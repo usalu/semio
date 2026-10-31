@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "declaration": {
+    "version": 1,
+    "kind": "cargo-executable",
+    "manifest": "Cargo.toml",
+    "package": "semio-framework-os-mcp",
+    "binary": "semio-os-mcp",
+    "sourcesRecord": "semio-os-mcp.sources.json"
+  },
+  "requests": [
+    {
+      "name": "declared-target",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "release-target",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "release",
+        "arguments": [
+          "space value",
+          "日本語",
+          "--flag"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "caller-manifest",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ],
+        "manifest": "Cargo.toml"
+      },
+      "valid": false
+    },
+    {
+      "name": "caller-output",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ],
+        "output": "dist/build"
+      },
+      "valid": false
+    },
+    {
+      "name": "caller-program",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ],
+        "program": "/tmp/arbitrary"
+      },
+      "valid": false
+    },
+    {
+      "name": "caller-authority",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ],
+        "capabilities": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown-mode",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "debug",
+        "arguments": [
+          "--stdio"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "target-chain",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build:other",
+        "configuration": "prototype",
+        "arguments": [
+          "--stdio"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "nul-argument",
+      "input": {
+        "version": 1,
+        "project": "@semio-tech/framework-os-mcp-rs",
+        "target": "build",
+        "configuration": "prototype",
+        "arguments": [
+          "bad\u0000argument"
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "declarations": [
+    {
+      "name": "owned-manifest",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp",
+        "sourcesRecord": "semio-os-mcp.sources.json"
+      },
+      "valid": true
+    },
+    {
+      "name": "absolute",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "/outside/Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp"
+      },
+      "valid": false
+    },
+    {
+      "name": "drive",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "C:/Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp"
+      },
+      "valid": false
+    },
+    {
+      "name": "colon",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "x:y/Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp"
+      },
+      "valid": false
+    },
+    {
+      "name": "parent",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "../Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp"
+      },
+      "valid": false
+    },
+    {
+      "name": "unc",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "\\\\server\\share\\Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp"
+      },
+      "valid": false
+    },
+    {
+      "name": "source-record-escape",
+      "input": {
+        "version": 1,
+        "kind": "cargo-executable",
+        "manifest": "Cargo.toml",
+        "package": "semio-framework-os-mcp",
+        "binary": "semio-os-mcp",
+        "sourcesRecord": "../sources.json"
+      },
+      "valid": false
+    }
+  ]
+}

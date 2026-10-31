@@ -35,7 +35,7 @@ const resourceReadSchema = JSON.parse(readFileSync(new URL("../📥️resources/
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const custodyValidate = new Ajv({ strict:true }).compile(JSON.parse(readFileSync(new URL("../🔒️custody/🧬️schema/🔣️.json", import.meta.url), "utf8")));
 test("compiler custody vectors are closed by their schema", () => { expect(custodyValidate(fixture.compilerCustody)).toBe(true); });
-for (const vector of fixture.compilerCustody) registerIsolatedBuildTestV1(import.meta.path, "compiler custody runs after leases and refuses native work on " + vector.id, 120000, async (checkpoint) => {
+for (const vector of fixture.compilerCustody) registerIsolatedBuildTestV1(import.meta.path, "compiler custody runs after leases and refuses native work on " + vector.id, {bodyMilliseconds:120000,scope:{kind:"body"}}, async (checkpoint) => {
     const controller = new AbortController();
     await withBuildStorageV1(controller.signal, async (held, admission) => {
       const root=mkdtempSync(join(held.root,"custody-")), manifest=join(root,"Cargo.toml"), executed=join(root,"executed");
@@ -75,7 +75,7 @@ for(const vector of fixture.vectors){const name=`captured native artifacts: ${ve
   let failure:unknown;try{await buildCargoArtifacts(manifest,[],policy,lawBuildOptionsV1(held,admission,{commandPort:{compilerIdentity:"fixture-compiler-v1",toolchainIdentity:"fixture-toolchain-v1",command:process.execPath,args:["-e",compiler]}}));}catch(error){failure=error;}finally{clearTimeout(cancel);}
   if(vector.accepted){expect(failure).toBeUndefined();const bytes=readFileSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name));expect(bytes.toString("hex")).toBe(fixture.files[0].hex);expect(createHash("sha256").update(bytes).digest("hex")).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.files[0].hex,"hex"))).toString("hex"));}else{expect(failure).toBeInstanceOf(Error);expect(existsSync(join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,"prototype"),fixture.files[0].name))).toBe(false);}
   expect(existsSync(policy.captureDirectory) ? readdirSync(policy.captureDirectory) : []).toEqual([]);checkpoint();
-});};if(vector.accepted)test(name,()=>body(()=>undefined),120000);else registerIsolatedBuildTestV1(import.meta.path,name,120000,body,/Cargo (artifact build failed|emitted no final artifacts)|Cancel|cancel|abort/u);}
+});};if(vector.accepted)test(name,()=>body(()=>undefined),120000);else registerIsolatedBuildTestV1(import.meta.path,name,{bodyMilliseconds:120000,scope:{kind:"body"}},body,/Cargo (artifact build failed|emitted no final artifacts)|Cancel|cancel|abort/u);}
 
 test("actual Cargo artifact capture executes the compiler's retained executable and records its sources",async()=>{const stop=new AbortController();await withBuildStorageV1(stop.signal,async(held,admission,invocation)=>{
  const root=mkdtempSync(join(held.root,"c-")),source=join(root,"owner");mkdirSync(source);const artifacts=join(held.root,"artifacts");mkdirSync(artifacts);
@@ -202,7 +202,7 @@ test("compiler diagnostics stay inside their line budget while the complete stre
 /** 🗄️ Runs one fixture build inside an original compiler reservation derived from a fresh issued invocation and the test's own cancellation. */
 function withBuildStorageV1<T>(signal:AbortSignal,body:(held:LawStorageV1,control:CompilerAdmissionControl,invocation:ScriptInvocation)=>Promise<T>):Promise<T>{return relayInvocation(original=>withIssuedLawStorageV1(original,signal,body));}
 
-registerIsolatedBuildTestV1(import.meta.path, "capture provenance consumes the original remainder after deliverable validation", 120000, async (checkpoint) => { const controller = new AbortController(); await withBuildStorageV1(controller.signal, async (held, admission) => {
+registerIsolatedBuildTestV1(import.meta.path, "capture provenance consumes the original remainder after deliverable validation", {bodyMilliseconds:120000,scope:{kind:"body"}}, async (checkpoint) => { const controller = new AbortController(); await withBuildStorageV1(controller.signal, async (held, admission) => {
   const law = fixture.captureProvenanceDeadline, spec = fixture.deliverables, root = mkdtempSync(join(held.root, "e-")), source = join(root, "owner"), artifact = join(root, spec.component), manifest = join(source, "Cargo.toml");
   mkdirSync(source);
   writeFileSync(manifest, '[workspace]\n[package]\nname="fixture"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\ncrate-type=["cdylib"]\n'); writeFileSync(join(source, "Cargo.lock"), 'version=4\n[[package]]\nname="fixture"\nversion="0.1.0"\n');

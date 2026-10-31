@@ -23,7 +23,7 @@ export function referenceCounts(asset: Asset): Readonly<Record<string, number>> 
 
 /** 🧮️ How many parameters carry each source tag. */
 export function sourceCounts(asset: Asset): Readonly<Record<ParameterSource, number>> {
-  const counts: Record<ParameterSource, number> = { measured: 0, literature: 0, "authored-estimate": 0, illustrative: 0 };
+  const counts: Record<ParameterSource, number> = { measured: 0, literature: 0, calibrated: 0, "authored-estimate": 0, illustrative: 0 };
   const count = (source: ParameterSource | undefined): void => {
     if (source !== undefined) counts[source] += 1;
   };

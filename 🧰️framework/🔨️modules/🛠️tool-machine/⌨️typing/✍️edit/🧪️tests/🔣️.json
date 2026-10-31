@@ -363,5 +363,12 @@
   "foreignCallerRefused": true,
   "foreignDecoderRefused": true,
   "sameMutationBacking": true,
-  "originalOldRowUntilPublication": true
+  "originalOldRowUntilPublication": true,
+  "resident": {
+    "readerWindow": "z-source",
+    "readerLeaves": 8197,
+    "prefixWindows": 65,
+    "maximumTurns": 1048576,
+    "sourceLast": true
+  }
 }

@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "purpose",
+    "sourceDirectory",
+    "expectedTarget",
+    "observedTarget",
+    "kind",
+    "truncated"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "javascript-dependency-binding-mismatch"
+    },
+    "sourceDirectory": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "expectedTarget": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "observedTarget": {
+      "anyOf": [
+        {
+          "type": "string",
+          "maxLength": 256
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "enum": [
+        "symlink",
+        "directory",
+        "file",
+        "other"
+      ]
+    },
+    "truncated": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "const": {
+        "maximumPathCodePoints": 256,
+        "maximumMessageBytes": 6144,
+        "prefix": "Current expected JavaScript dependency binding required "
+      }
+    }
+  }
+}

@@ -1,11 +1,13 @@
 {
   "issues": {
     "i-2": {
-      "elements": [
-        "w-east",
-        "w-south"
-      ],
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "elements": [
+          "w-east",
+          "w-south"
+        ]
+      }
     }
   }
 }

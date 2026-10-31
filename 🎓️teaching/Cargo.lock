@@ -853,6 +853,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
 ]

@@ -1,0 +1,17 @@
+# Focus Continuity and Native Reachability
+
+The strict native vf3 probe demonstrated a two-pixel focused-link clip after native scrolling, and a detached link across locale/layout changes. The revealed CourseCard applied a two-pixel upward transform. Both the generic overlay/cell and Course Home card wrappers changed ancestry between strip and swipe modes.
+
+Two language-neutral mode sequences now drive actual React/Testing Library/JSDOM node identity and activeElement assertions in the existing LayeredOverview component owner. Registered Node owner97877 failed the original overlay identity (one failed,55filtered); the initial preceding attempt refused missing explicit Vitest policy before tests. The ticket launcher obtains repositoryVitestPolicyV1 through its actual repository owner. After the fix, owner18925 exited0 with the complete56-test component file. Adaptive owner1352 exited0; its exact summary is retained in generated/vertical-stablehost-adaptive.log.
+
+The overlay and keyed card host remain the same elements; the host changes between display-contents grid placement and the existing swipe-cell box. Course Home always retains the same outer/inner card ancestry. Revealed cards retain their focus/reveal behavior without a positional transform. No focus restoration or replacement control hides a remount. No viewport, deadline, quality or budget changes.
+
+Original presence and tagged title browser cases are running together under owner42459; discovery and actual outcomes must still be verified. Root owns strict native font/convergence vf4. Complete unit, semantic and BOTH acceptance remain separate. Exact seven-file hashes are in generated/focus-continuity-checkpoint.json.
+
+## Actual Original Browser Results
+
+Owner42459 authoritatively exited0 after explicit discovery of exactly two tests. The original tagged keyboard/locked-topic case106 passed36.8s and the complete original cooperative-card-scroll case431 passed39.2s (1.3minutes total). The latter retains100/200px entry, online2, real inner-card progress/edge navigation, both overflows, follow,0.65mirror/reset/stop assertions. No force, deadline, viewport or product-lock change. These two diagnostics do not replace strict font/convergence vf4, full unit/semantic or unfiltered BOTH. Adaptive owner1352 passed all13tests in3.80s.
+
+## Root vf4: Distinct Later Boundary
+
+Read-only inspection of Root vf4 retained receipts/log (outer status remains Root-owned) shows both languages passed tiny entry, native font changes/restoration and locale plus layout-mode transition with sameDOM=true. Failure occurs later at largest-narrow after textSize opens Preferences, changes real preference, returns home, focuses the current link at desktop size, then resizes to375x200. Generic overview intentionally unmounts its overlay while a page is opened, so the original saved focused-node reference is detached after this real navigation; its0rectangle is not a repeat of the fixed mode-only remount. The current locator nevertheless remains focused but genuinely has viewport ratio0 after resize, with app.scrollTop0 and port.y201.875 beyond200px viewport. This is a separate focus-visibility requirement under natural geometry growth. No Source or diagnostic changes were made while Root81958 full teaching remains live. A future correction must preserve the current actual focused control rather than restoring a stale node or weakening viewport assertions.

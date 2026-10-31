@@ -1,5 +1,6 @@
 /** 📚️ The course application shell, without the package's task and view reexports. */
 import { AccessGate, useReleaseClock } from "../🔓️access/🟦️.tsx";
+import { bindIntrinsicScrollport } from "../🪟️chrome/📏️scrollport/🟦️.ts";
 import { Component, StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { presenceProfile, type PresencePreferences, type PresencePresentation } from "@semio-tech/course";
@@ -388,6 +389,7 @@ function Client(props: ClientProps): ReactElement {
   useAddress(session, state);
   const view = useMemo(() => presenceView(shared, text), [shared, text]);
   const main = useRef<HTMLElement>(null);
+  useLayoutEffect(() => main.current === null ? undefined : bindIntrinsicScrollport(main.current), []);
   const shown = useRef<string | undefined>(undefined);
   const key = stepKey(state.step);
   const observedKey = remote === undefined ? key : `${remote.tag}:${remote.place.screen}:${remote.view?.home ?? ""}:${remote.place.task ?? ""}`;
@@ -424,7 +426,7 @@ function Client(props: ClientProps): ReactElement {
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div className="course-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
+      <div className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
         if (remote !== undefined && event.target instanceof Element && event.target.closest("[data-presence-footer]") === null) { event.preventDefault(); event.stopPropagation(); follow.stop("interaction"); return; }
         playTappedIcons(event.target, event.pointerType);
       }} onKeyDownCapture={(event) => {
@@ -584,7 +586,7 @@ export function CourseApp(options: CourseOptions): ReactElement {
       </CoursePetsProvider>
     );
   return (
-    <div className="course-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
+    <div className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
       <main id="course-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto p-double">
         <div className="mx-auto w-full max-w-xl">
           <LanguageChoice onChoose={(chosen) => change({ ...preferences, locale: chosen })} />

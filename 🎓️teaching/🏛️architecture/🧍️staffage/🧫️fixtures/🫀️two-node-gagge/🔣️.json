@@ -1,0 +1,1073 @@
+{
+ "id": "two-node-gagge",
+ "oracle": "pythermalcomfort 4.x two_nodes_gagge (Gagge, Stolwijk & Nishi 1971), 60 min from neutral, round_output=False",
+ "tolerances": {
+  "coreK": 0.15,
+  "skinK": 1.0,
+  "wettedness": 0.05,
+  "bloodFlowRelative": 0.2,
+  "bloodFlowAbsolute": 2.0,
+  "respiratoryWM2": 1.0,
+  "sensibleWM2": 6.0,
+  "evaporationWM2": 3.0
+ },
+ "cases": [
+  {
+   "id": "neutral",
+   "inputs": {
+    "id": "neutral",
+    "tdb": 24.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.0,
+    "clo": 0.6
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 24.0,
+      "meanRadiantTempC": 24.0,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.49292970178926443,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 1.9901220000000002,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.10137,
+         "vapourResistanceM2PaW": 13.652525252525253,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 12282.664077880654,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.0,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 36.83410876314854,
+    "t_skin": 33.78505888059392,
+    "w": 0.06878841604274302,
+    "m_bl": 10.393051577825407,
+    "e_skin": 8.339661728393498,
+    "q_sensible": 44.55216812707879,
+    "q_res": 4.392126076474253,
+    "e_max": 121.23642624960992,
+    "m_rsw": 1.66689010234184,
+    "set": 23.677841475762673
+   }
+  },
+  {
+   "id": "warm",
+   "inputs": {
+    "id": "warm",
+    "tdb": 28.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.0,
+    "clo": 0.5
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 28.0,
+      "meanRadiantTempC": 28.0,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.49292970178926443,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 1.9627350000000001,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.0833125,
+         "vapourResistanceM2PaW": 11.22053872053872,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 12454.050088269685,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.0,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 36.8614868485677,
+    "t_skin": 34.327262764690566,
+    "w": 0.18716326782931506,
+    "m_bl": 13.678421828124431,
+    "e_skin": 22.591838826136406,
+    "q_sensible": 31.08413004833082,
+    "q_res": 3.992216556015106,
+    "e_max": 120.70658462075583,
+    "m_rsw": 24.013522761093636,
+    "set": 27.236182817452068
+   }
+  },
+  {
+   "id": "hot-sweating",
+   "inputs": {
+    "id": "hot-sweating",
+    "tdb": 35.0,
+    "v": 0.2,
+    "rh": 50.0,
+    "met": 1.2,
+    "clo": 0.4
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 35.0,
+      "meanRadiantTempC": 35.0,
+      "relativeHumidity": 0.5,
+      "windMS": 0.2,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.5915156421471173,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 1.9353480000000003,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.06572,
+         "vapourResistanceM2PaW": 8.851178451178452,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 12630.286646122559,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.2,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 37.01901682490394,
+    "t_skin": 35.49406669692657,
+    "w": 0.4997758504790133,
+    "m_bl": 32.58201898847351,
+    "e_skin": 62.943443255946256,
+    "q_sensible": 2.824537614228548,
+    "q_res": 3.6799093185532494,
+    "e_max": 125.94334679360301,
+    "m_rsw": 86.65025414319474,
+    "set": 33.97039846399626
+   }
+  },
+  {
+   "id": "cool",
+   "inputs": {
+    "id": "cool",
+    "tdb": 18.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 1.0,
+    "clo": 1.0
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 18.0,
+      "meanRadiantTempC": 18.0,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.49292970178926443,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 2.09967,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.17825,
+         "vapourResistanceM2PaW": 24.006734006734003,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 11641.829430339054,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.0,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 36.82341488016184,
+    "t_skin": 32.24585069149943,
+    "w": 0.06,
+    "m_bl": 5.2746912804275095,
+    "e_skin": 5.916761263025859,
+    "q_sensible": 51.096729900475864,
+    "q_res": 4.854308374127135,
+    "e_max": 98.61268771709766,
+    "m_rsw": -0.0,
+    "set": 20.6443711341712
+   }
+  },
+  {
+   "id": "cold-windy",
+   "inputs": {
+    "id": "cold-windy",
+    "tdb": 10.0,
+    "v": 1.0,
+    "rh": 60.0,
+    "met": 1.2,
+    "clo": 1.5
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 10.0,
+      "meanRadiantTempC": 10.0,
+      "relativeHumidity": 0.6,
+      "windMS": 1.0,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.5915156421471173,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 2.2366050000000004,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.2848125,
+         "vapourResistanceM2PaW": 38.35858585858586,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 10929.064363175437,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.2,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 36.8311534674655,
+    "t_skin": 30.484072903529245,
+    "w": 0.06,
+    "m_bl": 3.849139725381654,
+    "e_skin": 5.8717560408666545,
+    "q_sensible": 68.5761387636994,
+    "q_res": 6.181411931977297,
+    "e_max": 97.8626006811109,
+    "m_rsw": -0.0,
+    "set": 16.18309706345024
+   }
+  },
+  {
+   "id": "walking",
+   "inputs": {
+    "id": "walking",
+    "tdb": 24.0,
+    "v": 0.1,
+    "rh": 50.0,
+    "met": 2.0,
+    "clo": 0.6
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 24.0,
+      "meanRadiantTempC": 24.0,
+      "relativeHumidity": 0.5,
+      "windMS": 0.1,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.9858594035785289,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 1.9901220000000002,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.10137,
+         "vapourResistanceM2PaW": 13.652525252525253,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 12282.664077880654,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 2.0,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 36.996678063080275,
+    "t_skin": 34.35459783356164,
+    "w": 0.272564530849012,
+    "m_bl": 29.901367569633283,
+    "e_skin": 49.13477044598792,
+    "q_sensible": 56.6259445940983,
+    "q_res": 8.784252152948506,
+    "e_max": 180.26839476485765,
+    "m_rsw": 59.947851627184704,
+    "set": 26.197928232069223
+   }
+  },
+  {
+   "id": "humid-working",
+   "inputs": {
+    "id": "humid-working",
+    "tdb": 30.0,
+    "v": 0.2,
+    "rh": 80.0,
+    "met": 1.5,
+    "clo": 0.5
+   },
+   "asset": {
+    "dimensions": {
+     "heightM": 1.75,
+     "massKg": 70.0
+    },
+    "materials": [
+     {
+      "id": "clothing",
+      "title": {
+       "en": "Clothing, effective radiation",
+       "de": "Bekleidung, effektive Strahlung"
+      },
+      "emissivity": 0.6935,
+      "solarAbsorptivity": 0.5,
+      "source": "literature"
+     }
+    ],
+    "thermal": {
+     "environment": {
+      "airTempC": 30.0,
+      "meanRadiantTempC": 30.0,
+      "relativeHumidity": 0.8,
+      "windMS": 0.2,
+      "windDirectionDeg": 0,
+      "solarWM2": 0,
+      "diffuseFraction": 1,
+      "pressurePa": 101325
+     },
+     "baseMet": 1,
+     "body": {
+      "species": "human",
+      "massKg": 70.0,
+      "skinAreaM2": 1.8258,
+      "basalMetabolismW": 0,
+      "metWM2": 58.2,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 0.5,
+      "source": "literature"
+     },
+     "respiration": {
+      "noseEmitter": "nose",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.95,
+      "patterns": [
+       {
+        "id": "p",
+        "title": {
+         "en": "Matched to the library",
+         "de": "An die Bibliothek angepasst"
+        },
+        "rateBpm": 15.0,
+        "tidalVolumeL": 0.7393945526838965,
+        "inhaleFraction": 0.4,
+        "pauseAfterInhaleFraction": 0.1,
+        "exhaleFraction": 0.4,
+        "pauseAfterExhaleFraction": 0.1,
+        "route": "nose",
+        "source": "illustrative"
+       }
+      ],
+      "motion": [],
+      "source": "illustrative"
+     },
+     "passengers": [],
+     "operating": [],
+     "emitters": [],
+     "assumptions": [],
+     "regions": [
+      {
+       "id": "body",
+       "title": {
+        "en": "Whole body",
+        "de": "Ganzer Körper"
+       },
+       "kind": "clothing",
+       "model": "body",
+       "material": "clothing",
+       "areaM2": 1.9627350000000001,
+       "characteristicLengthM": 0.2,
+       "geometry": "cylinder",
+       "skyViewFactor": 0.5,
+       "layers": [
+        {
+         "id": "clothing",
+         "title": {
+          "en": "Clothing ensemble",
+          "de": "Bekleidungsensemble"
+         },
+         "kind": "clothing",
+         "material": "clothing",
+         "resistanceM2KW": 0.0833125,
+         "vapourResistanceM2PaW": 11.22053872053872,
+         "source": "literature"
+        }
+       ],
+       "heatCapacityJM2K": 12454.050088269685,
+       "body": {
+        "segment": "trunk",
+        "metabolicShare": 1,
+        "skinFraction": 1
+       },
+       "source": "literature"
+      }
+     ]
+    }
+   },
+   "state": {
+    "timeS": 3600,
+    "thermal": {
+     "activityMet": 1.5,
+     "externalWorkW": 0,
+     "operating": {},
+     "regions": {
+      "body": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {},
+     "breathing": "p"
+    },
+    "anchors": {},
+    "bones": {}
+   },
+   "expected": {
+    "t_core": 37.01090699456069,
+    "t_skin": 35.04122529205996,
+    "w": 0.5397722986302069,
+    "m_bl": 31.608839347283368,
+    "e_skin": 54.463149343890635,
+    "q_sensible": 28.27072570345061,
+    "q_res": 3.7220836245710403,
+    "e_max": 100.90023048997341,
+    "m_rsw": 75.73394166847972,
+    "set": 33.044015613196414
+   }
+  }
+ ]
+}

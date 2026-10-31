@@ -21,7 +21,7 @@
     "port": { "dev": 6061, "env": "TEACHING_ARCHITECTURE_COURSE_PORT" },
     "executor": "repo:script",
     "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
-    "targets": ["build", "check", "ci-browser-prepare", "deploy-check", "dev", "dev-site", "docker-image-build", "docker-image-check", "docker-image-publish", "docker-stack-bundle", "docker-stack-check", "preflight", "publish", "test", "test-e2e", "typecheck"],
+    "targets": ["build", "build-parametrization-de", "build-parametrization-en", "check", "ci-browser-prepare", "deploy-check", "dev", "dev-site", "docker-image-build", "docker-image-check", "docker-image-publish", "docker-stack-bundle", "docker-stack-check", "preflight", "publish", "test", "test-assignment", "test-e2e", "typecheck"],
     "compilerModes": {
       "deploy-check": "release",
       "docker-image-build": "release",

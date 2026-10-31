@@ -33,6 +33,20 @@
         "extra"
       ],
       "accepted": false
+    },
+    {
+      "arguments": [
+        "cache",
+        "nx-output-observation"
+      ],
+      "accepted": true
+    },
+    {
+      "arguments": [
+        "cache",
+        "contracts"
+      ],
+      "accepted": true
     }
   ]
 }

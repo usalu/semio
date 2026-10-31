@@ -1,110 +1,210 @@
 {
-  "id": "blackbody-exchange",
-  "oracle": "scipy.constants.Stefan_Boltzmann + numpy (CODATA 2018)",
-  "tolerances": {
-    "relative": 0.005,
-    "absoluteWM2": 0.01
+ "id": "blackbody-exchange",
+ "oracle": "scipy.constants.Stefan_Boltzmann (CODATA 2018), numpy",
+ "tolerances": {
+  "relative": 0.002,
+  "absoluteWM2": 0.01
+ },
+ "asset": {
+  "dimensions": {
+   "heightM": 1,
+   "massKg": 0
   },
-  "asset": {
-    "dimensions": {
-      "heightM": 1,
-      "massKg": 0
+  "materials": [
+   {
+    "id": "eps-0.95",
+    "title": {
+     "en": "Grey body, emissivity 0.95",
+     "de": "Grauer Körper, Emissionsgrad 0.95"
     },
-    "materials": [
-      {
-        "id": "grey-body",
-        "title": {
-          "en": "Grey body",
-          "de": "Grauer Körper"
-        },
-        "emissivity": 0.95,
-        "source": "illustrative"
-      }
-    ],
-    "thermal": {
-      "environment": {
-        "airTempC": 20,
-        "meanRadiantTempC": 20,
-        "relativeHumidity": 0.5,
-        "windMS": 0,
-        "windDirectionDeg": 0,
-        "solarWM2": 0,
-        "pressurePa": 101325
-      },
-      "regions": [
-        {
-          "id": "warm",
-          "title": {
-            "en": "Warm plate",
-            "de": "Warme Platte"
-          },
-          "kind": "surface",
-          "material": "grey-body",
-          "model": "fixed",
-          "areaM2": 1,
-          "characteristicLengthM": 0.5,
-          "surfaceTempC": 33,
-          "source": "illustrative"
-        },
-        {
-          "id": "cold",
-          "title": {
-            "en": "Cold plate",
-            "de": "Kalte Platte"
-          },
-          "kind": "surface",
-          "material": "grey-body",
-          "model": "fixed",
-          "areaM2": 2,
-          "characteristicLengthM": 0.5,
-          "surfaceTempC": 5,
-          "source": "illustrative"
-        },
-        {
-          "id": "equal",
-          "title": {
-            "en": "Plate at radiant temperature",
-            "de": "Platte auf Strahlungstemperatur"
-          },
-          "kind": "surface",
-          "material": "grey-body",
-          "model": "fixed",
-          "areaM2": 1,
-          "characteristicLengthM": 0.5,
-          "surfaceTempC": 20,
-          "source": "illustrative"
-        }
-      ],
-      "emitters": [],
-      "assumptions": []
+    "emissivity": 0.95,
+    "source": "illustrative"
+   },
+   {
+    "id": "eps-0.9",
+    "title": {
+     "en": "Grey body, emissivity 0.9",
+     "de": "Grauer Körper, Emissionsgrad 0.9"
+    },
+    "emissivity": 0.9,
+    "source": "illustrative"
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": -10,
+    "groundTempC": 30,
+    "relativeHumidity": 0.5,
+    "windMS": 0,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 1,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [],
+   "emitters": [],
+   "assumptions": [],
+   "regions": [
+    {
+     "id": "warm-plate",
+     "title": {
+      "en": "warm-plate",
+      "de": "warm-plate"
+     },
+     "kind": "surface",
+     "model": "fixed",
+     "material": "eps-0.95",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.5,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.8,
+     "layers": [],
+     "heatCapacityJM2K": 1000,
+     "fixed": {
+      "surfaceTempC": 33
+     },
+     "source": "illustrative"
+    },
+    {
+     "id": "cold-wall",
+     "title": {
+      "en": "cold-wall",
+      "de": "cold-wall"
+     },
+     "kind": "surface",
+     "model": "fixed",
+     "material": "eps-0.95",
+     "areaM2": 2.0,
+     "characteristicLengthM": 0.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 1000,
+     "fixed": {
+      "surfaceTempC": 5
+     },
+     "source": "illustrative"
+    },
+    {
+     "id": "underside",
+     "title": {
+      "en": "underside",
+      "de": "underside"
+     },
+     "kind": "surface",
+     "model": "fixed",
+     "material": "eps-0.9",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.5,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0.0,
+     "layers": [],
+     "heatCapacityJM2K": 1000,
+     "fixed": {
+      "surfaceTempC": 25
+     },
+     "source": "illustrative"
+    },
+    {
+     "id": "equilibrium",
+     "title": {
+      "en": "equilibrium",
+      "de": "equilibrium"
+     },
+     "kind": "surface",
+     "model": "fixed",
+     "material": "eps-0.95",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.5,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 1000,
+     "fixed": {
+      "surfaceTempC": 20
+     },
+     "source": "illustrative"
     }
-  },
-  "state": {
-    "timeS": 0,
-    "thermal": {
-      "activityMet": 1,
-      "operating": {},
-      "regions": {},
-      "emitters": {}
-    },
-    "anchors": {},
-    "bones": {}
-  },
-  "expected": {
-    "warm": {
-      "radiantFluxWM2": 75.40251596608847,
-      "radiationCoefficientWM2K": 5.8001935358529595,
-      "radiantW": 75.40251596608847
-    },
-    "cold": {
-      "radiantFluxWM2": -75.38562939397441,
-      "radiationCoefficientWM2K": 5.025708626264961,
-      "radiantW": -150.77125878794882
-    },
-    "equal": {
-      "radiantFluxWM2": 0.0,
-      "radiationCoefficientWM2K": 5.428314842504722,
-      "radiantW": 0.0
-    }
+   ]
   }
+ },
+ "state": {
+  "timeS": 0,
+  "thermal": {
+   "activityMet": 0,
+   "externalWorkW": 0,
+   "operating": {},
+   "regions": {
+    "warm-plate": {
+     "exposedFraction": 1,
+     "sunlitFraction": 0
+    },
+    "cold-wall": {
+     "exposedFraction": 1,
+     "sunlitFraction": 0
+    },
+    "underside": {
+     "exposedFraction": 1,
+     "sunlitFraction": 0
+    },
+    "equilibrium": {
+     "exposedFraction": 1,
+     "sunlitFraction": 0
+    }
+   },
+   "emitters": {},
+   "breathing": null
+  },
+  "anchors": {},
+  "bones": {}
+ },
+ "expected": {
+  "warm-plate": {
+   "emittedWM2": 473.23013998615323,
+   "netWM2": 187.01298940310775,
+   "netW": 187.01298940310775,
+   "splitWM2": {
+    "sky": 171.93248620989007,
+    "ground": 0.0,
+    "surroundings": 15.080503193217691
+   },
+   "coefficientWM2K": 5.17114365155398
+  },
+  "cold-wall": {
+   "emittedWM2": 322.4419946260904,
+   "netWM2": -53.525253119659055,
+   "netW": -107.05050623931811,
+   "splitWM2": {
+    "sky": 19.23823872068991,
+    "ground": -46.378521552457926,
+    "surroundings": -26.38497028789104
+   },
+   "coefficientWM2K": 4.91636912967473
+  },
+  "underside": {
+   "emittedWM2": 403.2677580491006,
+   "netWM2": -27.739453092044013,
+   "netW": -13.869726546022006,
+   "splitWM2": {
+    "sky": 0.0,
+    "ground": -27.739453092044013,
+    "surroundings": 0.0
+   },
+   "coefficientWM2K": 5.547890618408802
+  },
+  "equilibrium": {
+   "emittedWM2": 397.8276240200648,
+   "netWM2": 55.47543785201785,
+   "netW": 55.47543785201785,
+   "splitWM2": {
+    "sky": 69.75654589813705,
+    "ground": -14.281108046119202,
+    "surroundings": 0.0
+   },
+   "coefficientWM2K": 5.135578602965932
+  }
+ }
 }

@@ -1,0 +1,762 @@
+{
+  "inventoryCases": [
+    {
+      "id": "wfc-snapshot",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "target": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"
+    },
+    {
+      "id": "bcf-snapshot",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup",
+      "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/🔣️.json"
+    }
+  ],
+  "referenceCases": [
+    {
+      "id": "transitive",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"$ref\":\"https://example.invalid/schema-input/b\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"$ref\":\"https://example.invalid/schema-input/c\"}",
+        "{\"$id\":\"https://example.invalid/schema-input/c\",\"type\":\"integer\"}",
+        "{\"$id\":\"https://example.invalid/schema-input/unused\",\"type\":\"string\"}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b",
+        "https://example.invalid/schema-input/c"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "duplicate-reference",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"type\":\"object\",\"properties\":{\"first\":{\"$ref\":\"https://example.invalid/schema-input/b\"},\"second\":{\"$ref\":\"https://example.invalid/schema-input/b\"}}}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"integer\"}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "local",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"definitions\":{\"Value\":{\"type\":\"integer\"}},\"$ref\":\"#/definitions/Value\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/unused\",\"type\":\"string\"}"
+      ],
+      "expected": [],
+      "compiles": true
+    },
+    {
+      "id": "missing",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"$ref\":\"https://example.invalid/schema-input/missing\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/unused\",\"type\":\"string\"}"
+      ],
+      "expected": [],
+      "compiles": false
+    },
+    {
+      "id": "missing-transitive",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"$ref\":\"https://example.invalid/schema-input/b\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"$ref\":\"https://example.invalid/schema-input/c\"}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b"
+      ],
+      "compiles": false
+    },
+    {
+      "id": "escaped-uri",
+      "root": "{\"$id\":\"https:\\/\\/example.invalid\\/schema-input\\/a\",\"$ref\":\"https:\\/\\/example.invalid\\/schema-input\\/b\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"integer\"}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "ambiguous-document",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"$ref\":\"https://example.invalid/schema-input/b\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"integer\"}",
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"string\"}"
+      ],
+      "expected": [],
+      "compiles": false
+    },
+    {
+      "id": "recursive-reference",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"$ref\":\"https://example.invalid/schema-input/b\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"object\",\"properties\":{\"next\":{\"$ref\":\"https://example.invalid/schema-input/b\"}}}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "cross-document-root-cycle",
+      "root": "{\"$id\":\"https://example.invalid/schema-input/a\",\"type\":\"object\",\"properties\":{\"child\":{\"$ref\":\"https://example.invalid/schema-input/b\"}}}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/schema-input/b\",\"type\":\"object\",\"properties\":{\"parent\":{\"$ref\":\"https://example.invalid/schema-input/a\"}}}"
+      ],
+      "expected": [
+        "https://example.invalid/schema-input/b"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "relative-sibling",
+      "root": "{\"$id\":\"https://example.invalid/uri-reference/root.json\",\"$ref\":\"./sibling.json\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/uri-reference/sibling.json\",\"type\":\"integer\"}"
+      ],
+      "expected": [
+        "https://example.invalid/uri-reference/sibling.json"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "relative-encoded-parent",
+      "root": "{\"$id\":\"https://example.invalid/uri-reference/nested/root.json\",\"$ref\":\"../%F0%9F%A7%AC/value.json\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/uri-reference/%F0%9F%A7%AC/value.json\",\"type\":\"string\"}"
+      ],
+      "expected": [
+        "https://example.invalid/uri-reference/%F0%9F%A7%AC/value.json"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "relative-query-fragment",
+      "root": "{\"$id\":\"https://example.invalid/uri-reference/nested/root.json\",\"$ref\":\"../value.json?revision=1#/$defs/Value\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/uri-reference/value.json?revision=1\",\"$defs\":{\"Value\":{\"type\":\"string\"}}}"
+      ],
+      "expected": [
+        "https://example.invalid/uri-reference/value.json?revision=1"
+      ],
+      "compiles": true
+    },
+    {
+      "id": "percent-encoded-local-pointer",
+      "root": "{\"$id\":\"https://example.invalid/uri-reference/pointer.json\",\"$defs\":{\"ä/~\":{\"type\":\"integer\"}},\"$ref\":\"#/$defs/%C3%A4~1~0\"}",
+      "documents": [],
+      "expected": [],
+      "compiles": true
+    },
+    {
+      "id": "relative-without-base-refused",
+      "root": "{\"$ref\":\"./sibling.json\"}",
+      "documents": [
+        "{\"$id\":\"https://example.invalid/uri-reference/sibling.json\",\"type\":\"integer\"}"
+      ],
+      "expected": [],
+      "compiles": false
+    }
+  ],
+  "repositoryRoots": [
+    "🧰️framework",
+    "✏️s",
+    "🌎️hub",
+    "♻️mit-bestand",
+    "🏢️semio-tech",
+    "👴️leutwiler",
+    "🎓️teaching"
+  ],
+  "draft07Keywords": [
+    "$comment",
+    "$id",
+    "$ref",
+    "$schema",
+    "additionalItems",
+    "additionalProperties",
+    "allOf",
+    "anyOf",
+    "const",
+    "contains",
+    "contentEncoding",
+    "contentMediaType",
+    "default",
+    "definitions",
+    "dependencies",
+    "description",
+    "else",
+    "enum",
+    "examples",
+    "exclusiveMaximum",
+    "exclusiveMinimum",
+    "format",
+    "if",
+    "items",
+    "maxItems",
+    "maxLength",
+    "maxProperties",
+    "maximum",
+    "minItems",
+    "minLength",
+    "minProperties",
+    "minimum",
+    "multipleOf",
+    "not",
+    "oneOf",
+    "pattern",
+    "patternProperties",
+    "properties",
+    "propertyNames",
+    "readOnly",
+    "required",
+    "then",
+    "title",
+    "type",
+    "uniqueItems"
+  ],
+  "classificationCases": [
+    {
+      "id": "owned-keyword",
+      "reason": "validation failed: $: unsupported JSON Schema keyword `contains`",
+      "expected": "draft07KeywordGap"
+    },
+    {
+      "id": "custom-type-map",
+      "reason": "validation failed: $: unsupported JSON Schema keyword `types`",
+      "expected": "unknownKeyword"
+    },
+    {
+      "id": "later-dialect",
+      "reason": "validation failed: $: unsupported JSON Schema keyword `prefixItems`",
+      "expected": "nonDraft07Keyword"
+    },
+    {
+      "id": "duplicate-id",
+      "reason": "ambiguous schema document identifier",
+      "expected": "ambiguousIdentifier"
+    },
+    {
+      "id": "missing-target",
+      "reason": "validation failed: $.$ref: unresolved cross-document reference `urn:missing`",
+      "expected": "unresolvedReference"
+    },
+    {
+      "id": "boundary-engine",
+      "reason": "validation failed: $.pattern: word boundaries are outside the supported subset",
+      "expected": "patternCompatibilityFailure"
+    },
+    {
+      "id": "surrogate-engine",
+      "reason": "validation failed: $.pattern: invalid code point escape `D800`",
+      "expected": "patternCompatibilityFailure"
+    },
+    {
+      "id": "invalid-enum",
+      "reason": "validation failed: $.enum: duplicate enum value",
+      "expected": "metaSchemaViolation"
+    }
+  ],
+  "patternCases": [
+    {
+      "id": "word-boundary",
+      "pattern": "\\bowner\\b",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            111,
+            119,
+            110,
+            101,
+            114
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            120,
+            111,
+            119,
+            110,
+            101,
+            114
+          ],
+          "expected": false
+        },
+        {
+          "units": [
+            111,
+            119,
+            110,
+            101,
+            114,
+            95
+          ],
+          "expected": false
+        },
+        {
+          "units": [
+            45,
+            111,
+            119,
+            110,
+            101,
+            114,
+            45
+          ],
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "surrogate-range",
+      "pattern": "^[^\\uD800-\\uDFFF]*$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            65
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            55296
+          ],
+          "expected": false
+        },
+        {
+          "units": [
+            55357,
+            56832
+          ],
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "invalid-code-point-escape",
+      "pattern": "\\uD80G",
+      "compiles": false
+    },
+    {
+      "id": "non-word-boundary",
+      "pattern": "\\Bowner\\B",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            120,
+            111,
+            119,
+            110,
+            101,
+            114,
+            120
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            111,
+            119,
+            110,
+            101,
+            114
+          ],
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "class-backspace",
+      "pattern": "^[\\b]$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            8
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            98
+          ],
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "escaped-surrogate-pair",
+      "pattern": "^\\uD83D\\uDE00$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            55357,
+            56832
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            65
+          ],
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "escaped-astral-range",
+      "pattern": "^[\\uD83D\\uDE00-\\uD83D\\uDE02]$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            55357,
+            56833
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            55357,
+            56835
+          ],
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "quantified-boundary",
+      "pattern": "\\b+",
+      "compiles": false
+    },
+    {
+      "id": "invalid-class-boundary",
+      "pattern": "[\\B]",
+      "compiles": false
+    },
+    {
+      "id": "ecma-space-next-line",
+      "pattern": "^\\s$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            133
+          ],
+          "expected": false
+        },
+        {
+          "units": [
+            8232
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            32
+          ],
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "ecma-space-byte-order-mark",
+      "pattern": "^\\s$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            65279
+          ],
+          "expected": true
+        }
+      ]
+    },
+    {
+      "id": "ecma-nonspace-next-line",
+      "pattern": "^\\S$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            133
+          ],
+          "expected": true
+        },
+        {
+          "units": [
+            8232
+          ],
+          "expected": false
+        },
+        {
+          "units": [
+            32
+          ],
+          "expected": false
+        }
+      ]
+    },
+    {
+      "id": "ecma-nonspace-byte-order-mark",
+      "pattern": "^\\S$",
+      "compiles": true,
+      "matches": [
+        {
+          "units": [
+            65279
+          ],
+          "expected": false
+        }
+      ]
+    }
+  ],
+  "opacityCases": [
+    {
+      "id": "opaque-gitlink",
+      "path": "♻️mit-bestand/🔎️recherche/🧬️schema",
+      "opaque": true
+    },
+    {
+      "id": "opaque-boundary",
+      "path": "♻️mit-bestand/🔎️recherche-extra/🧬️schema",
+      "opaque": false
+    },
+    {
+      "id": "preserved-payload",
+      "path": "🧰️framework/.p0123abcd",
+      "opaque": true
+    },
+    {
+      "id": "preserved-descendant",
+      "path": "🧰️framework/.p0123abcd/p/🧬️schema",
+      "opaque": true
+    },
+    {
+      "id": "nonhex-name",
+      "path": "🧰️framework/.p0123abcg",
+      "opaque": false
+    },
+    {
+      "id": "ordinary-dotfile",
+      "path": "🧰️framework/.profile",
+      "opaque": false
+    },
+    {
+      "id": "wrong-digest-length",
+      "path": "🧰️framework/.p0123abc",
+      "opaque": false
+    },
+    {
+      "id": "retirement-journal",
+      "path": "🧰️framework/.d0123abcd",
+      "opaque": true
+    },
+    {
+      "id": "retirement-descendant",
+      "path": "🧰️framework/.d0123abcd/p/🧬️schema",
+      "opaque": true
+    },
+    {
+      "id": "retirement-nonhex",
+      "path": "🧰️framework/.d0123abcg",
+      "opaque": false
+    },
+    {
+      "id": "ordinary-d-dotfile",
+      "path": "🧰️framework/.database",
+      "opaque": false
+    }
+  ],
+  "authoring": {
+    "schema": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦴️structure/🔣️.json",
+    "documents": [
+      "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+      "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"
+    ],
+    "cases": [
+      {
+        "id": "point-location",
+        "definition": "StructuralLocation",
+        "value": {
+          "Point": {
+            "station": 0.5
+          }
+        },
+        "valid": true
+      },
+      {
+        "id": "line-location",
+        "definition": "StructuralLocation",
+        "value": {
+          "Line": {
+            "start": 0,
+            "end": 1
+          }
+        },
+        "valid": true
+      },
+      {
+        "id": "area-location",
+        "definition": "StructuralLocation",
+        "value": "Area",
+        "valid": true
+      },
+      {
+        "id": "invalid-location-scalar",
+        "definition": "StructuralLocation",
+        "value": {
+          "Point": {
+            "station": "half"
+          }
+        },
+        "valid": false
+      },
+      {
+        "id": "restraints",
+        "definition": "Restraints",
+        "value": {
+          "x": true,
+          "y": false,
+          "z": false,
+          "rx": false,
+          "ry": false,
+          "rz": false
+        },
+        "valid": true
+      },
+      {
+        "id": "missing-restraint",
+        "definition": "Restraints",
+        "value": {
+          "x": true,
+          "y": false,
+          "z": false,
+          "rx": false,
+          "ry": false
+        },
+        "valid": false
+      },
+      {
+        "id": "support",
+        "definition": "StructuralSupport",
+        "value": {
+          "name": "fixed",
+          "member": "beam",
+          "location": {
+            "Point": {
+              "station": 0.5
+            }
+          },
+          "offset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "restraints": {
+            "x": true,
+            "y": false,
+            "z": false,
+            "rx": false,
+            "ry": false,
+            "rz": false
+          }
+        },
+        "valid": true
+      },
+      {
+        "id": "invalid-support-offset",
+        "definition": "StructuralSupport",
+        "value": {
+          "name": "fixed",
+          "member": "beam",
+          "location": {
+            "Point": {
+              "station": 0.5
+            }
+          },
+          "offset": {
+            "x": "zero",
+            "y": 0,
+            "z": 0
+          },
+          "restraints": {
+            "x": true,
+            "y": false,
+            "z": false,
+            "rx": false,
+            "ry": false,
+            "rz": false
+          }
+        },
+        "valid": false
+      },
+      {
+        "id": "load-case",
+        "definition": "LoadCase",
+        "value": {
+          "name": "dead",
+          "category": "permanent",
+          "factor": 1
+        },
+        "valid": true
+      },
+      {
+        "id": "invalid-load-factor",
+        "definition": "LoadCase",
+        "value": {
+          "name": "dead",
+          "category": "permanent",
+          "factor": "1"
+        },
+        "valid": false
+      },
+      {
+        "id": "structural-load",
+        "definition": "StructuralLoad",
+        "value": {
+          "name": "gravity",
+          "load_case": "dead",
+          "member": "beam",
+          "location": "Area",
+          "force": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "moment": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "valid": true
+      },
+      {
+        "id": "missing-load-case",
+        "definition": "StructuralLoad",
+        "value": {
+          "name": "gravity",
+          "member": "beam",
+          "location": "Area",
+          "force": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "moment": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        },
+        "valid": false
+      }
+    ]
+  }
+}

@@ -3,12 +3,11 @@ import {createIssuedResourceControlV1, receiveScriptProcessInvocation, Script, S
 import {withResourceLeases} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {NATIVE_TOOLCHAINS_V1, NATIVE_TOOL_IDS_V1, pythonEnvironmentOfProjectV1, pythonProjectForRootV1, toolchainIdentityV1, toolchainHostV1, toolchainMessageV1, type ToolchainKindV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {getWorkspaceRoot} from "../../../../📦️packages/🟦️typescript/📇️inventory/🗂️workspaces/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {provisionNativeToolsV1} from "./🟦️.ts";
-import {systemNativeToolPortV1} from "./🔌️port/🟦️.ts";
+import {ownedNativeToolPortV1} from "./🔌️port/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 
 const kinds: readonly ToolchainKindV1[] = ["python", "dotnet", "cmake", "go"];
@@ -18,13 +17,13 @@ export class PrepareScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error(toolchainMessageV1("usage", {command: "prepare", choices: "no arguments"}));
     const workspace = getWorkspaceRoot();
-    await withRepositoryToolingStoreV1(workspace, this.invocation, createIssuedResourceControlV1(this.invocation, "cache:entry", 0), async store => {
+    await withRepositoryToolingStoreV1(workspace, this.invocation, createIssuedResourceControlV1(this.invocation, "cache:entry", 0), async (store, actual) => {
       requireNativeStorageReservationV1(store.storage, store.control);
       await store.recheck();
       if (store.root !== repositoryCachePartitionRootV1(workspace, "tools")) throw new Error(toolchainMessageV1("directory", {path: store.root}));
-      const signal = store.control.signal;
-      await withResourceLeases({directory: join(workspace, ".cache/b/l/m/data"), signal, control: store.control, resources: [{resource: "native-tools:v1", mode: "exclusive"}]}, async () => {
-        await provisionNativeToolsV1(NATIVE_TOOL_IDS_V1, store.root, systemNativeToolPortV1(workspace, readNativeCallerAuthorityV1(this.invocation.capabilities).network.offline), signal);
+      const signal = actual.signal;
+      await withResourceLeases({directory: join(workspace, ".cache/b/l/m/data"), signal, control: actual, resources: [{resource: "native-tools:v1", mode: "exclusive"}]}, async () => {
+        await provisionNativeToolsV1(NATIVE_TOOL_IDS_V1, store.root, ownedNativeToolPortV1(store.environment, actual), signal);
       });
     });
   }

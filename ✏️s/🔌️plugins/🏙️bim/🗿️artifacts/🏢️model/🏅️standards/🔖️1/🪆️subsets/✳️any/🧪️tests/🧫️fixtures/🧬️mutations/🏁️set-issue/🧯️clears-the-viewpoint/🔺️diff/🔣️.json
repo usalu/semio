@@ -2,8 +2,10 @@
   "issues": {
     "i-1": {
       "entry": "Patched",
-      "viewpoint": {
-        "value": null
+      "value": {
+        "viewpoint": {
+          "value": null
+        }
       }
     }
   }

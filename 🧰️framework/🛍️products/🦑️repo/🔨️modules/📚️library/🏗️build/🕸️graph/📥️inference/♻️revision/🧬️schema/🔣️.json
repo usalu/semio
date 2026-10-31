@@ -1,5 +1,5 @@
 {
- "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Sections of the data files of the graph implementation that nothing of the graph reads",
  "description": "A declared data file of the graph implementation (`implementationFiles` of the revision component) is a fact of every project and of the environment, named by the digest of its bytes. A top level section that no inferred fact depends on (the capacity, worker and remote settings of the build policy, the storage budget of the caching policy) does not belong to that fact: a file listed here is named by the digest of its canonical JSON without the listed sections, the row carries the list (`ignore`) so any reader can check it, and an edit of an ignored section stales no project. The list is a promise that is checked by recomputation, not by reading code: the oracle over sampled projects infers them with every number of the ignored sections changed (and, in a second run, every boolean flipped and every string suffixed) and requires byte identical records; a trace of the sections the inference reads shows none of the ignored ones except the scheduling settings that only pace the work. A section added to a policy file counts until it is listed here.",
  "definitions": {

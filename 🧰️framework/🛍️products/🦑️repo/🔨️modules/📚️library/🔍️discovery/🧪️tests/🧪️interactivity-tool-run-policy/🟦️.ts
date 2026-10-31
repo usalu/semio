@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import policySchema from "../../📋️policy/⏯️tool-run/🧬️schema/🔣️.json";
 import {
   interactivityToolRunDeclarationFailures,

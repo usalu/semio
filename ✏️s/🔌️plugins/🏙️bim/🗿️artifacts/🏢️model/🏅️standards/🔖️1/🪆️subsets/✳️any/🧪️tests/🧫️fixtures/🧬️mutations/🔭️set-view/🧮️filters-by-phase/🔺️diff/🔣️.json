@@ -2,8 +2,10 @@
   "views": {
     "v-ground": {
       "entry": "Patched",
-      "phase": {
-        "value": "New"
+      "value": {
+        "phase": {
+          "value": "New"
+        }
       }
     }
   }

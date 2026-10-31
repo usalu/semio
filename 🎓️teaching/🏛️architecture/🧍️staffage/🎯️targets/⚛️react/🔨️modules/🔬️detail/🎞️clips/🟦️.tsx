@@ -28,7 +28,7 @@ function CardGroup(props: { readonly label: string; readonly cards: readonly Car
   return (
     <div role="radiogroup" aria-label={props.label} className="grid gap-double sm:grid-cols-2 xl:grid-cols-3">
       {props.cards.map((card, at) => (
-        <button key={card.id} ref={(element) => void (refs.current[at] = element)} type="button" role="radio" aria-checked={card.id === props.checked} tabIndex={at === index ? 0 : -1} data-card={card.id} onKeyDown={(event) => onKey(event, at)} onClick={() => props.onPick(card.id)} className={cn("flex min-w-0 flex-col items-start gap-single border p-double text-left transition-colors motion-reduce:transition-none", card.id === props.checked ? "border-foreground bg-foreground text-background" : "border-border bg-panel hover:bg-hover-panel")}>
+        <button key={card.id} ref={(element) => void (refs.current[at] = element)} type="button" role="radio" aria-checked={card.id === props.checked} tabIndex={at === index ? 0 : -1} data-card={card.id} onKeyDown={(event) => onKey(event, at)} onClick={() => props.onPick(card.id)} className={cn("flex min-w-0 flex-col items-start gap-single border p-double text-left transition-colors motion-reduce:transition-none", card.id === props.checked ? "border-active-base bg-active-base text-active-foreground" : "border-border bg-panel hover:bg-hover-panel")}>
           <span className="flex w-full items-baseline justify-between gap-single">
             <span className="text-sm font-semibold">{card.title[language]}</span>
             {card.badge === undefined ? null : <Tag className="border-current text-current">{card.badge}</Tag>}
@@ -65,7 +65,7 @@ export function PosesAndClips(props: { readonly asset: Asset; readonly selection
   );
 }
 
-const EVENT_GLYPHS: Readonly<Record<ClipEvent["kind"], string>> = { "contact-on": "▼", "contact-off": "▲", inhale: "◐", exhale: "◑", ignition: "✦", shutdown: "■", "load-on": "⊕", "load-off": "⊖", thermal: "☼", motion: "→" };
+const EVENT_GLYPHS: Readonly<Record<ClipEvent["kind"], string>> = { "contact-on": "▼", "contact-off": "▲", ignition: "✦", shutdown: "■", "load-on": "⊕", "load-off": "⊖", thermal: "☼", motion: "→", operating: "⚙" };
 
 /** ⏳️ The timeline of a clip with a cursor at `timeS`; `onSeek` receives seconds. */
 export function ClipTimeline(props: { readonly asset: Asset; readonly clip: Clip; readonly timeS: number; readonly onSeek: (timeS: number) => void }): ReactElement {

@@ -56,7 +56,7 @@ export class ParserFiles {
 
   homeOf(name: string, moving: ReadonlySet<string> = new Set()): string {
     const defined = this.definingFile(name);
-    return defined !== undefined && (defined !== this.leaf || !moving.has(name)) ? defined : this.placementOf(name);
+    return this.pinned(name) ? this.leaf : defined !== undefined && (defined !== this.leaf || !moving.has(name)) ? defined : this.placementOf(name);
   }
 }
 

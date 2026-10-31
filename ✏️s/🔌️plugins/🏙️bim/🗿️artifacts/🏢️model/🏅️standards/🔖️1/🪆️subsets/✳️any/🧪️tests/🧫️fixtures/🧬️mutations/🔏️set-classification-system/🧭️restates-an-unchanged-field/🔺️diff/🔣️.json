@@ -1,8 +1,10 @@
 {
   "classification_systems": {
     "cs-din": {
-      "edition": "2020",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "edition": "2020"
+      }
     }
   }
 }

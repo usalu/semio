@@ -1,3 +1,5 @@
+import profileSchema from"../../🧬️schema/🔣️.json"with{type:"json"};
+import{parseArgs}from"node:util";
 import{runtimeActorCargoArgumentsV1}from"../../../../../🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
 import"@semio-tech/process/routing";
 import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
@@ -38,7 +40,7 @@ test("neutral consumed Cargo profile renders exact inline TOML before compiler p
 /** 🎟️ Serialized receipts and copied fields cannot issue a live compiler configuration selector. */
 test("neutral consumed Cargo selectors refuse every unissued view before effects",async()=>{
  const api=await import("../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts"),apply=Reflect.get(api,"repositoryCargoConfigurationArgumentsV1");expect(typeof apply).toBe("function");if(typeof apply!=="function")throw Error("Actual private issued configuration argument owner required");
- for(const value of[Object.freeze({}),Object.freeze({version:1,digest:"0".repeat(64),directory:"/paid-looking/configuration",environment:Object.freeze({SEMIO_COMPILER_CAPACITY_HELD:"true"})}),JSON.parse(JSON.stringify({version:1,selectors:["profile.release.opt-level=0"],profile:{mode:"release"}}))])await expect(Promise.resolve().then(()=>apply(value,["build","--profile","release"]))).rejects.toThrow("issued");
+ for(const value of[Object.freeze({}),Object.freeze({version:1,digest:"0".repeat(64),directory:"/paid-looking/configuration",environment:Object.freeze({SEMIO_COMPILER_CAPACITY_HELD:"true"})}),JSON.parse(JSON.stringify({version:1,selectors:["profile.release.opt-level=0"],profile:{mode:"release"}}))])await expect(Promise.resolve().then(()=>apply(value,["build","--profile","release"]))).rejects.toMatchObject({code:"invalid",key:"caching.compiler.live-configuration-view-required",values:{}});
 });
 
 /** 🧭️ Real controlled Source reads retain actual nearest/explicit workspace selection through callback settlement. */
@@ -112,7 +114,7 @@ test("neutral consumed Cargo isolated bridges retire redundant profile declarati
 /** 🧪️ A nextest invocation keeps its own profile option (the test level) and carries the consumed mode in its Cargo profile option. */
 test("neutral consumed Cargo nextest profiles keep the test level and narrow only the cargo profile",async()=>{
  const api=await import("../../🟦️.ts"),invoke=Reflect.get(api,"cargoProfileInvocationArgumentsV1");expect(typeof invoke).toBe("function");if(typeof invoke!=="function")throw Error("Actual native Cargo mode normalization required");
- for(const row of corpus.nextestModeFlags){const rendered=api.renderCargoProfileConfigurationV1({version:1,mode:row.mode,target:"wasm32-wasip2",producer:"artifact",operation:"build"},"Cargo.toml","repository"),execute=()=>invoke(row.args,rendered)as readonly string[];if(!row.accept){expect(execute).toThrow();continue;}const actual=execute();expect(actual.slice(0,row.head.length)).toEqual(row.head);expect(actual).not.toContain("--release");expect(actual.filter(value=>value==="--cargo-profile")).toHaveLength(Reflect.get(row,"prebuilt")?0:1);}
+ for(const row of corpus.nextestModeFlags){expect(new Ajv({strict:true}).validate(profileSchema.definitions.NextestModeFlagCase,row)).toBe(true);const rendered=api.renderCargoProfileConfigurationV1({version:1,mode:row.mode,target:"wasm32-wasip2",producer:"artifact",operation:"build"},"Cargo.toml","repository"),execute=()=>invoke(row.args,rendered)as readonly string[];if(!row.accept){expect(execute).toThrow();continue;}const actual=execute();expect(actual.slice(0,row.head.length)).toEqual(row.head);expect(actual).not.toContain("--release");const end=actual.indexOf("--"),head=end<0?actual:actual.slice(0,end),options={profile:{type:"string" as const,multiple:true},"cargo-profile":{type:"string" as const,multiple:true}},oracle=(args:readonly string[])=>parseArgs({args:[...args],options,allowPositionals:true,strict:false}).values;expect(oracle(head).profile).toEqual(oracle(row.head).profile);expect(oracle(head)["cargo-profile"]).toEqual(oracle(row.head)["cargo-profile"]);const tail=Reflect.get(row,"tail") as string[]|undefined;if(tail)expect(actual.slice(end)).toEqual(tail);}
 });
 
 /** 🦀️ Native Cargo release syntax narrows to the actual Original intent, without a retired profile alias. */

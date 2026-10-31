@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "flags",
+    "maximumUtf16",
+    "cases",
+    "provider"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "flags": {
+      "const": [
+        "/d",
+        "/v:off",
+        "/s",
+        "/c"
+      ]
+    },
+    "maximumUtf16": {
+      "const": 8191
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "program",
+          "args",
+          "accepted",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "program": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "expected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "enum": [
+              "quote",
+              "percent",
+              "control",
+              "target-alias",
+              "line-bound"
+            ]
+          }
+        }
+      }
+    },
+    "provider": {
+      "const": "go-safe-batch"
+    }
+  }
+}

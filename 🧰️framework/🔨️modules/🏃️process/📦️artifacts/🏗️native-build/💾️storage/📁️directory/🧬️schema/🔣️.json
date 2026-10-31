@@ -131,6 +131,15 @@
           "intervalMilliseconds": 2000
         },
         "usage": {
+          "metadata": {"maximumExactInteger": 9007199254740991},
+          "entry": {
+            "platforms": ["linux", "darwin", "win32"],
+            "invalidNames": ["", ".", ".."],
+            "nul": "\u0000",
+            "posixSeparator": "/",
+            "windowsSeparator": "\\",
+            "refusal": "Atomic native directory entry required"
+          },
           "blockBytes": 4096,
           "entryFactor": 2,
           "concurrency": 16,

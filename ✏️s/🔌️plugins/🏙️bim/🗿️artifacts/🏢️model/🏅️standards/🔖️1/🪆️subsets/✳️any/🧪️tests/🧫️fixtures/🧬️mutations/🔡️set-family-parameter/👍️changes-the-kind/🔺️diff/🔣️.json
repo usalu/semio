@@ -2,8 +2,10 @@
   "family_parameters": {
     "fam-table.double": {
       "entry": "Patched",
-      "kind": "Real",
-      "value": "2 * width / 1 m"
+      "value": {
+        "kind": "Real",
+        "value": "2 * width / 1 m"
+      }
     }
   }
 }

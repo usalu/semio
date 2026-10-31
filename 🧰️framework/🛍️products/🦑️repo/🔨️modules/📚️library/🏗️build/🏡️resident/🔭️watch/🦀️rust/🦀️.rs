@@ -136,9 +136,15 @@ fn fail(code: &str, message: &str) -> ! {
 struct Filter {
     rooted: Vec<String>,
     names: Vec<String>,
+    hex_names: Vec<(String, usize)>,
+    private_fence: Option<String>,
 }
 
 impl Filter {
+    fn observable(&self, rel: &str) -> bool {
+        !self.excluded(rel) || self.private_fence.as_ref().is_some_and(|root| rel.strip_prefix(&(root.clone() + "/")).is_some_and(|name| !name.is_empty() && !name.contains('/')))
+    }
+
     fn excluded(&self, rel: &str) -> bool {
         if rel.is_empty() {
             return false;
@@ -148,9 +154,9 @@ impl Filter {
                 return true;
             }
         }
-        if !self.names.is_empty() {
+        if !self.names.is_empty() || !self.hex_names.is_empty() {
             for part in rel.split('/') {
-                if self.names.iter().any(|name| name == part) {
+                if self.names.iter().any(|name| name == part) || self.hex_names.iter().any(|(prefix, width)| part.strip_prefix(prefix.as_str()).is_some_and(|suffix| suffix.len() == *width && suffix.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)))) {
                     return true;
                 }
             }
@@ -185,6 +191,22 @@ fn parse(arguments: &[String]) -> (String, Config) {
             "--root" => config.root = value(),
             "--exclude" => config.filter.rooted.push(value().trim_matches('/').to_string()),
             "--exclude-name" => config.filter.names.push(value()),
+            "--exclude-hex-basename" => {
+                let rule = value();
+                let (prefix, width) = rule.rsplit_once(':').unwrap_or_else(|| fail("argument", "hex basename prefix and width required"));
+                let width = width.parse::<usize>().unwrap_or_else(|_| fail("argument", "hex basename width"));
+                if prefix.is_empty() || prefix.len() > 16 || !prefix.is_ascii() || prefix.contains(['/', '\\', ':', '\0']) || width == 0 || width > 64 {
+                    fail("argument", "bounded hex basename rule required");
+                }
+                config.filter.hex_names.push((prefix.to_string(), width));
+            }
+            "--private-fence-directory" => {
+                let path = value();
+                if path.is_empty() || path.starts_with('/') || path.contains(['\\', ':', '\0']) || path.split('/').any(|part| part.is_empty() || part == "." || part == "..") {
+                    fail("argument", "relative private fence directory required");
+                }
+                config.filter.private_fence = Some(path);
+            }
             "--latency-ms" => config.latency_ms = value().parse().unwrap_or_else(|_| fail("argument", "latency")),
             "--since" => config.since = Some(value()),
             "--uuid" => config.uuid = Some(value()),
@@ -693,7 +715,7 @@ mod backend {
                 Some(rest) => rest.trim_start_matches('/').to_string(),
                 None => String::new(),
             };
-            match fsevent::action(flag, state.filter.excluded(&rel), rel.is_empty()) {
+            match fsevent::action(flag, !state.filter.observable(&rel), rel.is_empty()) {
                 fsevent::Action::HistoryDone => done = Some(id),
                 fsevent::Action::Resync => {
                     resync(state);
@@ -833,39 +855,40 @@ mod backend {
                     }
                     lost("watch-limit", rel);
                 }
+                if !matches!(error.raw_os_error(), Some(2 | 20)) { lost("registration-error", rel); }
                 return false;
             }
             self.by_wd.insert(wd, rel.to_string());
             true
         }
 
-        fn tree(&mut self, rel: &str) {
+        fn tree(&mut self, rel: &str, catchup: bool, record: &mut impl FnMut(String, bool)) {
             if self.filter.excluded(rel) || !self.add(rel) {
                 return;
             }
             let absolute = if rel.is_empty() { self.root.clone() } else { format!("{}/{}", self.root, rel) };
-            let Ok(entries) = std::fs::read_dir(&absolute) else { return };
+            let entries = match std::fs::read_dir(&absolute) { Ok(entries) => entries, Err(error) => { if !matches!(error.raw_os_error(), Some(2 | 20)) { lost("read-error", rel); } return; } };
             let mut children = Vec::new();
-            for entry in entries.flatten() {
-                if entry.file_type().map(|k| k.is_dir()).unwrap_or(false) {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    children.push(if rel.is_empty() { name } else { format!("{rel}/{name}") });
-                }
+            for entry in entries {
+                let entry = match entry { Ok(entry) => entry, Err(_) => { lost("read-error", rel); continue; } };
+                let kind = match entry.file_type() { Ok(kind) => kind, Err(error) => { if error.kind() != std::io::ErrorKind::NotFound { lost("read-error", rel); } continue; } };
+                if !kind.is_dir() && !catchup { continue; }
+                let name = entry.file_name().to_string_lossy().to_string();
+                let child = if rel.is_empty() { name } else { format!("{rel}/{name}") };
+                if self.filter.excluded(&child) { continue; }
+                if catchup { record(child.clone(), kind.is_dir()); }
+                if kind.is_dir() { children.push(child); }
             }
             for child in children {
-                self.tree(&child);
+                self.tree(&child, catchup, record);
             }
         }
 
-        fn rename_prefix(&mut self, from: &str, to: &str) {
-            let from_slash = format!("{from}/");
-            for path in self.by_wd.values_mut() {
-                if path == from {
-                    *path = to.to_string();
-                } else if path.starts_with(&from_slash) {
-                    *path = format!("{to}/{}", &path[from_slash.len()..]);
-                }
-            }
+        fn catchup(&mut self, rel: &str, changes: &mut BTreeMap<String, Change>, sequence: &mut u64) {
+            self.tree(rel, true, &mut |path, directory| {
+                merge(changes, 'n', directory, path);
+                if changes.len() >= BATCH_ROWS { emit_batch(sequence, "", changes); }
+            });
         }
 
         fn drop_prefix(&mut self, from: &str) {
@@ -885,13 +908,17 @@ mod backend {
             fail("backend", "inotify_init1 failed");
         }
         let mut watches = Watches { fd, by_wd: HashMap::new(), filter: config.filter.clone(), root: root.clone(), refused: false };
-        watches.tree("");
+        watches.tree("", false, &mut |_, _| {});
+        if let Some(fence) = &config.filter.private_fence {
+            if !watches.add(fence) {
+                fail("private-fence", "private directory subscription refused");
+            }
+        }
         emit(&format!("{{\"v\":1,\"t\":\"ready\",\"backend\":\"inotify\",\"root\":{},\"cursor\":\"\",\"uuid\":\"\",\"replay\":false,\"latencyMs\":{},\"native\":true,\"watches\":{}}}", quote(&root), config.latency_ms, watches.by_wd.len()));
         stdin_guard();
         let mut buffer = vec![0u8; 1 << 16];
         let mut sequence = 0u64;
         let mut changes: BTreeMap<String, Change> = BTreeMap::new();
-        let mut moves: HashMap<u32, (String, bool)> = HashMap::new();
         let latency = std::time::Duration::from_millis(config.latency_ms.max(1));
         let mut pending: Option<std::time::Instant> = None;
         loop {
@@ -905,9 +932,6 @@ mod backend {
             let timeout = if changes.is_empty() { -1 } else { config.latency_ms.max(1) as c_int };
             let ready = unsafe { poll(&mut poller, 1, timeout) };
             if ready == 0 {
-                for (_, (path, _)) in moves.drain() {
-                    watches.drop_prefix(&path);
-                }
                 emit_batch(&mut sequence, "", &mut changes);
                 pending = None;
                 continue;
@@ -921,7 +945,6 @@ mod backend {
             while offset + 16 <= count as usize {
                 let wd = i32::from_ne_bytes(buffer[offset..offset + 4].try_into().unwrap());
                 let mask = u32::from_ne_bytes(buffer[offset + 4..offset + 8].try_into().unwrap());
-                let cookie = u32::from_ne_bytes(buffer[offset + 8..offset + 12].try_into().unwrap());
                 let length = u32::from_ne_bytes(buffer[offset + 12..offset + 16].try_into().unwrap()) as usize;
                 let name_bytes = &buffer[offset + 16..offset + 16 + length];
                 let name = String::from_utf8_lossy(&name_bytes[..name_bytes.iter().position(|b| *b == 0).unwrap_or(length)]).to_string();
@@ -936,7 +959,7 @@ mod backend {
                     continue;
                 }
                 let rel = if name.is_empty() { parent.clone() } else if parent.is_empty() { name.clone() } else { format!("{parent}/{name}") };
-                if watches.filter.excluded(&rel) {
+                if !watches.filter.observable(&rel) {
                     continue;
                 }
                 let dir = mask & IN_ISDIR != 0;
@@ -947,7 +970,7 @@ mod backend {
                 if mask & IN_CREATE != 0 {
                     merge(&mut changes, 'a', dir, rel.clone());
                     if dir {
-                        watches.tree(&rel);
+                        watches.catchup(&rel, &mut changes, &mut sequence);
                     }
                 } else if mask & IN_DELETE != 0 {
                     merge(&mut changes, 'r', dir, rel.clone());
@@ -956,16 +979,10 @@ mod backend {
                     }
                 } else if mask & IN_MOVED_FROM != 0 {
                     merge(&mut changes, 'n', dir, rel.clone());
-                    moves.insert(cookie, (rel, dir));
+                    if dir { watches.drop_prefix(&rel); }
                 } else if mask & IN_MOVED_TO != 0 {
                     merge(&mut changes, 'n', dir, rel.clone());
-                    if let Some((old, was_dir)) = moves.remove(&cookie) {
-                        if was_dir {
-                            watches.rename_prefix(&old, &rel);
-                        }
-                    } else if dir {
-                        watches.tree(&rel);
-                    }
+                    if dir { watches.catchup(&rel, &mut changes, &mut sequence); }
                 } else {
                     merge(&mut changes, 'm', dir, rel);
                 }
@@ -981,16 +998,23 @@ mod backend {
     use super::*;
     use std::ffi::c_void;
 
+    #[repr(C)]
+    struct Overlapped { internal: usize, internal_high: usize, offset: u64, event: isize }
+
     extern "system" {
         fn CreateFileW(name: *const u16, access: u32, share: u32, security: *mut c_void, disposition: u32, flags: u32, template: isize) -> isize;
         fn ReadDirectoryChangesW(handle: isize, buffer: *mut c_void, length: u32, subtree: i32, filter: u32, returned: *mut u32, overlapped: *mut c_void, completion: *mut c_void) -> i32;
         fn GetLastError() -> u32;
+        fn CreateEventW(security: *mut c_void, manual: i32, initial: i32, name: *const u16) -> isize;
+        fn GetOverlappedResult(handle: isize, overlapped: *mut Overlapped, returned: *mut u32, wait: i32) -> i32;
     }
 
     const FILE_LIST_DIRECTORY: u32 = 0x1;
     const SHARE_ALL: u32 = 0x7;
     const OPEN_EXISTING: u32 = 3;
     const BACKUP_SEMANTICS: u32 = 0x0200_0000;
+    const OVERLAPPED: u32 = 0x4000_0000;
+    const ERROR_IO_PENDING: u32 = 997;
     const NOTIFY_ALL: u32 = 0x1 | 0x2 | 0x4 | 0x8 | 0x10 | 0x40;
     const ERROR_NOTIFY_ENUM_DIR: u32 = 1022;
     const ERROR_INVALID_PARAMETER: u32 = 87;
@@ -1002,18 +1026,29 @@ mod backend {
     pub fn run(config: &Config) {
         let root = canonical_root(&config.root);
         let wide: Vec<u16> = to_verbatim(&root).encode_utf16().chain(std::iter::once(0)).collect();
-        let handle = unsafe { CreateFileW(wide.as_ptr(), FILE_LIST_DIRECTORY, SHARE_ALL, std::ptr::null_mut(), OPEN_EXISTING, BACKUP_SEMANTICS, 0) };
+        let handle = unsafe { CreateFileW(wide.as_ptr(), FILE_LIST_DIRECTORY, SHARE_ALL, std::ptr::null_mut(), OPEN_EXISTING, BACKUP_SEMANTICS | OVERLAPPED, 0) };
         if handle == INVALID_HANDLE {
             fail("backend", "CreateFileW failed for the watch root");
         }
-        emit(&format!("{{\"v\":1,\"t\":\"ready\",\"backend\":\"rdcw\",\"root\":{},\"cursor\":\"\",\"uuid\":\"\",\"replay\":false,\"latencyMs\":0,\"native\":true}}", quote(&root)));
+        let event = unsafe { CreateEventW(std::ptr::null_mut(), 1, 0, std::ptr::null()) };
+        if event == 0 { fail("backend", "CreateEventW failed for observation completion"); }
+        let mut ready = false;
         stdin_guard();
         let mut buffer = vec![0u32; LOCAL_BUFFER_WORDS];
         let mut sequence = 0u64;
         let mut changes: BTreeMap<String, Change> = BTreeMap::new();
         loop {
             let mut returned = 0u32;
-            let ok = unsafe { ReadDirectoryChangesW(handle, buffer.as_mut_ptr() as *mut c_void, (buffer.len() * 4) as u32, 1, NOTIFY_ALL, &mut returned, std::ptr::null_mut(), std::ptr::null_mut()) };
+            let mut overlapped = Overlapped { internal: 0, internal_high: 0, offset: 0, event };
+            let queued = unsafe { ReadDirectoryChangesW(handle, buffer.as_mut_ptr() as *mut c_void, (buffer.len() * 4) as u32, 1, NOTIFY_ALL, std::ptr::null_mut(), &mut overlapped as *mut Overlapped as *mut c_void, std::ptr::null_mut()) };
+            let queue_error = if queued == 0 { unsafe { GetLastError() } } else { 0 };
+            if queued == 0 && queue_error == ERROR_INVALID_PARAMETER && buffer.len() > REMOTE_BUFFER_WORDS { buffer = vec![0u32; REMOTE_BUFFER_WORDS]; continue; }
+            if queued == 0 && queue_error != ERROR_IO_PENDING { fail("backend", &format!("ReadDirectoryChangesW subscription failed ({queue_error})")); }
+            if !ready {
+        emit(&format!("{{\"v\":1,\"t\":\"ready\",\"backend\":\"rdcw\",\"root\":{},\"cursor\":\"\",\"uuid\":\"\",\"replay\":false,\"latencyMs\":0,\"native\":true}}", quote(&root)));
+                ready = true;
+            }
+            let ok = unsafe { GetOverlappedResult(handle, &mut overlapped, &mut returned, 1) };
             if ok == 0 {
                 let code = unsafe { GetLastError() };
                 if code == ERROR_NOTIFY_ENUM_DIR {
@@ -1041,7 +1076,7 @@ mod backend {
                 let length = u32::from_le_bytes(bytes[offset + 8..offset + 12].try_into().unwrap()) as usize;
                 let units: Vec<u16> = bytes[offset + 12..offset + 12 + length].chunks_exact(2).map(|pair| u16::from_le_bytes([pair[0], pair[1]])).collect();
                 let rel = String::from_utf16_lossy(&units).replace('\\', "/");
-                if !config.filter.excluded(&rel) {
+                if config.filter.observable(&rel) {
                     let kind = match action {
                         1 => 'a',
                         2 => 'r',
@@ -1085,7 +1120,7 @@ mod tests {
     use super::*;
 
     fn filter() -> Filter {
-        Filter { rooted: vec![".git".into(), "a/b".into()], names: vec!["node_modules".into()] }
+        Filter { rooted: vec![".git".into(), "a/b".into()], names: vec!["node_modules".into()], hex_names: Vec::new(), private_fence: None }
     }
 
     #[test]
@@ -1094,6 +1129,17 @@ mod tests {
         assert!(f.excluded(".git") && f.excluded(".git/x") && !f.excluded(".github/x"));
         assert!(f.excluded("a/b/c") && !f.excluded("a/bc") && !f.excluded("a"));
         assert!(f.excluded("x/node_modules/y") && !f.excluded("x/node_modules2") && !f.excluded(""));
+    }
+
+    #[test]
+    fn private_fence_never_changes_source_exclusion_or_opens_siblings() {
+        let mut f = filter();
+        f.private_fence = Some(".git/funded/fence".into());
+        assert!(f.excluded(".git/funded/fence/nonce"));
+        assert!(f.observable(".git/funded/fence/nonce"));
+        assert!(!f.observable(".git/funded/sibling"));
+        assert!(!f.observable(".git/funded/fence/subdir/nonce"));
+        assert!(!f.observable(".git/funded/fence"));
     }
 
     #[test]

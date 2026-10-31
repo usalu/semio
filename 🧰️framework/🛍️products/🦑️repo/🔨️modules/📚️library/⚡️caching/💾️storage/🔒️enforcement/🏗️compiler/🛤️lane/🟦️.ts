@@ -1,3 +1,4 @@
+import {profilePhaseV1} from "../../../../../🏗️build/⏱️profile/🟨️.mjs";
 import {readFile} from "node:fs/promises";
 import {join} from "node:path";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
@@ -8,6 +9,7 @@ import {CATALOG_LANGUAGES_V1} from "../../../../../../../../../🔨️modules/�
 import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {acquirePooledLaneV1,poolQuotaBytesV1} from "../../../../🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
+import {acquireProductLaneV1} from "../../../../🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🎯️product/🟦️.ts";
 import {laneMessageV1,unitCacheCapacityBytesV1,unitCacheEnvironmentV1,unitCacheRootV1} from "../../../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {withLaneRetentionV1} from "../../../../🦀️cargo/🗃️unit-cache/🧵️lane/📤️retention/🟦️.ts";
 import {cacheLedgerV1,cacheRootDirectoryV1} from "../../../🧾️ledger/🟦️.ts";
@@ -35,11 +37,17 @@ export function compilerLaneEnvironmentV1(input:Readonly<{environment:Environmen
 }
 
 /** 🏊️ Runs `body` on a view of the compiler store whose build and target directories are a lane of the pool (see `acquirePooledLaneV1`) and whose environment routes the compiler through the unit cache, so the caller compiles beside every other Cargo process instead of queueing behind a custody of the shared directory. The view carries the same storage, control and capture directory as the store; the lane's provenance ledger and logs are published into the store's shared build directory and only then is the lane released, when `body` settles (see `withLaneRetentionV1`). */
-export async function withCompilerLaneViewV1<T>(input:Readonly<{host:string;store:RepositoryCompilerStoreV1;control:ResourceLeaseControl;request:CompilerLaneRequestV1;register:(view:RepositoryCompilerStoreV1)=>void}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+export async function withCompilerLaneViewV1<T>(input:Readonly<{host:string;store:RepositoryCompilerStoreV1;control:ResourceLeaseControl;request:CompilerLaneRequestV1;register:(view:RepositoryCompilerStoreV1)=>void}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withCompilerWorkspaceViewV1(input,body);}
+
+/** 🎯️ Holds the exact intended product workspace independently of transient execution-lane affinity. */
+export async function withCompilerProductViewV1<T>(input:Readonly<{host:string;store:RepositoryCompilerStoreV1;control:ResourceLeaseControl;request:CompilerLaneRequestV1;product:string;register:(view:RepositoryCompilerStoreV1)=>void}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{return withCompilerWorkspaceViewV1(input,body,input.product);}
+
+async function withCompilerWorkspaceViewV1<T>(input:Readonly<{host:string;store:RepositoryCompilerStoreV1;control:ResourceLeaseControl;request:CompilerLaneRequestV1;register:(view:RepositoryCompilerStoreV1)=>void}>,body:(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>Promise<T>,product?:string):Promise<T>{
  const {store,control,request}=input,space=readNativeStorageReservationPolicyV1(store.storage,store.control),cacheRoot=unitCacheRootV1(store.root),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],store.environment).language,session=currentAgentSessionV1({environment:store.environment});
  await store.storage.recheck();
  const quotaBytes=await compilerLaneQuotaBytesV1(input.host,store.environment,unitCacheCapacityBytesV1(space));
- const lane=await acquirePooledLaneV1(cacheRoot,{crates:request.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+ const owner={session:agentSessionAddressV1(session),agent:session.agent.id},options={signal:control.signal,report:(kind:Parameters<typeof laneMessageV1>[0],parameters:Readonly<Record<string,string|number>>)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}};
+ const lane=await(product===undefined?acquirePooledLaneV1(cacheRoot,{crates:request.crates,quotaBytes,owner},options):profilePhaseV1("cargo.product.claim",()=>acquireProductLaneV1(cacheRoot,{key:product,crates:request.crates,quotaBytes,owner},options)));
  return withLaneRetentionV1({lane,shared:store.buildDirectory,language,report:line=>{process.stderr.write(line+"\n");}},async()=>{
   for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(store.storage.backing.root,path);
   const view=Object.freeze({...store,buildDirectory:lane.paths.build,environment:compilerLaneEnvironmentV1({environment:store.environment,cacheRoot,lane:{id:lane.paths.id,base:lane.paths.base,target:lane.paths.target,build:lane.paths.build},toolchain:store.toolchain.digest,crates:request.crates,unitCache:request.unitCache??true})});

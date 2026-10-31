@@ -2,7 +2,9 @@
   "ceilings": {
     "ce-living": {
       "entry": "Patched",
-      "name": "Lounge ceiling"
+      "value": {
+        "name": "Lounge ceiling"
+      }
     }
   }
 }

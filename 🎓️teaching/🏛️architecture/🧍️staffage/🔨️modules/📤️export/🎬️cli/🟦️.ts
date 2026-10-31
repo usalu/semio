@@ -80,9 +80,10 @@ const even = (value: number): number => Math.ceil(value / 2) * 2;
 
 /** 🧮️ The evaluated frames of the command: one state per scheduled time (a pose is one frame at t = 0). */
 export function evaluateFrames(asset: Asset, options: CliOptions, control: JobControl): { readonly schedule: FrameSchedule; readonly states: EvaluatedState[] } {
+  const selector = { kind: "scale", scale: { denominator: options.scale } } as const;
   if (options.pose !== undefined) {
     const schedule: FrameSchedule = { fps: options.fps ?? 1, durationS: 0, loop: false, count: 1, times: [0] };
-    return { schedule, states: [evaluate(asset, { kind: "pose", pose: options.pose })] };
+    return { schedule, states: [evaluate(asset, { kind: "pose", pose: options.pose }, selector)] };
   }
   const clip = asset.clips.find((candidate) => candidate.id === options.clip);
   if (!clip) throw new Error(`asset ${asset.id} has no clip ${options.clip}; clips: ${asset.clips.map((candidate) => candidate.id).join(", ")}`);
@@ -90,7 +91,7 @@ export function evaluateFrames(asset: Asset, options: CliOptions, control: JobCo
   const states: EvaluatedState[] = [];
   for (const timeS of schedule.times) {
     control.signal?.throwIfAborted();
-    states.push(evaluate(asset, { kind: "clip", clip: clip.id, timeS }));
+    states.push(evaluate(asset, { kind: "clip", clip: clip.id, timeS }, selector));
     control.progress?.(states.length, schedule.count, { en: "Evaluating frames", de: "Bilder werden ausgewertet" });
   }
   return { schedule, states };

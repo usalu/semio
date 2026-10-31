@@ -33,8 +33,8 @@
     { "clip": "bag-swing", "t": 0.5, "bones": { "torso": -4, "pelvis": 2 }, "loadScale": { "shoulder-bag": 1.15 } }
   ],
   "tracks": [
-    { "clip": "idle-breathing", "t": 2.2, "target": "emitter:breath", "value": 0.5083333333333333 },
-    { "clip": "idle-breathing", "t": 0, "target": "emitter:breath", "value": 0 },
+    { "clip": "idle-breathing", "t": 2.2, "target": "emitter:body-plume", "value": 0.5083333333333333 },
+    { "clip": "idle-breathing", "t": 0, "target": "emitter:body-plume", "value": 0 },
     { "clip": "bag-swing", "t": 1, "target": "load:shoulder-bag", "value": 1.3 }
   ],
   "transition": {

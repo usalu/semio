@@ -6,11 +6,16 @@
 }
 
 /* 🏠️ The overview's cards stand on a grid above the glass: the card layer takes its track lists from the level (`--staffage-columns`, `--staffage-rows`) and each card fills its cell,
-   keeping the spacing inside the cell. A card taller than its cell scrolls inside it and never lies over the card below. */
+   keeping the spacing inside the cell. A card taller than its cell scrolls inside it and never lies over the card below.
+   The overlay starts with `pointer-events: none`; this layer takes the pointer back and scrolls vertically when the rows are taller than the window. */
 .staffage-grid {
   display: grid;
   grid-template-columns: var(--staffage-columns);
   grid-template-rows: var(--staffage-rows);
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: auto;
+  overscroll-behavior: contain;
 }
 
 .staffage-cell {
@@ -20,7 +25,7 @@
   align-items: stretch;
   justify-content: stretch;
   padding: var(--spacing-double);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .staffage-card {
@@ -31,6 +36,7 @@
 
 .staffage-cell > .staffage-card {
   block-size: 100%;
+  overflow: hidden;
 }
 
 .staffage-card [data-overview-card] {
@@ -50,6 +56,21 @@
 
 .staffage-entry [data-slot="staffage-card-content"] {
   min-block-size: 14rem;
+  overflow: hidden;
+}
+
+/* 🎞️ A walking figure is drawn inside its box. The box keeps the size its parent gave it, so the gait cannot resize the card, the grid or the page. */
+.staffage-app main {
+  overflow: hidden;
+  contain: layout;
+}
+
+.staffage-app [data-frieze],
+.staffage-app [data-preview],
+.staffage-app [data-compare-figure],
+.staffage-app [data-stage] {
+  overflow: hidden;
+  contain: layout paint;
 }
 
 /* 🏷️ A card's title is read in full: it wraps inside its chip instead of ending in an ellipsis. */
@@ -73,6 +94,12 @@
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+}
+
+/* 🗂️ Off-screen cards in the whole-archive grid stay unrendered until they near the viewport. */
+.staffage-app [data-page="all"] ul > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 18rem;
 }
 
 /* 🧪️ Checker behind a transparent export, so transparency is visible and never mistaken for white. */

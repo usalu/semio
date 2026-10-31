@@ -114,7 +114,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts"
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧪️tests/🪢️custody/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -669,7 +670,17 @@
         "🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts",
         "🧹️pruning/⏱️recency/🧪️tests/🟦️.ts",
         "🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts",
-        "🧹️pruning/🧪️tests/🧮️plan/🟦️.ts"
+        "🧹️pruning/🧪️tests/🧮️plan/🟦️.ts",
+        "../🎛️commands/🧬️schema/🧪️tests/🟦️.ts",
+        "../🧪️tests/🔬️workspace-contract/🧬️schema-authoring/🟦️.ts",
+        "../🔍️discovery/🧾️schema-scope-catalog/🧪️tests/🟦️.ts",
+        "../../../../../🔨️modules/🧬️schema/✅️validator/🧪️tests/🔗️reference/🟦️.ts",
+        "../🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/🧪️tests/🟦️.ts",
+        "../../../../🐾️pets/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+        "../🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🧪️tests/🟦️.ts",
+        "../../../../../../✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+        "../🧪️testing/🐹️go-plan/🧪️tests/🪆️members/🟦️.ts",
+        "../../../../../../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -738,7 +749,8 @@
       "typecheck": "none",
       "files": [
         "🌐️vite/💾️storage/🧪️tests/🟦️.ts",
-        "🌐️vite/📥️environment/🧪️tests/🟦️.ts"
+        "🌐️vite/📥️environment/🧪️tests/🟦️.ts",
+        "🌐️vite/🧪️tests/🎟️service-capacity/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -771,7 +783,8 @@
         "💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
         "💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
-        "💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts"
+        "💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/🪜️steps/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -979,6 +992,9 @@
     {
       "id": "tools-authorizers",
       "budgetMs": 15000,
+      "capabilities": {
+        "artifacts": true
+      },
       "typecheck": "none",
       "trees": [
         "🚀️bootstrap/🛠️tools/🔏️authorizers"
@@ -1158,6 +1174,7 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
+        "📦️artifacts/🏗️native-build/⏱️observation/🧪️tests/🟦️.ts",
         "🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
         "🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts",
         "🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts",
@@ -1237,7 +1254,8 @@
         "🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts",
         "🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
         "🕸️graph/🔏️seal/📌️generation/🧪️tests/🟦️.ts",
-        "🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts"
+        "🕸️graph/🔏️seal/📦️facts/🧪️tests/🟦️.ts",
+        "🕸️graph/🏁️startup/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1351,7 +1369,8 @@
       "budgetMs": 300000,
       "typecheck": "none",
       "files": [
-        "🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts"
+        "🗃️records/🧪️tests/🔌️descriptor-limit/🟦️.ts",
+        "🗃️records/🧪️tests/🔑️key-parts/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1428,7 +1447,8 @@
       "typecheck": "none",
       "files": [
         "🧪️tests/📐️phases/🟦️.ts",
-        "🧪️tests/📚️library-search-path/🟦️.ts"
+        "🧪️tests/📚️library-search-path/🟦️.ts",
+        "🧪️tests/🕸️wasm-bindgen-locks/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -1588,10 +1608,13 @@
         "../../../../../🔨️modules/📁️filesystem/📂️paths/🪟️windows/🧪️tests/🟦️.ts",
         "🩹️patches/🧪️tests/🟦️.ts",
         "🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🟦️.ts",
-        "../🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts"
+        "../🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts",
+        "🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🧊️provider/🟦️.ts",
+        "🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🟦️.ts"
       ],
       "fileLaunchers": {
-        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts": "setup-sdk"
+        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts": "setup-sdk",
+        "🩹️patches/🧪️tests/🟦️.ts": "setup-sdk"
       },
       "platforms": [
         "darwin",
@@ -1605,6 +1628,150 @@
       "typecheck": "none",
       "files": [
         "🔍️discovery/📂️source/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "storage-nx-oracle-processes",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "files": [
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/⏱️deadline/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🪶️sparse/🟦️.ts"
+      ],
+      "budgetMs": 300000,
+      "typecheck": "none"
+    },
+    {
+      "id": "storage-ledger-oracle-processes",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ],
+      "files": [
+        "💾️storage/🧾️ledger/🧪️tests/⚖️law/🌐️native/🟦️.ts",
+        "💾️storage/🧾️ledger/🧪️tests/📐️model/🟦️.ts"
+      ],
+      "budgetMs": 300000,
+      "typecheck": "none"
+    },
+    {
+      "id": "bootstrap-installation-processes",
+      "platforms": [
+        "darwin",
+        "linux"
+      ],
+      "platformCauses": [
+        "python3-command"
+      ],
+      "files": [
+        "🚀️bootstrap/🎛️dashboard/📦️installation/🧪️tests/🟦️.ts",
+        "🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🧪️tests/🟦️.ts"
+      ],
+      "budgetMs": 300000,
+      "typecheck": "none"
+    },
+    {
+      "id": "cargo-code-publication-processes",
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "files": [
+        "🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/🖊️writer/🟦️.ts"
+      ],
+      "budgetMs": 300000,
+      "typecheck": "none"
+    },
+    {
+      "id": "process-watchdog-linux",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "tools": [
+        "node"
+      ]
+    },
+    {
+      "id": "node-native-authorizer",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧲️node-native/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "tools": [
+        "node"
+      ]
+    },
+    {
+      "id": "browser-dependencies",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/🏗️native/🌐️system/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "capabilities": {}
+    },
+    {
+      "id": "laws-ifc-native-components",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️components/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-ifc-geometry-ownership",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "laws-ifc-geometry-units",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🦀️unit.ts"
       ],
       "platforms": [
         "darwin",

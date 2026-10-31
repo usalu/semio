@@ -2,15 +2,17 @@
   "openings": {
     "o-1": {
       "entry": "Patched",
-      "flip_hand": true,
-      "kind": {
-        "Door": {
-          "door_type": "door-1"
+      "value": {
+        "flip_hand": true,
+        "kind": {
+          "Door": {
+            "door_type": "door-1"
+          }
+        },
+        "name": "Back door",
+        "sill_override": {
+          "value": null
         }
-      },
-      "name": "Back door",
-      "sill_override": {
-        "value": null
       }
     }
   }

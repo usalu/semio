@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { Vector2 } from "three";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { drawSceneNode } from "../../🎨️paint/🟦️.ts";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {JSDOM} from "jsdom";
 import { wgpuTextCatalogFixture as catalogFixture, wgpuTextCatalogSchema as catalogSchema } from "@semio-tech/ui/testing/fixtures";
 import fixture from "../🧫️fixtures/🎨️paint/🔣️.json";

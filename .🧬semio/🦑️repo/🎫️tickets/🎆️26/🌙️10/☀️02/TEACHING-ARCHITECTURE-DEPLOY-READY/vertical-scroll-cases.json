@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "scope": "synthetic language-neutral proposed geometry; not measured production receipts or executed feature proof",
+  "cases": [
+    {
+      "id": "ordinary",
+      "viewport": 900,
+      "chrome": [
+        28,
+        46,
+        26
+      ],
+      "controls": [
+        24,
+        32
+      ],
+      "padding": [
+        8,
+        8
+      ],
+      "expected": {
+        "minimum": 48,
+        "main": 800,
+        "total": 900,
+        "overflow": 0
+      }
+    },
+    {
+      "id": "short-entry",
+      "viewport": 100,
+      "chrome": [
+        28,
+        46,
+        26
+      ],
+      "controls": [
+        24
+      ],
+      "padding": [
+        8,
+        8
+      ],
+      "expected": {
+        "minimum": 40,
+        "main": 40,
+        "total": 140,
+        "overflow": 40
+      }
+    },
+    {
+      "id": "long-translated-control",
+      "viewport": 200,
+      "chrome": [
+        56,
+        72,
+        54
+      ],
+      "controls": [
+        24,
+        96,
+        48
+      ],
+      "padding": [
+        8,
+        8
+      ],
+      "expected": {
+        "minimum": 112,
+        "main": 112,
+        "total": 294,
+        "overflow": 94
+      }
+    },
+    {
+      "id": "large-text",
+      "viewport": 100,
+      "chrome": [
+        56,
+        92,
+        52
+      ],
+      "controls": [
+        48
+      ],
+      "padding": [
+        16,
+        16
+      ],
+      "expected": {
+        "minimum": 80,
+        "main": 80,
+        "total": 280,
+        "overflow": 180
+      }
+    },
+    {
+      "id": "downloads-absent",
+      "viewport": 100,
+      "chrome": [
+        28,
+        26
+      ],
+      "controls": [
+        24
+      ],
+      "padding": [
+        8,
+        8
+      ],
+      "expected": {
+        "minimum": 40,
+        "main": 46,
+        "total": 100,
+        "overflow": 0
+      }
+    },
+    {
+      "id": "zero-room",
+      "viewport": 0,
+      "chrome": [
+        28,
+        26
+      ],
+      "controls": [
+        24
+      ],
+      "padding": [
+        0,
+        0
+      ],
+      "expected": {
+        "minimum": 24,
+        "main": 24,
+        "total": 78,
+        "overflow": 78
+      }
+    },
+    {
+      "id": "fractional-custom-font",
+      "viewport": 120.5,
+      "chrome": [
+        28.25,
+        46.5,
+        26.25
+      ],
+      "controls": [
+        24.5,
+        35.25
+      ],
+      "padding": [
+        7.5,
+        7.5
+      ],
+      "expected": {
+        "minimum": 50.25,
+        "main": 50.25,
+        "total": 151.25,
+        "overflow": 30.75
+      }
+    },
+    {
+      "id": "no-main-controls",
+      "viewport": 100,
+      "chrome": [
+        28,
+        26
+      ],
+      "controls": [],
+      "padding": [
+        0,
+        0
+      ],
+      "expected": {
+        "minimum": 0,
+        "main": 46,
+        "total": 100,
+        "overflow": 0
+      }
+    }
+  ]
+}

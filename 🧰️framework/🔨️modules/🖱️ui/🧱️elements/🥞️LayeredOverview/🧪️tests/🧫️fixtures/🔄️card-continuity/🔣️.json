@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "grid-to-touch-and-back",
+      "modes": [
+        "strip",
+        "swipe",
+        "strip"
+      ]
+    },
+    {
+      "id": "touch-to-grid-and-back",
+      "modes": [
+        "swipe",
+        "strip",
+        "swipe"
+      ]
+    }
+  ],
+  "cameraCases": [
+    {
+      "id": "focused-mode-change",
+      "before": "strip",
+      "after": "swipe",
+      "order": [
+        "learner",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand",
+        "prefs"
+      ],
+      "focus": "owned",
+      "expected": "learner",
+      "swipe": null
+    },
+    {
+      "id": "focused-same-mode-regrid",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "badges",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "learner",
+        "demand",
+        "prefs"
+      ],
+      "focus": "owned",
+      "expected": "learner",
+      "swipe": null
+    },
+    {
+      "id": "logical-resting-regrid",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "prefs",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand",
+        "learner"
+      ],
+      "focus": "none",
+      "expected": "prefs",
+      "swipe": null
+    },
+    {
+      "id": "unrelated-focus-resting",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "prefs",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand",
+        "learner"
+      ],
+      "focus": "outside",
+      "expected": "prefs",
+      "swipe": null
+    },
+    {
+      "id": "nested-focus-resting",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "prefs",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand",
+        "learner"
+      ],
+      "focus": "nested",
+      "expected": "prefs",
+      "swipe": null
+    },
+    {
+      "id": "explicit-follow-priority",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "prefs",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand",
+        "learner"
+      ],
+      "focus": "owned",
+      "swipe": "heating",
+      "expected": "heating"
+    },
+    {
+      "id": "removed-resting-occupied-fallback",
+      "before": "swipe",
+      "after": "swipe",
+      "order": [
+        "learner",
+        "physics",
+        "intro",
+        "heating",
+        "board",
+        "cooling",
+        "badges",
+        "demand"
+      ],
+      "focus": "none",
+      "expected": "demand",
+      "swipe": null
+    }
+  ]
+}

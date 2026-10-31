@@ -1,11 +1,13 @@
 {
   "issue_comments": {
     "c-1": {
-      "author": "AB",
-      "date": "2026-10-09T09:00:00Z",
       "entry": "Created",
-      "issue": "i-1",
-      "text": "I will check the structure."
+      "value": {
+        "author": "AB",
+        "date": "2026-10-09T09:00:00Z",
+        "issue": "i-1",
+        "text": "I will check the structure."
+      }
     }
   }
 }

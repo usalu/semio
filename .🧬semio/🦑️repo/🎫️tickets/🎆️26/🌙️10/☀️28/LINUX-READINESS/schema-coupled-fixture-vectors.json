@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "kind": "base",
+      "valid": true
+    },
+    {
+      "kind": "delete",
+      "key": "version",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "plans",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "ranks",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "garbage",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "restore",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "restoreRefused",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "messages",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "workspaces",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "languages",
+      "valid": false
+    },
+    {
+      "kind": "delete",
+      "key": "overrides",
+      "valid": false
+    },
+    {
+      "kind": "extra",
+      "valid": false
+    },
+    {
+      "kind": "version",
+      "valid": false
+    }
+  ]
+}

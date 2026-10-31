@@ -1,3 +1,7 @@
+import {fileURLToPath as physicalSchemaSourcePathV1} from "node:url";
+import {compileSchemaScopeExport as physicalSchemaScopeV1} from "./../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🔮️oracles/✅️validator/🟦️.ts";
+import {findWorkspaceRoot as physicalSchemaWorkspaceRootV1} from "./../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+const physicalProjectOracleV1=()=>physicalSchemaScopeV1(physicalSchemaWorkspaceRootV1(import.meta.dir),physicalSchemaSourcePathV1(new URL("./../../🧬️schema/📋️project/🔣️.json",import.meta.url)),null,[physicalSchemaSourcePathV1(new URL("./../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🧬️schema/🔣️.json",import.meta.url))]);
 import {buildBackendAlternationV1} from "../../🔌️backends/🟦️.ts";
 /** 🧭️ Public help is readable before any generated storage exists. */
 import {expect,test} from "bun:test";
@@ -47,7 +51,7 @@ test("a refused build mode disagreement is stated in English first and German se
 
 
 test("authored target defaults and fixed workflows preserve their declared compiler intent",()=>{
- expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const require=createRequire(import.meta.url),{targetBuildModes}=require("../../🎚️mode/🟨️.mjs"),projectSchema=require("../../🧬️schema/📋️project/🔣️.json"),projectValid=new Ajv({strict:false}).compile(projectSchema),db=new Database(":memory:");
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const require=createRequire(import.meta.url),{targetBuildModes}=require("../../🎚️mode/🟨️.mjs"),projectSchema=require("../../🧬️schema/📋️project/🔣️.json"),projectValid=physicalProjectOracleV1(),db=new Database(":memory:");
  try{for(const row of fixture.targetDeclarations){expect(projectValid({name:"fixture",targets:{[row.name]:row.target}}),row.id).toBe(row.schemaAccepted);const oracle=db.query("select case when (?1 is not null and ?2 is not null and ?1<>?2) or (?2 is not null and ?2 not in ('prototype','release')) or (?3 is not null and ?3 not in ('prototype','release')) then null else coalesce(?1,?2,?3,'prototype') end mode").get(row.named,row.fixed,row.default)as{mode:string|null};expect(oracle.mode,row.id).toBe(row.expected);if(row.expected===null){expect(()=>targetBuildModes(row.name,row.target),row.id).toThrow(/build mode|Build mode/u);continue;}const actual=targetBuildModes(row.name,row.target);expect(actual.defaultConfiguration,row.id).toBe(oracle.mode);expect(actual.metadata.semio.buildMode.fixed??null,row.id).toBe(row.named??row.fixed);for(const mode of["prototype","release"]){expect(actual.configurations[mode].env.SEMIO_BUILD_MODE,row.id).toBe(mode);const environment=(row.target as {options?:{env?:Record<string,string>}}).options?.env??{};for(const[key,value]of Object.entries(environment))if(key!=="SEMIO_BUILD_MODE")expect(actual.configurations[mode].env[key],row.id).toBe(value);}expect(targetBuildModes(row.name,actual),row.id).toEqual(actual);}}finally{db.close();}
 });
 

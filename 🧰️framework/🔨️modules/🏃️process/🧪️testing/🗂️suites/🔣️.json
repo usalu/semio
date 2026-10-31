@@ -518,7 +518,10 @@
         "📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/🗃️stage-cache/🧪️tests/🟦️.ts",
-        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts"
+        "📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📋️plan/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📋️plan/🧪️tests/🧵️control/🟦️.ts",
+        "📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",
@@ -533,7 +536,8 @@
       "files": [
         "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🟦️.ts",
         "📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts",
-        "💾️state/🧪️tests/🟦️.ts"
+        "💾️state/🧪️tests/🟦️.ts",
+        "📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",

@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
@@ -20,7 +21,7 @@ export async function runOwnedVerifyScript(context: Readonly<{ root: string; rep
   const Ajv = (await import("ajv/dist/2020.js")).default;
   const canvasSchema = await Bun.file(resolve(context.repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🖼️canvas2d-snapshot/🧬️schema/🔣️.json")).json();
   const fixture = await Bun.file(resolve(context.root, "../../🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/🧫️fixtures/🔣️.json")).json();
-  const validate = new Ajv({ strict: true }).compile(canvasSchema);
+  const validate = new AjvDraft07({ strict: true }).compile(canvasSchema);
   const pagePolicy = { snapshotCapacity: 8, pageCapacity: fixture.visual.pageCapacity, pageBytes: fixture.visual.pageBytes };
   assert(validate(pagePolicy)); assert(!validate({ ...pagePolicy, pageCapacity: pagePolicy.pageCapacity + 1 }));
   const collision = fixture.generatedIdentityCollision;

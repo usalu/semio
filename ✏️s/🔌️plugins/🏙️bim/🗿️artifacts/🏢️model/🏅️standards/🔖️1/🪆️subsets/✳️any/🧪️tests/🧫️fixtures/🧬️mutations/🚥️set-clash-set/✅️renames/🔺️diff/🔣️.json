@@ -2,7 +2,9 @@
   "clash_sets": {
     "cs-1": {
       "entry": "Patched",
-      "name": "Beams against masonry"
+      "value": {
+        "name": "Beams against masonry"
+      }
     }
   }
 }

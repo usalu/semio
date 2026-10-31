@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "owner": "repository:nx-store",
+  "bytes": 512,
+  "cases": [
+    {
+      "name": "new",
+      "receipt": null,
+      "allocations": [],
+      "expected": "created"
+    },
+    {
+      "name": "recover-missing-receipt",
+      "receipt": null,
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "committed"
+        }
+      ],
+      "expected": "recovered"
+    },
+    {
+      "name": "reserved",
+      "receipt": null,
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "reserved"
+        }
+      ],
+      "expected": "recovered"
+    },
+    {
+      "name": "duplicate",
+      "receipt": null,
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "committed"
+        },
+        {
+          "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "committed"
+        }
+      ],
+      "expected": "refused"
+    },
+    {
+      "name": "foreign-receipt",
+      "receipt": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "committed"
+        }
+      ],
+      "expected": "refused"
+    },
+    {
+      "name": "retiring",
+      "receipt": null,
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 512,
+          "phase": "retiring"
+        }
+      ],
+      "expected": "refused"
+    },
+    {
+      "name": "wrong-budget",
+      "receipt": null,
+      "allocations": [
+        {
+          "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "owner": "repository:nx-store",
+          "kind": "artifact-publication",
+          "bytes": 511,
+          "phase": "committed"
+        }
+      ],
+      "expected": "refused"
+    },
+    {
+      "name": "displaced-at-gate",
+      "receipt": null,
+      "allocations": [],
+      "expected": "created",
+      "receiptAtGate": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "publish": false
+    }
+  ],
+  "concurrentRequests": 2
+}

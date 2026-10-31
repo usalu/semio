@@ -369,6 +369,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🫧️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust",

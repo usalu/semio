@@ -179,7 +179,7 @@ test("a file projected before the refusal existed is restated in place, receives
   const scope = "✏️s/oracle/older";
   const before = auditLeaves({ root, under: scope });
   expect(before.drift.map((row) => `${row.reason} ${row.name}`)).toEqual(["open Point"]);
-  expect(before.helperless).toEqual([]);
+  expect(before.helperless).toEqual([portableOlder]);
   const planned = projectParsers({ ...options, mode: "report", under: scope, restate: new Set(["open"]) });
   expect(planned.touched.length).toBe(1);
   expect(readFileSync(olderLeaf, "utf8")).toBe(olderSource);
@@ -229,4 +229,23 @@ test("the gate fails on every drifted parser except the listed unowned ones, and
   const stale = checkParsers({ root, scopes, unowned: [{ path: gatePath, name: "Point", reason: "hand" }] });
   expect(stale.ok).toBe(false);
   expect(stale.orphans.map((row) => row.name)).toEqual(["Point"]);
+});
+
+test("canonical helper refresh preserves current domain declarations", async () => {
+  const fixture = JSON.parse(readFileSync(new URL("../../🚪️guard-helpers/🧪️tests/🔣️.json", import.meta.url), "utf8")) as { helperDeclarations: string };
+  const leaf = leafOf("helper-extension", "shape");
+  mkdirSync(join(leaf, ".."), { recursive: true });
+  writeFileSync(join(leaf, "..", "🔣️.json"), JSON.stringify(olderSchema));
+  writeFileSync(leaf, "export interface Point { x: number; y: number }\nexport interface Marker { id: string }\n" + helpersBlock("currentGuard").replace("//#endregion 🚪️Parsers", fixture.helperDeclarations + "//#endregion 🚪️Parsers"));
+  const result = projectParsers({ ...options, under: "✏️s/oracle/helper-extension" });
+  expect(result.refused).toEqual([]);
+  expect(readFileSync(leaf, "utf8")).toContain(fixture.helperDeclarations);
+  expect(await typeErrors(root, [leaf])).toEqual([]);
+  const module = await import(pathToFileURL(leaf).href) as Record<string, Parser>;
+  const validate = new Ajv({ strict: false }).compile(olderSchema.$defs.Point);
+  for (const value of [{ x: 1, y: 2 }, { x: 1 }, { x: 1, y: 2, extra: true }, null]) {
+    expect(accepts(module.parsePoint!, value)).toBe(validate(value));
+    expect(module.currentDomain!(value)).toEqual(value);
+    expect(module.currentNullable!(value)).toEqual(value);
+  }
 });

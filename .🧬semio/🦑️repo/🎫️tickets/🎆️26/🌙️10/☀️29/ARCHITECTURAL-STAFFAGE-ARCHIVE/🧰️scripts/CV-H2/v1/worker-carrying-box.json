@@ -1,0 +1,3861 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "worker-carrying-box",
+    "category": "humans",
+    "title": {
+      "en": "Worker Carrying Box",
+      "de": "Arbeitende Person mit Kiste"
+    },
+    "summary": {
+      "en": "A construction worker in a high-visibility vest and hard hat lifts a 20 kg box from the floor in a squat and carries it at hip or chest height; trunk, shoulder and elbow moments change with the lever arm of the load.",
+      "de": "Eine Bauarbeiterin bzw. ein Bauarbeiter mit Warnweste und Schutzhelm hebt eine 20-kg-Kiste in der Hocke vom Boden und trägt sie auf Hüft- oder Brusthöhe; Rumpf-, Schulter- und Ellbogenmomente ändern sich mit dem Hebelarm der Last."
+    },
+    "tags": [
+      "human",
+      "worker",
+      "construction",
+      "lifting",
+      "carrying",
+      "load",
+      "hi-vis",
+      "hard-hat"
+    ],
+    "provenance": {
+      "author": "Semio staffage humans-b content worker",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (male segment mass fractions and centre-of-mass positions)."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-8996-2021",
+          "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate (activity classes and met values)."
+        },
+        {
+          "id": "ainsworth-2011",
+          "citation": "Ainsworth, B. E. et al. (2011). 2011 Compendium of Physical Activities. Medicine and Science in Sports and Exercise 43(8), 1575-1581."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiration, skin wettedness)."
+        },
+        {
+          "id": "niosh-1994",
+          "citation": "Waters, T. R. et al. (1993/1994). Revised NIOSH equation for the design and evaluation of manual lifting tasks. Ergonomics 36(7), 749-776 (load constant 23 kg)."
+        },
+        {
+          "id": "iso-11228-1",
+          "citation": "ISO 11228-1:2021 Ergonomics, manual handling, lifting, lowering and carrying."
+        },
+        {
+          "id": "iso-20471",
+          "citation": "ISO 20471:2013 High-visibility clothing, test methods and requirements (class 2 retroreflective and fluorescent areas)."
+        },
+        {
+          "id": "en-397",
+          "citation": "EN 397:2012 Industrial safety helmets, requirements (mass about 0.35-0.45 kg)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, actions on structures, general actions (densities, self-weight, imposed loads)."
+        }
+      ],
+      "notes": {
+        "en": "Silhouette handcrafted from side-elevation proportions (7.5 heads); segment masses by de Leva male fractions for 84 kg; the box is two 10 kg half-bones, one per hand, because both hands coincide in elevation.",
+        "de": "Silhouette handgezeichnet nach Seitenansichts-Proportionen (7,5 Köpfe); Segmentmassen nach den männlichen Anteilen von de Leva für 84 kg; die Kiste besteht aus zwei 10-kg-Halbknochen, je einer pro Hand, weil beide Hände in der Ansicht zusammenfallen."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.81,
+      "widthM": 0.68,
+      "depthM": 0.5,
+      "massKg": 104
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "cotton-clothing",
+        "title": {
+          "en": "Work trousers and long-sleeve shirt (cotton/polyester)",
+          "de": "Arbeitshose und langärmliges Hemd (Baumwolle/Polyester)"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.55,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leather-shoe",
+        "title": {
+          "en": "Leather safety boot",
+          "de": "Sicherheitsstiefel aus Leder"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Hair",
+          "de": "Haar"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "glove",
+        "title": {
+          "en": "Leather work glove",
+          "de": "Lederarbeitshandschuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hi-vis-polyester",
+        "title": {
+          "en": "Fluorescent yellow polyester vest (ISO 20471 class 2)",
+          "de": "Fluoreszierende gelbe Polyesterweste (ISO 20471 Klasse 2)"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.4,
+        "source": "literature",
+        "reference": "iso-20471"
+      },
+      {
+        "id": "retroreflective",
+        "title": {
+          "en": "Retroreflective band",
+          "de": "Retroreflektierendes Band"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.3,
+        "source": "literature",
+        "reference": "iso-20471"
+      },
+      {
+        "id": "hdpe-shell",
+        "title": {
+          "en": "Safety helmet shell (HDPE)",
+          "de": "Schutzhelm-Schale (HDPE)"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 950,
+        "conductivityWmK": 0.45,
+        "source": "literature",
+        "reference": "en-397"
+      },
+      {
+        "id": "cardboard",
+        "title": {
+          "en": "Corrugated cardboard box",
+          "de": "Wellpappkiste"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 150,
+        "conductivityWmK": 0.06,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.1011,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 9.383,
+            "comX": 0.0506,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.1011,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4652,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 27.124,
+            "comX": 0.2124,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4652,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2731,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 5.83,
+            "comX": 0.1365,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4349,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3135,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 2.276,
+            "comX": 0.181,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3135,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2731,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.361,
+            "comX": 0.1249,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.2731,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.182,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.512,
+            "comX": 0.091,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4349,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 11.894,
+            "comX": 0.1781,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4349,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4248,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.637,
+            "comX": 0.1894,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.4248,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2225,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 1.151,
+            "comX": 0.1113,
+            "comY": -0.0405,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1315,
+          "y": -0.0809,
+          "angleDeg": 0,
+          "lengthM": 0.0991,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4349,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3135,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 2.276,
+            "comX": 0.181,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3135,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2731,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.361,
+            "comX": 0.1249,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.2731,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.182,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.512,
+            "comX": 0.091,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4349,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 11.894,
+            "comX": 0.1781,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4349,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4248,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.637,
+            "comX": 0.1894,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.4248,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2225,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 1.151,
+            "comX": 0.1113,
+            "comY": -0.0405,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1315,
+          "y": -0.0809,
+          "angleDeg": 0,
+          "lengthM": 0.0991,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "box-l",
+          "parent": "hand-l",
+          "title": {
+            "en": "Box half held by the left hand",
+            "de": "Kistenhälfte in der linke Hand"
+          },
+          "x": 0.0759,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 10,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "niosh-1994"
+          }
+        },
+        {
+          "id": "box-r",
+          "parent": "hand-r",
+          "title": {
+            "en": "Box half held by the right hand",
+            "de": "Kistenhälfte in der rechte Hand"
+          },
+          "x": 0.0759,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 10,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "niosh-1994"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.1315,
+        "y": -0.0809,
+        "kind": "contact",
+        "title": {
+          "en": "Left sole",
+          "de": "Linke Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2023,
+        "footprintWidthM": 0.1011,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.1315,
+        "y": -0.0809,
+        "kind": "contact",
+        "title": {
+          "en": "Right sole",
+          "de": "Rechte Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2023,
+        "footprintWidthM": 0.1011,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0303,
+        "y": -0.0809,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0809,
+        "footprintWidthM": 0.0809,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0303,
+        "y": -0.0809,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0809,
+        "footprintWidthM": 0.0809,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1153,
+        "y": -0.0961,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth and nose",
+          "de": "Mund und Nase"
+        }
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.0759,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.0759,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "box-base",
+        "bone": "box-r",
+        "x": 0,
+        "y": -0.15,
+        "kind": "contact",
+        "title": {
+          "en": "Underside of the box",
+          "de": "Kistenboden"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.86,
+          "kind": "path",
+          "d": "M 0.0 0.0478 L 0.0759 0.0425 C 0.1011 0.0701 0.1315 0.1062 0.1922 0.1041 C 0.2478 0.1009 0.2791 0.0425 0.2751 -0.0159 C 0.271 -0.069 0.2407 -0.0935 0.2073 -0.0945 L 0.1901 -0.0977 C 0.18 -0.1019 0.1638 -0.1147 0.1507 -0.1253 C 0.1426 -0.1189 0.1396 -0.1062 0.1355 -0.0998 C 0.1254 -0.1041 0.1173 -0.0998 0.1113 -0.0935 C 0.1032 -0.0977 0.093 -0.0935 0.089 -0.085 C 0.0809 -0.0658 0.0769 -0.0478 0.0728 -0.0361 C 0.0506 -0.0446 0.0223 -0.0531 0.0 -0.0552 Z",
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "hair",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5.4,
+          "filled": true,
+          "tone": 0.18,
+          "kind": "path",
+          "d": "M 0.2104 -0.0956 C 0.2508 -0.0998 0.2862 -0.0552 0.2842 -0.0053 C 0.2822 0.0658 0.2448 0.1147 0.1881 0.1115 C 0.1517 0.1094 0.1234 0.0935 0.1092 0.0637 L 0.1517 0.0552 C 0.1982 0.0488 0.2286 0.0085 0.2326 -0.0425 C 0.2336 -0.0701 0.2286 -0.0892 0.2104 -0.0956 Z",
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.18,
+          "cy": -0.0637,
+          "rx": 0.0056,
+          "ry": 0.008,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "brow",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1962,
+              -0.0488
+            ],
+            [
+              0.1992,
+              -0.085
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "ear",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.7,
+          "kind": "ellipse",
+          "cx": 0.1598,
+          "cy": 0.0212,
+          "rx": 0.0243,
+          "ry": 0.0127,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "mouth-line",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1133,
+              -0.0796
+            ],
+            [
+              0.1113,
+              -0.0956
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "torso",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.0607 -0.1147 C -0.0438 -0.1166 0.0067 -0.1234 0.0405 -0.1264 C 0.0742 -0.1294 0.1079 -0.1306 0.1416 -0.1327 C 0.1753 -0.1349 0.2124 -0.137 0.2427 -0.1391 C 0.2731 -0.1412 0.2967 -0.1478 0.3236 -0.1455 C 0.3506 -0.1432 0.3843 -0.1347 0.4045 -0.1253 C 0.4248 -0.1159 0.4349 -0.0998 0.445 -0.0892 C 0.4551 -0.0786 0.4619 -0.0662 0.4652 -0.0616 L 0.4652 0.0701 C 0.4619 0.0761 0.4551 0.0952 0.445 0.1062 C 0.4349 0.1172 0.4248 0.1306 0.4045 0.1359 C 0.3843 0.1412 0.3506 0.1391 0.3236 0.1381 C 0.2967 0.137 0.2731 0.1324 0.2427 0.1296 C 0.2124 0.1267 0.1753 0.1235 0.1416 0.1211 C 0.1079 0.1186 0.0742 0.1161 0.0405 0.1147 C 0.0067 0.1133 -0.0438 0.1129 -0.0607 0.1126 Z",
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "pelvis",
+          "bone": "pelvis",
+          "role": "body",
+          "lod": 0,
+          "z": 3.05,
+          "filled": true,
+          "tone": 0.26,
+          "kind": "path",
+          "d": "M -0.0961 -0.0977 C -0.0868 -0.1023 -0.0615 -0.12 -0.0405 -0.1253 C -0.0194 -0.1306 0.0067 -0.1299 0.0303 -0.1296 C 0.0539 -0.1292 0.0893 -0.1242 0.1011 -0.1232 L 0.1011 0.1168 C 0.0893 0.12 0.0539 0.1315 0.0303 0.1359 C 0.0067 0.1404 -0.0194 0.1465 -0.0405 0.1434 C -0.0615 0.1402 -0.0868 0.1212 -0.0961 0.1168 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "upper-arm-l",
+          "bone": "upper-arm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.4,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.0455 0.0225 C -0.0396 0.027 -0.0177 0.0453 -0.0101 0.0499 C -0.0025 0.0545 -0.0152 0.0496 0.0 0.0499 C 0.0152 0.0503 0.0472 0.0531 0.0809 0.052 C 0.1146 0.051 0.1635 0.0457 0.2023 0.0435 C 0.241 0.0414 0.295 0.04 0.3135 0.0393 L 0.3135 -0.0361 C 0.295 -0.0368 0.241 -0.0384 0.2023 -0.0404 C 0.1635 -0.0423 0.1146 -0.0464 0.0809 -0.0478 C 0.0472 -0.0492 0.0152 -0.0487 0.0 -0.0488 C -0.0152 -0.049 -0.0025 -0.0533 -0.0101 -0.0488 C -0.0177 -0.0444 -0.0396 -0.0265 -0.0455 -0.022 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "forearm-l",
+          "bone": "forearm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.42000000000000004,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.0051 0.0425 C -0.0042 0.0425 -0.0143 0.0419 0.0 0.0425 C 0.0143 0.043 0.0506 0.0469 0.0809 0.0457 C 0.1113 0.0444 0.15 0.0379 0.182 0.035 C 0.2141 0.0322 0.2562 0.0316 0.2731 0.0287 C 0.2899 0.0257 0.2815 0.0191 0.2832 0.0172 L 0.2832 -0.0159 C 0.2815 -0.0177 0.2899 -0.0241 0.2731 -0.0265 C 0.2562 -0.029 0.2141 -0.0287 0.182 -0.0308 C 0.15 -0.0329 0.1113 -0.0377 0.0809 -0.0393 C 0.0506 -0.0409 0.0143 -0.0402 0.0 -0.0404 C -0.0143 -0.0405 -0.0042 -0.0404 -0.0051 -0.0404 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "cuff-l",
+          "bone": "forearm-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.43000000000000005,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2478,
+              0.0297
+            ],
+            [
+              0.2478,
+              -0.0276
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.45,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.0144 -0.0287 C 0.0287 -0.0335 0.0718 -0.0326 0.1006 -0.0297 L 0.1542 -0.0287 C 0.1667 -0.0287 0.1667 -0.0144 0.1542 -0.0144 L 0.1312 -0.014 L 0.1676 -0.0151 C 0.1801 -0.0151 0.1801 0.0008 0.1676 0.0008 L 0.1312 0.0011 L 0.1753 0 C 0.1877 0 0.1877 0.0163 0.1753 0.0163 L 0.1312 0.0167 L 0.1686 0.0158 C 0.181 0.0158 0.181 0.0311 0.1686 0.0311 C 0.1245 0.0326 0.0575 0.0364 0 0.0393 L -0.0144 0.0354 Z",
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "thumb-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 2,
+          "z": 0.47,
+          "filled": true,
+          "tone": 0.291,
+          "kind": "path",
+          "d": "M -0.0038 0.023 C 0.0249 0.0479 0.0632 0.069 0.0939 0.0785 C 0.1044 0.0814 0.1121 0.0718 0.1044 0.0623 C 0.0881 0.0479 0.0671 0.0383 0.0441 0.0211 Z",
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-l-0",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              -0.0147
+            ],
+            [
+              0.1312,
+              -0.0147
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-l-1",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              0.0003
+            ],
+            [
+              0.1312,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-l-2",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              0.0161
+            ],
+            [
+              0.1312,
+              0.0161
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "thigh-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.26,
+          "kind": "path",
+          "d": "M 0.0 0.1041 C 0.0118 0.1041 0.0421 0.1055 0.0708 0.1041 C 0.0995 0.1027 0.1348 0.0998 0.1719 0.0956 C 0.209 0.0913 0.2579 0.0835 0.2933 0.0786 C 0.3287 0.0736 0.3607 0.0687 0.3843 0.0658 C 0.4079 0.063 0.4244 0.0664 0.4349 0.0616 C 0.4453 0.0568 0.445 0.0411 0.447 0.037 L 0.447 -0.037 C 0.445 -0.0411 0.4453 -0.0568 0.4349 -0.0616 C 0.4244 -0.0664 0.4079 -0.0627 0.3843 -0.0658 C 0.3607 -0.069 0.3287 -0.0745 0.2933 -0.0807 C 0.2579 -0.0869 0.209 -0.0973 0.1719 -0.103 C 0.1348 -0.1087 0.0995 -0.1127 0.0708 -0.1147 C 0.0421 -0.1166 0.0118 -0.1147 0.0 -0.1147 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-l",
+          "bone": "shank-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.02,
+          "filled": true,
+          "tone": 0.26,
+          "kind": "path",
+          "d": "M -0.0101 0.0637 C -0.0084 0.0637 -0.0169 0.0648 0.0 0.0637 C 0.0169 0.0627 0.0573 0.0595 0.091 0.0573 C 0.1247 0.0552 0.1635 0.0533 0.2023 0.051 C 0.241 0.0487 0.2899 0.0453 0.3236 0.0435 C 0.3573 0.0417 0.3894 0.0434 0.4045 0.0401 C 0.4197 0.0369 0.413 0.0268 0.4147 0.0241 L 0.4147 -0.0261 C 0.413 -0.029 0.4197 -0.0392 0.4045 -0.0435 C 0.3894 -0.0479 0.3573 -0.0469 0.3236 -0.052 C 0.2899 -0.0572 0.241 -0.0696 0.2023 -0.0743 C 0.1635 -0.0791 0.1247 -0.0825 0.091 -0.0807 C 0.0573 -0.0789 0.0169 -0.0665 0.0 -0.0637 C -0.0169 -0.0609 -0.0084 -0.0637 -0.0101 -0.0637 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-l",
+          "bone": "shank-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3894,
+              0.0425
+            ],
+            [
+              0.3894,
+              -0.0467
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-l",
+          "bone": "foot-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "path",
+          "d": "M 0.1315 -0.0809 L -0.0627 -0.0809 L -0.0668 0 C -0.0668 0.0506 -0.0607 0.1011 -0.0526 0.1264 L 0.0526 0.1264 L 0.0546 0.0455 C 0.0726 0.0282 0.1019 0.0077 0.1315 -0.0107 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-l",
+          "bone": "toe-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "path",
+          "d": "M -0 0.0702 C 0.0138 0.0616 0.0276 0.0536 0.0404 0.0465 C 0.0758 0.0324 0.0991 0.0243 0.0991 0.0101 C 0.0991 0.002 0.093 0 0.0829 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-l",
+          "bone": "foot-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0647,
+              -0.0526
+            ],
+            [
+              0.1315,
+              -0.0526
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-l",
+          "bone": "toe-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0283
+            ],
+            [
+              0.0971,
+              0.0283
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "upper-arm-r",
+          "bone": "upper-arm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.0455 0.0225 C -0.0396 0.027 -0.0177 0.0453 -0.0101 0.0499 C -0.0025 0.0545 -0.0152 0.0496 0.0 0.0499 C 0.0152 0.0503 0.0472 0.0531 0.0809 0.052 C 0.1146 0.051 0.1635 0.0457 0.2023 0.0435 C 0.241 0.0414 0.295 0.04 0.3135 0.0393 L 0.3135 -0.0361 C 0.295 -0.0368 0.241 -0.0384 0.2023 -0.0404 C 0.1635 -0.0423 0.1146 -0.0464 0.0809 -0.0478 C 0.0472 -0.0492 0.0152 -0.0487 0.0 -0.0488 C -0.0152 -0.049 -0.0025 -0.0533 -0.0101 -0.0488 C -0.0177 -0.0444 -0.0396 -0.0265 -0.0455 -0.022 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "forearm-r",
+          "bone": "forearm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.02,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.0051 0.0425 C -0.0042 0.0425 -0.0143 0.0419 0.0 0.0425 C 0.0143 0.043 0.0506 0.0469 0.0809 0.0457 C 0.1113 0.0444 0.15 0.0379 0.182 0.035 C 0.2141 0.0322 0.2562 0.0316 0.2731 0.0287 C 0.2899 0.0257 0.2815 0.0191 0.2832 0.0172 L 0.2832 -0.0159 C 0.2815 -0.0177 0.2899 -0.0241 0.2731 -0.0265 C 0.2562 -0.029 0.2141 -0.0287 0.182 -0.0308 C 0.15 -0.0329 0.1113 -0.0377 0.0809 -0.0393 C 0.0506 -0.0409 0.0143 -0.0402 0.0 -0.0404 C -0.0143 -0.0405 -0.0042 -0.0404 -0.0051 -0.0404 Z",
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "cuff-r",
+          "bone": "forearm-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.03,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2478,
+              0.0297
+            ],
+            [
+              0.2478,
+              -0.0276
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.0144 -0.0287 C 0.0287 -0.0335 0.0718 -0.0326 0.1006 -0.0297 L 0.1542 -0.0287 C 0.1667 -0.0287 0.1667 -0.0144 0.1542 -0.0144 L 0.1312 -0.014 L 0.1676 -0.0151 C 0.1801 -0.0151 0.1801 0.0008 0.1676 0.0008 L 0.1312 0.0011 L 0.1753 0 C 0.1877 0 0.1877 0.0163 0.1753 0.0163 L 0.1312 0.0167 L 0.1686 0.0158 C 0.181 0.0158 0.181 0.0311 0.1686 0.0311 C 0.1245 0.0326 0.0575 0.0364 0 0.0393 L -0.0144 0.0354 Z",
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "thumb-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 2,
+          "z": 6.22,
+          "filled": true,
+          "tone": 0.291,
+          "kind": "path",
+          "d": "M -0.0038 0.023 C 0.0249 0.0479 0.0632 0.069 0.0939 0.0785 C 0.1044 0.0814 0.1121 0.0718 0.1044 0.0623 C 0.0881 0.0479 0.0671 0.0383 0.0441 0.0211 Z",
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-r-0",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              -0.0147
+            ],
+            [
+              0.1312,
+              -0.0147
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-r-1",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              0.0003
+            ],
+            [
+              0.1312,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "fingers-r-2",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.165,
+          "kind": "poly",
+          "points": [
+            [
+              0.0718,
+              0.0161
+            ],
+            [
+              0.1312,
+              0.0161
+            ]
+          ],
+          "closed": false,
+          "region": "gloves",
+          "material": "glove"
+        },
+        {
+          "id": "thigh-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.26,
+          "kind": "path",
+          "d": "M 0.0 0.1041 C 0.0118 0.1041 0.0421 0.1055 0.0708 0.1041 C 0.0995 0.1027 0.1348 0.0998 0.1719 0.0956 C 0.209 0.0913 0.2579 0.0835 0.2933 0.0786 C 0.3287 0.0736 0.3607 0.0687 0.3843 0.0658 C 0.4079 0.063 0.4244 0.0664 0.4349 0.0616 C 0.4453 0.0568 0.445 0.0411 0.447 0.037 L 0.447 -0.037 C 0.445 -0.0411 0.4453 -0.0568 0.4349 -0.0616 C 0.4244 -0.0664 0.4079 -0.0627 0.3843 -0.0658 C 0.3607 -0.069 0.3287 -0.0745 0.2933 -0.0807 C 0.2579 -0.0869 0.209 -0.0973 0.1719 -0.103 C 0.1348 -0.1087 0.0995 -0.1127 0.0708 -0.1147 C 0.0421 -0.1166 0.0118 -0.1147 0.0 -0.1147 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-r",
+          "bone": "shank-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.02,
+          "filled": true,
+          "tone": 0.26,
+          "kind": "path",
+          "d": "M -0.0101 0.0637 C -0.0084 0.0637 -0.0169 0.0648 0.0 0.0637 C 0.0169 0.0627 0.0573 0.0595 0.091 0.0573 C 0.1247 0.0552 0.1635 0.0533 0.2023 0.051 C 0.241 0.0487 0.2899 0.0453 0.3236 0.0435 C 0.3573 0.0417 0.3894 0.0434 0.4045 0.0401 C 0.4197 0.0369 0.413 0.0268 0.4147 0.0241 L 0.4147 -0.0261 C 0.413 -0.029 0.4197 -0.0392 0.4045 -0.0435 C 0.3894 -0.0479 0.3573 -0.0469 0.3236 -0.052 C 0.2899 -0.0572 0.241 -0.0696 0.2023 -0.0743 C 0.1635 -0.0791 0.1247 -0.0825 0.091 -0.0807 C 0.0573 -0.0789 0.0169 -0.0665 0.0 -0.0637 C -0.0169 -0.0609 -0.0084 -0.0637 -0.0101 -0.0637 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-r",
+          "bone": "shank-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3894,
+              0.0425
+            ],
+            [
+              0.3894,
+              -0.0467
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-r",
+          "bone": "foot-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "path",
+          "d": "M 0.1315 -0.0809 L -0.0627 -0.0809 L -0.0668 0 C -0.0668 0.0506 -0.0607 0.1011 -0.0526 0.1264 L 0.0526 0.1264 L 0.0546 0.0455 C 0.0726 0.0282 0.1019 0.0077 0.1315 -0.0107 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-r",
+          "bone": "toe-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "path",
+          "d": "M -0 0.0702 C 0.0138 0.0616 0.0276 0.0536 0.0404 0.0465 C 0.0758 0.0324 0.0991 0.0243 0.0991 0.0101 C 0.0991 0.002 0.093 0 0.0829 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-r",
+          "bone": "foot-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0647,
+              -0.0526
+            ],
+            [
+              0.1315,
+              -0.0526
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-r",
+          "bone": "toe-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0283
+            ],
+            [
+              0.0971,
+              0.0283
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "vest",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.9,
+          "kind": "path",
+          "d": "M 0.0 -0.1291 C 0.0067 -0.1299 0.0169 -0.132 0.0405 -0.1338 C 0.0641 -0.1356 0.1079 -0.1381 0.1416 -0.1402 C 0.1753 -0.1423 0.2124 -0.1444 0.2427 -0.1465 C 0.2731 -0.1487 0.2967 -0.1552 0.3236 -0.1529 C 0.3506 -0.1506 0.386 -0.1406 0.4045 -0.1327 C 0.4231 -0.1249 0.4298 -0.1102 0.4349 -0.1057 L 0.4349 0.1211 C 0.4298 0.1248 0.4231 0.1393 0.4045 0.1434 C 0.386 0.1474 0.3506 0.1465 0.3236 0.1455 C 0.2967 0.1444 0.2731 0.1398 0.2427 0.137 C 0.2124 0.1342 0.1753 0.131 0.1416 0.1285 C 0.1079 0.126 0.0641 0.1233 0.0405 0.1221 C 0.0169 0.1209 0.0067 0.1214 0.0 0.1213 Z",
+          "region": "vest",
+          "material": "hi-vis-polyester"
+        },
+        {
+          "id": "vest-band-low",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "path",
+          "d": "M 0.0708 -0.1373 C 0.0792 -0.1378 0.1129 -0.14 0.1214 -0.1405 L 0.1214 0.1288 C 0.1129 0.1283 0.0792 0.1262 0.0708 0.1256 Z",
+          "region": "vest",
+          "material": "retroreflective"
+        },
+        {
+          "id": "vest-band-high",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "path",
+          "d": "M 0.2731 -0.1505 C 0.2815 -0.1512 0.3152 -0.1538 0.3236 -0.1545 L 0.3236 0.1471 C 0.3152 0.1462 0.2815 0.1427 0.2731 0.1418 Z",
+          "region": "vest",
+          "material": "retroreflective"
+        },
+        {
+          "id": "vest-hem",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.55,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              -0.1242
+            ],
+            [
+              0,
+              0.1221
+            ]
+          ],
+          "closed": false,
+          "region": "vest",
+          "material": "hi-vis-polyester"
+        },
+        {
+          "id": "vest-strap",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.55,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.4349,
+              -0.0531
+            ],
+            [
+              0.3135,
+              -0.1009
+            ],
+            [
+              0.1011,
+              -0.1147
+            ]
+          ],
+          "closed": false,
+          "region": "vest",
+          "material": "hi-vis-polyester"
+        },
+        {
+          "id": "helmet",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5.7,
+          "filled": true,
+          "tone": 0.92,
+          "kind": "path",
+          "d": "M 0.1679 0.1189 C 0.2579 0.1274 0.3176 0.0658 0.3196 -0.017 C 0.3206 -0.0871 0.2791 -0.1211 0.2346 -0.1253 L 0.2286 -0.1805 C 0.2276 -0.1911 0.2124 -0.1922 0.2104 -0.1805 L 0.2043 -0.1274 L 0.1901 -0.1062 L 0.1598 0.1168 Z",
+          "region": "helmet",
+          "material": "hdpe-shell"
+        },
+        {
+          "id": "helmet-ridge",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.8,
+          "filled": false,
+          "tone": 0.6,
+          "kind": "poly",
+          "points": [
+            [
+              0.2346,
+              0.1062
+            ],
+            [
+              0.2994,
+              0.0637
+            ],
+            [
+              0.3196,
+              -0.017
+            ],
+            [
+              0.2953,
+              -0.085
+            ],
+            [
+              0.2427,
+              -0.1147
+            ]
+          ],
+          "closed": false,
+          "region": "helmet",
+          "material": "hdpe-shell"
+        },
+        {
+          "id": "helmet-strap",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.8,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.178,
+              -0.0106
+            ],
+            [
+              0.1214,
+              -0.0297
+            ],
+            [
+              0.0809,
+              -0.0425
+            ]
+          ],
+          "closed": false,
+          "region": "helmet",
+          "material": "hdpe-shell"
+        },
+        {
+          "id": "shirt-cuff-glove-l",
+          "bone": "forearm-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2579,
+              0.0319
+            ],
+            [
+              0.2579,
+              -0.0297
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "knee-pad-r",
+          "bone": "shank-r",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.18,
+          "kind": "path",
+          "d": "M 0.0 0.0637 C 0.0202 0.0722 0.0759 0.0701 0.0961 0.0616 L 0.0961 0.0425 L 0.0 0.0425 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-pocket",
+          "bone": "thigh-r",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1214,
+              0.1041
+            ],
+            [
+              0.1416,
+              0.0637
+            ],
+            [
+              0.2023,
+              0.0616
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "boot-toecap",
+          "bone": "toe-r",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.0061
+            ],
+            [
+              0.0,
+              0.0445
+            ],
+            [
+              0.0303,
+              0.0465
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "boot-toecap-l",
+          "bone": "toe-l",
+          "role": "detail",
+          "lod": 3,
+          "z": 1.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              0.0061
+            ],
+            [
+              0.0,
+              0.0445
+            ],
+            [
+              0.0303,
+              0.0465
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "box",
+          "bone": "box-r",
+          "role": "body",
+          "lod": 0,
+          "z": 5.8,
+          "filled": true,
+          "tone": 0.66,
+          "kind": "rect",
+          "x": -0.2,
+          "y": -0.15,
+          "w": 0.4,
+          "h": 0.3,
+          "r": 0.008,
+          "region": "box-surface",
+          "material": "cardboard"
+        },
+        {
+          "id": "box-tape",
+          "bone": "box-r",
+          "role": "detail",
+          "lod": 1,
+          "z": 5.82,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "rect",
+          "x": -0.2,
+          "y": 0.075,
+          "w": 0.4,
+          "h": 0.04,
+          "region": "box-surface",
+          "material": "cardboard"
+        },
+        {
+          "id": "box-handle",
+          "bone": "box-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.82,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": -0.075,
+          "y": -0.015,
+          "w": 0.15,
+          "h": 0.045,
+          "r": 0.02,
+          "region": "box-surface",
+          "material": "cardboard"
+        },
+        {
+          "id": "box-label",
+          "bone": "box-r",
+          "role": "texture",
+          "lod": 2,
+          "z": 5.82,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "rect",
+          "x": -0.17,
+          "y": -0.12,
+          "w": 0.09,
+          "h": 0.07,
+          "region": "box-surface",
+          "material": "cardboard"
+        },
+        {
+          "id": "box-flap",
+          "bone": "box-r",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.82,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              -0.2,
+              -0.11
+            ],
+            [
+              0.2,
+              -0.11
+            ]
+          ],
+          "closed": false,
+          "region": "box-surface",
+          "material": "cardboard"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "squat-grip",
+        "title": {
+          "en": "Squat, hands on the box",
+          "de": "Hocke, Hände an der Kiste"
+        },
+        "description": {
+          "en": "Deep squat with a straight back and straight arms; the 20 kg box still rests on the ground and shares its weight with the floor.",
+          "de": "Tiefe Hocke mit geradem Rücken und gestreckten Armen; die 20-kg-Kiste steht noch auf dem Boden und gibt einen Teil ihres Gewichts an den Boden ab."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 88
+          },
+          "shank-l": {
+            "angleDeg": -113
+          },
+          "foot-l": {
+            "angleDeg": 25
+          },
+          "thigh-r": {
+            "angleDeg": 88
+          },
+          "shank-r": {
+            "angleDeg": -113
+          },
+          "foot-r": {
+            "angleDeg": 25
+          },
+          "torso": {
+            "angleDeg": -75
+          },
+          "head": {
+            "angleDeg": 40
+          },
+          "upper-arm-l": {
+            "angleDeg": 61.46
+          },
+          "forearm-l": {
+            "angleDeg": 60.4
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": 61.46
+          },
+          "forearm-r": {
+            "angleDeg": 60.4
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 43.15
+          },
+          "box-r": {
+            "angleDeg": 43.15
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r",
+          "box-base"
+        ],
+        "thermal": {
+          "activityMet": 4.5,
+          "emitters": {
+            "breath": 0.9
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lift-mid",
+        "title": {
+          "en": "Mid lift",
+          "de": "Mitte des Hebens"
+        },
+        "description": {
+          "en": "Half-risen, trunk flexed 50 degrees: the box hangs on straight arms far in front of the lumbar joint, the largest lever arm of the lift.",
+          "de": "Halb aufgerichtet, Rumpf 50 Grad vorgeneigt: die Kiste hängt an gestreckten Armen weit vor dem Lendengelenk, der größte Hebelarm des Hebens."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 62
+          },
+          "shank-l": {
+            "angleDeg": -88
+          },
+          "foot-l": {
+            "angleDeg": 25
+          },
+          "thigh-r": {
+            "angleDeg": 62
+          },
+          "shank-r": {
+            "angleDeg": -88
+          },
+          "foot-r": {
+            "angleDeg": 25
+          },
+          "torso": {
+            "angleDeg": -50
+          },
+          "head": {
+            "angleDeg": 30
+          },
+          "upper-arm-l": {
+            "angleDeg": 35.46
+          },
+          "forearm-l": {
+            "angleDeg": 64.37
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": 35.46
+          },
+          "forearm-r": {
+            "angleDeg": 64.37
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 40.18
+          },
+          "box-r": {
+            "angleDeg": 40.18
+          },
+          "toe-l": {
+            "angleDeg": 1.17
+          },
+          "toe-r": {
+            "angleDeg": 1.17
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 5,
+          "emitters": {
+            "breath": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "carrying-box-low",
+        "title": {
+          "en": "Carrying at hip height",
+          "de": "Tragen auf Hüfthöhe"
+        },
+        "description": {
+          "en": "Upright, trunk leaning back 6 degrees to balance the box held at hip height with extended arms.",
+          "de": "Aufrecht, Rumpf 6 Grad zurückgelehnt, um die Kiste mit gestreckten Armen auf Hüfthöhe auszugleichen."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.4,
+          "emitters": {
+            "breath": 0.7
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "carrying-box-chest",
+        "title": {
+          "en": "Carrying at chest height",
+          "de": "Tragen auf Brusthöhe"
+        },
+        "description": {
+          "en": "Box held close at chest height with the elbows bent: shorter lever arm at the lumbar joint, longer one at the shoulder and elbow.",
+          "de": "Kiste nah vor der Brust mit gebeugten Ellbogen: kürzerer Hebelarm am Lendengelenk, längerer an Schulter und Ellbogen."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 10
+          },
+          "head": {
+            "angleDeg": -10
+          },
+          "upper-arm-l": {
+            "angleDeg": 3.95
+          },
+          "forearm-l": {
+            "angleDeg": 109.99
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": 3.95
+          },
+          "forearm-r": {
+            "angleDeg": 109.99
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": -33.94
+          },
+          "box-r": {
+            "angleDeg": -33.94
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "setting-down",
+        "title": {
+          "en": "Setting the box down",
+          "de": "Kiste absetzen"
+        },
+        "description": {
+          "en": "Bent knees and flexed trunk while lowering the box to a pallet; the box hangs free.",
+          "de": "Gebeugte Knie und vorgeneigter Rumpf beim Absenken der Kiste auf eine Palette; die Kiste hängt frei."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 55
+          },
+          "shank-l": {
+            "angleDeg": -82
+          },
+          "foot-l": {
+            "angleDeg": 25
+          },
+          "thigh-r": {
+            "angleDeg": 55
+          },
+          "shank-r": {
+            "angleDeg": -82
+          },
+          "foot-r": {
+            "angleDeg": 25
+          },
+          "torso": {
+            "angleDeg": -42
+          },
+          "head": {
+            "angleDeg": 25
+          },
+          "upper-arm-l": {
+            "angleDeg": 60.55
+          },
+          "forearm-l": {
+            "angleDeg": 0.18
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": 60.55
+          },
+          "forearm-r": {
+            "angleDeg": 0.18
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 71.27
+          },
+          "box-r": {
+            "angleDeg": 71.27
+          },
+          "toe-l": {
+            "angleDeg": 2.17
+          },
+          "toe-r": {
+            "angleDeg": 2.17
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 4.2,
+          "emitters": {
+            "breath": 0.9
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "walk-heel-strike-l",
+        "title": {
+          "en": "Loaded gait: Heel strike, left",
+          "de": "Belasteter Gang: Fersenkontakt links"
+        },
+        "description": {
+          "en": "Left heel strike; the right foot is still on its toes behind (double support).",
+          "de": "Linker Fersenkontakt; der rechte Fuß steht noch hinten auf dem Ballen (Doppelstütz)."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 26.01
+          },
+          "shank-l": {
+            "angleDeg": -24.95
+          },
+          "foot-l": {
+            "angleDeg": -1.06
+          },
+          "thigh-r": {
+            "angleDeg": -5.18
+          },
+          "shank-r": {
+            "angleDeg": -33.17
+          },
+          "foot-r": {
+            "angleDeg": 12.43
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 26.09
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-toe-off-r",
+        "title": {
+          "en": "Loaded gait: Toe-off, right",
+          "de": "Belasteter Gang: Abdruck rechts"
+        },
+        "description": {
+          "en": "Right toe-off ends double support; the right leg starts to swing.",
+          "de": "Rechter Abdruck beendet die Doppelstützphase; das rechte Bein beginnt zu schwingen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 20.87
+          },
+          "shank-l": {
+            "angleDeg": -29.86
+          },
+          "foot-l": {
+            "angleDeg": 8.99
+          },
+          "thigh-r": {
+            "angleDeg": -25.65
+          },
+          "shank-r": {
+            "angleDeg": -2.9
+          },
+          "foot-r": {
+            "angleDeg": -7.97
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 37.62
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-midstance-l",
+        "title": {
+          "en": "Loaded gait: Midstance, left",
+          "de": "Belasteter Gang: Mittlere Standphase links"
+        },
+        "description": {
+          "en": "Body vertically over the left foot, highest hip position; right leg swings through.",
+          "de": "Körper senkrecht über dem linken Fuß, höchste Hüftlage; das rechte Bein schwingt durch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 9.72
+          },
+          "shank-l": {
+            "angleDeg": -22.63
+          },
+          "foot-l": {
+            "angleDeg": 12.91
+          },
+          "thigh-r": {
+            "angleDeg": -7.13
+          },
+          "shank-r": {
+            "angleDeg": -35.27
+          },
+          "foot-r": {
+            "angleDeg": -6.36
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 33.63
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-heel-off-l",
+        "title": {
+          "en": "Loaded gait: Heel-off, left",
+          "de": "Belasteter Gang: Fersenabhebung links"
+        },
+        "description": {
+          "en": "Left heel leaves the ground while the right leg reaches forward.",
+          "de": "Linke Ferse löst sich vom Boden, während das rechte Bein nach vorn greift."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -1.75
+          },
+          "shank-l": {
+            "angleDeg": -14.4
+          },
+          "foot-l": {
+            "angleDeg": 16.15
+          },
+          "thigh-r": {
+            "angleDeg": 21.68
+          },
+          "shank-r": {
+            "angleDeg": -58.92
+          },
+          "foot-r": {
+            "angleDeg": -3.24
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 20.35
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-late-swing-r",
+        "title": {
+          "en": "Loaded gait: Late swing, right",
+          "de": "Belasteter Gang: Späte Schwungphase rechts"
+        },
+        "description": {
+          "en": "Right foot descends to the ground ahead of the body.",
+          "de": "Rechter Fuß senkt sich vor dem Körper zum Boden."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -2.87
+          },
+          "shank-l": {
+            "angleDeg": -26.04
+          },
+          "foot-l": {
+            "angleDeg": 19.83
+          },
+          "thigh-r": {
+            "angleDeg": 34.73
+          },
+          "shank-r": {
+            "angleDeg": -48.36
+          },
+          "foot-r": {
+            "angleDeg": -1.13
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 9.25
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-heel-strike-r",
+        "title": {
+          "en": "Loaded gait: Heel strike, right",
+          "de": "Belasteter Gang: Fersenkontakt rechts"
+        },
+        "description": {
+          "en": "Right heel strike; the left foot is still on its toes behind (double support).",
+          "de": "Rechter Fersenkontakt; der linke Fuß steht noch hinten auf dem Ballen (Doppelstütz)."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -5.18
+          },
+          "shank-l": {
+            "angleDeg": -33.17
+          },
+          "foot-l": {
+            "angleDeg": 12.43
+          },
+          "thigh-r": {
+            "angleDeg": 26.01
+          },
+          "shank-r": {
+            "angleDeg": -24.95
+          },
+          "foot-r": {
+            "angleDeg": -1.06
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 26.09
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r",
+          "contact-l"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-toe-off-l",
+        "title": {
+          "en": "Loaded gait: Toe-off, left",
+          "de": "Belasteter Gang: Abdruck links"
+        },
+        "description": {
+          "en": "Left toe-off ends double support; the left leg starts to swing.",
+          "de": "Linker Abdruck beendet die Doppelstützphase; das linke Bein beginnt zu schwingen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -25.65
+          },
+          "shank-l": {
+            "angleDeg": -2.9
+          },
+          "foot-l": {
+            "angleDeg": -7.97
+          },
+          "thigh-r": {
+            "angleDeg": 20.87
+          },
+          "shank-r": {
+            "angleDeg": -29.86
+          },
+          "foot-r": {
+            "angleDeg": 8.99
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 37.62
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-midstance-r",
+        "title": {
+          "en": "Loaded gait: Midstance, right",
+          "de": "Belasteter Gang: Mittlere Standphase rechts"
+        },
+        "description": {
+          "en": "Body vertically over the right foot; left leg swings through.",
+          "de": "Körper senkrecht über dem rechten Fuß; das linke Bein schwingt durch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -7.13
+          },
+          "shank-l": {
+            "angleDeg": -35.27
+          },
+          "foot-l": {
+            "angleDeg": -6.36
+          },
+          "thigh-r": {
+            "angleDeg": 9.72
+          },
+          "shank-r": {
+            "angleDeg": -22.63
+          },
+          "foot-r": {
+            "angleDeg": 12.91
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 33.63
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-heel-off-r",
+        "title": {
+          "en": "Loaded gait: Heel-off, right",
+          "de": "Belasteter Gang: Fersenabhebung rechts"
+        },
+        "description": {
+          "en": "Right heel leaves the ground while the left leg reaches forward.",
+          "de": "Rechte Ferse löst sich vom Boden, während das linke Bein nach vorn greift."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 21.68
+          },
+          "shank-l": {
+            "angleDeg": -58.92
+          },
+          "foot-l": {
+            "angleDeg": -3.24
+          },
+          "thigh-r": {
+            "angleDeg": -1.75
+          },
+          "shank-r": {
+            "angleDeg": -14.4
+          },
+          "foot-r": {
+            "angleDeg": 16.15
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 20.35
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "walk-late-swing-l",
+        "title": {
+          "en": "Loaded gait: Late swing, left",
+          "de": "Belasteter Gang: Späte Schwungphase links"
+        },
+        "description": {
+          "en": "Left foot descends to the ground ahead of the body.",
+          "de": "Linker Fuß senkt sich vor dem Körper zum Boden."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 34.73
+          },
+          "shank-l": {
+            "angleDeg": -48.36
+          },
+          "foot-l": {
+            "angleDeg": -1.13
+          },
+          "thigh-r": {
+            "angleDeg": -2.87
+          },
+          "shank-r": {
+            "angleDeg": -26.04
+          },
+          "foot-r": {
+            "angleDeg": 19.83
+          },
+          "torso": {
+            "angleDeg": 6
+          },
+          "head": {
+            "angleDeg": -6
+          },
+          "upper-arm-l": {
+            "angleDeg": -5.82
+          },
+          "forearm-l": {
+            "angleDeg": 77.84
+          },
+          "hand-l": {
+            "angleDeg": 0
+          },
+          "upper-arm-r": {
+            "angleDeg": -5.82
+          },
+          "forearm-r": {
+            "angleDeg": 77.84
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "box-l": {
+            "angleDeg": 11.98
+          },
+          "box-r": {
+            "angleDeg": 11.98
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 9.25
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      }
+    ],
+    "clips": [
+      {
+        "id": "squat-lift",
+        "title": {
+          "en": "Squat lift from the floor",
+          "de": "Hebevorgang aus der Hocke"
+        },
+        "description": {
+          "en": "Lifting the 20 kg box from the floor with a straight back: the box leaves the ground at 0.7 s and the load moves entirely onto the arms; the lumbar moment peaks mid lift.",
+          "de": "Anheben der 20-kg-Kiste vom Boden mit geradem Rücken: bei 0,7 s hebt die Kiste ab und die Last geht vollständig auf die Arme; das Lendenmoment ist in der Mitte des Hebens am größten."
+        },
+        "durationS": 3.2,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "squat-grip",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.6,
+            "pose": "squat-grip",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.6,
+            "pose": "lift-mid",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.6,
+            "pose": "carrying-box-low",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.7,
+            "pose": "carrying-box-low",
+            "ease": "smooth",
+            "bones": {
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": 8.4306
+              },
+              "head": {
+                "angleDeg": -7.5625
+              },
+              "upper-arm-l": {
+                "angleDeg": -7.6117
+              },
+              "forearm-l": {
+                "angleDeg": 78.4246
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -2.691
+              },
+              "shank-l": {
+                "angleDeg": 0
+              },
+              "foot-l": {
+                "angleDeg": -1.0851
+              },
+              "toe-l": {
+                "angleDeg": 3.95
+              },
+              "upper-arm-r": {
+                "angleDeg": -7.6117
+              },
+              "forearm-r": {
+                "angleDeg": 78.4246
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -2.691
+              },
+              "shank-r": {
+                "angleDeg": 0
+              },
+              "foot-r": {
+                "angleDeg": -1.0851
+              },
+              "toe-r": {
+                "angleDeg": 3.95
+              },
+              "box-l": {
+                "angleDeg": 10.756
+              },
+              "box-r": {
+                "angleDeg": 10.756
+              }
+            }
+          },
+          {
+            "t": 3.2,
+            "pose": "carrying-box-low",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 3.2
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 3.2
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 3.2
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 3.2
+          },
+          {
+            "anchor": "box-base",
+            "fromS": 0,
+            "toS": 0.7
+          }
+        ],
+        "phases": [
+          {
+            "id": "brace",
+            "fromS": 0,
+            "toS": 0.6,
+            "title": {
+              "en": "Grip and brace",
+              "de": "Greifen und Anspannen"
+            }
+          },
+          {
+            "id": "lift",
+            "fromS": 0.6,
+            "toS": 2.6,
+            "title": {
+              "en": "Lift",
+              "de": "Heben"
+            }
+          },
+          {
+            "id": "carry-stance",
+            "fromS": 2.6,
+            "toS": 3.2,
+            "title": {
+              "en": "Stand with the load",
+              "de": "Stand mit Last"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.2,
+            "kind": "inhale",
+            "title": {
+              "en": "Deep breath before the lift",
+              "de": "Tiefes Einatmen vor dem Heben"
+            }
+          },
+          {
+            "t": 0.7,
+            "kind": "contact-off",
+            "title": {
+              "en": "Box leaves the ground",
+              "de": "Kiste hebt ab"
+            },
+            "target": "box-base"
+          },
+          {
+            "t": 0.7,
+            "kind": "load-on",
+            "title": {
+              "en": "Full box weight on the arms",
+              "de": "Volles Kistengewicht auf den Armen"
+            },
+            "target": "grip-r"
+          },
+          {
+            "t": 1.2,
+            "kind": "exhale",
+            "title": {
+              "en": "Effort exhalation",
+              "de": "Anstrengungsausatmung"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 3
+              },
+              {
+                "t": 1.2,
+                "v": 5
+              },
+              {
+                "t": 2.8,
+                "v": 3.6
+              },
+              {
+                "t": 3.2,
+                "v": 3.4
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3
+              },
+              {
+                "t": 0.5,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              },
+              {
+                "t": 1.8,
+                "v": 0.8
+              },
+              {
+                "t": 2.6,
+                "v": 0.4
+              },
+              {
+                "t": 3.2,
+                "v": 0.7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "carry-walk",
+        "title": {
+          "en": "Walking with the box",
+          "de": "Gehen mit Kiste"
+        },
+        "description": {
+          "en": "Level walking with the 20 kg box at hip height, arms locked, shortened stride, planted feet.",
+          "de": "Gehen in der Ebene mit der 20-kg-Kiste auf Hüfthöhe, Arme fixiert, verkürzter Schritt, Füße gleiten nicht."
+        },
+        "durationS": 1.1,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 1.10000629,
+        "keys": [
+          {
+            "t": 0,
+            "pose": "walk-heel-strike-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.11,
+            "pose": "walk-toe-off-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.22,
+            "pose": "walk-midstance-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.33,
+            "pose": "walk-heel-off-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.44,
+            "pose": "walk-late-swing-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.55,
+            "pose": "walk-heel-strike-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.66,
+            "pose": "walk-toe-off-l",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.77,
+            "pose": "walk-midstance-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.88,
+            "pose": "walk-heel-off-r",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.99,
+            "pose": "walk-late-swing-l",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 0.11000000000000001
+          },
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 0.33
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 0.66
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0.55,
+            "toS": 0.8800000000000001
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0.55,
+            "toS": 1.1
+          }
+        ],
+        "phases": [
+          {
+            "id": "double-support-1",
+            "fromS": 0,
+            "toS": 0.11,
+            "title": {
+              "en": "Double support, left heel strike",
+              "de": "Doppelstütz, linker Fersenkontakt"
+            }
+          },
+          {
+            "id": "left-single",
+            "fromS": 0.11,
+            "toS": 0.55,
+            "title": {
+              "en": "Left single support",
+              "de": "Linke Einzelstütz"
+            }
+          },
+          {
+            "id": "double-support-2",
+            "fromS": 0.55,
+            "toS": 0.66,
+            "title": {
+              "en": "Double support, right heel strike",
+              "de": "Doppelstütz, rechter Fersenkontakt"
+            }
+          },
+          {
+            "id": "right-single",
+            "fromS": 0.66,
+            "toS": 1.1,
+            "title": {
+              "en": "Right single support",
+              "de": "Rechte Einzelstütz"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Left heel strike",
+              "de": "Linker Fersenkontakt"
+            },
+            "target": "heel-l"
+          },
+          {
+            "t": 0.11,
+            "kind": "contact-off",
+            "title": {
+              "en": "Right toe-off",
+              "de": "Rechter Abdruck"
+            },
+            "target": "contact-r"
+          },
+          {
+            "t": 0.33,
+            "kind": "contact-off",
+            "title": {
+              "en": "Left heel-off",
+              "de": "Linke Fersenabhebung"
+            },
+            "target": "heel-l"
+          },
+          {
+            "t": 0.55,
+            "kind": "contact-on",
+            "title": {
+              "en": "Right heel strike",
+              "de": "Rechter Fersenkontakt"
+            },
+            "target": "heel-r"
+          },
+          {
+            "t": 0.66,
+            "kind": "contact-off",
+            "title": {
+              "en": "Left toe-off",
+              "de": "Linker Abdruck"
+            },
+            "target": "contact-l"
+          },
+          {
+            "t": 0.88,
+            "kind": "contact-off",
+            "title": {
+              "en": "Right heel-off",
+              "de": "Rechte Fersenabhebung"
+            },
+            "target": "heel-r"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 0.55,
+                "v": 1
+              },
+              {
+                "t": 1.1,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "set-down",
+        "title": {
+          "en": "Setting the box down",
+          "de": "Kiste absetzen"
+        },
+        "description": {
+          "en": "Lowering the carried box to the ground in a squat and releasing its weight onto the floor.",
+          "de": "Absenken der getragenen Kiste in der Hocke bis auf den Boden; das Gewicht geht auf den Boden über."
+        },
+        "durationS": 3,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "carrying-box-low",
+            "ease": "smooth"
+          },
+          {
+            "t": 1,
+            "pose": "setting-down",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.2,
+            "pose": "squat-grip",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "squat-grip",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 3
+          },
+          {
+            "anchor": "box-base",
+            "fromS": 2.2,
+            "toS": 3
+          }
+        ],
+        "phases": [
+          {
+            "id": "lower",
+            "fromS": 0,
+            "toS": 2.2,
+            "title": {
+              "en": "Lower",
+              "de": "Absenken"
+            }
+          },
+          {
+            "id": "release",
+            "fromS": 2.2,
+            "toS": 3,
+            "title": {
+              "en": "Box on the ground",
+              "de": "Kiste am Boden"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.5,
+            "kind": "exhale",
+            "title": {
+              "en": "Controlled exhale while lowering",
+              "de": "Kontrolliertes Ausatmen beim Absenken"
+            }
+          },
+          {
+            "t": 2.2,
+            "kind": "contact-on",
+            "title": {
+              "en": "Box touches the ground",
+              "de": "Kiste berührt den Boden"
+            },
+            "target": "box-base"
+          },
+          {
+            "t": 2.2,
+            "kind": "load-off",
+            "title": {
+              "en": "Box weight leaves the arms",
+              "de": "Kistengewicht verlässt die Arme"
+            },
+            "target": "grip-r"
+          },
+          {
+            "t": 2.6,
+            "kind": "inhale",
+            "title": {
+              "en": "Breath after the set-down",
+              "de": "Atemzug nach dem Absetzen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 3.4
+              },
+              {
+                "t": 1.2,
+                "v": 4.2
+              },
+              {
+                "t": 3,
+                "v": 2.2
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 1,
+                "v": 1
+              },
+              {
+                "t": 2.2,
+                "v": 0.6
+              },
+              {
+                "t": 3,
+                "v": 0.3
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0.2,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.5,
+      "regions": [
+        {
+          "id": "head-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.061,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.06,
+          "metabolicShare": 0.06,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "material": "hair",
+          "model": "core-resistance",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "helmet",
+          "title": {
+            "en": "Safety helmet shell",
+            "de": "Schutzhelm-Schale"
+          },
+          "kind": "surface",
+          "material": "hdpe-shell",
+          "model": "passive",
+          "areaM2": 0.061,
+          "characteristicLengthM": 0.2,
+          "source": "authored-estimate",
+          "reference": "en-397"
+        },
+        {
+          "id": "torso-clothing",
+          "title": {
+            "en": "Shirt under the vest",
+            "de": "Hemd unter der Weste"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.425,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.15,
+          "metabolicShare": 0.3,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "vest",
+          "title": {
+            "en": "High-visibility vest",
+            "de": "Warnweste"
+          },
+          "kind": "clothing",
+          "material": "hi-vis-polyester",
+          "model": "core-resistance",
+          "areaM2": 0.303,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.18,
+          "metabolicShare": 0.12,
+          "source": "literature",
+          "reference": "iso-20471"
+        },
+        {
+          "id": "arm-clothing",
+          "title": {
+            "en": "Long sleeves",
+            "de": "Lange Ärmel"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.263,
+          "characteristicLengthM": 0.08,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.14,
+          "metabolicShare": 0.13,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "gloves",
+          "title": {
+            "en": "Work gloves",
+            "de": "Arbeitshandschuhe"
+          },
+          "kind": "clothing",
+          "material": "glove",
+          "model": "core-resistance",
+          "areaM2": 0.101,
+          "characteristicLengthM": 0.07,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0.03,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "leg-clothing",
+          "title": {
+            "en": "Work trousers",
+            "de": "Arbeitshose"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.647,
+          "characteristicLengthM": 0.13,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.17,
+          "metabolicShare": 0.36,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shoes",
+          "title": {
+            "en": "Safety boots",
+            "de": "Sicherheitsstiefel"
+          },
+          "kind": "surface",
+          "material": "leather-shoe",
+          "model": "passive",
+          "areaM2": 0.142,
+          "characteristicLengthM": 0.12,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "box-surface",
+          "title": {
+            "en": "Cardboard box surface",
+            "de": "Kistenoberfläche"
+          },
+          "kind": "surface",
+          "material": "cardboard",
+          "model": "passive",
+          "areaM2": 0.66,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate",
+          "reference": "en-1991-1-1"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath",
+          "kind": "breath",
+          "title": {
+            "en": "Exhaled breath",
+            "de": "Ausgeatmete Luft"
+          },
+          "anchor": "mouth",
+          "directionDeg": -90,
+          "carries": "vapour",
+          "temperatureC": 34,
+          "velocityMS": 2,
+          "diameterM": 0.035,
+          "vapourKgPerKg": 0.034,
+          "periodS": 3,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "DuBois area for 1.78 m and 84 kg split by Lund-Browder-style fractions; clothing insulation from ISO 9920 (long-sleeve work clothes about 0.9 clo plus vest, boots and gloves).",
+          "de": "DuBois-Fläche für 1,78 m und 84 kg, aufgeteilt nach Lund-Browder-ähnlichen Anteilen; Bekleidungsdämmung nach ISO 9920 (langärmlige Arbeitskleidung etwa 0,9 clo plus Weste, Stiefel und Handschuhe)."
+        },
+        {
+          "en": "Metabolic rate by ISO 8996 class 3 to 4: 3.4 met carrying, 5.0 met at the peak of the lift (Compendium: lifting 15-49 lb 3.5 met, heavy 6 met).",
+          "de": "Stoffwechselrate nach ISO 8996 Klasse 3 bis 4: 3,4 met beim Tragen, 5,0 met am Höhepunkt des Hebens (Compendium: Heben 15-49 lb 3,5 met, schwer 6 met)."
+        },
+        {
+          "en": "The box is a passive cardboard surface at ambient temperature.",
+          "de": "Die Kiste ist eine passive Wellpappenoberfläche mit Umgebungstemperatur."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Segment masses are point masses at de Leva centres of mass; hand centres are authored estimates; rotational inertia is neglected.",
+          "de": "Segmentmassen sind Punktmassen in den Schwerpunkten nach de Leva; Handschwerpunkte sind Schätzwerte; Drehträgheit wird vernachlässigt."
+        },
+        {
+          "en": "The 20 kg box is two 10 kg point masses at the grips (NIOSH load constant 23 kg); while the box rests on the floor its base contact shares the weight with the feet under the equal-stiffness assumption.",
+          "de": "Die 20-kg-Kiste besteht aus zwei 10-kg-Punktmassen an den Griffen (NIOSH-Lastkonstante 23 kg); steht sie am Boden, teilt ihr Bodenkontakt das Gewicht unter der Annahme gleicher Steifigkeit mit den Füßen."
+        },
+        {
+          "en": "Both arms are lumped in the elevation: the near arm carries the left-hand half of the box through its own half bone.",
+          "de": "Beide Arme fallen in der Ansicht zusammen: der nahe Arm trägt die Hälfte der Kiste über seinen eigenen Halbknochen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "carrying-box-low",
+      "defaultClip": "carry-walk",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

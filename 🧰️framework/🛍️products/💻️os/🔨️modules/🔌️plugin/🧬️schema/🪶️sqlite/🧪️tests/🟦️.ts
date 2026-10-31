@@ -1,0 +1,14 @@
+import {test,expect} from "bun:test";
+import {readFileSync} from "node:fs";
+import {resolve} from "node:path";
+import laws from "./🔣️.json";
+import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+const owner=resolve(import.meta.dirname,"../../.."),schema=JSON.parse(readFileSync(owner+"/🧬️schema/🪶️sqlite/🔣️.json","utf8")),request=JSON.parse(readFileSync(owner+"/🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json","utf8")),Oracle=schema.$schema==="http://json-schema.org/draft-07/schema#"?Ajv:Ajv2020,oracle=new Oracle({strict:false}).compile(schema),axes=laws.nativeAxes;
+const valid=(value:unknown)=>{expect(oracle(value)).toBe(true);expect(validateJsonSchemaSubset(schema,value).length).toBe(0);};
+const refused=(value:unknown)=>{expect(oracle(value)).toBe(false);expect(validateJsonSchemaSubset(schema,value).length).toBeGreaterThan(0);};
+test("authored SnapshotInput and independent zero axes match both validators",()=>{valid(request);valid({...request,native:Object.fromEntries(axes.map(axis=>[axis,0]))});});
+test("native custody request and each independent axis are required",()=>{const absent={...request};delete absent.native;refused(absent);for(const axis of axes){const missing={...request.native};delete missing[axis];refused({...request,native:missing});}});
+test("each native axis stays integral nonnegative and JSON-safe",()=>{for(const axis of axes)for(const value of laws.invalidAxisValues)refused({...request,native:{...request.native,[axis]:value}});refused({...request,native:{...request.native,unexpected:0}});});
+test("schema wire fields agree with the actual closed Rust SnapshotGrant",()=>{const rust=readFileSync(owner+"/🧬️schema/🪶️sqlite/🦀️.rs","utf8"),body=/pub struct SnapshotGrant\s*\{([^}]*)\}/s.exec(rust)![1]!,fields=[...body.matchAll(/pub\s+(\w+)\s*:\s*u64/g)].map(match=>match[1]).sort();expect(fields).toEqual([...axes].sort());expect(Object.keys(request.native).sort()).toEqual(fields);const wire=JSON.parse(readFileSync(owner+"/🧬️schema/🪶️sqlite/🧬️schema/🔣️.json","utf8"));expect(schema.properties.native).toEqual(wire.properties.native);expect(Object.keys(schema.properties.native.properties).sort()).toEqual(fields);expect([...schema.properties.native.required].sort()).toEqual(fields);expect(schema.required).toContain("native");expect(schema.properties.native.additionalProperties).toBe(false);});

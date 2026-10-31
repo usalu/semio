@@ -2,9 +2,11 @@
   "design_options": {
     "b": {
       "entry": "Created",
-      "group": "g",
-      "name": "Timber",
-      "primary": false
+      "value": {
+        "group": "g",
+        "name": "Timber",
+        "primary": false
+      }
     }
   }
 }

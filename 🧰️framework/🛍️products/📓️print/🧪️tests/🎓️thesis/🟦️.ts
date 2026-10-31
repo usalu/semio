@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import "./📤️publication/🎨️paint/🧪️tests/🟦️.ts";
 import "../../🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts";
 /** 🧪️ Shared thesis declarations are checked against the independent JSON Schema oracle. */
@@ -9,7 +10,7 @@ import fixture from "./🔣️.json";
 import { escapeThesisText, isThesis, thesisPreamble } from "../../🧾️template/🎓️thesis/🟦️.ts";
 import { thesisSchema, thesisPreamble as publicPreamble } from "../../📦️packages/🟦️typescript/🧾️template/🎓️thesis/🟦️.ts";
 
-const oracle = new Ajv({ strict: true }).compile(schema);
+const oracle = new AjvDraft07({ strict: true }).compile(schema);
 for (const row of fixture.cases) test(row.name, () => {
   expect(isThesis(row.value)).toBe(row.valid);
   expect(Boolean(oracle(row.value))).toBe(row.valid);
@@ -66,4 +67,4 @@ import{thesisTestSourceInputsV1}from"./🧫️workspace/🟦️.ts";
 import{readSelectedBuildTargetModesV1}from"../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts";
 import ownerRegistrySchema from"../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️owners.json";
 import{findWorkspaceRoot}from"@semio-tech/process/routing";
-test("exact private native rendering birth reads only declared real owner metadata",()=>{const row=fixture.privateWorkspace.ownerInputs,checkout=findWorkspaceRoot(import.meta.dirname),inputs=thesisTestSourceInputsV1(),reads:string[]=[];for(const path of row.files)expect(inputs).toContain(path);const registry=JSON.parse(readFileSync(join(checkout,row.files[0]!),"utf8"));expect(new Ajv({strict:true}).validate(ownerRegistrySchema,registry)).toBe(true);const actual=readSelectedBuildTargetModesV1(checkout,row.arguments,path=>{const local=relative(checkout,path).split("\\").join("/");if(!row.files.includes(local))throw Error("Undeclared private owner metadata read: "+local);reads.push(local);return readFileSync(path,"utf8");});expect(actual).toEqual(row.expected);expect(reads).toEqual(row.files);});
+test("exact private native rendering birth reads only declared real owner metadata",()=>{const row=fixture.privateWorkspace.ownerInputs,checkout=findWorkspaceRoot(import.meta.dirname),inputs=thesisTestSourceInputsV1(),reads:string[]=[];for(const path of row.files)expect(inputs).toContain(path);const registry=JSON.parse(readFileSync(join(checkout,row.files[0]!),"utf8"));expect(new AjvDraft07({strict:true}).validate(ownerRegistrySchema,registry)).toBe(true);const actual=readSelectedBuildTargetModesV1(checkout,row.arguments,path=>{const local=relative(checkout,path).split("\\").join("/");if(!row.files.includes(local))throw Error("Undeclared private owner metadata read: "+local);reads.push(local);return readFileSync(path,"utf8");});expect(actual).toEqual(row.expected);expect(reads).toEqual(row.files);});

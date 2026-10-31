@@ -234,3 +234,18 @@ fn internally_tagged_without_attribute_accepts_unknown_key() {
     assert_eq!(InternallyTaggedLax::from_value(permissive), Ok(InternallyTaggedLax::Detailed { name: "a".to_string() }));
 }
 //#endregion 🔖️InternallyTagged
+
+#[derive(serde::Deserialize)]
+#[serde(tag = "kind", content = "data", rename_all = "camelCase", deny_unknown_fields)]
+enum AdjacentUnitOracle { Empty }
+
+#[test]
+fn adjacently_tagged_unit_denies_content() {
+    let text = r#"{"kind":"empty","data":{}}"#;
+    assert!(serde_json::from_str::<AdjacentUnitOracle>(text).is_err());
+    let value = DslValue::object([("kind".to_string(), DslValue::String("empty".to_string())), ("data".to_string(), DslValue::object([]))]);
+    assert!(AdjacentlyTagged::from_value(value.clone()).is_err());
+    let mut callback = |_| true;
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(10000, &mut callback);
+    assert!(AdjacentlyTagged::from_value_controlled(&value, &mut control).is_err());
+}

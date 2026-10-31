@@ -107,20 +107,30 @@ function pointInRings(p: Vec, rings: readonly Ring[], eps: number): boolean {
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
       const a = ring[i]!;
       const b = ring[j]!;
-      if (distanceToSegment(p, a, b) <= eps) return false;
+      if (p.x >= Math.min(a.x, b.x) - eps && p.x <= Math.max(a.x, b.x) + eps && p.y >= Math.min(a.y, b.y) - eps && p.y <= Math.max(a.y, b.y) + eps && distanceToSegment(p, a, b) <= eps) return false;
       if (a.y > p.y !== b.y > p.y && p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
     }
   }
   return inside;
 }
 
+/** 🎯️ Whether a point lies inside the rings (even-odd; on an edge counts as outside). */
+export const pointInside = (p: Vec, rings: readonly Ring[]): boolean => pointInRings(p, rings, 0);
+
 function crossings(a: Vec, b: Vec, occluder: Occluder): number[] {
+  const minX = Math.min(a.x, b.x);
+  const maxX = Math.max(a.x, b.x);
+  const minY = Math.min(a.y, b.y);
+  const maxY = Math.max(a.y, b.y);
+  if (maxX < occluder.box.minX || minX > occluder.box.maxX || maxY < occluder.box.minY || minY > occluder.box.maxY) return [];
   const out: number[] = [];
   const d1 = sub(b, a);
   for (const ring of occluder.rings)
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
       const c = ring[j]!;
-      const d2 = sub(ring[i]!, c);
+      const r = ring[i]!;
+      if (Math.max(c.x, r.x) < minX || Math.min(c.x, r.x) > maxX || Math.max(c.y, r.y) < minY || Math.min(c.y, r.y) > maxY) continue;
+      const d2 = sub(r, c);
       const denom = d1.x * d2.y - d1.y * d2.x;
       if (Math.abs(denom) < 1e-12) continue;
       const ca = sub(c, a);
@@ -156,7 +166,7 @@ export function visibleRuns(points: Ring, closed: boolean, occluders: readonly O
       const t1 = ts[k + 1]!;
       if (t1 - t0 < 1e-9) continue;
       const mid = lerp(a, b, (t0 + t1) / 2);
-      const hidden = relevant.some((o) => pointInRings(mid, o.rings, eps));
+      const hidden = relevant.some((o) => mid.x >= o.box.minX - eps && mid.x <= o.box.maxX + eps && mid.y >= o.box.minY - eps && mid.y <= o.box.maxY + eps && pointInRings(mid, o.rings, eps));
       if (i === 0 && k === 0) firstVisible = !hidden;
       lastVisible = !hidden;
       if (hidden) {
@@ -175,6 +185,33 @@ export function visibleRuns(points: Ring, closed: boolean, occluders: readonly O
     runs[0] = [...last, ...runs[0]!.slice(1)];
   }
   return runs.map((r) => ({ points: r, closed: false }));
+}
+
+/** ✂️ The stretches of the segment `a → b` that lie inside the rings (even-odd across all rings), in order along the segment. */
+export function clipSegmentToRings(a: Vec, b: Vec, rings: readonly Ring[]): [Vec, Vec][] {
+  const d1 = sub(b, a);
+  const ts: number[] = [0, 1];
+  for (const ring of rings)
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const c = ring[j]!;
+      const d2 = sub(ring[i]!, c);
+      const denom = d1.x * d2.y - d1.y * d2.x;
+      if (Math.abs(denom) < 1e-12) continue;
+      const ca = sub(c, a);
+      const t = (ca.x * d2.y - ca.y * d2.x) / denom;
+      const u = (ca.x * d1.y - ca.y * d1.x) / denom;
+      if (t > 0 && t < 1 && u >= 0 && u < 1) ts.push(t);
+    }
+  ts.sort((p, q) => p - q);
+  const out: [Vec, Vec][] = [];
+  for (let k = 0; k + 1 < ts.length; k++) {
+    const t0 = ts[k]!;
+    const t1 = ts[k + 1]!;
+    if (t1 - t0 < 1e-9) continue;
+    const mid = lerp(a, b, (t0 + t1) / 2);
+    if (pointInRings(mid, rings, 0)) out.push([lerp(a, b, t0), lerp(a, b, t1)]);
+  }
+  return out;
 }
 
 /** ✒️ Move/line commands through the points of a ring, closed with `Z` when requested. */

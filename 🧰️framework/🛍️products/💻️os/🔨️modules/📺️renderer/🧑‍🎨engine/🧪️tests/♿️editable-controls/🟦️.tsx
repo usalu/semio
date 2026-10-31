@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { computeAccessibleName, computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, expect, it } from "vitest";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import fixture from "../🧫️fixtures/♿️editable-controls/🔣️.json";
 import { createInputLedgerV1, inputActionWindowV1, inputActionWithWindowV1 } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";

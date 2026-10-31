@@ -1,0 +1,18 @@
+# Current Checkpoint Ledger Corrections
+
+Read-only comparison with actual focus-continuity seven-file checkpoint and retained receipts. No ledger edited, gate launched or scope removed.
+
+| Exact current-ledger location | Concrete correction |
+|---|---|
+| acceptance-2026-10-28.md:5,11–13 | Opening snapshot still calls89772/current full units and48540 latest browser. Label1075/43 and824/19 historical before new vertical/stable-host/pet/progress laws. Current fresh teaching81958 is LIVE with no verdict; fresh full React and both semantics after current Source remain required. Latest browser83108 deliberate130, audited170=95pass13fail62unaccepted. |
+| completion-gap-matrix-current-2026-10-29.md:10–14 | Full React/current teaching completed wording is stale for current focus Source; semantic sequencing/Records pending and48540 latest browser are stale. Actual Records38090 passed; newer exacttitle44330/42459, tiny presence10103/42459, generic56/adaptive13 andNodepresence7809 are narrow positives, not full owning replacements. |
+| completion-gates-2026-10-28.md:3–10 | Opening superseding table still names4262/73624/28199 pending before reboot. Currentmanaged87807 has authenticated sameboot/readiness+42read proof; fresh owner81958 LIVE. Preserve historical rows below as history. |
+| completion-gates JSON course-react-unit/course-react-semantic/course-semantic | needsRerun=true is correct, but status prose still says current full29337/98202/72909. Explicitly label these prior-to-focus-checkpoint receipts so machine/text consumers cannot attribute them to current7files. Do not erase actual old0 results. |
+| current-status-2026-10-29.md:10 | Teaching row still says deferred58638 is latest. Replace currentowner with retained81958 LIVE/fullnormal/no verdict;824/19 historical. |
+| current-status-2026-10-29.md:18 | Pair identity no longer merely unaccepted due early pair deadline:1221 emitted actualequalpairidentity/sameproductpath plus genuineproduce/OUT_DIR,pendingdrain,Source-change refusal. Overall1221 remainsFAIL0pass2fail/43assert/280.21s; manifest-change/public-providerfinal success not reached. Do not promote partials to fullplan/coalescing/gateway acceptance. |
+| current-status-2026-10-29.md:18 and causal Native rows | Physical51578 now additionally proves genuine15s preparation expiry/manualAbortfalse/consumerusable/4096committed/cleanup0retired,1test32asserts. Earlier97141 two-case proof remains narrow. Darwin and longcontinuousissuer/toolchain/gateway still open. |
+| JSON vertical-native-font |1498 remainsLIVE with no outcome; neither generic56noradaptive13 proves nativefont/focus/convergence. Keep pending. |
+| acceptance:17 / gapmatrix:21–23 | Alias/discovery implemented with actualfocusedTS/CLI proof; nativeGo/Rust exhaustive ordinary andphysicalWindows remain open. Darwin directorycensus still unresolved. Do not revert implementeddeclaration/discovery toabsent or claimnativepassed. |
+| acceptance:18 / gapmatrix:24 | Publicbackend latest retained01:20:53UTC Oct30 bounded/instance timeout; publicfrontend200. Local04:35both200 is not publicproof/accessauthority. No remote restoration or concreteauthorizedhostidentity established. |
+
+Retain every original remaining obligation: complete unfiltered9projects/16specs/170planned BOTH; fresh current fullReact/teaching/semantics; fullcoldcaller with NX_DAEMON trulyunset; selectedcontinuousfailure CLI afterreleasePDFreaders settle; exhaustiveGo/Rust native+Windows; twoEnergy retained-post laws; Darwin completecensus; publicbackend restoration/availability; fixture pre-overwrite uncertainty. No count prediction for new full teaching/React beyond actual final reporter/roster. Current81958 and1498 are retained owners, not invitations to launch duplicates.

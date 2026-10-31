@@ -1,10 +1,12 @@
 {
   "viewports": {
     "vp-2": {
-      "crop": {
-        "value": null
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "crop": {
+          "value": null
+        }
+      }
     }
   }
 }

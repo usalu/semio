@@ -6414,6 +6414,30 @@
       "packages": []
     },
     {
+      "name": "@teaching/staffage",
+      "root": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript",
+      "manifest": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/📋️project.json",
+      "packages": [
+        "@teaching/staffage"
+      ]
+    },
+    {
+      "name": "@teaching/staffage-react",
+      "root": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "manifest": "🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+      "packages": [
+        "@teaching/staffage-react"
+      ]
+    },
+    {
+      "name": "@teaching/staffage-site",
+      "root": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+      "manifest": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript/📋️project.json",
+      "packages": [
+        "@teaching/staffage-site"
+      ]
+    },
+    {
       "name": "repo-artifact-reader",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️project.json",
@@ -6498,9 +6522,21 @@
       "packages": []
     },
     {
+      "name": "semio-framework-plugin-typing-edit",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-framework-repo-model-entity",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🪪️entity/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/🪪️entity/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-framework-tool-typing-edit",
+      "root": "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust",
+      "manifest": "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -7950,6 +7986,12 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-energy-model-mut-membership-tests",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️membership/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️membership/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-energy-model-mut-pv-system-performance",
       "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️pv-system-performance/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️pv-system-performance/📦️packages/🦀️rust/Cargo.toml",
@@ -7971,6 +8013,12 @@
       "name": "semio-s-artifact-energy-model-native-mutations",
       "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-energy-model-snapshot-tests",
+      "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -8010,6 +8058,12 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-fem-2d-snapshot-tests",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-fem-3d-diff-document",
       "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🔺️diff/🧾️document/📦️packages/🦀️rust/Cargo.toml",
@@ -8031,6 +8085,12 @@
       "name": "semio-s-artifact-fem-3d-mesh-solids",
       "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧱️solids/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧱️solids/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-fem-3d-snapshot-tests",
+      "root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -11477,12 +11537,6 @@
       "name": "repo-build-reports",
       "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting",
       "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/📋️project.json",
-      "packages": []
-    },
-    {
-      "name": "repo-cache-retire",
-      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
-      "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📋️project.json",
       "packages": []
     },
     {
@@ -16975,12 +17029,6 @@
       "name": "semio-s-artifact-procedural-3d-inferences",
       "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml",
-      "packages": []
-    },
-    {
-      "name": "semio-s-artifact-procedural-3d-initialization",
-      "root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust",
-      "manifest": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {
@@ -23323,6 +23371,12 @@
       "name": "semio-writer-mutation-bridge",
       "root": "✏️s/🔌️plugins/✒️writer/🏭️bridge",
       "manifest": "✏️s/🔌️plugins/✒️writer/🏭️bridge/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "staffage-dwg",
+      "root": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust",
+      "manifest": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
       "packages": []
     },
     {

@@ -1,7 +1,6 @@
 //! 🏗️ Native IFC4 representation geometry entry points.
 use super::snapshot::{IfcSnapshot,IfcEntity,IfcValue};
-#[path="../../../../../../📐️geometry/🦀️.rs"]
-mod shared;
+use semio_s_artifact_stdio_ifc_geometry as shared;
 #[path="📖️reader/🦀️.rs"]
 mod reader;
 pub use shared::boolean;

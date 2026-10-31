@@ -363,7 +363,7 @@ function testCaseDependencies(_options, context) {
 export function testBuildInferenceDirectoryV1(workspace){return repositoryBuildGraphDataDirectoryV1(workspace,"inference");}
 
 /** ♻️ Refreshes resident inference after authored source changes without discarding build state. */
-async function withTestInferenceWriterV1(context,body){const run=(invocation,phaseControl)=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,phaseControl,(_store,actualControl)=>body(invocation,actualControl));return context.invocation?run(context.invocation,context.phaseControl):receiveScriptProcessInvocation(process.env,invocation=>run(invocation,createIssuedResourceControlV1(invocation,"graph:test-inference-entry",0)));}
+async function withTestInferenceWriterV1(context,body){workspaceAdmission(context.workspaceRoot);const run=(invocation,phaseControl)=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,phaseControl,(_store,actualControl)=>body(invocation,actualControl));return context.invocation?run(context.invocation,context.phaseControl):receiveScriptProcessInvocation(process.env,invocation=>run(invocation,createIssuedResourceControlV1(invocation,"graph:test-inference-entry",0)));}
 
 async function invokeCurrentImplementation(kind,args){const index=kind==="nodes"?2:1,context=args[index];return withTestInferenceWriterV1(context,(invocation,phaseControl)=>{const original=[...args];original[index]={...context,invocation,phaseControl};return invokeCurrentImplementationV1(kind,original);});}
 

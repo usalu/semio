@@ -13,7 +13,8 @@
     "cmake",
     "go",
     "extract",
-    "messages"
+    "messages",
+    "cargo"
   ],
   "properties": {
     "$schema": {
@@ -50,6 +51,9 @@
     },
     "messages": {
       "$ref": "#/definitions/Messages"
+    },
+    "cargo": {
+      "$ref": "#/definitions/Cargo"
     }
   },
   "definitions": {
@@ -359,7 +363,7 @@
         },
         "release": {
           "type": "string",
-          "pattern": "^https://(?:github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+/releases/download/v?[0-9]+\\.[0-9]+\\.[0-9]+|dl\\.google\\.com/go)$"
+          "pattern": "^https://(?:github\\.com/[A-Za-z0-9._-]+/[A-Za-z0-9._-]+/releases/download/(?:v|cargo-nextest-)?[0-9]+\\.[0-9]+\\.[0-9]+|dl\\.google\\.com/go)$"
         },
         "versionArguments": {
           "description": "The arguments that make the executable print its version.",
@@ -616,6 +620,22 @@
           "additionalProperties": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Cargo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargo-nextest",
+        "cargo-llvm-cov"
+      ],
+      "properties": {
+        "cargo-nextest": {
+          "$ref": "#/definitions/Tool"
+        },
+        "cargo-llvm-cov": {
+          "$ref": "#/definitions/Tool"
         }
       }
     }

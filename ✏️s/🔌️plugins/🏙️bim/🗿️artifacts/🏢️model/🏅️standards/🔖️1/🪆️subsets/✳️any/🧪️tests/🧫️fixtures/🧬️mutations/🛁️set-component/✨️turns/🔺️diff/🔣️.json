@@ -2,7 +2,9 @@
   "components": {
     "cmp-table": {
       "entry": "Patched",
-      "rotation": 1.57
+      "value": {
+        "rotation": 1.57
+      }
     }
   }
 }

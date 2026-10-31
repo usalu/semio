@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "guard": "!child||reservation.allocation.phase!==\"committed\"||reservation.allocation.kind!==\"compiler-state\"||reservation.backing.root!==parent.root||policy.root!==parent.root",
   "cases": [
     {
       "name": "complete",
@@ -71,6 +70,232 @@
       "failed": [
         "policyRoot"
       ]
+    }
+  ],
+  "guardCases": [
+    {
+      "id": "committed-false-false",
+      "child": true,
+      "phase": "committed",
+      "namespace": false,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": false
+    },
+    {
+      "id": "committed-false-true",
+      "child": true,
+      "phase": "committed",
+      "namespace": false,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": false
+    },
+    {
+      "id": "committed-true-false",
+      "child": true,
+      "phase": "committed",
+      "namespace": true,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": false
+    },
+    {
+      "id": "committed-true-true",
+      "child": true,
+      "phase": "committed",
+      "namespace": true,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": false
+    },
+    {
+      "id": "reserved-false-false",
+      "child": true,
+      "phase": "reserved",
+      "namespace": false,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "reserved-false-true",
+      "child": true,
+      "phase": "reserved",
+      "namespace": false,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "reserved-true-false",
+      "child": true,
+      "phase": "reserved",
+      "namespace": true,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "reserved-true-true",
+      "child": true,
+      "phase": "reserved",
+      "namespace": true,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "retiring-false-false",
+      "child": true,
+      "phase": "retiring",
+      "namespace": false,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "retiring-false-true",
+      "child": true,
+      "phase": "retiring",
+      "namespace": false,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "id": "retiring-true-false",
+      "child": true,
+      "phase": "retiring",
+      "namespace": true,
+      "directoryPresent": false,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": false
+    },
+    {
+      "id": "retiring-true-true",
+      "child": true,
+      "phase": "retiring",
+      "namespace": true,
+      "directoryPresent": true,
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "refused": true
+    },
+    {
+      "name": "child",
+      "child": false,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "child"
+      ],
+      "id": "refusal-child",
+      "namespace": true,
+      "directoryPresent": false,
+      "refused": true
+    },
+    {
+      "name": "committed",
+      "child": true,
+      "phase": "reserved",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "committed"
+      ],
+      "id": "refusal-committed",
+      "namespace": true,
+      "directoryPresent": false,
+      "refused": true
+    },
+    {
+      "name": "compilerState",
+      "child": true,
+      "phase": "committed",
+      "kind": "artifact-publication",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "compilerState"
+      ],
+      "id": "refusal-compilerState",
+      "namespace": true,
+      "directoryPresent": false,
+      "refused": true
+    },
+    {
+      "name": "backingRoot",
+      "child": true,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/foreign",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "backingRoot"
+      ],
+      "id": "refusal-backingRoot",
+      "namespace": true,
+      "directoryPresent": false,
+      "refused": true
+    },
+    {
+      "name": "policyRoot",
+      "child": true,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/foreign",
+      "parentRoot": "/parent",
+      "failed": [
+        "policyRoot"
+      ],
+      "id": "refusal-policyRoot",
+      "namespace": true,
+      "directoryPresent": false,
+      "refused": true
     }
   ]
 }

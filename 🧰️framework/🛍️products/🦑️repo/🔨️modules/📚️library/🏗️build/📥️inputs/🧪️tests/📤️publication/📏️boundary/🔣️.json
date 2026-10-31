@@ -1,0 +1,17 @@
+{
+  "paths": [
+    {
+      "units": 256,
+      "accepted": true
+    },
+    {
+      "units": 257,
+      "accepted": false
+    }
+  ],
+  "failures": [
+    "write",
+    "rename",
+    "cancel"
+  ]
+}

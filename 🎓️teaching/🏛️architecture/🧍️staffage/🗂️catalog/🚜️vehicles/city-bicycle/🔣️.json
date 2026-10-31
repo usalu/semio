@@ -1,0 +1,5065 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "city-bicycle",
+  "category": "vehicles",
+  "title": {
+   "en": "Dutch City Bicycle",
+   "de": "Holland-Stadtrad"
+  },
+  "summary": {
+   "en": "A riderless Dutch city bicycle with step-through frame, 28 inch wheels, chain case, dynamo lamps and a rear stand: rolling wheels, turning cranks with levelled pedals, steering, folding stand, hub-brake and drivetrain heat.",
+   "de": "Ein Holland-Stadtrad ohne Fahrer mit tiefem Einstieg, 28-Zoll-Rädern, Kettenkasten, Dynamobeleuchtung und Hinterbauständer: rollende Räder, drehende Kurbeln mit waagerechten Pedalen, Lenkung, klappbarer Ständer, Wärme von Nabenbremse und Antrieb."
+  },
+  "tags": [
+   "vehicle",
+   "bicycle",
+   "city",
+   "dutch",
+   "step-through",
+   "wheeled",
+   "human-powered"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-VE (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-14764",
+     "citation": "EN 14764:2005 City and trekking bicycles, safety requirements and test methods (frame, fork, handlebar, brakes, lighting, stand)."
+    },
+    {
+     "id": "etrto-2023",
+     "citation": "ETRTO Standards Manual (2023): tyre and rim designations (outer diameter from rim diameter plus twice the section height) for bicycle, scooter and car tyres."
+    },
+    {
+     "id": "wilson-2020",
+     "citation": "Wilson, D. G., Papadopoulos, J. (2020). Bicycling Science, 4th ed., MIT Press. Ch. 9 and 10: rolling resistance, drivetrain efficiency, braking energy, typical masses."
+    },
+    {
+     "id": "spicer-2001",
+     "citation": "Spicer, J. B., Richardson, C. J. K., Ehrlich, M. J., Bernstein, J. R., Fukuda, M., Terada, M. (2001). Effects of frictional loss on bicycle chain drive efficiency. Journal of Mechanical Design 123(4), 598-605."
+    },
+    {
+     "id": "wong-2008",
+     "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Ch. 1 and 3: tyre contact patch, rolling resistance, ground pressure about equal to inflation pressure, longitudinal load transfer."
+    },
+    {
+     "id": "limpert-1999",
+     "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Ch. 5: brake energy, disc and drum temperature rise."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 26 Heat, Air and Moisture Control: surface convection, radiation properties and U-values of glazing and sheet metal."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    }
+   ],
+   "notes": {
+    "en": "Typical Dutch city bicycle (wheelbase 1.12 m, 37-622 tyres, rear stand, hub gear 36:18); dimensions and masses are authored typical class values (authored-estimate) consistent with EN 14764. Wheels roll with theta = -x / r (r 0.345 m); the loop uses a closing key with whole wheel turns. The rider is excluded.",
+    "de": "Typisches Holland-Stadtrad (Radstand 1,12 m, Reifen 37-622, Hinterbauständer, Nabenschaltung 36:18); Abmessungen und Massen sind selbst gesetzte typische Klassenwerte (authored-estimate) im Einklang mit EN 14764. Die Räder rollen mit theta = -x / r (r 0,345 m); die Schleife nutzt einen Schlussschlüssel mit ganzen Radumdrehungen. Der Fahrer ist ausgeschlossen."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.09,
+   "widthM": 1.87,
+   "depthM": 0.62,
+   "massKg": 19
+  },
+  "materials": [
+   {
+    "id": "paint",
+    "title": {
+     "en": "Painted steel tube and sheet",
+     "de": "Lackiertes Stahlrohr und -blech"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 490,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1150,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "wong-2008"
+   },
+   {
+    "id": "alloy",
+    "title": {
+     "en": "Anodised aluminium rim",
+     "de": "Eloxierte Aluminiumfelge"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "saddle-skin",
+    "title": {
+     "en": "Synthetic saddle cover",
+     "de": "Kunstleder-Sattelbezug"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.75,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "chrome",
+    "title": {
+     "en": "Chromed steel",
+     "de": "Verchromter Stahl"
+    },
+    "emissivity": 0.1,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "source": "literature",
+    "reference": "incropera-2011"
+   },
+   {
+    "id": "plastic",
+    "title": {
+     "en": "Lamp housing and lens",
+     "de": "Lampengehäuse und Streuscheibe"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "frame",
+   "bones": [
+    {
+     "id": "frame",
+     "parent": null,
+     "title": {
+      "en": "Frame, rack, chain case and saddle",
+      "de": "Rahmen, Gepäckträger, Kettenkasten und Sattel"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.12,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 8.5,
+      "comX": -0.05,
+      "comY": 0.62,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "en-14764"
+     }
+    },
+    {
+     "id": "steer",
+     "parent": "frame",
+     "title": {
+      "en": "Fork, handlebar and front mudguard",
+      "de": "Gabel, Lenker und Vorderradschutzblech"
+     },
+     "x": 0.299,
+     "y": 0.932,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -12,
+      "maxDeg": 12
+     },
+     "mass": {
+      "kg": 3.4,
+      "comX": 0.1,
+      "comY": -0.3,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "steer",
+     "title": {
+      "en": "Front wheel",
+      "de": "Vorderrad"
+     },
+     "x": 0.26100000000000007,
+     "y": -0.5870000000000001,
+     "angleDeg": 0,
+     "lengthM": 0.345,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 2.1,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "etrto-2023"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "frame",
+     "title": {
+      "en": "Rear wheel with hub gear",
+      "de": "Hinterrad mit Nabenschaltung"
+     },
+     "x": -0.58,
+     "y": 0.345,
+     "angleDeg": 0,
+     "lengthM": 0.345,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 2.5,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "etrto-2023"
+     }
+    },
+    {
+     "id": "crank",
+     "parent": "frame",
+     "title": {
+      "en": "Crankset",
+      "de": "Kurbelgarnitur"
+     },
+     "x": -0.1,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.17,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 1.3,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "pedal-n",
+     "parent": "crank",
+     "title": {
+      "en": "Near pedal",
+      "de": "Vorderes Pedal"
+     },
+     "x": 0.17,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 0.3,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "pedal-f",
+     "parent": "crank",
+     "title": {
+      "en": "Far pedal",
+      "de": "Hinteres Pedal"
+     },
+     "x": -0.17,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 0.3,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "stand",
+     "parent": "frame",
+     "title": {
+      "en": "Rear stand",
+      "de": "Hinterbauständer"
+     },
+     "x": -0.42,
+     "y": 0.3295,
+     "angleDeg": -2,
+     "lengthM": 0.32,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 0.6,
+      "comX": 0.17,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-r",
+    "bone": "frame",
+    "x": -0.58,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patch",
+     "de": "Hinterreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.04,
+    "footprintWidthM": 0.037,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "contact-f",
+    "bone": "steer",
+    "x": 0.26100000000000007,
+    "y": -0.932,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patch",
+     "de": "Vorderreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.04,
+    "footprintWidthM": 0.037,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "stand-foot",
+    "bone": "stand",
+    "x": 0.32,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Stand foot",
+     "de": "Ständerfuß"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.06,
+    "footprintWidthM": 0.03,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "rack-deck",
+    "bone": "frame",
+    "x": -0.6,
+    "y": 0.82,
+    "kind": "load",
+    "title": {
+     "en": "Rack load point",
+     "de": "Lastpunkt Gepäckträger"
+    }
+   },
+   {
+    "id": "saddle-seat",
+    "bone": "frame",
+    "x": -0.35,
+    "y": 0.99,
+    "kind": "load",
+    "title": {
+     "en": "Saddle seat point",
+     "de": "Sitzpunkt Sattel"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.309,0 L 0.306,0.04 L 0.298,0.08 L 0.285,0.118 L 0.268,0.154 L 0.245,0.188 L 0.218,0.218 L 0.188,0.245 L 0.154,0.268 L 0.118,0.285 L 0.08,0.298 L 0.04,0.306 L 0,0.309 L -0.04,0.306 L -0.08,0.298 L -0.118,0.285 L -0.154,0.268 L -0.188,0.245 L -0.218,0.218 L -0.245,0.188 L -0.268,0.154 L -0.285,0.118 L -0.298,0.08 L -0.306,0.04 L -0.309,0 L -0.306,-0.04 L -0.298,-0.08 L -0.285,-0.118 L -0.268,-0.154 L -0.245,-0.188 L -0.218,-0.218 L -0.188,-0.245 L -0.154,-0.268 L -0.118,-0.285 L -0.08,-0.298 L -0.04,-0.306 L -0,-0.309 L 0.04,-0.306 L 0.08,-0.298 L 0.118,-0.285 L 0.154,-0.268 L 0.188,-0.245 L 0.218,-0.218 L 0.245,-0.188 L 0.268,-0.154 L 0.285,-0.118 L 0.298,-0.08 L 0.306,-0.04 Z",
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.309,0 L 0.306,0.04 L 0.298,0.08 L 0.285,0.118 L 0.268,0.154 L 0.245,0.188 L 0.218,0.218 L 0.188,0.245 L 0.154,0.268 L 0.118,0.285 L 0.08,0.298 L 0.04,0.306 L 0,0.309 L -0.04,0.306 L -0.08,0.298 L -0.118,0.285 L -0.154,0.268 L -0.188,0.245 L -0.218,0.218 L -0.245,0.188 L -0.268,0.154 L -0.285,0.118 L -0.298,0.08 L -0.306,0.04 L -0.309,0 L -0.306,-0.04 L -0.298,-0.08 L -0.285,-0.118 L -0.268,-0.154 L -0.245,-0.188 L -0.218,-0.218 L -0.188,-0.245 L -0.154,-0.268 L -0.118,-0.285 L -0.08,-0.298 L -0.04,-0.306 L -0,-0.309 L 0.04,-0.306 L 0.08,-0.298 L 0.118,-0.285 L 0.154,-0.268 L 0.188,-0.245 L 0.218,-0.218 L 0.245,-0.188 L 0.268,-0.154 L 0.285,-0.118 L 0.298,-0.08 L 0.306,-0.04 Z M 0.283,0 L 0.281,0.037 L 0.273,0.073 L 0.262,0.108 L 0.245,0.141 L 0.225,0.172 L 0.2,0.2 L 0.172,0.225 L 0.141,0.245 L 0.108,0.262 L 0.073,0.273 L 0.037,0.281 L 0,0.283 L -0.037,0.281 L -0.073,0.273 L -0.108,0.262 L -0.141,0.245 L -0.172,0.225 L -0.2,0.2 L -0.225,0.172 L -0.245,0.141 L -0.262,0.108 L -0.273,0.073 L -0.281,0.037 L -0.283,0 L -0.281,-0.037 L -0.273,-0.073 L -0.262,-0.108 L -0.245,-0.141 L -0.225,-0.172 L -0.2,-0.2 L -0.172,-0.225 L -0.141,-0.245 L -0.108,-0.262 L -0.073,-0.273 L -0.037,-0.281 L 0,-0.283 L 0.037,-0.281 L 0.073,-0.273 L 0.108,-0.262 L 0.141,-0.245 L 0.172,-0.225 L 0.2,-0.2 L 0.225,-0.172 L 0.245,-0.141 L 0.262,-0.108 L 0.273,-0.073 L 0.281,-0.037 Z",
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.78,
+       "region": "rims-spokes",
+       "material": "alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0547,
+         0.0055
+        ],
+        [
+         0.2816,
+         0.0283
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-1",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0446,
+         0.0321
+        ],
+        [
+         0.2297,
+         0.1653
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-2",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0226,
+         0.0501
+        ],
+        [
+         0.1163,
+         0.258
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-3",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0055,
+         0.0547
+        ],
+        [
+         -0.0283,
+         0.2816
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-4",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0321,
+         0.0446
+        ],
+        [
+         -0.1653,
+         0.2297
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-5",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0501,
+         0.0226
+        ],
+        [
+         -0.258,
+         0.1163
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-6",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0547,
+         -0.0055
+        ],
+        [
+         -0.2816,
+         -0.0283
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-7",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0446,
+         -0.0321
+        ],
+        [
+         -0.2297,
+         -0.1653
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-8",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0226,
+         -0.0501
+        ],
+        [
+         -0.1163,
+         -0.258
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-9",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0055,
+         -0.0547
+        ],
+        [
+         0.0283,
+         -0.2816
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-10",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0321,
+         -0.0446
+        ],
+        [
+         0.1653,
+         -0.2297
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-11",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0501,
+         -0.0226
+        ],
+        [
+         0.258,
+         -0.1163
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-f-12",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.309,0 L 0.306,0.04 L 0.298,0.08 L 0.285,0.118 L 0.268,0.154 L 0.245,0.188 L 0.218,0.218 L 0.188,0.245 L 0.154,0.268 L 0.118,0.285 L 0.08,0.298 L 0.04,0.306 L 0,0.309 L -0.04,0.306 L -0.08,0.298 L -0.118,0.285 L -0.154,0.268 L -0.188,0.245 L -0.218,0.218 L -0.245,0.188 L -0.268,0.154 L -0.285,0.118 L -0.298,0.08 L -0.306,0.04 L -0.309,0 L -0.306,-0.04 L -0.298,-0.08 L -0.285,-0.118 L -0.268,-0.154 L -0.245,-0.188 L -0.218,-0.218 L -0.188,-0.245 L -0.154,-0.268 L -0.118,-0.285 L -0.08,-0.298 L -0.04,-0.306 L -0,-0.309 L 0.04,-0.306 L 0.08,-0.298 L 0.118,-0.285 L 0.154,-0.268 L 0.188,-0.245 L 0.218,-0.218 L 0.245,-0.188 L 0.268,-0.154 L 0.285,-0.118 L 0.298,-0.08 L 0.306,-0.04 Z",
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.309,0 L 0.306,0.04 L 0.298,0.08 L 0.285,0.118 L 0.268,0.154 L 0.245,0.188 L 0.218,0.218 L 0.188,0.245 L 0.154,0.268 L 0.118,0.285 L 0.08,0.298 L 0.04,0.306 L 0,0.309 L -0.04,0.306 L -0.08,0.298 L -0.118,0.285 L -0.154,0.268 L -0.188,0.245 L -0.218,0.218 L -0.245,0.188 L -0.268,0.154 L -0.285,0.118 L -0.298,0.08 L -0.306,0.04 L -0.309,0 L -0.306,-0.04 L -0.298,-0.08 L -0.285,-0.118 L -0.268,-0.154 L -0.245,-0.188 L -0.218,-0.218 L -0.188,-0.245 L -0.154,-0.268 L -0.118,-0.285 L -0.08,-0.298 L -0.04,-0.306 L -0,-0.309 L 0.04,-0.306 L 0.08,-0.298 L 0.118,-0.285 L 0.154,-0.268 L 0.188,-0.245 L 0.218,-0.218 L 0.245,-0.188 L 0.268,-0.154 L 0.285,-0.118 L 0.298,-0.08 L 0.306,-0.04 Z M 0.283,0 L 0.281,0.037 L 0.273,0.073 L 0.262,0.108 L 0.245,0.141 L 0.225,0.172 L 0.2,0.2 L 0.172,0.225 L 0.141,0.245 L 0.108,0.262 L 0.073,0.273 L 0.037,0.281 L 0,0.283 L -0.037,0.281 L -0.073,0.273 L -0.108,0.262 L -0.141,0.245 L -0.172,0.225 L -0.2,0.2 L -0.225,0.172 L -0.245,0.141 L -0.262,0.108 L -0.273,0.073 L -0.281,0.037 L -0.283,0 L -0.281,-0.037 L -0.273,-0.073 L -0.262,-0.108 L -0.245,-0.141 L -0.225,-0.172 L -0.2,-0.2 L -0.172,-0.225 L -0.141,-0.245 L -0.108,-0.262 L -0.073,-0.273 L -0.037,-0.281 L 0,-0.283 L 0.037,-0.281 L 0.073,-0.273 L 0.108,-0.262 L 0.141,-0.245 L 0.172,-0.225 L 0.2,-0.2 L 0.225,-0.172 L 0.245,-0.141 L 0.262,-0.108 L 0.273,-0.073 L 0.281,-0.037 Z",
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.78,
+       "region": "rims-spokes",
+       "material": "alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0498,
+         0.005
+        ],
+        [
+         0.2816,
+         0.0283
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-1",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0406,
+         0.0292
+        ],
+        [
+         0.2297,
+         0.1653
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-2",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0206,
+         0.0456
+        ],
+        [
+         0.1163,
+         0.258
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-3",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.25
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.005,
+         0.0498
+        ],
+        [
+         -0.0283,
+         0.2816
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-4",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0292,
+         0.0406
+        ],
+        [
+         -0.1653,
+         0.2297
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-5",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0456,
+         0.0206
+        ],
+        [
+         -0.258,
+         0.1163
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-6",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0498,
+         -0.005
+        ],
+        [
+         -0.2816,
+         -0.0283
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-7",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0406,
+         -0.0292
+        ],
+        [
+         -0.2297,
+         -0.1653
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-8",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0206,
+         -0.0456
+        ],
+        [
+         -0.1163,
+         -0.258
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-9",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.005,
+         -0.0498
+        ],
+        [
+         0.0283,
+         -0.2816
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-10",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0292,
+         -0.0406
+        ],
+        [
+         0.1653,
+         -0.2297
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-11",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0456,
+         -0.0206
+        ],
+        [
+         0.258,
+         -0.1163
+        ]
+       ],
+       "closed": false,
+       "id": "spoke-r-12",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.7,
+       "region": "rims-spokes",
+       "material": "alloy",
+       "penMm": 0.1
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.348,
+         0.98
+        ]
+       ],
+       "closed": false,
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.5
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.347,
+         0.8
+        ],
+        [
+         0.24,
+         0.52
+        ],
+        [
+         0.1,
+         0.38
+        ],
+        [
+         -0.1,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "id": "down-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.6
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.347,
+         0.8
+        ],
+        [
+         0.299,
+         0.932
+        ]
+       ],
+       "closed": false,
+       "id": "head-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.9
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.5
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         0.8
+        ],
+        [
+         -0.3,
+         0.8
+        ]
+       ],
+       "closed": false,
+       "id": "rack",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.048,
+         -0.132
+        ],
+        [
+         0.261,
+         -0.587
+        ]
+       ],
+       "closed": false,
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.55
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         -0.024,
+         0.108
+        ],
+        [
+         -0.079,
+         0.143
+        ],
+        [
+         -0.179,
+         0.156
+        ],
+        [
+         -0.259,
+         0.133
+        ]
+       ],
+       "closed": false,
+       "id": "stem-bar",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.45
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.259,
+         0.133
+        ],
+        [
+         -0.329,
+         0.108
+        ]
+       ],
+       "closed": false,
+       "id": "grip",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.4,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "penMm": 0.75
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.19,
+         0.975
+        ],
+        [
+         -0.25,
+         0.99
+        ],
+        [
+         -0.4,
+         0.985
+        ],
+        [
+         -0.48,
+         1
+        ],
+        [
+         -0.49,
+         1.035
+        ],
+        [
+         -0.42,
+         1.04
+        ],
+        [
+         -0.25,
+         1.03
+        ],
+        [
+         -0.19,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "saddle",
+       "material": "saddle-skin"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.375
+        ],
+        [
+         -0.3,
+         0.385
+        ],
+        [
+         -0.55,
+         0.385
+        ],
+        [
+         -0.58,
+         0.345
+        ],
+        [
+         -0.55,
+         0.305
+        ],
+        [
+         -0.3,
+         0.31
+        ],
+        [
+         -0.1,
+         0.225
+        ],
+        [
+         -0.025,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "chaincase",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.6,
+       "region": "drivetrain",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.2574,
+         0.4955
+        ],
+        [
+         -0.2798,
+         0.5363
+        ],
+        [
+         -0.3073,
+         0.5738
+        ],
+        [
+         -0.3395,
+         0.6075
+        ],
+        [
+         -0.3758,
+         0.6366
+        ],
+        [
+         -0.4156,
+         0.6608
+        ],
+        [
+         -0.4582,
+         0.6795
+        ],
+        [
+         -0.5029,
+         0.6926
+        ],
+        [
+         -0.549,
+         0.6996
+        ],
+        [
+         -0.5955,
+         0.7007
+        ],
+        [
+         -0.6418,
+         0.6956
+        ],
+        [
+         -0.6871,
+         0.6845
+        ],
+        [
+         -0.7305,
+         0.6676
+        ],
+        [
+         -0.7713,
+         0.6452
+        ],
+        [
+         -0.8088,
+         0.6177
+        ],
+        [
+         -0.8425,
+         0.5855
+        ],
+        [
+         -0.8716,
+         0.5492
+        ],
+        [
+         -0.8958,
+         0.5094
+        ],
+        [
+         -0.9145,
+         0.4668
+        ],
+        [
+         -0.9276,
+         0.4221
+        ],
+        [
+         -0.9346,
+         0.376
+        ],
+        [
+         -0.9357,
+         0.3295
+        ],
+        [
+         -0.9306,
+         0.2832
+        ],
+        [
+         -0.9195,
+         0.2379
+        ],
+        [
+         -0.9026,
+         0.1945
+        ],
+        [
+         -0.8881,
+         0.2013
+        ],
+        [
+         -0.9043,
+         0.2428
+        ],
+        [
+         -0.9148,
+         0.286
+        ],
+        [
+         -0.9197,
+         0.3302
+        ],
+        [
+         -0.9187,
+         0.3746
+        ],
+        [
+         -0.9119,
+         0.4186
+        ],
+        [
+         -0.8995,
+         0.4613
+        ],
+        [
+         -0.8816,
+         0.502
+        ],
+        [
+         -0.8585,
+         0.54
+        ],
+        [
+         -0.8307,
+         0.5747
+        ],
+        [
+         -0.7985,
+         0.6055
+        ],
+        [
+         -0.7627,
+         0.6318
+        ],
+        [
+         -0.7237,
+         0.6531
+        ],
+        [
+         -0.6822,
+         0.6693
+        ],
+        [
+         -0.639,
+         0.6798
+        ],
+        [
+         -0.5948,
+         0.6847
+        ],
+        [
+         -0.5504,
+         0.6837
+        ],
+        [
+         -0.5064,
+         0.6769
+        ],
+        [
+         -0.4637,
+         0.6645
+        ],
+        [
+         -0.423,
+         0.6466
+        ],
+        [
+         -0.385,
+         0.6235
+        ],
+        [
+         -0.3503,
+         0.5957
+        ],
+        [
+         -0.3195,
+         0.5635
+        ],
+        [
+         -0.2932,
+         0.5277
+        ],
+        [
+         -0.2719,
+         0.4887
+        ]
+       ],
+       "closed": true,
+       "id": "fender-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "mudguards",
+       "material": "paint",
+       "penMm": 0.18
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.5836,
+         -0.7375
+        ],
+        [
+         0.6001,
+         -0.6953
+        ],
+        [
+         0.6111,
+         -0.6514
+        ],
+        [
+         0.6165,
+         -0.6064
+        ],
+        [
+         0.6161,
+         -0.5611
+        ],
+        [
+         0.6099,
+         -0.5163
+        ],
+        [
+         0.5981,
+         -0.4726
+        ],
+        [
+         0.5809,
+         -0.4307
+        ],
+        [
+         0.5584,
+         -0.3914
+        ],
+        [
+         0.5312,
+         -0.3552
+        ],
+        [
+         0.4996,
+         -0.3228
+        ],
+        [
+         0.4641,
+         -0.2946
+        ],
+        [
+         0.4254,
+         -0.2712
+        ],
+        [
+         0.384,
+         -0.2529
+        ],
+        [
+         0.3406,
+         -0.24
+        ],
+        [
+         0.2959,
+         -0.2327
+        ],
+        [
+         0.2506,
+         -0.2312
+        ],
+        [
+         0.2056,
+         -0.2353
+        ],
+        [
+         0.1614,
+         -0.2452
+        ],
+        [
+         0.1188,
+         -0.2606
+        ],
+        [
+         0.0785,
+         -0.2813
+        ],
+        [
+         0.0412,
+         -0.3069
+        ],
+        [
+         0.0074,
+         -0.3371
+        ],
+        [
+         -0.0222,
+         -0.3713
+        ],
+        [
+         -0.0473,
+         -0.409
+        ],
+        [
+         -0.0334,
+         -0.417
+        ],
+        [
+         -0.0095,
+         -0.381
+        ],
+        [
+         0.0188,
+         -0.3483
+        ],
+        [
+         0.0511,
+         -0.3195
+        ],
+        [
+         0.0867,
+         -0.2951
+        ],
+        [
+         0.1252,
+         -0.2753
+        ],
+        [
+         0.1659,
+         -0.2606
+        ],
+        [
+         0.2081,
+         -0.2511
+        ],
+        [
+         0.2511,
+         -0.2471
+        ],
+        [
+         0.2943,
+         -0.2486
+        ],
+        [
+         0.337,
+         -0.2556
+        ],
+        [
+         0.3784,
+         -0.2679
+        ],
+        [
+         0.418,
+         -0.2854
+        ],
+        [
+         0.455,
+         -0.3078
+        ],
+        [
+         0.4889,
+         -0.3347
+        ],
+        [
+         0.5191,
+         -0.3656
+        ],
+        [
+         0.5451,
+         -0.4002
+        ],
+        [
+         0.5665,
+         -0.4377
+        ],
+        [
+         0.583,
+         -0.4777
+        ],
+        [
+         0.5942,
+         -0.5195
+        ],
+        [
+         0.6001,
+         -0.5623
+        ],
+        [
+         0.6005,
+         -0.6055
+        ],
+        [
+         0.5954,
+         -0.6485
+        ],
+        [
+         0.5849,
+         -0.6904
+        ],
+        [
+         0.5691,
+         -0.7307
+        ]
+       ],
+       "closed": true,
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "mudguards",
+       "material": "paint",
+       "penMm": 0.18
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.96,
+         0.17
+        ],
+        [
+         -0.915,
+         0.17
+        ],
+        [
+         -0.915,
+         0.23
+        ],
+        [
+         -0.96,
+         0.23
+        ]
+       ],
+       "closed": true,
+       "id": "tail-lamp",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "lamps",
+       "material": "plastic"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.146,
+       "cy": 0.008,
+       "rx": 0.045,
+       "ry": 0.035,
+       "id": "head-lamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.85,
+       "region": "lamps",
+       "material": "plastic"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.17,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "crank-n",
+       "bone": "crank",
+       "role": "body",
+       "z": 6,
+       "filled": false,
+       "tone": 0.3,
+       "region": "drivetrain",
+       "material": "paint",
+       "penMm": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         -0.17,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "crank-f",
+       "bone": "crank",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "drivetrain",
+       "material": "paint",
+       "penMm": 0.4
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         -0.0125
+        ],
+        [
+         0.05,
+         -0.0125
+        ],
+        [
+         0.05,
+         0.0125
+        ],
+        [
+         -0.05,
+         0.0125
+        ]
+       ],
+       "closed": true,
+       "id": "pedal-n",
+       "bone": "pedal-n",
+       "role": "body",
+       "z": 6.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "drivetrain",
+       "material": "chrome"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         -0.0125
+        ],
+        [
+         0.05,
+         -0.0125
+        ],
+        [
+         0.05,
+         0.0125
+        ],
+        [
+         -0.05,
+         0.0125
+        ]
+       ],
+       "closed": true,
+       "id": "pedal-f",
+       "bone": "pedal-f",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "drivetrain",
+       "material": "chrome"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.32,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "stand-leg",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.4
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full side elevation: tyre and rim rings, 12 spokes, hubs, step-through wave frame, fork, upswept handlebar with bell, sprung saddle, rack, chain case, mudguards, lamps, cranks with levelled pedals and the rear stand.",
+      "de": "Vollständige Seitenansicht: Reifen- und Felgenringe, 12 Speichen, Naben, Wellenrahmen mit tiefem Einstieg, Gabel, hochgezogener Lenker mit Klingel, gefederter Sattel, Gepäckträger, Kettenkasten, Schutzbleche, Lampen, Kurbeln mit waagerechten Pedalen und der Hinterbauständer."
+     },
+     "retained": {
+      "en": "All construction parts that are printable.",
+      "de": "Alle druckbaren Konstruktionsteile."
+     },
+     "merged": {
+      "en": "Frame tubes of one region on one bone merge outlines; stay pairs are single tubes.",
+      "de": "Rahmenrohre einer Region auf einer Bone verschmelzen in den Konturen; Strebenpaare sind einzelne Rohre."
+     },
+     "omitted": {
+      "en": "Chain, saddle springs, cables, tread, reflectors.",
+      "de": "Kette, Sattelfedern, Züge, Profil, Reflektoren."
+     },
+     "thinElements": {
+      "en": "Tubes drawn as strokes of real width (0.35 to 0.9 mm); mudguards 0.32 mm bands; 12 instead of 36 spokes at 0.1 mm; bell and rack struts omitted.",
+      "de": "Rohre als Striche in Realbreite (0,35 bis 0,9 mm); Schutzbleche als 0,32-mm-Bänder; 12 statt 36 Speichen mit 0,1 mm; Klingel und Gepäckträgerstreben entfallen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark tyres, light rims, mid-tone tubes, near black grips.",
+      "de": "Dunkle Reifen, helle Felgen, mitteltonige Rohre, fast schwarze Griffe."
+     },
+     "overlays": {
+      "en": "Every region has its own shape.",
+      "de": "Jede Region hat eine eigene Form."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.285,0 L 0.283,0.037 L 0.275,0.074 L 0.263,0.109 L 0.247,0.142 L 0.226,0.173 L 0.202,0.202 L 0.173,0.226 L 0.142,0.247 L 0.109,0.263 L 0.074,0.275 L 0.037,0.283 L 0,0.285 L -0.037,0.283 L -0.074,0.275 L -0.109,0.263 L -0.142,0.247 L -0.173,0.226 L -0.202,0.202 L -0.226,0.173 L -0.247,0.142 L -0.263,0.109 L -0.275,0.074 L -0.283,0.037 L -0.285,0 L -0.283,-0.037 L -0.275,-0.074 L -0.263,-0.109 L -0.247,-0.142 L -0.226,-0.173 L -0.202,-0.202 L -0.173,-0.226 L -0.142,-0.247 L -0.109,-0.263 L -0.074,-0.275 L -0.037,-0.283 L 0,-0.285 L 0.037,-0.283 L 0.074,-0.275 L 0.109,-0.263 L 0.142,-0.247 L 0.173,-0.226 L 0.202,-0.202 L 0.226,-0.173 L 0.247,-0.142 L 0.263,-0.109 L 0.275,-0.074 L 0.283,-0.037 Z",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "rims-spokes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.285,0 L 0.283,0.037 L 0.275,0.074 L 0.263,0.109 L 0.247,0.142 L 0.226,0.173 L 0.202,0.202 L 0.173,0.226 L 0.142,0.247 L 0.109,0.263 L 0.074,0.275 L 0.037,0.283 L 0,0.285 L -0.037,0.283 L -0.074,0.275 L -0.109,0.263 L -0.142,0.247 L -0.173,0.226 L -0.202,0.202 L -0.226,0.173 L -0.247,0.142 L -0.263,0.109 L -0.275,0.074 L -0.283,0.037 L -0.285,0 L -0.283,-0.037 L -0.275,-0.074 L -0.263,-0.109 L -0.247,-0.142 L -0.226,-0.173 L -0.202,-0.202 L -0.173,-0.226 L -0.142,-0.247 L -0.109,-0.263 L -0.074,-0.275 L -0.037,-0.283 L 0,-0.285 L 0.037,-0.283 L 0.074,-0.275 L 0.109,-0.263 L 0.142,-0.247 L 0.173,-0.226 L 0.202,-0.202 L 0.226,-0.173 L 0.247,-0.142 L 0.263,-0.109 L 0.275,-0.074 L 0.283,-0.037 Z",
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.25,
+       "regions": [
+        "tyres",
+        "rims-spokes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.7,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.348,
+         0.98
+        ]
+       ],
+       "closed": false,
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.347,
+         0.8
+        ],
+        [
+         0.24,
+         0.52
+        ],
+        [
+         0.1,
+         0.38
+        ],
+        [
+         -0.1,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "id": "down-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.347,
+         0.8
+        ],
+        [
+         0.299,
+         0.932
+        ]
+       ],
+       "closed": false,
+       "id": "head-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.42
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         0.8
+        ],
+        [
+         -0.3,
+         0.8
+        ]
+       ],
+       "closed": false,
+       "id": "rack",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.048,
+         -0.132
+        ],
+        [
+         0.261,
+         -0.587
+        ]
+       ],
+       "closed": false,
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         -0.024,
+         0.108
+        ],
+        [
+         -0.079,
+         0.143
+        ],
+        [
+         -0.179,
+         0.156
+        ],
+        [
+         -0.259,
+         0.133
+        ]
+       ],
+       "closed": false,
+       "id": "stem",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.32,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "stand-leg",
+       "bone": "stand",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.19,
+         0.975
+        ],
+        [
+         -0.25,
+         0.99
+        ],
+        [
+         -0.4,
+         0.985
+        ],
+        [
+         -0.48,
+         1
+        ],
+        [
+         -0.49,
+         1.035
+        ],
+        [
+         -0.42,
+         1.04
+        ],
+        [
+         -0.25,
+         1.03
+        ],
+        [
+         -0.19,
+         1
+        ]
+       ],
+       "closed": true,
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "saddle",
+       "material": "saddle-skin"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.375
+        ],
+        [
+         -0.3,
+         0.385
+        ],
+        [
+         -0.55,
+         0.385
+        ],
+        [
+         -0.58,
+         0.345
+        ],
+        [
+         -0.55,
+         0.305
+        ],
+        [
+         -0.3,
+         0.31
+        ],
+        [
+         -0.1,
+         0.225
+        ],
+        [
+         -0.025,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "chaincase",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.6,
+       "region": "drivetrain",
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.259,
+         0.133
+        ],
+        [
+         -0.329,
+         0.108
+        ]
+       ],
+       "closed": false,
+       "id": "grip",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "rubber",
+       "penMm": 0.35
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.17,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "crank-n",
+       "bone": "crank",
+       "role": "body",
+       "z": 6,
+       "filled": false,
+       "tone": 0.3,
+       "region": "drivetrain",
+       "material": "paint",
+       "penMm": 0.25
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         -0.17,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "crank-f",
+       "bone": "crank",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "region": "drivetrain",
+       "material": "paint",
+       "penMm": 0.25
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.96,
+         0.16
+        ],
+        [
+         -0.91,
+         0.16
+        ],
+        [
+         -0.91,
+         0.24
+        ],
+        [
+         -0.96,
+         0.24
+        ]
+       ],
+       "closed": true,
+       "id": "tail-lamp",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "lamps",
+       "material": "plastic"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.146,
+       "cy": 0.008,
+       "rx": 0.045,
+       "ry": 0.035,
+       "id": "head-lamp",
+       "bone": "steer",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.85,
+       "region": "lamps",
+       "material": "plastic"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.2646,
+         0.4921
+        ],
+        [
+         -0.2865,
+         0.532
+        ],
+        [
+         -0.3134,
+         0.5687
+        ],
+        [
+         -0.3449,
+         0.6016
+        ],
+        [
+         -0.3804,
+         0.6301
+        ],
+        [
+         -0.4193,
+         0.6537
+        ],
+        [
+         -0.461,
+         0.672
+        ],
+        [
+         -0.5047,
+         0.6848
+        ],
+        [
+         -0.5497,
+         0.6917
+        ],
+        [
+         -0.5952,
+         0.6927
+        ],
+        [
+         -0.6404,
+         0.6877
+        ],
+        [
+         -0.6846,
+         0.6769
+        ],
+        [
+         -0.7271,
+         0.6604
+        ],
+        [
+         -0.767,
+         0.6385
+        ],
+        [
+         -0.8037,
+         0.6116
+        ],
+        [
+         -0.8366,
+         0.5801
+        ],
+        [
+         -0.8651,
+         0.5446
+        ],
+        [
+         -0.8887,
+         0.5057
+        ],
+        [
+         -0.907,
+         0.464
+        ],
+        [
+         -0.9198,
+         0.4203
+        ],
+        [
+         -0.9267,
+         0.3753
+        ],
+        [
+         -0.9277,
+         0.3298
+        ],
+        [
+         -0.9227,
+         0.2846
+        ],
+        [
+         -0.9119,
+         0.2404
+        ],
+        [
+         -0.8954,
+         0.1979
+        ]
+       ],
+       "closed": false,
+       "id": "fender-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "mudguards",
+       "material": "paint",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.5764,
+         -0.7341
+        ],
+        [
+         0.5925,
+         -0.6929
+        ],
+        [
+         0.6033,
+         -0.6499
+        ],
+        [
+         0.6085,
+         -0.606
+        ],
+        [
+         0.6081,
+         -0.5617
+        ],
+        [
+         0.6021,
+         -0.5179
+        ],
+        [
+         0.5905,
+         -0.4751
+        ],
+        [
+         0.5737,
+         -0.4342
+        ],
+        [
+         0.5517,
+         -0.3958
+        ],
+        [
+         0.5251,
+         -0.3604
+        ],
+        [
+         0.4942,
+         -0.3287
+        ],
+        [
+         0.4596,
+         -0.3012
+        ],
+        [
+         0.4217,
+         -0.2783
+        ],
+        [
+         0.3812,
+         -0.2604
+        ],
+        [
+         0.3388,
+         -0.2478
+        ],
+        [
+         0.2951,
+         -0.2407
+        ],
+        [
+         0.2509,
+         -0.2391
+        ],
+        [
+         0.2068,
+         -0.2432
+        ],
+        [
+         0.1636,
+         -0.2529
+        ],
+        [
+         0.122,
+         -0.268
+        ],
+        [
+         0.0826,
+         -0.2882
+        ],
+        [
+         0.0462,
+         -0.3132
+        ],
+        [
+         0.0131,
+         -0.3427
+        ],
+        [
+         -0.0159,
+         -0.3762
+        ],
+        [
+         -0.0404,
+         -0.413
+        ]
+       ],
+       "closed": false,
+       "id": "fender-f",
+       "bone": "steer",
+       "role": "body",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "mudguards",
+       "material": "paint",
+       "penMm": 0.3
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Wheel rings with ten spokes and hub, tube strokes at real width, chain case, saddle, pedals, lamps and both mudguards as arcs.",
+      "de": "Radringe mit zehn Speichen und Nabe, Rohrstriche in Realbreite, Kettenkasten, Sattel, Pedale, Lampen und beide Schutzbleche als Bögen."
+     },
+     "retained": {
+      "en": "Frame, fork, handlebar, rack, rack struts, cranks, pedals, chain case, lamps, mudguards.",
+      "de": "Rahmen, Gabel, Lenker, Gepäckträger, Streben, Kurbeln, Pedale, Kettenkasten, Lampen, Schutzbleche."
+     },
+     "merged": {
+      "en": "Tyre and rim are one ring; the 36 real spokes are ten.",
+      "de": "Reifen und Felge sind ein Ring; aus den 36 realen Speichen werden zehn."
+     },
+     "omitted": {
+      "en": "Bell, grips detail, chain, tread, stand foot, reflectors.",
+      "de": "Klingel, Griffdetail, Kette, Profil, Ständerfuß, Reflektoren."
+     },
+     "thinElements": {
+      "en": "Tubes 0.3 mm as strokes (real 0.3 mm); spokes 0.1 mm instead of 0.03 mm.",
+      "de": "Rohre 0,3 mm als Striche (real 0,3 mm); Speichen 0,1 mm statt 0,03 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark wheel ring, mid-tone saddle, light hubs, bar grips near black.",
+      "de": "Dunkler Radring, mitteltoniger Sattel, helle Naben, Lenkergriffe fast schwarz."
+     },
+     "overlays": {
+      "en": "Each region has its own shape except tyre and rim (merged ring).",
+      "de": "Jede Region hat eine eigene Form außer Reifen und Felge (gemeinsamer Ring)."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.275,0 L 0.273,0.036 L 0.266,0.071 L 0.254,0.105 L 0.238,0.138 L 0.218,0.167 L 0.195,0.195 L 0.167,0.218 L 0.138,0.238 L 0.105,0.254 L 0.071,0.266 L 0.036,0.273 L 0,0.275 L -0.036,0.273 L -0.071,0.266 L -0.105,0.254 L -0.138,0.238 L -0.167,0.218 L -0.195,0.195 L -0.218,0.167 L -0.238,0.138 L -0.254,0.105 L -0.266,0.071 L -0.273,0.036 L -0.275,0 L -0.273,-0.036 L -0.266,-0.071 L -0.254,-0.105 L -0.238,-0.138 L -0.218,-0.167 L -0.195,-0.195 L -0.167,-0.218 L -0.138,-0.238 L -0.105,-0.254 L -0.071,-0.266 L -0.036,-0.273 L 0,-0.275 L 0.036,-0.273 L 0.071,-0.266 L 0.105,-0.254 L 0.138,-0.238 L 0.167,-0.218 L 0.195,-0.195 L 0.218,-0.167 L 0.238,-0.138 L 0.254,-0.105 L 0.266,-0.071 L 0.273,-0.036 Z",
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "rims-spokes",
+        "mudguards"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.6,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.345,0 L 0.342,0.045 L 0.333,0.089 L 0.319,0.132 L 0.299,0.172 L 0.274,0.21 L 0.244,0.244 L 0.21,0.274 L 0.172,0.299 L 0.132,0.319 L 0.089,0.333 L 0.045,0.342 L 0,0.345 L -0.045,0.342 L -0.089,0.333 L -0.132,0.319 L -0.172,0.299 L -0.21,0.274 L -0.244,0.244 L -0.274,0.21 L -0.299,0.172 L -0.319,0.132 L -0.333,0.089 L -0.342,0.045 L -0.345,0 L -0.342,-0.045 L -0.333,-0.089 L -0.319,-0.132 L -0.299,-0.172 L -0.274,-0.21 L -0.244,-0.244 L -0.21,-0.274 L -0.172,-0.299 L -0.132,-0.319 L -0.089,-0.333 L -0.045,-0.342 L -0,-0.345 L 0.045,-0.342 L 0.089,-0.333 L 0.132,-0.319 L 0.172,-0.299 L 0.21,-0.274 L 0.244,-0.244 L 0.274,-0.21 L 0.299,-0.172 L 0.319,-0.132 L 0.333,-0.089 L 0.342,-0.045 Z M 0.275,0 L 0.273,0.036 L 0.266,0.071 L 0.254,0.105 L 0.238,0.138 L 0.218,0.167 L 0.195,0.195 L 0.167,0.218 L 0.138,0.238 L 0.105,0.254 L 0.071,0.266 L 0.036,0.273 L 0,0.275 L -0.036,0.273 L -0.071,0.266 L -0.105,0.254 L -0.138,0.238 L -0.167,0.218 L -0.195,0.195 L -0.218,0.167 L -0.238,0.138 L -0.254,0.105 L -0.266,0.071 L -0.273,0.036 L -0.275,0 L -0.273,-0.036 L -0.266,-0.071 L -0.254,-0.105 L -0.238,-0.138 L -0.218,-0.167 L -0.195,-0.195 L -0.167,-0.218 L -0.138,-0.238 L -0.105,-0.254 L -0.071,-0.266 L -0.036,-0.273 L 0,-0.275 L 0.036,-0.273 L 0.071,-0.266 L 0.105,-0.254 L 0.138,-0.238 L 0.167,-0.218 L 0.195,-0.195 L 0.218,-0.167 L 0.238,-0.138 L 0.254,-0.105 L 0.266,-0.071 L 0.273,-0.036 Z",
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.2,
+       "regions": [
+        "tyres",
+        "rims-spokes",
+        "mudguards"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.05,
+       "ry": 0.05,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.6,
+       "region": "hub-brakes",
+       "material": "chrome"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.348,
+         0.98
+        ]
+       ],
+       "closed": false,
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.347,
+         0.8
+        ],
+        [
+         0.24,
+         0.52
+        ],
+        [
+         0.1,
+         0.38
+        ],
+        [
+         -0.1,
+         0.3
+        ]
+       ],
+       "closed": false,
+       "id": "down-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.3
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.285,
+         0.8
+        ],
+        [
+         -0.58,
+         0.345
+        ]
+       ],
+       "closed": false,
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.048,
+         -0.132
+        ],
+        [
+         0.261,
+         -0.587
+        ]
+       ],
+       "closed": false,
+       "id": "fork",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         -0.024,
+         0.108
+        ],
+        [
+         -0.079,
+         0.143
+        ],
+        [
+         -0.179,
+         0.156
+        ],
+        [
+         -0.259,
+         0.133
+        ]
+       ],
+       "closed": false,
+       "id": "stem",
+       "bone": "steer",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "steer-assembly",
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.19,
+         0.975
+        ],
+        [
+         -0.3,
+         0.985
+        ],
+        [
+         -0.49,
+         1
+        ],
+        [
+         -0.49,
+         1.055
+        ],
+        [
+         -0.25,
+         1.05
+        ],
+        [
+         -0.19,
+         1.015
+        ]
+       ],
+       "closed": true,
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.2,
+       "region": "saddle",
+       "material": "saddle-skin"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0.375
+        ],
+        [
+         -0.55,
+         0.385
+        ],
+        [
+         -0.58,
+         0.345
+        ],
+        [
+         -0.55,
+         0.305
+        ],
+        [
+         -0.1,
+         0.225
+        ],
+        [
+         -0.025,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "chaincase",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.6,
+       "regions": [
+        "drivetrain",
+        "frame-tubes"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.97,
+         0.15
+        ],
+        [
+         -0.89,
+         0.15
+        ],
+        [
+         -0.89,
+         0.25
+        ],
+        [
+         -0.97,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "id": "lamps",
+       "bone": "frame",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "lamps",
+       "material": "plastic"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.84,
+         0.8
+        ],
+        [
+         -0.3,
+         0.8
+        ]
+       ],
+       "closed": false,
+       "id": "rack",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "frame-tubes",
+       "material": "paint",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Two tyre rings with hub dots, a stroked frame and fork, handlebar, saddle block, chain-case slot and tail lamp.",
+      "de": "Zwei Reifenringe mit Nabenpunkten, gestrichelt gezeichneter Rahmen und Gabel, Lenker, Sattelblock, Kettenkasten und Rücklicht."
+     },
+     "retained": {
+      "en": "Wheel rings, hubs, all frame tubes, fork, handlebar, saddle, chain case, crank arms, rack and lamp.",
+      "de": "Radringe, Naben, alle Rahmenrohre, Gabel, Lenker, Sattel, Kettenkasten, Kurbelarme, Gepäckträger und Lampe."
+     },
+     "merged": {
+      "en": "Tyre, rim and mudguard form one ring 0.06 m wide; the head and tail lamp are one dot.",
+      "de": "Reifen, Felge und Schutzblech bilden einen 0,06 m breiten Ring; Front- und Rücklicht sind ein Punkt."
+     },
+     "omitted": {
+      "en": "Spokes, pedals, stand, bell, grips.",
+      "de": "Speichen, Pedale, Ständer, Klingel, Griffe."
+     },
+     "thinElements": {
+      "en": "Tubes 0.03 m = 0.15 mm real are drawn 0.16 mm wide.",
+      "de": "Rohre mit 0,03 m = 0,15 mm real sind 0,16 mm breit gezeichnet."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark rings, mid-tone chain case and saddle, light hubs.",
+      "de": "Dunkle Ringe, mitteltoniger Kettenkasten und Sattel, helle Naben."
+     },
+     "overlays": {
+      "en": "Merged wheel ring carries tyres, rims and mudguards; tubes are strokes with their regions.",
+      "de": "Der Radring trägt Reifen, Felgen und Schutzbleche; Rohre sind Striche mit ihren Regionen."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "At 1:500 the bicycle is 3.7 mm long. Its tubes (0.03 m) are 0.06 mm, and they pass the tyres at 0.05 to 0.09 m, i.e. 0.1 to 0.18 mm, which is below the smallest white gap that prints (0.15 mm plus the stroke): a composed line drawing would clot into the wheel rings and a filled silhouette would show the open spoked wheels as solid discs.",
+     "de": "Bei 1:500 ist das Fahrrad 3,7 mm lang. Seine Rohre (0,03 m) sind 0,06 mm breit und passieren die Reifen im Abstand von 0,05 bis 0,09 m, also 0,1 bis 0,18 mm; das ist weniger als die kleinste druckbare weiße Lücke (0,15 mm plus Strich): eine zusammengesetzte Strichzeichnung verklumpt mit den Radringen, und eine gefüllte Silhouette ließe die offenen Speichenräder als volle Scheiben erscheinen."
+    },
+    "limitingFeature": {
+     "en": "Clearance between frame tubes and tyres",
+     "de": "Abstand zwischen Rahmenrohren und Reifen"
+    },
+    "limitingSizeM": 0.05,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "symbol",
+      "symbol": "bicycle-plan"
+     }
+    ]
+   }
+  },
+  "symbols": [
+   {
+    "id": "bicycle-plan",
+    "title": {
+     "en": "Bicycle plan symbol",
+     "de": "Fahrrad-Grundrisszeichen"
+    },
+    "description": {
+     "en": "True-extent plan of the bicycle: both tyres edge-on, frame line, handlebar width, saddle and pedal axle.",
+     "de": "Grundriss des Fahrrads in wahrer Ausdehnung: beide Reifen von der Kante, Rahmenlinie, Lenkerbreite, Sattel und Pedalachse."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.905,
+         -0.019
+        ],
+        [
+         -0.215,
+         -0.019
+        ],
+        [
+         -0.215,
+         0.019
+        ],
+        [
+         -0.905,
+         0.019
+        ]
+       ],
+       "closed": true,
+       "id": "plan-wheel-r",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.15,
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.215,
+         -0.019
+        ],
+        [
+         0.905,
+         -0.019
+        ],
+        [
+         0.905,
+         0.019
+        ],
+        [
+         0.215,
+         0.019
+        ]
+       ],
+       "closed": true,
+       "id": "plan-wheel-f",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.15,
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.56,
+         0
+        ],
+        [
+         -0.1,
+         0
+        ],
+        [
+         0.347,
+         0
+        ],
+        [
+         0.56,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "plan-frame",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.27,
+         -0.31
+        ],
+        [
+         0.27,
+         0.31
+        ]
+       ],
+       "closed": false,
+       "id": "plan-bar",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "material": "paint",
+       "penMm": 0.13
+      },
+      {
+       "kind": "ellipse",
+       "cx": -0.34,
+       "cy": 0,
+       "rx": 0.14,
+       "ry": 0.07,
+       "id": "plan-saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "material": "saddle-skin"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         -0.2
+        ],
+        [
+         -0.1,
+         0.2
+        ]
+       ],
+       "closed": false,
+       "id": "plan-pedals",
+       "bone": "frame",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "material": "paint",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres: length 1.87 m, handlebar width 0.62 m, tyre width 0.037 m; plan geometry only.",
+     "de": "Modellmeter: Länge 1,87 m, Lenkerbreite 0,62 m, Reifenbreite 0,037 m; nur Grundrissgeometrie."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "parked-on-stand",
+    "title": {
+     "en": "Parked on the rear stand",
+     "de": "Auf dem Hinterbauständer geparkt"
+    },
+    "description": {
+     "en": "The rear stand is down and lifts the rear wheel about 4 cm off the ground; the front wheel is turned 6 degrees; a 4 kg shopping bag hangs on the rack.",
+     "de": "Der Hinterbauständer ist ausgeklappt und hebt das Hinterrad etwa 4 cm vom Boden; das Vorderrad ist um 6 Grad eingeschlagen; eine 4-kg-Einkaufstasche hängt am Gepäckträger."
+    },
+    "bones": {
+     "stand": {
+      "angleDeg": -90
+     },
+     "steer": {
+      "angleDeg": 6
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -1.2
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "stand-foot"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0,
+      "pedalling": 0,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.002,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "shopping",
+      "kind": "carried",
+      "title": {
+       "en": "Shopping bag on the rack",
+       "de": "Einkaufstasche am Gepäckträger"
+      },
+      "anchor": "rack-deck",
+      "fxN": 0,
+      "fyN": -39.2,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "riding",
+    "title": {
+     "en": "Rolling upright",
+     "de": "Aufrecht rollend"
+    },
+    "description": {
+     "en": "Stand folded up, both wheels on the ground, cranks horizontal; rolling at about 15 km/h with moderate pedalling.",
+     "de": "Ständer hochgeklappt, beide Räder am Boden, Kurbeln waagerecht; Fahrt mit etwa 15 km/h bei mäßigem Treten."
+    },
+    "bones": {
+     "pedal-n": {
+      "angleDeg": 0
+     },
+     "pedal-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "riding-night",
+    "title": {
+     "en": "Rolling with dynamo lights",
+     "de": "Rollend mit Dynamobeleuchtung"
+    },
+    "description": {
+     "en": "Rolling at about 15 km/h at dusk: the hub dynamo feeds the LED head and tail lamps.",
+     "de": "Fahrt mit etwa 15 km/h in der Dämmerung: der Nabendynamo speist die LED-Front- und Rückleuchte."
+    },
+    "bones": {
+     "crank": {
+      "angleDeg": -35
+     },
+     "pedal-n": {
+      "angleDeg": 35
+     },
+     "pedal-f": {
+      "angleDeg": 35
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 1
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "braking-stop",
+    "title": {
+     "en": "Braking to a stop",
+     "de": "Bremsen bis zum Stillstand"
+    },
+    "description": {
+     "en": "Roller brakes at full effort after 20 km/h: front hub shells hot; the steering is straight.",
+     "de": "Rollenbremsen mit voller Wirkung nach 20 km/h: die Nabenmäntel vorn sind heiß; die Lenkung steht gerade."
+    },
+    "bones": {
+     "pedal-n": {
+      "angleDeg": 0
+     },
+     "pedal-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.2,
+      "pedalling": 0,
+      "braking": 0.05,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-start",
+    "title": {
+     "en": "Ride loop start",
+     "de": "Fahrschleife start"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r, the crank and the levelled pedals follow the 36:18 gear.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht, Kurbel und waagerecht gehaltene Pedale folgen der Übersetzung 36:18."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": 0
+     },
+     "wheel-r": {
+      "angleDeg": 0
+     },
+     "crank": {
+      "angleDeg": 0
+     },
+     "pedal-n": {
+      "angleDeg": 0
+     },
+     "pedal-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-mid",
+    "title": {
+     "en": "Ride loop mid",
+     "de": "Fahrschleife mid"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r, the crank and the levelled pedals follow the 36:18 gear.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht, Kurbel und waagerecht gehaltene Pedale folgen der Übersetzung 36:18."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -360
+     },
+     "wheel-r": {
+      "angleDeg": -360
+     },
+     "crank": {
+      "angleDeg": -180
+     },
+     "pedal-n": {
+      "angleDeg": 180
+     },
+     "pedal-f": {
+      "angleDeg": 180
+     }
+    },
+    "root": {
+     "x": 2.1677,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-end",
+    "title": {
+     "en": "Ride loop end",
+     "de": "Fahrschleife end"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r, the crank and the levelled pedals follow the 36:18 gear.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht, Kurbel und waagerecht gehaltene Pedale folgen der Übersetzung 36:18."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -720
+     },
+     "wheel-r": {
+      "angleDeg": -720
+     },
+     "crank": {
+      "angleDeg": -360
+     },
+     "pedal-n": {
+      "angleDeg": 360
+     },
+     "pedal-f": {
+      "angleDeg": 360
+     }
+    },
+    "root": {
+     "x": 4.3354,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "rolled-to-stop",
+    "title": {
+     "en": "Rolled to the stop point",
+     "de": "Am Haltepunkt ausgerollt"
+    },
+    "description": {
+     "en": "Technical key: the bike has rolled to rest 3 m on, stand still up, brake just released.",
+     "de": "Technische Schlüsselstellung: das Rad ist 3 m weiter zum Stillstand gerollt, Ständer noch oben, Bremse gerade gelöst."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -498.2241696789768
+     },
+     "wheel-r": {
+      "angleDeg": -498.2241696789768
+     }
+    },
+    "root": {
+     "x": 3,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0,
+      "pedalling": 0,
+      "braking": 0.3,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "parked-stopped",
+    "title": {
+     "en": "Parked where it stopped",
+     "de": "Dort abgestellt, wo es hielt"
+    },
+    "description": {
+     "en": "Technical key: rear stand down 3 m on, front wheel turned 6 degrees, rear wheel lifted.",
+     "de": "Technische Schlüsselstellung: Hinterbauständer 3 m weiter ausgeklappt, Vorderrad um 6 Grad eingeschlagen, Hinterrad angehoben."
+    },
+    "key": true,
+    "bones": {
+     "stand": {
+      "angleDeg": -90
+     },
+     "steer": {
+      "angleDeg": 6
+     },
+     "wheel-f": {
+      "angleDeg": -498.2241696789768
+     },
+     "wheel-r": {
+      "angleDeg": -498.2241696789768
+     }
+    },
+    "root": {
+     "x": 3,
+     "y": 0,
+     "angleDeg": -1.2
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "stand-foot"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0,
+      "pedalling": 0,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 28
+       }
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.002,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "rolling-in",
+    "title": {
+     "en": "Rolling in before stopping",
+     "de": "Anrollen vor dem Halt"
+    },
+    "description": {
+     "en": "Technical key: the bike enters the clip at about 15 km/h, stand up.",
+     "de": "Technische Schlüsselstellung: das Rad rollt mit etwa 15 km/h in den Clip, Ständer oben."
+    },
+    "key": true,
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "rolling": 0.6,
+      "pedalling": 0.5,
+      "braking": 0,
+      "lighting": 0
+     },
+     "regions": {
+      "frame-tubes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "steer-assembly": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "mudguards": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.004,
+        "tempC": 30
+       }
+      },
+      "rims-spokes": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "saddle": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "drivetrain": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.2
+      },
+      "hub-brakes": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.1
+      },
+      "lamps": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "ride-loop",
+    "title": {
+     "en": "Ride loop at 15 km/h",
+     "de": "Fahrschleife mit 15 km/h"
+    },
+    "description": {
+     "en": "Two wheel turns (4.34 m) per cycle at 4.17 m/s: wheels roll with theta = -x / r, the crank turns once with the 36:18 gear while the pedals stay level; the root advances by one cycle length every loop.",
+     "de": "Zwei Radumdrehungen (4,34 m) pro Zyklus mit 4,17 m/s: die Räder rollen mit theta = -x / r, die Kurbel dreht sich bei der Übersetzung 36:18 einmal, die Pedale bleiben waagerecht; die Wurzel rückt je Schleife um eine Zykluslänge vor."
+    },
+    "durationS": 1.0397,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "loop-start",
+      "ease": "linear"
+     },
+     {
+      "t": 0.5198,
+      "pose": "loop-mid",
+      "ease": "linear"
+     },
+     {
+      "t": 1.0397,
+      "pose": "loop-end",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 1.0397
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 1.0397
+     }
+    ],
+    "phases": [
+     {
+      "id": "pedalling",
+      "fromS": 0,
+      "toS": 1.0397,
+      "title": {
+       "en": "Pedalling at steady speed",
+       "de": "Treten mit gleichmäßiger Geschwindigkeit"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "motion",
+      "title": {
+       "en": "Cycle start",
+       "de": "Zyklusbeginn"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 1.0397,
+        "v": 0.6
+       }
+      ]
+     },
+     {
+      "target": "operating:pedalling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 1.0397,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "brake-and-park",
+    "title": {
+     "en": "Brake, stop and put on the stand",
+     "de": "Bremsen, anhalten und aufbocken"
+    },
+    "description": {
+     "en": "The bike brakes uniformly from 15 km/h to rest over 3 m (1.44 s), the stand is folded down and the rear wheel is lifted; the lamp stays off.",
+     "de": "Das Rad bremst gleichmäßig von 15 km/h in 3 m (1,44 s) bis zum Stillstand, der Ständer wird ausgeklappt und das Hinterrad angehoben; die Leuchte bleibt aus."
+    },
+    "durationS": 5,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "rolling-in",
+      "ease": "out"
+     },
+     {
+      "t": 1.44,
+      "pose": "rolled-to-stop",
+      "ease": "linear"
+     },
+     {
+      "t": 2.2,
+      "pose": "rolled-to-stop",
+      "ease": "smooth"
+     },
+     {
+      "t": 4.2,
+      "pose": "parked-stopped",
+      "ease": "linear"
+     },
+     {
+      "t": 5,
+      "pose": "parked-stopped",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 2.6
+     },
+     {
+      "anchor": "stand-foot",
+      "fromS": 2.6,
+      "toS": 5
+     }
+    ],
+    "phases": [
+     {
+      "id": "brake",
+      "fromS": 0,
+      "toS": 1.44,
+      "title": {
+       "en": "Braking to rest",
+       "de": "Bremsen bis zum Stillstand"
+      }
+     },
+     {
+      "id": "stand",
+      "fromS": 2.2,
+      "toS": 4.2,
+      "title": {
+       "en": "Stand folds down",
+       "de": "Ständer klappt aus"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.44,
+      "kind": "motion",
+      "title": {
+       "en": "Standstill",
+       "de": "Stillstand"
+      }
+     },
+     {
+      "t": 2.6,
+      "kind": "contact-on",
+      "title": {
+       "en": "Stand foot touches down",
+       "de": "Ständerfuß setzt auf"
+      },
+      "target": "stand-foot"
+     },
+     {
+      "t": 2.6,
+      "kind": "contact-off",
+      "title": {
+       "en": "Rear wheel lifts off",
+       "de": "Hinterrad hebt ab"
+      },
+      "target": "contact-r"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:braking",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 1.44,
+        "v": 1
+       },
+       {
+        "t": 2,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.6
+       },
+       {
+        "t": 1.44,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:pedalling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.6,
+       "title": {
+        "en": "About 15 km/h",
+        "de": "Etwa 15 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 25 km/h",
+        "de": "Etwa 25 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "pedalling",
+     "title": {
+      "en": "Pedalling power",
+      "de": "Tretleistung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Coasting",
+        "de": "Rollen"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "About 75 W",
+        "de": "Etwa 75 W"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 150 W",
+        "de": "Etwa 150 W"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Hub braking",
+      "de": "Nabenbremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Light braking",
+        "de": "Leichte Bremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full stop from 20 km/h",
+        "de": "Vollbremsung aus 20 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "lighting",
+     "title": {
+      "en": "Dynamo lighting",
+      "de": "Dynamobeleuchtung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "On",
+        "de": "An"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "frame-tubes",
+     "title": {
+      "en": "Frame tubes, rack and stand",
+      "de": "Rahmenrohre, Gepäckträger und Ständer"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 0.32,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Steel wall 1.3 mm",
+        "de": "Stahlwand 1.3 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0013,
+       "resistanceM2KW": 0.000026,
+       "heatCapacityJM2K": 4900,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00006,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 5000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "steer-assembly",
+     "title": {
+      "en": "Fork, stem and handlebar",
+      "de": "Gabel, Vorbau und Lenker"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 0.2,
+     "characteristicLengthM": 0.025,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Steel wall 1.2 mm",
+        "de": "Stahlwand 1.2 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0012,
+       "resistanceM2KW": 0.000023999999999999997,
+       "heatCapacityJM2K": 4500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00006,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 4600,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "mudguards",
+     "title": {
+      "en": "Front and rear mudguards",
+      "de": "Vorder- und Hinterradschutzblech"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "paint",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.06,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Steel wall 0.6 mm",
+        "de": "Stahlwand 0.6 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0006,
+       "resistanceM2KW": 0.000011999999999999999,
+       "heatCapacityJM2K": 2300,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00006,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 2400,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyres 37-622",
+      "de": "Reifen 37-622"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 0.46,
+     "characteristicLengthM": 0.04,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.45,
+     "layers": [
+      {
+       "id": "tread",
+       "title": {
+        "en": "Rubber tread and carcass",
+        "de": "Gummilauffläche und Karkasse"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.03,
+       "heatCapacityJM2K": 7000,
+       "source": "authored-estimate",
+       "reference": "wong-2008"
+      }
+     ],
+     "heatCapacityJM2K": 7000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 40
+     },
+     "source": "authored-estimate",
+     "reference": "wilson-2020"
+    },
+    {
+     "id": "rims-spokes",
+     "title": {
+      "en": "Rims and spokes",
+      "de": "Felgen und Speichen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "alloy",
+     "areaM2": 0.14,
+     "characteristicLengthM": 0.02,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "rim",
+       "title": {
+        "en": "Aluminium rim wall",
+        "de": "Aluminiumfelgenwand"
+       },
+       "kind": "metal",
+       "material": "alloy",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.000013333333333333333,
+       "heatCapacityJM2K": 5400,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "saddle",
+     "title": {
+      "en": "Saddle",
+      "de": "Sattel"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "saddle-skin",
+     "areaM2": 0.12,
+     "characteristicLengthM": 0.2,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "cover",
+       "title": {
+        "en": "Cover over foam",
+        "de": "Bezug über Schaum"
+       },
+       "kind": "polymer",
+       "material": "saddle-skin",
+       "thicknessM": 0.02,
+       "resistanceM2KW": 0.39999999999999997,
+       "heatCapacityJM2K": 3000,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 3000,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "drivetrain",
+     "title": {
+      "en": "Chain case, chainring, cranks and hub gear",
+      "de": "Kettenkasten, Kettenblatt, Kurbeln und Nabenschaltung"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "paint",
+     "areaM2": 0.2,
+     "characteristicLengthM": 0.1,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Steel wall 1.0 mm",
+        "de": "Stahlwand 1.0 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.001,
+       "resistanceM2KW": 0.00002,
+       "heatCapacityJM2K": 3900,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "paint",
+       "title": {
+        "en": "Paint film",
+        "de": "Lackschicht"
+       },
+       "kind": "polymer",
+       "material": "paint",
+       "thicknessM": 0.00006,
+       "resistanceM2KW": 0.0002,
+       "heatCapacityJM2K": 100,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 4000,
+     "operating": {
+      "key": "pedalling",
+      "heatW": 9
+     },
+     "source": "authored-estimate",
+     "reference": "spicer-2001"
+    },
+    {
+     "id": "hub-brakes",
+     "title": {
+      "en": "Hubs with roller brakes",
+      "de": "Naben mit Rollenbremsen"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "chrome",
+     "areaM2": 0.04,
+     "characteristicLengthM": 0.09,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 15000,
+     "operating": {
+      "key": "braking",
+      "heatW": 431.3
+     },
+     "source": "authored-estimate",
+     "reference": "limpert-1999"
+    },
+    {
+     "id": "lamps",
+     "title": {
+      "en": "Dynamo lamps front and rear",
+      "de": "Dynamoleuchten vorn und hinten"
+     },
+     "kind": "lamp",
+     "model": "operating",
+     "material": "plastic",
+     "areaM2": 0.012,
+     "characteristicLengthM": 0.05,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 2000,
+     "operating": {
+      "key": "lighting",
+      "heatW": 2
+     },
+     "source": "authored-estimate"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Operating heat at level 1: tyres 40 W (rolling resistance Crr 0.007 of a 104 kg bicycle with rider at 25 km/h = 50 W, 80 % into the tyre surfaces), drivetrain 9 W (chain about 2 W at 98.6 % efficiency, hub gear and bearings about 7 W), hub brakes 600 W (kinetic energy 1.7 kJ of a 110 kg bicycle with rider from 20 km/h in 3 s), lamps 2 W (3 W LED lamps at 33 % light).",
+     "de": "Betriebswärme bei Stufe 1: Reifen 40 W (Rollwiderstand Crr 0,007 eines 104-kg-Fahrrads mit Fahrer bei 25 km/h = 50 W, 80 % in die Reifenoberfläche), Antrieb 9 W (Kette etwa 2 W bei 98,6 % Wirkungsgrad, Nabenschaltung und Lager etwa 7 W), Nabenbremsen 600 W (Bewegungsenergie 1,7 kJ eines 110-kg-Fahrrads mit Fahrer aus 20 km/h in 3 s), Lampen 2 W (3-W-LED-Lampen mit 33 % Licht)."
+    },
+    {
+     "en": "The rider is not part of the asset: rolling, pedalling and braking levels describe a typical 85 kg rider as the scenario; no body regions or breath are modelled.",
+     "de": "Der Fahrer gehört nicht zum Asset: Roll-, Tret- und Bremsstufen beschreiben als Szenario einen typischen 85-kg-Fahrer; Körperregionen und Atem werden nicht modelliert."
+    },
+    {
+     "en": "Sun: the elevation shows one flank, so tubes and guards are half sunlit; the saddle is fully sunlit; tyre ground contact is 0.4 % of the tyre area on asphalt at 30 C.",
+     "de": "Sonne: die Ansicht zeigt eine Flanke, daher sind Rohre und Schutzbleche zur Hälfte besonnt, der Sattel ganz; der Bodenkontakt der Reifen beträgt 0,4 % der Reifenfläche auf Asphalt mit 30 C."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Rigid bodies on two unilateral ground contacts; on the stand the rear wheel is lifted and the stand foot carries the rear load. Bicycle stands upright (lateral balance is not modelled in the elevation).",
+     "de": "Starre Körper auf zwei einseitigen Bodenkontakten; auf dem Ständer ist das Hinterrad angehoben und der Ständerfuß trägt die hintere Last. Das Fahrrad steht aufrecht (seitliches Gleichgewicht wird in der Ansicht nicht modelliert)."
+    },
+    {
+     "en": "Steering is a small in-plane rotation of fork, handlebar and front wheel about the head tube; the true lateral swing of a turned handlebar is not visible in side elevation.",
+     "de": "Lenken ist eine kleine ebene Drehung von Gabel, Lenker und Vorderrad um das Steuerrohr; der echte seitliche Ausschlag eines eingeschlagenen Lenkers ist in der Seitenansicht nicht sichtbar."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "riding",
+   "defaultClip": "ride-loop",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

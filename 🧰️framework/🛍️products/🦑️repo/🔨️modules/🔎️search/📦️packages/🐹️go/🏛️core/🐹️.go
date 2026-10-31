@@ -695,7 +695,8 @@ func MatchContext(ctx context.Context, text string, query Query) (bool, error) {
 
 func scoreContext(ctx context.Context, text string, queries []*MatchQuery) (float64, bool) {
 	lower := strings.ToLower(text)
-	words := strings.FieldsFunc(lower, func(r rune) bool { return !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r >= 0x80) })
+	words := strings.FieldsFuncSeq(lower, func(r rune) bool { return !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r >= 0x80) })
+	var scratch distanceScratch
 	total := 0.0
 	for _, query := range queries {
 		if query.Fuzziness < 0 {
@@ -707,11 +708,11 @@ func scoreContext(ctx context.Context, text string, queries []*MatchQuery) (floa
 			total += float64(query.Fuzziness + 1)
 			continue
 		}
-		for _, word := range words {
+		for word := range words {
 			if ctx.Err() != nil {
 				return 0, false
 			}
-			distance := boundedDistanceContext(ctx, term, word, query.Fuzziness)
+			distance := boundedDistanceWithScratch(ctx, term, word, query.Fuzziness, &scratch)
 			if distance < best {
 				best = distance
 			}
@@ -727,7 +728,13 @@ func scoreContext(ctx context.Context, text string, queries []*MatchQuery) (floa
 func boundedDistance(left, right string, maximum int) int {
 	return boundedDistanceContext(context.Background(), left, right, maximum)
 }
+type distanceScratch [2][2*MaxQueryFuzziness + 1]int
+
 func boundedDistanceContext(ctx context.Context, left, right string, maximum int) int {
+	var scratch distanceScratch
+	return boundedDistanceWithScratch(ctx, left, right, maximum, &scratch)
+}
+func boundedDistanceWithScratch(ctx context.Context, left, right string, maximum int, scratch *distanceScratch) int {
 	if left == right {
 		return 0
 	}
@@ -740,7 +747,12 @@ func boundedDistanceContext(ctx context.Context, left, right string, maximum int
 	if maximum < 0 || abs(len(left)-len(right)) > maximum {
 		return maximum + 1
 	}
-	previous, current := make([]int, len(right)+1), make([]int, len(right)+1)
+	var previous, current []int
+	if len(right) < len(scratch[0]) {
+		previous, current = scratch[0][:len(right)+1], scratch[1][:len(right)+1]
+	} else {
+		previous, current = make([]int, len(right)+1), make([]int, len(right)+1)
+	}
 	for j := range previous {
 		previous[j] = maximum + 1
 		if j <= maximum {

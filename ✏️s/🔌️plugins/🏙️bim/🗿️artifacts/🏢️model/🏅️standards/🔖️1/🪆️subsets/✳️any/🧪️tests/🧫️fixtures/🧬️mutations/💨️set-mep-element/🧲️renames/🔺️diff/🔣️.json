@@ -2,7 +2,9 @@
   "mep_elements": {
     "mep-duct": {
       "entry": "Patched",
-      "name": "Main supply"
+      "value": {
+        "name": "Main supply"
+      }
     }
   }
 }

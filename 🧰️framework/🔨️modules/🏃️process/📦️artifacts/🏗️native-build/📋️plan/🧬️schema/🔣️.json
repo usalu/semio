@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "root",
+    "platform",
+    "mode",
+    "product",
+    "compiler",
+    "toolchain",
+    "configuration",
+    "source"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "platform": {
+      "enum": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "product": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "compiler": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "toolchain": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536
+    },
+    "configuration": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "definitions": {
+    "AcquisitionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consumerCancelled",
+        "producerState",
+        "producerPlan",
+        "producerSettled",
+        "custodyReleased",
+        "publication",
+        "publicationRechecked"
+      ],
+      "properties": {
+        "consumerCancelled": {
+          "type": "boolean"
+        },
+        "producerState": {
+          "enum": [
+            "absent",
+            "running",
+            "cancel-requested",
+            "failed",
+            "completed"
+          ]
+        },
+        "producerPlan": {
+          "enum": [
+            null,
+            "same",
+            "other"
+          ]
+        },
+        "producerSettled": {
+          "type": "boolean"
+        },
+        "custodyReleased": {
+          "type": "boolean"
+        },
+        "publication": {
+          "enum": [
+            "absent",
+            "matching",
+            "stale",
+            "foreign"
+          ]
+        },
+        "publicationRechecked": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "producerState": {
+                "const": "absent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "producerPlan": {
+                "const": null
+              },
+              "producerSettled": {
+                "const": true
+              },
+              "custodyReleased": {
+                "const": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "producerPlan": {
+                "enum": [
+                  "same",
+                  "other"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custodyReleased": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "producerSettled": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

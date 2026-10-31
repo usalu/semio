@@ -2,19 +2,21 @@
   "railings": {
     "rl-1": {
       "entry": "Patched",
-      "host": {
-        "value": null
-      },
-      "path": [
-        {
-          "x": 0.0,
-          "y": 0.0
+      "value": {
+        "host": {
+          "value": null
         },
-        {
-          "x": 5.0,
-          "y": 0.0
-        }
-      ]
+        "path": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 5,
+            "y": 0
+          }
+        ]
+      }
     }
   }
 }

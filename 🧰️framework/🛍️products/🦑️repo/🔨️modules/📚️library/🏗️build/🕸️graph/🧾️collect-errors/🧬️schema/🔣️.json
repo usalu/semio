@@ -2,7 +2,7 @@
  "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Collected graph inference errors / Gesammelte Inferenzfehler des Graphen",
  "description": "EN: Diagnostic mode of the graph builder (SEMIO_GRAPH_COLLECT_ERRORS=<directory>): every project is inferred, every failure is recorded, the report is written, nothing is published. DE: Diagnosemodus des Graph-Builders (SEMIO_GRAPH_COLLECT_ERRORS=<Verzeichnis>): jedes Projekt wird abgeleitet, jeder Fehler wird erfasst, der Bericht geschrieben, nichts veröffentlicht.",
- "texts": {
+ "x-semio-texts": {
   "en": {
    "headline": "{failed} of {total} projects failed in {causes} causes; report: {directory}",
    "group": "  {count} x {cause} (e.g. {example}) at {top}",

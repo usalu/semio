@@ -6,10 +6,10 @@
 import chartSchema from "../../🔣️.json" with { type: "json" };
 
 /** 📐️ Native axis geometry uses millimetres and typography uses TeX points. */
-export const VIZ_AXIS_DEFAULTS: Readonly<{scale:string;orient:string;tickSize:number;tickSizeOuter:number;tickPadding:number;titleGap:number;labelSize:number;titleSize:number;labelFont:string;titleFont:string;strokeRole:string;strokeColorRole:string;minorStrokeColorRole:string;gridStrokeColorRole:string;textColorRole:string;minorOpacity:number;gridOpacity:number}> = Object.freeze({...chartSchema.$defs.ChartGuide["x-semio-guide-defaults"].axis});
+export const VIZ_AXIS_DEFAULTS: Readonly<{scale:string;orient:string;tickSize:number;tickSizeOuter:number;tickPadding:number;titleGap:number;labelSize:number;titleSize:number;labelFont:string;titleFont:string;strokeRole:string;strokeColorRole:string;minorStrokeColorRole:string;gridStrokeColorRole:string;textColorRole:string;minorOpacity:number;gridOpacity:number}> = Object.freeze({...chartSchema.$defs.ChartGuide.definitions.Defaults.const.axis});
 
 /** 🏷️ Native legend geometry, typography and stroke roles come from the owned guide schema. */
-export const VIZ_LEGEND_DEFAULTS: Readonly<{scale:string;kind:string;orient:string;columns:number;ticks:number;hatchLines:number;itemGap:number;swatchSize:number;labelGap:number;length:number;symbol:string;sizeMode:string;offset:number;inset:number;labelSize:number;titleSize:number;labelFont:string;titleFont:string;strokeRole:string;outlineStrokeRole:string;textColorRole:string}> = Object.freeze({...chartSchema.$defs.ChartGuide["x-semio-guide-defaults"].legend});
+export const VIZ_LEGEND_DEFAULTS: Readonly<{scale:string;kind:string;orient:string;columns:number;ticks:number;hatchLines:number;itemGap:number;swatchSize:number;labelGap:number;length:number;symbol:string;sizeMode:string;offset:number;inset:number;labelSize:number;titleSize:number;labelFont:string;titleFont:string;strokeRole:string;outlineStrokeRole:string;textColorRole:string}> = Object.freeze({...chartSchema.$defs.ChartGuide.definitions.Defaults.const.legend});
 
 //#region 🔖️Localization
 /** 🌍️ A user-visible string in every language the print product ships; there is no default one. */

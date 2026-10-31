@@ -8,7 +8,7 @@ import {createHash} from "node:crypto";
 import {createRequire} from "node:module";
 import {pathToFileURL} from "node:url";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import picomatch from "picomatch";
 import fixture from "../🧫️fixtures/⚡️incremental/🔣️.json";
 import schema from "../../🧬️schema/⚡️incremental/🔣️.json";

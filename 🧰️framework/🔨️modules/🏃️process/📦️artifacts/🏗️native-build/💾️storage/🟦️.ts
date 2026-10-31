@@ -1,3 +1,6 @@
+export{observeExistingNativeStorageStateV1}from"./👁️existing/🟦️.ts";
+export type{NativeStorageExistingSnapshotV1}from"./👁️existing/🟦️.ts";
+import{readNativeStorageOwnerRequestV1,nativeStorageOwnerAllocationV1}from"./🎟️owner/🟦️.ts";
 import type {NativeStorageReservationV1,NativeStorageCleanupV1} from "./📋️contract/🟦️.ts";
 export type {NativeStorageReservationV1,NativeStorageCleanupV1} from "./📋️contract/🟦️.ts";
 import{nativeStorageSchemaV1 as schema,readNativeStorageDataV1 as admit,nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1,snapshotNativeStorageStateV1,createNativeStorageJournalProjectionV1,type NativeStoragePolicyV1,type NativeStorageAllocationV1,type NativeStorageNamespaceIdentityV1,type NativeStorageNamespaceReceiptV1,type NativeStorageChildRequestV1,type NativeStorageChildDeclarationV1,type NativeStorageStateV1,type NativeStorageEventV1,type NativeStorageRebudgetRequestV1,type NativeStorageBackingV1,type NativeStorageJournalProjectionV1}from"./📜️journal/🟦️.ts";
@@ -121,6 +124,27 @@ export function acquireNativeStorageV1(options:Readonly<{policy:NativeStoragePol
  const allocation=admit<NativeStorageAllocationV1>("Allocation",{id:randomBytes(16).toString("hex"),owner:options.owner,kind:options.kind,bytes:options.bytes,phase:"reserved"});
  if(allocation.bytes>((allocation.kind==="compiler-workspace"||allocation.kind==="compiler-state")?policy.maximumWorkspaceBytes:policy.maximumArtifactBytes))throw Error("Native storage allocation exceeds kind capacity");
  await options.port.measure?.(custody.backing,{mode:"reserve",requestBytes:allocation.bytes},control);await custody.transaction(control,(_,append)=>append({type:"reserved",allocation}));return heldReservationV1(options,allocation,custody);});
+}
+
+
+/** 🏦️ Recovers or commits one exact owner atomically under the genuine Native journal writer. */
+export function acquireNativeStorageOwnerV1(options:Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1;owner:string;kind:NativeStorageAllocationV1["kind"];bytes:number;expectedAllocation?:string}>):Promise<NativeStorageReservationV1>{return acquireNativeStorageOwnerBodyV1(options,options.control);}
+
+/** 🧭️ Commits preparation work under its bounded refinement while the resulting charge belongs to the actual consumer. */
+export function acquirePreparedNativeStorageOwnerV1(options:Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1;owner:string;kind:NativeStorageAllocationV1["kind"];bytes:number;expectedAllocation?:string}>,preparation:ResourceLeaseControl):Promise<NativeStorageReservationV1>{requireIssuedResourceControlRefinementV1(options.control,preparation);if(checkResourceLeaseControl(preparation)===null)throw Error("Finite Native charge preparation required");return acquireNativeStorageOwnerBodyV1(options,preparation);}
+
+function acquireNativeStorageOwnerBodyV1(options:Readonly<{policy:NativeStoragePolicyV1;control:ResourceLeaseControl;port:NativeStoragePortV1;owner:string;kind:NativeStorageAllocationV1["kind"];bytes:number;expectedAllocation?:string}>,preparation:ResourceLeaseControl):Promise<NativeStorageReservationV1>{
+ const request=readNativeStorageOwnerRequestV1({version:1,owner:options.owner,kind:options.kind,bytes:options.bytes,...(options.expectedAllocation===undefined?{}:{expectedAllocation:options.expectedAllocation})});options=Object.freeze({...options,policy:Object.freeze({...options.policy})});
+ return options.port.withOperation(preparation,async control=>{
+  const custody=await storageCustodyV1({...options,control}),policy=options.policy;if(request.bytes>((request.kind==="compiler-workspace"||request.kind==="compiler-state")?policy.maximumWorkspaceBytes:policy.maximumArtifactBytes))throw Error("Native storage allocation exceeds kind capacity");
+  await options.port.measure?.(custody.backing,{mode:"recheck",requestBytes:0},control);
+  const allocation=await custody.transaction(control,async(state,append)=>{
+   let selected=nativeStorageOwnerAllocationV1(state.allocations,request);
+   if(!selected){await options.port.measure?.(custody.backing,{mode:"reserve",requestBytes:request.bytes},control);selected=admit<NativeStorageAllocationV1>("Allocation",{id:randomBytes(16).toString("hex"),owner:request.owner,kind:request.kind,bytes:request.bytes,phase:"reserved"});append({type:"reserved",allocation:selected});}
+   if(selected.phase==="reserved"){await options.port.measure?.(custody.backing,{mode:"commit",requestBytes:0},control);append({type:"committed",id:selected.id});}
+   return Object.freeze({...selected,phase:"committed" as const});
+  });return heldReservationV1(options,allocation,custody);
+ });
 }
 
 type FundedChildScope={namespace?:{directory:string;started:boolean;receipt?:NativeStorageNamespaceReceiptV1;removed:boolean};request?:NativeStorageChildRequestV1;enrollment:AcceptedPhysicalCleanupV1;ordinaryJoined:boolean;work?:Promise<unknown>;settlement?:Promise<void>;physical?:NativeStorageCleanupPortV1;cleanup?:NativeStorageCleanupV1;source?:ReservationSource;entered:boolean;appendStarted:boolean;failed:boolean;failure:unknown;cleanupFailed?:boolean;cleanupFailure?:unknown};

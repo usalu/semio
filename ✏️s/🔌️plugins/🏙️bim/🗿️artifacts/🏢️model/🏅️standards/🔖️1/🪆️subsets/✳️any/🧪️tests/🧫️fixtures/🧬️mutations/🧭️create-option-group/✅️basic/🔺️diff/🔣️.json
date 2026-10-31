@@ -2,7 +2,9 @@
   "option_groups": {
     "g": {
       "entry": "Created",
-      "name": "Envelope"
+      "value": {
+        "name": "Envelope"
+      }
     }
   }
 }

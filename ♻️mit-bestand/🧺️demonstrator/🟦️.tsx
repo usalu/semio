@@ -97,7 +97,7 @@ const DEMONSTRATOR_CELLS = Object.fromEntries(centeredLastRowCells(DEMONSTRATOR_
 
 /** 🔢️ The card grid mirrors the strip. */
 const DEMONSTRATOR_GRID = nearSquareGrid(DEMONSTRATOR_PANES.length);
-const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(0, 1fr))` } as const;
+const DEMONSTRATOR_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID.rows}, minmax(min(10rem, 100%), 1fr))` } as const;
 
 /** 🧮️ Every app may stay live; boots start 1.5 s after load, one per 35 s plugin-load budget. A pristine app is released to its poster after
  * 30 s offscreen while another is opened, 5 min idle on the overview or 60 s in a hidden tab — the unattended kiosk case. */
@@ -140,7 +140,7 @@ const DEMONSTRATOR_SPECS = new Map(DEMONSTRATOR_PANES.map((pane) => [pane.id, pa
 /** 🃏️ An app's card, centred in its cell of the card grid (when swiping, the overview centres it on its page itself). */
 function renderDemonstratorCard(page: LayeredPane, state: LayeredCardState) {
   const card = <DemonstratorCard pane={DEMONSTRATOR_SPECS.get(page.id)!} lifted={state.revealed} onClick={state.open} />;
-  return state.mode === "swipe" ? card : <div className="flex min-w-0 justify-center px-double">{card}</div>;
+  return state.mode === "swipe" ? card : <div className="flex min-h-0 min-w-0 justify-center overflow-x-hidden overflow-y-auto px-double">{card}</div>;
 }
 //#endregion 🎪️DemonstratorPages
 

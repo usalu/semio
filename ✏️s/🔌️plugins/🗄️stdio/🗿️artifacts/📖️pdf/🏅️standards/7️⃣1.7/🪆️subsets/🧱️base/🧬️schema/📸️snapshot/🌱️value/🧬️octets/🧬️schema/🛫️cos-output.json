@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://s.stdio.pdf.1.7.base.cos-output",
   "title": "PdfCosValue",
   "$ref": "#/$defs/Cos",

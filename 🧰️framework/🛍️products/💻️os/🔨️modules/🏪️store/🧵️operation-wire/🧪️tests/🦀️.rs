@@ -1,5 +1,6 @@
 //! 🧪️ Exact serde operation wire and same-thread allocator witnesses across admitted copy and cancellation turns.
-use super::*;
+use semio_framework_os_store_operation_wire::*;
+use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedCloneGrant};
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
 use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
 
@@ -145,7 +146,7 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 }
                 let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire_source(), &mut output[..maximum.min(64)], original_json_policy(&fixture)).unwrap());
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0), "row={row_index} hex={hex} maximum={maximum} progress={progress:?} frames={:?}",cursor.json().depth);
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0), "row={row_index} hex={hex} maximum={maximum} progress={progress:?}");
                 assert!(progress.processed_items <= 1);
                 assert!(progress.written_bytes <= maximum.min(64));
                 actual.extend_from_slice(&output[..progress.written_bytes]);
@@ -309,3 +310,47 @@ fn the_operation_text_is_the_exact_default_authoring_wire_of_its_bytes() {
         }
     }
 }
+
+#[test]
+fn canonical_json_reuses_original_frontier_for_neutral_source_batches() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let policy=&fixture["sourceBoundaryGrant"];
+    let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap() as usize};
+    for batch in fixture["sourceBatches"].as_array().unwrap() {
+        let mut cursor=ArtifactPreparedOperationCursor::default();
+        assert!(cursor.restart_canonical_json(grant).is_err());
+        for (index,row) in batch["sources"].as_array().unwrap().iter().enumerate() {
+            let source=OracleSource(row["body"].clone());
+            let mut bytes=Vec::new();
+            for _ in 0..4096 {
+                let demand=cursor.canonical_json_work_demands().unwrap();
+                assert!(demand.copy_bytes<=grant.maximum_copy_bytes);
+                assert!(demand.depth<=grant.maximum_depth);
+                let mut output=[0;64];
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::CanonicalJson{header:&[1,6],body:&source},&mut output,grant).unwrap());
+                assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+                bytes.extend_from_slice(&output[..step.written_bytes]);
+                if step.complete {break}
+            }
+            assert!(cursor.complete);
+            let expected:Vec<u8>=serde_json::from_value(batch["expected"][index].clone()).unwrap();
+            assert_eq!(bytes,expected);
+            assert_eq!(&bytes[2..],serde_json::to_vec(&source.0).unwrap());
+            assert!(cursor.close(grant).unwrap().complete);
+            let demand=cursor.canonical_json_restart_demands();
+            assert!(demand.copy_bytes<std::mem::size_of::<ArtifactPreparedOperationCursor>());
+            let denied=RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant};
+            assert!(cursor.restart_canonical_json(denied).unwrap().is_none());
+            assert!(cursor.closed);
+            let (receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.restart_canonical_json(grant).unwrap().unwrap());
+            assert_eq!(receipt.copied_bytes,demand.copy_bytes);
+            assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+
+            assert!(!cursor.closed);
+            assert!(!cursor.complete);
+        }
+    }
+}
+
+#[global_allocator]
+static TEST_REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

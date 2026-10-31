@@ -3,6 +3,11 @@
 package tree
 
 import (
+	search "github.com/usalu/semio/repo/search"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
+	"os"
+	"encoding/json"
+	"context"
 	strings "strings"
 	testing "testing"
 
@@ -259,4 +264,17 @@ func TestTreeNodeKindConstants(t *testing.T) {
 			}
 		}
 	})
+}
+
+func TestCachedQueryCapturesSourceOnEveryOperation(t *testing.T) {
+ data,err:=os.ReadFile(sandbox.OriginPath("..","..","..","🔎️search","🧪️tests","🧫️fixtures","🌲️snapshot","💾️streaming","🔣️.json"))
+ if err!=nil{t.Fatal(err)}
+ var fixture struct{QueryCapture struct{SourceCaptures int;Query string;Cases []json.RawMessage}}
+ if err=json.Unmarshal(data,&fixture);err!=nil{t.Fatal(err)}
+ for range fixture.QueryCapture.Cases{
+  captures:=0;progress:=func(value search.Progress){if value.Step=="fingerprinting"{captures++}}
+  _,err:=SearchMonorepoTreeCachedWithOptions(context.Background(),fixture.QueryCapture.Query,TreeBuildOptions{Progress:progress},TreeSearchOptions{Limit:4,Progress:progress})
+  if err!=nil{t.Fatal(err)}
+  if captures!=fixture.QueryCapture.SourceCaptures{t.Fatalf("independent Source captures=%d expected=%d",captures,fixture.QueryCapture.SourceCaptures)}
+ }
 }

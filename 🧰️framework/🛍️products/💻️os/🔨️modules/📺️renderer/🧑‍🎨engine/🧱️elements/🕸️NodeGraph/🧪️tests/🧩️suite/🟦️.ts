@@ -1,4 +1,4 @@
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { uiViewport2dSchema as viewport } from "@semio-tech/ui/testing/fixtures";
 import { nodeGraphSceneSchema as sceneContract } from "@semio-tech/framework-surface-ts/testing/fixtures";
 import inputContract from "../../📡️scene/🧬️schema/🔣️.json";

@@ -1,8 +1,10 @@
 {
   "sheet_revisions": {
     "rev-1": {
-      "author": "MK",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "author": "MK"
+      }
     }
   }
 }

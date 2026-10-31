@@ -137,7 +137,7 @@ fn typing_open_json(ledger: &TypingLedger<Value>) -> Value {
             .windows()
             .map(|window| {
                 let state = ledger.open(window).expect("listed window");
-                (window.to_string(), json!({ "buffer": state.buffer, "tool": state.tool, "deadline": state.deadline_ms, "transaction": reference_json(&state.transaction), "entries": entries_json(&state.entries, Value::clone) }))
+                (window.to_string(), json!({ "buffer": state.buffer, "tool": state.tool, "deadline": state.deadline_ms, "transaction": reference_json(&state.transaction), "net": state.net }))
             })
             .collect(),
     )
@@ -158,7 +158,7 @@ fn windowed(ledger: &TypingLedger<Value>, all: Vec<(String, Result<ToolStep<Valu
 #[test]
 fn typing_ledger_replays_every_fixture_scenario() {
     let law = typing_law();
-    let actor = ActorId(text(&law["actor"]).to_string());
+    let actor = ActorId(text(&law["actor"]).into());
     for scenario in law["scenarios"].as_array().expect("scenarios") {
         let mut ledger = TypingLedger::<Value>::default();
         for (index, row) in scenario["steps"].as_array().expect("steps").iter().enumerate() {

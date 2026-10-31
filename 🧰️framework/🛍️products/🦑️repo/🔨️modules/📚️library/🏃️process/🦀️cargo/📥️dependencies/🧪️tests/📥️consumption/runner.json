@@ -1,0 +1,9 @@
+[
+  {
+    "ready": false,
+    "rejection": "Prepared pinned Cargo test runner required"
+  },
+  {
+    "ready": true
+  }
+]

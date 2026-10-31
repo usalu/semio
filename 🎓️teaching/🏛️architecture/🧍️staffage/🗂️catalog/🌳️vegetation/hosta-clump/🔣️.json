@@ -1,0 +1,3717 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "hosta-clump",
+  "category": "vegetation",
+  "rig": {
+   "kind": "botanical",
+   "root": "root-plate",
+   "bones": [
+    {
+     "id": "root-plate",
+     "parent": null,
+     "title": {
+      "en": "Crown and root ball",
+      "de": "Wurzelstock mit Ballen"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 0.9,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 3.4,
+      "comX": 0.45,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-R1",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole R1",
+      "de": "Blattstiel R1"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 22.0,
+     "lengthM": 0.16,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.08,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-R1",
+     "parent": "petiole-R1",
+     "title": {
+      "en": "Leaf blade R1",
+      "de": "Blattspreite R1"
+     },
+     "x": 0.16,
+     "y": 0.0,
+     "angleDeg": -36.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-R2",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole R2",
+      "de": "Blattstiel R2"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 45.0,
+     "lengthM": 0.21,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.105,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-R2",
+     "parent": "petiole-R2",
+     "title": {
+      "en": "Leaf blade R2",
+      "de": "Blattspreite R2"
+     },
+     "x": 0.21,
+     "y": 0.0,
+     "angleDeg": -35.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-R3",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole R3",
+      "de": "Blattstiel R3"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 65.0,
+     "lengthM": 0.26,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.13,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-R3",
+     "parent": "petiole-R3",
+     "title": {
+      "en": "Leaf blade R3",
+      "de": "Blattspreite R3"
+     },
+     "x": 0.26,
+     "y": 0.0,
+     "angleDeg": -37.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-R4",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole R4",
+      "de": "Blattstiel R4"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 80.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-R4",
+     "parent": "petiole-R4",
+     "title": {
+      "en": "Leaf blade R4",
+      "de": "Blattspreite R4"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -28.0,
+     "lengthM": 0.28,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.14,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-L1",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole L1",
+      "de": "Blattstiel L1"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 158.0,
+     "lengthM": 0.17,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.085,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-L1",
+     "parent": "petiole-L1",
+     "title": {
+      "en": "Leaf blade L1",
+      "de": "Blattspreite L1"
+     },
+     "x": 0.17,
+     "y": 0.0,
+     "angleDeg": 36.0,
+     "lengthM": 0.29,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.145,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-L2",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole L2",
+      "de": "Blattstiel L2"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 133.0,
+     "lengthM": 0.2,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.1,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-L2",
+     "parent": "petiole-L2",
+     "title": {
+      "en": "Leaf blade L2",
+      "de": "Blattspreite L2"
+     },
+     "x": 0.2,
+     "y": 0.0,
+     "angleDeg": 35.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-L3",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole L3",
+      "de": "Blattstiel L3"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 114.0,
+     "lengthM": 0.25,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.125,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-L3",
+     "parent": "petiole-L3",
+     "title": {
+      "en": "Leaf blade L3",
+      "de": "Blattspreite L3"
+     },
+     "x": 0.25,
+     "y": 0.0,
+     "angleDeg": 36.0,
+     "lengthM": 0.29,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.145,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-L4",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole L4",
+      "de": "Blattstiel L4"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 101.0,
+     "lengthM": 0.29,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.145,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-L4",
+     "parent": "petiole-L4",
+     "title": {
+      "en": "Leaf blade L4",
+      "de": "Blattspreite L4"
+     },
+     "x": 0.29,
+     "y": 0.0,
+     "angleDeg": 29.0,
+     "lengthM": 0.27,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.135,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "petiole-C1",
+     "parent": "root-plate",
+     "title": {
+      "en": "Petiole C1",
+      "de": "Blattstiel C1"
+     },
+     "x": 0.0,
+     "y": 0.06,
+     "angleDeg": 90.0,
+     "lengthM": 0.32,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -30,
+      "maxDeg": 30
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.16,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    },
+    {
+     "id": "blade-C1",
+     "parent": "petiole-C1",
+     "title": {
+      "en": "Leaf blade C1",
+      "de": "Blattspreite C1"
+     },
+     "x": 0.32,
+     "y": 0.0,
+     "angleDeg": 8.0,
+     "lengthM": 0.24,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -40,
+      "maxDeg": 40
+     },
+     "mass": {
+      "kg": 0.07,
+      "comX": 0.12,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "schmid-1991"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "base-support",
+    "bone": "root-plate",
+    "x": 0,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Root ball in the bed",
+     "de": "Wurzelballen im Beet"
+    },
+    "support": "fixed",
+    "normalDeg": 90,
+    "footprintLengthM": 0.5,
+    "footprintWidthM": 0.5,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "tp-outer-1",
+    "bone": "blade-R1",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade R1",
+     "de": "Transpiration von Spreite R1"
+    }
+   },
+   {
+    "id": "tp-outer-2",
+    "bone": "blade-R2",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade R2",
+     "de": "Transpiration von Spreite R2"
+    }
+   },
+   {
+    "id": "tp-inner-1",
+    "bone": "blade-R3",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade R3",
+     "de": "Transpiration von Spreite R3"
+    }
+   },
+   {
+    "id": "tp-inner-2",
+    "bone": "blade-R4",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade R4",
+     "de": "Transpiration von Spreite R4"
+    }
+   },
+   {
+    "id": "tp-outer-3",
+    "bone": "blade-L1",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade L1",
+     "de": "Transpiration von Spreite L1"
+    }
+   },
+   {
+    "id": "tp-outer-4",
+    "bone": "blade-L2",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade L2",
+     "de": "Transpiration von Spreite L2"
+    }
+   },
+   {
+    "id": "tp-inner-3",
+    "bone": "blade-L3",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade L3",
+     "de": "Transpiration von Spreite L3"
+    }
+   },
+   {
+    "id": "tp-inner-4",
+    "bone": "blade-L4",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade L4",
+     "de": "Transpiration von Spreite L4"
+    }
+   },
+   {
+    "id": "tp-inner-5",
+    "bone": "blade-C1",
+    "x": 0.15,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of blade C1",
+     "de": "Transpiration von Spreite C1"
+    }
+   }
+  ],
+  "title": {
+   "en": "Hosta Clump",
+   "de": "Funkienhorst"
+  },
+  "summary": {
+   "en": "A clump of hosta (Hosta sieboldiana type) 0.62 m high and 0.9 m wide: a mound of broad, ribbed, glaucous-green blades on petioles that arch out of the crown; the outer blades touch the soil. A low shade perennial for the foreground of planting.",
+   "de": "Ein Horst Funkien (Hosta sieboldiana-Typ) von 0,62 m Höhe und 0,9 m Breite: ein Hügel aus breiten, gerippten, blaugrünen Spreiten auf Stielen, die sich aus dem Wurzelstock wölben; die äußeren Spreiten berühren den Boden. Eine niedrige Schattenstaude für den Vordergrund der Pflanzung."
+  },
+  "tags": [
+   "hosta",
+   "perennial",
+   "shade",
+   "broad-leaf",
+   "transpiration",
+   "low"
+  ],
+  "provenance": {
+   "author": "Semio staffage vegetation content worker NW-V2",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "schmid-1991",
+     "citation": "Schmid, W. G. (1991). The Genus Hosta: Giboshi Zoku. Timber Press, Portland."
+    },
+    {
+     "id": "jones-2014",
+     "citation": "Jones, H. G. (2014). Plants and Microclimate, 3rd ed., Cambridge University Press. Leaf energy balance, leaf area index, boundary-layer and stomatal conductance."
+    },
+    {
+     "id": "monteith-unsworth-2013",
+     "citation": "Monteith, J. L. and Unsworth, M. H. (2013). Principles of Environmental Physics, 4th ed., Academic Press. Penman-Monteith leaf transpiration."
+    },
+    {
+     "id": "en-1991-1-4",
+     "citation": "EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Dynamic pressure q = 0.5 rho v^2 with air density 1.25 kg/m3, force F = cf q A."
+    },
+    {
+     "id": "en-1991-1-3",
+     "citation": "EN 1991-1-3:2003 Eurocode 1, Actions on structures, Part 1-3: Snow loads (order of magnitude of snow and ice accretion on plan area)."
+    }
+   ],
+   "notes": {
+    "en": "Nine leaf groups (petiole and blade bones, 18 in all), each standing for two to three of the clump's 25 leaves, are authored by hand; the 1:500 elevation is declared unavailable with a plan symbol as the replacement. Leaf areas and conductances are authored estimates guided by Jones (2014) and Schmid (1991).",
+    "de": "Neun Blattgruppen (Stiel- und Spreitenknochen, zusammen 18), die je für zwei bis drei der 25 Blätter des Horsts stehen, sind von Hand entworfen; die Ansicht 1:500 ist als nicht verfügbar erklärt, mit einem Grundrisssymbol als Ersatz. Blattflächen und Leitfähigkeiten sind Autorenschätzungen angelehnt an Jones (2014) und Schmid (1991)."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.62,
+   "widthM": 0.88,
+   "depthM": 0.85,
+   "massKg": 4.7
+  },
+  "materials": [
+   {
+    "id": "hosta-blade",
+    "title": {
+     "en": "Hosta leaf blade (thin, glaucous-green, ribbed)",
+     "de": "Funkien-Blattspreite (dünn, blaugrün, gerippt)"
+    },
+    "emissivity": 0.97,
+    "solarAbsorptivity": 0.5,
+    "source": "authored-estimate",
+    "reference": "jones-2014"
+   },
+   {
+    "id": "hosta-petiole",
+    "title": {
+     "en": "Succulent petiole (water-rich)",
+     "de": "Saftiger Blattstiel (wasserreich)"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 950,
+    "specificHeatJKgK": 3800,
+    "source": "authored-estimate",
+    "reference": "schmid-1991"
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "A hosta of 0.9 m by 0.62 m is 1.8 mm by 1.2 mm at 1:500: a dot. Its blades (0.28 m, 0.56 mm) and their overlaps cannot be told apart, so any elevation would be a blob without information beyond the plan symbol.",
+     "de": "Eine Funkie von 0,9 m mal 0,62 m misst bei 1:500 1,8 mm mal 1,2 mm: ein Punkt. Ihre Spreiten (0,28 m, 0,56 mm) und deren Überlagerungen sind nicht unterscheidbar; jede Ansicht wäre ein Fleck ohne mehr Information als das Grundrisssymbol."
+    },
+    "limitingFeature": {
+     "en": "Leaf blade (width 0.25 m)",
+     "de": "Blattspreite (Breite 0,25 m)"
+    },
+    "limitingSizeM": 0.25,
+    "alternatives": [
+     {
+      "kind": "symbol",
+      "symbol": "plan-extent"
+     },
+     {
+      "kind": "scale",
+      "denominator": 200
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 151,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "mass-outer-0",
+       "bone": "blade-R1",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.0904,
+         -0.1207
+        ],
+        [
+         0.1486,
+         -0.1062
+        ],
+        [
+         0.1438,
+         -0.0868
+        ],
+        [
+         0.1899,
+         -0.065
+        ],
+        [
+         0.1923,
+         -0.0334
+        ],
+        [
+         0.299,
+         -0.0068
+        ],
+        [
+         0.2651,
+         0.0878
+        ],
+        [
+         0.2191,
+         0.1072
+        ],
+        [
+         0.2046,
+         0.1654
+        ],
+        [
+         0.2191,
+         0.1897
+        ],
+        [
+         0.2385,
+         0.1945
+        ],
+        [
+         0.2264,
+         0.243
+        ],
+        [
+         0.1901,
+         0.2649
+        ],
+        [
+         0.1149,
+         0.2771
+        ],
+        [
+         0.1125,
+         0.2868
+        ],
+        [
+         -0.0161,
+         0.265
+        ],
+        [
+         -0.0137,
+         0.2553
+        ],
+        [
+         -0.0428,
+         0.2481
+        ],
+        [
+         -0.0646,
+         0.2117
+        ],
+        [
+         -0.0477,
+         0.1438
+        ],
+        [
+         -0.038,
+         0.1462
+        ],
+        [
+         -0.0211,
+         0.0783
+        ],
+        [
+         -0.0114,
+         0.0807
+        ],
+        [
+         0.0201,
+         -0.0454
+        ],
+        [
+         0.0298,
+         -0.043
+        ],
+        [
+         0.054,
+         -0.0988
+        ]
+       ],
+       "closed": true,
+       "region": "blades-outer"
+      },
+      {
+       "id": "mass-outer-1",
+       "bone": "blade-R1",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3778,
+         -0.2271
+        ],
+        [
+         -0.3099,
+         -0.2102
+        ],
+        [
+         -0.3026,
+         -0.198
+        ],
+        [
+         -0.305,
+         -0.1471
+        ],
+        [
+         -0.2953,
+         -0.1447
+        ],
+        [
+         -0.3049,
+         -0.1059
+        ],
+        [
+         -0.2952,
+         -0.1035
+        ],
+        [
+         -0.317,
+         -0.0161
+        ],
+        [
+         -0.2927,
+         0.0105
+        ],
+        [
+         -0.3169,
+         0.1488
+        ],
+        [
+         -0.3533,
+         0.1706
+        ],
+        [
+         -0.3824,
+         0.1634
+        ],
+        [
+         -0.3848,
+         0.1731
+        ],
+        [
+         -0.5182,
+         0.1295
+        ],
+        [
+         -0.5231,
+         0.1077
+        ],
+        [
+         -0.5595,
+         0.0883
+        ],
+        [
+         -0.5643,
+         0.0665
+        ],
+        [
+         -0.591,
+         0.0495
+        ],
+        [
+         -0.5789,
+         0.001
+        ],
+        [
+         -0.5353,
+         -0.0087
+        ],
+        [
+         -0.5232,
+         -0.0572
+        ],
+        [
+         -0.562,
+         -0.1081
+        ],
+        [
+         -0.5475,
+         -0.2076
+        ],
+        [
+         -0.4602,
+         -0.1858
+        ],
+        [
+         -0.4214,
+         -0.2174
+        ],
+        [
+         -0.3826,
+         -0.2077
+        ]
+       ],
+       "closed": true,
+       "region": "blades-outer"
+      },
+      {
+       "id": "mass-inner-0",
+       "bone": "blade-R3",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "points": [
+        [
+         -0.3544,
+         0.116
+        ],
+        [
+         -0.2926,
+         0.0831
+        ],
+        [
+         -0.2656,
+         0.0914
+        ],
+        [
+         -0.2479,
+         0.082
+        ],
+        [
+         -0.2297,
+         0.0949
+        ],
+        [
+         -0.212,
+         0.0855
+        ],
+        [
+         -0.185,
+         0.0938
+        ],
+        [
+         -0.1574,
+         0.1244
+        ],
+        [
+         -0.1262,
+         0.1192
+        ],
+        [
+         -0.0944,
+         0.1363
+        ],
+        [
+         -0.0238,
+         0.0987
+        ],
+        [
+         -0.0244,
+         0.0764
+        ],
+        [
+         0.0063,
+         0.0488
+        ],
+        [
+         -0.0084,
+         -0.0001
+        ],
+        [
+         0.0222,
+         -0.0277
+        ],
+        [
+         0.0258,
+         -0.0636
+        ],
+        [
+         0.0564,
+         -0.0912
+        ],
+        [
+         0.0517,
+         -0.1
+        ],
+        [
+         0.0959,
+         -0.1235
+        ],
+        [
+         0.1635,
+         -0.1028
+        ],
+        [
+         0.187,
+         -0.0587
+        ],
+        [
+         0.1958,
+         -0.0633
+        ],
+        [
+         0.2234,
+         -0.0327
+        ],
+        [
+         0.2322,
+         -0.0374
+        ],
+        [
+         0.2463,
+         -0.0109
+        ],
+        [
+         0.2687,
+         -0.0115
+        ],
+        [
+         0.2922,
+         0.0327
+        ],
+        [
+         0.2839,
+         0.0597
+        ],
+        [
+         0.2397,
+         0.0832
+        ],
+        [
+         0.2444,
+         0.092
+        ],
+        [
+         0.1873,
+         0.1337
+        ],
+        [
+         0.2249,
+         0.2043
+        ],
+        [
+         0.2207,
+         0.2179
+        ],
+        [
+         0.1678,
+         0.246
+        ],
+        [
+         0.1631,
+         0.2372
+        ],
+        [
+         0.1366,
+         0.2513
+        ],
+        [
+         0.1319,
+         0.2425
+        ],
+        [
+         0.0613,
+         0.28
+        ],
+        [
+         0.0489,
+         0.3206
+        ],
+        [
+         0.0047,
+         0.3441
+        ],
+        [
+         -0.0406,
+         0.3228
+        ],
+        [
+         -0.1642,
+         0.3885
+        ],
+        [
+         -0.197,
+         0.3267
+        ],
+        [
+         -0.2106,
+         0.3226
+        ],
+        [
+         -0.2635,
+         0.3508
+        ],
+        [
+         -0.2682,
+         0.3419
+        ],
+        [
+         -0.3082,
+         0.3519
+        ],
+        [
+         -0.3364,
+         0.2989
+        ],
+        [
+         -0.3276,
+         0.2942
+        ],
+        [
+         -0.3417,
+         0.2677
+        ],
+        [
+         -0.3328,
+         0.263
+        ],
+        [
+         -0.3469,
+         0.2366
+        ],
+        [
+         -0.3381,
+         0.2319
+        ],
+        [
+         -0.3616,
+         0.1877
+        ],
+        [
+         -0.3527,
+         0.183
+        ],
+        [
+         -0.3621,
+         0.1654
+        ],
+        [
+         -0.3533,
+         0.1607
+        ],
+        [
+         -0.3627,
+         0.143
+        ]
+       ],
+       "closed": true,
+       "region": "blades-inner"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) the hosta is a mound of nine overlapping blades, 4.4 mm wide and 3.1 mm high, each blade an ovate pointed outline, the outer blades touching the ground.",
+      "de": "Bei 1:200 (1 m sind 5 mm) ist die Funkie ein Hügel aus neun überlappenden Spreiten, 4,4 mm breit und 3,1 mm hoch, jede Spreite ein eiförmiger spitzer Umriss, die äußeren Spreiten berühren den Boden."
+     },
+     "retained": {
+      "en": "Retained: blade outlines, their overlap order from the outer to the central blade, the real width and height.",
+      "de": "Beibehalten: Spreitenumrisse, ihre Überlagerungsfolge von den äußeren zur mittleren Spreite, die wahre Breite und Höhe."
+     },
+     "merged": {
+      "en": "Merged: 2 to 3 real leaves behind each drawn blade.",
+      "de": "Zusammengefasst: 2 bis 3 wirkliche Blätter hinter jeder gezeichneten Spreite."
+     },
+     "omitted": {
+      "en": "Omitted: petioles (covered), ribs, veins and the waviness of the margin.",
+      "de": "Weggelassen: Blattstiele (verdeckt), Rippen, Adern und die Wellung des Randes."
+     },
+     "thinElements": {
+      "en": "Petioles (12 mm) are covered by the blades; the ribs (3 mm) are dropped.",
+      "de": "Blattstiele (12 mm) sind von den Spreiten verdeckt; die Rippen (3 mm) entfallen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Outer blades lighter grey, inner blades darker; one body pen.",
+      "de": "Äußere Spreiten hellgrau, innere dunkler; ein Körperstift."
+     },
+     "overlays": {
+      "en": "Each blade maps to one region (outer or inner).",
+      "de": "Jede Spreite entspricht einer Region (außen oder innen)."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 76,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.2,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.3
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blade-R1",
+       "bone": "blade-R1",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0012 0.0167 0.002 0.0783 0.0073 0.1C0.0126 0.1218 0.0229 0.1233 0.0318 0.1305C0.0406 0.1377 0.0506 0.1407 0.0606 0.1433C0.0707 0.1458 0.0762 0.1459 0.092 0.1456C0.1079 0.1453 0.1399 0.1451 0.1555 0.1414C0.1711 0.1377 0.1758 0.1299 0.1859 0.1233C0.196 0.1168 0.2034 0.1114 0.2161 0.1024C0.2288 0.0934 0.2511 0.0804 0.262 0.0695C0.273 0.0585 0.2754 0.048 0.2817 0.0364C0.2881 0.0248 0.297 0.0061 0.3 0.0C0.303 -0.0061 0.3065 0.002 0.3 0.0C0.2935 -0.002 0.2738 -0.0086 0.2611 -0.0121C0.2484 -0.0155 0.2321 -0.0164 0.2236 -0.0208C0.2152 -0.0252 0.2178 -0.0324 0.2103 -0.0384C0.2028 -0.0445 0.189 -0.0512 0.1784 -0.0569C0.1678 -0.0625 0.1516 -0.0675 0.1467 -0.0724C0.1418 -0.0772 0.1537 -0.0816 0.1493 -0.0859C0.1449 -0.0903 0.1304 -0.0961 0.1204 -0.0985C0.1103 -0.101 0.1001 -0.1029 0.0889 -0.1006C0.0777 -0.0984 0.0679 -0.1019 0.053 -0.0851C0.0382 -0.0683 0.0088 -0.0142 0.0 0.0C-0.0088 0.0142 -0.0012 -0.0167 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "blade-L1",
+       "bone": "blade-L1",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0087 0.0142 0.0376 0.0685 0.052 0.0853C0.0665 0.1022 0.076 0.0988 0.0869 0.1011C0.0978 0.1035 0.1076 0.1016 0.1174 0.0993C0.1271 0.0969 0.1412 0.0912 0.1453 0.0869C0.1493 0.0826 0.1372 0.0784 0.1417 0.0735C0.1462 0.0687 0.1621 0.0636 0.1724 0.058C0.1826 0.0523 0.196 0.0456 0.2032 0.0395C0.2104 0.0334 0.2074 0.0261 0.2155 0.0216C0.2237 0.0171 0.2396 0.0161 0.252 0.0125C0.2645 0.0089 0.2837 0.0021 0.29 0.0C0.2963 -0.0021 0.2929 0.006 0.29 0.0C0.2871 -0.006 0.2787 -0.0246 0.2727 -0.036C0.2667 -0.0474 0.2645 -0.0578 0.2539 -0.0686C0.2433 -0.0795 0.2214 -0.0924 0.209 -0.1013C0.1966 -0.1103 0.1895 -0.1157 0.1798 -0.1222C0.17 -0.1287 0.1658 -0.1365 0.1505 -0.1403C0.1352 -0.144 0.1035 -0.1442 0.088 -0.1446C0.0725 -0.145 0.0673 -0.1449 0.0576 -0.1425C0.0479 -0.1401 0.0383 -0.1371 0.0298 -0.13C0.0212 -0.1229 0.0112 -0.1214 0.0063 -0.0998C0.0013 -0.0781 0.001 -0.0166 0.0 0.0C-0.001 0.0166 -0.0087 -0.0142 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "blade-R2",
+       "bone": "blade-R2",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0016 0.0166 0.0036 0.0782 0.0093 0.0999C0.0151 0.1215 0.0254 0.1229 0.0345 0.1299C0.0436 0.1369 0.0536 0.1398 0.0637 0.1421C0.0738 0.1445 0.0845 0.1444 0.0953 0.1439C0.1061 0.1434 0.1132 0.1421 0.1284 0.1389C0.1437 0.1356 0.1722 0.1303 0.187 0.1244C0.2018 0.1185 0.2039 0.112 0.2173 0.1034C0.2308 0.0947 0.2565 0.0834 0.2677 0.0725C0.279 0.0616 0.2794 0.0499 0.2847 0.0379C0.2901 0.0258 0.2975 0.0063 0.3 0.0C0.3025 -0.0063 0.3066 0.0015 0.3 0.0C0.2934 -0.0015 0.2731 -0.0063 0.2601 -0.0087C0.2471 -0.0111 0.2301 -0.0094 0.2219 -0.0142C0.2138 -0.019 0.2185 -0.0305 0.2114 -0.0374C0.2043 -0.0444 0.1853 -0.0504 0.1793 -0.0558C0.1734 -0.0612 0.181 -0.0643 0.1758 -0.0698C0.1706 -0.0753 0.1576 -0.0835 0.1481 -0.0887C0.1386 -0.0938 0.129 -0.0985 0.1188 -0.1007C0.1087 -0.103 0.0984 -0.1047 0.0872 -0.1023C0.076 -0.0998 0.0661 -0.1031 0.0515 -0.0861C0.037 -0.069 0.0086 -0.0143 0.0 0.0C-0.0086 0.0143 -0.0016 -0.0166 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "blade-L2",
+       "bone": "blade-L2",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0085 0.0144 0.0368 0.0691 0.0512 0.0862C0.0657 0.1033 0.0756 0.1001 0.0869 0.1026C0.0981 0.105 0.1083 0.1033 0.1185 0.1011C0.1286 0.0989 0.1383 0.0943 0.1478 0.0891C0.1573 0.084 0.1703 0.0759 0.1755 0.0704C0.1808 0.0649 0.1734 0.0614 0.1794 0.056C0.1854 0.0505 0.2043 0.0446 0.2114 0.0376C0.2185 0.0306 0.2138 0.0187 0.2219 0.0138C0.23 0.009 0.2471 0.0108 0.2601 0.0085C0.2731 0.0062 0.2933 0.0014 0.3 0.0C0.3067 -0.0014 0.3025 0.0063 0.3 0.0C0.2975 -0.0063 0.2902 -0.0258 0.2849 -0.0379C0.2796 -0.05 0.2794 -0.0618 0.2681 -0.0726C0.2569 -0.0835 0.2309 -0.0946 0.2174 -0.1032C0.2039 -0.1118 0.2018 -0.1184 0.187 -0.1242C0.1723 -0.1301 0.1441 -0.1352 0.1288 -0.1384C0.1136 -0.1417 0.1065 -0.143 0.0957 -0.1436C0.085 -0.1442 0.0743 -0.1442 0.0641 -0.1419C0.054 -0.1396 0.044 -0.1368 0.0349 -0.1298C0.0258 -0.1228 0.0155 -0.1215 0.0096 -0.0999C0.0038 -0.0782 0.0016 -0.0166 0.0 0.0C-0.0016 0.0166 -0.0085 -0.0144 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "blade-R3",
+       "bone": "blade-R3",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0021 0.0166 0.0062 0.078 0.0127 0.0995C0.0191 0.1209 0.0295 0.1218 0.0387 0.1286C0.048 0.1353 0.0581 0.1378 0.0682 0.1398C0.0784 0.1417 0.089 0.1413 0.0997 0.1404C0.1104 0.1394 0.118 0.1373 0.1325 0.1342C0.147 0.131 0.1727 0.1269 0.1868 0.1213C0.2009 0.1156 0.207 0.1076 0.2171 0.1004C0.2272 0.0931 0.2358 0.0881 0.2473 0.0777C0.2587 0.0674 0.2771 0.0511 0.2859 0.0382C0.2947 0.0252 0.2976 0.0064 0.3 0.0C0.3024 -0.0064 0.3067 0.0013 0.3 0.0C0.2933 -0.0013 0.2694 -0.0043 0.26 -0.0077C0.2506 -0.0111 0.2516 -0.0148 0.2435 -0.0202C0.2354 -0.0257 0.2222 -0.034 0.2116 -0.0405C0.201 -0.0469 0.1864 -0.053 0.1798 -0.059C0.1733 -0.0649 0.1785 -0.0702 0.1726 -0.076C0.1666 -0.0819 0.154 -0.0891 0.1443 -0.0939C0.1347 -0.0987 0.125 -0.103 0.1148 -0.1049C0.1046 -0.1068 0.0944 -0.1082 0.0833 -0.1053C0.0722 -0.1025 0.0622 -0.1054 0.0483 -0.0878C0.0345 -0.0703 0.0081 -0.0146 0.0 0.0C-0.0081 0.0146 -0.0021 -0.0166 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "blade-L3",
+       "bone": "blade-L3",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0078 0.0147 0.0334 0.0706 0.0469 0.0883C0.0603 0.106 0.07 0.1031 0.0807 0.1061C0.0914 0.1091 0.1014 0.1078 0.1112 0.106C0.121 0.1042 0.1304 0.1 0.1397 0.0954C0.149 0.0907 0.1613 0.0836 0.167 0.0778C0.1727 0.072 0.1675 0.0665 0.1738 0.0605C0.18 0.0546 0.1942 0.0485 0.2045 0.042C0.2147 0.0355 0.2275 0.0273 0.2353 0.0217C0.243 0.0161 0.2418 0.0118 0.2509 0.0082C0.2601 0.0046 0.2835 0.0014 0.29 0.0C0.2965 -0.0014 0.2922 0.0063 0.29 0.0C0.2878 -0.0063 0.2853 -0.025 0.2768 -0.0377C0.2683 -0.0504 0.2501 -0.0661 0.239 -0.0763C0.2278 -0.0865 0.2196 -0.0916 0.2098 -0.0989C0.2001 -0.1061 0.1943 -0.1141 0.1806 -0.1197C0.167 -0.1253 0.142 -0.1293 0.1279 -0.1326C0.1139 -0.1358 0.1066 -0.1381 0.0962 -0.1391C0.0858 -0.1402 0.0756 -0.1407 0.0658 -0.1389C0.0559 -0.137 0.0462 -0.1346 0.0373 -0.128C0.0283 -0.1214 0.0183 -0.1205 0.0121 -0.0992C0.0059 -0.0779 0.002 -0.0165 0.0 0.0C-0.002 0.0165 -0.0078 -0.0147 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "blade-R4",
+       "bone": "blade-R4",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0028 0.0164 0.0096 0.0773 0.0166 0.0981C0.0236 0.119 0.0332 0.1192 0.042 0.1252C0.0509 0.1312 0.0602 0.1329 0.0697 0.1341C0.0791 0.1353 0.0889 0.1341 0.0987 0.1324C0.1085 0.1307 0.1162 0.1274 0.1285 0.1238C0.1409 0.1202 0.1606 0.1163 0.1726 0.1107C0.1846 0.1051 0.1913 0.0974 0.2006 0.0903C0.2099 0.0831 0.2176 0.077 0.2286 0.068C0.2395 0.059 0.2574 0.0476 0.266 0.0363C0.2746 0.0249 0.2777 0.006 0.28 0.0C0.2823 -0.006 0.2862 0.0018 0.28 0.0C0.2738 -0.0018 0.2518 -0.006 0.2427 -0.011C0.2337 -0.016 0.2335 -0.0234 0.2259 -0.03C0.2182 -0.0366 0.2064 -0.044 0.1967 -0.0506C0.187 -0.0572 0.1746 -0.0632 0.1676 -0.0696C0.1607 -0.0759 0.1615 -0.0828 0.1549 -0.0886C0.1483 -0.0943 0.1372 -0.1002 0.1281 -0.1042C0.119 -0.1083 0.1098 -0.1119 0.1004 -0.113C0.0909 -0.1141 0.0814 -0.1147 0.0714 -0.1111C0.0613 -0.1074 0.052 -0.1096 0.0401 -0.0911C0.0282 -0.0726 0.0067 -0.0152 0.0 0.0C-0.0067 0.0152 -0.0028 -0.0164 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "blade-L4",
+       "bone": "blade-L4",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0066 0.0152 0.028 0.0725 0.0397 0.091C0.0514 0.1095 0.0603 0.1073 0.0701 0.1109C0.0798 0.1146 0.089 0.1139 0.0982 0.1128C0.1073 0.1116 0.1161 0.1081 0.1248 0.104C0.1336 0.0999 0.1445 0.094 0.1506 0.0883C0.1567 0.0825 0.1551 0.0757 0.1616 0.0694C0.1681 0.0631 0.1803 0.0571 0.1897 0.0505C0.1991 0.0439 0.2106 0.0365 0.2179 0.0299C0.2252 0.0233 0.2248 0.016 0.2335 0.0111C0.2422 0.0061 0.2639 0.0018 0.27 0.0C0.2761 -0.0018 0.2721 0.006 0.27 0.0C0.2679 -0.006 0.2655 -0.0246 0.2573 -0.036C0.2491 -0.0473 0.2313 -0.0591 0.2207 -0.0681C0.2101 -0.0772 0.2027 -0.0832 0.1937 -0.0904C0.1847 -0.0975 0.1785 -0.1053 0.1667 -0.1108C0.1549 -0.1164 0.1351 -0.1203 0.1229 -0.1239C0.1108 -0.1275 0.1035 -0.1308 0.094 -0.1325C0.0845 -0.1342 0.0751 -0.1354 0.066 -0.1342C0.0569 -0.133 0.0478 -0.1312 0.0393 -0.1252C0.0308 -0.1192 0.0216 -0.119 0.015 -0.0981C0.0085 -0.0772 0.0025 -0.0164 0.0 0.0C-0.0025 0.0164 -0.0066 -0.0152 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "blade-C1",
+       "bone": "blade-C1",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0044 0.0158 0.0181 0.075 0.0266 0.0947C0.0351 0.1143 0.0431 0.1131 0.0513 0.1177C0.0594 0.1223 0.0674 0.1227 0.0754 0.1225C0.0834 0.1223 0.0914 0.1197 0.0993 0.1166C0.1072 0.1135 0.1151 0.1088 0.123 0.1037C0.1309 0.0987 0.1391 0.0924 0.1466 0.0863C0.154 0.0801 0.1602 0.0734 0.1677 0.0666C0.1753 0.0598 0.1844 0.0526 0.1919 0.0453C0.1994 0.038 0.2047 0.0305 0.2127 0.0229C0.2207 0.0154 0.2355 0.0038 0.24 0.0C0.2445 -0.0038 0.2434 0.0049 0.24 0.0C0.2366 -0.0049 0.2276 -0.0205 0.2197 -0.0293C0.2117 -0.0381 0.201 -0.0452 0.1925 -0.0528C0.184 -0.0603 0.1771 -0.0675 0.1686 -0.0744C0.1601 -0.0812 0.1503 -0.0881 0.1417 -0.094C0.1331 -0.1 0.1254 -0.1056 0.1172 -0.1102C0.1091 -0.1148 0.101 -0.1191 0.0929 -0.1218C0.0848 -0.1245 0.0767 -0.1267 0.0687 -0.1264C0.0607 -0.1262 0.0527 -0.1254 0.0448 -0.1203C0.037 -0.1152 0.0289 -0.116 0.0214 -0.096C0.014 -0.0759 0.0036 -0.016 0.0 0.0C-0.0036 0.016 -0.0044 -0.0158 0.0 0.0Z",
+       "region": "blades-inner"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) the nine blades are drawn with their midribs and the petioles appear as short filled stems between blade and crown; blades are 2.6 mm wide.",
+      "de": "Bei 1:100 (1 m sind 10 mm) sind die neun Spreiten mit Mittelrippe gezeichnet und die Blattstiele erscheinen als kurze gefüllte Stiele zwischen Spreite und Wurzelstock; die Spreiten sind 2,6 mm breit."
+     },
+     "retained": {
+      "en": "Retained: midribs, petioles as filled strips (12 mm becomes 0.25 mm), blade overlap order.",
+      "de": "Beibehalten: Mittelrippen, Blattstiele als gefüllte Streifen (12 mm werden 0,25 mm), Überlagerungsfolge der Spreiten."
+     },
+     "merged": {
+      "en": "Merged: 2 to 3 real leaves per blade.",
+      "de": "Zusammengefasst: 2 bis 3 wirkliche Blätter je Spreite."
+     },
+     "omitted": {
+      "en": "Omitted: side veins and margin waves.",
+      "de": "Weggelassen: Seitenadern und Randwellen."
+     },
+     "thinElements": {
+      "en": "Petioles are drawn at 25 mm (0.25 mm) instead of 12 mm to stay above the minimum feature, a thickening of 13 mm.",
+      "de": "Blattstiele sind mit 25 mm (0,25 mm) statt 12 mm gezeichnet, damit sie das Mindestmerkmal einhalten, eine Verdickung um 13 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Blades grey filled, midribs and petioles darker.",
+      "de": "Spreiten grau gefüllt, Mittelrippen und Blattstiele dunkler."
+     },
+     "overlays": {
+      "en": "Blades carry their regions, petioles theirs.",
+      "de": "Spreiten tragen ihre Regionen, Blattstiele ihre eigene."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "blade-R1",
+       "bone": "blade-R1",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0006 0.0129 0.0007 0.0589 0.0037 0.0775C0.0068 0.096 0.0124 0.1039 0.0182 0.1112C0.0241 0.1185 0.0321 0.117 0.0386 0.1212C0.0452 0.1255 0.0506 0.1345 0.0577 0.1366C0.0648 0.1386 0.0738 0.133 0.0813 0.1335C0.0888 0.134 0.0904 0.1402 0.1027 0.1397C0.1149 0.1392 0.1427 0.1331 0.1551 0.1305C0.1675 0.128 0.1698 0.1285 0.177 0.1245C0.1843 0.1204 0.1913 0.111 0.1985 0.1063C0.2057 0.1016 0.2105 0.1023 0.2203 0.0961C0.2301 0.0899 0.2484 0.077 0.2571 0.0692C0.2658 0.0614 0.2678 0.0566 0.2727 0.0492C0.2776 0.0418 0.2819 0.0331 0.2865 0.0249C0.291 0.0167 0.2977 0.0041 0.3 0.0C0.3023 -0.0041 0.3046 0.0012 0.3 0.0C0.2954 -0.0012 0.2818 -0.0051 0.2727 -0.0075C0.2636 -0.0099 0.2543 -0.0128 0.2456 -0.0144C0.2369 -0.016 0.2255 -0.014 0.2204 -0.017C0.2153 -0.02 0.2196 -0.0286 0.215 -0.0325C0.2103 -0.0365 0.2 -0.0368 0.1924 -0.0409C0.1849 -0.045 0.1771 -0.0538 0.1695 -0.0572C0.162 -0.0607 0.1494 -0.0584 0.1472 -0.0615C0.1449 -0.0646 0.1581 -0.0726 0.1559 -0.0757C0.1537 -0.0789 0.141 -0.0772 0.1341 -0.0802C0.1273 -0.0832 0.1219 -0.0925 0.1147 -0.094C0.1074 -0.0955 0.0984 -0.0899 0.0907 -0.0893C0.0829 -0.0886 0.0765 -0.0936 0.0679 -0.0899C0.0594 -0.0861 0.0507 -0.0818 0.0394 -0.0668C0.0281 -0.0518 0.0066 -0.0111 0.0 0.0C-0.0066 0.0111 -0.0006 -0.0129 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "midrib-R1",
+       "bone": "blade-R1",
+       "role": "detail",
+       "z": 5.0,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0353 0.0087C0.053 0.0131 0.1078 0.0341 0.1413 0.0349C0.1748 0.0358 0.2206 0.0175 0.2365 0.014"
+      },
+      {
+       "id": "blade-L1",
+       "bone": "blade-L1",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0064 0.0112 0.0276 0.052 0.0387 0.067C0.0497 0.082 0.0582 0.0864 0.0665 0.0902C0.0748 0.094 0.081 0.089 0.0885 0.0898C0.0961 0.0905 0.1048 0.0961 0.1118 0.0947C0.1188 0.0932 0.1239 0.0841 0.1306 0.0811C0.1372 0.0781 0.1497 0.0799 0.1516 0.0768C0.1535 0.0737 0.1401 0.0657 0.1421 0.0626C0.1441 0.0596 0.1565 0.0618 0.1638 0.0584C0.1711 0.0549 0.1786 0.0461 0.1859 0.042C0.1932 0.0379 0.2033 0.0376 0.2077 0.0336C0.2122 0.0296 0.2075 0.021 0.2124 0.0179C0.2173 0.0148 0.2285 0.0167 0.237 0.015C0.2455 0.0133 0.2545 0.0103 0.2634 0.0078C0.2722 0.0053 0.2856 0.0013 0.29 0.0C0.2944 -0.0013 0.2921 0.0041 0.29 0.0C0.2879 -0.0041 0.2815 -0.0165 0.2771 -0.0246C0.2728 -0.0327 0.2687 -0.0413 0.264 -0.0486C0.2594 -0.0559 0.2576 -0.0606 0.2491 -0.0683C0.2406 -0.0761 0.2226 -0.0889 0.213 -0.095C0.2035 -0.1012 0.1989 -0.1005 0.192 -0.1052C0.185 -0.1099 0.1782 -0.1193 0.1712 -0.1233C0.1643 -0.1274 0.1622 -0.1268 0.15 -0.1294C0.1379 -0.1319 0.1104 -0.1381 0.0983 -0.1386C0.0863 -0.1391 0.085 -0.133 0.0777 -0.1326C0.0705 -0.1321 0.0617 -0.1379 0.0548 -0.1359C0.0479 -0.1339 0.0428 -0.1249 0.0365 -0.1207C0.0301 -0.1165 0.0224 -0.118 0.0168 -0.1108C0.0112 -0.1036 0.0058 -0.0958 0.003 -0.0773C0.0002 -0.0588 0.0005 -0.0129 0.0 0.0C-0.0005 0.0129 -0.0064 -0.0112 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "midrib-L1",
+       "bone": "blade-L1",
+       "role": "detail",
+       "z": 5.01,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0341 -0.0084C0.0512 -0.0127 0.1042 -0.0329 0.1366 -0.0338C0.169 -0.0346 0.2133 -0.0169 0.2286 -0.0135"
+      },
+      {
+       "id": "blade-R2",
+       "bone": "blade-R2",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0009 0.0129 0.0019 0.0589 0.0053 0.0774C0.0087 0.0959 0.0146 0.1036 0.0206 0.1108C0.0265 0.118 0.0345 0.1164 0.0412 0.1205C0.0479 0.1246 0.0535 0.1336 0.0606 0.1355C0.0678 0.1374 0.0768 0.1316 0.0843 0.132C0.0918 0.1324 0.0981 0.1384 0.1058 0.1378C0.1136 0.1372 0.1188 0.1303 0.1309 0.1282C0.1429 0.1262 0.1667 0.129 0.1781 0.1255C0.1896 0.122 0.1924 0.1121 0.1997 0.1073C0.2069 0.1026 0.211 0.1029 0.2215 0.0971C0.2321 0.0913 0.2536 0.0803 0.2628 0.0727C0.272 0.065 0.2725 0.0591 0.2767 0.0514C0.281 0.0436 0.2846 0.0345 0.2885 0.0259C0.2924 0.0174 0.2981 0.0043 0.3 0.0C0.3019 -0.0043 0.3047 0.0009 0.3 0.0C0.2953 -0.0009 0.2813 -0.0035 0.2721 -0.0051C0.2628 -0.0067 0.2533 -0.0089 0.2445 -0.0097C0.2356 -0.0106 0.2237 -0.0066 0.219 -0.0102C0.2143 -0.0138 0.2203 -0.0266 0.2161 -0.0315C0.2118 -0.0365 0.201 -0.0357 0.1934 -0.0399C0.1858 -0.044 0.1738 -0.0529 0.1704 -0.0562C0.1671 -0.0594 0.176 -0.0555 0.1734 -0.0592C0.1708 -0.0629 0.1617 -0.0747 0.1549 -0.0786C0.1482 -0.0825 0.14 -0.0798 0.133 -0.0827C0.126 -0.0856 0.1205 -0.0947 0.1132 -0.0961C0.1059 -0.0975 0.097 -0.0918 0.0892 -0.0909C0.0814 -0.0901 0.0749 -0.095 0.0664 -0.0911C0.0579 -0.0872 0.0492 -0.0827 0.0382 -0.0675C0.0271 -0.0524 0.0064 -0.0113 0.0 0.0C-0.0064 0.0113 -0.0009 -0.0129 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "midrib-R2",
+       "bone": "blade-R2",
+       "role": "detail",
+       "z": 5.02,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0391 0.0089C0.0586 0.0133 0.1223 0.0346 0.1563 0.0355C0.1902 0.0363 0.2281 0.0177 0.2425 0.0142"
+      },
+      {
+       "id": "blade-L2",
+       "bone": "blade-L2",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0063 0.0113 0.0269 0.0524 0.038 0.0677C0.049 0.0829 0.0576 0.0874 0.0661 0.0913C0.0746 0.0952 0.0811 0.0904 0.0889 0.0912C0.0967 0.0921 0.1056 0.0978 0.1129 0.0964C0.1202 0.0951 0.1258 0.086 0.1327 0.0831C0.1397 0.0802 0.1479 0.083 0.1547 0.0791C0.1614 0.0752 0.1705 0.0635 0.1732 0.0597C0.1758 0.056 0.1671 0.0596 0.1705 0.0563C0.1739 0.0531 0.1859 0.0441 0.1935 0.04C0.2011 0.0359 0.2119 0.0367 0.2161 0.0317C0.2204 0.0267 0.2143 0.0135 0.219 0.0098C0.2237 0.0061 0.2356 0.0102 0.2444 0.0094C0.2533 0.0086 0.2628 0.0066 0.2721 0.005C0.2813 0.0034 0.2953 0.0008 0.3 0.0C0.3047 -0.0008 0.3019 0.0043 0.3 0.0C0.2981 -0.0043 0.2925 -0.0174 0.2886 -0.026C0.2848 -0.0346 0.2812 -0.0437 0.277 -0.0515C0.2727 -0.0593 0.2724 -0.0653 0.2632 -0.0728C0.2539 -0.0804 0.2321 -0.0912 0.2216 -0.0969C0.211 -0.1027 0.2069 -0.1024 0.1997 -0.1072C0.1925 -0.1119 0.1896 -0.1219 0.1782 -0.1253C0.1668 -0.1288 0.1432 -0.1258 0.1312 -0.1278C0.1192 -0.1298 0.114 -0.1368 0.1062 -0.1374C0.0985 -0.1381 0.0922 -0.1321 0.0847 -0.1317C0.0772 -0.1314 0.0682 -0.1372 0.0611 -0.1353C0.0539 -0.1334 0.0483 -0.1245 0.0416 -0.1204C0.0349 -0.1163 0.0269 -0.1179 0.0209 -0.1108C0.0149 -0.1036 0.009 -0.0959 0.0055 -0.0774C0.002 -0.0589 0.0009 -0.0129 0.0 0.0C-0.0009 0.0129 -0.0063 -0.0113 0.0 0.0Z",
+       "region": "blades-outer"
+      },
+      {
+       "id": "midrib-L2",
+       "bone": "blade-L2",
+       "role": "detail",
+       "z": 5.03,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0394 -0.0088C0.0591 -0.0132 0.1235 -0.0343 0.1575 -0.0352C0.1914 -0.0361 0.2287 -0.0176 0.243 -0.0141"
+      },
+      {
+       "id": "blade-R3",
+       "bone": "blade-R3",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0013 0.0129 0.0039 0.0588 0.0079 0.0772C0.0119 0.0955 0.018 0.103 0.0242 0.11C0.0304 0.117 0.0383 0.1151 0.0451 0.1189C0.0519 0.1228 0.0577 0.1316 0.0649 0.1333C0.0722 0.1349 0.0809 0.1288 0.0884 0.1289C0.0959 0.129 0.1023 0.1348 0.11 0.1339C0.1177 0.133 0.1232 0.1254 0.1346 0.1234C0.1459 0.1215 0.1672 0.1256 0.178 0.1224C0.1888 0.1191 0.1923 0.1089 0.1995 0.1042C0.2067 0.0995 0.2141 0.0989 0.2213 0.0941C0.2285 0.0894 0.2333 0.0828 0.2428 0.0757C0.2523 0.0687 0.2705 0.0601 0.2783 0.0519C0.286 0.0436 0.2857 0.0348 0.2893 0.0262C0.2929 0.0176 0.2982 0.0044 0.3 0.0C0.3018 -0.0044 0.3047 0.0007 0.3 0.0C0.2953 -0.0007 0.2813 -0.003 0.272 -0.0044C0.2628 -0.0058 0.2499 -0.0061 0.2444 -0.0083C0.2389 -0.0106 0.2438 -0.0135 0.2392 -0.0179C0.2345 -0.0223 0.2239 -0.0304 0.2163 -0.0345C0.2087 -0.0387 0.2013 -0.0388 0.1938 -0.043C0.1862 -0.0471 0.1748 -0.0556 0.171 -0.0594C0.1671 -0.0631 0.1738 -0.0612 0.1705 -0.0653C0.1673 -0.0695 0.1583 -0.0804 0.1515 -0.0841C0.1447 -0.0878 0.1366 -0.0847 0.1295 -0.0874C0.1225 -0.09 0.1167 -0.0989 0.1094 -0.1001C0.1021 -0.1012 0.0934 -0.0951 0.0857 -0.094C0.0779 -0.0929 0.0713 -0.0976 0.063 -0.0934C0.0546 -0.0892 0.0462 -0.0844 0.0357 -0.0689C0.0252 -0.0533 0.0059 -0.0115 0.0 0.0C-0.0059 0.0115 -0.0013 -0.0129 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "midrib-R3",
+       "bone": "blade-R3",
+       "role": "detail",
+       "z": 5.04,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0417 0.0079C0.0626 0.0119 0.1327 0.031 0.1669 0.0318C0.2011 0.0326 0.2335 0.0159 0.2468 0.0127"
+      },
+      {
+       "id": "blade-L3",
+       "bone": "blade-L3",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0058 0.0115 0.0245 0.0535 0.0346 0.0692C0.0448 0.0848 0.053 0.0897 0.061 0.094C0.0691 0.0983 0.0755 0.0937 0.083 0.0949C0.0905 0.096 0.0989 0.1022 0.1059 0.1011C0.113 0.1001 0.1186 0.0912 0.1254 0.0887C0.1322 0.0861 0.14 0.0892 0.1466 0.0856C0.1532 0.082 0.1619 0.0712 0.165 0.0671C0.1681 0.063 0.1615 0.0647 0.1652 0.061C0.1689 0.0572 0.1799 0.0487 0.1872 0.0445C0.1945 0.0404 0.2017 0.0402 0.209 0.0361C0.2163 0.0319 0.2266 0.0239 0.2311 0.0194C0.2355 0.0149 0.2304 0.0115 0.2357 0.0091C0.241 0.0066 0.2537 0.0063 0.2627 0.0048C0.2718 0.0033 0.2855 0.0008 0.29 0.0C0.2945 -0.0008 0.2917 0.0043 0.29 0.0C0.2883 -0.0043 0.2834 -0.0173 0.28 -0.0258C0.2766 -0.0343 0.2772 -0.043 0.2696 -0.0511C0.2621 -0.0592 0.2439 -0.0674 0.2346 -0.0743C0.2253 -0.0812 0.2208 -0.0879 0.2139 -0.0926C0.2069 -0.0973 0.1998 -0.098 0.1928 -0.1027C0.1859 -0.1074 0.1825 -0.1176 0.1721 -0.1208C0.1616 -0.124 0.1409 -0.1199 0.1299 -0.1218C0.1189 -0.1238 0.1136 -0.1316 0.1061 -0.1325C0.0987 -0.1335 0.0925 -0.1278 0.0852 -0.1278C0.078 -0.1277 0.0696 -0.134 0.0626 -0.1324C0.0556 -0.1308 0.05 -0.1221 0.0434 -0.1183C0.0369 -0.1145 0.0292 -0.1165 0.0232 -0.1096C0.0173 -0.1027 0.0114 -0.0953 0.0075 -0.077C0.0036 -0.0587 0.0013 -0.0128 0.0 0.0C-0.0013 0.0128 -0.0058 -0.0115 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "midrib-L3",
+       "bone": "blade-L3",
+       "role": "detail",
+       "z": 5.05,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0406 -0.0075C0.0609 -0.0113 0.1293 -0.0294 0.1624 -0.0301C0.1955 -0.0309 0.2262 -0.0151 0.239 -0.0121"
+      },
+      {
+       "id": "blade-R4",
+       "bone": "blade-R4",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0018 0.0127 0.0065 0.0583 0.0111 0.0763C0.0157 0.0942 0.0217 0.1013 0.0277 0.1078C0.0338 0.1143 0.0409 0.1118 0.0474 0.1151C0.0538 0.1185 0.0596 0.1268 0.0663 0.1279C0.0731 0.129 0.0808 0.1222 0.0877 0.1218C0.0946 0.1213 0.1008 0.1267 0.1078 0.1252C0.1148 0.1237 0.1227 0.1154 0.1299 0.113C0.137 0.1105 0.1417 0.1135 0.1508 0.1104C0.1598 0.1072 0.1754 0.0983 0.1844 0.0939C0.1933 0.0895 0.1978 0.0887 0.2045 0.084C0.2112 0.0794 0.2154 0.0718 0.2244 0.066C0.2334 0.0601 0.2512 0.0559 0.2587 0.049C0.2662 0.0422 0.2659 0.033 0.2695 0.0248C0.273 0.0166 0.2782 0.0041 0.28 0.0C0.2818 -0.0041 0.2843 0.0011 0.28 0.0C0.2757 -0.0011 0.2626 -0.0046 0.2539 -0.0067C0.2453 -0.0089 0.2335 -0.0094 0.2281 -0.0129C0.2228 -0.0164 0.2264 -0.0224 0.2219 -0.0277C0.2173 -0.033 0.2079 -0.0404 0.201 -0.0447C0.1941 -0.0489 0.185 -0.0491 0.1803 -0.0534C0.1757 -0.0576 0.1777 -0.066 0.1732 -0.0701C0.1687 -0.0742 0.1599 -0.0736 0.1536 -0.0777C0.1472 -0.0819 0.1416 -0.0919 0.1352 -0.095C0.1287 -0.0982 0.1214 -0.0945 0.1148 -0.0966C0.1082 -0.0988 0.1024 -0.1072 0.0956 -0.1078C0.0889 -0.1083 0.0812 -0.1017 0.0741 -0.1C0.067 -0.0983 0.0607 -0.1025 0.0533 -0.0977C0.0458 -0.0929 0.0383 -0.0875 0.0294 -0.0712C0.0205 -0.055 0.0049 -0.0119 0.0 0.0C-0.0049 0.0119 -0.0018 -0.0127 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "midrib-R4",
+       "bone": "blade-R4",
+       "role": "detail",
+       "z": 5.06,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0416 0.0052C0.0624 0.0078 0.1343 0.0202 0.1665 0.0207C0.1986 0.0212 0.2232 0.0103 0.2346 0.0083"
+      },
+      {
+       "id": "blade-L4",
+       "bone": "blade-L4",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0049 0.0119 0.0204 0.0549 0.0291 0.0712C0.0379 0.0874 0.0452 0.0928 0.0525 0.0976C0.0597 0.1024 0.0658 0.0982 0.0726 0.0999C0.0795 0.1015 0.0869 0.1081 0.0935 0.1076C0.1 0.107 0.1056 0.0985 0.1119 0.0964C0.1183 0.0943 0.1254 0.0979 0.1316 0.0947C0.1378 0.0916 0.1431 0.0816 0.1492 0.0775C0.1553 0.0733 0.1639 0.0738 0.1681 0.0698C0.1722 0.0658 0.1696 0.0575 0.1739 0.0533C0.1782 0.0491 0.1871 0.0488 0.1938 0.0445C0.2005 0.0403 0.2098 0.0328 0.214 0.0276C0.2183 0.0223 0.2142 0.0165 0.2192 0.013C0.2243 0.0096 0.236 0.009 0.2445 0.0068C0.2529 0.0046 0.2657 0.0011 0.27 0.0C0.2743 -0.0011 0.2716 0.0041 0.27 0.0C0.2684 -0.0041 0.2636 -0.0165 0.2603 -0.0246C0.2571 -0.0327 0.2577 -0.0417 0.2504 -0.0486C0.2431 -0.0555 0.2255 -0.0602 0.2167 -0.0661C0.2079 -0.072 0.2039 -0.0795 0.1975 -0.0842C0.1911 -0.0888 0.1869 -0.0896 0.1781 -0.094C0.1692 -0.0984 0.1535 -0.1073 0.1446 -0.1105C0.1356 -0.1137 0.1313 -0.1106 0.1244 -0.1131C0.1174 -0.1156 0.1097 -0.1238 0.1029 -0.1253C0.0961 -0.1268 0.0902 -0.1214 0.0835 -0.1219C0.0768 -0.1223 0.0693 -0.1291 0.0628 -0.1279C0.0563 -0.1268 0.0508 -0.1185 0.0446 -0.1151C0.0384 -0.1118 0.0315 -0.1142 0.0257 -0.1078C0.0199 -0.1013 0.0142 -0.0942 0.0099 -0.0762C0.0057 -0.0583 0.0017 -0.0127 0.0 0.0C-0.0017 0.0127 -0.0049 -0.0119 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "midrib-L4",
+       "bone": "blade-L4",
+       "role": "detail",
+       "z": 5.07,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.04 -0.0052C0.0599 -0.0078 0.1288 -0.0203 0.1598 -0.0208C0.1908 -0.0213 0.2149 -0.0104 0.2259 -0.0083"
+      },
+      {
+       "id": "blade-C1",
+       "bone": "blade-C1",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M0.0 0.0C0.0032 0.0123 0.013 0.0567 0.0192 0.0738C0.0253 0.0909 0.0312 0.097 0.0371 0.1026C0.043 0.1081 0.0486 0.1046 0.0544 0.107C0.0602 0.1094 0.0661 0.1167 0.0718 0.1169C0.0776 0.117 0.0831 0.1092 0.0888 0.1077C0.0944 0.1062 0.1003 0.1106 0.1059 0.1081C0.1116 0.1056 0.1171 0.0963 0.1227 0.0928C0.1283 0.0893 0.1345 0.091 0.1397 0.0872C0.1449 0.0833 0.1487 0.0741 0.154 0.0697C0.1592 0.0652 0.1654 0.0649 0.1712 0.0605C0.1769 0.0561 0.1827 0.048 0.1885 0.0431C0.1942 0.0382 0.2003 0.0355 0.2057 0.0309C0.2111 0.0262 0.215 0.0203 0.2207 0.0152C0.2264 0.01 0.2368 0.0025 0.24 0.0C0.2432 -0.0025 0.2424 0.0033 0.24 0.0C0.2376 -0.0033 0.2309 -0.0133 0.2253 -0.0197C0.2197 -0.026 0.2122 -0.033 0.2061 -0.0382C0.2001 -0.0433 0.1947 -0.0456 0.189 -0.0506C0.1833 -0.0556 0.1777 -0.0637 0.172 -0.0682C0.1663 -0.0727 0.1611 -0.0732 0.1549 -0.0776C0.1487 -0.082 0.141 -0.091 0.1348 -0.0946C0.1286 -0.0982 0.1233 -0.0961 0.1175 -0.0993C0.1117 -0.1025 0.1057 -0.1115 0.1 -0.1137C0.0942 -0.1159 0.0886 -0.1112 0.0828 -0.1123C0.0771 -0.1135 0.0711 -0.121 0.0654 -0.1206C0.0597 -0.1201 0.0542 -0.1124 0.0485 -0.1098C0.0429 -0.1071 0.0371 -0.1103 0.0315 -0.1044C0.026 -0.0986 0.0204 -0.0922 0.0152 -0.0748C0.0099 -0.0574 0.0025 -0.0125 0.0 0.0C-0.0025 0.0125 -0.0032 -0.0123 0.0 0.0Z",
+       "region": "blades-inner"
+      },
+      {
+       "id": "midrib-C1",
+       "bone": "blade-C1",
+       "role": "detail",
+       "z": 5.08,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.0371 -0.001C0.0557 -0.0015 0.1208 -0.0039 0.1485 -0.004C0.1762 -0.0041 0.1943 -0.002 0.2034 -0.0016"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every blade has its cordate-ovate outline with a slightly wavy margin, a midrib and four pairs of arching side veins, and the petioles appear as tapered strips.",
+      "de": "Bei 1:50 (1 m sind 20 mm) hat jede Spreite ihren herzförmig-eiförmigen Umriss mit leicht welligem Rand, eine Mittelrippe und vier Paare bogiger Seitenadern, und die Blattstiele erscheinen als verjüngte Streifen."
+     },
+     "retained": {
+      "en": "Retained: wavy blade margin, midrib, side veins, petioles with their taper, overlap order.",
+      "de": "Beibehalten: welliger Spreitenrand, Mittelrippe, Seitenadern, Blattstiele mit ihrer Verjüngung, Überlagerungsfolge."
+     },
+     "merged": {
+      "en": "Merged: 2 to 3 real leaves per blade.",
+      "de": "Zusammengefasst: 2 bis 3 wirkliche Blätter je Spreite."
+     },
+     "omitted": {
+      "en": "Omitted: the scape and flowers of summer (not part of this asset), blade puckering.",
+      "de": "Weggelassen: Schaft und Blüten des Sommers (nicht Teil dieses Assets), Spreitenkräuselung."
+     },
+     "thinElements": {
+      "en": "Petioles (12 mm) are 16 mm wide strips (0.32 mm); veins are 0.13 mm strokes.",
+      "de": "Blattstiele (12 mm) sind Streifen von 16 mm (0,32 mm); Adern sind Striche von 0,13 mm."
+     },
+     "hatching": {
+      "en": "None; veins are strokes.",
+      "de": "Keine; Adern sind Striche."
+     },
+     "styles": {
+      "en": "Outer blades lighter, inner blades darker, veins as texture strokes.",
+      "de": "Äußere Spreiten heller, innere dunkler, Adern als Texturstriche."
+     },
+     "overlays": {
+      "en": "Blades carry their regions; veins stay neutral.",
+      "de": "Spreiten tragen ihre Regionen; Adern bleiben neutral."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "plan-extent",
+    "title": {
+     "en": "Plan symbol with true clump extent",
+     "de": "Grundrisssymbol mit wahrer Horstausdehnung"
+    },
+    "description": {
+     "en": "A plan sign for planting plans: the true outline of the overlapping leaf blades of the mound (0.9 m across); the replacement for the unavailable 1:500 elevation.",
+     "de": "Ein Grundrisszeichen für Pflanzpläne: der wahre Umriss der überlappenden Spreiten des Hügels (0,9 m Durchmesser); der Ersatz für die nicht verfügbare Ansicht 1:500."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "leaf-0",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.2,
+       "cy": 0.15,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": 25
+      },
+      {
+       "id": "leaf-1",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": -0.2,
+       "cy": 0.2,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": 150
+      },
+      {
+       "id": "leaf-2",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.25,
+       "cy": -0.15,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": -25
+      },
+      {
+       "id": "leaf-3",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.3,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": -0.25,
+       "cy": -0.18,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": 205
+      },
+      {
+       "id": "leaf-4",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.4,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.3,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": 90
+      },
+      {
+       "id": "leaf-5",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": -0.3,
+       "rx": 0.27,
+       "ry": 0.15,
+       "rotationDeg": -90
+      },
+      {
+       "id": "leaf-6",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1.6,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.2,
+       "ry": 0.12,
+       "rotationDeg": 0
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "The ellipses are the real blades (0.54 m by 0.3 m) seen from above; at 1:500 the whole sign is 1.8 mm across.",
+     "de": "Die Ellipsen sind die wirklichen Spreiten (0,54 m mal 0,3 m) von oben; bei 1:500 misst das ganze Zeichen 1,8 mm."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "summer-full",
+    "title": {
+     "en": "Summer, full leaf",
+     "de": "Sommer, voll belaubt"
+    },
+    "description": {
+     "en": "Shaded summer bed: the blades spread in an arching mound, the outer blades touching the soil. Only dappled sun reaches the outer blades.",
+     "de": "Beschattetes Sommerbeet: Die Spreiten breiten sich zu einem bogigen Hügel aus, die äußeren Spreiten berühren den Boden. Nur Lichtflecken erreichen die äußeren Spreiten."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "blades-outer": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.35
+      },
+      "blades-inner": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.1
+      },
+      "petioles": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "transpiration-outer": 1.0,
+      "transpiration-inner": 0.8
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-R1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R1",
+       "de": "Winddruck auf Spreite R1"
+      },
+      "bone": "blade-R1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R2",
+       "de": "Winddruck auf Spreite R2"
+      },
+      "bone": "blade-R2",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R3",
+       "de": "Winddruck auf Spreite R3"
+      },
+      "bone": "blade-R3",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R4",
+       "de": "Winddruck auf Spreite R4"
+      },
+      "bone": "blade-R4",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L1",
+       "de": "Winddruck auf Spreite L1"
+      },
+      "bone": "blade-L1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L2",
+       "de": "Winddruck auf Spreite L2"
+      },
+      "bone": "blade-L2",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L3",
+       "de": "Winddruck auf Spreite L3"
+      },
+      "bone": "blade-L3",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L4",
+       "de": "Winddruck auf Spreite L4"
+      },
+      "bone": "blade-L4",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-C1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade C1",
+       "de": "Winddruck auf Spreite C1"
+      },
+      "bone": "blade-C1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.101,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "spring-emerging",
+    "title": {
+     "en": "Spring, leaves unfurling",
+     "de": "Frühling, Blätter entrollen sich"
+    },
+    "description": {
+     "en": "Young leaves rise in tight upright rolls: petioles lift by 25 degrees and the blades fold up beside them; the mound is narrow and transpires little.",
+     "de": "Junge Blätter steigen in dichten, aufrechten Rollen auf: Die Stiele heben sich um 25 Grad und die Spreiten falten sich daneben; der Hügel ist schmal und transpiriert wenig."
+    },
+    "bones": {
+     "petiole-R1": {
+      "angleDeg": 14.0
+     },
+     "blade-R1": {
+      "angleDeg": 38.0
+     },
+     "petiole-R2": {
+      "angleDeg": 14.0
+     },
+     "blade-R2": {
+      "angleDeg": 38.0
+     },
+     "petiole-R3": {
+      "angleDeg": 14.0
+     },
+     "blade-R3": {
+      "angleDeg": 38.0
+     },
+     "petiole-R4": {
+      "angleDeg": 14.0
+     },
+     "blade-R4": {
+      "angleDeg": 38.0
+     },
+     "petiole-L1": {
+      "angleDeg": -14.0
+     },
+     "blade-L1": {
+      "angleDeg": -38.0
+     },
+     "petiole-L2": {
+      "angleDeg": -14.0
+     },
+     "blade-L2": {
+      "angleDeg": -38.0
+     },
+     "petiole-L3": {
+      "angleDeg": -14.0
+     },
+     "blade-L3": {
+      "angleDeg": -38.0
+     },
+     "petiole-L4": {
+      "angleDeg": -14.0
+     },
+     "blade-L4": {
+      "angleDeg": -38.0
+     },
+     "petiole-C1": {
+      "angleDeg": 14.0
+     },
+     "blade-C1": {
+      "angleDeg": 38.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "blades-outer": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.7
+      },
+      "blades-inner": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.4
+      },
+      "petioles": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.2
+      }
+     },
+     "emitters": {
+      "transpiration-outer": 0.4,
+      "transpiration-inner": 0.3
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-R1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R1",
+       "de": "Winddruck auf Spreite R1"
+      },
+      "bone": "blade-R1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R2",
+       "de": "Winddruck auf Spreite R2"
+      },
+      "bone": "blade-R2",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R3",
+       "de": "Winddruck auf Spreite R3"
+      },
+      "bone": "blade-R3",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade R4",
+       "de": "Winddruck auf Spreite R4"
+      },
+      "bone": "blade-R4",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L1",
+       "de": "Winddruck auf Spreite L1"
+      },
+      "bone": "blade-L1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L2",
+       "de": "Winddruck auf Spreite L2"
+      },
+      "bone": "blade-L2",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L3",
+       "de": "Winddruck auf Spreite L3"
+      },
+      "bone": "blade-L3",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade L4",
+       "de": "Winddruck auf Spreite L4"
+      },
+      "bone": "blade-L4",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-C1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on blade C1",
+       "de": "Winddruck auf Spreite C1"
+      },
+      "bone": "blade-C1",
+      "x": 0.12,
+      "y": 0.0,
+      "fxN": 0.051,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "rain-bowed",
+    "title": {
+     "en": "Heavy rain, blades bowed",
+     "de": "Starkregen, Spreiten gebeugt"
+    },
+    "description": {
+     "en": "Rain water on the broad blades bows them downward by their weight; the surface is wet (evaporation, no transpiration need).",
+     "de": "Regenwasser auf den breiten Spreiten beugt sie durch sein Gewicht nach unten; die Oberfläche ist nass (Verdunstung, kein Transpirationsbedarf)."
+    },
+    "bones": {
+     "petiole-R1": {
+      "angleDeg": -6.0
+     },
+     "blade-R1": {
+      "angleDeg": -14.0
+     },
+     "petiole-R2": {
+      "angleDeg": -6.0
+     },
+     "blade-R2": {
+      "angleDeg": -14.0
+     },
+     "petiole-R3": {
+      "angleDeg": -6.0
+     },
+     "blade-R3": {
+      "angleDeg": -14.0
+     },
+     "petiole-R4": {
+      "angleDeg": -6.0
+     },
+     "blade-R4": {
+      "angleDeg": -14.0
+     },
+     "petiole-L1": {
+      "angleDeg": 6.0
+     },
+     "blade-L1": {
+      "angleDeg": 14.0
+     },
+     "petiole-L2": {
+      "angleDeg": 6.0
+     },
+     "blade-L2": {
+      "angleDeg": 14.0
+     },
+     "petiole-L3": {
+      "angleDeg": 6.0
+     },
+     "blade-L3": {
+      "angleDeg": 14.0
+     },
+     "petiole-L4": {
+      "angleDeg": 6.0
+     },
+     "blade-L4": {
+      "angleDeg": 14.0
+     },
+     "petiole-C1": {
+      "angleDeg": -6.0
+     },
+     "blade-C1": {
+      "angleDeg": -14.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "blades-outer": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.2,
+       "wettedness": 0.9
+      },
+      "blades-inner": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.1,
+       "wettedness": 0.9
+      },
+      "petioles": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.0,
+       "wettedness": 0.9
+      }
+     },
+     "emitters": {
+      "transpiration-outer": 0.1,
+      "transpiration-inner": 0.1
+     }
+    },
+    "loads": [
+     {
+      "id": "water-R1",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade R1",
+       "de": "Auf Spreite R1 haftendes Regenwasser"
+      },
+      "bone": "blade-R1",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-R2",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade R2",
+       "de": "Auf Spreite R2 haftendes Regenwasser"
+      },
+      "bone": "blade-R2",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-R3",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade R3",
+       "de": "Auf Spreite R3 haftendes Regenwasser"
+      },
+      "bone": "blade-R3",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-R4",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade R4",
+       "de": "Auf Spreite R4 haftendes Regenwasser"
+      },
+      "bone": "blade-R4",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-L1",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade L1",
+       "de": "Auf Spreite L1 haftendes Regenwasser"
+      },
+      "bone": "blade-L1",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-L2",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade L2",
+       "de": "Auf Spreite L2 haftendes Regenwasser"
+      },
+      "bone": "blade-L2",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-L3",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade L3",
+       "de": "Auf Spreite L3 haftendes Regenwasser"
+      },
+      "bone": "blade-L3",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-L4",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade L4",
+       "de": "Auf Spreite L4 haftendes Regenwasser"
+      },
+      "bone": "blade-L4",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     },
+     {
+      "id": "water-C1",
+      "kind": "imposed",
+      "title": {
+       "en": "Rain water retained on blade C1",
+       "de": "Auf Spreite C1 haftendes Regenwasser"
+      },
+      "bone": "blade-C1",
+      "x": 0.15,
+      "y": 0.0,
+      "fxN": 0,
+      "fyN": -0.392,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-3"
+     }
+    ]
+   },
+   {
+    "id": "autumn-collapse",
+    "title": {
+     "en": "Autumn, leaves collapsed",
+     "de": "Herbst, Blätter eingesunken"
+    },
+    "description": {
+     "en": "After the first frost the leaves lose turgor and flop: the petioles fold down and the blades hang to the soil; senescent leaves hardly transpire.",
+     "de": "Nach dem ersten Frost verlieren die Blätter Turgor und sinken ein: Die Stiele klappen nach unten und die Spreiten hängen zum Boden; welkende Blätter transpirieren kaum."
+    },
+    "bones": {
+     "petiole-R1": {
+      "angleDeg": -24.0
+     },
+     "blade-R1": {
+      "angleDeg": -34.0
+     },
+     "petiole-R2": {
+      "angleDeg": -24.0
+     },
+     "blade-R2": {
+      "angleDeg": -34.0
+     },
+     "petiole-R3": {
+      "angleDeg": -24.0
+     },
+     "blade-R3": {
+      "angleDeg": -34.0
+     },
+     "petiole-R4": {
+      "angleDeg": -24.0
+     },
+     "blade-R4": {
+      "angleDeg": -34.0
+     },
+     "petiole-L1": {
+      "angleDeg": 24.0
+     },
+     "blade-L1": {
+      "angleDeg": 34.0
+     },
+     "petiole-L2": {
+      "angleDeg": 24.0
+     },
+     "blade-L2": {
+      "angleDeg": 34.0
+     },
+     "petiole-L3": {
+      "angleDeg": 24.0
+     },
+     "blade-L3": {
+      "angleDeg": 34.0
+     },
+     "petiole-L4": {
+      "angleDeg": 24.0
+     },
+     "blade-L4": {
+      "angleDeg": 34.0
+     },
+     "petiole-C1": {
+      "angleDeg": -24.0
+     },
+     "blade-C1": {
+      "angleDeg": -34.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "blades-outer": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.5,
+       "wettedness": 0.2
+      },
+      "blades-inner": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.3,
+       "wettedness": 0.2
+      },
+      "petioles": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0.1,
+       "wettedness": 0.2
+      }
+     },
+     "emitters": {
+      "transpiration-outer": 0.05,
+      "transpiration-inner": 0.05
+     }
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "wind-flutter",
+    "title": {
+     "en": "Wind flutter",
+     "de": "Windflattern"
+    },
+    "description": {
+     "en": "A deterministic 1.2 s cycle (0.83 Hz): the broad, thin blades nod about their rest position with a phase that runs around the mound; the stiff petioles move little.",
+     "de": "Ein deterministischer Zyklus von 1,2 s (0,83 Hz): Die breiten dünnen Spreiten nicken um ihre Ruhelage mit einer um den Hügel laufenden Phase; die steifen Stiele bewegen sich wenig."
+    },
+    "durationS": 1.2,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0.0,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 0.0
+       },
+       "blade-R1": {
+        "angleDeg": 3.0311
+       },
+       "petiole-R2": {
+        "angleDeg": 0.7713
+       },
+       "blade-R2": {
+        "angleDeg": 3.4468
+       },
+       "petiole-R3": {
+        "angleDeg": 1.1818
+       },
+       "blade-R3": {
+        "angleDeg": 2.2498
+       },
+       "petiole-R4": {
+        "angleDeg": 1.0392
+       },
+       "blade-R4": {
+        "angleDeg": 0.0
+       },
+       "petiole-L1": {
+        "angleDeg": 0.4104
+       },
+       "blade-L1": {
+        "angleDeg": -2.2498
+       },
+       "petiole-L2": {
+        "angleDeg": -0.4104
+       },
+       "blade-L2": {
+        "angleDeg": -3.4468
+       },
+       "petiole-L3": {
+        "angleDeg": -1.0392
+       },
+       "blade-L3": {
+        "angleDeg": -3.0311
+       },
+       "petiole-L4": {
+        "angleDeg": -1.1818
+       },
+       "blade-L4": {
+        "angleDeg": -1.1971
+       },
+       "petiole-C1": {
+        "angleDeg": -0.7713
+       },
+       "blade-C1": {
+        "angleDeg": 1.1971
+       }
+      }
+     },
+     {
+      "t": 0.1,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 0.6
+       },
+       "blade-R1": {
+        "angleDeg": 3.5
+       },
+       "petiole-R2": {
+        "angleDeg": 1.1276
+       },
+       "blade-R2": {
+        "angleDeg": 2.6812
+       },
+       "petiole-R3": {
+        "angleDeg": 1.1276
+       },
+       "blade-R3": {
+        "angleDeg": 0.6078
+       },
+       "petiole-R4": {
+        "angleDeg": 0.6
+       },
+       "blade-R4": {
+        "angleDeg": -1.75
+       },
+       "petiole-L1": {
+        "angleDeg": -0.2084
+       },
+       "blade-L1": {
+        "angleDeg": -3.2889
+       },
+       "petiole-L2": {
+        "angleDeg": -0.9193
+       },
+       "blade-L2": {
+        "angleDeg": -3.2889
+       },
+       "petiole-L3": {
+        "angleDeg": -1.2
+       },
+       "blade-L3": {
+        "angleDeg": -1.75
+       },
+       "petiole-L4": {
+        "angleDeg": -0.9193
+       },
+       "blade-L4": {
+        "angleDeg": 0.6078
+       },
+       "petiole-C1": {
+        "angleDeg": -0.2084
+       },
+       "blade-C1": {
+        "angleDeg": 2.6812
+       }
+      }
+     },
+     {
+      "t": 0.2,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 1.0392
+       },
+       "blade-R1": {
+        "angleDeg": 3.0311
+       },
+       "petiole-R2": {
+        "angleDeg": 1.1818
+       },
+       "blade-R2": {
+        "angleDeg": 1.1971
+       },
+       "petiole-R3": {
+        "angleDeg": 0.7713
+       },
+       "blade-R3": {
+        "angleDeg": -1.1971
+       },
+       "petiole-R4": {
+        "angleDeg": 0.0
+       },
+       "blade-R4": {
+        "angleDeg": -3.0311
+       },
+       "petiole-L1": {
+        "angleDeg": -0.7713
+       },
+       "blade-L1": {
+        "angleDeg": -3.4468
+       },
+       "petiole-L2": {
+        "angleDeg": -1.1818
+       },
+       "blade-L2": {
+        "angleDeg": -2.2498
+       },
+       "petiole-L3": {
+        "angleDeg": -1.0392
+       },
+       "blade-L3": {
+        "angleDeg": 0.0
+       },
+       "petiole-L4": {
+        "angleDeg": -0.4104
+       },
+       "blade-L4": {
+        "angleDeg": 2.2498
+       },
+       "petiole-C1": {
+        "angleDeg": 0.4104
+       },
+       "blade-C1": {
+        "angleDeg": 3.4468
+       }
+      }
+     },
+     {
+      "t": 0.3,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 1.2
+       },
+       "blade-R1": {
+        "angleDeg": 1.75
+       },
+       "petiole-R2": {
+        "angleDeg": 0.9193
+       },
+       "blade-R2": {
+        "angleDeg": -0.6078
+       },
+       "petiole-R3": {
+        "angleDeg": 0.2084
+       },
+       "blade-R3": {
+        "angleDeg": -2.6812
+       },
+       "petiole-R4": {
+        "angleDeg": -0.6
+       },
+       "blade-R4": {
+        "angleDeg": -3.5
+       },
+       "petiole-L1": {
+        "angleDeg": -1.1276
+       },
+       "blade-L1": {
+        "angleDeg": -2.6812
+       },
+       "petiole-L2": {
+        "angleDeg": -1.1276
+       },
+       "blade-L2": {
+        "angleDeg": -0.6078
+       },
+       "petiole-L3": {
+        "angleDeg": -0.6
+       },
+       "blade-L3": {
+        "angleDeg": 1.75
+       },
+       "petiole-L4": {
+        "angleDeg": 0.2084
+       },
+       "blade-L4": {
+        "angleDeg": 3.2889
+       },
+       "petiole-C1": {
+        "angleDeg": 0.9193
+       },
+       "blade-C1": {
+        "angleDeg": 3.2889
+       }
+      }
+     },
+     {
+      "t": 0.4,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 1.0392
+       },
+       "blade-R1": {
+        "angleDeg": 0.0
+       },
+       "petiole-R2": {
+        "angleDeg": 0.4104
+       },
+       "blade-R2": {
+        "angleDeg": -2.2498
+       },
+       "petiole-R3": {
+        "angleDeg": -0.4104
+       },
+       "blade-R3": {
+        "angleDeg": -3.4468
+       },
+       "petiole-R4": {
+        "angleDeg": -1.0392
+       },
+       "blade-R4": {
+        "angleDeg": -3.0311
+       },
+       "petiole-L1": {
+        "angleDeg": -1.1818
+       },
+       "blade-L1": {
+        "angleDeg": -1.1971
+       },
+       "petiole-L2": {
+        "angleDeg": -0.7713
+       },
+       "blade-L2": {
+        "angleDeg": 1.1971
+       },
+       "petiole-L3": {
+        "angleDeg": 0.0
+       },
+       "blade-L3": {
+        "angleDeg": 3.0311
+       },
+       "petiole-L4": {
+        "angleDeg": 0.7713
+       },
+       "blade-L4": {
+        "angleDeg": 3.4468
+       },
+       "petiole-C1": {
+        "angleDeg": 1.1818
+       },
+       "blade-C1": {
+        "angleDeg": 2.2498
+       }
+      }
+     },
+     {
+      "t": 0.5,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 0.6
+       },
+       "blade-R1": {
+        "angleDeg": -1.75
+       },
+       "petiole-R2": {
+        "angleDeg": -0.2084
+       },
+       "blade-R2": {
+        "angleDeg": -3.2889
+       },
+       "petiole-R3": {
+        "angleDeg": -0.9193
+       },
+       "blade-R3": {
+        "angleDeg": -3.2889
+       },
+       "petiole-R4": {
+        "angleDeg": -1.2
+       },
+       "blade-R4": {
+        "angleDeg": -1.75
+       },
+       "petiole-L1": {
+        "angleDeg": -0.9193
+       },
+       "blade-L1": {
+        "angleDeg": 0.6078
+       },
+       "petiole-L2": {
+        "angleDeg": -0.2084
+       },
+       "blade-L2": {
+        "angleDeg": 2.6812
+       },
+       "petiole-L3": {
+        "angleDeg": 0.6
+       },
+       "blade-L3": {
+        "angleDeg": 3.5
+       },
+       "petiole-L4": {
+        "angleDeg": 1.1276
+       },
+       "blade-L4": {
+        "angleDeg": 2.6812
+       },
+       "petiole-C1": {
+        "angleDeg": 1.1276
+       },
+       "blade-C1": {
+        "angleDeg": 0.6078
+       }
+      }
+     },
+     {
+      "t": 0.6,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 0.0
+       },
+       "blade-R1": {
+        "angleDeg": -3.0311
+       },
+       "petiole-R2": {
+        "angleDeg": -0.7713
+       },
+       "blade-R2": {
+        "angleDeg": -3.4468
+       },
+       "petiole-R3": {
+        "angleDeg": -1.1818
+       },
+       "blade-R3": {
+        "angleDeg": -2.2498
+       },
+       "petiole-R4": {
+        "angleDeg": -1.0392
+       },
+       "blade-R4": {
+        "angleDeg": 0.0
+       },
+       "petiole-L1": {
+        "angleDeg": -0.4104
+       },
+       "blade-L1": {
+        "angleDeg": 2.2498
+       },
+       "petiole-L2": {
+        "angleDeg": 0.4104
+       },
+       "blade-L2": {
+        "angleDeg": 3.4468
+       },
+       "petiole-L3": {
+        "angleDeg": 1.0392
+       },
+       "blade-L3": {
+        "angleDeg": 3.0311
+       },
+       "petiole-L4": {
+        "angleDeg": 1.1818
+       },
+       "blade-L4": {
+        "angleDeg": 1.1971
+       },
+       "petiole-C1": {
+        "angleDeg": 0.7713
+       },
+       "blade-C1": {
+        "angleDeg": -1.1971
+       }
+      }
+     },
+     {
+      "t": 0.7,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": -0.6
+       },
+       "blade-R1": {
+        "angleDeg": -3.5
+       },
+       "petiole-R2": {
+        "angleDeg": -1.1276
+       },
+       "blade-R2": {
+        "angleDeg": -2.6812
+       },
+       "petiole-R3": {
+        "angleDeg": -1.1276
+       },
+       "blade-R3": {
+        "angleDeg": -0.6078
+       },
+       "petiole-R4": {
+        "angleDeg": -0.6
+       },
+       "blade-R4": {
+        "angleDeg": 1.75
+       },
+       "petiole-L1": {
+        "angleDeg": 0.2084
+       },
+       "blade-L1": {
+        "angleDeg": 3.2889
+       },
+       "petiole-L2": {
+        "angleDeg": 0.9193
+       },
+       "blade-L2": {
+        "angleDeg": 3.2889
+       },
+       "petiole-L3": {
+        "angleDeg": 1.2
+       },
+       "blade-L3": {
+        "angleDeg": 1.75
+       },
+       "petiole-L4": {
+        "angleDeg": 0.9193
+       },
+       "blade-L4": {
+        "angleDeg": -0.6078
+       },
+       "petiole-C1": {
+        "angleDeg": 0.2084
+       },
+       "blade-C1": {
+        "angleDeg": -2.6812
+       }
+      }
+     },
+     {
+      "t": 0.8,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": -1.0392
+       },
+       "blade-R1": {
+        "angleDeg": -3.0311
+       },
+       "petiole-R2": {
+        "angleDeg": -1.1818
+       },
+       "blade-R2": {
+        "angleDeg": -1.1971
+       },
+       "petiole-R3": {
+        "angleDeg": -0.7713
+       },
+       "blade-R3": {
+        "angleDeg": 1.1971
+       },
+       "petiole-R4": {
+        "angleDeg": 0.0
+       },
+       "blade-R4": {
+        "angleDeg": 3.0311
+       },
+       "petiole-L1": {
+        "angleDeg": 0.7713
+       },
+       "blade-L1": {
+        "angleDeg": 3.4468
+       },
+       "petiole-L2": {
+        "angleDeg": 1.1818
+       },
+       "blade-L2": {
+        "angleDeg": 2.2498
+       },
+       "petiole-L3": {
+        "angleDeg": 1.0392
+       },
+       "blade-L3": {
+        "angleDeg": 0.0
+       },
+       "petiole-L4": {
+        "angleDeg": 0.4104
+       },
+       "blade-L4": {
+        "angleDeg": -2.2498
+       },
+       "petiole-C1": {
+        "angleDeg": -0.4104
+       },
+       "blade-C1": {
+        "angleDeg": -3.4468
+       }
+      }
+     },
+     {
+      "t": 0.9,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": -1.2
+       },
+       "blade-R1": {
+        "angleDeg": -1.75
+       },
+       "petiole-R2": {
+        "angleDeg": -0.9193
+       },
+       "blade-R2": {
+        "angleDeg": 0.6078
+       },
+       "petiole-R3": {
+        "angleDeg": -0.2084
+       },
+       "blade-R3": {
+        "angleDeg": 2.6812
+       },
+       "petiole-R4": {
+        "angleDeg": 0.6
+       },
+       "blade-R4": {
+        "angleDeg": 3.5
+       },
+       "petiole-L1": {
+        "angleDeg": 1.1276
+       },
+       "blade-L1": {
+        "angleDeg": 2.6812
+       },
+       "petiole-L2": {
+        "angleDeg": 1.1276
+       },
+       "blade-L2": {
+        "angleDeg": 0.6078
+       },
+       "petiole-L3": {
+        "angleDeg": 0.6
+       },
+       "blade-L3": {
+        "angleDeg": -1.75
+       },
+       "petiole-L4": {
+        "angleDeg": -0.2084
+       },
+       "blade-L4": {
+        "angleDeg": -3.2889
+       },
+       "petiole-C1": {
+        "angleDeg": -0.9193
+       },
+       "blade-C1": {
+        "angleDeg": -3.2889
+       }
+      }
+     },
+     {
+      "t": 1.0,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": -1.0392
+       },
+       "blade-R1": {
+        "angleDeg": 0.0
+       },
+       "petiole-R2": {
+        "angleDeg": -0.4104
+       },
+       "blade-R2": {
+        "angleDeg": 2.2498
+       },
+       "petiole-R3": {
+        "angleDeg": 0.4104
+       },
+       "blade-R3": {
+        "angleDeg": 3.4468
+       },
+       "petiole-R4": {
+        "angleDeg": 1.0392
+       },
+       "blade-R4": {
+        "angleDeg": 3.0311
+       },
+       "petiole-L1": {
+        "angleDeg": 1.1818
+       },
+       "blade-L1": {
+        "angleDeg": 1.1971
+       },
+       "petiole-L2": {
+        "angleDeg": 0.7713
+       },
+       "blade-L2": {
+        "angleDeg": -1.1971
+       },
+       "petiole-L3": {
+        "angleDeg": 0.0
+       },
+       "blade-L3": {
+        "angleDeg": -3.0311
+       },
+       "petiole-L4": {
+        "angleDeg": -0.7713
+       },
+       "blade-L4": {
+        "angleDeg": -3.4468
+       },
+       "petiole-C1": {
+        "angleDeg": -1.1818
+       },
+       "blade-C1": {
+        "angleDeg": -2.2498
+       }
+      }
+     },
+     {
+      "t": 1.1,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": -0.6
+       },
+       "blade-R1": {
+        "angleDeg": 1.75
+       },
+       "petiole-R2": {
+        "angleDeg": 0.2084
+       },
+       "blade-R2": {
+        "angleDeg": 3.2889
+       },
+       "petiole-R3": {
+        "angleDeg": 0.9193
+       },
+       "blade-R3": {
+        "angleDeg": 3.2889
+       },
+       "petiole-R4": {
+        "angleDeg": 1.2
+       },
+       "blade-R4": {
+        "angleDeg": 1.75
+       },
+       "petiole-L1": {
+        "angleDeg": 0.9193
+       },
+       "blade-L1": {
+        "angleDeg": -0.6078
+       },
+       "petiole-L2": {
+        "angleDeg": 0.2084
+       },
+       "blade-L2": {
+        "angleDeg": -2.6812
+       },
+       "petiole-L3": {
+        "angleDeg": -0.6
+       },
+       "blade-L3": {
+        "angleDeg": -3.5
+       },
+       "petiole-L4": {
+        "angleDeg": -1.1276
+       },
+       "blade-L4": {
+        "angleDeg": -2.6812
+       },
+       "petiole-C1": {
+        "angleDeg": -1.1276
+       },
+       "blade-C1": {
+        "angleDeg": -0.6078
+       }
+      }
+     },
+     {
+      "t": 1.2,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "petiole-R1": {
+        "angleDeg": 0.0
+       },
+       "blade-R1": {
+        "angleDeg": 3.0311
+       },
+       "petiole-R2": {
+        "angleDeg": 0.7713
+       },
+       "blade-R2": {
+        "angleDeg": 3.4468
+       },
+       "petiole-R3": {
+        "angleDeg": 1.1818
+       },
+       "blade-R3": {
+        "angleDeg": 2.2498
+       },
+       "petiole-R4": {
+        "angleDeg": 1.0392
+       },
+       "blade-R4": {
+        "angleDeg": 0.0
+       },
+       "petiole-L1": {
+        "angleDeg": 0.4104
+       },
+       "blade-L1": {
+        "angleDeg": -2.2498
+       },
+       "petiole-L2": {
+        "angleDeg": -0.4104
+       },
+       "blade-L2": {
+        "angleDeg": -3.4468
+       },
+       "petiole-L3": {
+        "angleDeg": -1.0392
+       },
+       "blade-L3": {
+        "angleDeg": -3.0311
+       },
+       "petiole-L4": {
+        "angleDeg": -1.1818
+       },
+       "blade-L4": {
+        "angleDeg": -1.1971
+       },
+       "petiole-C1": {
+        "angleDeg": -0.7713
+       },
+       "blade-C1": {
+        "angleDeg": 1.1971
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [],
+    "events": [],
+    "tracks": []
+   },
+   {
+    "id": "gust",
+    "title": {
+     "en": "Gust of wind",
+     "de": "Windböe"
+    },
+    "description": {
+     "en": "A 6 s gust: the blades flutter harder and bow downwind at the peak of 2.6 s, then settle.",
+     "de": "Eine Böe von 6 s: Die Spreiten flattern stärker und beugen sich am Höhepunkt bei 2,6 s in Windrichtung, dann beruhigen sie sich."
+    },
+    "durationS": 6.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "blade-R1": {
+        "angleDeg": 0.0
+       },
+       "blade-R2": {
+        "angleDeg": 0.383
+       },
+       "blade-R3": {
+        "angleDeg": 0.4924
+       },
+       "blade-R4": {
+        "angleDeg": 0.25
+       },
+       "blade-L1": {
+        "angleDeg": -0.171
+       },
+       "blade-L2": {
+        "angleDeg": -0.4698
+       },
+       "blade-L3": {
+        "angleDeg": -0.433
+       },
+       "blade-L4": {
+        "angleDeg": -0.0868
+       },
+       "blade-C1": {
+        "angleDeg": 0.3214
+       }
+      }
+     },
+     {
+      "t": 1.5,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "blade-R1": {
+        "angleDeg": 3.5355
+       },
+       "blade-R2": {
+        "angleDeg": 4.981
+       },
+       "blade-R3": {
+        "angleDeg": 2.8679
+       },
+       "blade-R4": {
+        "angleDeg": -1.2941
+       },
+       "blade-L1": {
+        "angleDeg": -4.5315
+       },
+       "blade-L2": {
+        "angleDeg": -4.5315
+       },
+       "blade-L3": {
+        "angleDeg": -1.2941
+       },
+       "blade-L4": {
+        "angleDeg": 2.8679
+       },
+       "blade-C1": {
+        "angleDeg": 4.981
+       }
+      }
+     },
+     {
+      "t": 2.6,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "blade-R1": {
+        "angleDeg": -4.0
+       },
+       "blade-R2": {
+        "angleDeg": -7.8785
+       },
+       "blade-R3": {
+        "angleDeg": -6.1284
+       },
+       "blade-R4": {
+        "angleDeg": 0.0
+       },
+       "blade-L1": {
+        "angleDeg": 6.1284
+       },
+       "blade-L2": {
+        "angleDeg": 7.8785
+       },
+       "blade-L3": {
+        "angleDeg": 4.0
+       },
+       "blade-L4": {
+        "angleDeg": -2.7362
+       },
+       "blade-C1": {
+        "angleDeg": -7.5175
+       }
+      }
+     },
+     {
+      "t": 4.0,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "blade-R1": {
+        "angleDeg": -3.4641
+       },
+       "blade-R2": {
+        "angleDeg": -3.7588
+       },
+       "blade-R3": {
+        "angleDeg": -1.3681
+       },
+       "blade-R4": {
+        "angleDeg": 2.0
+       },
+       "blade-L1": {
+        "angleDeg": 3.9392
+       },
+       "blade-L2": {
+        "angleDeg": 3.0642
+       },
+       "blade-L3": {
+        "angleDeg": 0.0
+       },
+       "blade-L4": {
+        "angleDeg": -3.0642
+       },
+       "blade-C1": {
+        "angleDeg": -3.9392
+       }
+      }
+     },
+     {
+      "t": 6.0,
+      "pose": "summer-full",
+      "ease": "smooth",
+      "bones": {
+       "blade-R1": {
+        "angleDeg": 0.0
+       },
+       "blade-R2": {
+        "angleDeg": -0.383
+       },
+       "blade-R3": {
+        "angleDeg": -0.4924
+       },
+       "blade-R4": {
+        "angleDeg": -0.25
+       },
+       "blade-L1": {
+        "angleDeg": 0.171
+       },
+       "blade-L2": {
+        "angleDeg": 0.4698
+       },
+       "blade-L3": {
+        "angleDeg": 0.433
+       },
+       "blade-L4": {
+        "angleDeg": 0.0868
+       },
+       "blade-C1": {
+        "angleDeg": -0.3214
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "gust",
+      "fromS": 0,
+      "toS": 4.0,
+      "title": {
+       "en": "Gust",
+       "de": "Böe"
+      }
+     },
+     {
+      "id": "settle",
+      "fromS": 4.0,
+      "toS": 6.0,
+      "title": {
+       "en": "Settling",
+       "de": "Abklingen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.6,
+      "kind": "motion",
+      "title": {
+       "en": "Peak flutter",
+       "de": "Größtes Flattern"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "emitter:transpiration-outer",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 2.6,
+        "v": 0.7
+       },
+       {
+        "t": 6.0,
+        "v": 1.0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 21,
+    "relativeHumidity": 0.65,
+    "windMS": 0.5,
+    "windDirectionDeg": 0,
+    "solarWM2": 250,
+    "diffuseFraction": 0.6,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "blades-outer",
+     "title": {
+      "en": "Outer leaf blades",
+      "de": "Äußere Blattspreiten"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "hosta-blade",
+     "areaM2": 0.45,
+     "characteristicLengthM": 0.2,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.7,
+     "layers": [],
+     "heatCapacityJM2K": 1100,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.0045,
+      "leafAreaIndex": 0.7,
+      "photosynthesis": "c3"
+     },
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    },
+    {
+     "id": "blades-inner",
+     "title": {
+      "en": "Inner leaf blades",
+      "de": "Innere Blattspreiten"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "hosta-blade",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.45,
+     "layers": [],
+     "heatCapacityJM2K": 1100,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.004,
+      "leafAreaIndex": 0.9,
+      "photosynthesis": "c3"
+     },
+     "source": "authored-estimate",
+     "reference": "jones-2014"
+    },
+    {
+     "id": "petioles",
+     "title": {
+      "en": "Petioles",
+      "de": "Blattstiele"
+     },
+     "kind": "stem",
+     "model": "passive",
+     "material": "hosta-petiole",
+     "areaM2": 0.25,
+     "characteristicLengthM": 0.012,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 11000,
+     "source": "authored-estimate",
+     "reference": "schmid-1991",
+     "hidden": {
+      "en": "The petioles are largely covered by the overlapping blades; they show as separate strokes only at 1:50 and 1:100.",
+      "de": "Die Blattstiele sind weitgehend von den überlappenden Spreiten verdeckt; als eigene Formen zeigen sie sich nur bei 1:50 und 1:100."
+     }
+    }
+   ],
+   "emitters": [
+    {
+     "id": "transpiration-outer",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the outer blades (distributed over four anchors)",
+      "de": "Transpiration der äußeren Spreiten (über vier Anker verteilt)"
+     },
+     "anchor": "tp-outer-1",
+     "anchors": [
+      "tp-outer-1",
+      "tp-outer-2",
+      "tp-outer-3",
+      "tp-outer-4"
+     ],
+     "directionDeg": 104.0,
+     "diameterM": 0.5,
+     "region": "blades-outer",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    },
+    {
+     "id": "transpiration-inner",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the inner blades (distributed over five anchors)",
+      "de": "Transpiration der inneren Spreiten (über fünf Anker verteilt)"
+     },
+     "anchor": "tp-inner-1",
+     "anchors": [
+      "tp-inner-1",
+      "tp-inner-2",
+      "tp-inner-3",
+      "tp-inner-4",
+      "tp-inner-5"
+     ],
+     "directionDeg": 62.0,
+     "diameterM": 0.4,
+     "region": "blades-inner",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Leaf regions use one-sided area of the 25 real leaves (1.05 m2 over a ground projection of 0.64 m2): leaf area index 0.7 outer and 0.9 inner. Maximum stomatal conductances (0.0045 and 0.004 m/s) are authored estimates for a shade-tolerant C3 perennial (Jones 2014); thin blades of 0.3 mm give 1.1 kJ/(m2 K). The reference case is a shaded bed (250 W/m2, mostly diffuse).",
+     "de": "Blattregionen verwenden die einseitige Fläche der 25 wirklichen Blätter (1,05 m2 über einer Bodenprojektion von 0,64 m2): Blattflächenindex 0,7 außen und 0,9 innen. Maximale Spaltöffnungsleitfähigkeiten (0,0045 und 0,004 m/s) sind Autorenschätzungen für eine schattenverträgliche C3-Staude (Jones 2014); dünne Spreiten von 0,3 mm ergeben 1,1 kJ/(m2 K). Der Referenzfall ist ein Schattenbeet (250 W/m2, überwiegend diffus)."
+    },
+    {
+     "en": "Petioles are passive, water-rich (11 kJ/(m2 K)). Emitters release the latent flux of their blade region over four and five anchors on the blades.",
+     "de": "Blattstiele sind passiv und wasserreich (11 kJ/(m2 K)). Emitter geben den latenten Strom ihrer Spreitenregion über vier und fünf Anker auf den Spreiten ab."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "base-support"
+   ],
+   "assumptions": [
+    {
+     "en": "One rigid body per evaluated pose, fixed at the root ball; wind drag acts on each blade (0.06 m2) and rain water adds 0.04 kg per blade. Petioles are soft, water-rich beams without authored sections; no failure is predicted.",
+     "de": "Ein starrer Körper je ausgewerteter Pose, am Wurzelballen eingespannt; Winddruck wirkt auf jede Spreite (0,06 m2) und Regenwasser fügt 0,04 kg je Spreite hinzu. Blattstiele sind weiche, wasserreiche Balken ohne angegebene Querschnitte; es wird kein Versagen vorhergesagt."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "summer-full",
+   "defaultClip": "wind-flutter",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation",
+    "plan"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

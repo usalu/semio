@@ -1,0 +1,1591 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "glulam-beam",
+    "category": "components",
+    "title": {
+      "en": "Glulam Beam",
+      "de": "Brettschichtholzbalken"
+    },
+    "summary": {
+      "en": "An 8 m GL24h glulam beam of 160 x 600 mm simply supported on steel bearing plates (pin left, roller right), carrying a uniform floor load and a moving concentrated load; fifteen 40 mm lamellae with staggered finger joints.",
+      "de": "Ein 8 m langer Brettschichtholzbalken GL24h 160 x 600 mm auf Stahllagerplatten (Festlager links, Rollenlager rechts) mit gleichmäßiger Deckenlast und wandernder Einzellast; fünfzehn Lamellen zu 40 mm mit versetzten Keilzinkenstößen."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "timber",
+      "beam",
+      "glulam"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-14080",
+          "citation": "EN 14080:2013 Timber structures, glued laminated timber, Table 5: GL24h E0,mean = 11.6 GPa, mean density 420 kg/m3."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table 6.1 (floor imposed load category A, 2.0 kN/m2) and Table 6.2 (concentrated load 2.0 kN)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, non-alloy structural steels (S235 yield strength 235 MPa)."
+        }
+      ],
+      "notes": {
+        "en": "Section 160 x 600 mm; tributary width 2.0 m for the floor load.",
+        "de": "Querschnitt 160 x 600 mm; Einzugsbreite 2,0 m für die Deckenlast."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.62,
+      "widthM": 8.0,
+      "depthM": 0.16,
+      "massKg": 322.56
+    },
+    "materials": [
+      {
+        "id": "glulam",
+        "title": {
+          "en": "Glulam GL24h",
+          "de": "Brettschichtholz GL24h"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11600000000,
+        "source": "literature",
+        "reference": "en-14080",
+        "conductivityWmK": 0.13,
+        "specificHeatJKgK": 1600
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Bearing plate steel S235",
+          "de": "Lagerplatte Stahl S235"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "beam",
+      "bones": [
+        {
+          "id": "beam",
+          "parent": null,
+          "title": {
+            "en": "Beam",
+            "de": "Balken"
+          },
+          "x": 0,
+          "y": 0.32,
+          "angleDeg": 0,
+          "lengthM": 8,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 322.56,
+            "comX": 4,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-14080"
+          },
+          "section": {
+            "areaM2": 0.096,
+            "secondMomentM4": 0.00288,
+            "extremeFibreM": 0.3,
+            "material": "glulam",
+            "title": {
+              "en": "GL24h 160 x 600 mm",
+              "de": "GL24h 160 x 600 mm"
+            }
+          }
+        },
+        {
+          "id": "load-carrier",
+          "parent": "beam",
+          "title": {
+            "en": "Load carrier (massless, moves the point load)",
+            "de": "Lastträger (masselos, bewegt die Einzellast)"
+          },
+          "x": 0.5,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 7
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "bearing-left",
+        "bone": "beam",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Left bearing, pin",
+          "de": "Linkes Auflager, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "bearing-right",
+        "bone": "beam",
+        "x": 8,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Right bearing, roller",
+          "de": "Rechtes Auflager, Rollenlager"
+        },
+        "support": "roller",
+        "normalDeg": 90
+      },
+      {
+        "id": "load-point",
+        "bone": "load-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Concentrated load",
+          "de": "Einzellast"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "beam",
+              "bone": "beam",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "beam-sides",
+                "beam-top",
+                "beam-soffit",
+                "bearing-steel"
+              ],
+              "material": "glulam",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.32,
+              "w": 8,
+              "h": 0.62
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One solid bar 8.00 x 0.62 m (16 x 1.24 mm); the bearing plates are carried in the outline of the bar.",
+            "de": "Ein Vollkörper 8,00 x 0,62 m (16 x 1,24 mm); die Lagerplatten sind in der Kontur des Balkens enthalten."
+          },
+          "retained": {
+            "en": "Span, depth and the exact overall height including the 20 mm plate level.",
+            "de": "Spannweite, Höhe und die genaue Gesamthöhe einschließlich der 20-mm-Lagerplattenlage."
+          },
+          "merged": {
+            "en": "Timber side faces, top, soffit and the two steel bearing plates are one filled bar.",
+            "de": "Holzseiten, Ober- und Unterseite und die beiden Stahllagerplatten sind ein gefüllter Balken."
+          },
+          "omitted": {
+            "en": "Lamination, finger joints, plate bolts and the end lines.",
+            "de": "Lamellen, Keilzinkenstöße, Lagerschrauben und die Stirnlinien."
+          },
+          "thinElements": {
+            "en": "There are no thin parts; the 20 mm plates (0.04 mm) are merged into the bar bottom, a deviation of 0.04 mm.",
+            "de": "Es gibt keine dünnen Teile; die 20-mm-Platten (0,04 mm) gehen im Balkenfuß auf, eine Abweichung von 0,04 mm."
+          },
+          "hatching": {
+            "en": "No hatch: a 1.24 mm bar cannot carry a printable hatch.",
+            "de": "Keine Schraffur: ein 1,24-mm-Balken trägt keine druckbare Schraffur."
+          },
+          "styles": {
+            "en": "Mid-dark filled bar reads as timber.",
+            "de": "Der mitteldunkle Balken liest sich als Holz."
+          },
+          "overlays": {
+            "en": "Overlays colour the whole bar with the area-weighted value of side faces, top, soffit and bearing plates (labelled merged).",
+            "de": "Überlagerungen färben den ganzen Balken mit dem flächengewichteten Wert von Seitenflächen, Ober-, Unterseite und Lagerplatten (als zusammengefasst gekennzeichnet)."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "beam",
+              "bone": "beam",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "beam-sides",
+                "beam-top",
+                "beam-soffit"
+              ],
+              "material": "glulam",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.3,
+              "w": 8,
+              "h": 0.6
+            },
+            {
+              "id": "bearing-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.31
+                ],
+                [
+                  0.12,
+                  -0.31
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "bearing-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  7.88,
+                  -0.31
+                ],
+                [
+                  8.0,
+                  -0.31
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A single timber bar (40 x 3 mm) with two bearing lines under its ends.",
+            "de": "Ein einzelner Holzbalken (40 x 3 mm) mit zwei Auflagerlinien unter den Enden."
+          },
+          "retained": {
+            "en": "Span, depth 0.60 m and the two bearing lengths of 0.12 m.",
+            "de": "Spannweite, Höhe 0,60 m und die beiden Auflagerlängen von 0,12 m."
+          },
+          "merged": {
+            "en": "Side faces, top and soffit are one bar shape.",
+            "de": "Seitenflächen, Oberseite und Unterseite bilden eine Balkenform."
+          },
+          "omitted": {
+            "en": "Lamination (0.2 mm spacing), finger joints and bolts.",
+            "de": "Lamellen (0,2 mm Abstand), Keilzinkenstöße und Schrauben."
+          },
+          "thinElements": {
+            "en": "The 20 mm bearing plates are lines of 0.18 mm pen (36 mm), 16 mm taller than real.",
+            "de": "Die 20-mm-Lagerplatten sind Linien mit 0,18 mm Feder (36 mm), 16 mm höher als real."
+          },
+          "hatching": {
+            "en": "No hatch: lamella spacing is below the printable minimum.",
+            "de": "Keine Schraffur: der Lamellenabstand liegt unter dem druckbaren Minimum."
+          },
+          "styles": {
+            "en": "Mid-grey bar, dark bearing lines.",
+            "de": "Mittelgrauer Balken, dunkle Auflagerlinien."
+          },
+          "overlays": {
+            "en": "Overlays colour the bar (merged faces) and the bearing lines separately.",
+            "de": "Überlagerungen färben Balken (zusammengefasste Flächen) und Auflagerlinien getrennt."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "grain",
+            "title": {
+              "en": "Timber, longitudinal",
+              "de": "Holz, Längsschnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "beam",
+              "bone": "beam",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "beam-sides",
+                "beam-top",
+                "beam-soffit"
+              ],
+              "material": "glulam",
+              "hatch": "grain",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.3,
+              "w": 8,
+              "h": 0.6
+            },
+            {
+              "id": "bearing-plate-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.325,
+              "w": 0.12,
+              "h": 0.025
+            },
+            {
+              "id": "bearing-plate-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.325,
+              "w": 0.12,
+              "h": 0.025
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A timber bar (80 x 6 mm) with grain hatch on two steel bearing plates 5 mm proud of the soffit.",
+            "de": "Ein Holzbalken (80 x 6 mm) mit Faserschraffur auf zwei Stahllagerplatten."
+          },
+          "retained": {
+            "en": "Bar, grain direction and both plates (1.2 x 0.25 mm).",
+            "de": "Balken, Faserrichtung und beide Platten (1,2 x 0,25 mm)."
+          },
+          "merged": {
+            "en": "Lamellae (0.4 mm) are expressed by a grain hatch at every second glue line (0.8 mm).",
+            "de": "Lamellen (0,4 mm) sind durch eine Faserschraffur an jeder zweiten Leimfuge (0,8 mm) ausgedrückt."
+          },
+          "omitted": {
+            "en": "Finger joints and bolts.",
+            "de": "Keilzinkenstöße und Schrauben."
+          },
+          "thinElements": {
+            "en": "The 20 mm plates are drawn 25 mm thick (0.25 mm, 5 mm below the beam), the smallest filled feature that prints under the office-laser profile (0.2 mm plus margin); length stays 120 mm. The real height of the beam is unchanged.",
+            "de": "Die 20-mm-Platten sind 25 mm dick (0,25 mm, 5 mm unter dem Balken) gezeichnet, die kleinste gefüllte Einzelheit, die im Büro-Laserprofil druckt (0,2 mm plus Reserve); die Länge bleibt 120 mm. Die reale Höhe des Balkens bleibt unverändert."
+          },
+          "hatching": {
+            "en": "Timber long-section hatch: parallel lines along the grain at 0.8 mm (DIN ISO 128-50, DIN 1356-1).",
+            "de": "Holz im Längsschnitt: parallele Linien in Faserrichtung, 0,8 mm Abstand (DIN ISO 128-50, DIN 1356-1)."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm, hatch 0.1 mm, plates darker.",
+            "de": "Kontur 0,25 mm, Schraffur 0,1 mm, Platten dunkler."
+          },
+          "overlays": {
+            "en": "Bar (merged faces) and plates are separate overlay cells.",
+            "de": "Balken (zusammengefasste Flächen) und Platten sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "beam-chamfered",
+              "bone": "beam",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "beam-sides",
+                "beam-top",
+                "beam-soffit"
+              ],
+              "material": "glulam",
+              "kind": "poly",
+              "points": [
+                [
+                  0.006,
+                  -0.3
+                ],
+                [
+                  7.994,
+                  -0.3
+                ],
+                [
+                  8.0,
+                  -0.294
+                ],
+                [
+                  8.0,
+                  0.294
+                ],
+                [
+                  7.994,
+                  0.3
+                ],
+                [
+                  0.006,
+                  0.3
+                ],
+                [
+                  0.0,
+                  0.294
+                ],
+                [
+                  0.0,
+                  -0.294
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bearing-plate-left",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.0,
+              "y": -0.32,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "bearing-plate-right",
+              "bone": "beam",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "bearing-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 7.88,
+              "y": -0.32,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "glue-line-01",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.26
+                ],
+                [
+                  8.0,
+                  -0.26
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-02",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.22
+                ],
+                [
+                  8.0,
+                  -0.22
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-03",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.18
+                ],
+                [
+                  8.0,
+                  -0.18
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-04",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.14
+                ],
+                [
+                  8.0,
+                  -0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-05",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.1
+                ],
+                [
+                  8.0,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-06",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.06
+                ],
+                [
+                  8.0,
+                  -0.06
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-07",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  -0.02
+                ],
+                [
+                  8.0,
+                  -0.02
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-08",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.02
+                ],
+                [
+                  8.0,
+                  0.02
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-09",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.06
+                ],
+                [
+                  8.0,
+                  0.06
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-10",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.1
+                ],
+                [
+                  8.0,
+                  0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-11",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.14
+                ],
+                [
+                  8.0,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-12",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.18
+                ],
+                [
+                  8.0,
+                  0.18
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-13",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.22
+                ],
+                [
+                  8.0,
+                  0.22
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glue-line-14",
+              "bone": "beam",
+              "role": "texture",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.26
+                ],
+                [
+                  8.0,
+                  0.26
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-0",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  1.9,
+                  -0.14
+                ],
+                [
+                  1.92,
+                  -0.13
+                ],
+                [
+                  1.9,
+                  -0.12
+                ],
+                [
+                  1.92,
+                  -0.11
+                ],
+                [
+                  1.9,
+                  -0.1
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-1",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  3.7,
+                  -0.02
+                ],
+                [
+                  3.72,
+                  -0.01
+                ],
+                [
+                  3.7,
+                  0.0
+                ],
+                [
+                  3.72,
+                  0.01
+                ],
+                [
+                  3.7,
+                  0.02
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-2",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  5.3,
+                  -0.22
+                ],
+                [
+                  5.32,
+                  -0.21
+                ],
+                [
+                  5.3,
+                  -0.2
+                ],
+                [
+                  5.32,
+                  -0.19
+                ],
+                [
+                  5.3,
+                  -0.18
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-3",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  6.6,
+                  0.1
+                ],
+                [
+                  6.62,
+                  0.11
+                ],
+                [
+                  6.6,
+                  0.12
+                ],
+                [
+                  6.62,
+                  0.13
+                ],
+                [
+                  6.6,
+                  0.14
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-4",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  2.8,
+                  0.14
+                ],
+                [
+                  2.82,
+                  0.15
+                ],
+                [
+                  2.8,
+                  0.16
+                ],
+                [
+                  2.82,
+                  0.17
+                ],
+                [
+                  2.8,
+                  0.18
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "finger-joint-5",
+              "bone": "beam",
+              "role": "detail",
+              "z": 1.6,
+              "filled": false,
+              "tone": 0.3,
+              "region": "beam-sides",
+              "kind": "poly",
+              "points": [
+                [
+                  4.4,
+                  -0.3
+                ],
+                [
+                  4.42,
+                  -0.29
+                ],
+                [
+                  4.4,
+                  -0.28
+                ],
+                [
+                  4.42,
+                  -0.27
+                ],
+                [
+                  4.4,
+                  -0.26
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Side elevation of the 600 mm deep beam (12 mm tall and 160 mm long on paper) with fifteen lamellae, six staggered finger joints and two steel bearing plates.",
+            "de": "Seitenansicht des 600 mm hohen Balkens (12 mm hoch und 160 mm lang auf Papier) mit fünfzehn Lamellen, sechs versetzten Keilzinkenstößen und zwei Stahllagerplatten."
+          },
+          "retained": {
+            "en": "All 14 glue lines at 40 mm spacing (0.8 mm), the two 120 x 20 mm bearing plates (2.4 x 0.4 mm), staggered finger joints.",
+            "de": "Alle 14 Leimfugen im Abstand von 40 mm (0,8 mm), die beiden Lagerplatten 120 x 20 mm (2,4 x 0,4 mm), versetzte Keilzinkenstöße."
+          },
+          "merged": {
+            "en": "Side faces, top and soffit remain one bar shape; the glue lines are bound to the side faces.",
+            "de": "Seitenflächen, Oberseite und Unterseite bleiben eine Balkenform; die Leimfugen sind an die Seitenflächen gebunden."
+          },
+          "omitted": {
+            "en": "Plate bolts (12 mm, 0.24 mm) and the real finger pitch (12 mm).",
+            "de": "Lagerschrauben (12 mm, 0,24 mm) und die reale Zinkenteilung (12 mm)."
+          },
+          "thinElements": {
+            "en": "Finger joints are two-tooth symbols with a 40 mm pitch (0.8 mm), because the real pitch (0.24 mm) is below the printable minimum.",
+            "de": "Keilzinkenstöße sind Zeichen mit zwei Zinken und 40 mm Teilung (0,8 mm), weil die echte Teilung (0,24 mm) unter dem druckbaren Minimum liegt."
+          },
+          "hatching": {
+            "en": "No hatch fill: the glue lines are the grain indication of the longitudinal view.",
+            "de": "Keine Schraffurfüllung: die Leimfugen sind die Faserandeutung der Längsansicht."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, glue lines 0.1 mm, finger joints 0.18 mm.",
+            "de": "Kontur 0,35 mm, Leimfugen 0,1 mm, Keilzinken 0,18 mm."
+          },
+          "overlays": {
+            "en": "Faces are one merged bar cell, bearing plates their own cells.",
+            "de": "Die Flächen sind eine zusammengefasste Balkenzelle, die Lagerplatten eigene Zellen."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Self-weight only",
+          "de": "Nur Eigengewicht"
+        },
+        "description": {
+          "en": "Beam under its own weight.",
+          "de": "Balken unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "beam-sides": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "beam-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "beam-soffit": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            },
+            "bearing-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "distributed-live-load",
+        "title": {
+          "en": "Uniform floor load",
+          "de": "Gleichmäßige Deckenlast"
+        },
+        "description": {
+          "en": "Imposed floor load of 2 kN/m² over a 2.0 m tributary width, 4 kN/m along the beam.",
+          "de": "Deckenlast 2 kN/m² über 2,0 m Einzugsbreite, 4 kN/m entlang des Balkens."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "beam-sides": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "beam-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "beam-soffit": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            },
+            "bearing-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "imposed-floor",
+            "kind": "imposed",
+            "title": {
+              "en": "Imposed floor load 4 kN/m",
+              "de": "Deckenlast 4 kN/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "beam",
+              "fromM": 0,
+              "toM": 8,
+              "wxNPerM": 0,
+              "wyNPerM": -4000
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "point-load-midspan",
+        "title": {
+          "en": "Midspan point load",
+          "de": "Einzellast in Feldmitte"
+        },
+        "description": {
+          "en": "A 2 kN concentrated load at midspan on top of the self-weight.",
+          "de": "Einzellast 2 kN in Feldmitte zusätzlich zum Eigengewicht."
+        },
+        "bones": {
+          "load-carrier": {
+            "dx": 3.5
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "beam-sides": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "beam-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "beam-soffit": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            },
+            "bearing-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "point-midspan",
+            "kind": "live",
+            "title": {
+              "en": "Concentrated load 2 kN",
+              "de": "Einzellast 2 kN"
+            },
+            "anchor": "load-point",
+            "fxN": 0,
+            "fyN": -2000,
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "moving-point-load",
+        "title": {
+          "en": "Moving concentrated load",
+          "de": "Wandernde Einzellast"
+        },
+        "description": {
+          "en": "The 2 kN load travels from near the left bearing to near the right bearing.",
+          "de": "Die Einzellast 2 kN wandert von nahe dem linken zum nahen rechten Auflager."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "point-load-midspan",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 0
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "point-load-midspan",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 7
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "travel",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Travel",
+              "de": "Wanderung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Load starts near the left bearing",
+              "de": "Last beginnt nahe dem linken Auflager"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The floor load rises smoothly from zero to its full value.",
+          "de": "Die Deckenlast steigt weich von null auf ihren vollen Wert."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Floor load at full value",
+              "de": "Deckenlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:imposed-floor",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 8,
+        "groundTempC": 18,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "beam-sides",
+          "title": {
+            "en": "Beam side faces",
+            "de": "Balkenseitenflächen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "glulam",
+          "areaM2": 9.6,
+          "characteristicLengthM": 0.6,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 24000,
+          "source": "authored-estimate",
+          "reference": "en-iso-13786"
+        },
+        {
+          "id": "beam-top",
+          "title": {
+            "en": "Beam top",
+            "de": "Balkenoberseite"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "glulam",
+          "areaM2": 1.28,
+          "characteristicLengthM": 0.08,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.95,
+          "layers": [],
+          "heatCapacityJM2K": 24000,
+          "source": "authored-estimate",
+          "reference": "en-iso-13786"
+        },
+        {
+          "id": "beam-soffit",
+          "title": {
+            "en": "Beam soffit",
+            "de": "Balkenunterseite"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "glulam",
+          "areaM2": 1.28,
+          "characteristicLengthM": 0.08,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.05,
+          "layers": [],
+          "heatCapacityJM2K": 24000,
+          "source": "authored-estimate",
+          "reference": "en-iso-13786"
+        },
+        {
+          "id": "bearing-steel",
+          "title": {
+            "en": "Bearing plates",
+            "de": "Lagerplatten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.12,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.05,
+          "layers": [],
+          "heatCapacityJM2K": 9000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Passive timber faces store heat in an effective depth of about 36 mm (half the 24 h penetration depth of 73 mm for lambda 0.13 W/mK, rho 420 kg/m3, c 1600 J/kgK, EN ISO 13786), so the beam responds slowly to sun and shade.",
+          "de": "Passive Holzflächen speichern Wärme in einer wirksamen Tiefe von etwa 36 mm (die Hälfte der 24-h-Eindringtiefe von 73 mm für Lambda 0,13 W/mK, Rho 420 kg/m³, c 1600 J/kgK, EN ISO 13786); der Balken reagiert daher träge auf Sonne und Schatten."
+        },
+        {
+          "en": "The beam is a free-standing element in the open (no conditioned side); the exposed side face is drawn, the opposite face is the same region.",
+          "de": "Der Balken ist ein freistehendes Bauteil im Freien (keine konditionierte Seite); die gezeichnete Seitenfläche und die gegenüberliegende bilden dieselbe Region."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: top fully sunlit, side face half sunlit, soffit and bearing plates shaded.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Oberseite voll besonnt, Seitenfläche halb besonnt, Unterseite und Lagerplatten verschattet."
+        },
+        {
+          "en": "Reference case: a mild sunny day, all values authored estimates.",
+          "de": "Referenzfall: ein milder sonniger Tag, alle Werte sind Schätzungen."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "bearing-left",
+        "bearing-right"
+      ],
+      "assumptions": [
+        {
+          "en": "Simply supported beam, pin left and roller right; E0,mean = 11.6 GPa, section 160 x 600 mm, uniform self-weight from density 420 kg/m3.",
+          "de": "Frei aufliegender Balken, Festlager links und Rollenlager rechts; E0,mean = 11,6 GPa, Querschnitt 160 x 600 mm, gleichmäßiges Eigengewicht aus Dichte 420 kg/m3."
+        },
+        {
+          "en": "Shear and axial deformation are neglected in the deflection.",
+          "de": "Schub- und Längsverformung werden in der Durchbiegung vernachlässigt."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "distributed-live-load",
+      "defaultClip": "moving-point-load",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 100
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

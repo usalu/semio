@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
-import { delimiter, dirname, join } from "node:path";
+import { delimiter, dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RuntimeCapabilityMissingV1, runtimeMessageV1 } from "../../../🗣️messages/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
@@ -16,7 +16,7 @@ export type NodeNativeHostV1 = Readonly<{ platform: string; arch: string; env: R
 /** 🎯️ One declared build target of the Node native core. */
 export type NodeNativeTargetV1 = Readonly<{ platform: string; arch: string; triple: string; linkArguments: readonly string[] }>;
 /** 🗺️ Where the native core of one host and one source lives in the cache and which compiler call produces it. */
-export type NodeNativePlanV1 = Readonly<{ key: string; directory: string; file: string; target: NodeNativeTargetV1 }>;
+export type NodeNativePlanV1 = Readonly<{ key: string; directory: string; file: string; target: NodeNativeTargetV1; linker?: NodeNativeLinkerV1 }>;
 /** 🔌️ The outcome of one compiler run. */
 export type NodeNativeRunV1 = Readonly<{ status: number | null; stderr: string }>;
 /** 🧰️ Every side effect the preparation of the native core performs; tests replace it by a table. */
@@ -58,18 +58,43 @@ export function nodeNativeCacheRootV1(host: NodeNativeHostV1): string {
   return join(base !== undefined && base !== "" ? base : join(host.home, ...row.homeSegments), ...row.segments, ...protocol.addon.directory);
 }
 
+/** 🔗️ One closed, already resolved linker invocation; selection conveys no process or storage authority. */
+export type NodeNativeLinkerV1 = Readonly<{ version: 1; command: string; arguments: readonly string[] }>;
+/** 🧰️ The registry resolution facts required to preserve a direct SDK compiler driver. */
+export type NodeNativeLinkerResolutionV1 = Readonly<{ source?: string; command: string | null; prefix: readonly string[]; suffix: readonly string[] }>;
+
+function readNodeNativeLinkerV1(wire: string | undefined): NodeNativeLinkerV1 | undefined {
+  if (wire === undefined) return undefined;
+  if (wire.length > 32768) throw new TypeError("Bounded native linker DATA required");
+  const value: unknown = JSON.parse(wire), policy = schema.definitions.Linker.properties;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError("Closed native linker DATA required");
+  const row = value as Record<string, unknown>, text = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= policy.command.maxLength && !/[\x00-\x1f\x7f]/u.test(value);
+  if (Object.keys(row).sort().join(",") !== "arguments,command,version" || row.version !== 1 || !text(row.command) || !isAbsolute(row.command) || !Array.isArray(row.arguments) || row.arguments.length > policy.arguments.maxItems || !row.arguments.every(text)) throw new TypeError("Absolute direct native linker DATA required");
+  return Object.freeze({ version: 1, command: row.command, arguments: Object.freeze([...row.arguments]) });
+}
+
+/** 🌿️ Projects only a registered SDK driver; explicit providers, cores and linker choices retain their exact environment. */
+export function nodeNativeLinkerEnvironmentV1(environment: Readonly<Record<string, string | undefined>>, resolution: NodeNativeLinkerResolutionV1): Readonly<Record<string, string | undefined>> {
+  const names = protocol.addon.environment;
+  if (resolution.source !== "native-compiler" || [names.provider, names.addon, names.linker].some(name => environment[name] !== undefined && environment[name] !== "")) return environment;
+  if (resolution.prefix.length || !resolution.command) throw new TypeError("Registered direct native linker required");
+  const wire = JSON.stringify({ version: 1, command: resolution.command, arguments: resolution.suffix });
+  readNodeNativeLinkerV1(wire);
+  return Object.freeze({ ...environment, [names.linker]: wire });
+}
+
 /** 📍️ Plans the cache location of the core: the key joins platform, architecture and the digest of the source and the compiler call, so a changed source never reuses an old build. */
 export function planNodeNativeAddonV1(host: NodeNativeHostV1, source: Uint8Array): NodeNativePlanV1 {
-  const target = nodeNativeTargetV1(host.platform, host.arch);
-  const digest = createHash("sha256").update(source).update("\0").update(JSON.stringify([protocol.version, protocol.compiler.arguments, target.linkArguments])).digest("hex").slice(0, protocol.addon.digestCharacters);
+  const target = nodeNativeTargetV1(host.platform, host.arch), linker = readNodeNativeLinkerV1(host.env[protocol.addon.environment.linker]);
+  const digest = createHash("sha256").update(source).update("\0").update(JSON.stringify([protocol.version, protocol.compiler.arguments, target.linkArguments, linker ?? null])).digest("hex").slice(0, protocol.addon.digestCharacters);
   const key = `${host.platform}-${host.arch}-${digest}`, directory = join(nodeNativeCacheRootV1(host), key), file = join(directory, protocol.addon.file);
   if (file.length > protocol.addon.maximumPathCharacters) throw refusal("nativePathLength", { path: file, limit: protocol.addon.maximumPathCharacters });
-  return Object.freeze({ key, directory, file, target });
+  return Object.freeze({ key, directory, file, target, ...(linker ? { linker } : {}) });
 }
 
 /** ⌨️ Builds the argument vector of the one compiler call that produces the core. */
 export function nodeNativeCompilerArgumentsV1(plan: NodeNativePlanV1, source: string, output: string): readonly string[] {
-  return Object.freeze([...protocol.compiler.arguments, ...plan.target.linkArguments, "--crate-name", protocol.compiler.crateName, "-o", output, source]);
+  return Object.freeze([...protocol.compiler.arguments, ...plan.target.linkArguments, ...(plan.linker ? ["-C", "linker=" + plan.linker.command, ...plan.linker.arguments.flatMap(value => ["-C", "link-arg=" + value])] : []), "--crate-name", protocol.compiler.crateName, "-o", output, source]);
 }
 
 /** 🔎️ Finds the compiler: `SEMIO_RUSTC`, then the `PATH`, then the `bin` directory of `CARGO_HOME` or `~/.cargo`. */
@@ -126,7 +151,7 @@ function isFile(path: string): boolean { try { return statSync(path).isFile(); }
 
 /** 🏭️ Binds the preparation of the core to the real file system, process table and standard error. */
 export function defaultNodeNativePortsV1(environment: NodeJS.ProcessEnv = process.env): NodeNativePortsV1 {
-  const host: NodeNativeHostV1 = Object.freeze({ platform: process.platform, arch: process.arch, env: environment, home: homedir(), source: fileURLToPath(new URL("../🦀️.rs", import.meta.url)) });
+  const host: NodeNativeHostV1 = Object.freeze({ platform: process.platform, arch: process.arch, env: environment, home: homedir(), source: fileURLToPath(new URL("../🦀️.rs", (import.meta as ImportMeta & { readonly semioPhysicalSourceURL?: string }).semioPhysicalSourceURL ?? import.meta.url)) });
   const sleeper = new Int32Array(new SharedArrayBuffer(4));
   return Object.freeze({
     host,

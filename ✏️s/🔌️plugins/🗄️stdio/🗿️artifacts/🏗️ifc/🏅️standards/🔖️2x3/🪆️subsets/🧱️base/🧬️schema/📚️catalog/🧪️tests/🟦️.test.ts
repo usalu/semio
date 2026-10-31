@@ -1,3 +1,4 @@
+import nativePolicy from "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json";
 import {test as register} from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -12,7 +13,7 @@ const test=(name:string,run:()=>void):void=>{checks.push(register(name,()=>{try{
 const read=(file:string):string=>readFileSync(new URL(file,import.meta.url),"utf8"),vectors=JSON.parse(read("./🔣️.json"));
 test("IFC2x3 complete catalog reproduces unchanged normative input and native output",()=>{
  const source=read("../IFC2X3_TC1.exp"),manifest=JSON.parse(read("../source.json"));assert.equal(createHash("sha256").update(source).digest("hex"),manifest.source.sha256);
- const extracted=extractExpressCatalog(source,manifest);assert.deepEqual(extracted,ifc2x3Catalog);assert.equal(renderRustCatalog(extracted),read("../data.rs"));
+ const extracted=extractExpressCatalog(source,manifest);assert.deepEqual(extracted,ifc2x3Catalog);const native=renderRustCatalog(extracted,{maximumSourceBytes:nativePolicy.storage.sourceBoundary.maxSourceBytes});assert.equal(native.assembler,read("../data.rs"));for(const component of native.components)assert.equal(component.rust,read("../🧩️components/"+component.folder+"/🦀️.rs"));
  assert.deepEqual({entities:Object.keys(extracted.entities).length,types:Object.keys(extracted.types).length,enumerations:Object.values(extracted.types).filter(t=>t.kind==="enum").length,selects:Object.values(extracted.types).filter(t=>t.kind==="select").length,definedTypes:Object.values(extracted.types).filter(t=>t.kind==="defined").length,functions:Object.keys(extracted.functions).length,rules:Object.keys(extracted.rules).length},vectors.counts);
  assert.equal(ifc2x3Catalog.schema,"IFC2X3");assert.ok(Object.values(ifc2x3Catalog.validation).every(v=>v===false));
 });

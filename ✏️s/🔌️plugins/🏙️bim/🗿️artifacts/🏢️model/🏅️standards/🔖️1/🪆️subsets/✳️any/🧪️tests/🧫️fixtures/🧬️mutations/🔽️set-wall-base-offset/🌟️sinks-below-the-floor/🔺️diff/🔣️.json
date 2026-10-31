@@ -1,8 +1,10 @@
 {
   "walls": {
     "w-east": {
-      "base_offset": -0.3,
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "base_offset": -0.3
+      }
     }
   }
 }

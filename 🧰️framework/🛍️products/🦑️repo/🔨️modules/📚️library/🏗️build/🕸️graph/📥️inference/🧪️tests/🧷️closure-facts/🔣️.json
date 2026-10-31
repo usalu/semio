@@ -10,7 +10,7 @@
   "boundedScriptInputsV1": {
    "file": "scriptInputs",
    "start": "async function boundedScriptInputsV1(",
-   "end": "/** 🧩️ The full command closure of `entries`"
+   "end": "export async function relativeScriptInputs("
   },
   "targetScriptSources": {
    "file": "scriptInputs",
@@ -35,7 +35,7 @@
   "routerKeptFromSourceV1": {
    "file": "scriptInputs",
    "start": "function routerKeptFromSourceV1(",
-   "end": "/** 🔀️ The imports a router script needs"
+   "end": "function routerKeptV1("
   }
  },
  "order": [

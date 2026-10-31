@@ -196,7 +196,7 @@
         "height": 400,
         "scale": 1,
         "grid": "tablet",
-        "mode": "swipe"
+        "mode": "strip"
       },
       {
         "width": 767,
@@ -217,7 +217,7 @@
         "height": 375,
         "scale": 1,
         "grid": "tablet",
-        "mode": "swipe"
+        "mode": "strip"
       },
       {
         "width": 1440,
@@ -231,7 +231,7 @@
         "height": 720,
         "scale": 1.5,
         "grid": "tablet",
-        "mode": "swipe"
+        "mode": "strip"
       },
       {
         "width": 1100,

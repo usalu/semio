@@ -11,6 +11,7 @@ use super::{PatternMatcher, SchemaFragmentContextRefusal, SchemaFragmentError, S
 /// cross-scope `$ref` may name by `$id`.
 #[derive(Clone, Copy)]
 pub(super) struct Scope<'a> {
+    pub(super) root: &'a Value,
     pub(super) base: &'a Value,
     pub(super) documents: &'a SchemaIndex<Value>,
     pub(super) patterns: &'a SchemaIndex<PatternMatcher>,
@@ -20,7 +21,8 @@ pub(super) fn index_documents(documents: &[&str]) -> Result<SchemaIndex<Value>, 
     let mut indexed = SchemaIndex::new();
     for body in documents {
         let document = parse_json(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid sibling schema JSON: {error}")))?;
-        let id = document.get("$id").and_then(Value::as_str).ok_or_else(|| SchemaError::Validation("sibling schema document requires an `$id`".to_string()))?.to_string();
+        let id = document.get("$id").and_then(Value::as_str).ok_or_else(|| SchemaError::Validation("sibling schema document requires an `$id`".to_string()))?;
+        let id = resolve_schema_document_reference(id, None);
         if indexed.insert(id.clone(), document).is_some() {
             return Err(SchemaError::Validation(format!("duplicate sibling schema `$id` {id}")));
         }
@@ -34,6 +36,9 @@ pub(super) fn schema_object<'a>(schema: &'a Value, path: &str) -> Result<&'a Obj
 
 pub(super) fn validate_schema_node(scope: Scope<'_>, schema: &Value, path: &str, traversal: &mut Traversal<'_>) -> Result<(), SchemaError> {
     traversal.visit()?;
+    if !traversal.compiled_schemas.insert((scope.base as *const Value as usize, schema as *const Value as usize)) {
+        return Ok(());
+    }
     if schema.as_bool().is_some() {
         return Ok(());
     }
@@ -49,7 +54,8 @@ pub(super) fn validate_schema_node(scope: Scope<'_>, schema: &Value, path: &str,
             }
             "$ref" => {
                 let reference = require_string(value, &keyword_path)?;
-                resolve_reference(scope, reference).map_err(|message| SchemaError::Validation(format!("{keyword_path}: {message}")))?;
+                let (base, referenced) = resolve_reference(scope, reference).map_err(|message| SchemaError::Validation(format!("{keyword_path}: {message}")))?;
+                validate_schema_node(Scope { base, ..scope }, referenced, &keyword_path, traversal)?;
             }
             "$defs" | "definitions" | "properties" => {
                 let entries = value.as_object().ok_or_else(|| SchemaError::Validation(format!("{keyword_path}: expected object")))?;
@@ -170,6 +176,95 @@ fn validate_enum_keyword(value: &Value, path: &str) -> Result<(), SchemaError> {
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+struct UriReference<'a> {
+    scheme: Option<&'a str>,
+    authority: Option<&'a str>,
+    path: &'a str,
+    query: Option<&'a str>,
+}
+
+fn uri_reference(value: &str) -> UriReference<'_> {
+    let value = value.split_once('#').map_or(value, |(head, _)| head);
+    let (hierarchy, query) = value.split_once('?').map_or((value, None), |(head, query)| (head, Some(query)));
+    let (scheme, rest) = match hierarchy.find(':') {
+        Some(index) if hierarchy.as_bytes().first().is_some_and(u8::is_ascii_alphabetic) && hierarchy[..index].bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'-' | b'.')) => (Some(&hierarchy[..index]), &hierarchy[index + 1..]),
+        _ => (None, hierarchy),
+    };
+    let (authority, path) = match rest.strip_prefix("//") {
+        Some(rest) => rest.find('/').map_or((Some(rest), ""), |index| (Some(&rest[..index]), &rest[index..])),
+        None => (None, rest),
+    };
+    UriReference { scheme, authority, path, query }
+}
+
+fn uri_path_without_dots(mut path: &str) -> String {
+    let mut output = String::with_capacity(path.len());
+    while !path.is_empty() {
+        if let Some(tail) = path.strip_prefix("../").or_else(|| path.strip_prefix("./")) {
+            path = tail;
+        } else if path.starts_with("/./") {
+            path = &path[2..];
+        } else if path == "/." {
+            path = "/";
+        } else if path.starts_with("/../") || path == "/.." {
+            path = if path == "/.." { "/" } else { &path[3..] };
+            output.truncate(output.rfind('/').unwrap_or(0));
+        } else if path == "." || path == ".." {
+            path = "";
+        } else {
+            let start = usize::from(path.starts_with('/'));
+            let end = path[start..].find('/').map_or(path.len(), |index| index + start);
+            output.push_str(&path[..end]);
+            path = &path[end..];
+        }
+    }
+    output
+}
+
+/// 🧭️ Resolves a document URI reference against its declared base without filesystem or network access.
+/// @see <https://www.rfc-editor.org/rfc/rfc3986#section-5.2>
+pub fn resolve_schema_document_reference(reference: &str, base: Option<&str>) -> String {
+    let reference = uri_reference(reference);
+    let base = uri_reference(base.unwrap_or(""));
+    let scheme = reference.scheme.or(base.scheme);
+    let authority = if reference.scheme.is_some() { reference.authority } else { reference.authority.or(base.authority) };
+    let (path, query) = if reference.scheme.is_some() || reference.authority.is_some() {
+        (uri_path_without_dots(reference.path), reference.query)
+    } else if reference.path.is_empty() {
+        (uri_path_without_dots(base.path), reference.query.or(base.query))
+    } else if reference.path.starts_with('/') {
+        (uri_path_without_dots(reference.path), reference.query)
+    } else {
+        let prefix = if base.authority.is_some() && base.path.is_empty() { "/" } else { &base.path[..base.path.rfind('/').map_or(0, |index| index + 1)] };
+        (uri_path_without_dots(&format!("{prefix}{}", reference.path)), reference.query)
+    };
+    let mut result = String::new();
+    if let Some(scheme) = scheme { result.push_str(scheme); result.push(':'); }
+    if let Some(authority) = authority { result.push_str("//"); result.push_str(authority); }
+    result.push_str(&path);
+    if let Some(query) = query { result.push('?'); result.push_str(query); }
+    result
+}
+
+fn decoded_uri_fragment(fragment: &str) -> Result<String, String> {
+    let mut output = Vec::with_capacity(fragment.len());
+    let bytes = fragment.as_bytes();
+    let mut position = 0;
+    while position < bytes.len() {
+        if bytes[position] == b'%' {
+            let pair = bytes.get(position + 1..position + 3).filter(|pair| pair.iter().all(u8::is_ascii_hexdigit)).ok_or_else(|| "invalid percent encoding in schema fragment".to_string())?;
+            let digit = |byte: u8| if byte.is_ascii_digit() { byte - b'0' } else { byte.to_ascii_lowercase() - b'a' + 10 };
+            output.push(digit(pair[0]) * 16 + digit(pair[1]));
+            position += 3;
+        } else {
+            output.push(bytes[position]);
+            position += 1;
+        }
+    }
+    String::from_utf8(output).map_err(|_| "invalid UTF8 in schema fragment".to_string())
+}
+
 /// 🔗 Resolves `$ref` to `(document it lives in, referenced node)` — `#`/`#/…` and the document's
 /// own `$id` inside the current document, another `<$id>`/`<$id>#/…` into a registered sibling.
 pub(super) fn resolve_reference<'a>(scope: Scope<'a>, reference: &str) -> Result<(&'a Value, &'a Value), String> {
@@ -177,15 +272,20 @@ pub(super) fn resolve_reference<'a>(scope: Scope<'a>, reference: &str) -> Result
         Some((document_id, fragment)) => (document_id, fragment),
         None => (reference, ""),
     };
-    let base = if document_id.is_empty() || scope.base.get("$id").and_then(Value::as_str) == Some(document_id) {
+    let resolved = resolve_schema_document_reference(document_id, scope.base.get("$id").and_then(Value::as_str));
+    let document_id = resolved.as_str();
+    let base = if reference.starts_with('#') || reference.is_empty() || scope.base.get("$id").and_then(Value::as_str).is_some_and(|id| resolve_schema_document_reference(id, None) == document_id) {
         scope.base
+    } else if scope.root.get("$id").and_then(Value::as_str).is_some_and(|id| resolve_schema_document_reference(id, None) == document_id) {
+        scope.root
     } else {
         scope.documents.get(document_id).ok_or_else(|| format!("unresolved cross-document reference `{reference}`"))?
     };
     if fragment.is_empty() {
         return Ok((base, base));
     }
-    let pointer = fragment.strip_prefix('/').ok_or_else(|| format!("only JSON Pointer fragments are supported, found `{reference}`"))?;
+    let decoded = decoded_uri_fragment(fragment)?;
+    let pointer = decoded.strip_prefix('/').ok_or_else(|| format!("only JSON Pointer fragments are supported, found `{reference}`"))?;
     let mut current = base;
     for raw in pointer.split('/') {
         let segment = raw.replace("~1", "/").replace("~0", "~");
@@ -240,7 +340,7 @@ pub(super) fn normalize_fragment_cursor<'a>(mut cursor: FragmentSchemaCursor<'a>
         }
         let (base, referenced) = resolve_reference(scope, reference)
             .map_err(|message| SchemaFragmentError::new("schema.fragment.reference", fragment_path(path), message))?;
-        cursor = FragmentSchemaCursor::Node { scope: Scope { base, documents: scope.documents, patterns: scope.patterns }, schema: referenced };
+        cursor = FragmentSchemaCursor::Node { scope: Scope { base, ..scope }, schema: referenced };
     }
     Err(SchemaFragmentError::new(
         "schema.fragment.reference-depth",

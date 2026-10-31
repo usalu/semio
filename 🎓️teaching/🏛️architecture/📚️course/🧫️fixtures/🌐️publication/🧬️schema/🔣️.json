@@ -1,0 +1,96 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "internalFiles",
+    "addedFiles",
+    "cases",
+    "assignmentFiles",
+    "pdf",
+    "assignmentCases"
+  ],
+  "properties": {
+    "internalFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "addedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "origin"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assignmentFiles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^assignments/[a-z-]+\\.pdf$"
+      }
+    },
+    "pdf": {
+      "type": "string",
+      "pattern": "^%PDF-"
+    },
+    "assignmentCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "replacement",
+          "problem"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "present",
+              "missing",
+              "invalid"
+            ]
+          },
+          "replacement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "problem": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

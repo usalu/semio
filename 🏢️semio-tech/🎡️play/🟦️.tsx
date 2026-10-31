@@ -98,7 +98,7 @@ const PLAY_CELLS = Object.fromEntries(centeredLastRowCells(PLAY_PANES.length).ma
 
 /** 🔢️ The card grid mirrors the strip: one card per cell. */
 const PLAY_GRID = nearSquareGrid(PLAY_PANES.length);
-const PLAY_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${PLAY_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${PLAY_GRID.rows}, minmax(0, 1fr))` } as const;
+const PLAY_OVERLAY_STYLE = { gridTemplateColumns: `repeat(${PLAY_GRID.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${PLAY_GRID.rows}, minmax(min(10rem, 100%), 1fr))` } as const;
 
 /** 🧮️ Four shells live at most (the least recently touched pristine one goes to its poster first); the first warm boot waits 4 s so the
  * introduction never fights a wasm boot, every later one a 35 s plugin-load budget; a pristine shell untouched for two minutes is released. */
@@ -141,7 +141,7 @@ function renderPlayCard(page: LayeredPane, state: LayeredCardState) {
   if (state.mode === "swipe") return card;
   const cell = PLAY_CELLS[page.id]!;
   return (
-    <div className="flex min-w-0 justify-center px-single" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}>
+    <div className="flex min-h-0 min-w-0 justify-center overflow-x-hidden overflow-y-auto px-single" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}>
       {card}
     </div>
   );

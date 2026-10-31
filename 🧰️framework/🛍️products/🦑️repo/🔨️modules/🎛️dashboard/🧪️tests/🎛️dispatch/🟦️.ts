@@ -5,7 +5,7 @@ import humanUsage from "../../⌨️usage/🧪️tests/🔣️.json";
 import humanUsageSchema from "../../⌨️usage/🧬️schema/🔣️.json";
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { readFileSync,existsSync } from "node:fs";
 import { join, resolve, relative, dirname,isAbsolute } from "node:path";
 import ts from "typescript";

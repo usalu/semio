@@ -1,0 +1,13 @@
+# Daemon Slot Ownership
+
+Read-only Source diagnosis after actual profile25826 terminated with caching.daemon.slots-exhausted finite1. This attempt did not reproduce the earlier client replay deadline; its two flushed profiles must not be attributed to that earlier path.
+
+Startup/admission TS65–66 builds nx:daemon-slot using the first16hex SHA256 digits of resolved slash-normalized repository root, then family finite/watch and slot index. It does not include the caller Original, watched workspace, tooling identity, graph identity, fixture directory or service generation. All finite daemons of one checkout compete for this same pool. Limits derive from actual service process environment and total host memory; finite1 admits only index0.
+
+Service birth in the client issues a handoff and retains stores; it does not acquire a slot on behalf of the child. The actual Node service entry authenticates handoff at74, creates a separate service Original at76, then acquires the repositoryRoot slot at77 before post-slot storage and namespace work79–99. Its entire later lifetime is inside finally99 that releases this slot after owned stores/namespace settle. An inherited caller Original does not create a distinct slot pool or substitute a prior hold.
+
+Admission take uses official acquireResourceLease exclusive timeoutMs0 and treats only the exact resource timeout as busy. Counter probes use the same official resources. No separate slot claim files, age-based recovery, custom adoption or stale deletion exist here; holder liveness/crash recovery is the existing resource lease kernel. Explicit NX_DAEMON can bypass the preliminary decision function, but the actual daemon still acquires its slot and refuses saturation.
+
+A Course or other same-checkout finite daemon can occupy the pool despite a different watched workspace. Neither earlier failed compilation nor visible files establish that it currently does. The next supported evidence is the live holder of the exact official slot resource through lease status; do not infer owner from the failure history or modify caps, delete claims, signal peers or retry blindly. No Native, lease inspection, process mutation, tests or Node work was performed by this audit.
+
+Official nonpruning read16:24:30UTC observed currentfinite0 held byPID1246666, SDKdf38d06d… server/start.js, session12974ae06f6b.adh9md2vm5. This later live-row observation cannot identify the earlier25826slot holder and does not independently prove kernel PID epoch. No lease, registry, process or limit was modified. Full metadata is generated/daemon-finite-slot-current.json.

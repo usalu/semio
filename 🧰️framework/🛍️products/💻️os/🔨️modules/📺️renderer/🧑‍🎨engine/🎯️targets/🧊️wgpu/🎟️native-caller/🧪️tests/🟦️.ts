@@ -2,7 +2,7 @@ import {test} from "bun:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 /** 🎟️ SQLite independently retains one business identity while the original root issues finite callback epochs. */

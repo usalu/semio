@@ -1,17 +1,20 @@
 /** 🧫️ Test-support builder of the thermal fixtures: turns the language-agnostic fixture documents (`🧫️fixtures/<case>/🔣️.json`) into minimal evaluated states.
  *
- * Only the fields the thermal solver reads are populated: `asset.thermal`, `asset.materials`, `asset.dimensions`, thermal inputs, anchor world positions,
+ * Only the fields the thermal solver reads are populated (the others are inert placeholders): `asset.thermal`, `asset.materials`, `asset.dimensions`, thermal inputs, anchor world positions,
  * bone world angles, `timeS` and the figure velocity.
  *
  * @see ../../🔨️modules/🌡️thermal/🟦️.ts — the solver under test
  */
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Anchor, Asset, Material, Slug, ThermalModel } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedBone, EvaluatedState, Point, ThermalInputs } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 
 /** 🧾️ The state part of a thermal fixture. */
 export type ThermalFixtureState = {
   readonly timeS: number;
-  readonly thermal: ThermalInputs;
+  readonly thermal: Omit<ThermalInputs, "passengers"> & { readonly passengers?: ThermalInputs["passengers"] };
   readonly anchors: Readonly<Record<Slug, { readonly bone: Slug; readonly x: number; readonly y: number }>>;
   readonly bones: Readonly<Record<Slug, { readonly angleDeg: number }>>;
   readonly comVelocity?: Point;
@@ -56,8 +59,28 @@ export function thermalState(fixture: { readonly asset: ThermalFixtureAsset; rea
     anchors,
     contacts: [],
     loads: [],
-    thermal: state.thermal,
+    thermal: { ...state.thermal, passengers: state.thermal.passengers ?? {} },
     bounds: { minX: 0, minY: 0, maxX: 1, maxY: 1 },
+    respiration: null,
+    cycle: 0,
+    representation: { kind: "none" },
     kinematics: { comVelocity: state.comVelocity ?? { x: 0, y: 0 }, segmentAccelerations: {} },
   } satisfies EvaluatedState;
+}
+
+/** 🗂️ Reads one catalog asset document by id from `🗂️catalog/<category folder>/<id>/🔣️.json` (test support; the catalog loader of 🗂️catalog is async and validates). */
+export function catalogAsset(id: string): Asset {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../🗂️catalog");
+  for (const folder of readdirSync(root, { withFileTypes: true }))
+    if (folder.isDirectory()) {
+      const file = join(root, folder.name, id, "🔣️.json");
+      if (existsSync(file)) return (JSON.parse(readFileSync(file, "utf8")) as { asset: Asset }).asset;
+    }
+  throw new Error(`catalog asset ${id} not found`);
+}
+
+/** 🗂️ The ids of every catalog asset. */
+export function catalogIds(): string[] {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../🗂️catalog");
+  return readdirSync(root, { withFileTypes: true }).flatMap((f) => (f.isDirectory() ? readdirSync(join(root, f.name), { withFileTypes: true }).filter((a) => a.isDirectory() && existsSync(join(root, f.name, a.name, "🔣️.json"))).map((a) => a.name) : [])).sort();
 }

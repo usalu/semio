@@ -23,6 +23,7 @@ export interface NxAuthorizerCaptureOptionsV1{readonly installed?:boolean;readon
 export function nxAuthorizerCapturedBytesV1(source:NxAuthorizerSourcesV1):ReadonlyMap<string,Uint8Array>{const bytes=capturedBytes.get(source);if(!bytes)throw Error("Original captured authorizer bytes required");return new Map([...bytes].map(([path,value])=>[path,new Uint8Array(value)]));}
 /** 📦️ Installed third-party tool packages that stay outside the captured closure and load natively from the pinned installation. */
 export const nxAuthorizerInstalledPackagesV1=Object.freeze(["typescript"]);
+const runtimeDataCompanionPathsV1=new Set(authorizerSchema.$defs.RuntimeDataCompanions.const.flatMap(row=>row.paths));
 const external=new Set([...nxAuthorizerExternalModulesV1,...nxAuthorizerInstalledPackagesV1]),maximumSourceFiles=authorizerSchema.properties.sources.maxItems,computedRoots=new Map<string,readonly string[]>(authorizerSchema.$defs.ComputedImportSites.const.filter(row=>row.roots.length).map(row=>[row.owner,Object.freeze([...row.roots])] as const)),runtimeDataCompanions=new Map<string,readonly string[]>([...new Set([...authorizerSchema.$defs.RuntimeDataCompanions.const.map(row=>row.owner),...computedRoots.keys()])].map(owner=>[owner,Object.freeze([...authorizerSchema.$defs.RuntimeDataCompanions.const.filter(row=>row.owner===owner).flatMap(row=>row.paths),...(computedRoots.get(owner)??[])])] as const));
 const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
 const compare=(left:string,right:string)=>Buffer.compare(Buffer.from(left),Buffer.from(right));
@@ -125,12 +126,14 @@ async function installedMarkV1(root:string,inside:string,specifier:string,versio
  const remembered=options.memo!==undefined&&options.roots===undefined?await replayCapturedV1(workspace,entry,signal,options.installed===true,options.memo.file):undefined;
  if(remembered){options.memo!.served?.("memo");return remembered;}
  const installed=options.installed===true,roots=options.roots??computedRoots,root=resolve(workspace),files=new Map<string,string>(),contents=new Map<string,Uint8Array>(),pending=[entry],resolutions=new Map<string,string>(),marks=new Map<string,string>(),versions=new Map<string,string>(),observed:NxAuthorizerObservationV1[]=[],ancestry=createNxAuthorizerAncestryV1(),discovery:RuntimeDataDiscoveryV1={directories:new Set(),results:new Set(),observed,ancestry,entries:0,bytes:0};let total=0;
- const capture=async(path:string)=>{if(contents.has(path))return contents.get(path)!;const bytes=await readNxAuthorizerSourceV1(root,path,signal,ancestry);signal.throwIfAborted();files.set(path,hash(bytes));contents.set(path,new Uint8Array(bytes));total+=bytes.byteLength;if(files.size>maximumSourceFiles||total>16_777_216)throw Error(`Authorizer source closure capacity exceeded: files=${files.size}/${maximumSourceFiles}, bytes=${total}/16777216`);return bytes;};
+ const origins=new Map<string,{kind:string;importer:string|null;specifier?:string}>([[entry,{kind:"entry",importer:null}]]);
+ const capture=async(path:string)=>{if(contents.has(path))return contents.get(path)!;let bytes:Uint8Array;try{bytes=await readNxAuthorizerSourceV1(root,path,signal,ancestry);}catch(error){try{const detail=error as NodeJS.ErrnoException,text=JSON.stringify({root,entry,installed,operation:"required-source-read",request:path,origin:origins.get(path)??null,code:detail?.code??null,failedPath:detail?.path??null},(_key,value)=>typeof value==="string"?value.slice(0,256):value);if(Buffer.byteLength(text)<=8192)console.error("[DEBUG] Authorizer required Source read failed",text);}catch{}throw error;}signal.throwIfAborted();files.set(path,hash(bytes));contents.set(path,new Uint8Array(bytes));total+=bytes.byteLength;if(files.size>maximumSourceFiles||total>16_777_216)throw Error(`Authorizer source closure capacity exceeded: files=${files.size}/${maximumSourceFiles}, bytes=${total}/16777216`);return bytes;};
  while(pending.length){signal.throwIfAborted();const path=pending.pop()!;if(files.has(path))continue;const bytes=await capture(path);signal.throwIfAborted();
-  for(const companion of [...(runtimeDataCompanions.get(path)??[]),...(options.roots?.get(path)??[])]){sourcePath(root,companion);pending.push(companion);}
+  for(const companion of [...(runtimeDataCompanions.get(path)??[]),...(options.roots?.get(path)??[])]){sourcePath(root,companion);origins.set(companion,{kind:"declared-companion",importer:path});pending.push(companion);}
   if(extname(path)===".json"){JSON.parse(Buffer.from(bytes).toString("utf8"));continue;}
+  if(runtimeDataCompanionPathsV1.has(path))continue;
   const source=Buffer.from(bytes).toString("utf8").replace(/^#![^\r\n]*/u,"");
-  for(const companion of await runtimeDataDiscoveryV1(root,path,source,signal,discovery))pending.push(companion);
+  for(const companion of await runtimeDataDiscoveryV1(root,path,source,signal,discovery)){origins.set(companion,{kind:"discovered-data",importer:path});pending.push(companion);}
   for(const row of scannedImportRowsV1(path,source,installed)){
    const specifier=scannedImport(row.path),kind=closureSpecifierKindV1(specifier);
    if(kind==="builtin"||installed&&(kind==="absolute"||kind==="scheme")||!installed&&external.has(specifier))continue;
@@ -142,7 +145,7 @@ async function installedMarkV1(root:string,inside:string,specifier:string,versio
      sourcePath(root,candidate);const manifest=nxAuthorizerWorkspaceCandidateV1(rootBytes,candidate);await capture(manifest);signal.throwIfAborted();child=resolveNxAuthorizerWorkspaceV1(nxAuthorizerWorkspaceIndexV1(contents),specifier);if(child!==candidate)throw Error("Located package differs from its captured exact export");resolutions.set(specifier,child);observed.push({kind:"package",specifier,from:dirname(path),candidate:child,mark:null});
     }catch(error){signal.throwIfAborted();if(row.lenient){observed.push({kind:"package",specifier,from:dirname(path),candidate:null,mark:null});continue;}throw error instanceof Error?new Error(error.message+" (importer chain "+viaChainV1(viaV1,path)+", specifier "+specifier+")",{cause:error}):error;}
    }}
-   sourcePath(root,child);if(!viaV1.has(child))viaV1.set(child,path);pending.push(child);
+   sourcePath(root,child);if(!viaV1.has(child))viaV1.set(child,path);origins.set(child,{kind:"import",importer:path,specifier});pending.push(child);
   }
  }
  await verifyNxAuthorizerAncestryV1(ancestry,signal);
@@ -154,7 +157,7 @@ async function installedMarkV1(root:string,inside:string,specifier:string,versio
 /** 🕸️ Resolves only executable compiler imports against the same privately captured byte census; with installed markers it also resolves third-party packages and computed-site roots. */
 export function nxAuthorizerImportProjectionV1(workspace:string,bytes:ReadonlyMap<string,Uint8Array>,resolutions:readonly NxAuthorizerResolutionV1[],derived?:Readonly<{installed:Readonly<Record<string,string>>;roots:ReadonlyMap<string,readonly string[]>}>):ReadonlyMap<string,Readonly<Record<string,string>>>{
  const root=resolve(workspace),packages=new Map(resolutions.map(row=>[row.specifier,row.path])),result=new Map<string,Readonly<Record<string,string>>>();
- for(const[path,value]of bytes){const imports:Record<string,string>={};if(extname(path)!==".json"){const text=Buffer.from(value).toString("utf8").replace(/^#![^\r\n]*/u,"");
+ for(const[path,value]of bytes){const imports:Record<string,string>={};if(extname(path)!==".json"&&!runtimeDataCompanionPathsV1.has(path)){const text=Buffer.from(value).toString("utf8").replace(/^#![^\r\n]*/u,"");
   for(const row of scannedImportRowsV1(path,text,derived!==undefined)){const specifier=scannedImport(row.path),kind=closureSpecifierKindV1(specifier);if(kind==="builtin"||derived!==undefined&&(kind==="absolute"||kind==="scheme")||derived===undefined&&external.has(specifier))continue;const target=kind==="relative"?relative(root,resolve(dirname(join(root,path)),specifier)).replaceAll("\\","/"):packages.get(specifier)??derived?.installed[specifier];if(!target||!target.startsWith(closureTargetSchemesV1.installed)&&!bytes.has(target)){if(row.lenient&&derived!==undefined)continue;throw Error("Complete immutable compiler import required: "+specifier);}if(!target.startsWith(closureTargetSchemesV1.installed))sourcePath(root,target);imports[specifier]=target;}
   if(derived!==undefined)for(const target of derived.roots.get(path)??[])if(bytes.has(target)){sourcePath(root,target);imports[closureTargetSchemesV1.root+target]=target;}}
   result.set(path,Object.freeze(imports));}

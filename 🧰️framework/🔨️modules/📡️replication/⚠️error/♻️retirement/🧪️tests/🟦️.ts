@@ -1,7 +1,7 @@
 /** ♻️ Independent SQLite and JSON preserve original protocol cause ownership through exact grants. */
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync,existsSync} from "node:fs";
 test("protocol cause retirement preserves refused original storage and separately admits copy and release",()=>{
  const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),"utf8"));

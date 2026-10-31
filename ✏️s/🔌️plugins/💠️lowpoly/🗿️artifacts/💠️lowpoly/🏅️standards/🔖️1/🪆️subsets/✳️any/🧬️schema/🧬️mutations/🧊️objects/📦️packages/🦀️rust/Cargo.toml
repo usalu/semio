@@ -30,6 +30,7 @@ semio-s-artifact-lowpoly-lowpoly-model-diff = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]
+semio-framework-schema-validator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

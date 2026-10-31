@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🚪️entrypoint/🔣️.json",import.meta.url),"utf8")),fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚪️entrypoint/🔣️.json",import.meta.url),"utf8"));
 const scriptArgument=(argv:string[]):boolean=>{let index=0;while(index<argv.length){if(argv[index]==="--watch"||argv[index]!.startsWith("--cwd="))index++;else if(argv[index]==="--cwd")index+=2;else break;}return index<argv.length&&(fixture.scriptExtensions as string[]).some(extension=>argv[index]!.endsWith(extension));};
 test("native entrypoint neutral routes agree with the independent SQLite oracle",()=>{

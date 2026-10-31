@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {NativeDecodeControl} from "../../🟦️.ts";
 import type {NativeDecodeCloseControl,NativeRetirementDecodeControl} from "../../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";

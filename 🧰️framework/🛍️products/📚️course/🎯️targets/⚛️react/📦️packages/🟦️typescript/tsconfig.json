@@ -2,24 +2,61 @@
   "extends": "../../../../../../../tsconfig.json",
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/course-react-typecheck.tsbuildinfo",
-    "types": ["bun", "react", "react-dom", "vite/client"],
+    "types": [
+      "bun",
+      "react",
+      "react-dom",
+      "vite/client"
+    ],
     "paths": {
-      "@semio-tech/course-react": ["./🟦️.tsx"],
-      "@semio-tech/course-react/app": ["./📚️app/🟦️.tsx"],
-      "@semio-tech/course-react/stylesheet": ["./🎨️stylesheet/🟦️.ts"],
-      "@semio-tech/course-react/modules/run/.tsx": ["./🔨️modules/▶️run/🟦️.tsx"],
-      "@semio-tech/course-react/modules/results/.tsx": ["./🔨️modules/🏁️results/🟦️.tsx"],
-      "@semio-tech/course": ["../../../../📦️packages/🟦️typescript/🟦️.ts"],
-      "@semio-tech/pets-react": ["../../../../../🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
-      "@semio-tech/pets": ["../../../../../🐾️pets/📦️packages/🟦️typescript/🟦️.ts"],
-      "@semio-tech/framework/async": ["../../../../../../📦️packages/🟦️typescript/⏳️async/🟦️.ts"],
-      "@semio-tech/framework": ["../../../../../../📦️packages/🟦️typescript/🟦️.ts"],
-      "@semio-tech/framework-server": ["../../../../../🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
-      "@semio-tech/ui-react/introduction": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/👋️introduction/🟦️.tsx"],
-      "@semio-tech/ui-react/i18n": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/🟦️.ts"],
-      "@semio-tech/ui-react/chrome": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"],
-      "@semio-tech/ui-react": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
-      "dom-accessibility-api": ["../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"]
+      "@semio-tech/course-react": [
+        "./🟦️.tsx"
+      ],
+      "@semio-tech/course-react/app": [
+        "./📚️app/🟦️.tsx"
+      ],
+      "@semio-tech/course-react/stylesheet": [
+        "./🎨️stylesheet/🟦️.ts"
+      ],
+      "@semio-tech/course-react/modules/run/.tsx": [
+        "./🔨️modules/▶️run/🟦️.tsx"
+      ],
+      "@semio-tech/course-react/modules/results/.tsx": [
+        "./🔨️modules/🏁️results/🟦️.tsx"
+      ],
+      "@semio-tech/course": [
+        "../../../../📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "@semio-tech/pets-react": [
+        "../../../../../🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"
+      ],
+      "@semio-tech/pets": [
+        "../../../../../🐾️pets/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "@semio-tech/framework/async": [
+        "../../../../../../📦️packages/🟦️typescript/⏳️async/🟦️.ts"
+      ],
+      "@semio-tech/framework": [
+        "../../../../../../📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "@semio-tech/framework-server": [
+        "../../../../../🖥️server/📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "@semio-tech/ui-react/introduction": [
+        "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/👋️introduction/🟦️.tsx"
+      ],
+      "@semio-tech/ui-react/i18n": [
+        "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🌐️i18n/🟦️.ts"
+      ],
+      "@semio-tech/ui-react/chrome": [
+        "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+      ],
+      "@semio-tech/ui-react": [
+        "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"
+      ],
+      "dom-accessibility-api": [
+        "../../../../../../../node_modules/dom-accessibility-api/dist/index.d.ts"
+      ]
     }
   },
   "include": [
@@ -66,7 +103,10 @@
     "../../../../🧪️tests/🪜️challenge-views/🟦️.tsx",
     "../../../../🧪️tests/💬️challenge-hint-views/🟦️.tsx",
     "../../../../🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
-    "../../../../🧪️tests/🎨️stylesheet-tree/🟦️.tsx"
+    "../../../../🧪️tests/🎨️stylesheet-tree/🟦️.tsx",
+    "../../../../🧪️tests/📐️adaptive-layout/🟦️.tsx"
   ],
-  "exclude": ["**/node_modules/**"]
+  "exclude": [
+    "**/node_modules/**"
+  ]
 }

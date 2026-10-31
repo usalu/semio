@@ -1,0 +1,259 @@
+{
+  "$schema": "../../🧬️schema/🔣️.json#/$defs/EnvironmentDocument",
+  "version": "semio.staffage/v2",
+  "presets": [
+    {
+      "id": "office-neutral",
+      "title": {
+        "en": "Office, neutral",
+        "de": "Büro, neutral"
+      },
+      "description": {
+        "en": "Indoor office at a neutral operative temperature of 22 °C, still air, no sun: the ISO 7730 category B reference for seated and standing light work. Radiant and air temperature equal, so radiation and convection act equally.",
+        "de": "Innenraumbüro bei neutraler operativer Temperatur von 22 °C, ruhige Luft, keine Sonne: die Referenz der ISO 7730 Kategorie B für leichte sitzende und stehende Tätigkeit. Strahlungs- und Lufttemperatur sind gleich, Strahlung und Konvektion wirken gleich stark."
+      },
+      "environment": {
+        "airTempC": 22,
+        "meanRadiantTempC": 22,
+        "relativeHumidity": 0.5,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "iso-7730"
+    },
+    {
+      "id": "indoor-heated-winter",
+      "title": {
+        "en": "Heated interior, winter",
+        "de": "Beheizter Innenraum, Winter"
+      },
+      "description": {
+        "en": "Heated room in winter: air 21 °C, cooler window and exterior wall surfaces lower the mean radiant temperature to 19 °C, dry air (35 % relative humidity).",
+        "de": "Beheizter Raum im Winter: Luft 21 °C, kühlere Fenster- und Außenwandflächen senken die mittlere Strahlungstemperatur auf 19 °C, trockene Luft (35 % relative Feuchte)."
+      },
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 19,
+        "relativeHumidity": 0.35,
+        "windMS": 0.1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "iso-7730"
+    },
+    {
+      "id": "winter-overcast",
+      "title": {
+        "en": "Winter day, overcast",
+        "de": "Wintertag, bedeckt"
+      },
+      "description": {
+        "en": "Overcast cold day: air 2 °C, humid, wind 3 m/s, diffuse light only (about 80 W/m² on a normal surface), cloud base keeps the sky temperature 4 K below the air.",
+        "de": "Bedeckter kalter Tag: Luft 2 °C, feucht, Wind 3 m/s, nur diffuses Licht (etwa 80 W/m² auf eine Normalfläche), die Wolkenbasis hält die Himmelstemperatur 4 K unter der Luft."
+      },
+      "environment": {
+        "airTempC": 2,
+        "meanRadiantTempC": 2,
+        "skyTempC": -2,
+        "groundTempC": 2,
+        "relativeHumidity": 0.85,
+        "windMS": 3,
+        "windDirectionDeg": 0,
+        "solarWM2": 80,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "illustrative"
+    },
+    {
+      "id": "winter-clear-night",
+      "title": {
+        "en": "Winter night, clear",
+        "de": "Winternacht, klar"
+      },
+      "description": {
+        "en": "Clear cold night: air −5 °C, wind 1 m/s, no sun. The effective clear-sky temperature follows Swinbank (1963), T_sky = 0.0552 T_air^1.5, giving −31 °C, so upward-facing surfaces radiate strongly to the sky.",
+        "de": "Klare kalte Nacht: Luft −5 °C, Wind 1 m/s, keine Sonne. Die effektive Klarhimmeltemperatur folgt Swinbank (1963), T_Himmel = 0,0552 T_Luft^1,5, also −31 °C; nach oben gerichtete Flächen strahlen stark zum Himmel ab."
+      },
+      "environment": {
+        "airTempC": -5,
+        "meanRadiantTempC": -5,
+        "skyTempC": -31,
+        "groundTempC": -4,
+        "relativeHumidity": 0.8,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "swinbank-1963"
+    },
+    {
+      "id": "spring-mild-sun",
+      "title": {
+        "en": "Spring day, mild and sunny",
+        "de": "Frühlingstag, mild und sonnig"
+      },
+      "description": {
+        "en": "Mild sunny day: air 15 °C, beam-normal irradiance 600 W/m² with 20 % diffuse share, wind 2 m/s, clear sky temperature −3 °C (Swinbank 1963), ground 18 °C.",
+        "de": "Milder sonniger Tag: Luft 15 °C, Normalstrahlung 600 W/m² mit 20 % Diffusanteil, Wind 2 m/s, Klarhimmeltemperatur −3 °C (Swinbank 1963), Boden 18 °C."
+      },
+      "environment": {
+        "airTempC": 15,
+        "meanRadiantTempC": 15,
+        "skyTempC": -3,
+        "groundTempC": 18,
+        "relativeHumidity": 0.55,
+        "windMS": 2,
+        "windDirectionDeg": 0,
+        "solarWM2": 600,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "swinbank-1963"
+    },
+    {
+      "id": "summer-hot-sun",
+      "title": {
+        "en": "Summer day, hot and sunny",
+        "de": "Sommertag, heiß und sonnig"
+      },
+      "description": {
+        "en": "Hot clear day: air 32 °C, 40 % relative humidity, beam-normal irradiance 850 W/m² with 12 % diffuse share, wind 1.5 m/s, clear sky temperature 21 °C (Swinbank 1963), sun-heated pavement 50 °C.",
+        "de": "Heißer klarer Tag: Luft 32 °C, 40 % relative Feuchte, Normalstrahlung 850 W/m² mit 12 % Diffusanteil, Wind 1,5 m/s, Klarhimmeltemperatur 21 °C (Swinbank 1963), sonnenerwärmter Belag 50 °C."
+      },
+      "environment": {
+        "airTempC": 32,
+        "meanRadiantTempC": 36,
+        "skyTempC": 21,
+        "groundTempC": 50,
+        "relativeHumidity": 0.4,
+        "windMS": 1.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 850,
+        "diffuseFraction": 0.12,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "swinbank-1963"
+    },
+    {
+      "id": "summer-heatwave-calm",
+      "title": {
+        "en": "Heatwave, calm",
+        "de": "Hitzewelle, windstill"
+      },
+      "description": {
+        "en": "Heatwave afternoon: air 38 °C, dry (30 % relative humidity), almost calm (0.3 m/s), beam-normal irradiance 900 W/m², pavement 58 °C; the body can only lose heat by sweating.",
+        "de": "Hitzewellen-Nachmittag: Luft 38 °C, trocken (30 % relative Feuchte), fast windstill (0,3 m/s), Normalstrahlung 900 W/m², Belag 58 °C; der Körper kann Wärme nur durch Schwitzen abgeben."
+      },
+      "environment": {
+        "airTempC": 38,
+        "meanRadiantTempC": 44,
+        "skyTempC": 26,
+        "groundTempC": 58,
+        "relativeHumidity": 0.3,
+        "windMS": 0.3,
+        "windDirectionDeg": 0,
+        "solarWM2": 900,
+        "diffuseFraction": 0.1,
+        "pressurePa": 101325
+      },
+      "source": "illustrative"
+    },
+    {
+      "id": "summer-humid",
+      "title": {
+        "en": "Summer day, humid and hazy",
+        "de": "Sommertag, schwül und dunstig"
+      },
+      "description": {
+        "en": "Humid summer day: air 30 °C, 80 % relative humidity, hazy sun (500 W/m² beam-normal, 30 % diffuse), wind 0.5 m/s, sky 19 °C; evaporation is strongly limited by the vapour pressure of the air.",
+        "de": "Schwüler Sommertag: Luft 30 °C, 80 % relative Feuchte, dunstige Sonne (500 W/m² Normalstrahlung, 30 % diffus), Wind 0,5 m/s, Himmel 19 °C; die Verdunstung wird durch den Dampfdruck der Luft stark begrenzt."
+      },
+      "environment": {
+        "airTempC": 30,
+        "meanRadiantTempC": 32,
+        "skyTempC": 19,
+        "groundTempC": 38,
+        "relativeHumidity": 0.8,
+        "windMS": 0.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "diffuseFraction": 0.3,
+        "pressurePa": 101325
+      },
+      "source": "illustrative"
+    },
+    {
+      "id": "summer-night",
+      "title": {
+        "en": "Summer night, clear",
+        "de": "Sommernacht, klar"
+      },
+      "description": {
+        "en": "Clear warm night: air 20 °C, 60 % relative humidity, wind 0.5 m/s, no sun, clear-sky temperature 4 °C (Swinbank 1963); open surfaces cool below the air temperature by sky radiation.",
+        "de": "Klare warme Nacht: Luft 20 °C, 60 % relative Feuchte, Wind 0,5 m/s, keine Sonne, Klarhimmeltemperatur 4 °C (Swinbank 1963); offene Flächen kühlen durch Himmelsstrahlung unter die Lufttemperatur ab."
+      },
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 4,
+        "groundTempC": 19,
+        "relativeHumidity": 0.6,
+        "windMS": 0.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "authored-estimate",
+      "reference": "swinbank-1963"
+    },
+    {
+      "id": "windy-cool",
+      "title": {
+        "en": "Cool and windy",
+        "de": "Kühl und windig"
+      },
+      "description": {
+        "en": "Cool windy day: air 10 °C, wind 8 m/s, overcast (diffuse 100 W/m²), sky 6 °C; convection dominates the exchange of every exposed surface.",
+        "de": "Kühler windiger Tag: Luft 10 °C, Wind 8 m/s, bedeckt (diffus 100 W/m²), Himmel 6 °C; die Konvektion dominiert den Austausch aller exponierten Flächen."
+      },
+      "environment": {
+        "airTempC": 10,
+        "meanRadiantTempC": 10,
+        "skyTempC": 6,
+        "groundTempC": 10,
+        "relativeHumidity": 0.7,
+        "windMS": 8,
+        "windDirectionDeg": 0,
+        "solarWM2": 100,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "source": "illustrative"
+    }
+  ],
+  "references": [
+    {
+      "id": "swinbank-1963",
+      "citation": "Swinbank, W. C. (1963). Long-wave radiation from clear skies. Quarterly Journal of the Royal Meteorological Society 89(381): 339-348.",
+      "url": "https://doi.org/10.1002/qj.49708938105"
+    },
+    {
+      "id": "iso-7730",
+      "citation": "ISO 7730:2005. Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort using calculation of the PMV and PPD indices and local thermal comfort criteria."
+    }
+  ]
+}

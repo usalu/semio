@@ -1,7 +1,7 @@
 /** 🖼️ The node graph host rendering, gesture retirement and viewport action tests. */
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { uiViewport2dSchema as viewport2dSchema } from "@semio-tech/ui/testing/fixtures";
 import { viewportPoseFixture } from "@semio-tech/ui/testing/fixtures";
 import * as flowSessionLoader from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";

@@ -1,6 +1,6 @@
 /** 🚆️ Released direct counterparts remain selected, reversible and distinct from whole-view acceptance. */
 import {expect,test} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {applyPatch} from 'fast-json-patch';

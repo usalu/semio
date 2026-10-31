@@ -1,6 +1,6 @@
 /** ✂️ Contract: a derived fact is the answer of a question put to a pure computation; the projects that consumed it hold one row and the raw rows it read are the support of a pseudo owner. A stale support row asks the question again: an equal answer keeps every holder valid, a different or failing answer stales exactly the holders, and a stale raw row a project reads itself stales it as before. The decisions equal the independent Python model on hand written and seeded random worlds, and a cutoff never leaves a stale row in a valid generation. */
 import{expect,test}from"bun:test";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";

@@ -16,7 +16,7 @@ export default defineConfig({
   cacheDir: testCacheDirectoryV1(process.env, "framework-schema"),
   test: {
     root: testRoot,
-    include: ["🧪️tests/✅️draft07-oracle/🟦️.ts", "🧪️tests/🏷️entity-kinds/🟦️.ts", "🧪️tests/📤️schema-export-entries/🟦️.ts"],
+    include: ["🧪️tests/✅️draft07-oracle/🟦️.ts", "🧪️tests/🏷️entity-kinds/🟦️.ts", "🧪️tests/📤️schema-export-entries/🟦️.ts", "🧪️tests/🧩️module-compile/🟦️.ts"],
     passWithNoTests: false,
   },
 });

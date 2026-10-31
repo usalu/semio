@@ -1,7 +1,6 @@
 #!/usr/bin/env repo
 import { buildCourseAssignmentV1 } from "../../🏗️builder/📖️assignments/🟦️.ts";
 import { withCourseAssignmentPdfsV1 } from "../../🏗️builder/🌐️vite/📦️assignments/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { typecheckRepositoryProjectV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -54,7 +53,7 @@ class DevScript extends BundleScript {
  * `PROCTOR_PORT`. */
 class DevSiteScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await withCourseAssignmentPdfsV1(this.repoRoot, this.invocation, runtimeChannels => runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels, config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-course"), defaultPort: playgroundDevPortString("architecture-course"), fixedPort: true }));
+    await withCourseAssignmentPdfsV1(this.repoRoot, this.invocation, (runtimeChannels, control) => runViteBunxDev(this.invocation, control, this.root, segments, { runtimeChannels, config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-course"), defaultPort: playgroundDevPortString("architecture-course"), fixedPort: true }));
   }
 }
 /** 📝️ Publishes the English course assignment. */

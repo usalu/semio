@@ -1,4 +1,4 @@
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import {NativeDecodeControl} from "../🟦️.ts";

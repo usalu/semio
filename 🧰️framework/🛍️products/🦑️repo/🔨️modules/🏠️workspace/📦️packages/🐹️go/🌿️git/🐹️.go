@@ -20,6 +20,8 @@ import (
 	runtime "runtime"
 	strings "strings"
 	sync "sync"
+	unicode "unicode"
+	utf8 "unicode/utf8"
 )
 
 // #region 🌿️Git
@@ -52,9 +54,39 @@ func ExecCommandContext(ctx context.Context, command string, args []string, cwd 
 }
 
 // 🪪️registeredTool is the part of one tool registry row the Go side reads: its id, the executable names it owns, where to look for it and the environment it gets.
+// 📣️registeredInvocation maps one owned secondary name to the same primary executable.
+type registeredInvocation struct {
+	Command string `json:"command"`
+	Prefix []string `json:"prefix"`
+}
+
+// 🔒️UnmarshalJSON keeps the invocation row closed without constraining unrelated registry fields.
+func (invocation *registeredInvocation) UnmarshalJSON(data []byte) error {
+	type row registeredInvocation
+	var value row
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&value); err != nil { return err }
+	*invocation = registeredInvocation(value)
+	return nil
+}
+
+// 📋️registeredInvocations distinguishes an omitted optional policy from invalid null DATA.
+type registeredInvocations []registeredInvocation
+
+// 🔒️UnmarshalJSON requires an actual array when invocation DATA is present.
+func (invocations *registeredInvocations) UnmarshalJSON(data []byte) error {
+	if bytes.Equal(bytes.TrimSpace(data), []byte("null")) { return fmt.Errorf("invocations must be an array") }
+	var rows []registeredInvocation
+	if err := json.Unmarshal(data, &rows); err != nil { return err }
+	*invocations = rows
+	return nil
+}
+
 type registeredTool struct {
 	ID       string   `json:"id"`
 	Commands []string `json:"commands"`
+	Invocations registeredInvocations `json:"invocations"`
 	Locate   []struct {
 		Kind        string   `json:"kind"`
 		Name        string   `json:"name"`
@@ -96,13 +128,39 @@ func loadToolRegistry(cwd string) *toolRegistryDocument {
 				return
 			}
 			var document toolRegistryDocument
-			if json.Unmarshal(text, &document) == nil {
+			if json.Unmarshal(text, &document) == nil && validRegisteredInvocations(document) {
 				toolRegistryValue = &document
 			}
 			return
 		}
 	})
 	return toolRegistryValue
+}
+
+// 🧬️validRegisteredInvocations checks same-owner secondary declarations before routing.
+func validRegisteredInvocations(document toolRegistryDocument) bool {
+	for _, tool := range document.Tools {
+		seen := map[string]bool{}
+		if len(tool.Invocations) > 16 { return false }
+		for _, invocation := range tool.Invocations {
+			owned := false
+			for _, command := range tool.Commands { if command == invocation.Command { owned = true } }
+			if !owned || len(tool.Commands) == 0 || invocation.Command == tool.Commands[0] || seen[invocation.Command] || len(invocation.Prefix) == 0 || len(invocation.Prefix) > 16 { return false }
+			for _, argument := range invocation.Prefix { if len([]rune(argument)) == 0 || len([]rune(argument)) > 256 || strings.IndexFunc(argument, func(value rune) bool { return value < 32 || value == 127 }) >= 0 { return false } }
+			seen[invocation.Command] = true
+		}
+	}
+	return true
+}
+
+// 🪟️registeredCommandName applies the declared bare executable suffix normalization.
+func registeredCommandName(command string) string { extension := filepath.Ext(command); if strings.EqualFold(extension, ".exe") || strings.EqualFold(extension, ".cmd") || strings.EqualFold(extension, ".bat") { return strings.TrimSuffix(command, extension) }; return command }
+
+// 🧭️registeredToolInvocation keeps unmapped siblings and clones declared primary prefixes.
+func registeredToolInvocation(tool registeredTool, command string) (string, []string) {
+	command = registeredCommandName(command)
+	for _, invocation := range tool.Invocations { if invocation.Command == command { return tool.Commands[0], append([]string{}, invocation.Prefix...) } }
+	return command, nil
 }
 
 // 🧷️toolNameMatches reports whether an environment variable name matches a registry pattern whose * stands for any characters; Windows names ignore case.
@@ -116,7 +174,7 @@ func toolNameMatches(pattern string, name string) bool {
 
 // 🪛️resolveRegisteredTool finds the executable of a registered tool: the SEMIO_TOOL_<ID> override, then PATH, then the directories of the tool's path locator; empty when the host does not have it.
 func resolveRegisteredTool(tool registeredTool, command string) string {
-	if override := os.Getenv("SEMIO_TOOL_" + strings.ToUpper(strings.ReplaceAll(tool.ID, "-", "_"))); override != "" {
+	if override := os.Getenv("SEMIO_TOOL_" + strings.ToUpper(strings.ReplaceAll(tool.ID, "-", "_"))); len(tool.Commands) > 0 && command == tool.Commands[0] && override != "" {
 		if _, err := os.Stat(override); err == nil {
 			return override
 		}
@@ -163,26 +221,28 @@ func registeredToolEnvironment(registry *toolRegistryDocument, tool registeredTo
 }
 
 // 🧱️routeRegisteredTool resolves a bare command name that belongs to a registered tool to its executable and the registry's sanitized environment. Explicit paths, unknown commands, a host without the tool, an unreadable registry and SEMIO_TOOL_GUARD=off answer the command unchanged and a nil environment.
-func routeRegisteredTool(command string, cwd string) (string, []string) {
+func routeRegisteredTool(command string, cwd string) (string, []string, []string) {
 	if strings.ContainsAny(command, "/\\") || os.Getenv("SEMIO_TOOL_GUARD") == "off" {
-		return command, nil
+		return command, nil, nil
 	}
 	registry := loadToolRegistry(cwd)
 	if registry == nil {
-		return command, nil
+		return command, nil, nil
 	}
+	normalized := registeredCommandName(command)
 	for _, tool := range registry.Tools {
 		for _, name := range tool.Commands {
-			if name != command {
+			if name != normalized {
 				continue
 			}
-			if program := resolveRegisteredTool(tool, command); program != "" {
-				return program, registeredToolEnvironment(registry, tool)
+			selected, prefix := registeredToolInvocation(tool, normalized)
+			if program := resolveRegisteredTool(tool, selected); program != "" {
+				return program, prefix, registeredToolEnvironment(registry, tool)
 			}
-			return command, nil
+			return command, nil, nil
 		}
 	}
-	return command, nil
+	return command, nil, nil
 }
 
 // 🛑️ToolError says why a registered tool could not be run at all; a tool that ran and failed answers its status in the result instead.
@@ -230,6 +290,7 @@ func RunTool(toolID string, args []string, options ToolRunOptions) (ToolRunResul
 	}
 	cmd := ToolCommandContext(ctx, command, args...)
 	cmd.Dir = options.Dir
+	if refusal, ok := cmd.Err.(*ToolCapabilityError); ok { return ToolRunResult{}, refusal }
 	cmd.Env = append(append([]string{}, cmd.Environ()...), options.Env...)
 	cmd.Stdin = options.Stdin
 	var stdout, stderr bytes.Buffer
@@ -251,10 +312,73 @@ func ToolCommand(command string, args ...string) *exec.Cmd {
 	return ToolCommandContext(context.Background(), command, args...)
 }
 
+// 🪟️ToolCapabilityError refuses unsupported registered process semantics before launch.
+type ToolCapabilityError struct { Capability string; Reason string }
+
+// 🚧️Error reports the closed capability and reason without echoing caller arguments.
+func (refusal *ToolCapabilityError) Error() string { return "Tool capability " + refusal.Capability + ": " + refusal.Reason }
+
+// 🔐️registeredBatchFragment implements only the declared literal batch argument subset.
+func registeredBatchFragment(program string, args []string) (string, error) {
+ refusal := func(reason string) (string, error) { return "", &ToolCapabilityError{Capability: "windows-batch-arguments", Reason: reason} }
+ if strings.TrimRight(program, ". ") != program { return refusal("target-alias") }
+ if !(len(program) > 2 && program[1] == ':' && (program[2] == '/' || program[2] == '\\')) && !strings.HasPrefix(program, "\\\\") { return refusal("invalid-target") }
+ units := 0
+ for _, value := range append([]string{program}, args...) {
+  if !utf8.ValidString(value) { return refusal("utf8") }
+  for _, point := range value {
+   if point == '"' { return refusal("quote") }
+   if point == '%' { return refusal("percent") }
+   if unicode.IsControl(point) { return refusal("control") }
+   units++
+   if point > 0xffff { units++ }
+   if units > 8191 { return refusal("line-bound") }
+  }
+ }
+ escape := func(value string) string {
+  var result strings.Builder
+  for _, point := range value { if strings.ContainsRune("()[]%!^\"`<>&|;, *?", point) { result.WriteByte('^') }; result.WriteRune(point) }
+  return result.String()
+ }
+ var result strings.Builder
+ result.WriteByte('"')
+ result.WriteString(escape(program))
+ for _, argument := range args {
+  tail := len(argument) - len(strings.TrimRight(argument, "\\"))
+  result.WriteByte(' ')
+  result.WriteString(escape("\"" + argument + strings.Repeat("\\", tail) + "\""))
+ }
+ result.WriteByte('"')
+ line := result.String()
+ units = 0
+ for _, point := range "cmd.exe /d /v:off /s /c " + line { units++; if point > 0xffff { units++ } }
+ if units > 8191 { return refusal("line-bound") }
+ return line, nil
+}
+
+// 🧭️registeredBatchTarget recognizes Windows normalized batch aliases before refusing them.
+func registeredBatchTarget(program string) bool { extension := strings.ToLower(filepath.Ext(strings.TrimRight(program, ". "))); return extension == ".cmd" || extension == ".bat" }
+
+// 🪟️registeredToolCommandArguments keeps ordinary executable argv and owns batch refusal.
+func registeredToolCommandArguments(program string, prefix []string, args []string, windows bool, shell string) (string, []string, error) {
+ arguments := append(append([]string{}, prefix...), args...)
+ if windows && registeredBatchTarget(program) {
+  line, refusal := registeredBatchFragment(program, arguments)
+  if refusal != nil { return program, arguments, refusal }
+  if shell == "" { shell = "cmd.exe" }
+  return shell, []string{"/d", "/v:off", "/s", "/c", line}, nil
+ }
+ return program, arguments, nil
+}
+
 // 🪡️ToolCommandContext is exec.CommandContext for a registered tool.
 func ToolCommandContext(ctx context.Context, command string, args ...string) *exec.Cmd {
-	program, environment := routeRegisteredTool(command, "")
-	cmd := exec.CommandContext(ctx, program, args...)
+	program, prefix, environment := routeRegisteredTool(command, "")
+	batch := runtime.GOOS == "windows" && environment != nil && registeredBatchTarget(program)
+	program, arguments, refusal := registeredToolCommandArguments(program, prefix, args, batch, os.Getenv("COMSPEC"))
+	cmd := exec.CommandContext(ctx, program, arguments...)
+	if refusal != nil { cmd.Err = refusal }
+	if refusal == nil && batch { setRegisteredBatchCommandLine(cmd, arguments[4]) }
 	if environment != nil {
 		cmd.Env = environment
 	}

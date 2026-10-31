@@ -8,7 +8,20 @@
           "test",
           "cache"
         ],
-        "operands": 3
+        "operands": 3,
+        "schemaPrefix": [
+          "schema"
+        ],
+        "schemaCommands": [
+          "verify",
+          "entries",
+          "compile"
+        ],
+        "schemaMinimumOperands": 2,
+        "helpFlags": [
+          "-h",
+          "--help"
+        ]
       }
     },
     "Case": {

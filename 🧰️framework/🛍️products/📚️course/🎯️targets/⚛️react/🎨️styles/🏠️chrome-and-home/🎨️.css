@@ -54,12 +54,15 @@
 
 /* 🏠️ The overview's cards over the glass, fixed on a grid while the pages pan behind it: the card layer takes its
    track lists from home (`--course-home-columns`, `--course-home-rows`) with no gaps (the spacing lies inside the cells),
-   and each card is compact and centred in its cell. The grid is only laid out where every card fits its cell; a card
-   that is taller after all starts at the top of its cell (never above it, under the navbar) and scrolls inside it,
-   so it never lies over the card below. Where the learner swipes through the grid instead (below 768 px, short
-   windows) the overview places every card on its page itself. DOM order is reading order at every width. */
+   and each card is compact and centred in its cell. Extra rows scroll inside the card layer. A card that is taller
+   than its cell starts at the top of its cell (never above it, under the navbar) and scrolls inside it, so it never
+   lies over the card below. Where the learner swipes through the grid instead (below 768 px) the overview places
+   every card on its page itself. DOM order is reading order at every width. */
 .course-home-grid {
   display: grid;
+  overflow-x: hidden;
+  overflow-y: auto;
+  pointer-events: auto;
   grid-template-columns: var(--course-home-columns);
   grid-template-rows: var(--course-home-rows);
 }

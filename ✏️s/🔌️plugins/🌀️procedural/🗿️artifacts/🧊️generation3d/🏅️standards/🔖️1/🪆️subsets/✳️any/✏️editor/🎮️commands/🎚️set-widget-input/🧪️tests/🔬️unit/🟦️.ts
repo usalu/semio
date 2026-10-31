@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import mutationSchema from "../../../../../🧬️schema/🧬️mutations/🎛️change-widget-input/🧬️schema/🔣️.json";

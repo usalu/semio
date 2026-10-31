@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
+import Ajv from "ajv";
 import { viewport3dSchema as viewportSchema } from "@semio-tech/framework/ui/viewport/3d/schema";
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
@@ -8,7 +7,7 @@ import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪�
 import { parseFem3dModelWindowConfig } from "../../🟦️.ts";
 
 export function testFem3dModelWindowConfigContract(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(viewportSchema).compile(schema);
   const base = fixture.valid[0];
   assert(validate(base), JSON.stringify(validate.errors));
   assert.deepEqual(parseFem3dModelWindowConfig(base), base);

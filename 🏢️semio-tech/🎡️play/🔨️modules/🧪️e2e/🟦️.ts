@@ -19,24 +19,19 @@ export class TestScript extends BundleScript {
   protected reportDirectory="play-e2e";
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E accepts no compiler or server arguments");
-    const root = resolve(this.root, "../.."), sessionRoot = playE2eSessionRoot(this.repoRoot), controller = new AbortController();
+    const root = resolve(this.root, "../.."), sessionRoot = playE2eSessionRoot(this.repoRoot), controller = new AbortController(), signal = AbortSignal.any([this.invocation.control.signal, controller.signal]);
     const session = readServiceSession(sessionRoot, PLAY_E2E_OWNER, playE2eInvocationPid(process.env));
     const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       console.log(`Waiting for play E2E service ${session.id}`);
       const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
-      const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });
+      const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(PLAY_E2E_OWNER, progress, language)) });
       const output = process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated",this.reportDirectory, session.id) : join(root, "dist/reports/e2e", session.id);
       console.log(`Testing play at ${baseURL}`);
-      const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
-      const cancel = (): void => { child.kill("SIGTERM"); };
-      controller.signal.addEventListener("abort", cancel, { once: true });
-      if (controller.signal.aborted) cancel();
-      let status: number;
-      try { status = await toolExitV1(child); }
-      finally { controller.signal.removeEventListener("abort", cancel); }
-      if (status !== 0 && !controller.signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
+      const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output, ...this.selection], { signal, cwd: this.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(this.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
+      const status = await toolExitV1(child);
+      if (status !== 0 && !signal.aborted) throw new Error(`Play acceptance tests failed (${status})`);
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }
 }

@@ -5,7 +5,7 @@ Feature: The figure component is a faithful, accessible view of one scene
     Then its width in CSS millimetres equals the paper width of the scene and doubles at zoom 2
   Scenario: Contain fits a parent box
     When the figure is rendered with fit contain
-    Then it fills the parent box, keeps the paper aspect ratio and its viewBox equals the paper scene
+    Then it fills the parent box without taking the box size from the scene, and its viewBox keeps the paper aspect
   Scenario: Accessible name and alternative
     Given a thermal figure in English and in German
     Then it is a focusable role img whose aria-label names asset, pose, view and scale in the chosen language

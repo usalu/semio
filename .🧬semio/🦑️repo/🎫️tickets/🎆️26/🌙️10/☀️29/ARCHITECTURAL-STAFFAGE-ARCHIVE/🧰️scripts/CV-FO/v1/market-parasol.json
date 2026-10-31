@@ -1,0 +1,1871 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "market-parasol",
+    "category": "objects",
+    "title": {
+      "en": "Market Parasol",
+      "de": "Marktschirm"
+    },
+    "summary": {
+      "en": "A tilting market parasol with a concrete base, an aluminium mast, an eight-rib canopy (11 degrees plan offset so all eight ribs show in elevation), fabric scallops and a sliding runner whose stretchers fold the ribs down along the mast.",
+      "de": "Ein neigbarer Marktschirm mit Betonfuß, Aluminiummast, achtspeichigem Schirm (11 Grad Planversatz, damit alle acht Speichen im Aufriss sichtbar sind), Stoffbögen und einem Läufer, dessen Spreizen die Speichen am Mast nach unten klappen."
+    },
+    "tags": [
+      "parasol",
+      "market",
+      "tilt",
+      "canopy",
+      "wind",
+      "street-furniture"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (objects worker)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1: Actions on structures, Part 1-4: General actions, wind actions."
+        },
+        {
+          "id": "en-1992-1-1",
+          "citation": "EN 1992-1-1:2004 Eurocode 2: Design of concrete structures, Part 1-1: General rules (E_cm for C30/37)."
+        },
+        {
+          "id": "en-1999-1-1",
+          "citation": "EN 1999-1-1:2007 Eurocode 9: Design of aluminium structures, Part 1-1: General structural rules (E = 70 GPa)."
+        },
+        {
+          "id": "ashby-2011",
+          "citation": "Ashby, M. F. (2011). Materials Selection in Mechanical Design, 4th ed., Butterworth-Heinemann."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation. The base is a 0.4 x 0.3 x 0.2 m concrete block (about 58 kg); the foot is modelled as a fixed socket, so tipping and sliding of the base are not checked (ballast data unknown). Wind: q = 0.5 rho v^2 at v = 8 m/s (about 40 Pa), drag 1.2 and uplift 0.5 on 5.3 m2 projected canopy, authored estimates on the basis of EN 1991-1-4. Canopy ribs are 2 of 8 ribs; ribs and panels carry their masses for four ribs each side. Tilt is 8 degrees towards the sun on the right.",
+        "de": "Seitenansicht. Der Fuß ist ein Betonblock 0,4 x 0,3 x 0,2 m (etwa 58 kg); der Fuß ist als feste Hülse modelliert, Kippen und Gleiten des Fußes werden nicht nachgewiesen (Ballastdaten unbekannt). Wind: q = 0,5 rho v^2 bei v = 8 m/s (etwa 40 Pa), Widerstand 1,2 und Auftrieb 0,5 auf 5,3 m² projizierter Schirmfläche, Schätzungen auf Basis EN 1991-1-4. Die Rippen sind 2 von 8; Rippen und Bahnen tragen die Masse für je vier Rippen pro Seite. Neigung 8 Grad zur Sonne rechts."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.4,
+      "widthM": 2.6,
+      "depthM": 2.6,
+      "massKg": 66.7
+    },
+    "materials": [
+      {
+        "id": "concrete",
+        "title": {
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2400,
+        "elasticModulusPa": 33000000000,
+        "source": "literature",
+        "reference": "en-1992-1-1"
+      },
+      {
+        "id": "aluminium-anodised",
+        "title": {
+          "en": "Anodised aluminium",
+          "de": "Eloxiertes Aluminium"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 2700,
+        "elasticModulusPa": 70000000000,
+        "source": "literature",
+        "reference": "en-1999-1-1"
+      },
+      {
+        "id": "polyester-canvas",
+        "title": {
+          "en": "Polyester canopy fabric",
+          "de": "Polyester-Schirmstoff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "title": {
+            "en": "Concrete base",
+            "de": "Betonfuß"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 57.6,
+            "comX": 0,
+            "comY": 0.1,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1992-1-1"
+          }
+        },
+        {
+          "id": "mast",
+          "parent": "base",
+          "title": {
+            "en": "Tilting mast",
+            "de": "Neigungsmast"
+          },
+          "x": 0,
+          "y": 0.2,
+          "angleDeg": 90,
+          "lengthM": 2.15,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 3.2,
+            "comX": 1.075,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1999-1-1"
+          }
+        },
+        {
+          "id": "crown",
+          "parent": "mast",
+          "title": {
+            "en": "Crown hub",
+            "de": "Schirmkrone"
+          },
+          "x": 2.15,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 0.05,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "runner",
+          "parent": "mast",
+          "title": {
+            "en": "Sliding runner",
+            "de": "Gleitring (Läufer)"
+          },
+          "x": 1.75744,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 0.05,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.74,
+            "maxM": 0.1
+          },
+          "mass": {
+            "kg": 0.4,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-right",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 11 deg (near right)",
+            "de": "Speiche bei 11 Grad (rechts)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -15.2803,
+          "lengthM": 1.2374,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.6187,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-b",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 56 deg",
+            "de": "Speiche bei 56 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -25.7478,
+          "lengthM": 0.7507,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.3753,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-c",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 101 deg",
+            "de": "Speiche bei 101 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -126.0579,
+          "lengthM": 0.4034,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.2017,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-d",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 146 deg",
+            "de": "Speiche bei 146 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -162.138,
+          "lengthM": 1.0632,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.5316,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-left",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 191 deg (left)",
+            "de": "Speiche bei 191 Grad (links)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -164.7197,
+          "lengthM": 1.2374,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.6187,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-f",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 236 deg",
+            "de": "Speiche bei 236 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -154.2522,
+          "lengthM": 0.7507,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.3753,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-g",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 281 deg",
+            "de": "Speiche bei 281 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -53.9421,
+          "lengthM": 0.4034,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.2017,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-h",
+          "parent": "crown",
+          "title": {
+            "en": "Rib at 326 deg",
+            "de": "Speiche bei 326 Grad"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -17.862,
+          "lengthM": 1.0632,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          },
+          "mass": {
+            "kg": 0.6875,
+            "comX": 0.5316,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stretch-right",
+          "parent": "runner",
+          "title": {
+            "en": "Stretcher right",
+            "de": "Spreize rechts"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 29.0537,
+          "lengthM": 0.55,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          }
+        },
+        {
+          "id": "stretch-left",
+          "parent": "runner",
+          "title": {
+            "en": "Stretcher left",
+            "de": "Spreize links"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 150.9463,
+          "lengthM": 0.55,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 100
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "socket",
+        "bone": "base",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Ground socket",
+          "de": "Bodenhülse"
+        },
+        "support": "fixed",
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.3
+      },
+      {
+        "id": "canopy-centre",
+        "bone": "crown",
+        "x": 0,
+        "y": -0.1,
+        "kind": "load",
+        "title": {
+          "en": "Canopy centre",
+          "de": "Schirmmitte"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "base-block",
+          "bone": "base",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "rect",
+          "x": -0.2,
+          "y": 0,
+          "w": 0.4,
+          "h": 0.2,
+          "r": 0.01,
+          "region": "base-concrete",
+          "material": "concrete"
+        },
+        {
+          "id": "base-seam",
+          "bone": "base",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.1,
+          "filled": false,
+          "tone": 0.35,
+          "kind": "poly",
+          "points": [
+            [
+              -0.2,
+              0.15
+            ],
+            [
+              0.2,
+              0.15
+            ]
+          ],
+          "closed": false,
+          "region": "base-concrete",
+          "material": "concrete"
+        },
+        {
+          "id": "base-plate",
+          "bone": "base",
+          "role": "body",
+          "lod": 1,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": -0.14,
+          "y": 0.2,
+          "w": 0.28,
+          "h": 0.015,
+          "r": 0.002,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "base-socket",
+          "bone": "base",
+          "role": "body",
+          "lod": 1,
+          "z": 1.3,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.045 0.215 L -0.035 0.30 L 0.035 0.30 L 0.045 0.215 Z",
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "base-bolt-0",
+          "bone": "base",
+          "role": "detail",
+          "lod": 3,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "ellipse",
+          "cx": -0.11,
+          "cy": 0.2075,
+          "rx": 0.008,
+          "ry": 0.0075,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "base-bolt-1",
+          "bone": "base",
+          "role": "detail",
+          "lod": 3,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "ellipse",
+          "cx": 0.11,
+          "cy": 0.2075,
+          "rx": 0.008,
+          "ry": 0.0075,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "base-grit",
+          "bone": "base",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.15 0.06 L -0.12 0.07 M 0.05 0.04 L 0.09 0.05 M -0.04 0.11 L 0.0 0.1",
+          "region": "base-concrete",
+          "material": "concrete"
+        },
+        {
+          "id": "mast",
+          "bone": "mast",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "capsule",
+          "x0": 0.0,
+          "y0": 0,
+          "x1": 2.15,
+          "y1": 0,
+          "r0": 0.026,
+          "r1": 0.021,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "mast-knuckle",
+          "bone": "mast",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0.0,
+          "cy": 0,
+          "rx": 0.04,
+          "ry": 0.04,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "mast-tilt-collar",
+          "bone": "mast",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "rect",
+          "x": 0.82,
+          "y": -0.034,
+          "w": 0.11,
+          "h": 0.068,
+          "r": 0.008,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "mast-crank",
+          "bone": "mast",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.18 0.021 L 1.18 0.075 L 1.14 0.095",
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "mast-crank-knob",
+          "bone": "mast",
+          "role": "detail",
+          "lod": 3,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 1.135,
+          "cy": 0.097,
+          "rx": 0.012,
+          "ry": 0.012,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "mast-seam",
+          "bone": "mast",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.4,
+              0.012
+            ],
+            [
+              0.78,
+              0.012
+            ]
+          ],
+          "closed": false,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "crown-hub",
+          "bone": "crown",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": -0.045,
+          "y": -0.06,
+          "w": 0.09,
+          "h": 0.14,
+          "r": 0.02,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "crown-finial",
+          "bone": "crown",
+          "role": "body",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.012 0.08 L -0.012 0.1 C -0.01 0.115 0.01 0.115 0.012 0.1 L 0.012 0.08 Z",
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "runner-collar",
+          "bone": "runner",
+          "role": "body",
+          "lod": 0,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": -0.035,
+          "y": -0.04,
+          "w": 0.07,
+          "h": 0.08,
+          "r": 0.02,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "runner-detent",
+          "bone": "runner",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.035,
+              0.0
+            ],
+            [
+              0.035,
+              0.0
+            ]
+          ],
+          "closed": false,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "stretch-right",
+          "bone": "stretch-right",
+          "role": "body",
+          "lod": 1,
+          "z": 2.4,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.55,
+          "y1": 0,
+          "r0": 0.006,
+          "r1": 0.006,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "stretch-right-eye",
+          "bone": "stretch-right",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.55,
+          "cy": 0,
+          "rx": 0.008,
+          "ry": 0.008,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "stretch-left",
+          "bone": "stretch-left",
+          "role": "body",
+          "lod": 1,
+          "z": 2.4,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.55,
+          "y1": 0,
+          "r0": 0.006,
+          "r1": 0.006,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "stretch-left-eye",
+          "bone": "stretch-left",
+          "role": "detail",
+          "lod": 3,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.55,
+          "cy": 0,
+          "rx": 0.008,
+          "ry": 0.008,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-right-rod",
+          "bone": "rib-right",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.237426,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-right-tip",
+          "bone": "rib-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 1.237426,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-right-scallop-a",
+          "bone": "rib-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.2374 0.0000 Q 1.2712 0.0662 1.3339 0.0264",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-right-scallop-b",
+          "bone": "rib-right",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.2374 0.0000 Q 1.1747 0.0399 1.1410 -0.0264",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-b-rod",
+          "bone": "rib-b",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.750699,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-b-tip",
+          "bone": "rib-b",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.750699,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-b-scallop-a",
+          "bone": "rib-b",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.7507 -0.0000 Q 0.7718 0.0713 0.8408 0.0434",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-b-scallop-b",
+          "bone": "rib-b",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.7507 -0.0000 Q 0.6818 0.0278 0.6606 -0.0434",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-c-rod",
+          "bone": "rib-c",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.403393,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-c-tip",
+          "bone": "rib-c",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.403393,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-c-scallop-a",
+          "bone": "rib-c",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.4034 0.0000 Q 0.3295 0.0080 0.3445 0.0808",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-c-scallop-b",
+          "bone": "rib-c",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.4034 0.0000 Q 0.3884 -0.0728 0.4623 -0.0808",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-d-rod",
+          "bone": "rib-d",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.063203,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-d-tip",
+          "bone": "rib-d",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 1.063203,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-d-scallop-a",
+          "bone": "rib-d",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.0632 -0.0000 Q 0.9987 -0.0370 0.9680 0.0307",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-d-scallop-b",
+          "bone": "rib-d",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.0632 -0.0000 Q 1.0939 -0.0677 1.1584 -0.0307",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-left-rod",
+          "bone": "rib-left",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.237426,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-left-tip",
+          "bone": "rib-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 1.237426,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-left-scallop-a",
+          "bone": "rib-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.2374 0.0000 Q 1.1747 -0.0399 1.1410 0.0264",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-left-scallop-b",
+          "bone": "rib-left",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.2374 0.0000 Q 1.2712 -0.0662 1.3339 -0.0264",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-f-rod",
+          "bone": "rib-f",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.750699,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-f-tip",
+          "bone": "rib-f",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.750699,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-f-scallop-a",
+          "bone": "rib-f",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.7507 -0.0000 Q 0.6818 -0.0278 0.6606 0.0434",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-f-scallop-b",
+          "bone": "rib-f",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.7507 -0.0000 Q 0.7718 -0.0713 0.8408 -0.0434",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-g-rod",
+          "bone": "rib-g",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.403393,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-g-tip",
+          "bone": "rib-g",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.403393,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-g-scallop-a",
+          "bone": "rib-g",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.4034 0.0000 Q 0.3884 0.0728 0.4623 0.0808",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-g-scallop-b",
+          "bone": "rib-g",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.4034 0.0000 Q 0.3295 -0.0080 0.3445 -0.0808",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-h-rod",
+          "bone": "rib-h",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.063203,
+          "y1": 0,
+          "r0": 0.011,
+          "r1": 0.007,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-h-tip",
+          "bone": "rib-h",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 1.063203,
+          "cy": 0,
+          "rx": 0.013,
+          "ry": 0.013,
+          "region": "frame-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "rib-h-scallop-a",
+          "bone": "rib-h",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.0632 0.0000 Q 1.0939 0.0677 1.1584 0.0307",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "rib-h-scallop-b",
+          "bone": "rib-h",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.0632 0.0000 Q 0.9987 0.0370 0.9680 -0.0307",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-right",
+          "bone": "rib-right",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.82,
+          "kind": "path",
+          "d": "M 0 0 C 0.3465 0.1150 0.8909 0.1035 1.2374 0 Z",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-right-seam",
+          "bone": "rib-right",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.3712 0.0500 C 0.6187 0.0850 0.9281 0.0700 1.1384 0.0200",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-right-fold",
+          "bone": "rib-right",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.1856 0.0300 C 0.3712 0.0600 0.5568 0.0750 0.7425 0.0700",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-left",
+          "bone": "rib-left",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.82,
+          "kind": "path",
+          "d": "M 0 0 C 0.3465 -0.1150 0.8909 -0.1035 1.2374 0 Z",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-left-seam",
+          "bone": "rib-left",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.3712 -0.0500 C 0.6187 -0.0850 0.9281 -0.0700 1.1384 -0.0200",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        },
+        {
+          "id": "panel-left-fold",
+          "bone": "rib-left",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.1856 -0.0300 C 0.3712 -0.0600 0.5568 -0.0750 0.7425 -0.0700",
+          "region": "canopy-fabric",
+          "material": "polyester-canvas"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "open-still",
+        "title": {
+          "en": "Open, still",
+          "de": "Offen, windstill"
+        },
+        "description": {
+          "en": "Canopy open and upright on the mast, no wind.",
+          "de": "Schirm offen und senkrecht auf dem Mast, ohne Wind."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "socket"
+        ],
+        "thermal": {},
+        "loads": []
+      },
+      {
+        "id": "tilted-to-sun",
+        "title": {
+          "en": "Tilted to the sun",
+          "de": "Zur Sonne geneigt"
+        },
+        "description": {
+          "en": "Mast tilted 8 degrees towards the sun on the right; design gust drag and uplift on the canopy.",
+          "de": "Mast 8 Grad zur Sonne rechts geneigt; Bemessungsböe mit Widerstand und Auftrieb am Schirm."
+        },
+        "bones": {
+          "mast": {
+            "angleDeg": -8
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "socket"
+        ],
+        "thermal": {},
+        "loads": [
+          {
+            "id": "gust-drag",
+            "kind": "wind",
+            "title": {
+              "en": "Gust drag on canopy",
+              "de": "Böenwiderstand am Schirm"
+            },
+            "bone": "crown",
+            "x": 0,
+            "y": -0.1,
+            "fxN": 254,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-4"
+          },
+          {
+            "id": "gust-uplift",
+            "kind": "wind",
+            "title": {
+              "en": "Gust uplift on canopy",
+              "de": "Böenauftrieb am Schirm"
+            },
+            "bone": "crown",
+            "x": 0,
+            "y": -0.1,
+            "fxN": 0,
+            "fyN": 106,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      },
+      {
+        "id": "furled",
+        "title": {
+          "en": "Furled",
+          "de": "Geschlossen"
+        },
+        "description": {
+          "en": "Ribs folded down along the mast; the runner has slid down by 0.73 m and the fabric hangs bundled along the ribs.",
+          "de": "Speichen entlang des Masts nach unten geklappt; der Läufer ist 0,73 m abgerutscht und der Stoff hängt gebündelt an den Speichen."
+        },
+        "bones": {
+          "runner": {
+            "dx": -0.65381
+          },
+          "rib-right": {
+            "angleDeg": -69.8153
+          },
+          "rib-b": {
+            "angleDeg": -61.4694
+          },
+          "rib-c": {
+            "angleDeg": 35.08
+          },
+          "rib-d": {
+            "angleDeg": 67.9774
+          },
+          "rib-left": {
+            "angleDeg": 69.8153
+          },
+          "rib-f": {
+            "angleDeg": 61.4694
+          },
+          "rib-g": {
+            "angleDeg": -35.08
+          },
+          "rib-h": {
+            "angleDeg": -67.9774
+          },
+          "stretch-right": {
+            "angleDeg": 56.4888
+          },
+          "stretch-left": {
+            "angleDeg": -56.4888
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "socket"
+        ],
+        "thermal": {},
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "wind-flap",
+        "title": {
+          "en": "Wind flap",
+          "de": "Windflattern"
+        },
+        "description": {
+          "en": "A gust builds on the tilted canopy, the ribs flutter by 4 degrees and the wind releases.",
+          "de": "Eine Böe baut sich am geneigten Schirm auf, die Rippen flattern um 4 Grad und der Wind lässt nach."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "open-still",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "tilted-to-sun",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.5,
+            "pose": "tilted-to-sun",
+            "ease": "smooth",
+            "bones": {
+              "runner": {
+                "dx": 0.04896
+              },
+              "rib-right": {
+                "angleDeg": 4.0702
+              },
+              "rib-b": {
+                "angleDeg": 6.4641
+              },
+              "rib-c": {
+                "angleDeg": -9.0466
+              },
+              "rib-d": {
+                "angleDeg": -4.7038
+              },
+              "rib-left": {
+                "angleDeg": -4.0702
+              },
+              "rib-f": {
+                "angleDeg": -6.4641
+              },
+              "rib-g": {
+                "angleDeg": 9.0466
+              },
+              "rib-h": {
+                "angleDeg": 4.7038
+              },
+              "stretch-right": {
+                "angleDeg": -1.7784
+              },
+              "stretch-left": {
+                "angleDeg": 1.7784
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "open-still",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "socket",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "gust-rise",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Gust rises",
+              "de": "Böe steigt an"
+            }
+          },
+          {
+            "id": "flutter",
+            "fromS": 3,
+            "toS": 4.5,
+            "title": {
+              "en": "Flutter",
+              "de": "Flattern"
+            }
+          },
+          {
+            "id": "lull",
+            "fromS": 4.5,
+            "toS": 6,
+            "title": {
+              "en": "Lull",
+              "de": "Flaute"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "load-on",
+            "title": {
+              "en": "Gust hits the canopy",
+              "de": "Böe trifft den Schirm"
+            },
+            "target": "gust-drag"
+          },
+          {
+            "t": 5.5,
+            "kind": "load-off",
+            "title": {
+              "en": "Gust releases",
+              "de": "Böe klingt ab"
+            },
+            "target": "gust-drag"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:gust-drag",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 4.5,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:gust-uplift",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 4.5,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sun-tilt",
+        "title": {
+          "en": "Tilt towards the sun",
+          "de": "Neigung zur Sonne"
+        },
+        "description": {
+          "en": "The mast tilts towards the sun and back, without wind; the gust loads are switched off by their tracks.",
+          "de": "Der Mast neigt sich zur Sonne und zurück, ohne Wind; die Böenlasten sind durch ihre Spuren abgeschaltet."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "open-still",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "tilted-to-sun",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "open-still",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "socket",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "tilt-in",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Tilting to the sun",
+              "de": "Neigung zur Sonne"
+            }
+          },
+          {
+            "id": "tilt-out",
+            "fromS": 4,
+            "toS": 8,
+            "title": {
+              "en": "Upright again",
+              "de": "Wieder aufrecht"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "motion",
+            "title": {
+              "en": "Canopy shades the table",
+              "de": "Schirm beschattet den Tisch"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:gust-drag",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 8,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:gust-uplift",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 8,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 25,
+        "meanRadiantTempC": 35,
+        "relativeHumidity": 0.4,
+        "windMS": 2.2,
+        "windDirectionDeg": 180,
+        "solarWM2": 700,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "canopy-fabric",
+          "title": {
+            "en": "Canopy fabric",
+            "de": "Schirmstoff"
+          },
+          "kind": "surface",
+          "material": "polyester-canvas",
+          "model": "passive",
+          "areaM2": 5.3,
+          "characteristicLengthM": 1.3,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "frame-alu",
+          "title": {
+            "en": "Aluminium mast and ribs",
+            "de": "Aluminium-Mast und Rippen"
+          },
+          "kind": "surface",
+          "material": "aluminium-anodised",
+          "model": "passive",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.05,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "base-concrete",
+          "title": {
+            "en": "Concrete base",
+            "de": "Betonfuß"
+          },
+          "kind": "surface",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 0.4,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Passive canopy and frame in summer sun; no emitters.",
+          "de": "Passiver Schirm und Gestell in Sommersonne; keine Emitter."
+        },
+        {
+          "en": "Reference case: 700 W/m² sun, 25 °C air, 35 °C mean radiant, 2.2 m/s breeze.",
+          "de": "Referenzfall: 700 W/m² Sonne, 25 °C Luft, 35 °C mittlere Strahlungstemperatur, 2,2 m/s Brise."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "socket"
+      ],
+      "assumptions": [
+        {
+          "en": "Base is a fixed socket; the canopy wind loads act at the crown hub as a quasi-static design state.",
+          "de": "Der Fuß ist eine feste Hülse; die Windlasten am Schirm wirken an der Krone als quasistatischer Bemessungszustand."
+        },
+        {
+          "en": "Sliding and tipping of a free base are not checked.",
+          "de": "Gleiten und Kippen eines freien Fußes werden nicht nachgewiesen."
+        },
+        {
+          "en": "Ribs other than the two main ribs are drawn as their foreshortened elevation projections with a rigid length; they are exact for the open canopy and approximate (shorter than true) when folded.",
+          "de": "Die übrigen Speichen sind als verkürzte Aufrissprojektionen mit starrer Länge gezeichnet; sie sind für den offenen Schirm exakt und im gefalteten Zustand näherungsweise (kürzer als wahr)."
+        },
+        {
+          "en": "Ribs other than the two main ribs are drawn as their foreshortened elevation projections with a rigid length; they are exact for the open canopy and approximate (shorter than true) when folded.",
+          "de": "Die übrigen Speichen sind als verkürzte Aufrissprojektionen mit starrer Länge gezeichnet; sie sind für den offenen Schirm exakt und im gefalteten Zustand näherungsweise (kürzer als wahr)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "open-still",
+      "defaultClip": "wind-flap",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,3 +1,5 @@
+import{compileJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import schemaCases from"./📥️schema.json";
 import{test,expect}from"bun:test";
 import{mkdtempSync,readFileSync,rmSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -49,4 +51,11 @@ test("collect-errors does not swallow a cancelled run",async()=>{
   await expect(collector.guard({project:"p",root:"r",phase:"project"},async()=>{throw Error("boom");})).rejects.toThrow("boom");
   expect(collector.rows().length).toBe(0);
  }finally{rmSync(directory,{recursive:true,force:true});}
+});
+
+test("collect-errors schema annotations compile in the owned draft07 language",()=>{
+ const document={...schema,$ref:"#/definitions/Row"},oracle=new Ajv({strict:false}).compile(document),owned=compileJsonSchemaSubset(document);
+ for(const row of schemaCases){expect(oracle(row.input),row.id).toBe(row.expected);expect(owned.validate(row.input).length===0,row.id).toBe(row.expected)}
+ expect(collectTextsV1).toEqual(schema["x-semio-texts"]);
+ expect(Object.keys(collectTextsV1)).toEqual(["en","de"]);
 });

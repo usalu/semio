@@ -1,7 +1,7 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {applyPatch} from "fast-json-patch";
 test("original Store projection corpus preserves the exact issuer through independent patch replay",()=>{
  const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));

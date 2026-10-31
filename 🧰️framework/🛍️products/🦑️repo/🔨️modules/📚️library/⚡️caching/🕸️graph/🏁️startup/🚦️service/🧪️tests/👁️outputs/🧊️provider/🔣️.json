@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "owner": "infrastructure",
+      "name": "infrastructure-successful-operation",
+      "fail": false,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    },
+    {
+      "owner": "infrastructure",
+      "name": "infrastructure-failed-operation",
+      "fail": true,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    },
+    {
+      "owner": "bootstrap",
+      "name": "bootstrap-successful-operation",
+      "fail": false,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    },
+    {
+      "owner": "bootstrap",
+      "name": "bootstrap-failed-operation",
+      "fail": true,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    },
+    {
+      "owner": "service",
+      "name": "service-successful-operation",
+      "fail": false,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    },
+    {
+      "owner": "service",
+      "name": "service-failed-operation",
+      "fail": true,
+      "expected": [
+        "ordinary",
+        "settlement"
+      ]
+    }
+  ],
+  "clientProjection": {
+    "environment": {
+      "EXPLICIT_CLIENT": "preserved",
+      "REMOVE_ME": null
+    },
+    "expected": {
+      "EXPLICIT_CLIENT": "preserved"
+    }
+  },
+  "nodeProfile": {
+    "environment": {
+      "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/tmp/generated\"}",
+      "SEMIO_TEST_ARTIFACT_DIR": "/unrelated-managed-test-artifacts"
+    },
+    "prefix": [
+      "--qualified-driver"
+    ],
+    "suffix": [
+      "--driver-tail"
+    ],
+    "entry": "daemon-entry.js"
+  }
+}

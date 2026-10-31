@@ -1,3 +1,4 @@
+import {dropColumnV1,activeQuizIdsV1} from "./📐️geometry/🟦️.ts";
 /** 🐕️ The pets of the site in a real browser, as the second round made them (design-v2 §22): decoration that lives on
  * the cards and answers the learner's hand. A click on a pet says hello, the next clicks ask for a trick and then for a
  * purr; a pet picked up hangs in the hand, and let go high above the page it opens its parachute, glides and lands;
@@ -32,7 +33,7 @@
  * @see ../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/🤏️grasp/🟦️.ts — how a press reaches a pet
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html — why `still` and `off` exist
  * @see https://www.w3.org/WAI/WCAG22/Understanding/pointer-gestures.html — why the settings offer every deed of the hand */
-import {QUIZZES, card, expect, layoutQuiet, pane, primary, test, way, openQuizGrid} from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import {QUIZZES, activeOverview, card, expect, layoutQuiet, pane, primary, test, way, openQuizGrid} from "../../🎭️e2e/🚶️learner/🟦️.ts";
 import { ANSWER_MS, APPEAR_MS, bodies, eventually, type Body, CARD_PARTS, carry, choosePets, CIRCLE_LAP_MS, CIRCLE_LAPS, CIRCLE_POINTS, circled, circleRound, CONTROLS, CURSOR, DEEDS, DROP_HEIGHT, EDGES, enterWithPets, expectCast, expectMoving, expectPerched, floorSpot, framesPass, FRONT_LEAST, HOME, inOrder, instrumented, type Instruments, KINDS, LANDING_MS, layer, LIVELY_MS, middleOf, misplaced, overControls, OVERLAP_SLACK, paceTo, pets, PLAY_LABEL, reachable, RECAST_MS, RELEASE_DEPTH, said, seenBoxes, takenTargets, trailOf, TEMPO } from "./🧰️pet-kit/🟦️.ts";
 
 /** 🔂️ How often a spec that lets a pet fall tries again when another pet's head broke the fall or the pet was not seen in front of the card: the casts and their places are random, a host that is busy sees fewer frames of a fall. */
@@ -154,24 +155,27 @@ test("a pet picked up hangs in the hand, and let go high above the page it opens
       }).toPass({ timeout: RECAST_MS });
     });
   let held = pet!;
-  const canopy = page.locator(`.pet-layer svg.pet[data-pet="${held.id}"] [data-pet-tool="chute"] > g > path`);
-  await expect(canopy).toHaveCount(1);
-  await expect(canopy).toHaveAttribute("d", KINDS[held.id]!.canopy!.d!);
-  expect(await canopy.evaluate((path) => (path as SVGPathElement).getTotalLength())).toBeGreaterThan(0);
-  const edges = (await page.evaluate(seenBoxes, EDGES)).filter((edge) => edge.topped);
   const top = 70;
-  const width = page.viewportSize()?.width ?? 1440;
   let column = { x: 0, floor: 0 };
   let release = { x: 0, y: 0 };
+  const measuredColumn = async () => dropColumnV1({width:page.viewportSize()?.width??1440,reach:(held.right-held.left)/2+FALL_MARGIN,top,height:DROP_HEIGHT,minimum:200,edges:(await page.evaluate(seenBoxes,EDGES)).filter(edge=>edge.topped),others:(await bodies(page)).filter(body=>body.id!==held.id)});
   for (let attempt = 1; ; attempt++) {
-    const reach = (held.right - held.left) / 2 + FALL_MARGIN;
-    const others = (await bodies(page)).filter((body) => body.id !== held.id);
-    const all = Array.from({ length: Math.floor((width - 160) / 8) }, (_, index) => 80 + index * 8).map((x) => ({ x, floor: Math.min(...edges.filter((edge) => edge.left <= x && edge.right >= x && edge.top > top + 40).map((edge) => edge.top)) }));
-    const clear = all.filter((candidate) => others.every((body) => candidate.x < body.left - reach || candidate.x > body.right + reach));
-    const pool = clear.some((candidate) => candidate.floor < Infinity) ? clear : all;
-    column = pool.reduce((best, candidate) => (candidate.floor > best.floor && candidate.floor < Infinity ? candidate : best));
-    release = { x: column.x, y: Math.max(top, column.floor - DROP_HEIGHT) };
+    let selected = await measuredColumn();
+    if (!selected) {
+      await page.evaluate(() => (window.location.hash = "heating"));
+      await expect(pane(page, "heating")).toHaveAttribute("data-opened", "");
+      await instrumented(page);
+      await expect(async () => { held = await reachable(page, parachuted); }).toPass({ timeout: RECAST_MS });
+      await expect(async () => { selected = await measuredColumn(); expect(selected, "a measured scene with a sufficient real fall").toBeDefined(); }).toPass({ timeout: RECAST_MS });
+    }
+    expect(selected).toBeDefined();
+    column = {x:selected!.x,floor:selected!.floor};
+    release = {x:selected!.x,y:selected!.y};
     expect(column.floor - release.y, "a fall long enough for a parachute").toBeGreaterThan(200);
+    const canopy = page.locator(`.pet-layer svg.pet[data-pet="${held.id}"] [data-pet-tool="chute"] > g > path`);
+    await expect(canopy).toHaveCount(1);
+    await expect(canopy).toHaveAttribute("d", KINDS[held.id]!.canopy!.d!);
+    expect(await canopy.evaluate(path => (path as SVGPathElement).getTotalLength())).toBeGreaterThan(0);
 
     const since = (await trailOf(page, held.id)).length;
     await carry(page, held, release);
@@ -210,20 +214,20 @@ test("no two pets ever overlap during a lively minute in which the learner drags
   watching.catch(() => undefined);
   const started = Date.now();
   const thrown: string[] = [];
-  while (Date.now() - started < LIVELY_MS - 15_000) {
-    const pet = await reachable(page).catch(() => undefined);
+  while (Date.now() - started < LIVELY_MS) {
+    const pet = await reachable(page, (body) => !thrown.includes(body.id)).catch(() => undefined) ?? await reachable(page).catch(() => undefined);
     if (pet === undefined) {
       await page.evaluate(framesPass, 30);
       continue;
     }
     const others = (await bodies(page)).filter((body) => body.id !== pet.id && body.opacity > 0);
     const over = others.length === 0 ? { x: 720, y: 300 } : middleOf(others[thrown.length % others.length]!);
-    await carry(page, pet, over);
+    await carry(page, pet, over, "continuous");
     const fling = { x: Math.min(Math.max(over.x + (thrown.length % 2 === 0 ? 160 : -160), 40), 1400), y: Math.max(over.y - 160, 60) };
     for (let step = 1; step <= 4; step++) await page.mouse.move(over.x + ((fling.x - over.x) * step) / 4, over.y + ((fling.y - over.y) * step) / 4);
     await page.mouse.up();
     thrown.push(pet.id);
-    await expectPerched(page, pet.id, ANSWER_MS * 2).catch(() => undefined);
+    await eventually(page, async () => (await bodies(page)).find((body) => body.id === pet.id)?.footing, (footing) => footing !== undefined && footing !== "hand", { stageMs: ANSWER_MS, message: `${pet.id} has left the hand` }).catch(() => undefined);
   }
   const watched = await watching;
   test.info().annotations.push({ type: "watched", description: `${watched.frames} frames, at most ${watched.most} pets on one, ${watched.overlaps.length} overlaps; thrown: ${thrown.join(", ")}` });
@@ -429,7 +433,9 @@ test("a control under a pet still receives its click: the card a falling pet pas
   await enterWithPets(learner);
   await openQuizGrid(learner, "physics");
   await instrumented(page);
-  const fronts = await Promise.all(QUIZZES.map(async (quiz) => ({ id: quiz.id, box: await card(page, quiz.id).locator('[data-slot="window-chrome-body-surface"]').boundingBox() })));
+  const observed = await activeOverview(page).locator("[data-layered-card]").and(page.locator(":not([inert] *)")).evaluateAll(nodes => nodes.map(node => node.getAttribute("data-layered-card")!));
+  const ids = activeQuizIdsV1(observed, QUIZZES.map(quiz => quiz.id));
+  const fronts = await Promise.all(ids.map(async id => ({ id, box: await card(page, id).locator('[data-slot="window-chrome-body-surface"]').boundingBox() })));
   const { id: target, box } = fronts.reduce((tallest, candidate) => ((candidate.box?.height ?? 0) > (tallest.box?.height ?? 0) ? candidate : tallest));
   const front = box!;
   expect(front.height, "a card tall enough for the middle of a pet to pass in front of it").toBeGreaterThanOrEqual(FRONT_LEAST - OVERLAP_SLACK);

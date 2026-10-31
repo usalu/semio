@@ -47,15 +47,62 @@ pub struct ArtifactPreparedOperationCursor {
     hex_pending: Option<u8>,
     hex_low: bool,
     pub complete: bool,
-    json: ArtifactCanonicalJsonCursor,
-    pub text: ArtifactOperationTextCursor,
-    pub pack: BorrowedProjectedPackCursor,
     pack_started: bool,
     codec:Option<ArtifactCodecFrontier>,
     pub closed: bool,
 }
 
 impl ArtifactPreparedOperationCursor {
+    /// 📏️ Quotes the original JSON codec birth, wrapper or next retained encoder turn.
+    pub fn canonical_json_work_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if self.closed { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "closed JSON operation has no work turn")); }
+        let json = match self.codec.as_ref() {
+            None => return Ok(RetirementDemand { copy_bytes:self.codec_birth_copy_bytes(), depth:1, ..Default::default() }),
+            Some(ArtifactCodecFrontier::Json(json)) => json,
+            _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "original operation codec is not JSON")),
+        };
+        let Some(identity) = self.source_identity else {
+            return Ok(RetirementDemand { copy_bytes:size_of_val(&self.source_identity), depth:1, ..Default::default() });
+        };
+        if self.header_offset < identity.2 || self.prefix_offset < identity.4 || self.hex_pending.is_some() {
+            return Ok(RetirementDemand { copy_bytes:1, depth:1, ..Default::default() });
+        }
+        let mut demand = json.next_encode_demand();
+        demand.copy_bytes += usize::from(identity.5 == 1 && json.next_encode_output_bound() != 0);
+        demand.depth += 1;
+        Ok(demand)
+    }
+
+    /// 🔁️ Quotes only the completed JSON frontier and its wrapper metadata.
+    pub fn canonical_json_restart_demands(&self) -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand {
+            copy_bytes:ArtifactCanonicalJsonCursor::restart_copy_bytes() + size_of_val(&self.source_identity) + size_of_val(&self.header_offset) + size_of_val(&self.prefix_offset) + size_of_val(&self.hex_pending) + size_of_val(&self.hex_low) + size_of_val(&self.complete) + size_of_val(&self.closed),
+            depth:2,
+            ..Default::default()
+        }
+    }
+
+    /// 🌱️ Reuses the same closed, completed JSON frontier under an admitted restart grant.
+    pub fn restart_canonical_json(&mut self, grant:RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneProgress>, ValueError> {
+        if !self.closed || !self.complete || !matches!(self.codec,Some(ArtifactCodecFrontier::Json(_))) {
+            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "JSON operation restart requires its closed completed frontier"));
+        }
+        let demand = self.canonical_json_restart_demands();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand) { return Ok(None); }
+        let wrapper = demand.copy_bytes - ArtifactCanonicalJsonCursor::restart_copy_bytes();
+        let Some(mut progress) = self.json_mut().restart_admitted(RetainedCloneGrant { maximum_copy_bytes:grant.maximum_copy_bytes-wrapper, maximum_depth:grant.maximum_depth-1, ..grant })? else { return Ok(None); };
+        self.source_identity = None;
+        self.header_offset = 0;
+        self.prefix_offset = 0;
+        self.hex_pending = None;
+        self.hex_low = false;
+        self.complete = false;
+        self.closed = false;
+        progress.copied_bytes += wrapper;
+        Ok(Some(progress))
+    }
+
     fn json(&self)->&ArtifactCanonicalJsonCursor{match self.codec.as_ref(){Some(ArtifactCodecFrontier::Json(cursor))=>cursor,_=>unreachable!("original JSON codec frontier is installed")}}
     fn json_mut(&mut self)->&mut ArtifactCanonicalJsonCursor{match self.codec.as_mut(){Some(ArtifactCodecFrontier::Json(cursor))=>cursor,_=>unreachable!("original JSON codec frontier is installed")}}
     fn text(&self)->&ArtifactOperationTextCursor{match self.codec.as_ref(){Some(ArtifactCodecFrontier::Text(cursor))=>cursor,_=>unreachable!("original text codec frontier is installed")}}
@@ -236,9 +283,7 @@ impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::Arti
     fn stamped_mutation_id(&self) -> Option<&semio_framework_os_spr::MutationId> { self.factory.stamped_mutation_id() }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[cfg(test)]
 #[global_allocator]

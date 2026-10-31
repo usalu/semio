@@ -32,7 +32,7 @@ export interface NativeImageStorageV1{
  readonly maximumPhysicalBytes:number;
  readonly filesystemBytes:number;
  readonly port:NativeStoragePortV1;
- recheck():Promise<void>;
+ recheck(control?:ResourceLeaseControl):Promise<void>;
  close():Promise<void>;
  withExclusiveMaintenance<T>(request:NativeImageMaintenanceRequestV1,body:(port:NativeStoragePortV1,custody:NativeImageMaintenanceCustodyV1)=>Promise<T>,withdrawWhen?:NativeImageMaintenanceWaitObserverV1):Promise<NativeImageMaintenanceResultV1<T>>;
 }

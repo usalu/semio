@@ -190,3 +190,10 @@ describe("state against naive oracles under random edits",()=>{
   rmSync(root+"/out/b");expect(await outputSignatureV1(root,["out/b"],100)).toBeDefined();
  });
 });
+
+test("resident Source eligibility agrees with the schema-derived capsule corpus and SQLite",async()=>{
+ const {SOURCE_OPACITY_PROTOCOL_V1}=await import("../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts"),{default:corpus}=await import("../../../../⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/📥️opaque.json"),{default:schema}=await import("../../../../⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🔣️opaque.json"),{default:Ajv}=await import("ajv"),{Database}=await import("bun:sqlite"),database=new Database(":memory:");
+ try{expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const filter=createFilterV1({opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1});
+  for(const row of corpus){const sql=database.query("SELECT EXISTS(SELECT 1 FROM json_each(?1) part,json_each(?2) prefix WHERE substr(part.value,1,length(prefix.value))=prefix.value AND length(part.value)=length(prefix.value)+?3 AND substr(part.value,length(prefix.value)+1) NOT GLOB '*[^0-9a-f]*') excluded").get(JSON.stringify(row.path.split(String.fromCharCode(92)).join("/").split("/")),JSON.stringify(SOURCE_OPACITY_PROTOCOL_V1.prefixes),SOURCE_OPACITY_PROTOCOL_V1.digestHex) as {excluded:number};expect(Boolean(sql.excluded)).toBe(row.excluded);expect(filter.excluded(row.path),row.path).toBe(row.excluded);}
+ }finally{database.close();}
+});

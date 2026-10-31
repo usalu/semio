@@ -1,6 +1,7 @@
 /** 📖️ Readers of the TypeScript already on disk: the declared interface and alias types a parser must satisfy, and the parsers a file already declares, imports or promises.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🟦️.ts
  */
+import { declaresSchemaExport } from "../../../../../🧪️test/📐️schema-contracts/📤️export-completeness/🟦️.ts";
 import { escapeRegExp } from "../🔡️json-text/🟦️.ts";
 
 //#region 🔖️Declarations
@@ -30,7 +31,7 @@ export function declares(format: string, source: string, name: string): boolean 
   const escaped = escapeRegExp(name);
   if (format === "🛰️protobuf") return new RegExp(`^\\s*message\\s+${escaped}\\b`, "m").test(source);
   if (format === "🔗️graphql") return new RegExp(`^\\s*(?:${GRAPHQL_KEYWORDS})\\s+${escaped}\\b`, "m").test(source);
-  if (format === "🦀️rust") return new RegExp(`^\\s*pub\\s+(?:struct|enum|type)\\s+${escaped}\\b`, "m").test(source);
+  if (format === "🦀️rust") return declaresSchemaExport(format, source, name);
   return new RegExp(`^\\s*(?:export\\s+)?(?:declare\\s+)?(?:interface|type|const|class)\\s+${escaped}\\b`, "m").test(source) || reexports(source, name);
 }
 

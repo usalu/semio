@@ -2,8 +2,10 @@
   "viewports": {
     "vp-2": {
       "entry": "Patched",
-      "label": {
-        "value": null
+      "value": {
+        "label": {
+          "value": null
+        }
       }
     }
   }

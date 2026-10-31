@@ -18,3 +18,6 @@ mod tests_translates_obj_hull_along_x_and_z;
 mod tests_yaws_obj_hull_about_the_y_axis;
 #[path = "../../📐️scale-object/🧪️tests/📐️halves/🦀️.rs"]
 mod tests_halves_obj_hull_uniformly;
+
+#[path = "../../🌱️create-object/🧪️tests/🦀️.rs"]
+mod create_object_schema;

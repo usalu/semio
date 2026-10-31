@@ -229,7 +229,7 @@
    "mechanism": "build.rs that mounts its environment-only helper by include!",
    "crate": "c9/crate",
    "files": {
-    "c9/crate/Cargo.toml": "[package]\nname = \"c9\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c9/crate/Cargo.toml": "[package]\nname = \"c9\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n\n[package.metadata.semio.build-script]\nversion = 1\nkind = \"link-only\"\nscript = \"c9/crate/build.rs\"\nenvironment = [\"CARGO_CFG_TARGET_OS\"]\neffects = [\"cargo:rustc-link-arg-bin\"]\noutputs = []\n\n[[package.metadata.semio.build-script.files]]\npath = \"c9/crate/build.rs\"\nsha256 = \"5a924d60ad92ce7b8fdbb9c084f8b0aed9e3d052d11a330d1d47be33396ec987\"\n\n[[package.metadata.semio.build-script.files]]\npath = \"c9/shared/link.rs\"\nsha256 = \"59463125bdb79929c046614870578b7d8c3958ac559078fdddb3016ee52dc5d0\"\n",
     "c9/crate/build.rs": "include!(\"../shared/link.rs\");\n",
     "c9/crate/src/lib.rs": "pub fn f() {}\n",
     "c9/shared/link.rs": "use std::env;\n\nfn main() {\n    if env::var(\"CARGO_CFG_TARGET_OS\").as_deref() == Ok(\"windows\") {\n        println!(\"cargo:rustc-link-arg-bin=x=/STACK:8388608\");\n    }\n}\n"
@@ -247,11 +247,25 @@
   },
   {
    "name": "build-script-decoys-in-comments-and-literals",
-   "mechanism": "fs names in comments, nested comments, strings, raw strings and a quote character literal are not reads",
+   "mechanism": "fs names in comments, nested comments, strings, raw strings and a quote character literal are not reads; TARGET and rerun directives are outside the closed reviewed link-only contract",
    "crate": "c10/crate",
    "files": {
     "c10/crate/Cargo.toml": "[package]\nname = \"c10\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
     "c10/crate/build.rs": "// std::fs::read(\"x\") is only mentioned here\n/* nested /* std::fs::read */ still a comment */\nfn main() {\n    let note = \"std::fs::read_to_string and File::open\";\n    let raw = r#\"use std::fs; // not a comment\"#;\n    let mark: char = '\"';\n    let ok = std::env::var(\"TARGET\").is_ok();\n    println!(\"cargo:rerun-if-env-changed=TARGET {note}{raw}{mark}{ok}\");\n}\n",
+    "c10/crate/src/lib.rs": "pub fn f() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "outside": [],
+   "reason": "build-script"
+  },
+  {
+   "name": "build-script-reviewed-link-only-decoys",
+   "mechanism": "reviewed link-only target environment script retains comment and literal decoys",
+   "crate": "c10/crate",
+   "files": {
+    "c10/crate/Cargo.toml": "[package]\nname = \"c10\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n\n[package.metadata.semio.build-script]\nversion = 1\nkind = \"link-only\"\nscript = \"c10/crate/build.rs\"\nenvironment = [\"CARGO_CFG_TARGET_OS\"]\neffects = [\"cargo:rustc-link-arg-bin\"]\noutputs = []\n\n[[package.metadata.semio.build-script.files]]\npath = \"c10/crate/build.rs\"\nsha256 = \"f6ae454fa6f5153ae152c314f3fc73b4c77891074001d02a3489dade80bc79d3\"\n",
+    "c10/crate/build.rs": "// std::fs::read(\"x\") is only mentioned here\n/* nested /* std::fs::read */ still a comment */\nfn main() {\n    let note = \"std::fs::read_to_string and File::open\";\n    let raw = r#\"use std::fs; // not a comment\"#;\n    let mark: char = '\"';\n    let ok = std::env::var(\"CARGO_CFG_TARGET_OS\").is_ok();\n    let _ = (note, raw, mark, ok);\n    println!(\"cargo:rustc-link-arg-bin=x=/STACK:8388608\");\n}\n",
     "c10/crate/src/lib.rs": "pub fn f() {}\n"
    },
    "flavor": "named",
@@ -267,7 +281,7 @@
    "mechanism": "include_str! in a build script is a static input like in the library",
    "crate": "c11/crate",
    "files": {
-    "c11/crate/Cargo.toml": "[package]\nname = \"c11\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c11/crate/Cargo.toml": "[package]\nname = \"c11\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n\n[package.metadata.semio.build-script]\nversion = 1\nkind = \"link-only\"\nscript = \"c11/crate/build.rs\"\nenvironment = [\"CARGO_CFG_TARGET_OS\"]\neffects = [\"cargo:rustc-link-arg-bin\"]\noutputs = []\n\n[[package.metadata.semio.build-script.files]]\npath = \"c11/crate/build.rs\"\nsha256 = \"cf848b73523cb674c7d06fb32164f022289a338b33b620de8c2d50bcfd43107a\"\n\n[[package.metadata.semio.build-script.files]]\npath = \"c11/shared/x.txt\"\nsha256 = \"73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac\"\n",
     "c11/crate/build.rs": "fn main() {\n    let _ = include_str!(\"../shared/x.txt\");\n}\n",
     "c11/crate/src/lib.rs": "pub fn f() {}\n",
     "c11/shared/x.txt": "x\n"

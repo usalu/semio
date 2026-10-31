@@ -1,0 +1,34 @@
+# Cache Charge Reservation Lease Order — 2026-10-29
+
+Actual coordinated Root CLI proof11219 reached Native birth/provider and then refused lease order after15s. The root supplied violation IDs842205/845223/845315/847256 and an empty current holder/waiter registry. Source confirms repositoryCacheStoreReservationV1 acquired repository-cache-charge EX before Native observe/recover/acquire/recheck/commit, which may require lower native-storage EX. This is a caller order defect; no stale claim deletion or rank change is justified.
+
+The corrected protocol reads and validates a bounded receipt quote first. Canonical Native acquireNativeStorageOwnerV1 atomically selects one exact owner/kind/byte envelope under its existing genuine journal writer. It refuses ambiguous owners, retiring or changed quotes and expected-id mismatch, creates only when absent, and returns an actual privately issued committed reservation. Selecting and committing in one transaction prevents concurrent missing-receipt callers from creating duplicate charges or racing reserved commits. Existing physical metering, capacity checks, durable events and held-reservation custody remain in the Native implementation.
+
+Only after Native acquisition/recheck does the repository receipt gate open. Under it, the caller rereads and validates the complete receipt; a displaced id refuses without overwrite. An absent receipt is written exclusively to a temporary, fsynced, renamed, and its directory fsynced. The gate releases before final Native and image rechecks. No Native API is nested under the receipt gate. Existing durable charges are never refunded/reset on refusal; no compatibility adapter or legacy route is added.
+
+Schema-first neutral cases: new owner, missing-receipt recovery, reserved recovery, duplicate owner, foreign receipt, retiring owner, wrong budget and receipt displaced at the gate. The corpus declares two concurrent requests. Focused tests execute the actual authored repository and Native functions through explicit test boundary ports, inside genuine issued Original test controls. The Native test uses the real Native journal reducer and serial transaction model; SQLite independently checks owner selection and resulting committed count/bytes. Both concurrent callers get the same allocation; exactly one reserve/commit sequence occurs. These are Source-port strategy proofs, not physical Native custody execution; the normal Root daemon retry remains the physical proof.
+
+Baseline: Native observe invoked while receipt writer held (0pass1fail). Final focused result2pass0fail198assertions745ms. Three production TS files parse without diagnostics. The real public Native storage facade resolves the new function. No cap/rank/guard, cleanup deadline, refund or arbitrary retry changed. Logs generated/cache-charge-order-red.log and cache-charge-order-green.log.
+
+Changed production:
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts
+- Same storage owner: 🎟️owner/🟦️.ts and 🎟️owner/🔣️schema.json.
+- Repo library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🎟️reservation/🟦️.ts.
+- Adjacent repository reservation test owner 🧪️tests/{🟦️.ts,🔣️.json,📋️schema.json}.
+
+Source is frozen for coordinated Root daemon and frontend physical received-request verification. No heavy job or backend retry was launched by this patch. Previous19402 watchdog failure is distinct; this order defect is independently supported by the later actual Root CLI evidence and regression, not claimed as the sole watchdog cause.
+
+
+## Independent Frozen-Source Review
+
+The owner request has a closed schema and canonical kind/id references. Selection filters the complete active allocation set by owner, refuses duplicates, exact expected-id disagreement, kind/byte disagreement and retiring phase. Actual acquireNativeStorageOwnerV1 performs selection and any reserve/commit append inside storageCustodyV1.transaction, whose existing exclusive native-storage journal lease encloses read, reducer updates, durable append/fsync and metadata synchronization. This avoids two absent-receipt callers independently reserving or committing the same durable owner. Aggregate capacity remains enforced by the real journal reducer; backing validation and kind-specific budget checks remain active. The returned reservation uses the genuine existing private heldReservationV1 issuance.
+
+Repository code performs Native owner admission/recheck before charge-gate acquisition and final Native/image rechecks after release. Inside the gate, quote validation and receipt publication call node:fs directly; requireNativeStoragePathV1 only validates materialized ancestry with stats, without Native journal/image acquisition. No indirect lower Native lease acquisition was found in that body. A publication failure releases the gate but never calls reservation.retire or refunds its committed allocation; displaced receipts are refused without replacement.
+
+The two Source-port laws use extracted actual production function bodies, genuine issued controls, the actual Native reducer/owner parser and a serialized transaction port with independent SQLite checks. They cover concurrent singleton reservation and the declared quote/phase/refusal cases. Their filesystem publication operations are test ports: displaced-receipt failure is checked, but fsync/rename/write failure injection and real Native custody/concurrency are not established by the reported 2/198 result. No concrete frozen-Source defect was identified; the pending normal physical request/daemon proof remains required. No gate was launched by this review.
+
+## Coordinated Physical Order-Proof Observation
+
+Root supplied normal Linux daemon owner36194/PID1000917 as the sole actual proof. The first read-only sample found PID already absent. Peer log nx-output-daemon-order-fixed.log under LINUX-READINESS passed the earlier lease-order boundary and reached repeated nx:graph-inventory publications, then explicitly refused Original resource loan deadline exhausted at remaining→arm. No lease-order violation text or recovered-child guard appeared in the inspected tail. The owner’s execution handle belongs to another root; this agent did not and cannot authoritatively poll it. Absence plus log refusal is observation, not a fabricated terminal receipt. Counts/hash are in generated/daemon-order-proof-observation.json.
+
+No CPU/IO sample was possible after process exit, and no process was killed, Source edited, cache/claim mutated, or parallel test started. This is physical passage of the previous order boundary, not full daemon acceptance or backend readiness. The finite resource-loan expiry is distinct from19402’s ten-minute no-progress watchdog. Source remains frozen for coordinated ownership of the next actual cause.

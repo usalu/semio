@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📋️register/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts",
+      "offset": 2913,
+      "reason": "Exact four Source configs plus canonical viewport2d source"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️canvas/🎚️config/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 876,
+      "reason": "Canonical viewport2d source plus authored Source viewer config"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 2381,
+      "reason": "All direct Source schemas declare07; framework image decoder joins proved cohort"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 27308,
+      "reason": "All direct Source schemas declare07; framework image decoder joins proved cohort"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 29228,
+      "reason": "All direct Source schemas declare07; framework image decoder joins proved cohort"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️assets/🟦️.ts",
+      "offset": 1496,
+      "reason": "Authored raster/path Source07 with proved image decoder cohort"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/🧾️requirements/🧪️.test.ts",
+      "offset": 10041,
+      "reason": "Request/report/concept Source schemas belong to closed proved resource component; independent cases schema constructor remains2020"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧪️tests/🎛️controlled/🟦️.ts",
+      "offset": 1136,
+      "reason": "Proved diagnostic/value Source schemas plus shared-vocabulary inline string-array"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏗️mesh-engine/🥽️polygon/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 21978,
+      "reason": "Loop-cut Source already07; knife-cut Source2020 instance is preserved"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/🧪️tests/🟦️.ts",
+      "offset": 526,
+      "reason": "Synthetic mutation-inventory wrapper follows its canonical Source wire schema dialect; public pointers preserved"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/⚡️incremental/🟦️.ts",
+      "offset": 11046,
+      "reason": "Declared graph resource references Source public UnavailableProject export"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧵️sessions/🧪️tests/🟦️.ts",
+      "offset": 1937,
+      "reason": "Bazel sessions Source07 and header-corrected directly coupled fixture; exact13triple-validator cases"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔌️load/🧪️tests/🚧️withheld-dependency/🟦️.ts",
+      "offset": 1942,
+      "reason": "Declared graph resource references Source public UnavailableProject export"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧪️tests/🟦️.ts",
+      "offset": 27161,
+      "reason": "Declared s resource references Source private definitions"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "offset": 32913,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🧬️schema/📦️codec-ownership/🔣️.json",
+      "schemaSha256": "9f770cfc3db3fa61ab90a20954e66904261d4588f39e16cb0ce307dd108715f4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "offset": 33757,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🧬️schema/🎚️field-set/🔣️.json",
+      "schemaSha256": "dfc317013b71aaf4efdb62f961eec44fd69d57c4fe4ed96ff5d337e433e07929"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
+      "offset": 34266,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🔨️modules/🚪️io/📸️snapshot/🧬️schema/🔣️.json",
+      "schemaSha256": "50ffc6c9e4200a598994c23e707557d4f7970a6cbbb51d6477d13dc55de1a76e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🎮️operation/🧬️native/🧪️tests/🟦️.ts",
+      "offset": 1832,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🔒️registry/🌱️birth/🧬️schema/🔣️.json",
+      "schemaSha256": "85ec2486b179efd0607a3c98ed878b05dc3324e69390e9ce09ac2aeb5e6ac842"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧪️tests/🔬️unit/🟦️.ts",
+      "offset": 1740,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🧺️values/🧬️schema/🔣️.json",
+      "schemaSha256": "d86f76f3528c91fb84e521ec71ed1429ea06ea2bc042ffe216a051e0b1679801"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts",
+      "offset": 1293,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🔣️.json",
+      "schemaSha256": "7ddca28d7b8756e42009863c00bbc7766a8b6499f7e4fe867ad1601ed9e855b5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧪️tests/🟦️.ts",
+      "offset": 2575,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🧬️schema/🔣️.json",
+      "schemaSha256": "7ddca28d7b8756e42009863c00bbc7766a8b6499f7e4fe867ad1601ed9e855b5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 6901,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/♻️host/🔣️.json",
+      "schemaSha256": "8cd26c1b515008c9f2cee53e22aa625feecfe46172f64f81718d48d7c166eb8d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 9006,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/📥️input/🔣️.json",
+      "schemaSha256": "5665c7ac71b5706c82793792a68e2ec484c464176bab27eb8d67411fd6a03e7b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 9751,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🔎️measurement/🧬️schema/🔣️.json",
+      "schemaSha256": "f35fe19a7c6c7ee076ac3b8da068593069c45dc51c05107e1795895320631ba3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 9950,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control/🧬️schema/🧾️receipt/🔣️.json",
+      "schemaSha256": "319f46c91be461d76d239be038efe84516c39bb0b7b01ee107713befe9e4005f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 14221,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧬️schema/🛂️receiving/🔣️.json",
+      "schemaSha256": "6f694db34daf5e072f1447c16a122812e48699c9ea3c486139821500d887f45c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/🪶️sqlite/⚠️refusal/🧪️tests/🟦️.ts",
+      "offset": 15374,
+      "reason": "Exact Source schema binding independently reviewed",
+      "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🛂️authority/🪶️snapshot/🧬️schema/input-wallet.json",
+      "schemaSha256": "b23192051930819d99446b6524cdba6ae2bce8355cf46b2d5f0db0c1497d4484"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎛️dispatch/🟦️.ts",
+      "offset": 28258,
+      "reason": "Actual projection Source root is canonical07"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts",
+      "offset": 1502,
+      "reason": "Actual typecheck Source07 and proved dashboard registry spread retain declared07 dialect"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎛️dashboard-control/🟦️.ts",
+      "offset": 31514,
+      "reason": "Actual typecheck Source07 and proved dashboard registry spread retain declared07 dialect"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎯️source-roster/🟦️.ts",
+      "offset": 10449,
+      "reason": "Actual Source cache Live private fragment follows canonical07 vocabulary"
+    }
+  ]
+}

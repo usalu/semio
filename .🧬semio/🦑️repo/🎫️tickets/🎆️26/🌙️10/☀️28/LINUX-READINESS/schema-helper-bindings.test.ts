@@ -1,0 +1,3 @@
+import{test,expect}from"bun:test";import{readFileSync}from"node:fs";import Ajv from"ajv";import bindings from"./schema-helper-bindings.json";
+const valid=new Ajv({strict:true}).compile({type:"array",minItems:5,items:{type:"object",additionalProperties:false,required:["file","anchor","imports"],properties:{file:{type:"string"},anchor:{type:"string"},imports:{type:"array",minItems:1,uniqueItems:true,items:{type:"string"}}}}});expect(valid(bindings)).toBe(true);
+for(const row of bindings)test("actual helper bindings "+row.file,()=>{const source=readFileSync(row.file,"utf8");for(const imported of row.imports)expect(source.includes(imported),imported).toBe(true)});

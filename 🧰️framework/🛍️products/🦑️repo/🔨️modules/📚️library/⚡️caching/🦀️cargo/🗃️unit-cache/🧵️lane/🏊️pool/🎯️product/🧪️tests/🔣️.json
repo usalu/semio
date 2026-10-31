@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "bounds": {
+    "maximumLanes": 2,
+    "maximumLiveLanes": 4,
+    "quotaBytes": 100
+  },
+  "cases": [
+    {
+      "id": "product-is-not-an-ordinary-warm-lane",
+      "lanes": [
+        {
+          "id": "q11111111111",
+          "product": true,
+          "claimed": false,
+          "lastUsedMs": 1,
+          "crateKey": "a",
+          "bytes": 1
+        }
+      ],
+      "crateKey": "a",
+      "kind": "new"
+    },
+    {
+      "id": "ordinary-affinity-stays-warm",
+      "lanes": [
+        {
+          "id": "p111111",
+          "claimed": false,
+          "lastUsedMs": 1,
+          "crateKey": "a",
+          "bytes": 1
+        }
+      ],
+      "crateKey": "a",
+      "kind": "warm"
+    },
+    {
+      "id": "product-is-not-an-ordinary-lru-lane",
+      "lanes": [
+        {
+          "id": "q11111111111",
+          "product": true,
+          "claimed": false,
+          "lastUsedMs": 1,
+          "crateKey": "a",
+          "bytes": 50
+        },
+        {
+          "id": "p222222",
+          "claimed": true,
+          "lastUsedMs": 2,
+          "crateKey": "b",
+          "bytes": 50
+        }
+      ],
+      "crateKey": "c",
+      "kind": "new"
+    }
+  ],
+  "intent": {
+    "version": 1,
+    "root": "/workspace/é",
+    "manifest": "/workspace/é/Cargo.toml",
+    "mode": "prototype",
+    "command": "build",
+    "producer": "artifact",
+    "arguments": [
+      "--package",
+      "subject",
+      "--bin",
+      "subject"
+    ],
+    "toolchain": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "intentVariants": [
+    {
+      "root": "/workspace/é"
+    },
+    {
+      "root": "/workspace/É"
+    },
+    {
+      "manifest": "/workspace/é/other/Cargo.toml"
+    },
+    {
+      "mode": "release"
+    },
+    {
+      "command": "rustc"
+    },
+    {
+      "producer": "descriptor-emitter"
+    },
+    {
+      "arguments": [
+        "--package",
+        "other"
+      ]
+    },
+    {
+      "toolchain": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  ]
+}

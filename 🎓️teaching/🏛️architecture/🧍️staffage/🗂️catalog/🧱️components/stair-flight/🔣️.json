@@ -1,0 +1,3795 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "stair-flight",
+    "category": "components",
+    "title": {
+      "en": "Stair Flight",
+      "de": "Treppenlauf"
+    },
+    "summary": {
+      "en": "A 12-step straight steel stair flight (rise 241.7 mm, going 300 mm) with an HEA 160 stringer, open risers, welded gusset brackets and 40 mm timber treads, pinned at the lower landing and on a roller at the upper landing.",
+      "de": "Ein gerader Stahltreppenlauf mit 12 Stufen (Steigung 241,7 mm, Auftritt 300 mm) auf einer Wange HEA 160, offenen Setzstufen, angeschweißten Knaggen und 40 mm dicken Holzstufen, unten Festlager, oben Rollenlager."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "stair",
+      "stringer",
+      "steel",
+      "timber"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10365",
+          "citation": "EN 10365:2017 Hot rolled steel channels, I and H sections: HEA 160 A = 38.8 cm2, I_y = 1673 cm4, W_el = 220 cm3."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (density 7850 kg/m3)."
+        },
+        {
+          "id": "en-338",
+          "citation": "EN 338:2016 Structural timber, strength classes: C24 mean density 420 kg/m3, E0,mean = 11 GPa."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1: imposed loads for stairs (3.0 kN/m2, an authored value; the actual value depends on the use category) and a concentrated person load of 0.8 kN split between two stringers."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        }
+      ],
+      "notes": {
+        "en": "One stringer of a pair; the tributary width of 0.6 m is half of a 1.2 m flight. Treads are added to the stringer as a uniform share.",
+        "de": "Eine Wange eines Paares; die Einzugsbreite 0,6 m ist die Hälfte eines 1,2 m breiten Laufs. Die Stufen sind als gleichmäßiger Anteil zur Wange gerechnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.9,
+      "widthM": 3.885,
+      "depthM": 1.2,
+      "massKg": 166.2
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2",
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "Timber C24 tread",
+          "de": "Holzstufe C24"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11000000000,
+        "source": "literature",
+        "reference": "en-338",
+        "conductivityWmK": 0.13,
+        "specificHeatJKgK": 1600
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "stringer",
+      "bones": [
+        {
+          "id": "stringer",
+          "parent": null,
+          "title": {
+            "en": "Stringer",
+            "de": "Wange"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 38.853374,
+          "lengthM": 4.62277,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 166.2,
+            "comX": 2.31,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10365"
+          },
+          "section": {
+            "areaM2": 0.00388,
+            "secondMomentM4": 1.673e-05,
+            "extremeFibreM": 0.08,
+            "material": "steel",
+            "title": {
+              "en": "HEA 160",
+              "de": "HEA 160"
+            }
+          }
+        },
+        {
+          "id": "walker-carrier",
+          "parent": "stringer",
+          "title": {
+            "en": "Walker load carrier (massless)",
+            "de": "Lastträger Person (masselos)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 4.62277
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-pin",
+        "bone": "stringer",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Bottom landing, pin",
+          "de": "Unterer Podest, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "landing-roller",
+        "bone": "stringer",
+        "x": 4.62277,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Top landing, roller",
+          "de": "Oberer Podest, Rollenlager"
+        },
+        "support": "roller",
+        "normalDeg": 90
+      },
+      {
+        "id": "walker-point",
+        "bone": "walker-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Person on the flight",
+          "de": "Person auf dem Lauf"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stringer-stroke",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0.13807,
+                  -0.11123
+                ],
+                [
+                  4.69658,
+                  -0.11082
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "head-bearing",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.4,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  4.59768,
+                  -0.03115
+                ],
+                [
+                  4.79626,
+                  -0.19112
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-01",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1157,
+                  0.19144
+                ],
+                [
+                  0.37268,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-02",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.50093,
+                  0.19144
+                ],
+                [
+                  0.75792,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-03",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.88616,
+                  0.19144
+                ],
+                [
+                  1.14315,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-04",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  1.27139,
+                  0.19144
+                ],
+                [
+                  1.52838,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-05",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  1.65662,
+                  0.19144
+                ],
+                [
+                  1.91361,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-06",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.04185,
+                  0.19144
+                ],
+                [
+                  2.29884,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-07",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.42708,
+                  0.19144
+                ],
+                [
+                  2.68407,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-08",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.81231,
+                  0.19144
+                ],
+                [
+                  3.0693,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-09",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.19754,
+                  0.19144
+                ],
+                [
+                  3.45453,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-10",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.58277,
+                  0.19144
+                ],
+                [
+                  3.83976,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-11",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.968,
+                  0.19144
+                ],
+                [
+                  4.22499,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "step-12",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  4.35323,
+                  0.19144
+                ],
+                [
+                  4.61022,
+                  -0.01558
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A dark sloping stringer stroke (0.35 mm, the 160 mm HEA depth) with twelve short tread strokes above it; the open risers stay open, so the flight reads as a sloping band with a rhythm of twelve steps.",
+            "de": "Ein dunkler geneigter Wangenstrich (0,35 mm, die Tiefe 160 mm der HEA) mit zwölf kurzen Stufenstrichen darüber; die offenen Setzstufen bleiben offen, der Lauf liest sich als geneigtes Band mit zwölf Stufen im Rhythmus."
+          },
+          "retained": {
+            "en": "Rise 2.90 m, run 3.60 m, 12 treads (0.66 mm long, 0.48 mm apart vertically), stringer foot and head seat; overall extent 3.89 x 2.90 m.",
+            "de": "Steigung 2,90 m, Lauflänge 3,60 m, 12 Stufen (0,66 mm lang, 0,48 mm senkrechter Abstand), Wangenfuß und Auflager; Gesamtmaß 3,89 x 2,90 m."
+          },
+          "merged": {
+            "en": "Stringer flanges, web and gussets are one stroke; the landing bearing is a short stroke at the head.",
+            "de": "Wangenflansche, Steg und Knaggen sind ein Strich; das Auflager am Kopf ist ein kurzer Strich."
+          },
+          "omitted": {
+            "en": "Tread thickness, nosing details, gussets and flange lines.",
+            "de": "Stufendicke, Nasendetails, Knaggen und Flanschlinien."
+          },
+          "thinElements": {
+            "en": "Each 40 mm tread is a stroke of the body pen 0.13 mm (65 mm, thicker than real); a sawtooth silhouette was rejected because its 0.6 x 0.5 mm teeth are thinner than the printable feature.",
+            "de": "Jede 40-mm-Stufe ist ein Strich mit dem Körperstift 0,13 mm (65 mm, dicker als real); eine Sägezahnsilhouette wurde verworfen, weil ihre Zähne mit 0,6 x 0,5 mm dünner sind als das druckbare Merkmal."
+          },
+          "hatching": {
+            "en": "No hatch: the stringer is a single stroke. A filled parallelogram band was rejected because its 39 degree end tips are thinner than the printable feature.",
+            "de": "Keine Schraffur: die Wange ist ein einzelner Strich. Ein gefülltes Parallelogrammband wurde verworfen, weil seine Endspitzen von 39 Grad dünner sind als das druckbare Merkmal."
+          },
+          "styles": {
+            "en": "Dark band reads as steel, tread strokes as the timber layer on top.",
+            "de": "Das dunkle Band liest sich als Stahl, die Stufenstriche als Holzlage darüber."
+          },
+          "overlays": {
+            "en": "The stringer band carries the stringer-steel value; every tread stroke carries the tread-top value on its own.",
+            "de": "Das Wangenband trägt den Wert Wangenstahl; jeder Stufenstrich trägt für sich den Wert Stufenoberseite."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stringer-beam",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.4,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.09345,
+                  -0.07528
+                ],
+                [
+                  0.23733,
+                  -0.19118
+                ],
+                [
+                  4.63693,
+                  -0.19118
+                ],
+                [
+                  4.73361,
+                  -0.26906
+                ],
+                [
+                  4.79634,
+                  -0.19118
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-01",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0906,
+                  0.16029
+                ],
+                [
+                  0.34759,
+                  -0.04673
+                ],
+                [
+                  0.38523,
+                  0.0
+                ],
+                [
+                  0.12824,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-02",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.47583,
+                  0.16029
+                ],
+                [
+                  0.73282,
+                  -0.04673
+                ],
+                [
+                  0.77046,
+                  0.0
+                ],
+                [
+                  0.51347,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-03",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  0.86106,
+                  0.16029
+                ],
+                [
+                  1.11805,
+                  -0.04673
+                ],
+                [
+                  1.15569,
+                  0.0
+                ],
+                [
+                  0.8987,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-04",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  1.24629,
+                  0.16029
+                ],
+                [
+                  1.50328,
+                  -0.04673
+                ],
+                [
+                  1.54092,
+                  0.0
+                ],
+                [
+                  1.28393,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-05",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  1.63153,
+                  0.16029
+                ],
+                [
+                  1.88851,
+                  -0.04673
+                ],
+                [
+                  1.92615,
+                  0.0
+                ],
+                [
+                  1.66917,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-06",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.01676,
+                  0.16029
+                ],
+                [
+                  2.27375,
+                  -0.04673
+                ],
+                [
+                  2.31138,
+                  0.0
+                ],
+                [
+                  2.0544,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-07",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.40199,
+                  0.16029
+                ],
+                [
+                  2.65898,
+                  -0.04673
+                ],
+                [
+                  2.69662,
+                  0.0
+                ],
+                [
+                  2.43963,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-08",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  2.78722,
+                  0.16029
+                ],
+                [
+                  3.04421,
+                  -0.04673
+                ],
+                [
+                  3.08185,
+                  0.0
+                ],
+                [
+                  2.82486,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-09",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.17245,
+                  0.16029
+                ],
+                [
+                  3.42944,
+                  -0.04673
+                ],
+                [
+                  3.46708,
+                  0.0
+                ],
+                [
+                  3.21009,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-10",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.55768,
+                  0.16029
+                ],
+                [
+                  3.81467,
+                  -0.04673
+                ],
+                [
+                  3.85231,
+                  0.0
+                ],
+                [
+                  3.59532,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-11",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  3.94291,
+                  0.16029
+                ],
+                [
+                  4.1999,
+                  -0.04673
+                ],
+                [
+                  4.23754,
+                  0.0
+                ],
+                [
+                  3.98055,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-board-12",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "kind": "poly",
+              "points": [
+                [
+                  4.32814,
+                  0.16029
+                ],
+                [
+                  4.58513,
+                  -0.04673
+                ],
+                [
+                  4.62277,
+                  0.0
+                ],
+                [
+                  4.36578,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A sloped stringer beam (1.0 mm deep) carrying twelve filled tread boards that overhang the nosing; open risers keep light between the boards.",
+            "de": "Ein geneigter Wangenträger (1,0 mm tief) mit zwölf gefüllten Stufenbohlen, die über die Nase überstehen; offene Setzstufen lassen Licht zwischen den Bohlen."
+          },
+          "retained": {
+            "en": "Stringer, 12 tread boards (1.65 mm long, 0.3 mm thick) with the 30 mm nosing overhang, 1.2 mm apart vertically.",
+            "de": "Wange, 12 Stufenbohlen (1,65 mm lang, 0,3 mm dick) mit 30 mm Nasenüberstand, 1,2 mm senkrechter Abstand."
+          },
+          "merged": {
+            "en": "Gussets and stringer flanges are merged into the stringer beam.",
+            "de": "Knaggen und Wangenflansche gehen im Wangenträger auf."
+          },
+          "omitted": {
+            "en": "Risers (the stair has none), gussets, flange lines, grain.",
+            "de": "Setzstufen (der Lauf hat keine), Knaggen, Flanschlinien, Maserung."
+          },
+          "thinElements": {
+            "en": "The 40 mm tread is drawn 60 mm thick (0.3 mm), the smallest filled feature that prints with a margin; it rests on the stringer line as in reality.",
+            "de": "Die 40-mm-Stufe ist 60 mm dick gezeichnet (0,3 mm), die kleinste gefüllte Einzelheit, die mit Reserve druckt; sie ruht wie in Wirklichkeit auf der Wangenlinie."
+          },
+          "hatching": {
+            "en": "No hatch: the stringer is 1 mm deep.",
+            "de": "Keine Schraffur: die Wange ist 1 mm tief."
+          },
+          "styles": {
+            "en": "Dark beam reads as steel, lighter boards as timber; outline 0.18 mm.",
+            "de": "Der dunkle Träger liest sich als Stahl, die helleren Bohlen als Holz; Kontur 0,18 mm."
+          },
+          "overlays": {
+            "en": "Stringer and each tread board are separate overlay cells.",
+            "de": "Wange und jede Stufenbohle sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "steel",
+            "title": {
+              "en": "Steel",
+              "de": "Stahl"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.6,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stringer-hatched",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "stringer-steel",
+              "material": "steel",
+              "hatch": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03867,
+                  -0.03115
+                ],
+                [
+                  0.23733,
+                  -0.19118
+                ],
+                [
+                  4.79634,
+                  -0.19118
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-01",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.10315,
+                  0.17587
+                ],
+                [
+                  0.36014,
+                  -0.03115
+                ],
+                [
+                  0.38523,
+                  0.0
+                ],
+                [
+                  0.12824,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-01",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.26669,
+                  0.04413
+                ],
+                [
+                  0.36014,
+                  -0.03115
+                ],
+                [
+                  0.20605,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-02",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.48838,
+                  0.17587
+                ],
+                [
+                  0.74537,
+                  -0.03115
+                ],
+                [
+                  0.77046,
+                  0.0
+                ],
+                [
+                  0.51347,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-02",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.65192,
+                  0.04413
+                ],
+                [
+                  0.74537,
+                  -0.03115
+                ],
+                [
+                  0.59128,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-03",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.87361,
+                  0.17587
+                ],
+                [
+                  1.1306,
+                  -0.03115
+                ],
+                [
+                  1.15569,
+                  0.0
+                ],
+                [
+                  0.8987,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-03",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.03715,
+                  0.04413
+                ],
+                [
+                  1.1306,
+                  -0.03115
+                ],
+                [
+                  0.97651,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-04",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.25884,
+                  0.17587
+                ],
+                [
+                  1.51583,
+                  -0.03115
+                ],
+                [
+                  1.54092,
+                  0.0
+                ],
+                [
+                  1.28393,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-04",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.42238,
+                  0.04413
+                ],
+                [
+                  1.51583,
+                  -0.03115
+                ],
+                [
+                  1.36174,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-05",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.64407,
+                  0.17587
+                ],
+                [
+                  1.90106,
+                  -0.03115
+                ],
+                [
+                  1.92615,
+                  0.0
+                ],
+                [
+                  1.66917,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-05",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.80761,
+                  0.04413
+                ],
+                [
+                  1.90106,
+                  -0.03115
+                ],
+                [
+                  1.74697,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-06",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.0293,
+                  0.17587
+                ],
+                [
+                  2.28629,
+                  -0.03115
+                ],
+                [
+                  2.31138,
+                  0.0
+                ],
+                [
+                  2.0544,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-06",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.19284,
+                  0.04413
+                ],
+                [
+                  2.28629,
+                  -0.03115
+                ],
+                [
+                  2.1322,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-07",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.41453,
+                  0.17587
+                ],
+                [
+                  2.67152,
+                  -0.03115
+                ],
+                [
+                  2.69662,
+                  0.0
+                ],
+                [
+                  2.43963,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-07",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.57807,
+                  0.04413
+                ],
+                [
+                  2.67152,
+                  -0.03115
+                ],
+                [
+                  2.51743,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-08",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.79976,
+                  0.17587
+                ],
+                [
+                  3.05675,
+                  -0.03115
+                ],
+                [
+                  3.08185,
+                  0.0
+                ],
+                [
+                  2.82486,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-08",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.9633,
+                  0.04413
+                ],
+                [
+                  3.05675,
+                  -0.03115
+                ],
+                [
+                  2.90266,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-09",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  3.185,
+                  0.17587
+                ],
+                [
+                  3.44198,
+                  -0.03115
+                ],
+                [
+                  3.46708,
+                  0.0
+                ],
+                [
+                  3.21009,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-09",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  3.34853,
+                  0.04413
+                ],
+                [
+                  3.44198,
+                  -0.03115
+                ],
+                [
+                  3.28789,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-10",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  3.57023,
+                  0.17587
+                ],
+                [
+                  3.82721,
+                  -0.03115
+                ],
+                [
+                  3.85231,
+                  0.0
+                ],
+                [
+                  3.59532,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-10",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  3.73376,
+                  0.04413
+                ],
+                [
+                  3.82721,
+                  -0.03115
+                ],
+                [
+                  3.67312,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-11",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  3.95546,
+                  0.17587
+                ],
+                [
+                  4.21245,
+                  -0.03115
+                ],
+                [
+                  4.23754,
+                  0.0
+                ],
+                [
+                  3.98055,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-11",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  4.119,
+                  0.04413
+                ],
+                [
+                  4.21245,
+                  -0.03115
+                ],
+                [
+                  4.05835,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-plank-12",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  4.34069,
+                  0.17587
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ],
+                [
+                  4.62277,
+                  0.0
+                ],
+                [
+                  4.36578,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bracket-12",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  4.50423,
+                  0.04413
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ],
+                [
+                  4.44358,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A steel-hatched stringer with twelve tread planks on it; under every plank an outlined gusset triangle shows how the plank is carried; risers open.",
+            "de": "Eine stahlschraffierte Wange mit zwölf Stufenbohlen darauf; unter jeder Bohle zeigt ein umrissenes Knaggendreieck, wie die Bohle getragen wird; Setzstufen offen."
+          },
+          "retained": {
+            "en": "Stringer (1.6 mm deep, steel hatch), 12 planks of 3.3 x 0.4 mm with nosing overhang, 2.4 mm rise, 12 gusset outlines (1.2 x 0.97 mm).",
+            "de": "Wange (1,6 mm tief, Stahlschraffur), 12 Bohlen zu 3,3 x 0,4 mm mit Nasenüberstand, 2,4 mm Steigung, 12 Knaggenumrisse (1,2 x 0,97 mm)."
+          },
+          "merged": {
+            "en": "Stringer flanges are merged into the stringer shape.",
+            "de": "Wangenflansche sind in der Wangenform zusammengefasst."
+          },
+          "omitted": {
+            "en": "Flange lines, welds and grain.",
+            "de": "Flanschlinien, Schweißnähte und Maserung."
+          },
+          "thinElements": {
+            "en": "The gussets are unfilled outlines (pen 0.1 mm): a filled triangle of 1.2 x 1 mm has tips thinner than the printable feature.",
+            "de": "Die Knaggen sind ungefüllte Umrisse (Stift 0,1 mm): ein gefülltes Dreieck von 1,2 x 1 mm hat Spitzen, die dünner sind als das druckbare Merkmal."
+          },
+          "hatching": {
+            "en": "Steel hatch at 45 degrees, 0.6 mm spacing, on the stringer (material indication, not a cut; DIN 1356-1).",
+            "de": "Stahlschraffur 45°, 0,6 mm Abstand, auf der Wange (Materialandeutung, kein Schnitt; DIN 1356-1)."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm; hatched stringer, lighter planks, gusset outlines 0.1 mm.",
+            "de": "Kontur 0,25 mm; schraffierte Wange, hellere Bohlen, Knaggenumrisse 0,1 mm."
+          },
+          "overlays": {
+            "en": "Stringer, each plank and each gusset outline are separate overlay cells (gussets share the stringer value).",
+            "de": "Wange, jede Bohle und jeder Knaggenumriss sind getrennte Überlagerungszellen (Knaggen teilen den Wert der Wange)."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "grain",
+            "title": {
+              "en": "Timber, longitudinal",
+              "de": "Holz, Längsschnitt"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.4,
+            "penMm": 0.1
+          },
+          {
+            "id": "steel",
+            "title": {
+              "en": "Steel",
+              "de": "Stahl"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "stringer-web",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "region": "stringer-steel",
+              "material": "steel",
+              "hatch": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.03867,
+                  -0.03115
+                ],
+                [
+                  0.23733,
+                  -0.19118
+                ],
+                [
+                  4.79634,
+                  -0.19118
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-01",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  0.10315,
+                  0.17587
+                ],
+                [
+                  0.36014,
+                  -0.03115
+                ],
+                [
+                  0.38523,
+                  0.0
+                ],
+                [
+                  0.12824,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-01",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.26669,
+                  0.04413
+                ],
+                [
+                  0.33678,
+                  -0.01233
+                ],
+                [
+                  0.32161,
+                  -0.03115
+                ],
+                [
+                  0.20605,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-01-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0.15463,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-01-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0.33375,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-02",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  0.48838,
+                  0.17587
+                ],
+                [
+                  0.74537,
+                  -0.03115
+                ],
+                [
+                  0.77046,
+                  0.0
+                ],
+                [
+                  0.51347,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-02",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.65192,
+                  0.04413
+                ],
+                [
+                  0.72201,
+                  -0.01233
+                ],
+                [
+                  0.70685,
+                  -0.03115
+                ],
+                [
+                  0.59128,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-02-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0.53986,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-02-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0.71898,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-03",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  0.87361,
+                  0.17587
+                ],
+                [
+                  1.1306,
+                  -0.03115
+                ],
+                [
+                  1.15569,
+                  0.0
+                ],
+                [
+                  0.8987,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-03",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  1.03715,
+                  0.04413
+                ],
+                [
+                  1.10724,
+                  -0.01233
+                ],
+                [
+                  1.09208,
+                  -0.03115
+                ],
+                [
+                  0.97651,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-03-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 0.92509,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-03-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.10421,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-04",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  1.25884,
+                  0.17587
+                ],
+                [
+                  1.51583,
+                  -0.03115
+                ],
+                [
+                  1.54092,
+                  0.0
+                ],
+                [
+                  1.28393,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-04",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  1.42238,
+                  0.04413
+                ],
+                [
+                  1.49247,
+                  -0.01233
+                ],
+                [
+                  1.47731,
+                  -0.03115
+                ],
+                [
+                  1.36174,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-04-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.31033,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-04-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.48944,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-05",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  1.64407,
+                  0.17587
+                ],
+                [
+                  1.90106,
+                  -0.03115
+                ],
+                [
+                  1.92615,
+                  0.0
+                ],
+                [
+                  1.66917,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-05",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  1.80761,
+                  0.04413
+                ],
+                [
+                  1.8777,
+                  -0.01233
+                ],
+                [
+                  1.86254,
+                  -0.03115
+                ],
+                [
+                  1.74697,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-05-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.69556,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-05-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.87467,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-06",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  2.0293,
+                  0.17587
+                ],
+                [
+                  2.28629,
+                  -0.03115
+                ],
+                [
+                  2.31138,
+                  0.0
+                ],
+                [
+                  2.0544,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-06",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.19284,
+                  0.04413
+                ],
+                [
+                  2.26293,
+                  -0.01233
+                ],
+                [
+                  2.24777,
+                  -0.03115
+                ],
+                [
+                  2.1322,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-06-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 2.08079,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-06-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 2.2599,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-07",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  2.41453,
+                  0.17587
+                ],
+                [
+                  2.67152,
+                  -0.03115
+                ],
+                [
+                  2.69662,
+                  0.0
+                ],
+                [
+                  2.43963,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-07",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.57807,
+                  0.04413
+                ],
+                [
+                  2.64816,
+                  -0.01233
+                ],
+                [
+                  2.633,
+                  -0.03115
+                ],
+                [
+                  2.51743,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-07-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 2.46602,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-07-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 2.64513,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-08",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  2.79976,
+                  0.17587
+                ],
+                [
+                  3.05675,
+                  -0.03115
+                ],
+                [
+                  3.08185,
+                  0.0
+                ],
+                [
+                  2.82486,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-08",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.9633,
+                  0.04413
+                ],
+                [
+                  3.03339,
+                  -0.01233
+                ],
+                [
+                  3.01823,
+                  -0.03115
+                ],
+                [
+                  2.90266,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-08-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 2.85125,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-08-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 3.03036,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-09",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  3.185,
+                  0.17587
+                ],
+                [
+                  3.44198,
+                  -0.03115
+                ],
+                [
+                  3.46708,
+                  0.0
+                ],
+                [
+                  3.21009,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-09",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  3.34853,
+                  0.04413
+                ],
+                [
+                  3.41862,
+                  -0.01233
+                ],
+                [
+                  3.40346,
+                  -0.03115
+                ],
+                [
+                  3.28789,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-09-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 3.23648,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-09-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 3.41559,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-10",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  3.57023,
+                  0.17587
+                ],
+                [
+                  3.82721,
+                  -0.03115
+                ],
+                [
+                  3.85231,
+                  0.0
+                ],
+                [
+                  3.59532,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-10",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  3.73376,
+                  0.04413
+                ],
+                [
+                  3.80385,
+                  -0.01233
+                ],
+                [
+                  3.78869,
+                  -0.03115
+                ],
+                [
+                  3.67312,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-10-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 3.62171,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-10-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 3.80082,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-11",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  3.95546,
+                  0.17587
+                ],
+                [
+                  4.21245,
+                  -0.03115
+                ],
+                [
+                  4.23754,
+                  0.0
+                ],
+                [
+                  3.98055,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-11",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  4.119,
+                  0.04413
+                ],
+                [
+                  4.18908,
+                  -0.01233
+                ],
+                [
+                  4.17392,
+                  -0.03115
+                ],
+                [
+                  4.05835,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-11-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 4.00694,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-11-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 4.18605,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "tread-12",
+              "bone": "stringer",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "region": "tread-top",
+              "material": "timber",
+              "hatch": "grain",
+              "kind": "poly",
+              "points": [
+                [
+                  4.34069,
+                  0.17587
+                ],
+                [
+                  4.59768,
+                  -0.03115
+                ],
+                [
+                  4.62277,
+                  0.0
+                ],
+                [
+                  4.36578,
+                  0.20702
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gusset-12",
+              "bone": "stringer",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "stringer-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  4.50423,
+                  0.04413
+                ],
+                [
+                  4.57431,
+                  -0.01233
+                ],
+                [
+                  4.55915,
+                  -0.03115
+                ],
+                [
+                  4.44358,
+                  -0.03115
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "screw-12-a",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 4.39217,
+              "cy": 0.16008,
+              "rx": 0.009,
+              "ry": 0.009
+            },
+            {
+              "id": "screw-12-b",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "region": "tread-top",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 4.57129,
+              "cy": 0.01579,
+              "rx": 0.009,
+              "ry": 0.009
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The side elevation of the stair: an HEA 160 stringer web with steel hatch, twelve timber treads with longitudinal grain hatch and two countersunk fixing screws each, and a welded gusset bracket under every tread, risers open.",
+            "de": "Die Seitenansicht des Laufs: ein Wangensteg HEA 160 mit Stahlschraffur, zwölf Holzstufen mit Faserschraffur und je zwei Senkschrauben sowie unter jeder Stufe eine angeschweißte Knagge, Setzstufen offen."
+          },
+          "retained": {
+            "en": "Stringer web, 12 treads (6.6 x 0.8 mm) with 30 mm nosing overhang, 12 trapezoid gussets (1.8 x 1.9 mm, tip cut 30 mm short of the tread end), 24 fixing screws (0.36 mm).",
+            "de": "Wangensteg, 12 Stufen (6,6 x 0,8 mm) mit 30 mm Nasenüberstand, 12 Trapezknaggen (1,8 x 1,9 mm, Spitze 30 mm vor dem Stufenende gekappt), 24 Befestigungsschrauben (0,36 mm)."
+          },
+          "merged": {
+            "en": "Gusset and stringer share the steel region and hide each other's inner outline, so they read as one welded member.",
+            "de": "Knagge und Wange teilen sich die Stahlregion und verdecken gegenseitig ihre Innenkontur, sie lesen sich als ein geschweißtes Bauteil."
+          },
+          "omitted": {
+            "en": "Weld seams, the stringer fillets and flange edge lines (9 mm = 0.18 mm from the outline would close to a 0.04 mm white sliver) and the second stringer behind.",
+            "de": "Schweißnähte, die Hohlkehlen der Wange und die Flanschkantenlinien (9 mm = 0,18 mm von der Kontur würden eine 0,04 mm weiße Lücke bilden) und die zweite Wange dahinter."
+          },
+          "thinElements": {
+            "en": "Screw heads are unfilled circles of 0.1 mm pen (18 mm diameter would be 0.36 mm).",
+            "de": "Schraubenköpfe sind ungefüllte Kreise mit 0,1-mm-Stift (18 mm Durchmesser wären 0,36 mm)."
+          },
+          "hatching": {
+            "en": "Timber longitudinal hatch (0 degrees, 0.4 mm) on the treads, steel hatch (45 degrees, 0.8 mm) on the stringer web: material indication in the elevation, not a cut (DIN ISO 128-50).",
+            "de": "Holz längs (0°, 0,4 mm) auf den Stufen, Stahlschraffur (45°, 0,8 mm) auf dem Wangensteg: Materialandeutung in der Ansicht, kein Schnitt (DIN ISO 128-50)."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, screws 0.1 mm, hatches 0.1 mm; dark steel, lighter timber.",
+            "de": "Kontur 0,35 mm, Schrauben 0,1 mm, Schraffuren 0,1 mm; dunkler Stahl, hellere Holzstufen."
+          },
+          "overlays": {
+            "en": "Stringer, gussets and each tread are separate overlay cells; screws carry the tread value.",
+            "de": "Wange, Knaggen und jede Stufe sind getrennte Überlagerungszellen; Schrauben tragen den Stufenwert."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "flight-plan",
+        "title": {
+          "en": "Stair flight in plan with walking line",
+          "de": "Treppenlauf im Grundriss mit Lauflinie"
+        },
+        "description": {
+          "en": "The conventional plan sign of a straight flight (DIN 1356-1): outline, one line per riser, the walking line with a start dot and an arrow pointing up.",
+          "de": "Das übliche Grundrisszeichen eines geraden Laufs (DIN 1356-1): Umriss, eine Linie je Steigung, die Lauflinie mit Startpunkt und Pfeil nach oben."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "flight-outline",
+              "bone": "stringer",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  3.6,
+                  0
+                ],
+                [
+                  3.6,
+                  1.2
+                ],
+                [
+                  0,
+                  1.2
+                ]
+              ],
+              "closed": true,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-01",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0
+                ],
+                [
+                  0.3,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-02",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.6,
+                  0
+                ],
+                [
+                  0.6,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-03",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.8999999999999999,
+                  0
+                ],
+                [
+                  0.8999999999999999,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-04",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  1.2,
+                  0
+                ],
+                [
+                  1.2,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-05",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0
+                ],
+                [
+                  1.5,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-06",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  1.7999999999999998,
+                  0
+                ],
+                [
+                  1.7999999999999998,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-07",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  2.1,
+                  0
+                ],
+                [
+                  2.1,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-08",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  2.4,
+                  0
+                ],
+                [
+                  2.4,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-09",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  2.6999999999999997,
+                  0
+                ],
+                [
+                  2.6999999999999997,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-10",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  3.0,
+                  0
+                ],
+                [
+                  3.0,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "tread-edge-11",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  3.3,
+                  0
+                ],
+                [
+                  3.3,
+                  1.2
+                ]
+              ],
+              "closed": false,
+              "region": "tread-top"
+            },
+            {
+              "id": "walking-line",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.15,
+                  0.6
+                ],
+                [
+                  3.45,
+                  0.6
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "walking-arrow",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  3.3,
+                  0.52
+                ],
+                [
+                  3.45,
+                  0.6
+                ],
+                [
+                  3.3,
+                  0.6799999999999999
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "walking-start",
+              "bone": "stringer",
+              "role": "detail",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.15,
+                  0.57
+                ],
+                [
+                  0.18,
+                  0.6
+                ],
+                [
+                  0.15,
+                  0.63
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: 3.60 m run (12 goings of 0.30 m) by 1.20 m width; the cut line at 1 m above the floor is not drawn. At 1:200 the sign is 18 x 6 mm.",
+          "de": "Echte Größe: 3,60 m Lauflänge (12 Auftritte zu 0,30 m) bei 1,20 m Breite; die Schnittlinie 1 m über dem Boden ist nicht gezeichnet. Bei 1:200 ist das Zeichen 18 x 6 mm groß."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Empty flight",
+          "de": "Leerer Lauf"
+        },
+        "description": {
+          "en": "Stringer and treads under their own weight.",
+          "de": "Wange und Stufen unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "stringer-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "tread-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "crowd-live-load",
+        "title": {
+          "en": "Full stair load",
+          "de": "Volle Treppenlast"
+        },
+        "description": {
+          "en": "Imposed load of 3 kN/m2 over a 0.6 m tributary width, 1.80 kN/m per horizontal metre, 1.402 kN/m per metre of slope.",
+          "de": "Nutzlast 3 kN/m² über 0,6 m Einzugsbreite, 1,80 kN/m je horizontalem Meter, 1,402 kN/m je Meter Lauflänge."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "stringer-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "tread-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "crowd-live-load",
+            "kind": "imposed",
+            "title": {
+              "en": "Stair imposed load 3 kN/m2",
+              "de": "Treppennutzlast 3 kN/m²"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "stringer",
+              "fromM": 0,
+              "toM": 4.62277,
+              "wxNPerM": 0,
+              "wyNPerM": -1401.9
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "point-load-tread",
+        "title": {
+          "en": "Person mid-flight",
+          "de": "Person in Lauf-Mitte"
+        },
+        "description": {
+          "en": "A person's 400 N share on this stringer at mid-flight.",
+          "de": "Ein Personenanteil von 400 N auf dieser Wange in Laufmitte."
+        },
+        "bones": {
+          "walker-carrier": {
+            "dx": 2.31139
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "stringer-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "tread-top": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "walker",
+            "kind": "occupant",
+            "title": {
+              "en": "Person 400 N on the stringer",
+              "de": "Person 400 N auf der Wange"
+            },
+            "anchor": "walker-point",
+            "fxN": 0,
+            "fyN": -400,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The crowd load rises smoothly to its full value.",
+          "de": "Die Personenlast steigt weich auf ihren vollen Wert."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Stair load at full value",
+              "de": "Treppenlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:crowd-live-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "moving-point-load",
+        "title": {
+          "en": "Person walking up",
+          "de": "Person geht hinauf"
+        },
+        "description": {
+          "en": "The person walks from the bottom to the top of the flight.",
+          "de": "Die Person geht vom unteren zum oberen Ende des Laufs."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "point-load-tread",
+            "ease": "smooth",
+            "bones": {
+              "walker-carrier": {
+                "dx": 0.3
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "point-load-tread",
+            "ease": "smooth",
+            "bones": {
+              "walker-carrier": {
+                "dx": 4.32277
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "climb",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Climb",
+              "de": "Aufstieg"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Person at the bottom",
+              "de": "Person am unteren Ende"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 8,
+        "groundTempC": 18,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "stringer-steel",
+          "title": {
+            "en": "Stringer and gusset steel",
+            "de": "Wange und Knaggen Stahl"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 4.2,
+          "characteristicLengthM": 0.2,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 26000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "tread-top",
+          "title": {
+            "en": "Timber tread surfaces",
+            "de": "Holzstufenoberflächen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "timber",
+          "areaM2": 4.75,
+          "characteristicLengthM": 0.33,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.95,
+          "layers": [],
+          "heatCapacityJM2K": 24000,
+          "source": "authored-estimate",
+          "reference": "en-iso-13786"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The stringer is an HEA 160 (about 0.9 m2 of surface per metre) with an average steel thickness of 7.5 mm; tread tops are 12 timber boards of 0.33 x 1.2 m.",
+          "de": "Die Wange ist ein HEA 160 (etwa 0,9 m² Oberfläche je Meter) mit mittlerer Stahldicke 7,5 mm; die Stufenoberseiten sind 12 Holzbohlen 0,33 x 1,2 m."
+        },
+        {
+          "en": "Timber treads store heat in an effective depth of 36 mm (EN ISO 13786, half the 24 h penetration depth), so they warm slowly in the sun and stay cooler than the stringer.",
+          "de": "Holzstufen speichern Wärme in einer wirksamen Tiefe von 36 mm (EN ISO 13786, die Hälfte der 24-h-Eindringtiefe), sie erwärmen sich in der Sonne langsam und bleiben kühler als die Wange."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: treads fully sunlit, stringer half in shade of the treads.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Stufen voll besonnt, Wange halb im Schatten der Stufen."
+        },
+        {
+          "en": "Reference case: a mild sunny day, all values authored estimates.",
+          "de": "Referenzfall: ein milder sonniger Tag, alle Werte sind Schätzungen."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-pin",
+        "landing-roller"
+      ],
+      "assumptions": [
+        {
+          "en": "Inclined simply supported stringer: pin at the lower landing, vertical roller at the upper landing; slope 38.85 deg, horizontal run 3.6 m, rise 2.9 m.",
+          "de": "Geneigte, frei aufliegende Wange: Festlager am unteren Podest, senkrechtes Rollenlager am oberen Podest; Neigung 38,85 Grad, Lauflänge 3,6 m, Steigung 2,9 m."
+        },
+        {
+          "en": "Vertical loads are converted to per-metre-of-slope line loads; the stringer is one of a pair and the 0.6 m tributary width is half of the flight.",
+          "de": "Vertikale Lasten sind in Linienlasten je Meter Lauflänge umgerechnet; die Wange ist eine von zwei, die 0,6 m Einzugsbreite ist die Hälfte des Laufs."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "crowd-live-load",
+      "defaultClip": "loading-ramp",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

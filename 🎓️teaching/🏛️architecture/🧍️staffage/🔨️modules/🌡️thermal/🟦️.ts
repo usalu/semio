@@ -1,546 +1,343 @@
-/** 🌡️ Thermal solver of the staffage archive: steady-state surface energy balances per region, deterministic jet/plume streamlines and tracer parcels per emitter.
+/** 🌡️ Thermal solver of the staffage archive: explicit physical quantities per region (surface and skin temperature, emitted and net radiation, sensible, latent
+ * and moisture flux) from energy balances, before any colour.
  *
- * Models (all documented in the ticket file `thermal-model.md`; none is CFD and none is physiologically validated):
- * - radiation: grey-body exchange with the mean radiant temperature, q = εσ(Tₛ⁴ − T_mrt⁴);
- * - convection: ISO 7730 (Fanger) for clothed bodies, flat-plate / Churchill–Bernstein cylinder forced and laminar/turbulent vertical-plate natural correlations elsewhere, h = max(natural, forced);
- * - evaporation: ASHRAE skin wettedness with the Lewis relation hₑ = 16.5·h_c, Penman–Monteith leaf transpiration with a joint leaf energy balance;
- * - respiration: ASHRAE Fundamentals ch. 9 latent and sensible loss, assigned to breath emitters;
- * - emitters: free round turbulent jet (centreline u ∝ K·d/x, ΔT ∝ 5·d/x) advected by the relative wind and lifted by a momentum-conserving buoyant acceleration.
+ * - Outer surface: radiation against sky, ground and surroundings, absorbed solar by sunlit share, convection by geometry (natural and forced, relative wind incl. body
+ *   motion), evaporation, contact conduction, layers in series from the skin, the interior or the heat source (🧱️balance, 🔬️physics).
+ * - Bodies: Gagge-type two-node thermoregulation distributed over the regions, shivering, sweating, panting, skin blood flow, respiration (🫀️physiology).
+ * - Leaves: Penman–Monteith balance with light and vapour-pressure-deficit controlled stomata, CAM at night (🍃️canopy).
+ * - Machines and building elements: released heat `heatW × level`, interior-to-exterior conduction through layers.
+ * - Transient: first-order response with `C/G` per region, driven by the input history (⏳️transient); core temperature with the body's heat capacity.
  *
- * Wind convention: `windDirectionDeg` is the direction the air moves towards, counter-clockwise from +x in the elevation plane; `relativeHumidity` is a fraction 0…1.
+ * Documentation, sources, parameter classes and validation: ticket file `thermal-v2.md`. Deterministic in (state, environment, history); invariant under drawing scale.
  *
- * @see ../../🧬️schema/🟦️.ts — ThermalModel, ThermalRegion, Emitter, Environment
  * @see ../🔗️contracts/🟦️.ts — EvaluatedState, ThermalField
+ * @see ../../🧬️schema/🟦️.ts — ThermalModel, ThermalRegion, Environment
  */
-import type { Emitter, Environment, Slug, Text, ThermalRegion } from "../../🧬️schema/🟦️.ts";
-import type { DisplayRange, EvaluatedState, Legend, Parcel, Point, RegionField, Streamline, ThermalField, ThermalQuantity } from "../🔗️contracts/🟦️.ts";
+import type { Asset, Environment, Slug, Text, ThermalRegion } from "../../🧬️schema/🟦️.ts";
+import type { BodyField, EnvironmentTimeline, EvaluatedState, JobControl, Point, RegionField, ThermalField, ThermalInputs, ThermalQuantity } from "../🔗️contracts/🟦️.ts";
+import { type EnvironmentInput, environmentAt, isTimeline } from "./🌤️environment/🟦️.ts";
+import { type BodySetup, type BodyState, bodySetup, evaluateBody, neutralState, skinConductances, steadyBody, stepBody } from "./🫀️physiology/🟦️.ts";
+import { type Ambient, type RadiationSplit, type RegionFrame, type RegionSetup, ambientOf, emittedOf, envOf, exchange, inflowOf, radiationSplit as splitOf, regionSetup, residualWM2, restoringConductance, solarOf, solveSteady, stomataOf } from "./🧱️balance/🟦️.ts";
+import { MET_WM2, latentHeatJkg, radiantEnvironmentC } from "./🔬️physics/🟦️.ts";
+import { QUANTITY_SPECS } from "./📏️quantities/🟦️.ts";
+import { historyPlan, relax } from "./⏳️transient/🟦️.ts";
 
-//#region 🔖️Constants
-const SIGMA = 5.670374419e-8;
-const KELVIN = 273.15;
-const GRAVITY = 9.80665;
-const R_DRY = 287.058;
-const R_VAPOUR = 461.495;
-const CP_AIR = 1006;
-const PRANDTL = 0.71;
-const SCHMIDT = 0.6;
-const LEWIS_BODY = 16.5;
-const STANDARD_PRESSURE = 101325;
-const MET_WM2 = 58.15;
-const CORE_RISE_K_PER_MET = 0.15;
-const CORE_RISE_MAX_K = 1.5;
-const SKIN_MIN_WETTEDNESS = 0.06;
-const DEFAULT_INSULATION = 0.155;
-const DEFAULT_STOMATAL = 0.005;
-const JET_VELOCITY_K = 6.2;
-const JET_SCALAR_K = 5;
-const JET_SPREAD = 0.1;
-const EXCESS_STOP_K = 0.2;
-const SPEED_STOP_MS = 0.05;
-const VAPOUR_EXCESS_STOP = 0.02;
-const PUFF_FORMATION_NUMBER = 4;
-const MAX_REACH_M = 10;
-const MAX_TIME_S = 60;
-const STREAMLINE_POINTS = 24;
-const PARCELS_PER_S = 8;
-const MAX_PARCELS_PER_EMITTER = 240;
-const DEG = Math.PI / 180;
+export { environmentAt, isTimeline, type EnvironmentInput } from "./🌤️environment/🟦️.ts";
+export { absorbedSolar, convection, emittedFlux, radiationCoefficient, radiationFlux, saturationPressurePa, specificHumidity, vapourPressurePa, humidityRatio, latentHeatJkg, airDensity, SIGMA } from "./🔬️physics/🟦️.ts";
+export { QUANTITY_SPECS, type QuantitySpec, valueOf } from "./📏️quantities/🟦️.ts";
+export { respiratoryHeat, type RespiratoryHeat } from "./🫀️physiology/🟦️.ts";
+export { type PenmanMonteithInput, penmanMonteith, perGroundArea, stomatalConductance } from "./🍃️canopy/🟦️.ts";
+export { type RadiationSplit } from "./🧱️balance/🟦️.ts";
+export { radiantEnvironmentC, radiantTemperatures, viewFactors } from "./🔬️physics/🟦️.ts";
+export { type HistoryPlan, historyPlan, relax } from "./⏳️transient/🟦️.ts";
+export { type TimelineOptions, solveThermalAt } from "./🕰️timeline/🟦️.ts";
 
-type ConvectionClass = "body" | "cylinder" | "plate";
+/** 🌡️ The scalar thermal inputs and the figure's centre-of-mass velocity at one absolute time of the input history. */
+/** 🌡️ The scalar thermal inputs and the figure's centre-of-mass velocity at one absolute time of the input history. */
+/** 🌡️ The inputs of the passengers (second living bodies) at one instant; `ThermalInputs` of the contract does not carry them yet, the evaluator adds them. */
+export type PassengerInputs = { readonly passengers?: Readonly<Record<Slug, { readonly activityMet: number; readonly breathing?: Slug | null }>> };
 
-const CONVECTION_CLASS: Readonly<Record<ThermalRegion["kind"], ConvectionClass>> = { skin: "body", clothing: "body", hair: "body", fur: "cylinder", feather: "cylinder", bark: "cylinder", tyre: "cylinder", exhaust: "cylinder", foliage: "plate", surface: "plate", engine: "plate", glazing: "plate", wall: "plate" };
-const SOLAR_AREA_FACTOR: Readonly<Record<ThermalRegion["kind"], number>> = { skin: 0.25, clothing: 0.25, hair: 0.25, fur: 0.25, feather: 0.25, bark: 0.25, tyre: 0.25, exhaust: 0.25, foliage: 0.5, engine: 0.5, surface: 1, wall: 1, glazing: 1 };
-//#endregion 🔖️Constants
+/** 🌡️ The scalar thermal inputs and the figure's centre-of-mass velocity at one absolute time of the input history. */
+export type ThermalSample = { readonly inputs: ThermalInputs; readonly comVelocity?: Point };
 
-//#region 💧️Psychrometrics
-/** 💧️ Saturation vapour pressure over water in pascal, Magnus form with the Buck (1996) coefficients; within 0.05 % of IAPWS-95 for 0 … 60 °C.
- * @see Buck, A. L. (1996) Buck Research CR-1A manual */
-export const saturationVapourPressurePa = (tempC: number): number => 611.21 * Math.exp((18.678 - tempC / 234.5) * (tempC / (257.14 + tempC)));
+/** 🌡️ Solver options: `history` returns the inputs at any absolute time (the evaluator's thermal binding along the clip or pose timeline); without it the inputs of the
+ * evaluated state are assumed to have held forever and the response is the steady state. `windowS` overrides the history window, `maxSteps` the step budget. */
+export type ThermalOptions = Partial<JobControl> & { readonly history?: (timeS: number) => ThermalSample; readonly windowS?: number; readonly maxSteps?: number };
 
-/** 🌫️ Partial vapour pressure of the ambient air in pascal (relative humidity is a fraction). */
-export const vapourPressurePa = (environment: Environment): number => environment.relativeHumidity * saturationVapourPressurePa(environment.airTempC);
+type Body = { readonly setup: BodySetup; readonly subject: Slug | null; readonly regions: readonly number[] };
+type System = { readonly regions: readonly RegionSetup[]; readonly bodies: readonly Body[]; readonly place: ReadonlyMap<number, { readonly body: number; readonly slot: number }> };
 
-/** 🫧️ Specific humidity (kg vapour per kg moist air) from vapour pressure and total pressure. */
-export const specificHumidity = (vapourPa: number, pressurePa: number): number => (0.622 * vapourPa) / (pressurePa - 0.378 * vapourPa);
+const SYSTEMS = new WeakMap<Asset, System>();
 
-/** 🔥️ Latent heat of vaporisation of water in J/kg (linear fit, 0 … 50 °C). */
-export const latentHeatJPerKg = (tempC: number): number => 2.501e6 - 2361 * tempC;
-
-/** ☁️ Moist-air density in kg/m³. */
-export const airDensity = (tempC: number, pressurePa: number, vapourPa: number): number => (pressurePa - vapourPa) / (R_DRY * (tempC + KELVIN)) + vapourPa / (R_VAPOUR * (tempC + KELVIN));
-//#endregion 💧️Psychrometrics
-
-//#region 🌬️Transfer
-type AirProperties = { readonly conductivity: number; readonly kinematicViscosity: number };
-
-const airProperties = (filmC: number, pressurePa: number): AirProperties => {
-  const t = filmC + KELVIN;
-  const mu = 1.716e-5 * (t / KELVIN) ** 1.5 * (KELVIN + 110.4) / (t + 110.4);
-  return { conductivity: 0.02428 + 7.7e-5 * filmC, kinematicViscosity: mu / airDensity(filmC, pressurePa, 0) };
-};
-
-/** 🌬️ Convective coefficient in W/(m²·K), h = max(natural, forced).
- * - body: ISO 7730 / Fanger, natural 2.38·ΔT^0.25, forced 12.1·√v;
- * - plate: natural 1.42·(ΔT/L)^¼ (Ra < 10⁹) or 1.31·ΔT^⅓, forced Nu = 0.664·Re^½·Pr^⅓ (Re < 5·10⁵) or (0.037·Re^0.8 − 871)·Pr^⅓;
- * - cylinder: same natural, forced Churchill–Bernstein cross-flow.
- * @see ISO 7730:2005 annex D; Incropera & DeWitt ch. 7, 9; ASHRAE Handbook — Fundamentals ch. 4 */
-export function convectionCoefficient(kind: ConvectionClass, deltaK: number, speedMS: number, lengthM: number, filmC: number, pressurePa: number): number {
-  const dT = Math.abs(deltaK);
-  if (kind === "body") return Math.max(2.38 * dT ** 0.25, 12.1 * Math.sqrt(Math.max(0, speedMS)));
-  const { conductivity, kinematicViscosity } = airProperties(filmC, pressurePa);
-  const rayleigh = (GRAVITY * dT * lengthM ** 3 * PRANDTL) / ((filmC + KELVIN) * kinematicViscosity ** 2);
-  const natural = dT === 0 ? 0 : rayleigh < 1e9 ? 1.42 * (dT / lengthM) ** 0.25 : 1.31 * dT ** (1 / 3);
-  const re = (Math.max(0, speedMS) * lengthM) / kinematicViscosity;
-  const nu = re === 0 ? 0 : kind === "plate"
-    ? (re < 5e5 ? 0.664 * Math.sqrt(re) : 0.037 * re ** 0.8 - 871) * PRANDTL ** (1 / 3)
-    : 0.3 + (0.62 * Math.sqrt(re) * PRANDTL ** (1 / 3) * (1 + (re / 282000) ** (5 / 8)) ** (4 / 5)) / (1 + (0.4 / PRANDTL) ** (2 / 3)) ** 0.25;
-  return Math.max(natural, (nu * conductivity) / lengthM);
-}
-
-/** ☢️ Net grey-body radiant flux in W/m² leaving a surface, q = εσ(Tₛ⁴ − T_mrt⁴); positive = loss. */
-export const radiationFlux = (emissivity: number, surfaceC: number, mrtC: number): number => emissivity * SIGMA * ((surfaceC + KELVIN) ** 4 - (mrtC + KELVIN) ** 4);
-
-/** 📉️ Secant radiation coefficient in W/(m²·K) with q = h_r·(Tₛ − T_mrt); the 4εσT³ tangent where both temperatures coincide. */
-export const radiationCoefficient = (emissivity: number, surfaceC: number, mrtC: number): number =>
-  Math.abs(surfaceC - mrtC) < 1e-9 ? 4 * emissivity * SIGMA * (surfaceC + KELVIN) ** 3 : radiationFlux(emissivity, surfaceC, mrtC) / (surfaceC - mrtC);
-//#endregion 🌬️Transfer
-
-//#region 🧮️Balance
-type Ambient = { readonly env: Environment; readonly vapourPa: number; readonly humidity: number; readonly density: number; readonly wind: Point; readonly relativeSpeed: number };
-
-const ambientOf = (env: Environment, state: EvaluatedState): Ambient => {
-  const vapourPa = vapourPressurePa(env);
-  const phi = env.windDirectionDeg * DEG;
-  const velocity = state.kinematics?.comVelocity ?? { x: 0, y: 0 };
-  const wind = { x: env.windMS * Math.cos(phi) - velocity.x, y: env.windMS * Math.sin(phi) - velocity.y };
-  return { env, vapourPa, humidity: specificHumidity(vapourPa, env.pressurePa), density: airDensity(env.airTempC, env.pressurePa, vapourPa), wind, relativeSpeed: Math.hypot(wind.x, wind.y) };
-};
-
-type Exchange = { readonly qr: number; readonly qc: number; readonly qe: number; readonly hc: number; readonly hr: number };
-
-type RegionContext = { readonly region: ThermalRegion; readonly emissivity: number; readonly absorbedSolarWM2: number; readonly wettedness: number; readonly ambient: Ambient };
-
-function exchange(c: RegionContext, tsC: number): Exchange {
-  const { region, ambient: a } = c;
-  const env = a.env;
-  const hc = convectionCoefficient(CONVECTION_CLASS[region.kind], tsC - env.airTempC, a.relativeSpeed, region.characteristicLengthM, (tsC + env.airTempC) / 2, env.pressurePa);
-  const qr = radiationFlux(c.emissivity, tsC, env.meanRadiantTempC);
-  const qc = hc * (tsC - env.airTempC);
-  const surfaceVapourPa = saturationVapourPressurePa(tsC);
-  let qe: number;
-  if (region.model === "leaf") {
-    const gb = (hc / (a.density * CP_AIR)) * (PRANDTL / SCHMIDT) ** (1 / 3);
-    const gs = Math.max(0, region.stomatalConductanceMS ?? DEFAULT_STOMATAL);
-    const g = gs + gb === 0 ? 0 : (gs * gb) / (gs + gb);
-    qe = Math.max(0, latentHeatJPerKg(tsC) * a.density * g * (specificHumidity(surfaceVapourPa, env.pressurePa) - a.humidity));
-  } else {
-    qe = Math.max(0, c.wettedness * LEWIS_BODY * hc * (STANDARD_PRESSURE / env.pressurePa) * ((surfaceVapourPa - a.vapourPa) / 1000));
+function systemOf(asset: Asset): System {
+  const cached = SYSTEMS.get(asset);
+  if (cached) return cached;
+  const regions = asset.thermal.regions.map((r) => regionSetup(r, asset.materials));
+  const bodies: Body[] = [];
+  const place = new Map<number, { body: number; slot: number }>();
+  for (const subject of [null, ...asset.thermal.passengers.map((p) => p.id)]) {
+    const setup = bodySetup(asset, regions, subject);
+    if (!setup) continue;
+    const indices = setup.regions.map((br) => regions.indexOf(br.setup));
+    indices.forEach((index, slot) => place.set(index, { body: bodies.length, slot }));
+    bodies.push({ setup, subject, regions: indices });
   }
-  return { qr, qc, qe, hc, hr: radiationCoefficient(c.emissivity, tsC, env.meanRadiantTempC) };
+  const system = { regions, bodies, place };
+  SYSTEMS.set(asset, system);
+  return system;
 }
 
-function solveDecreasing(f: (x: number) => number, lo: number, hi: number): number {
-  let span = Math.max(1, hi - lo);
-  for (let i = 0; i < 60 && f(hi) > 0; i++, span *= 2) hi += span;
-  span = Math.max(1, hi - lo);
-  for (let i = 0; i < 60 && f(lo) < 0; i++, span *= 2) lo -= span;
-  let [a, b, fa, fb, side] = [lo, hi, f(lo), f(hi), 0];
-  for (let i = 0; i < 400; i++) {
-    const c = fb === fa ? (a + b) / 2 : (a * fb - b * fa) / (fb - fa);
-    const fc = f(c);
-    if (Math.abs(fc) < 1e-11 || Math.abs(b - a) < 1e-12) return c;
-    if (fc > 0) {
-      [a, fa] = [c, fc];
-      if (side === 1) fb /= 2;
-      side = 1;
-    } else {
-      [b, fb] = [c, fc];
-      if (side === -1) fa /= 2;
-      side = -1;
-    }
-  }
-  return (a + b) / 2;
+function subjectInputs(inputs: ThermalInputs, subject: Slug | null): ThermalInputs {
+  if (subject === null) return inputs;
+  const p = inputs.passengers?.[subject];
+  return { ...inputs, activityMet: p?.activityMet ?? 0, externalWorkW: 0, breathing: p?.breathing ?? null };
 }
 
-function surfaceTemperature(c: RegionContext, override: { surfaceTempC?: number; coreTempC?: number }, coreRiseK: number, state: EvaluatedState): number {
-  const { region, ambient: a } = c;
-  const env = a.env;
-  if (override.surfaceTempC !== undefined) return override.surfaceTempC;
-  const bounds = [env.airTempC, env.meanRadiantTempC];
-  switch (region.model) {
-    case "fixed":
-      return region.surfaceTempC ?? env.airTempC;
-    case "operating":
-      return env.airTempC + (region.riseK ?? 0) * (state.thermal.operating[region.operatingKey ?? ""] ?? 0);
-    case "passive":
-    case "leaf": {
-      const f = (t: number) => { const e = exchange(c, t); return c.absorbedSolarWM2 - e.qr - e.qc - e.qe; };
-      return solveDecreasing(f, Math.min(...bounds) - 1, Math.max(...bounds) + 1);
-    }
-    case "core-resistance": {
-      const core = (override.coreTempC ?? region.coreTempC ?? 37) + (override.coreTempC === undefined ? coreRiseK : 0);
-      const r = Math.max(1e-6, region.insulationM2KW ?? DEFAULT_INSULATION);
-      const f = (t: number) => { const e = exchange(c, t); return (core - t) / r - e.qr - e.qc - e.qe + c.absorbedSolarWM2; };
-      return solveDecreasing(f, Math.min(...bounds, core) - 1, Math.max(...bounds, core) + 1);
-    }
-  }
-}
+type Instant = { readonly env: Environment; readonly amb: Ambient; readonly inputs: ThermalInputs; readonly frames: readonly RegionFrame[]; readonly levels: readonly number[] };
 
-/** 🧍️ Body surface area in m² after DuBois & DuBois (1916), A = 0.202·m^0.425·h^0.725. */
-export const duboisAreaM2 = (massKg: number, heightM: number): number => (massKg > 0 && heightM > 0 ? 0.202 * massKg ** 0.425 * heightM ** 0.725 : 0);
-
-/** 🫁️ Respiratory heat loss per body area in W/m² after ASHRAE Fundamentals ch. 9: latent 0.0173·M·(5.87 − pₐ[kPa]), sensible 0.0014·M·(34 − Tₐ), M in W/m². */
-export const respirationWM2 = (metabolicWM2: number, airC: number, vapourPa: number): { readonly latent: number; readonly sensible: number } => ({
-  latent: Math.max(0, 0.0173 * metabolicWM2 * (5.87 - vapourPa / 1000)),
-  sensible: 0.0014 * metabolicWM2 * (34 - airC),
-});
-
-function solveRegions(state: EvaluatedState, a: Ambient): { readonly fields: Record<Slug, RegionField>; readonly defaults: Slug[] } {
-  const model = state.asset.thermal;
-  const materials = new Map(state.asset.materials.map((m) => [m.id, m]));
-  const baseMet = model.baseMet ?? 1;
-  const shares = model.regions.filter((r) => r.model === "core-resistance" && r.metabolicShare !== undefined).map((r) => r.metabolicShare as number);
-  const meanShare = shares.length ? shares.reduce((s, v) => s + v, 0) / shares.length : 1;
-  const fields: Record<Slug, RegionField> = {};
-  const defaults: Slug[] = [];
-  for (const region of model.regions) {
-    const override = state.thermal.regions[region.id] ?? { exposedFraction: 1 };
-    const material = materials.get(region.material);
-    if (!material || (region.model === "core-resistance" && region.insulationM2KW === undefined)) defaults.push(region.id);
-    const share = region.metabolicShare === undefined ? 1 : Math.min(2, region.metabolicShare / meanShare);
-    const coreRiseK = Math.min(CORE_RISE_MAX_K, CORE_RISE_K_PER_MET * Math.max(0, state.thermal.activityMet - baseMet) * share);
-    const c: RegionContext = {
-      region,
-      emissivity: material?.emissivity ?? 0.9,
-      absorbedSolarWM2: (material?.solarAbsorptivity ?? 0) * a.env.solarWM2 * SOLAR_AREA_FACTOR[region.kind],
-      wettedness: override.wettedness ?? region.wettedness ?? (region.kind === "skin" ? SKIN_MIN_WETTEDNESS : 0),
-      ambient: a,
+function instantOf(sys: System, sample: ThermalSample, env: Environment): Instant {
+  const amb = ambientOf(env);
+  const theta = (env.windDirectionDeg * Math.PI) / 180;
+  const c = sample.comVelocity ?? { x: 0, y: 0 };
+  const rel = Math.hypot(env.windMS * Math.cos(theta) - c.x, env.windMS * Math.sin(theta) - c.y);
+  const activities = sys.regions.map((s) => {
+    const met = subjectInputs(sample.inputs, s.region.body?.subject ?? null).activityMet;
+    return 0.0052 * Math.max(0, (met > 0 ? met : 1) * MET_WM2 - 58);
+  });
+  const levels: number[] = [];
+  const frames = sys.regions.map((s, j): RegionFrame => {
+    const r = s.region;
+    const b = sample.inputs.regions[r.id];
+    const sunlit = b?.sunlitFraction ?? 0;
+    levels.push(r.operating ? (sample.inputs.operating[r.operating.key] ?? 0) : 0);
+    return {
+      setup: s,
+      exposed: b?.exposedFraction ?? 1,
+      contact: b?.contact?.fraction ?? 0,
+      contactTempC: b?.contact?.tempC ?? env.groundTempC ?? env.airTempC,
+      wettedness: b?.wettedness ?? s.wetDefault,
+      sunlit,
+      speed: r.model === "body" ? Math.hypot(rel, activities[j]!) : rel,
+      envC: envOf(s, env),
+      solar: solarOf(s, env, sunlit),
+      stomatalMS: stomataOf(s, env, sunlit),
     };
-    const tsC = surfaceTemperature(c, override, coreRiseK, state);
-    const e = exchange(c, tsC);
-    const exposed = override.exposedFraction ?? 1;
-    const area = region.areaM2 * exposed;
-    fields[region.id] = {
-      region: region.id,
-      surfaceTempC: tsC,
-      radiantFluxWM2: e.qr,
-      convectiveFluxWM2: e.qc,
-      latentFluxWM2: e.qe,
-      netFluxWM2: e.qr + e.qc + e.qe - c.absorbedSolarWM2,
-      radiantW: e.qr * area,
-      convectiveW: e.qc * area,
-      latentW: e.qe * area,
-      convectionCoefficientWM2K: e.hc,
-      radiationCoefficientWM2K: e.hr,
-      exposedFraction: exposed,
-    };
-  }
-  return { fields, defaults };
-}
-//#endregion 🧮️Balance
-
-//#region 💨️Emitters
-type Source = { readonly at: Point; readonly dirRad: number; readonly u0: number; readonly d: number; readonly dT0: number; readonly vapour: boolean; readonly q0: number; readonly qa: number; readonly crosswindMS: number; readonly puff: boolean };
-
-type Path = { readonly t: number[]; readonly x: number[]; readonly y: number[]; readonly ell: number[] };
-
-const dilution = (s: Source, ell: number, t: number): number => {
-  const x = ell + s.crosswindMS * t;
-  return s.puff ? Math.max(1, (x / (PUFF_FORMATION_NUMBER * s.d)) ** 3) : Math.max(1, x / (JET_SCALAR_K * s.d));
-};
-
-const relativeVelocity = (s: Source, t: number, ell: number, airK: number): Point => {
-  const uj = s.puff ? s.u0 * Math.min(1, ((PUFF_FORMATION_NUMBER * s.d) / Math.max(ell, 1e-12)) ** 3) : s.u0 * Math.min(1, (JET_VELOCITY_K * s.d) / Math.max(ell, 1e-12));
-  const vb = ((GRAVITY * s.dT0) / airK) * (t / dilution(s, ell, t));
-  return { x: uj * Math.cos(s.dirRad), y: uj * Math.sin(s.dirRad) + vb };
-};
-
-/** 🌀️ Integrates one Lagrangian parcel path in the air frame plus wind drift, Heun's method with an adaptive step of 2 % of the jet length scale.
- * Dilution D = max(1, x/5d) with x = air-frame path + |relative wind|·t (cross-flow eddies mix like path length, Briggs bent-over plume); excess temperature and vapour excess both decay as 1/D.
- * Pulsed sources (period with duty < 1) are puffs: beyond 4d (vortex-ring formation number) D = (x/4d)³ and u = u₀·(4d/x)³ (Turner 1973); steady sources follow the round jet u = u₀·min(1, 6.2d/x).
- * The buoyant velocity v_b = g·ΔT₀/Tₐ·t/D conserves buoyancy impulse while entrainment dilutes the parcel (Morton, Taylor & Turner 1956).
- * The path ends when the temperature excess < 0.2 K and the vapour excess < 2 % of its source value, or the relative speed < 0.05 m/s, or after 10 m.
- * @see Pope, Turbulent Flows ch. 5 (round jet); Briggs 1969 (plume rise); Turner 1973, Buoyancy Effects in Fluids (puffs); Morton, Taylor & Turner 1956 */
-function integratePlume(s: Source, wind: Point, airK: number): Path {
-  const path: Path = { t: [0], x: [s.at.x], y: [s.at.y], ell: [0] };
-  let [t, x, y, ell] = [0, s.at.x, s.at.y, 0];
-  const stop = (tt: number, l: number) => {
-    const rel = relativeVelocity(s, tt, l, airK);
-    const speed = Math.hypot(rel.x, rel.y);
-    const dil = dilution(s, l, tt);
-    const needed = Math.max(Math.abs(s.dT0) >= EXCESS_STOP_K ? Math.abs(s.dT0) / EXCESS_STOP_K : 1, Math.abs(s.q0 - s.qa) > 0 ? 1 / VAPOUR_EXCESS_STOP : 1);
-    return speed < (s.vapour ? SPEED_STOP_MS / 10 : SPEED_STOP_MS) || dil > needed;
-  };
-  for (let i = 0; i < 20000 && t < MAX_TIME_S && Math.hypot(x - s.at.x, y - s.at.y) < MAX_REACH_M && (i === 0 || !stop(t, ell)); i++) {
-    const k1 = relativeVelocity(s, t, ell, airK);
-    const l1 = Math.hypot(k1.x, k1.y);
-    const dt = Math.min(0.05, Math.max(1e-4, (0.02 * (ell + 3 * s.d)) / (l1 + 1e-9)));
-    const k2 = relativeVelocity(s, t + dt, ell + l1 * dt, airK);
-    const l2 = Math.hypot(k2.x, k2.y);
-    x += (wind.x + (k1.x + k2.x) / 2) * dt;
-    y += (wind.y + (k1.y + k2.y) / 2) * dt;
-    ell += ((l1 + l2) / 2) * dt;
-    t += dt;
-    path.t.push(t);
-    path.x.push(x);
-    path.y.push(y);
-    path.ell.push(ell);
-  }
-  return path;
+  });
+  return { env, amb, inputs: sample.inputs, frames, levels };
 }
 
-type Sample = { readonly at: Point; readonly ageS: number; readonly ell: number; readonly velocity: Point; readonly excessK: number };
+const bodyFrames = (b: Body, i: Instant): RegionFrame[] => b.regions.map((j) => i.frames[j]!);
 
-function sampleAt(s: Source, path: Path, wind: Point, airK: number, index: number, frac: number): Sample {
-  const j = Math.min(index + 1, path.t.length - 1);
-  const mix = (v: readonly number[]) => (v[index] as number) * (1 - frac) + (v[j] as number) * frac;
-  const [t, ell] = [mix(path.t), mix(path.ell)];
-  const rel = relativeVelocity(s, t, ell, airK);
-  return { at: { x: mix(path.x), y: mix(path.y) }, ageS: t, ell, velocity: { x: wind.x + rel.x, y: wind.y + rel.y }, excessK: s.dT0 / dilution(s, ell, t) };
+type Node = { readonly target: number; readonly tau: number };
+
+function steadyOf(f: RegionFrame, a: Ambient, level: number, guess: number): Node {
+  const inflow = inflowOf(f, level);
+  const target = solveSteady(f, a, inflow, guess);
+  const g = f.setup.region.model === "fixed" ? Infinity : restoringConductance(f, a, inflow, target);
+  return { target, tau: f.setup.region.model === "fixed" ? 0 : f.setup.region.heatCapacityJM2K / g };
 }
 
-const locate = (times: readonly number[], age: number): { index: number; frac: number } => {
-  let [lo, hi] = [0, times.length - 1];
-  while (hi - lo > 1) {
-    const mid = (lo + hi) >> 1;
-    if ((times[mid] as number) <= age) lo = mid; else hi = mid;
-  }
-  const t0 = times[lo] as number;
-  const t1 = times[hi] as number;
-  return { index: lo, frac: t1 > t0 ? Math.min(1, Math.max(0, (age - t0) / (t1 - t0))) : 0 };
-};
+const label = (en: string, de: string): Text => ({ en, de });
 
-/** #️⃣️ Deterministic hash of (id, index) mapped to [−1, 1] (FNV-1a followed by a murmur3 finaliser); the only "randomness" of the parcel spread. */
-export function unitHash(id: string, index: number): number {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
-  h ^= index;
-  h = Math.imul(h ^ (h >>> 16), 2246822507);
-  h = Math.imul(h ^ (h >>> 13), 3266489909);
-  h ^= h >>> 16;
-  return ((h >>> 0) / 4294967295) * 2 - 1;
-}
+/** 🌡️ Solves the thermal field of an evaluated state under an environment (a constant {@link Environment} or an {@link EnvironmentTimeline} sampled at `state.timeS`;
+ * absent: the asset's reference environment). The surface and skin temperatures follow the input history if `options.history` is given; otherwise the state's inputs are
+ * assumed to have held forever (steady state). Independent of the drawing scale: nothing but `state.thermal`, `state.timeS`, the figure velocity and the asset is read. */
+export function solveThermal(state: EvaluatedState, environment?: EnvironmentInput, options: ThermalOptions = {}): ThermalField {
+  const asset = state.asset;
+  const sys = systemOf(asset);
+  const input = environment ?? asset.thermal.environment;
+  const t = state.timeS;
+  const now = instantOf(sys, { inputs: state.thermal, comVelocity: state.kinematics.comVelocity }, environmentAt(input, t));
+  const steadyNodes = sys.regions.map((s, j) => (sys.place.has(j) ? null : steadyOf(now.frames[j]!, now.amb, now.levels[j]!, now.env.airTempC)));
+  const steadyBodies = sys.bodies.map((b) => steadyBody(b.setup, subjectInputs(now.inputs, b.subject), bodyFrames(b, now), now.amb));
+  const skinTaus = sys.bodies.map((b, k) => skinConductances(b.setup, steadyBodies[k]!.state, bodyFrames(b, now), now.amb, steadyBodies[k]!.diag).map((g, i) => b.setup.regions[i]!.capacityJK / b.setup.regions[i]!.skinAreaM2 / g));
+  const placed = (j: number): { readonly body: number; readonly slot: number } | undefined => sys.place.get(j);
+  const steadyTemps = steadyNodes.map((n, j) => n?.target ?? steadyBodies[placed(j)!.body]!.diag.regions[placed(j)!.slot]!.surfaceC);
+  const useHistory = options.history !== undefined || isTimeline(input);
+  let temps = [...steadyTemps];
+  let bodyStates: BodyState[] = steadyBodies.map((b) => b.state);
+  const taus = steadyNodes.map((n, j) => n?.tau ?? skinTaus[placed(j)!.body]![placed(j)!.slot]!);
 
-type EmitterResult = { readonly streamline: Streamline | null; readonly parcels: readonly Parcel[]; readonly sensibleW: number; readonly latentW: number };
-
-function emitterField(state: EvaluatedState, emitter: Emitter, a: Ambient): EmitterResult {
-  const empty: EmitterResult = { streamline: null, parcels: [], sensibleW: 0, latentW: 0 };
-  const strength = Math.min(1, Math.max(0, state.thermal.emitters[emitter.id] ?? 0));
-  const anchor = state.anchors[emitter.anchor];
-  if (strength <= 0 || !anchor) return empty;
-  const bone = state.bones[anchor.anchor.bone];
-  const airK = a.env.airTempC + KELVIN;
-  const period = emitter.periodS && emitter.periodS > 0 ? emitter.periodS : 0;
-  const [from, to] = [emitter.dutyFrom ?? 0, emitter.dutyTo ?? 1];
-  const phase = period ? (((state.timeS % period) + period) % period) / period : 0;
-  const open = !period || (phase >= from && phase < to) ? 1 : 0;
-  const tempC = emitter.kind === "transpiration" ? Math.min(emitter.temperatureC, a.env.airTempC) : emitter.temperatureC;
-  const source: Source = {
-    at: anchor.at,
-    dirRad: (bone ? bone.angleRad : 0) + emitter.directionDeg * DEG,
-    u0: emitter.velocityMS * strength,
-    d: emitter.diameterM,
-    dT0: tempC - a.env.airTempC,
-    vapour: emitter.carries === "vapour",
-    q0: emitter.vapourKgPerKg ?? (emitter.carries === "vapour" ? specificHumidity(saturationVapourPressurePa(tempC), a.env.pressurePa) : a.humidity),
-    qa: a.humidity,
-    crosswindMS: a.relativeSpeed,
-    puff: period > 0 && to - from < 1,
-  };
-  const path = integratePlume(source, a.wind, airK);
-  const cumulative: number[] = [0];
-  for (let i = 1; i < path.x.length; i++) cumulative.push((cumulative[i - 1] as number) + Math.hypot((path.x[i] as number) - (path.x[i - 1] as number), (path.y[i] as number) - (path.y[i - 1] as number)));
-  const total = cumulative[cumulative.length - 1] as number;
-  const points: Point[] = [];
-  const excessK: number[] = [];
-  const speedMS: number[] = [];
-  for (let k = 0; k < STREAMLINE_POINTS; k++) {
-    const { index, frac } = locate(cumulative, (total * k) / (STREAMLINE_POINTS - 1));
-    const sample = sampleAt(source, path, a.wind, airK, index, frac);
-    points.push(sample.at);
-    excessK.push(sample.excessK);
-    speedMS.push(Math.hypot(sample.velocity.x, sample.velocity.y));
-  }
-  const streamline: Streamline = { emitter: emitter.id, points, excessK, speedMS, carries: emitter.carries, active: strength * open };
-  const slots = period ? Math.max(PARCELS_PER_S, Math.ceil(PARCELS_PER_S * period)) : 0;
-  const step = period ? period / slots : 1 / PARCELS_PER_S;
-  const endS = path.t[path.t.length - 1] as number;
-  const newest = Math.floor(state.timeS / step + 1e-9);
-  const oldest = Math.max(newest - MAX_PARCELS_PER_EMITTER + 1, Math.ceil((state.timeS - endS) / step - 1e-9));
-  const parcels: Parcel[] = [];
-  for (let k = newest; k >= oldest; k--) {
-    const slot = period ? ((k % slots) + slots) % slots : ((k % 64) + 64) % 64;
-    if (period && !(slot / slots >= from - 1e-12 && slot / slots < to - 1e-12)) continue;
-    const age = Math.min(endS, Math.max(0, state.timeS - k * step));
-    const { index, frac } = locate(path.t, age);
-    const s = sampleAt(source, path, a.wind, airK, index, frac);
-    const speed = Math.hypot(s.velocity.x, s.velocity.y);
-    const normal = speed > 1e-9 ? { x: -s.velocity.y / speed, y: s.velocity.x / speed } : { x: -Math.sin(source.dirRad), y: Math.cos(source.dirRad) };
-    const lateral = 0.7 * unitHash(emitter.id, slot) * Math.max(source.d / 2, JET_SPREAD * s.ell);
-    parcels.push({
-      emitter: emitter.id,
-      at: { x: s.at.x + normal.x * lateral, y: s.at.y + normal.y * lateral },
-      ageS: age,
-      velocity: s.velocity,
-      excessK: s.excessK,
-      vapourKgPerKg: a.humidity + (source.q0 - a.humidity) / dilution(source, s.ell, s.ageS),
-      carries: emitter.carries,
+  if (useHistory && t > 0) {
+    const coreTaus = sys.bodies.map((b, k) => b.setup.coreCapacityJK / Math.max(1, steadyBodies[k]!.diag.regions.reduce((s, d, i) => s + d.conductanceWM2K * b.setup.regions[i]!.skinAreaM2, 0)));
+    const tauMax = Math.max(0, ...coreTaus, ...steadyNodes.map((n) => n?.tau ?? 0));
+    const plan = historyPlan(t, tauMax, { ...(options.windowS !== undefined ? { windowS: options.windowS } : {}), ...(options.maxSteps !== undefined ? { maxSteps: options.maxSteps } : {}) });
+    const sampleAt = (time: number): ThermalSample => options.history?.(time) ?? { inputs: state.thermal, comVelocity: state.kinematics.comVelocity };
+    const start = instantOf(sys, sampleAt(plan.startS), environmentAt(input, plan.startS));
+    temps = sys.regions.map((s, j) => (sys.place.has(j) ? steadyTemps[j]! : steadyOf(start.frames[j]!, start.amb, start.levels[j]!, start.env.airTempC).target));
+    bodyStates = sys.bodies.map((b) => steadyBody(b.setup, subjectInputs(start.inputs, b.subject), bodyFrames(b, start), start.amb).state);
+    let previous = plan.startS;
+    plan.times.forEach((at, k) => {
+      options.signal?.throwIfAborted();
+      const dt = at - previous;
+      const mid = previous + dt / 2;
+      const instant = instantOf(sys, sampleAt(mid), environmentAt(input, mid));
+      temps = temps.map((temp, j) => {
+        if (sys.place.has(j)) return temp;
+        const f = instant.frames[j]!;
+        const region = f.setup.region;
+        if (region.model === "fixed") return region.fixed?.surfaceTempC ?? temp;
+        const inflow = inflowOf(f, instant.levels[j]!);
+        const g = restoringConductance(f, instant.amb, inflow, temp);
+        return relax(temp, temp + residualWM2(f, instant.amb, inflow, temp) / g, dt, region.heatCapacityJM2K / g);
+      });
+      bodyStates = sys.bodies.map((b, i) => stepBody(b.setup, bodyStates[i]!, subjectInputs(instant.inputs, b.subject), bodyFrames(b, instant), instant.amb, dt).state);
+      previous = at;
+      options.progress?.(k + 1, plan.times.length, label("Thermal history", "Thermischer Verlauf"));
     });
+    const last = instantOf(sys, sampleAt(t), environmentAt(input, t));
+    return assemble(asset, sys, last, temps, steadyTemps, taus, bodyStates, input, true);
   }
-  const massFlow = a.density * source.u0 * (Math.PI * source.d ** 2 / 4) * open;
-  const sensibleW = emitter.kind === "breath" ? 0 : massFlow * CP_AIR * source.dT0;
-  const latentW = emitter.kind === "breath" || emitter.kind === "transpiration" ? 0 : massFlow * (source.q0 - a.humidity) * latentHeatJPerKg(tempC);
-  return { streamline, parcels, sensibleW, latentW };
+  return assemble(asset, sys, now, temps, steadyTemps, taus, bodyStates, input, false);
 }
-//#endregion 💨️Emitters
 
-//#region 📝️Notes
-const note = (en: string, de: string): Text => ({ en, de });
-
-const classify = (state: EvaluatedState): Text => {
-  const count: Record<string, number> = { measured: 0, literature: 0, "authored-estimate": 0, illustrative: 0 };
-  for (const item of [...state.asset.thermal.regions, ...state.asset.thermal.emitters]) count[item.source] = (count[item.source] ?? 0) + 1;
-  const list = Object.entries(count).map(([k, v]) => `${k} ${v}`).join(", ");
-  return note(`Parameter sources of the ${state.asset.thermal.regions.length} regions and ${state.asset.thermal.emitters.length} emitters: ${list}.`, `Parameterquellen der ${state.asset.thermal.regions.length} Regionen und ${state.asset.thermal.emitters.length} Emitter: ${list}.`);
-};
-
-/** 🏷️ The sentence a legend states about what the parcels of a plume carry. */
-export const parcelCarrierText = (carries: "airflow" | "vapour"): Text =>
-  carries === "airflow" ? note("Parcels carry air flow (excess temperature along the jet).", "Teilchen tragen Luftströmung (Übertemperatur entlang des Strahls).") : note("Parcels carry water vapour (humidity excess along the plume), not heat.", "Teilchen tragen Wasserdampf (Feuchteüberschuss entlang der Fahne), keine Wärme.");
-
-function notesOf(state: EvaluatedState, a: Ambient, defaults: readonly Slug[], skipped: readonly Slug[]): Text[] {
-  const env = a.env;
-  const notes: Text[] = [
-    note(
-      `Steady-state surface energy balance per region at Tair ${env.airTempC} °C, Tmrt ${env.meanRadiantTempC} °C, RH ${Math.round(env.relativeHumidity * 100)} %, wind ${env.windMS} m/s towards ${env.windDirectionDeg}°, solar ${env.solarWM2} W/m². Radiation: grey body; convection: ISO 7730 for clothed bodies, plate/cylinder correlations otherwise (h = max(natural, forced)); evaporation: ASHRAE wettedness with Lewis relation or Penman–Monteith leaf balance.`,
-      `Stationäre Oberflächen-Energiebilanz je Region bei Tluft ${env.airTempC} °C, Tmrt ${env.meanRadiantTempC} °C, rF ${Math.round(env.relativeHumidity * 100)} %, Wind ${env.windMS} m/s Richtung ${env.windDirectionDeg}°, Solar ${env.solarWM2} W/m². Strahlung: grauer Körper; Konvektion: ISO 7730 für bekleidete Körper, sonst Platten-/Zylinderkorrelationen (h = max(natürlich, erzwungen)); Verdunstung: ASHRAE-Benetzung mit Lewis-Beziehung oder Penman-Monteith-Blattbilanz.`,
-    ),
-    note(
-      "Emitters: free round turbulent jet (u ∝ 6.2·d/x, ΔT and vapour excess ∝ 5·d/x) or, for pulsed sources, a puff (∝ x⁻³), advected by the wind relative to the figure and lifted by entrainment-diluted buoyancy; parcels are deterministic tracers on that path with a hash-seeded lateral spread and end when temperature and vapour excess are indistinguishable from ambient. Plumes are cut at 10 m. Respiration follows ASHRAE Fundamentals ch. 9. No CFD, not physiologically validated; core-temperature rise with activity (0.15 K/met, max 1.5 K) is an authored estimate.",
-      "Emitter: freier runder turbulenter Strahl (u ∝ 6,2·d/x, ΔT und Feuchteüberschuss ∝ 5·d/x) oder, bei gepulsten Quellen, ein Puff (∝ x⁻³), vom Wind relativ zur Figur getragen und durch verdünnungsbegrenzten Auftrieb gehoben; Teilchen sind deterministische Tracer auf diesem Pfad mit hash-basierter seitlicher Streuung und enden, wenn Temperatur- und Feuchteüberschuss nicht mehr von der Umgebung zu unterscheiden sind. Fahnen enden bei 10 m. Atmung nach ASHRAE Fundamentals Kap. 9. Keine CFD, nicht physiologisch validiert; der Kerntemperaturanstieg mit der Aktivität (0,15 K/met, max. 1,5 K) ist eine Autorenschätzung.",
-    ),
-    classify(state),
-  ];
-  if (defaults.length) notes.push(note(`Regions using default insulation (0.155 m²K/W) or default material (ε 0.9): ${defaults.join(", ")}.`, `Regionen mit Standard-Dämmung (0,155 m²K/W) oder Standardmaterial (ε 0,9): ${defaults.join(", ")}.`));
-  if (skipped.length) notes.push(note(`Emitters without a placed anchor were skipped: ${skipped.join(", ")}.`, `Emitter ohne platzierten Anker wurden übersprungen: ${skipped.join(", ")}.`));
-  return [...notes, ...state.asset.thermal.assumptions];
+function splitFields(s: RegionSetup, env: Environment, tsC: number): Pick<RegionField, "netRadiativeSkyWM2" | "netRadiativeGroundWM2" | "netRadiativeSurroundingsWM2"> {
+  const x = splitOf(s, env, tsC);
+  return { netRadiativeSkyWM2: x.sky, netRadiativeGroundWM2: x.ground, netRadiativeSurroundingsWM2: x.surroundings };
 }
-//#endregion 📝️Notes
 
-//#region 🌡️Solve
-/** 🌡️ Solves the thermal field of one evaluated state under one environment (default: the asset's reference environment).
- * Deterministic in (state, environment); the unsolved inputs are `state.thermal` (activity, operating levels, region overrides, emitter strengths), anchor world positions, bone world angles, `timeS` and the figure velocity. */
-export function solveThermal(state: EvaluatedState, environment: Environment = state.asset.thermal.environment): ThermalField {
-  const a = ambientOf(environment, state);
-  const { fields, defaults } = solveRegions(state, a);
-  const regions = Object.values(fields);
-  const sum = (pick: (f: RegionField) => number) => regions.reduce((s, f) => s + pick(f), 0);
-  const emitters = state.asset.thermal.emitters;
-  const results = emitters.map((e) => emitterField(state, e, a));
-  const skipped = emitters.filter((e) => !state.anchors[e.anchor] && (state.thermal.emitters[e.id] ?? 0) > 0).map((e) => e.id);
-  const breath = emitters.filter((e) => e.kind === "breath");
-  const strength = breath.length ? breath.reduce((s, e) => s + Math.min(1, Math.max(0, state.thermal.emitters[e.id] ?? 0)), 0) / breath.length : 0;
-  const area = duboisAreaM2(state.asset.dimensions.massKg, state.asset.dimensions.heightM);
-  const res = respirationWM2(state.thermal.activityMet * MET_WM2, environment.airTempC, a.vapourPa);
+function bodyFieldOf(core: number, d: ReturnType<typeof evaluateBody>): BodyField {
+  return { coreTempC: core, meanSkinTempC: d.meanSkinC, metabolicW: d.metabolicW, respiratorySensibleW: d.respiratory.sensibleW, respiratoryLatentW: d.respiratory.latentW, skinBloodFlowLM2H: d.meanBloodFlow, skinWettedness: d.meanWettedness, storageW: d.storageW };
+}
+
+function assemble(asset: Asset, sys: System, now: Instant, temps: readonly number[], steadyTemps: readonly number[], taus: readonly number[], bodyStates: readonly BodyState[], input: EnvironmentInput, transient: boolean): ThermalField {
+  const diags = sys.bodies.map((b, k) => evaluateBody(b.setup, bodyStates[k]!, subjectInputs(now.inputs, b.subject), bodyFrames(b, now), now.amb));
+  const regions: Record<Slug, RegionField> = {};
+  let netRadiativeW = 0;
+  let sensibleW = 0;
+  let latentW = 0;
+  let moistureGH = 0;
+  sys.regions.forEach((s, j) => {
+    const r = s.region;
+    const f = now.frames[j]!;
+    const area = r.areaM2 * f.exposed;
+    const p = sys.place.get(j);
+    let field: RegionField;
+    if (p) {
+      const d = diags[p.body]!.regions[p.slot]!;
+      const skinArea = sys.bodies[p.body]!.setup.regions[p.slot]!.skinAreaM2;
+      field = {
+        region: r.id,
+        surfaceTempC: d.surfaceC,
+        steadyTempC: steadyTemps[j]!,
+        skinTempC: d.skinC,
+        emittedRadiantWM2: emittedOf(f, d.surfaceC),
+        netRadiativeWM2: d.exposure.radiative,
+        sensibleWM2: d.exposure.sensible,
+        latentWM2: d.evapOuterWM2,
+        moistureGM2H: (d.evapOuterWM2 / latentHeatJkg(d.skinC)) * 3.6e6,
+        absorbedSolarWM2: f.solar,
+        conductedWM2: d.conductedOuterWM2,
+        ...splitFields(sys.regions[j]!, now.env, d.surfaceC),
+        contactWM2: f.contact * d.exposure.contact,
+        netRadiativeW: d.exposure.radiative * area,
+        sensibleW: d.exposure.sensible * area,
+        latentW: d.evapWM2 * skinArea,
+        convectionCoefficientWM2K: d.exposure.hc,
+        radiationCoefficientWM2K: d.exposure.hr,
+        timeConstantS: taus[j]!,
+        exposedFraction: f.exposed,
+        sunlitFraction: f.sunlit,
+      };
+    } else {
+      const ts = temps[j]!;
+      const x = exchange(f, now.amb, ts);
+      field = {
+        region: r.id,
+        surfaceTempC: ts,
+        steadyTempC: steadyTemps[j]!,
+        skinTempC: null,
+        emittedRadiantWM2: emittedOf(f, ts),
+        netRadiativeWM2: x.radiative,
+        sensibleWM2: x.sensible,
+        latentWM2: x.latent,
+        moistureGM2H: (x.latent / latentHeatJkg(ts)) * 3.6e6,
+        absorbedSolarWM2: f.solar,
+        conductedWM2: inflowOf(f, now.levels[j]!)(ts),
+        ...splitFields(s, now.env, ts),
+        contactWM2: f.contact * x.contact,
+        netRadiativeW: x.radiative * area,
+        sensibleW: x.sensible * area,
+        latentW: x.latent * area,
+        convectionCoefficientWM2K: x.hc,
+        radiationCoefficientWM2K: x.hr,
+        timeConstantS: taus[j]!,
+        exposedFraction: f.exposed,
+        sunlitFraction: f.sunlit,
+      };
+    }
+    regions[r.id] = field;
+    netRadiativeW += field.netRadiativeW;
+    sensibleW += field.sensibleW;
+    latentW += field.latentW;
+    moistureGH += (field.latentW / latentHeatJkg(field.surfaceTempC)) * 3.6e6;
+  });
+  const passengers: Record<Slug, BodyField> = {};
+  let primary: BodyField | null = null;
+  sys.bodies.forEach((b, k) => {
+    const field = bodyFieldOf(bodyStates[k]!.core, diags[k]!);
+    if (b.subject === null) primary = field;
+    else passengers[b.subject] = field;
+  });
+  const respSensible = diags.reduce((s, d) => s + d.respiratory.sensibleW, 0);
+  const respLatent = diags.reduce((s, d) => s + d.respiratory.latentW, 0);
+  const timeline = isTimeline(input);
   return {
-    environment,
-    regions: fields,
-    totals: {
-      radiantW: sum((f) => f.radiantW),
-      convectiveW: sum((f) => f.convectiveW),
-      latentW: sum((f) => f.latentW),
-      emitterSensibleW: results.reduce((s, r) => s + r.sensibleW, 0) + res.sensible * area * strength,
-      emitterLatentW: results.reduce((s, r) => s + r.latentW, 0) + res.latent * area * strength,
-    },
-    streamlines: results.flatMap((r) => (r.streamline ? [r.streamline] : [])),
-    parcels: results.flatMap((r) => r.parcels),
-    notes: notesOf(state, a, defaults, skipped),
-  };
-}
-//#endregion 🌡️Solve
-
-//#region 🎨️Legend
-/** 🎨️ A thermal legend: the contract {@link Legend} plus its `centre` value; stop positions `at` are normalised 0 … 1 along min → max. */
-export type ThermalLegend = Legend & { readonly centre: number };
-
-const COOL_FAR = "#2c7bb6";
-const COOL_NEAR = "#abd9e9";
-const NEUTRAL = "#e6e6e6";
-const WARM_NEAR = "#fdae61";
-const WARM_FAR = "#d7301f";
-
-const QUANTITY_META: Readonly<Record<ThermalQuantity, { readonly unit: string; readonly title: Text; readonly pick: (f: RegionField) => number }>> = {
-  "surface-temperature": { unit: "°C", title: note("Surface temperature", "Oberflächentemperatur"), pick: (f) => f.surfaceTempC },
-  "radiant-flux": { unit: "W/m²", title: note("Radiant heat flux", "Strahlungswärmestrom"), pick: (f) => f.radiantFluxWM2 },
-  "convective-flux": { unit: "W/m²", title: note("Convective heat flux", "Konvektiver Wärmestrom"), pick: (f) => f.convectiveFluxWM2 },
-  "latent-flux": { unit: "W/m²", title: note("Latent heat flux", "Latenter Wärmestrom"), pick: (f) => f.latentFluxWM2 },
-  "net-flux": { unit: "W/m²", title: note("Net heat flux", "Netto-Wärmestrom"), pick: (f) => f.netFluxWM2 },
-};
-
-/** 🎚️ Min, max and centre plus warm/cool colour stops for a thermal quantity: centred on the air temperature for surface temperature and on 0 for fluxes;
- * `auto` takes the symmetric extent of the field (at least 1 K or 1 W/m²), `fixed` uses the given bounds. */
-export function thermalLegend(quantity: ThermalQuantity, field: ThermalField, range: DisplayRange): ThermalLegend {
-  const meta = QUANTITY_META[quantity];
-  const centre = quantity === "surface-temperature" ? field.environment.airTempC : 0;
-  const values = Object.values(field.regions).map(meta.pick);
-  const half = Math.max(1, ...values.map((v) => Math.abs(v - centre)));
-  const [min, max] = range.mode === "fixed" ? [range.min, range.max] : [centre - half, centre + half];
-  const where = (min === max ? 0.5 : Math.min(1, Math.max(0, (centre - min) / (max - min))));
-  const cool = where > 0 ? [{ at: 0, color: COOL_FAR }, { at: where / 2, color: COOL_NEAR }] : [];
-  const warm = where < 1 ? [{ at: where + (1 - where) / 2, color: WARM_NEAR }, { at: 1, color: WARM_FAR }] : [];
-  const stops = [...cool, { at: where, color: NEUTRAL }, ...warm];
-  const unit = meta.unit;
-  const isTemperature = quantity === "surface-temperature";
-  return {
-    title: meta.title,
-    quantity,
-    unit,
-    centre,
-    min,
-    max,
-    stops,
-    convention: isTemperature
-      ? note(`Neutral = air temperature ${centre} °C; warm colours above, cool colours below.`, `Neutral = Lufttemperatur ${centre} °C; warme Farben darüber, kühle darunter.`)
-      : note("Neutral = 0 W/m²; warm = heat leaves the surface, cool = surface gains heat.", "Neutral = 0 W/m²; warm = Wärme verlässt die Oberfläche, kühl = Oberfläche nimmt Wärme auf."),
-    interpretation: isTemperature
-      ? note("Steady-state estimate per region, not a measurement.", "Stationäre Schätzung je Region, keine Messung.")
-      : note("Steady-state flux per region area; positive values leave the surface (solar gain is subtracted in the net flux).", "Stationärer Strom je Regionsfläche; positive Werte verlassen die Oberfläche (Solargewinn wird im Nettostrom abgezogen)."),
+    environment: now.env,
+    regions,
+    body: primary,
+    passengers,
+    totals: { netRadiativeW, sensibleW, latentW, moistureGH, emitterSensibleW: respSensible, emitterLatentW: respLatent },
+    assumptions: [...asset.thermal.assumptions, ...ASSUMPTIONS],
+    notes: [
+      transient
+        ? label("Surface and skin temperatures follow the input history (first-order response per region, core temperature with the body heat capacity).", "Oberflächen- und Hauttemperaturen folgen dem Eingabeverlauf (Antwort erster Ordnung je Region, Kerntemperatur mit der Wärmekapazität des Körpers).")
+        : label("Steady state of the current inputs (no input history given).", "Stationärer Zustand der aktuellen Eingaben (kein Eingabeverlauf angegeben)."),
+      ...(timeline ? [label("The environment follows its timeline.", "Die Umgebung folgt ihrer Zeitleiste.")] : []),
+      ...sys.bodies.map((b, k) => label(`Whole-body ventilation ${diags[k]!.ventilationLMin.toFixed(1)} L/min${b.subject ? ` (${b.subject})` : ""} (breathing pattern plus panting), shared with the breath emitters.`, `Gesamtventilation ${diags[k]!.ventilationLMin.toFixed(1)} l/min${b.subject ? ` (${b.subject})` : ""} (Atemmuster plus Hecheln), gemeinsam mit den Atem-Emittern.`)),
+    ],
   };
 }
 
-/** 🖍️ The sRGB colour of a value on a thermal legend: piecewise linear between the stops, clamped at the ends. */
-export function thermalColour(legend: Legend, value: number): string {
-  const x = legend.max === legend.min ? 0.5 : Math.min(1, Math.max(0, (value - legend.min) / (legend.max - legend.min)));
-  const stops = legend.stops;
-  let i = 1;
-  while (i < stops.length - 1 && (stops[i] as { at: number }).at < x) i++;
-  const [s0, s1] = [stops[i - 1], stops[i]] as [{ at: number; color: string }, { at: number; color: string }];
-  const f = s1.at > s0.at ? Math.min(1, Math.max(0, (x - s0.at) / (s1.at - s0.at))) : 1;
-  const channel = (hex: string, k: number) => parseInt(hex.slice(1 + 2 * k, 3 + 2 * k), 16);
-  const out = [0, 1, 2].map((k) => Math.round(channel(s0.color, k) * (1 - f) + channel(s1.color, k) * f).toString(16).padStart(2, "0"));
-  return `#${out.join("")}`;
-}
-//#endregion 🎨️Legend
+const ASSUMPTIONS: readonly Text[] = [
+  label("Illustrative engineering estimate: lumped regions, no CFD, no conduction between regions, no condensation, no sweat dynamics beyond the two-node model.", "Illustrative technische Schätzung: konzentrierte Regionen, keine CFD, keine Leitung zwischen Regionen, keine Kondensation, keine Schweißdynamik jenseits des Zweiknotenmodells."),
+  label("Radiation against sky, ground and surroundings weighted by the view factors of the region (sky view factor, geometry); solar by sunlit share with geometry factors; wind relative to the figure's motion.", "Strahlung gegen Himmel, Boden und Umgebung nach den Sichtfaktoren der Region (Himmelssichtfaktor, Geometrie); Sonne nach besonntem Anteil mit Geometriefaktoren; Wind relativ zur Bewegung der Figur."),
+];
 
-//#region 💨️Plume legend
-/** 💨️ The Legend of the parcels and streamlines of a field. Parcels carrying air flow are painted by temperature excess over ambient (K), parcels carrying vapour by
- * the vapour excess over ambient (g/kg), never the absolute humidity; the legend states what the parcels carry. `at` is normalised 0 … 1 along min (0) → max. */
-export function plumeLegend(carries: "airflow" | "vapour", field: ThermalField, range: DisplayRange): ThermalLegend {
-  const humidity = specificHumidity(vapourPressurePa(field.environment), field.environment.pressurePa);
-  const vapour = carries === "vapour";
-  const values = field.parcels.filter((p) => p.carries === carries).map((p) => (vapour ? (p.vapourKgPerKg - humidity) * 1000 : Math.abs(p.excessK)));
-  const top = Math.max(vapour ? 0.5 : 1, ...values);
-  const [min, max] = range.mode === "fixed" ? [range.min, range.max] : [0, top];
-  return {
-    title: vapour ? note("Vapour excess over ambient", "Dampfüberschuss gegenüber der Umgebung") : note("Air temperature excess over ambient", "Lufttemperatur-Überschuss gegenüber der Umgebung"),
-    quantity: vapour ? "vapour-excess" : "excess-temperature",
-    unit: vapour ? "g/kg" : "K",
-    centre: 0,
-    min,
-    max,
-    stops: vapour ? [{ at: 0, color: NEUTRAL }, { at: 0.5, color: COOL_NEAR }, { at: 1, color: COOL_FAR }] : [{ at: 0, color: NEUTRAL }, { at: 0.5, color: WARM_NEAR }, { at: 1, color: WARM_FAR }],
-    convention: note("Neutral = ambient (0); stronger colour = larger excess.", "Neutral = Umgebung (0); kräftigere Farbe = größerer Überschuss."),
-    interpretation: parcelCarrierText(carries),
-  };
+/** 🧮️ Area-weighted value of a quantity over merged regions (the colour of a merged small-scale shape): `Σ w_i v_i / Σ w_i` with `w_i = area_i × exposedFraction_i`.
+ * Skin temperature falls back to the surface temperature of regions without skin. `null` when none of the regions exists in the field. */
+export function areaWeighted(regions: readonly ThermalRegion[], field: ThermalField, ids: readonly Slug[], quantity: ThermalQuantity): number | null {
+  let weight = 0;
+  let sum = 0;
+  for (const id of ids) {
+    const f = field.regions[id];
+    const r = regions.find((x) => x.id === id);
+    if (!f || !r) continue;
+    const v = QUANTITY_SPECS[quantity].pick(f) ?? (quantity === "skin-temperature" ? f.surfaceTempC : null);
+    if (v === null) continue;
+    const w = r.areaM2 * Math.max(f.exposedFraction, 1e-9);
+    weight += w;
+    sum += w * v;
+  }
+  return weight > 0 ? sum / weight : null;
 }
-//#endregion 💨️Plume legend
+
+/** 🧮️ Overall heat transmittance `U = 1 / (ΣR_layers + R_interior film + 1/h_exterior)` of a conditioned element for an exterior film coefficient `exteriorWM2K` (default 25 W/(m² K), EN ISO 6946 R_se = 0.04). */
+export function uValue(region: ThermalRegion, exteriorWM2K = 25): number | null {
+  if (!region.conditioned) return null;
+  return 1 / (region.layers.reduce((s, l) => s + l.resistanceM2KW, 0) + region.conditioned.interiorFilmM2KW + 1 / exteriorWM2K);
+}
+
+/** ☀️ The net longwave exchange of a solved region split by counterpart (sky, ground, surroundings), W/m² of exposed area, positive = the region loses heat; the parts sum to `netRadiativeWM2`.
+ * Leaves exchange through both faces; the split includes both. */
+export function radiationSplit(field: ThermalField, regionId: Slug): RadiationSplit {
+  const f = field.regions[regionId];
+  if (!f) throw new Error(`Region ${regionId} is not part of the solved field.`);
+  return { sky: f.netRadiativeSkyWM2, ground: f.netRadiativeGroundWM2, surroundings: f.netRadiativeSurroundingsWM2 };
+}
+
+/** 🌡️ The operative temperature a region experiences, `(h_r T_rad + h_c T_air)/(h_r + h_c)` with the region's own radiation and convection coefficients and its radiant environment
+ * (sky, ground, surroundings by view factor): the single temperature that gives the same dry heat exchange as radiation and convection together (ISO 7726 definition). */
+export function operativeTemperatureC(asset: Asset, field: ThermalField, regionId: Slug): number {
+  const setup = systemOf(asset).regions.find((s) => s.region.id === regionId);
+  const f = field.regions[regionId];
+  if (!setup || !f) throw new Error(`Region ${regionId} is not part of the solved field of ${asset.id}.`);
+  const rad = radiantEnvironmentC(field.environment, setup.region.geometry, setup.region.skyViewFactor);
+  const { radiationCoefficientWM2K: hr, convectionCoefficientWM2K: hc } = f;
+  return (hr * rad + hc * field.environment.airTempC) / (hr + hc);
+}
+
+/** 🧪️ Runs only the body of an asset (`subject` null) or one passenger for `durationS` seconds under constant inputs and environment, from the neutral state (`start: "neutral"`, as
+ * Gagge's simulation and pythermalcomfort do) or from the steady state; returns the final whole-body state. Used by the oracle tests. */
+export function simulateBody(asset: Asset, inputs: ThermalInputs, env: Environment, durationS: number, start: "neutral" | "steady" = "neutral", stepS = 60, subject: Slug | null = null): { readonly state: BodyState; readonly field: BodyField; readonly diag: ReturnType<typeof evaluateBody> } {
+  const sys = systemOf(asset);
+  const body = sys.bodies.find((b) => b.subject === subject);
+  if (!body) throw new Error(`Asset ${asset.id} has no body${subject ? ` for ${subject}` : ""}.`);
+  const instant = instantOf(sys, { inputs }, env);
+  const frames = bodyFrames(body, instant);
+  const own = subjectInputs(inputs, subject);
+  let st = start === "steady" ? steadyBody(body.setup, own, frames, instant.amb).state : neutralState(body.setup);
+  for (let t = 0; t < durationS - 1e-9; t += stepS) st = stepBody(body.setup, st, own, frames, instant.amb, Math.min(stepS, durationS - t)).state;
+  const diag = evaluateBody(body.setup, st, own, frames, instant.amb);
+  return { state: st, field: bodyFieldOf(st.core, diag), diag };
+}

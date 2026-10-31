@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/build/cpu-profile/schema.json",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "environmentVariable": "SEMIO_REPO_CPU_PROFILE",
+        "maximumPathCharacters": 256,
+        "maximumRequestBytes": 2048,
+        "maximumProcessId": 2147483647,
+        "maximumSequence": 9999,
+        "samplingIntervalMicroseconds": 10000,
+        "enabledFlag": "--cpu-prof",
+        "intervalFlag": "--cpu-prof-interval",
+        "directoryFlag": "--cpu-prof-dir",
+        "nameFlag": "--cpu-prof-name",
+        "artifactSuffix": ".cpuprofile",
+        "testArtifactSuffix": ".jsc.json",
+        "testPreloadFlag": "--preload"
+      }
+    },
+    "Request": {
+      "type": "object",
+      "required": [
+        "version",
+        "directory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "required": [
+        "name",
+        "platform",
+        "environment",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "linux",
+            "darwin",
+            "win32"
+          ]
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "expected": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "BunSamplingArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "runtime",
+        "pid",
+        "functions",
+        "bytecodes",
+        "stackTraces"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "runtime": {
+          "const": "bun"
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "functions": {
+          "type": "string"
+        },
+        "bytecodes": {
+          "type": "string"
+        },
+        "stackTraces": {
+          "type": "object",
+          "required": [
+            "interval",
+            "traces"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "interval": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "traces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "timestamp",
+                  "frames"
+                ],
+                "properties": {
+                  "timestamp": {
+                    "type": "number"
+                  },
+                  "frames": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -31,3 +31,5 @@ import {withRepositoryBuildGraphPublicationV1} from "../../../../../📦️packa
 (globalThis as Record<symbol,unknown>)[Symbol.for("semio.nx.graphPublication.v1")]=Object.freeze({withReceivedNxGraphTaskV1,withRepositoryBuildGraphPublicationV1});
 
 export{createNxDaemonOutputObservationV1,createNxDaemonProcessMarkerObservationV1}from"../../../../../📦️packages/🟦️typescript/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts";
+
+export{createNxDaemonWorkspaceWatcherV1}from"../../../../../📦️packages/🟦️typescript/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts";

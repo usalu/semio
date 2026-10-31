@@ -1,0 +1,36 @@
+{
+  "title": "Staffage Catalog Suitability Pass",
+  "emoji": "🧍",
+  "status": "closed",
+  "description": "Regenerate leaning-person, restore pens and geometry, and make all 107 catalog assets pass checkAssetDetailed and validateManifest.",
+  "summary": "Regenerated leaning-person, widened the runner blade toe, and synced the catalog manifest. validateManifest has 0 issues and checkAssetDetailed has 0 problems on all 107 assets. The three unit suites passed.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [
+    "5bd79a9c-b407-4652-a390-b3ee447c03ad"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-30 08:30:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Regenerate leaning-person, restore pens and geometry, and make all 107 catalog assets pass checkAssetDetailed and validateManifest."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 09:15:36",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "cursor-chat",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "Regenerated leaning-person, widened the runner blade toe, and synced the catalog manifest. validateManifest has 0 issues and checkAssetDetailed has 0 problems on all 107 assets. The three unit suites passed.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️30/STAFFAGE-CATALOG-SUITABILITY-PASS/📌️important/📝️.md"
+        }
+      ]
+    }
+  ]
+}

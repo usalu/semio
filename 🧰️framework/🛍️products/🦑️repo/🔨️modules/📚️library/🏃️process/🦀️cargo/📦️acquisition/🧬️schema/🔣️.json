@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:repository-cargo-artifact-acquisition:v1",
+  "definitions": {
+    "Declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "manifest",
+        "package",
+        "binary"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "cargo-executable"
+        },
+        "manifest": {
+          "type": "string",
+          "maxLength": 224,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?:[^\\\\:\\u0000-\\u001f\\u007f]+/)?Cargo\\.toml$"
+        },
+        "package": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "maxLength": 128
+        },
+        "binary": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "maxLength": 128
+        },
+        "sourcesRecord": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.json$"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "project",
+        "target",
+        "configuration",
+        "arguments"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\s:]+$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+          "maxLength": 128
+        },
+        "configuration": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 512,
+          "items": {
+            "type": "string",
+            "maxLength": 4096,
+            "pattern": "^[^\\u0000]*$"
+          }
+        }
+      }
+    }
+  }
+}

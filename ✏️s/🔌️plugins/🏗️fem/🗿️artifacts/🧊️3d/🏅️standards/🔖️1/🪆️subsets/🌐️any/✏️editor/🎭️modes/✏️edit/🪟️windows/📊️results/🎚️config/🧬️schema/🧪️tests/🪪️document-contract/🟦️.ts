@@ -2,8 +2,7 @@ import { appSurfaceResultModeSchema as resultModeSchema } from "@semio-tech/fem-
 import { appSurfaceResultsAnimationSchema as resultsAnimationSchema } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv/dist/2020";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
+import Ajv from "ajv";
 import { viewport3dSchema as viewportSchema } from "@semio-tech/framework/ui/viewport/3d/schema";
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
@@ -11,7 +10,7 @@ import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪�
 import { parseFem3dResultsWindowConfig } from "../../🟦️.ts";
 
 export function testFem3dResultsWindowConfigContract(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
   const base = fixture.valid[0];
   const sources = JSON.parse(readFileSync(new URL("../../../../../../../../🕹️interaction/🧪️tests/🧫️fixtures/📊️result-source/🔣️.json", import.meta.url), "utf8")) as { cases: Array<{ identity: string; mode: string; admitted: boolean }> };
   for (const row of sources.cases) {

@@ -71,7 +71,12 @@
       ],
       "extraBytes": 104857600,
       "availableBytes": 268435456,
-      "admitted": true
+      "admitted": true,
+      "nativeFunding": {
+        "effectiveCapacityBytes": 1,
+        "usedBytes": 0,
+        "requestedBytes": 0
+      }
     },
     {
       "name": "two large generations cannot promise another full replacement",
@@ -85,7 +90,12 @@
       ],
       "extraBytes": 300253184,
       "availableBytes": 536870912,
-      "admitted": false
+      "admitted": false,
+      "nativeFunding": {
+        "effectiveCapacityBytes": 1,
+        "usedBytes": 0,
+        "requestedBytes": 0
+      }
     },
     {
       "name": "physical exact boundary",
@@ -97,7 +107,12 @@
       ],
       "extraBytes": 104857600,
       "availableBytes": 125829120,
-      "admitted": true
+      "admitted": true,
+      "nativeFunding": {
+        "effectiveCapacityBytes": 1,
+        "usedBytes": 0,
+        "requestedBytes": 0
+      }
     },
     {
       "name": "physical boundary minus one",
@@ -109,7 +124,12 @@
       ],
       "extraBytes": 104857600,
       "availableBytes": 125829119,
-      "admitted": false
+      "admitted": false,
+      "nativeFunding": {
+        "effectiveCapacityBytes": 1,
+        "usedBytes": 0,
+        "requestedBytes": 0
+      }
     }
   ],
   "disabledMarker": {

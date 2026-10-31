@@ -2,28 +2,30 @@
   "ramps": {
     "rp-1": {
       "entry": "Patched",
-      "path": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 0.0
+      "value": {
+        "path": [
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 12,
+              "y": 0
+            }
+          }
+        ],
+        "top": {
+          "Unconnected": {
+            "height": 0.7
           }
         },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 12.0,
-            "y": 0.0
-          }
-        }
-      ],
-      "top": {
-        "Unconnected": {
-          "height": 0.7
-        }
-      },
-      "width": 1.5
+        "width": 1.5
+      }
     }
   }
 }

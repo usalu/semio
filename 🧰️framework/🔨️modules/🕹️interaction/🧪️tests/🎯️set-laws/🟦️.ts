@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import corpus from "../🧫️fixtures/🎯️set-laws/🔣️.json";
 import schema from "../../🧬️schema/🎯️set-laws/🔣️.json";
 import { domainTopologyAncestors, domainTopologyDescendantClosure, nextHover, nextSelection, validateState, type DomainTopology, type InteractionDefinition, type MergeMode, type SelectionSpec } from "../../🟦️.ts";

@@ -1,6 +1,6 @@
 {
   "$schema": "../🧬️schema/🔣️.json#/$defs/Manifest",
-  "version": "semio.staffage/v1",
+  "version": "semio.staffage/v2",
   "categories": [
     {
       "id": "humans",
@@ -13,20 +13,7 @@
         "en": "Pedestrians, workers and people in everyday postures and gestures, with rigs for gait and seated poses.",
         "de": "Passantinnen und Passanten, Arbeitende und Menschen in alltäglichen Haltungen und Gesten, mit Modellen für Gang und Sitzen."
       },
-      "file": "👤️humans/🔣️.json"
-    },
-    {
-      "id": "vegetation",
-      "emoji": "🌳️",
-      "title": {
-        "en": "Vegetation",
-        "de": "Vegetation"
-      },
-      "description": {
-        "en": "Trees, hedges and grasses with wind sway, storm and snow load states and leaf transpiration over the day.",
-        "de": "Bäume, Hecken und Gräser mit Windschwingung, Sturm- und Schneelastzuständen und Blatttranspiration im Tagesgang."
-      },
-      "file": "🌳️vegetation/🔣️.json"
+      "folder": "👤️humans"
     },
     {
       "id": "animals",
@@ -39,7 +26,33 @@
         "en": "Domestic animals, farm animals and wildlife with quadruped and bird rigs, gait clips and metabolic heat.",
         "de": "Haus-, Nutz- und Wildtiere mit Vierbein- und Vogelmodellen, Gangzyklen und Stoffwechselwärme."
       },
-      "file": "🐕️animals/🔣️.json"
+      "folder": "🐕️animals"
+    },
+    {
+      "id": "vegetation",
+      "emoji": "🌳️",
+      "title": {
+        "en": "Vegetation",
+        "de": "Vegetation"
+      },
+      "description": {
+        "en": "Trees, hedges and grasses with wind sway, storm and snow load states and leaf transpiration over the day.",
+        "de": "Bäume, Hecken und Gräser mit Windschwingung, Sturm- und Schneelastzuständen und Blatttranspiration im Tagesgang."
+      },
+      "folder": "🌳️vegetation"
+    },
+    {
+      "id": "furniture",
+      "emoji": "🛋",
+      "title": {
+        "en": "Furniture",
+        "de": "Möbel"
+      },
+      "description": {
+        "en": "Seating, tables, storage and beds for interiors and public space.",
+        "de": "Sitzmöbel, Tische, Stauraum und Betten für Innenräume und öffentlichen Raum."
+      },
+      "folder": "🛋️furniture"
     },
     {
       "id": "objects",
@@ -52,7 +65,7 @@
         "en": "Street furniture, office furniture and playground equipment with occupant loads and operating states.",
         "de": "Stadtmöbel, Büromöbel und Spielgeräte mit Personenlasten und Betriebszuständen."
       },
-      "file": "🪑️objects/🔣️.json"
+      "folder": "🪑️objects"
     },
     {
       "id": "vehicles",
@@ -65,7 +78,20 @@
         "en": "Cars, buses, bicycles and machines with wheel, track and boom articulation and load-state clips.",
         "de": "Pkw, Busse, Fahrräder und Maschinen mit Rad-, Ketten- und Auslegergelenken sowie Lastzustands-Clips."
       },
-      "file": "🚜️vehicles/🔣️.json"
+      "folder": "🚜️vehicles"
+    },
+    {
+      "id": "machinery",
+      "emoji": "🏗",
+      "title": {
+        "en": "Machinery",
+        "de": "Maschinen"
+      },
+      "description": {
+        "en": "Construction and building-services machines with operating states.",
+        "de": "Bau- und Haustechnikmaschinen mit Betriebszuständen."
+      },
+      "folder": "🏗️machinery"
     },
     {
       "id": "components",
@@ -78,7 +104,7 @@
         "en": "Structural members, openings and glazing with load-state poses, moving-load clips and support rigs.",
         "de": "Tragende Bauteile, Öffnungen und Verglasungen mit Lastzuständen, Wanderlast-Clips und Auflagermodellen."
       },
-      "file": "🧱️components/🔣️.json"
+      "folder": "🧱️components"
     }
   ],
   "collections": [
@@ -180,7 +206,7 @@
         "en": "Walking Commuter",
         "de": "Pendler zu Fuß"
       },
-      "heightM": 1.77,
+      "heightM": 1.78,
       "widthM": 0.4,
       "poses": [
         "standing",
@@ -193,8 +219,18 @@
         "glance-at-watch",
         "idle-breathing"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "walking-direction-marker"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -236,8 +272,18 @@
         "stand-up",
         "lean-back"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "seated-person-marker"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -266,8 +312,8 @@
         "en": "Running Child",
         "de": "Rennendes Kind"
       },
-      "heightM": 1.12,
-      "widthM": 0.27,
+      "heightM": 1.135,
+      "widthM": 0.281,
       "poses": [
         "standing-ready",
         "mid-stride",
@@ -280,8 +326,18 @@
         "sprint-cycle",
         "standing-jump"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "running-direction-marker"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -323,8 +379,18 @@
         "ramp-roll",
         "rest-in-chair"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "wheelchair-position-marker"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -353,7 +419,7 @@
         "en": "Elderly Person with Cane",
         "de": "Ältere Person mit Gehstock"
       },
-      "heightM": 1.63,
+      "heightM": 1.65,
       "widthM": 0.54,
       "poses": [
         "stooped-standing",
@@ -366,8 +432,16 @@
         "cane-gait",
         "rest-on-cane"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -409,8 +483,16 @@
         "brake-and-stop",
         "dismount"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -439,7 +521,7 @@
         "en": "Worker Carrying Box",
         "de": "Arbeitende Person mit Kiste"
       },
-      "heightM": 1.82,
+      "heightM": 1.81,
       "widthM": 0.68,
       "poses": [
         "squat-grip",
@@ -453,8 +535,16 @@
         "carry-walk",
         "set-down"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -483,7 +573,7 @@
         "en": "Parent with Stroller",
         "de": "Elternteil mit Kinderwagen"
       },
-      "heightM": 1.77,
+      "heightM": 1.75,
       "widthM": 1.8,
       "poses": [
         "pushing-stroller",
@@ -496,8 +586,16 @@
         "stop-and-check-child",
         "kerb-tilt-up"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -526,8 +624,8 @@
         "en": "Jogger",
         "de": "Jogger:in"
       },
-      "heightM": 1.77,
-      "widthM": 1.04,
+      "heightM": 1.775,
+      "widthM": 1.035,
       "poses": [
         "initial-contact-l",
         "midstance-l",
@@ -540,8 +638,18 @@
         "run-cycle",
         "stretch"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "runner-direction-mark"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -581,8 +689,16 @@
         "rain-gust-sway",
         "close-umbrella"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -611,8 +727,8 @@
         "en": "Leaning Person",
         "de": "Angelehnte Person"
       },
-      "heightM": 1.8,
-      "widthM": 0.6,
+      "heightM": 1.73,
+      "widthM": 0.53,
       "poses": [
         "leaning-shoulder-wall",
         "leaning-arms-folded",
@@ -624,8 +740,16 @@
         "phone-call-idle",
         "push-off"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -654,8 +778,8 @@
         "en": "Tour Guide",
         "de": "Stadtführende Person"
       },
-      "heightM": 2.27,
-      "widthM": 1.25,
+      "heightM": 2.275,
+      "widthM": 1.254,
       "poses": [
         "standing-pointing",
         "gesturing-to-group",
@@ -666,8 +790,16 @@
         "gesture-point",
         "turn-and-wave"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -696,8 +828,8 @@
         "en": "English Oak",
         "de": "Stieleiche"
       },
-      "heightM": 18.23,
-      "widthM": 18.31,
+      "heightM": 18.2,
+      "widthM": 18.35,
       "poses": [
         "calm",
         "windy",
@@ -709,8 +841,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -739,8 +881,8 @@
         "en": "Lombardy Poplar",
         "de": "Pyramidenpappel"
       },
-      "heightM": 26.05,
-      "widthM": 4.17,
+      "heightM": 26.0,
+      "widthM": 4.16,
       "poses": [
         "calm",
         "windy",
@@ -751,8 +893,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -781,7 +933,7 @@
         "en": "Multi-stem Birch",
         "de": "Mehrstämmige Birke"
       },
-      "heightM": 13.03,
+      "heightM": 13.0,
       "widthM": 9.26,
       "poses": [
         "calm",
@@ -794,8 +946,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -824,7 +986,7 @@
         "en": "Scots Pine",
         "de": "Waldkiefer"
       },
-      "heightM": 22.16,
+      "heightM": 22.2,
       "widthM": 12.15,
       "poses": [
         "calm",
@@ -837,8 +999,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -867,8 +1039,8 @@
         "en": "Date Palm",
         "de": "Dattelpalme"
       },
-      "heightM": 12.49,
-      "widthM": 6.89,
+      "heightM": 12.5,
+      "widthM": 6.87,
       "poses": [
         "calm",
         "windy",
@@ -879,8 +1051,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -909,7 +1091,7 @@
         "en": "Weeping Willow",
         "de": "Trauerweide"
       },
-      "heightM": 11.07,
+      "heightM": 11.1,
       "widthM": 16.23,
       "poses": [
         "calm",
@@ -921,8 +1103,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -964,8 +1156,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -994,7 +1196,7 @@
         "en": "Miscanthus Grass",
         "de": "Chinaschilf"
       },
-      "heightM": 1.77,
+      "heightM": 1.75,
       "widthM": 2.14,
       "poses": [
         "calm",
@@ -1007,8 +1209,18 @@
         "gust",
         "diurnal-transpiration"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1037,8 +1249,8 @@
         "en": "Labrador Dog",
         "de": "Labrador"
       },
-      "heightM": 0.73,
-      "widthM": 1.43,
+      "heightM": 0.72,
+      "widthM": 1.44,
       "poses": [
         "standing-alert",
         "sitting-waiting",
@@ -1050,8 +1262,16 @@
         "sniff-ground",
         "sit-and-pant"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1081,7 +1301,7 @@
         "de": "Hauskatze"
       },
       "heightM": 0.36,
-      "widthM": 0.8,
+      "widthM": 0.77,
       "poses": [
         "standing-alert",
         "sitting-tail-wrapped",
@@ -1094,8 +1314,16 @@
         "stalk-cycle",
         "stretch"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1125,7 +1353,7 @@
         "de": "Pferd"
       },
       "heightM": 2.37,
-      "widthM": 2.9,
+      "widthM": 2.91,
       "poses": [
         "standing-alert",
         "standing-rest",
@@ -1135,8 +1363,16 @@
         "walk-cycle",
         "graze-and-swish"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1162,11 +1398,11 @@
       "id": "pigeon",
       "category": "animals",
       "title": {
-        "en": "Pigeon",
-        "de": "Taube"
+        "en": "Rock Pigeon",
+        "de": "Felsentaube"
       },
-      "heightM": 0.24,
-      "widthM": 0.32,
+      "heightM": 0.25,
+      "widthM": 0.33,
       "poses": [
         "standing-alert",
         "wings-half-open",
@@ -1181,8 +1417,16 @@
         "peck-cycle",
         "take-off"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1225,8 +1469,16 @@
         "bound-cycle",
         "alarm-freeze"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1255,8 +1507,8 @@
         "en": "Dairy Cow",
         "de": "Milchkuh"
       },
-      "heightM": 1.47,
-      "widthM": 2.57,
+      "heightM": 1.49,
+      "widthM": 2.55,
       "poses": [
         "standing-chewing",
         "grazing-head-down",
@@ -1269,8 +1521,16 @@
         "lie-down",
         "graze-and-chew"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1294,7 +1554,7 @@
     },
     {
       "id": "park-bench",
-      "category": "objects",
+      "category": "furniture",
       "title": {
         "en": "Park Bench",
         "de": "Parkbank"
@@ -1310,6 +1570,13 @@
         "occupant-sit-down",
         "sun-exposure-cycle"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1335,22 +1602,30 @@
     },
     {
       "id": "cafe-chair",
-      "category": "objects",
+      "category": "furniture",
       "title": {
         "en": "Café Chair",
         "de": "Café-Stuhl"
       },
-      "heightM": 0.9,
-      "widthM": 0.46,
+      "heightM": 0.88,
+      "widthM": 0.44,
       "poses": [
         "upright-empty",
         "pulled-out",
-        "tilted-on-two-legs"
+        "tilted-on-two-legs",
+        "seated-occupied"
       ],
       "clips": [
         "pull-out-and-sit",
         "tip-back"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1376,13 +1651,13 @@
     },
     {
       "id": "office-swivel-chair",
-      "category": "objects",
+      "category": "furniture",
       "title": {
         "en": "Office Swivel Chair",
         "de": "Bürodrehstuhl"
       },
       "heightM": 1.08,
-      "widthM": 0.62,
+      "widthM": 0.6,
       "poses": [
         "seat-low",
         "seat-high",
@@ -1392,6 +1667,13 @@
         "swivel-rotation",
         "height-adjust"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1417,12 +1699,12 @@
     },
     {
       "id": "height-adjustable-desk",
-      "category": "objects",
+      "category": "furniture",
       "title": {
         "en": "Height-adjustable Desk",
         "de": "Höhenverstellbarer Schreibtisch"
       },
-      "heightM": 1.17,
+      "heightM": 1.18,
       "widthM": 1.6,
       "poses": [
         "seated-height",
@@ -1433,6 +1715,13 @@
         "raise-and-lower",
         "load-on-surface"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1463,19 +1752,29 @@
         "en": "Street Lamp",
         "de": "Straßenleuchte"
       },
-      "heightM": 6,
+      "heightM": 6.0,
       "widthM": 1.2,
       "poses": [
         "dusk-off",
         "lit-night",
-        "lit-in-wind"
+        "dimmed-night",
+        "lit-in-wind",
+        "day-off"
       ],
       "clips": [
         "ignition-at-dusk",
         "pole-sway-in-gust"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1504,8 +1803,8 @@
         "en": "Market Parasol",
         "de": "Marktschirm"
       },
-      "heightM": 2.39,
-      "widthM": 2.63,
+      "heightM": 2.46,
+      "widthM": 2.6,
       "poses": [
         "open-still",
         "tilted-to-sun",
@@ -1515,6 +1814,13 @@
         "wind-flap",
         "sun-tilt"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1556,6 +1862,13 @@
         "lid-open-close",
         "waste-fill"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1586,8 +1899,8 @@
         "en": "Playground Swing",
         "de": "Spielplatzschaukel"
       },
-      "heightM": 2.41,
-      "widthM": 2.67,
+      "heightM": 2.35,
+      "widthM": 2.78,
       "poses": [
         "rest",
         "pendulum-forward",
@@ -1597,6 +1910,13 @@
         "pendulum-swing",
         "occupant-push"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1628,7 +1948,7 @@
         "de": "Stadtauto"
       },
       "heightM": 1.5,
-      "widthM": 3.92,
+      "widthM": 3.9,
       "poses": [
         "parked",
         "driving",
@@ -1640,8 +1960,16 @@
         "drive-by",
         "park-and-open-hatch"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1680,10 +2008,19 @@
       ],
       "clips": [
         "arrive-kneel-doors",
-        "depart"
+        "depart",
+        "layover-shutdown"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1707,7 +2044,7 @@
     },
     {
       "id": "excavator",
-      "category": "vehicles",
+      "category": "machinery",
       "title": {
         "en": "Excavator",
         "de": "Bagger"
@@ -1721,10 +2058,19 @@
       ],
       "clips": [
         "dig-cycle",
-        "dump-and-stow"
+        "dump-and-stow",
+        "start-and-idle"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1748,7 +2094,7 @@
     },
     {
       "id": "tower-crane",
-      "category": "vehicles",
+      "category": "machinery",
       "title": {
         "en": "Tower Crane",
         "de": "Turmdrehkran"
@@ -1765,8 +2111,18 @@
         "lift-and-traverse",
         "unload"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "site-plan-reach"
+      ],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1790,7 +2146,7 @@
     },
     {
       "id": "forklift",
-      "category": "vehicles",
+      "category": "machinery",
       "title": {
         "en": "Forklift",
         "de": "Gabelstapler"
@@ -1806,8 +2162,16 @@
         "lift-pallet",
         "drive-with-load"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
+        "transport",
         "structural"
       ],
       "viewpoints": [
@@ -1836,8 +2200,8 @@
         "en": "Cargo Bike",
         "de": "Lastenrad"
       },
-      "heightM": 1.18,
-      "widthM": 2.68,
+      "heightM": 1.16,
+      "widthM": 2.69,
       "poses": [
         "parked-on-stand",
         "loaded-on-stand",
@@ -1847,6 +2211,13 @@
         "roll-by",
         "load-box"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1878,7 +2249,7 @@
         "de": "Kragbalkon"
       },
       "heightM": 1.3,
-      "widthM": 1.83,
+      "widthM": 1.8,
       "poses": [
         "self-weight",
         "distributed-live-load",
@@ -1886,8 +2257,16 @@
       ],
       "clips": [
         "loading-ramp",
-        "moving-point-load"
+        "moving-point-load",
+        "sun-and-shade"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1918,8 +2297,8 @@
         "en": "Glulam Beam",
         "de": "Brettschichtholzbalken"
       },
-      "heightM": 0.6,
-      "widthM": 8,
+      "heightM": 0.62,
+      "widthM": 8.0,
       "poses": [
         "self-weight",
         "distributed-live-load",
@@ -1929,6 +2308,13 @@
         "moving-point-load",
         "loading-ramp"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -1959,7 +2345,7 @@
         "en": "Steel Column",
         "de": "Stahlstütze"
       },
-      "heightM": 3,
+      "heightM": 3.0,
       "widthM": 0.3,
       "poses": [
         "axial-self-weight",
@@ -1969,6 +2355,15 @@
       "clips": [
         "loading-ramp",
         "eccentric-load-sweep"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "section-plan"
       ],
       "analytics": [
         "thermal",
@@ -2000,8 +2395,8 @@
         "en": "Stair Flight",
         "de": "Treppenlauf"
       },
-      "heightM": 3.02,
-      "widthM": 3.7,
+      "heightM": 2.9,
+      "widthM": 3.885,
       "poses": [
         "self-weight",
         "crowd-live-load",
@@ -2010,6 +2405,15 @@
       "clips": [
         "loading-ramp",
         "moving-point-load"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "flight-plan"
       ],
       "analytics": [
         "thermal",
@@ -2050,7 +2454,17 @@
       ],
       "clips": [
         "slide-open-close",
-        "slide-open"
+        "slide-open",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "sliding-door-plan"
       ],
       "analytics": [
         "thermal",
@@ -2091,7 +2505,18 @@
       ],
       "clips": [
         "tilt-open-close",
-        "wind-pressure-pulse"
+        "wind-pressure-pulse",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "window-plan",
+        "tilt-opening-sign"
       ],
       "analytics": [
         "thermal",
@@ -2123,7 +2548,7 @@
         "en": "Glass Balustrade",
         "de": "Glasgeländer"
       },
-      "heightM": 1.12,
+      "heightM": 1.1,
       "widthM": 0.3,
       "poses": [
         "self-weight-unloaded",
@@ -2134,6 +2559,15 @@
       "clips": [
         "handrail-push",
         "impact-pulse"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "balustrade-plan"
       ],
       "analytics": [
         "thermal",
@@ -2165,8 +2599,8 @@
         "en": "Tied Canopy",
         "de": "Abgespanntes Vordach"
       },
-      "heightM": 3.09,
-      "widthM": 6,
+      "heightM": 3.14,
+      "widthM": 6.0,
       "poses": [
         "self-weight",
         "snow-load",
@@ -2176,6 +2610,13 @@
         "loading-ramp",
         "wind-gust"
       ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
       "analytics": [
         "thermal",
         "structural"
@@ -2196,6 +2637,3018 @@
       "distinction": {
         "en": "A 5.5 m steel canopy pinned at the wall and held by a tube strut hinged at both ends, modelled as a bilateral roller along the rod, so the strut carries snow in tension and net wind uplift in compression and the canopy keeps its restraint.",
         "de": "5,5 m langes Stahlvordach, am Wandanschluss gelenkig gelagert und von einem beidseitig gelenkig angeschlossenen Rohrstab gehalten, als beidseitige Rolle entlang des Stabs modelliert; der Stab trägt Schnee auf Zug und Netto-Windsog auf Druck, sodass das Vordach seine Halterung behält."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "child-on-kick-scooter",
+      "category": "humans",
+      "title": {
+        "en": "Child on Kick Scooter",
+        "de": "Kind auf Tretroller"
+      },
+      "heightM": 1.274,
+      "widthM": 0.925,
+      "poses": [
+        "gliding",
+        "pushing-off",
+        "braking"
+      ],
+      "clips": [
+        "kick-and-glide",
+        "glide-and-brake"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An 8-year-old girl, 1.28 m, in a helmet, zip jacket and backpack rides a two-wheel kick scooter: she pushes with the right foot, swings it back onto the deck and glides crouched with both hands on the T-bar; the right foot also brakes on the rear fender.",
+        "de": "Ein 8-jähriges Mädchen, 1,28 m, mit Helm, Reißverschlussjacke und Rucksack fährt einen zweirädrigen Tretroller: Sie schiebt mit dem rechten Fuß an, schwingt ihn zurück aufs Trittbrett und gleitet geduckt mit beiden Händen am T-Lenker; mit dem rechten Fuß bremst sie am Hinterradschutzblech."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "courier-with-hand-truck",
+      "category": "humans",
+      "title": {
+        "en": "Courier with Hand Truck",
+        "de": "Kurier mit Sackkarre"
+      },
+      "heightM": 1.82,
+      "widthM": 1.16,
+      "poses": [
+        "waiting",
+        "tilted-back",
+        "parked-upright",
+        "walking-contact"
+      ],
+      "clips": [
+        "push-walk",
+        "tilt-and-settle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 34-year-old parcel courier of 1.82 m in a high-visibility jacket, cargo trousers, work boots and a cap, wheeling a steel hand truck loaded with three parcels (38 kg) tilted back on its wheels. Poses: waiting, tilting the load, parked upright; clips: walking with the load and tipping it onto the wheels.",
+        "de": "Ein 34-jähriger Paketkurier von 1,82 m in Warnschutzjacke, Cargohose, Arbeitsstiefeln und Mütze, der eine Stahl-Sackkarre mit drei Paketen (38 kg) auf den Rädern nach hinten geneigt schiebt. Posen: Warten, Last kippen, aufrecht abgestellt; Clips: Gehen mit Last und Kippen der Last auf die Räder."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "kneeling-gardener",
+      "category": "humans",
+      "title": {
+        "en": "Kneeling gardener",
+        "de": "Kniende Gärtnerin"
+      },
+      "heightM": 1.145,
+      "widthM": 1.835,
+      "poses": [
+        "kneeling-weeding",
+        "kneeling-upright",
+        "reaching-trug"
+      ],
+      "clips": [
+        "dig-cycle",
+        "reach-to-trug"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 58-year-old, 1.66 m gardener kneeling on a foam pad in a straw hat, rolled linen sleeves, canvas trousers and clogs, weeding with a hand trowel beside a trug: weeding, upright kneeling and reaching to the trug, a digging loop and a trug round; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
+        "de": "Eine 58-jährige, 1,66 m große Gärtnerin kniet in Strohhut, hochgekrempeltem Leinenhemd, Canvas-Hose und Clogs auf einem Schaumkissen und jätet mit der Handschaufel neben einem Trog: Jäten, aufrechtes Knien und Greifen zum Trog, eine Grabschleife und eine Troglauf-Runde; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "parent-carrying-toddler",
+      "category": "humans",
+      "title": {
+        "en": "Parent carrying a toddler",
+        "de": "Elternteil trägt ein Kleinkind"
+      },
+      "heightM": 1.73,
+      "widthM": 0.607,
+      "poses": [
+        "standing-carry",
+        "heel-strike-l",
+        "hoisting"
+      ],
+      "clips": [
+        "walk-carrying",
+        "shift-toddler"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.70 m parent in wool coat, scarf, beanie and boots carrying a 24-month toddler (12.2 kg) in a padded overall on the hip: the toddler is a second living body with its own breathing; standing, a walking cycle with planted feet, hoisting and settling; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
+        "de": "Ein 1,70 m großes Elternteil in Wollmantel, Schal, Mütze und Stiefeln trägt ein 24 Monate altes Kleinkind (12,2 kg) im gefütterten Overall auf der Hüfte: Das Kleinkind ist ein zweiter lebender Körper mit eigener Atmung; Stehen, ein Gehzyklus mit festen Füßen, Hochnehmen und Zurechtsetzen; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "person-on-crutches",
+      "category": "humans",
+      "title": {
+        "en": "Person on Forearm Crutches",
+        "de": "Person an Unterarmgehstützen"
+      },
+      "heightM": 1.83,
+      "widthM": 0.556,
+      "poses": [
+        "tripod-stand",
+        "crutches-forward",
+        "body-swing"
+      ],
+      "clips": [
+        "three-point-gait",
+        "rest-on-crutches"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 24-year-old man, 1.82 m, in a hooded sweatshirt and sports shorts moves on two forearm crutches in a three-point swing gait: the left foot sits in an orthopaedic walking boot and stays off the ground while the crutch tips and the right foot carry him.",
+        "de": "Ein 24-jähriger Mann, 1,82 m, in Kapuzenpullover und Sportshorts bewegt sich mit zwei Unterarmgehstützen im Dreipunkt-Durchschwunggang: Der linke Fuß steckt in einem orthopädischen Walking-Stiefel und bleibt vom Boden frei, während Krückenspitzen und rechter Fuß ihn tragen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "person-with-rollator",
+      "category": "humans",
+      "title": {
+        "en": "Person with Rollator",
+        "de": "Person mit Rollator"
+      },
+      "heightM": 1.61,
+      "widthM": 1.16,
+      "poses": [
+        "stand-at-grips",
+        "walking-midstance",
+        "seated-rest",
+        "stoop-to-basket"
+      ],
+      "clips": [
+        "rollator-walk",
+        "rest-at-the-grips"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 79-year-old woman, 1.58 m, in a loden coat and beret walks stooped behind a four-wheel rollator with seat, basket, brake levers and a shopping bag; the aid carries part of her weight, rolls on 0.2 m wheels and doubles as a seat.",
+        "de": "Eine 79-jährige Frau, 1,58 m, in Lodenmantel und Baskenmütze geht gebeugt hinter einem vierrädrigen Rollator mit Sitz, Korb, Bremshebeln und Einkaufstasche; das Hilfsmittel trägt einen Teil ihres Gewichts, rollt auf 0,2-m-Rädern und dient als Sitz."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "person-with-white-cane",
+      "category": "humans",
+      "title": {
+        "en": "Person with White Cane",
+        "de": "Person mit Blindenlangstock"
+      },
+      "heightM": 1.69,
+      "widthM": 1.074,
+      "poses": [
+        "constant-contact-stance",
+        "diagonal-technique",
+        "walking-midstance",
+        "cane-parked"
+      ],
+      "clips": [
+        "constant-contact-walk",
+        "listen-and-scan"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A blind woman, 1.68 m, in a denim jacket and sunglasses walks briskly with a 1.3 m long white cane held diagonally ahead of her; the roller tip stays in contact with the ground and sweeps ahead of every step.",
+        "de": "Eine blinde Frau, 1,68 m, in Jeansjacke und Sonnenbrille geht zügig mit einem 1,3 m langen weißen Langstock, der diagonal vor ihr gehalten wird; die Rollspitze bleibt am Boden und tastet jedem Schritt voraus."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "pregnant-person",
+      "category": "humans",
+      "title": {
+        "en": "Pregnant Person",
+        "de": "Schwangere Person"
+      },
+      "heightM": 1.65,
+      "widthM": 0.72,
+      "poses": [
+        "hand-on-back",
+        "cradling-belly",
+        "stretching-back",
+        "waddle-contact"
+      ],
+      "clips": [
+        "waddle-walk",
+        "rest-and-breathe"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A woman of 1.66 m in week 36 of pregnancy (71 kg, 13 kg gained) in an oversized knit sweater, maternity leggings and ankle boots, standing with the torso leaned back and the lumbar curve increased. The abdomen is its own bone and thermal region; physiology (metabolism, ventilation, skin blood flow) is adjusted for the third trimester.",
+        "de": "Eine Frau von 1,66 m in der 36. Schwangerschaftswoche (71 kg, 13 kg zugenommen) in übergroßem Strickpullover, Umstandsleggings und Stiefeletten, die mit zurückgelehntem Oberkörper und verstärkter Lendenkrümmung steht. Der Bauch ist ein eigener Knochen und eine eigene thermische Region; Physiologie (Stoffwechsel, Atmung, Hautdurchblutung) ist für das dritte Trimester angepasst."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "runner-with-blade-prosthesis",
+      "category": "humans",
+      "title": {
+        "en": "Runner with Blade Prosthesis",
+        "de": "Läufer mit Prothesenfeder"
+      },
+      "heightM": 1.79,
+      "widthM": 0.41,
+      "poses": [
+        "standing-ready",
+        "hands-on-hips",
+        "left-forefoot-strike",
+        "blade-midstance",
+        "flight"
+      ],
+      "clips": [
+        "run-cycle",
+        "recover-breathing"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 29-year-old man of 1.80 m with a right transtibial amputation, running at 3.1 m/s on a J-shaped carbon blade attached below a carbon socket, in a singlet and compression shorts and one running shoe. The gait has a flight phase, a shorter blade contact with 11 degrees of spring deflection, and the socket holds heat. Poses: standing, recovering, forefoot strike, blade mid-stance and flight.",
+        "de": "Ein 29-jähriger Mann von 1,80 m mit rechtsseitiger Unterschenkelamputation, der mit 3,1 m/s auf einer J-förmigen Karbonfeder unter einem Karbonschaft läuft, in Top, Kompressionsshorts und einem Laufschuh. Der Gang hat eine Flugphase, einen kürzeren Federkontakt mit 11 Grad Einfederung, und der Schaft staut Wärme. Posen: Stehen, Erholen, Vorfußaufsatz, Feder im Stütz und Flug."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "seated-guitarist",
+      "category": "humans",
+      "title": {
+        "en": "Seated guitarist",
+        "de": "Sitzender Gitarrist"
+      },
+      "heightM": 1.495,
+      "widthM": 1.107,
+      "poses": [
+        "strumming",
+        "fretting-high",
+        "resting"
+      ],
+      "clips": [
+        "strum-loop",
+        "chord-change",
+        "tune-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 42-year-old man of 1.76 m in flannel shirt, jeans and leather boots on a wooden bar stool with one foot on the rung, playing an acoustic guitar: strumming, fretting high on the neck while singing, resting and tuning, with a strum loop, a chord-change phrase and a tuning sequence; four individually drawn scales from 1:500 to 1:50.",
+        "de": "Ein 42-jähriger, 1,76 m großer Mann in Flanellhemd, Jeans und Lederstiefeln sitzt auf einem hölzernen Barhocker mit einem Fuß auf der Fußraste und spielt Akustikgitarre: Anschlagen, hohes Greifen am Hals beim Singen, Ablegen und Stimmen, mit einer Anschlagschleife, einer Akkordwechsel-Phrase und einer Stimmfolge; vier einzeln gezeichnete Maßstäbe von 1:500 bis 1:50."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "skateboarder",
+      "category": "humans",
+      "title": {
+        "en": "Skateboarder",
+        "de": "Skateboarder:in"
+      },
+      "heightM": 1.774,
+      "widthM": 1.218,
+      "poses": [
+        "cruising",
+        "pushing",
+        "crouch",
+        "ollie-air"
+      ],
+      "clips": [
+        "push-cycle",
+        "ollie",
+        "pump-cruise"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 19-year-old, 1.78 m skateboarder in beanie, hooded sweatshirt, cotton trousers and vulcanised shoes on a 0.81 m street deck: cruising, pushing off, a crouch and a tail-snap ollie with a flight phase; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
+        "de": "Ein 19-jähriger, 1,78 m großer Skateboarder in Mütze, Kapuzenpullover, Baumwollhose und vulkanisierten Schuhen auf einem 0,81 m langen Street-Deck: Rollen, Anschieben, Hocke und ein Ollie mit Flugphase; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "standing-phone-user",
+      "category": "humans",
+      "title": {
+        "en": "Standing Phone User",
+        "de": "Stehende Smartphone-Nutzerin"
+      },
+      "heightM": 1.67,
+      "widthM": 0.64,
+      "poses": [
+        "texting",
+        "phone-call",
+        "photo-pose"
+      ],
+      "clips": [
+        "scroll-and-sway",
+        "answer-call"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 24-year-old woman of 1.69 m in a hooded sweatshirt, slim jeans and canvas sneakers, standing at a bus stop with her head bowed over a smartphone; over-ear headphones around the neck, a ponytail, weight on one leg. Poses for texting, a call at the ear and a photo.",
+        "de": "Eine 24-jährige Frau von 1,69 m in Kapuzenpullover, enger Jeans und Stoffsneakern, die an einer Bushaltestelle mit gesenktem Kopf auf ein Smartphone schaut; Kopfhörer um den Hals, Pferdeschwanz, Gewicht auf einem Bein. Posen für Tippen, Telefonat am Ohr und Foto."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "goat",
+      "category": "animals",
+      "title": {
+        "en": "Goat (Horned Doe)",
+        "de": "Ziege (gehörnte Geiß)"
+      },
+      "heightM": 1.09,
+      "widthM": 1.31,
+      "poses": [
+        "standing-alert",
+        "browsing-upright",
+        "climbing-ledge"
+      ],
+      "clips": [
+        "walk-cycle",
+        "browse-rear"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult horned goat of 55 kg with 0.76 m withers height: lean barrel on long legs, swept-back horns, beard and upright ears; standing alert, rearing on the hind legs to browse foliage, climbing a ledge, and a four-beat walk; short summer coat, sweating and panting, bare horns and ears as thermal windows.",
+        "de": "Eine erwachsene gehörnte Ziege von 55 kg mit 0,76 m Widerristhöhe: schlanke Tonne auf langen Beinen, zurückgeschwungene Hörner, Bart und aufrechte Ohren; aufmerksames Stehen, Aufrichten auf die Hinterbeine zum Äsen von Laub, Klettern über einen Absatz und ein Viertakt-Schritt; kurzes Sommerfell, Schwitzen und Hecheln, nackte Hörner und Ohren als thermische Fenster."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hedgehog",
+      "category": "animals",
+      "title": {
+        "en": "European Hedgehog",
+        "de": "Westeuropäischer Igel"
+      },
+      "heightM": 0.128,
+      "widthM": 0.28,
+      "poses": [
+        "foraging",
+        "alert",
+        "rolled"
+      ],
+      "clips": [
+        "forage-walk",
+        "roll-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult European hedgehog (Erinaceus europaeus, 1.0 kg): spiny dome with front and rear spine skirts that swing down to close the animal into a defensive ball, pointed snout, four short limbs; foraging, alert and rolled-up poses, a slow foraging walk and the roll-up reaction; spine and fur thermal model with 35.5 degC core, nose breathing and a back plume. Too small for 1:500.",
+        "de": "Ein erwachsener Westeuropäischer Igel (Erinaceus europaeus, 1,0 kg): Stachelkuppel mit vorderem und hinterem Stachelsaum, die sich zum Abwehrball um das Tier schließen, spitze Schnauze, vier kurze Gliedmaßen; Suchen, Wachsamkeit und eingerollt, ein langsamer Suchgang und die Einrollreaktion; Stachel- und Fell-Wärmemodell mit 35,5 Grad Kern, Nasenatmung und Rückenfahne. Zu klein für 1:500."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "herring-gull",
+      "category": "animals",
+      "title": {
+        "en": "Herring Gull",
+        "de": "Silbermöwe"
+      },
+      "heightM": 0.51,
+      "widthM": 0.699,
+      "poses": [
+        "standing",
+        "gliding",
+        "landing"
+      ],
+      "clips": [
+        "soar",
+        "landing"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult herring gull (Larus argentatus, 1.0 kg, wingspan 1.45 m): upright standing, soaring on spread wings and a landing flare to touchdown; rig with two-piece neck, arm and hand wings, webbed legs; plumage thermal model (41 degC core), nares breathing, back plume, breathing patterns for rest, soaring and the flare. The side elevation shows spread wings in oblique projection.",
+        "de": "Eine erwachsene Silbermöwe (Larus argentatus, 1,0 kg, Spannweite 1,45 m): aufrechtes Stehen, Segeln mit gespreizten Flügeln und ein Landeanflug bis zum Aufsetzen; Rig mit zweiteiligem Hals, Flügeln aus Arm und Hand, Schwimmbeinen; Gefieder-Wärmemodell (41 Grad Kern), Nasenatmung, Rückenfahne, Atemmuster für Ruhe, Segeln und Abfangen. Der Seitenaufriss zeigt gespreizte Flügel in schräger Projektion."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "mallard-duck",
+      "category": "animals",
+      "title": {
+        "en": "Mallard Drake",
+        "de": "Stockerpel"
+      },
+      "heightM": 0.46,
+      "widthM": 0.6,
+      "poses": [
+        "standing",
+        "swimming",
+        "dabbling",
+        "wing-stretch"
+      ],
+      "clips": [
+        "waddle",
+        "paddle",
+        "dabble"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult drake mallard (Anas platyrhynchos, 1.15 kg): boat-shaped body with a three-piece S-neck, flat bill, folded wings that can be raised, short legs with webbed feet and a waterline contact for swimming; standing, floating, dabbling and upending poses, a waddling walk, paddling and a dabbling cycle, with a plumage thermal model (41.5 degC core), nostril breathing and a back plume.",
+        "de": "Ein erwachsener Stockerpel (Anas platyrhynchos, 1,15 kg): bootsförmiger Körper mit dreiteiligem S-Hals, flachem Schnabel, angelegten und hebbaren Flügeln, kurzen Beinen mit Schwimmfüßen und einem Wasserlinien-Kontakt zum Schwimmen; Stehen, Schwimmen, Gründeln und Kopfstand, Watschelgang, Paddeln und ein Gründelzyklus, mit Gefieder-Wärmemodell (41,5 Grad Kern), Nasenatmung und Rückenfahne."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "pig",
+      "category": "animals",
+      "title": {
+        "en": "Domestic Pig (Finishing Pig)",
+        "de": "Hausschwein (Mastschwein)"
+      },
+      "heightM": 0.763,
+      "widthM": 1.206,
+      "poses": [
+        "standing-pig",
+        "rooting",
+        "lying-wallowing"
+      ],
+      "clips": [
+        "walk-cycle",
+        "root-cycle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A finishing pig of 100 kg with 0.64 m withers height: deep barrel on very short legs, nearly no neck, wedge head with snout disc, floppy ears, curly tail and sparse bristles on pale skin; standing, rooting with the snout down, lying wet in a mud wallow, and a slow four-beat walk; no sweat glands, panting and wallowing for cooling.",
+        "de": "Ein Mastschwein von 100 kg mit 0,64 m Widerristhöhe: tiefe Tonne auf sehr kurzen Beinen, kaum Hals, Keilkopf mit Rüsselscheibe, Schlappohren, Ringelschwanz und spärliche Borsten auf heller Haut; Stehen, Wühlen mit gesenktem Rüssel, nasses Liegen in der Schlammsuhle und ein langsamer Viertakt-Schritt; keine Schweißdrüsen, Kühlung durch Hecheln und Suhlen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "red-fox",
+      "category": "animals",
+      "title": {
+        "en": "Red Fox",
+        "de": "Rotfuchs"
+      },
+      "heightM": 0.626,
+      "widthM": 1.173,
+      "poses": [
+        "standing-alert",
+        "mousing-crouch",
+        "curled-sleeping"
+      ],
+      "clips": [
+        "trot-cycle",
+        "mousing-pounce"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult red fox (Vulpes vulpes) of 6 kg, 1.15 m nose to brush tip and 0.5 m at the shoulder: slender legs with dark stockings, pointed muzzle, erect ears and a long bushy brush with a pale tip; standing alert, a mousing crouch, curled asleep with the brush over the nose, a diagonal trot with suspension and a mousing pounce; thick brush fur as the largest insulation patch.",
+        "de": "Ein erwachsener Rotfuchs (Vulpes vulpes) von 6 kg, 1,15 m von der Nase bis zur Rutenspitze und 0,5 m Schulterhöhe: schlanke Beine mit dunklen Strümpfen, spitzer Fang, aufrechte Ohren und eine lange buschige Rute mit heller Spitze; aufmerksames Stehen, Ducken beim Mäuseln, eingerollt schlafend mit der Rute über der Nase, diagonaler Trab mit Schwebephase und ein Mäusesprung; dichtes Rutenfell als größte Dämmfläche."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "red-squirrel",
+      "category": "animals",
+      "title": {
+        "en": "Red Squirrel",
+        "de": "Eichhörnchen"
+      },
+      "heightM": 0.275,
+      "widthM": 0.21,
+      "poses": [
+        "sitting-eating",
+        "running",
+        "climbing"
+      ],
+      "clips": [
+        "nibble",
+        "bound",
+        "climb"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "unavailable",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult Eurasian red squirrel (Sciurus vulgaris, 0.30 kg): two-part spine, bushy two-part tail, fore limbs with long fingers and digitigrade hind limbs; sitting upright eating a nut, a bounding run and climbing a vertical trunk (the trunk is not part of the asset: the claws are supports with a bark friction of 1.5); fur thermal model with 38.5 degC core, nose breathing and a back plume.",
+        "de": "Ein erwachsenes Europäisches Eichhörnchen (Sciurus vulgaris, 0,30 kg): zweiteilige Wirbelsäule, buschiger zweiteiliger Schwanz, Vorderglieder mit langen Fingern und Hinterglieder; aufrecht sitzend beim Nussfressen, ein Sprunglauf und Klettern an einem senkrechten Stamm (der Stamm ist nicht Teil des Assets: die Krallen sind Auflager mit Rindenreibung 1,5); Fell-Wärmemodell mit 38,5 Grad Kern, Nasenatmung und Rückenfahne."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sheep",
+      "category": "animals",
+      "title": {
+        "en": "Sheep (Ewe in Full Fleece)",
+        "de": "Schaf (Mutterschaf im vollen Vlies)"
+      },
+      "heightM": 0.823,
+      "widthM": 1.27,
+      "poses": [
+        "standing-resting",
+        "grazing",
+        "lying-ruminating"
+      ],
+      "clips": [
+        "walk-cycle",
+        "graze-cycle",
+        "ruminate-lying"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An adult wool-breed ewe of 70 kg with 0.74 m withers height in full fleece: a heavy fleece barrel on thin hair-covered legs, short wool tail, level head carriage; standing, grazing with the head down, lying and ruminating, a slow four-beat walk, with fleece as a thick insulating layer, nose and open-mouth heat panting.",
+        "de": "Ein erwachsenes Mutterschaf einer Wollrasse von 70 kg mit 0,74 m Widerristhöhe im vollen Vlies: eine schwere Vliestonne auf dünnen behaarten Beinen, kurzer Wollschwanz, waagerechte Kopfhaltung; Stehen, Grasen mit gesenktem Kopf, Liegen und Wiederkäuen, ein langsamer Viertakt-Schritt, mit dem Vlies als dicker Dämmschicht, Nasenatmung und Hecheln."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "agave",
+      "category": "vegetation",
+      "title": {
+        "en": "Agave",
+        "de": "Agave"
+      },
+      "heightM": 1.43,
+      "widthM": 2.52,
+      "poses": [
+        "summer-turgid",
+        "night-stomata-open",
+        "drought-infolded",
+        "frost-sag",
+        "fresh-breeze"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A mature century plant (Agave americana) of 1.45 m height and 2.55 m width: a rosette of stiff, succulent, glaucous leaves with marginal teeth around a short trunk, the lowest leaves arching to the ground and a spear of young leaves in the heart. A CAM plant: its stomata open at night.",
+        "de": "Eine ausgewachsene Amerikanische Agave (Agave americana) von 1,45 m Höhe und 2,55 m Breite: eine Rosette aus steifen, sukkulenten, blaugrauen Blättern mit Randzähnen um einen kurzen Stamm, die untersten Blätter bogig zum Boden, ein Speer junger Blätter im Herzen. Eine CAM-Pflanze: Ihre Spaltöffnungen öffnen sich nachts."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "apple-tree",
+      "category": "vegetation",
+      "title": {
+        "en": "Apple Tree, Orchard Standard",
+        "de": "Apfelbaum, Hochstamm"
+      },
+      "heightM": 6.35,
+      "widthM": 6.73,
+      "poses": [
+        "summer-fruit-set",
+        "breeze-with-fruit",
+        "harvest-laden",
+        "gale-windfall"
+      ],
+      "clips": [
+        "breeze-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A full-standard orchard apple tree with a clear stem of 1.6 m and an open, spreading vase crown of arching scaffold limbs; the fruit load is carried as a seasonal pose and load, from green fruit set to the drooping harvest load.",
+        "de": "Ein Hochstamm-Obstbaum (Apfel) mit 1,6 m Stammhöhe und offener, ausladender Vasenkrone aus gebogenen Leitästen; die Fruchtlast wird als jahreszeitliche Pose und Last geführt, vom grünen Fruchtansatz bis zur Erntelast, die die Äste nach unten biegt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "bamboo-clump",
+      "category": "vegetation",
+      "title": {
+        "en": "Bamboo Clump",
+        "de": "Bambushorst"
+      },
+      "heightM": 4.57,
+      "widthM": 3.03,
+      "poses": [
+        "summer-calm",
+        "fresh-breeze",
+        "storm-bent",
+        "wet-snow",
+        "winter-overcast"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A clump of six running-type bamboo culms (Phyllostachys aureosulcata, 29 mm culms, grown in a rhizome barrier) from 2.4 to 4.6 m tall: nodes, a groove along the culm and leaf-bearing branches in the upper half that stream in the wind.",
+        "de": "Ein Horst aus sechs Bambushalmen (Phyllostachys aureosulcata, Halme von 29 mm, in einer Rhizomsperre gezogen) von 2,4 bis 4,6 m Höhe: Knoten, eine Rille entlang des Halms und beblätterte Äste in der oberen Hälfte, die im Wind wehen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hosta-clump",
+      "category": "vegetation",
+      "title": {
+        "en": "Hosta Clump",
+        "de": "Funkienhorst"
+      },
+      "heightM": 0.62,
+      "widthM": 0.88,
+      "poses": [
+        "summer-full",
+        "spring-emerging",
+        "rain-bowed",
+        "autumn-collapse"
+      ],
+      "clips": [
+        "wind-flutter",
+        "gust"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A clump of hosta (Hosta sieboldiana type) 0.62 m high and 0.9 m wide: a mound of broad, ribbed, glaucous-green blades on petioles that arch out of the crown; the outer blades touch the soil. A low shade perennial for the foreground of planting.",
+        "de": "Ein Horst Funkien (Hosta sieboldiana-Typ) von 0,62 m Höhe und 0,9 m Breite: ein Hügel aus breiten, gerippten, blaugrünen Spreiten auf Stielen, die sich aus dem Wurzelstock wölben; die äußeren Spreiten berühren den Boden. Eine niedrige Schattenstaude für den Vordergrund der Pflanzung."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "ivy-on-trellis",
+      "category": "vegetation",
+      "title": {
+        "en": "Ivy on Trellis",
+        "de": "Efeu am Spalier"
+      },
+      "heightM": 2.11,
+      "widthM": 1.91,
+      "poses": [
+        "summer-calm",
+        "summer-night",
+        "breezy",
+        "storm",
+        "winter-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-extent"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "English ivy (Hedera helix) climbing a freestanding timber trellis, 1.9 m wide and 2.15 m high, on two timber posts in galvanised steel shoes: four main stems carry leaf mats that cover the upper lattice and shoots that overhang the top rail. Trellis and plant are one asset.",
+        "de": "Gemeiner Efeu (Hedera helix) klettert an einem freistehenden Holzspalier von 1,9 m Breite und 2,15 m Höhe auf zwei Holzpfosten in verzinkten Stahlschuhen: vier Haupttriebe tragen Blattteppiche, die das obere Gitter decken, und Triebe, die über den oberen Riegel hängen. Spalier und Pflanze sind ein Asset."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "japanese-maple",
+      "category": "vegetation",
+      "title": {
+        "en": "Japanese Maple, Multi-Stem",
+        "de": "Fächerahorn, mehrstämmig"
+      },
+      "heightM": 4.42,
+      "widthM": 5.27,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "autumn-colour",
+        "autumn-snow",
+        "storm"
+      ],
+      "clips": [
+        "breeze-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A mature small Japanese maple (Acer palmatum) of three slender stems whose near-horizontal branches carry the foliage in layered, flat tiers; the crown is wider than it is high.",
+        "de": "Ein ausgewachsener kleiner Fächerahorn (Acer palmatum) aus drei schlanken Stämmen, deren fast waagerechte Äste das Laub in geschichteten, flachen Etagen tragen; die Krone ist breiter als hoch."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "london-plane-pollarded",
+      "category": "vegetation",
+      "title": {
+        "en": "London Plane, Pollarded",
+        "de": "Platane, gekappt (Kopfbaum)"
+      },
+      "heightM": 8.9,
+      "widthM": 6.81,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "midday-heat",
+        "autumn-leaf-fall",
+        "gale"
+      ],
+      "clips": [
+        "breeze-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A street plane tree held as a pollard: a clear grey-cream mottled bole of 3.8 m ends in a knuckled head from which one summer of whippy shoots carries a dense upright crown of large palmate leaves.",
+        "de": "Eine als Kopfbaum gehaltene Straßenplatane: Ein grau-cremefarben gescheckter Schaft von 3,8 m endet in einem knorrigen Kopf, aus dem die Triebe eines Sommers eine dichte, aufrechte Krone aus großen, gelappten Blättern tragen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "small-leaved-lime",
+      "category": "vegetation",
+      "title": {
+        "en": "Small-Leaved Lime",
+        "de": "Winterlinde"
+      },
+      "heightM": 14.19,
+      "widthM": 9.06,
+      "poses": [
+        "summer-calm",
+        "summer-breeze",
+        "drought-stress",
+        "autumn-leaf-fall",
+        "wet-snow",
+        "gale"
+      ],
+      "clips": [
+        "breeze-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-crown",
+        "tree-sign"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A mature park lime (Tilia cordata) with a straight stem, one continuous leader and a dense, domed crown of small heart-shaped leaves; epicormic shoots sprout from the stem base.",
+        "de": "Eine ausgewachsene Parklinde (Tilia cordata) mit geradem Stamm, durchgehender Stammverlängerung und dichter, gewölbter Krone aus kleinen herzförmigen Blättern; am Stammfuß treiben Stammaustriebe."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "bar-stool",
+      "category": "furniture",
+      "title": {
+        "en": "Bar stool with footrest ring",
+        "de": "Barhocker mit Fußring"
+      },
+      "heightM": 0.87,
+      "widthM": 0.42,
+      "poses": [
+        "unoccupied",
+        "occupied",
+        "turned-90",
+        "seat-proof-load"
+      ],
+      "clips": [
+        "swivel-turn",
+        "sit-and-turn",
+        "stand-up"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "stool-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.75 m swivel bar stool with a chromed four-leg frame, footrest ring, foam seat pad that sinks under load and a low backrest that shows the swivel as it turns.",
+        "de": "Ein 0,75 m hoher Drehbarhocker mit verchromtem Vierbeingestell, Fußring, unter Last einsinkendem Schaumpolster und niedriger Lehne, die die Drehung beim Drehen zeigt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "bookshelf",
+      "category": "furniture",
+      "title": {
+        "en": "Bookshelf with adjustable shelves",
+        "de": "Bücherregal mit verstellbaren Böden"
+      },
+      "heightM": 1.8,
+      "widthM": 0.8,
+      "poses": [
+        "empty",
+        "loaded",
+        "shelf-adjusted"
+      ],
+      "clips": [
+        "load-the-shelves",
+        "re-pin-shelf",
+        "unload-shelves"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "shelf-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.80 x 1.80 m chipboard bookshelf with five adjustable shelves on 32 mm pin holes; the loaded pose bends every board by its computed beam deflection, the clips load the shelves and re-pin one.",
+        "de": "Ein Bücherregal aus Spanplatte, 0,80 x 1,80 m, mit fünf verstellbaren Böden im 32-mm-Lochraster; die beladene Pose biegt jeden Boden um die berechnete Balkendurchbiegung, die Clips beladen die Böden und stecken einen um."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "dining-table",
+      "category": "furniture",
+      "title": {
+        "en": "Dining table with extension leaf",
+        "de": "Esstisch mit Einlegeplatte"
+      },
+      "heightM": 0.75,
+      "widthM": 1.6,
+      "poses": [
+        "closed",
+        "extended",
+        "set-for-dinner",
+        "edge-test-load"
+      ],
+      "clips": [
+        "extend-table",
+        "retract-table",
+        "lay-the-table"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "table-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.60 m solid oak dining table whose halves slide apart on slide rails so that a 0.60 m leaf lifts in (2.20 m); closed, extended, set and test-load poses.",
+        "de": "Ein 1,60 m langer Esstisch aus massiver Eiche, dessen Hälften auf Auszugsschienen auseinandergleiten, sodass eine 0,60 m lange Einlegeplatte einrastet (2,20 m); Posen geschlossen, ausgezogen, gedeckt und Prüflast."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "folding-deck-chair",
+      "category": "furniture",
+      "title": {
+        "en": "Folding deck chair with canvas sling",
+        "de": "Klapp-Liegestuhl mit Segeltuch"
+      },
+      "heightM": 0.93,
+      "widthM": 0.78,
+      "poses": [
+        "unfolded",
+        "folded",
+        "reclined-seated",
+        "sling-proof-load"
+      ],
+      "clips": [
+        "fold-chair",
+        "unfold-chair",
+        "sit-and-recline"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "chair-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A beech deck chair of three hinged frames and a hanging canvas sling that folds flat: the scissor frames slide and turn, the sling hangs as two inextensible canvas bones solved for every pose.",
+        "de": "Ein Buchen-Liegestuhl aus drei gelenkigen Rahmen und einem hängenden Segeltuchsack, der flach zusammenklappt: die Scherenrahmen gleiten und drehen sich, das Segeltuch hängt als zwei undehnbare Knochen, die für jede Pose berechnet werden."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "picnic-table",
+      "category": "furniture",
+      "title": {
+        "en": "Picnic table with fold-down benches",
+        "de": "Picknicktisch mit Klappbänken"
+      },
+      "heightM": 0.75,
+      "widthM": 1.52,
+      "poses": [
+        "deployed",
+        "stowed",
+        "occupied",
+        "bench-proof-load"
+      ],
+      "clips": [
+        "fold-benches",
+        "deploy-benches",
+        "sit-down-together"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "picnic-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.80 m softwood picnic table with A-frame ends and two benches hinged to the frames that fold down for four persons or up against the frames; end elevation and plan symbol.",
+        "de": "Ein 1,80 m langer Picknicktisch aus Weichholz mit A-Gestellen an den Enden und zwei Bänken, die an den Gestellen angelenkt sind und für vier Personen heruntergeklappt oder an die Gestelle hochgeklappt werden; Stirnansicht und Grundrisssymbol."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "single-bed",
+      "category": "furniture",
+      "title": {
+        "en": "Single bed with slatted base",
+        "de": "Einzelbett mit Lattenrost"
+      },
+      "heightM": 0.95,
+      "widthM": 2.12,
+      "poses": [
+        "flat",
+        "head-raised",
+        "asleep",
+        "reading-in-bed"
+      ],
+      "clips": [
+        "raise-head-section",
+        "get-into-bed",
+        "sit-up-to-read"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "bed-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 0.90 x 2.00 m pine single bed with an adjustable slatted base in three sections and a 0.20 m foam mattress that sinks under the sleeper; side elevation and the conventional plan sign.",
+        "de": "Ein Einzelbett aus Kiefer, 0,90 x 2,00 m, mit verstellbarem Lattenrost in drei Teilen und einer 0,20 m dicken Schaumstoffmatratze, die unter dem Schläfer einsinkt; Seitenansicht und das übliche Grundrisszeichen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "three-seat-sofa",
+      "category": "furniture",
+      "title": {
+        "en": "Three-seat sofa",
+        "de": "Dreisitzer-Sofa"
+      },
+      "heightM": 0.85,
+      "widthM": 2.0,
+      "poses": [
+        "unoccupied",
+        "one-seated",
+        "two-seated",
+        "lounging",
+        "seat-proof-load"
+      ],
+      "clips": [
+        "sit-down-and-settle",
+        "stand-up-and-recover",
+        "lie-down-on-sofa"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "sofa-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 2.00 m upholstered three-seat sofa with padded arms, three separately sinking seat cushions and three back cushions on turned beech feet; front elevation and plan symbol.",
+        "de": "Ein 2,00 m breites gepolstertes Dreisitzer-Sofa mit gepolsterten Armlehnen, drei einzeln einsinkenden Sitzkissen und drei Rückenkissen auf gedrechselten Buchenfüßen; Vorderansicht und Grundrisssymbol."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "bicycle-stand",
+      "category": "objects",
+      "title": {
+        "en": "Bicycle Stand (Sheffield Hoop)",
+        "de": "Fahrradbügel (Sheffield-Bügel)"
+      },
+      "heightM": 0.8,
+      "widthM": 0.75,
+      "poses": [
+        "empty-shade",
+        "empty-sun",
+        "bike-leaning",
+        "lock-pulled"
+      ],
+      "clips": [
+        "bike-parked",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-true",
+        "plan-mark"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A galvanised 48.3 mm tube hoop with a cross rail, set in a concrete footing: 0.75 m wide, 0.80 m high, drawn face-on from the side where the bikes park; a leaning bicycle is a load, not a second asset. The plan shows the hoop as a bar with two leg dots.",
+        "de": "Ein feuerverzinkter Bügel aus 48,3-mm-Rohr mit Querholm im Betonfundament: 0,75 m breit, 0,80 m hoch, von der Parkseite her frontal gezeichnet; ein angelehntes Fahrrad ist eine Last, kein zweites Asset. Der Grundriss zeigt den Bügel als Balken mit zwei Beinpunkten."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "charcoal-grill",
+      "category": "objects",
+      "title": {
+        "en": "Charcoal Kettle Grill",
+        "de": "Holzkohle-Kugelgrill"
+      },
+      "heightM": 0.97,
+      "widthM": 0.67,
+      "poses": [
+        "cold-closed",
+        "lit-lid-open",
+        "grilling-closed",
+        "embers-vents-low"
+      ],
+      "clips": [
+        "light-and-close",
+        "lid-lift-cycle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 57 cm charcoal kettle grill on three legs: lid closed or raised, a glowing charcoal bed inside, hot enamel shells and smoke leaving through the lid vent or over the open bowl.",
+        "de": "Ein Holzkohle-Kugelgrill von 57 cm auf drei Beinen: Deckel geschlossen oder angehoben, glühende Kohle im Inneren, heiße Emailleschalen und Rauch, der durch die Deckelöffnung oder über den offenen Kessel abzieht."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "drinking-fountain",
+      "category": "objects",
+      "title": {
+        "en": "Cast Drinking Fountain",
+        "de": "Guss-Trinkbrunnen"
+      },
+      "heightM": 1.0,
+      "widthM": 0.4,
+      "poses": [
+        "idle-sun",
+        "drinking",
+        "idle-shade"
+      ],
+      "clips": [
+        "press-and-drink",
+        "shade-to-sun"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.0 m cast-iron pedestal drinking fountain with a stainless basin and a goose-neck bubbler: a push button opens the tap, the water jet arcs into the basin as a cool, wet source of moisture, and the pedestal warms in the sun.",
+        "de": "Ein 1,0 m hoher Trinkbrunnen mit Gusssockel, Edelstahlbecken und Schwanenhals-Sprudler: ein Drucktaster öffnet den Hahn, der Wasserstrahl bogt als kühle, feuchte Feuchtequelle ins Becken und der Sockel erwärmt sich in der Sonne."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "patio-heater",
+      "category": "objects",
+      "title": {
+        "en": "Propane Patio Heater",
+        "de": "Gas-Heizpilz (Propan)"
+      },
+      "heightM": 2.25,
+      "widthM": 0.8,
+      "poses": [
+        "off-afternoon",
+        "low",
+        "high",
+        "high-in-breeze"
+      ],
+      "clips": [
+        "ignite-and-warm-up",
+        "turn-down-and-shut-off"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A free-standing 13 kW propane radiant heater, 2.25 m high with a 0.80 m dome: operating levels off, low (6 kW) and high (13 kW) heat the emitter shroud and the dome and send a hot flue plume up through the dome.",
+        "de": "Ein freistehender Propan-Heizstrahler von 13 kW, 2,25 m hoch mit 0,80 m Haube: die Betriebsstufen Aus, Klein (6 kW) und Groß (13 kW) heizen Strahlermantel und Haube und schicken eine heiße Abgasfahne durch die Haube nach oben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "retractable-bollard",
+      "category": "objects",
+      "title": {
+        "en": "Retractable Bollard (Section)",
+        "de": "Versenkbarer Poller (Schnitt)"
+      },
+      "heightM": 1.9,
+      "widthM": 0.56,
+      "poses": [
+        "raised",
+        "lowered",
+        "moving-up",
+        "raised-nudged"
+      ],
+      "clips": [
+        "raise-and-lower",
+        "nudge-test"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "plan-true",
+        "plan-dot"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An electro-hydraulic rising bollard of 0.20 m diameter, drawn as a section: 0.65 m raised above the ground, 1.25 m of sleeve below it with the cylinder and a power unit that heats up while the shaft moves; raised, lowered, moving and nudged.",
+        "de": "Ein elektrohydraulischer Hubpoller mit 0,20 m Durchmesser, als Schnitt gezeichnet: 0,65 m ausgefahren über dem Boden, darunter 1,25 m Hülse mit Zylinder und einer Antriebseinheit, die sich bei Schaftbewegung erwärmt; ausgefahren, abgesenkt, fahrend und angestoßen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "shopping-trolley",
+      "category": "objects",
+      "title": {
+        "en": "Shopping Trolley",
+        "de": "Einkaufswagen"
+      },
+      "heightM": 1.0,
+      "widthM": 1.05,
+      "poses": [
+        "empty",
+        "loaded",
+        "gate-raised"
+      ],
+      "clips": [
+        "load-groceries",
+        "nesting-swing"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 100 litre zinc-plated wire-basket trolley on four castors, 1.05 m long and 1.0 m high: empty, loaded with 30 kg of groceries, and with the rear nesting gate swung up; a second trolley is not drawn.",
+        "de": "Ein 100-Liter-Einkaufswagen aus verzinktem Draht auf vier Rollen, 1,05 m lang und 1,0 m hoch: leer, mit 30 kg Einkäufen beladen und mit hochgeschwenkter hinterer Nesting-Klappe; ein zweiter Wagen wird nicht gezeichnet."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "stepladder",
+      "category": "objects",
+      "title": {
+        "en": "Aluminium Stepladder",
+        "de": "Aluminium-Stehleiter"
+      },
+      "heightM": 1.5,
+      "widthM": 0.68,
+      "poses": [
+        "open-empty",
+        "open-in-use",
+        "rated-load-test"
+      ],
+      "clips": [
+        "climb-and-work",
+        "rated-load-ramp"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A five-step aluminium stepladder with platform, 1.50 m high and 0.68 m across the feet, open and locked: empty, under a person standing on it and under the EN 131 rated test load, with the standing load and lateral thrust as loads.",
+        "de": "Eine fünfstufige Aluminium-Stehleiter mit Plattform, 1,50 m hoch und 0,68 m über den Füßen, aufgeklappt und gesperrt: leer, unter einer stehenden Person und unter der EN-131-Nennprüflast, mit Standlast und Seitenschub als Lasten."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "city-bicycle",
+      "category": "vehicles",
+      "title": {
+        "en": "Dutch City Bicycle",
+        "de": "Holland-Stadtrad"
+      },
+      "heightM": 1.09,
+      "widthM": 1.87,
+      "poses": [
+        "parked-on-stand",
+        "riding",
+        "riding-night",
+        "braking-stop"
+      ],
+      "clips": [
+        "ride-loop",
+        "brake-and-park"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "bicycle-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A riderless Dutch city bicycle with step-through frame, 28 inch wheels, chain case, dynamo lamps and a rear stand: rolling wheels, turning cranks with levelled pedals, steering, folding stand, hub-brake and drivetrain heat.",
+        "de": "Ein Holland-Stadtrad ohne Fahrer mit tiefem Einstieg, 28-Zoll-Rädern, Kettenkasten, Dynamobeleuchtung und Hinterbauständer: rollende Räder, drehende Kurbeln mit waagerechten Pedalen, Lenkung, klappbarer Ständer, Wärme von Nabenbremse und Antrieb."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "delivery-van",
+      "category": "vehicles",
+      "title": {
+        "en": "Delivery Van",
+        "de": "Lieferwagen"
+      },
+      "heightM": 1.99,
+      "widthM": 5.34,
+      "poses": [
+        "parked",
+        "side-door-open",
+        "rear-doors-open",
+        "driving-loaded",
+        "braking-nose-down"
+      ],
+      "clips": [
+        "drive-loop",
+        "stop-and-unload"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "van-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A medium diesel panel van (5.34 m, 2.0 t, 235/65 R16) with a sliding side door, rear doors, cab glazing, exhaust jet, hot engine, particulate filter, tyres and brakes.",
+        "de": "Ein mittlerer Diesel-Kastenwagen (5,34 m, 2,0 t, 235/65 R16) mit Schiebetür, Hecktüren, Fahrerhausverglasung, Abgasstrahl, heißem Motor, Partikelfilter, Reifen und Bremsen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "electric-kick-scooter",
+      "category": "vehicles",
+      "title": {
+        "en": "Electric Kick Scooter",
+        "de": "Elektro-Tretroller"
+      },
+      "heightM": 1.11,
+      "widthM": 1.09,
+      "poses": [
+        "riding-cruise",
+        "braking-stop",
+        "standby-unfolded",
+        "folded-charging"
+      ],
+      "clips": [
+        "ride-loop",
+        "fold-and-charge"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "kick-scooter-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A riderless folding electric kick scooter (8.5 inch wheels, 250 W front hub motor, deck battery, rear disc brake): riding and folded states, rolling wheels, hub motor, battery, brake and charging heat.",
+        "de": "Ein klappbarer Elektro-Tretroller ohne Fahrer (8,5-Zoll-Räder, 250-W-Nabenmotor vorn, Akku im Trittbrett, hintere Scheibenbremse): Fahr- und Klappzustand, rollende Räder, Wärme von Nabenmotor, Akku, Bremse und Laden."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "motor-scooter",
+      "category": "vehicles",
+      "title": {
+        "en": "Motor Scooter 125",
+        "de": "Motorroller 125"
+      },
+      "heightM": 1.15,
+      "widthM": 1.85,
+      "poses": [
+        "parked-on-stand",
+        "cruising",
+        "braking-nose-down",
+        "idling-seat-open"
+      ],
+      "clips": [
+        "ride-loop",
+        "stop-and-shut-down"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "scooter-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A riderless 125 cc four-stroke step-through scooter (130 kg, 12 inch wheels) with hinged seat, centre stand, exhaust jet, hot engine, silencer, tyres and brakes.",
+        "de": "Ein fahrerloser Motorroller mit 125-cm3-Viertaktmotor und Durchstieg (130 kg, 12-Zoll-Räder) mit klappbarer Sitzbank, Hauptständer, Abgasstrahl, heißem Motor, Schalldämpfer, Reifen und Bremsen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tram",
+      "category": "vehicles",
+      "title": {
+        "en": "Low-Floor Tram Section",
+        "de": "Niederflur-Straßenbahnabschnitt"
+      },
+      "heightM": 5,
+      "widthM": 15.45,
+      "poses": [
+        "running",
+        "at-stop-doors-open",
+        "braking-stop",
+        "depot-pantograph-down"
+      ],
+      "clips": [
+        "run-loop",
+        "stop-and-open-doors",
+        "pantograph-cycle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "tram-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A section of a 100 % low-floor articulated tram: a cab end module (9.0 m) with powered bogie and trailing bogie, the articulation bellows and a suspended middle module, with plug-sliding doors, a pantograph that raises and lowers, traction motors, brake resistor and discs, and roof air conditioning.",
+        "de": "Ein Abschnitt einer 100-%-Niederflur-Gelenkstraßenbahn: ein Endmodul mit Fahrerstand (9,0 m) mit angetriebenem Drehgestell und Laufdrehgestell, Gelenkbalg und ein eingehängtes Mittelmodul, mit Schwenkschiebetüren, hebe- und senkbarem Stromabnehmer, Fahrmotoren, Bremswiderstand und -scheiben sowie Dachklimaanlage."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "concrete-mixer-truck",
+      "category": "machinery",
+      "title": {
+        "en": "Concrete mixer truck, 9 m3",
+        "de": "Fahrmischer, 9 m3"
+      },
+      "heightM": 3.95,
+      "widthM": 9,
+      "poses": [
+        "transit-agitating",
+        "parked-off",
+        "charging",
+        "discharging"
+      ],
+      "clips": [
+        "agitate-at-rest",
+        "discharge-sequence"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An 8x4 truck mixer of the 9 m3 class in side elevation: heavy chassis with cab-over-engine cab and vertical exhaust stack, a tilted mixer drum whose spiral flight marks drift with its rotation, charging hopper and a folding discharge chute with extension.",
+        "de": "Ein Fahrmischer 8x4 der 9-m3-Klasse in der Seitenansicht: schweres Fahrgestell mit Frontlenker-Fahrerhaus und senkrechtem Auspuffrohr, eine geneigte Mischtrommel, deren Wendelmarken mit der Drehung wandern, Einfülltrichter und eine klappbare Entladerutsche mit Verlängerung."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "diesel-generator",
+      "category": "machinery",
+      "title": {
+        "en": "Silenced container diesel generator, 400 kVA",
+        "de": "Schallgedämmtes Container-Dieselaggregat, 400 kVA"
+      },
+      "heightM": 3.57,
+      "widthM": 6.06,
+      "poses": [
+        "off",
+        "idle",
+        "half-load",
+        "rated-load"
+      ],
+      "clips": [
+        "load-cycle",
+        "start-run-stop"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 400 kVA diesel generating set in a silenced 20 ft container in side elevation: louvred inlets, roof silencer with a stack and rain cap flap, and the radiator discharge hood with a weather flap. Exhaust jet and radiator fan air are separate emitters; the flaps open with load.",
+        "de": "Ein 400-kVA-Dieselaggregat im schallgedämmten 20-ft-Container in der Seitenansicht: Eintrittslamellen, Dachschalldämpfer mit Abgasrohr und Regenklappe sowie die Kühlerluft-Austrittshaube mit Wetterklappe. Abgasstrahl und Kühlerlüfterluft sind getrennte Emitter; die Klappen öffnen mit der Last."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "heat-pump-outdoor-unit",
+      "category": "machinery",
+      "title": {
+        "en": "Air-source heat pump outdoor unit, 12 kW",
+        "de": "Luft-Wasser-Wärmepumpe Außengerät, 12 kW"
+      },
+      "heightM": 1.45,
+      "widthM": 0.72,
+      "poses": [
+        "heating",
+        "cooling",
+        "defrosting",
+        "off",
+        "serviced"
+      ],
+      "clips": [
+        "heating-sweep",
+        "defrost-sequence"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "site-plan-footprint"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 12 kW air-source heat pump outdoor unit in side elevation: the louvred coil guard, front fan outlet with an adjustable guide vane and a hinged service lid. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
+        "de": "Ein Luft-Wasser-Wärmepumpen-Außengerät von 12 kW in der Seitenansicht: Lamellenschutz des Wärmetauschers, vorderer Lüfterausblas mit verstellbarer Leitlamelle und angeschlagener Wartungsdeckel. Im Heizbetrieb bläst der Lüfter um 5 K abgekühlte Luft, im Kühlbetrieb um 7 K erwärmte; ein Abtauzyklus setzt Dampf vom Wärmetauscher frei."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "scissor-lift",
+      "category": "machinery",
+      "title": {
+        "en": "Electric scissor lift, 5.8 m platform height",
+        "de": "Elektro-Scherenarbeitsbühne, 5,8 m Plattformhöhe"
+      },
+      "heightM": 2.2,
+      "widthM": 1.85,
+      "poses": [
+        "stowed",
+        "mid-raise",
+        "raised-working"
+      ],
+      "clips": [
+        "raise-cycle",
+        "start-lift-stop"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [
+        "site-plan-footprint"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A battery-electric 19 ft scissor lift in side elevation: five scissor stages built from ten arms that fold to a 0.55 m stack or rise to a 5.8 m platform, a sliding deck extension, guard rails, and two occupants with a tool box as loads.",
+        "de": "Eine batterieelektrische 19-ft-Scherenarbeitsbühne in der Seitenansicht: fünf Scherenstufen aus zehn Armen, die sich zu einem 0,55 m hohen Paket falten oder zu einer 5,8 m hohen Plattform heben, eine ausschiebbare Bühnenverlängerung, Geländer sowie zwei Personen mit Werkzeugkasten als Lasten."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "wheel-loader",
+      "category": "machinery",
+      "title": {
+        "en": "Articulated wheel loader, 20 t",
+        "de": "Knickgelenkter Radlader, 20 t"
+      },
+      "heightM": 3.4,
+      "widthM": 8.9,
+      "poses": [
+        "carry",
+        "dig",
+        "dump-high",
+        "parked-off"
+      ],
+      "clips": [
+        "load-cycle",
+        "start-and-lift"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "articulated-steering-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 20 t articulated wheel loader with a 3.5 m3 bucket in side elevation: rear frame with hood and counterweight, front frame with cab and arm towers, a lift arm and bucket driven by closed-pin lift and tilt cylinders, tyres with lugs and a vertical exhaust stack. Steering articulation is shown in a plan symbol.",
+        "de": "Ein knickgelenkter Radlader von 20 t mit 3,5-m3-Schaufel in der Seitenansicht: Hinterwagen mit Haube und Gegengewicht, Vorderwagen mit Kabine und Armstützen, Hubarm und Schaufel mit Hub- und Kippzylindern mit geschlossenen Bolzen, Stollenreifen und senkrechtes Auspuffrohr. Die Knicklenkung zeigt ein Grundrisszeichen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "curtain-wall-bay",
+      "category": "components",
+      "title": {
+        "en": "Curtain Wall Bay",
+        "de": "Pfosten-Riegel-Fassadenfeld"
+      },
+      "heightM": 3.3,
+      "widthM": 1.4,
+      "poses": [
+        "dead-load",
+        "cradle-at-mid",
+        "seismic-in-plane",
+        "shaded-by-overhang"
+      ],
+      "clips": [
+        "cradle-pass",
+        "shadow-rise",
+        "seismic-pulse"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "One 1.35 m wide, 3.30 m high mullion-transom bay of a curtain wall in elevation: 50 mm thermally broken aluminium mullions and transoms (U_f 2.0 and 2.2), a 6-16-6 argon insulating glass unit (U_g about 1.08) with warm-edge zone and an insulated spandrel panel (U about 0.31); every element is a conditioned layered region, sun and shade follow the pose sunlit fractions.",
+        "de": "Ein 1,35 m breites, 3,30 m hohes Pfosten-Riegel-Feld einer Vorhangfassade in der Ansicht: 50 mm breite thermisch getrennte Aluminiumpfosten und -riegel (U_f 2,0 und 2,2), eine Argon-Isolierverglasung 6-16-6 (U_g etwa 1.08) mit Warme-Kante-Randzone und ein gedämmtes Brüstungspaneel (U etwa 0.31); jedes Element ist eine konditionierte, geschichtete Region, Sonne und Schatten folgen den Besonnungsanteilen der Posen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "external-venetian-blind",
+      "category": "components",
+      "title": {
+        "en": "External Venetian Blind",
+        "de": "Außenjalousie"
+      },
+      "heightM": 2.75,
+      "widthM": 0.42,
+      "poses": [
+        "lowered-horizontal",
+        "retracted",
+        "lowered-cut-off-45",
+        "lowered-closed",
+        "closed-in-gust"
+      ],
+      "clips": [
+        "raise-lower",
+        "tilt-sweep",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.2 m wide external venetian blind (raffstore) of 17 aluminium Z-lamellae (90 mm wide, 80 mm pitch) in a 150 x 210 mm headrail box with guide rails and bottom rail, shown in vertical section in front of a double-glazed window in an insulated wall; retracted, lowered with slats horizontal, at 45 degrees or closed, with the shading effect on the glazing from the louvre geometry.",
+        "de": "Eine 1,2 m breite Außenjalousie (Raffstore) aus 17 Aluminium-Z-Lamellen (90 mm breit, 80 mm Abstand) in einer 150 x 210 mm großen Kastenblende mit Führungsschienen und Unterschiene, im Vertikalschnitt vor einem doppelt verglasten Fenster in einer gedämmten Wand; hochgezogen, abgelassen mit waagerechten, 45-Grad- oder geschlossenen Lamellen, mit der Verschattungswirkung auf die Verglasung aus der Lamellengeometrie."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "masonry-wall-with-lintel",
+      "category": "components",
+      "title": {
+        "en": "Masonry Wall with Precast Lintel",
+        "de": "Mauerwerkswand mit Betonfertigsturz"
+      },
+      "heightM": 2.75,
+      "widthM": 3.0,
+      "poses": [
+        "dead-load",
+        "floor-line-load",
+        "beam-over-opening",
+        "shaded-morning"
+      ],
+      "clips": [
+        "load-build-up",
+        "beam-sweep",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 3.0 m wide, 2.75 m high full-fill cavity wall (175 mm calcium silicate, 140 mm mineral wool, 115 mm facing brick, U about 0.22 W/m2K) in elevation with a 1.25 x 1.33 m opening, a precast insulated concrete lintel with 0.25 m bearings (U about 0.39) and a precast sill; brick courses of 0.0833 m drawn where printable; floor slab and beam loads with arching over the opening.",
+        "de": "Eine 3,0 m breite, 2,75 m hohe zweischalige Wand mit Kerndämmung (175 mm Kalksandstein, 140 mm Mineralwolle, 115 mm Verblender, U etwa 0.22 W/m2K) in der Ansicht mit einer Öffnung von 1,25 x 1,33 m, einem gedämmten Betonfertigsturz mit 0,25 m Auflager (U etwa 0.39) und einer Fertigteil-Fensterbank; Ziegelschichten von 0,0833 m dort gezeichnet, wo sie druckbar sind; Decken- und Trägerlasten mit Gewölbewirkung über der Öffnung."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "panel-radiator",
+      "category": "components",
+      "title": {
+        "en": "Panel Radiator Type 22",
+        "de": "Plattenheizkörper Typ 22"
+      },
+      "heightM": 0.85,
+      "widthM": 0.285,
+      "poses": [
+        "off",
+        "night",
+        "comfort",
+        "rated",
+        "leaned-on"
+      ],
+      "clips": [
+        "heat-up",
+        "thermostat-cycle"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "unavailable"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "transport",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A compact type 22 steel panel radiator (two water panels, two convectors; 600 mm high, 1000 mm long, 100 mm deep, rated 1.2 kW at 75/65/20 degC) shown in vertical section on two wall brackets 35 mm off a plastered wall, with its thermostatic valve; output scales with the EN 442 exponent n = 1.3 and rises as a convection plume.",
+        "de": "Ein kompakter Stahl-Plattenheizkörper Typ 22 (zwei Wasserplatten, zwei Konvektoren; 600 mm hoch, 1000 mm lang, 100 mm tief, 1,2 kW bei 75/65/20 °C) im Vertikalschnitt an zwei Wandkonsolen 35 mm vor einer verputzten Wand, mit Thermostatventil; die Leistung folgt dem EN-442-Exponenten n = 1,3 und steigt als Konvektionsfahne auf."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sectional-garage-door",
+      "category": "components",
+      "title": {
+        "en": "Sectional Garage Door",
+        "de": "Sektionaltor"
+      },
+      "heightM": 2.861,
+      "widthM": 2.62,
+      "poses": [
+        "closed",
+        "half-open",
+        "open",
+        "closed-wind"
+      ],
+      "clips": [
+        "open-close",
+        "wind-gust",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An insulated 2.5 m wide, 2.0 m high sectional garage door of four 40 mm PU sandwich panels (about 56 kg) shown in vertical section: hinged panels with rollers ride a vertical, curved (R 0.5 m) and horizontal track, balanced by a torsion spring on a cable-drum shaft; closed, half open and open poses and the full opening motion.",
+        "de": "Ein gedämmtes, 2,5 m breites und 2,0 m hohes Sektionaltor aus vier 40-mm-PU-Sandwichpaneelen (etwa 56 kg) im Vertikalschnitt: gelenkig verbundene Paneele mit Rollen laufen in einer senkrechten, gebogenen (R 0,5 m) und waagerechten Schiene, ausgeglichen durch eine Torsionsfeder auf einer Seiltrommelwelle; Posen geschlossen, halb offen und offen sowie die vollständige Öffnungsbewegung."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "spiral-stair",
+      "category": "components",
+      "title": {
+        "en": "Steel Spiral Stair",
+        "de": "Stahl-Wendeltreppe"
+      },
+      "heightM": 3.733,
+      "widthM": 1.6,
+      "poses": [
+        "self-weight",
+        "walker-on-tread-8",
+        "point-load-top-tread",
+        "rail-push"
+      ],
+      "clips": [
+        "climb",
+        "live-load-ramp",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [
+        "spiral-stair-plan"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation",
+        "plan"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.6 m diameter steel spiral stair around a 168 mm central column: 15 risers of 0.187 m (2.80 m floor to floor), 15 pie treads turning 22.5 degrees each, 15 balusters and a 0.93 m high helical handrail, drawn in elevation where every tread projects to a bar whose length follows the helix and the rail reads as a sine curve; a plan symbol gives the true spiral.",
+        "de": "Eine Stahl-Wendeltreppe mit 1,6 m Durchmesser um eine 168-mm-Mittelsäule: 15 Steigungen von 0,187 m (2,80 m Geschosshöhe), 15 Kreisringstufen mit je 22,5 Grad Drehung, 15 Stäbe und ein 0,93 m hoher Wendelhandlauf, in der Ansicht gezeichnet, in der jede Stufe als Balken mit wendelfolgender Länge erscheint und der Handlauf als Sinuskurve; ein Grundrisssymbol zeigt die echte Spirale."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "wheelchair-ramp",
+      "category": "components",
+      "title": {
+        "en": "Wheelchair Ramp 1:12 with Landings",
+        "de": "Rollstuhlrampe 1:12 mit Podesten"
+      },
+      "heightM": 1.471,
+      "widthM": 10.5,
+      "poses": [
+        "self-weight",
+        "crowd-live-load",
+        "wheelchair-on-run-2",
+        "handrail-push"
+      ],
+      "clips": [
+        "wheelchair-ascent",
+        "live-load-ramp",
+        "sun-and-shade"
+      ],
+      "representations": {
+        "50": "authored",
+        "100": "authored",
+        "200": "authored",
+        "500": "authored"
+      },
+      "symbols": [],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.4 m wide reinforced concrete access ramp rising 0.60 m in two 3.6 m runs at 1:12 (8.3 %), with an at-grade landing, a middle landing and a top landing of 1.5 m, 0.10 m wheel-guard kerbs and continuous steel handrails at 0.85 m on both sides with 0.30 m extensions. 1:12 is the ADA maximum; DIN 18040-1 asks for at most 6 %.",
+        "de": "Eine 1,4 m breite Stahlbeton-Zugangsrampe, die in zwei 3,6 m langen Läufen mit 1:12 (8,3 %) um 0,60 m ansteigt, mit ebenerdigem Podest, Zwischenpodest und oberem Podest von je 1,5 m, 0,10 m hohen Radabweisern und durchgehenden Stahlhandläufen in 0,85 m Höhe auf beiden Seiten mit 0,30 m Verlängerung. 1:12 ist das ADA-Maximum; DIN 18040-1 verlangt höchstens 6 %."
       },
       "completion": "authored"
     }

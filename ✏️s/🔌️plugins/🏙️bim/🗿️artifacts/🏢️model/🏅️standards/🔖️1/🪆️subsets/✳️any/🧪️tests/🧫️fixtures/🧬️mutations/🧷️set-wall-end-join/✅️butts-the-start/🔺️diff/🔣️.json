@@ -2,8 +2,10 @@
   "walls": {
     "w-south": {
       "entry": "Patched",
-      "start_join": {
-        "value": "Butt"
+      "value": {
+        "start_join": {
+          "value": "Butt"
+        }
       }
     }
   }

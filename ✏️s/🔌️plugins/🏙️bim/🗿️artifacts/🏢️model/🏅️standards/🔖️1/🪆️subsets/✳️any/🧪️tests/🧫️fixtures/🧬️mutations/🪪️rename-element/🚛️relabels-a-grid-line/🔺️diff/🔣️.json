@@ -2,7 +2,9 @@
   "grids": {
     "g-a": {
       "entry": "Patched",
-      "label": "A1"
+      "value": {
+        "label": "A1"
+      }
     }
   }
 }

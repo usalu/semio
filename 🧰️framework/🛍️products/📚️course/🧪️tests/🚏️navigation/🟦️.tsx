@@ -487,6 +487,22 @@ describe("🚏️ the navbar", () => {
     expect(leads("back")).toEqual(["Back: Badges", true]);
   });
 
+  it("opens the page of a card from its heading link when the browser does not follow the hash", async () => {
+    render(app(device()));
+    await arrived();
+    const link = document.querySelector<HTMLAnchorElement>('[data-course-grid="root"][data-grid-active] [data-layered-card="badges"] a[href="#badges"]');
+    expect(link).not.toBeNull();
+    link!.addEventListener("click", (event) => event.preventDefault(), { capture: true });
+    fireEvent.click(link!);
+    await waitFor(() => expect(openedPage()).toBe("badges"));
+    expect(window.location.hash).toBe("#badges");
+    await userEvent.setup().click(way("up"));
+    expect(openedPage()).toBeNull();
+    const modified = document.querySelector<HTMLAnchorElement>('[data-course-grid="root"][data-grid-active] [data-layered-card="badges"] a[href="#badges"]')!;
+    fireEvent.click(modified, { metaKey: true });
+    expect(openedPage()).toBeNull();
+  });
+
   for (const stored of [false, true]) {
     for (const turns of [0, 3, 12]) {
       it(`opens the page an address names that was set ${turns} turns after the client mounted, ${stored ? "with the course restored from the device" : "while the course is still on its way"}`, { timeout: 30_000 }, async () => {

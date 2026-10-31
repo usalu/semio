@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "zero",
+      "payload": "process.exitCode=0",
+      "status": 0,
+      "signal": null,
+      "frontend": 0
+    },
+    {
+      "id": "seven",
+      "payload": "process.exitCode=7",
+      "status": 7,
+      "signal": null,
+      "frontend": 7
+    },
+    {
+      "id": "self-term",
+      "payload": "process.kill(process.pid,\"SIGTERM\")",
+      "status": 143,
+      "signal": null,
+      "frontend": 143
+    }
+  ]
+}

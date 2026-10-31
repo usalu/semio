@@ -1,5 +1,5 @@
 import{test,expect}from"bun:test";
-import Ajv from"ajv/dist/2020.js";
+import Ajv from"ajv";
 import{Writer}from"protobufjs";
 import{unsignedLebOracleV1}from"../🟦️.ts";
 import { replicationIoBinaryFixture as corpus, replicationIoBinarySchema as schema } from "@semio-tech/framework-replication/testing/fixtures";

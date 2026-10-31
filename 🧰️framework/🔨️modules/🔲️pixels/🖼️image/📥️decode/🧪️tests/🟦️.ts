@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import { retainedCloneContractSchema as fundingSchema } from "@semio-tech/value-ts/retained-clone/contract/schema";
 import {PNG} from "pngjs";
 import cases from "./🧫️fixtures/🔣️.json";

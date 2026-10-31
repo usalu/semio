@@ -24,6 +24,9 @@ function nativePlatformBackendV1(directory:string,selection:NativeStorageSelecti
 /** 🌐️ Opens the host's actual finite backing while preserving original system capability admission. */
 export async function openNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,selection?:NativeStorageSelectionV1):Promise<NativeImageStorageV1>{options=Object.freeze({...options});requireNativeRecomputableRetirementSettledV1(options.directory,options.control);const backend=nativePlatformBackendV1(options.directory,selection,false);const image=await nativeStorageOperationsV1(backend).open(options);return registerNativePlatformImageV1(image,options,backend);}
 
+/** 🧭️ Creates consumer custody while bounded preparation remains an authenticated refinement of that same owner. */
+export function openPreparedNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,preparation:ResourceLeaseControl,selection?:NativeStorageSelectionV1):Promise<NativeImageStorageV1>{requireIssuedResourceControlRefinementV1(options.control,preparation);if(checkResourceLeaseControl(preparation)===null)throw Error("Finite Native preparation control required");return openNativePlatformStorageV1(Object.freeze({...options,preparationControl:preparation}),selection);}
+
 /** ♻️ Retires only an exclusively held exact native backing through its declared host protocol. */
 export async function retireNativePlatformStorageV1(options:NativeFixedPlatformOptionsV1,request?:NativeImageRetirementRequestV1,selection?:NativeStorageSelectionV1):Promise<boolean>{requireNativeImageEnvelopeV1(options);const admitted=readNativeImageRetirementRequestV1(request??{version:1,wait:true});return nativeStorageOperationsV1(nativePlatformBackendV1(options.directory,selection,true)).retire(options,admitted);}
 

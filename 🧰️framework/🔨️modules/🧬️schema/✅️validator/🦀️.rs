@@ -8,6 +8,7 @@ use std::sync::Arc;
 #[path = "🔨️compile/🦀️.rs"]
 mod compile;
 use compile::*;
+pub use compile::resolve_schema_document_reference;
 #[path = "🔎️validate/🦀️.rs"]
 mod validate;
 use validate::*;
@@ -153,11 +154,12 @@ struct Traversal<'a> {
     visited_nodes: usize,
     active: Vec<(usize, usize)>,
     patterns: SchemaIndex<PatternMatcher>,
+    compiled_schemas: std::collections::BTreeSet<(usize, usize)>,
 }
 
 impl<'a> Traversal<'a> {
     fn new(control: &'a ValidationControl) -> Self {
-        Self { control, visited_nodes: 0, active: Vec::new(), patterns: SchemaIndex::new() }
+        Self { control, visited_nodes: 0, active: Vec::new(), patterns: SchemaIndex::new(), compiled_schemas: std::collections::BTreeSet::new() }
     }
 
     fn visit(&mut self) -> Result<(), SchemaError> {
@@ -226,7 +228,7 @@ impl OwnedJsonSchemaValidator {
         let schema = parse_json(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid schema JSON: {error}")))?;
         let documents = index_documents(documents)?;
         let mut traversal = Traversal::new(control);
-        validate_schema_node(Scope { base: &schema, documents: &documents, patterns: &SchemaIndex::new() }, &schema, "$", &mut traversal)?;
+        validate_schema_node(Scope { root: &schema, base: &schema, documents: &documents, patterns: &SchemaIndex::new() }, &schema, "$", &mut traversal)?;
         let progress = traversal.progress();
         Ok((Self { schema, documents, patterns: std::mem::take(&mut traversal.patterns) }, progress))
     }
@@ -236,7 +238,7 @@ impl OwnedJsonSchemaValidator {
         let control = ValidationControl::default();
         let documents = SchemaIndex::new();
         let mut traversal = Traversal::new(&control);
-        validate_schema_node(Scope { base: schema, documents: &documents, patterns: &SchemaIndex::new() }, schema, "$", &mut traversal)?;
+        validate_schema_node(Scope { root: schema, base: schema, documents: &documents, patterns: &SchemaIndex::new() }, schema, "$", &mut traversal)?;
         Ok(Self { schema: schema.clone(), documents, patterns: std::mem::take(&mut traversal.patterns) })
     }
 
@@ -249,7 +251,7 @@ impl OwnedJsonSchemaValidator {
     pub fn validate_json_with_control(&self, value_json: &str, control: &ValidationControl) -> Result<ValidationProgress, SchemaError> {
         let value = parse_json(value_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| SchemaError::Validation(format!("invalid instance JSON: {error}")))?;
         let mut traversal = Traversal::new(control);
-        validate_value(Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, &value, "$", &mut traversal)?;
+        validate_value(Scope { root: &self.schema, base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, &value, "$", &mut traversal)?;
         Ok(traversal.progress())
     }
 
@@ -273,7 +275,7 @@ impl OwnedJsonSchemaValidator {
     {
         let control = ValidationControl::default();
         let mut traversal = Traversal::new(&control);
-        let scope = Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns };
+        let scope = Scope { root: &self.schema, base: &self.schema, documents: &self.documents, patterns: &self.patterns };
         let mut cursor = FragmentSchemaCursor::Node { scope, schema: &self.schema };
         let mut prefix = Vec::new();
         for (index, segment) in path.iter().enumerate() {
@@ -333,7 +335,7 @@ impl OwnedJsonSchemaValidator {
             if indexed.contains_key(id) { return Err(SchemaError::Validation(format!("duplicate owned schema id {id}"))); }
             indexed.insert(id.to_string(), intrinsic_json(document, &mut traversal, 0)?);
         }
-        validate_schema_node(Scope { base:&schema, documents:&indexed, patterns:&SchemaIndex::new() },&schema,"$",&mut traversal)?;
+        validate_schema_node(Scope { root:&schema, base:&schema, documents:&indexed, patterns:&SchemaIndex::new() },&schema,"$",&mut traversal)?;
         let progress = traversal.progress();
         Ok((Self { schema, documents:indexed, patterns:std::mem::take(&mut traversal.patterns) }, progress))
     }
@@ -345,7 +347,7 @@ impl OwnedJsonSchemaValidator {
     pub fn validate_intrinsic_with_control(&self, value: &DslValue, control: &ValidationControl) -> Result<ValidationProgress,SchemaError> {
         let mut traversal = Traversal::new(control);
         let value = intrinsic_json(value, &mut traversal, 0)?;
-        validate_value(Scope { base:&self.schema, documents:&self.documents, patterns:&self.patterns }, &self.schema, &value, "$", &mut traversal)?;
+        validate_value(Scope { root:&self.schema, base:&self.schema, documents:&self.documents, patterns:&self.patterns }, &self.schema, &value, "$", &mut traversal)?;
         Ok(traversal.progress())
     }
 
@@ -353,7 +355,7 @@ impl OwnedJsonSchemaValidator {
     pub fn validate_value(&self, value: &Value) -> Result<(), SchemaError> {
         let control = ValidationControl::default();
         let mut traversal = Traversal::new(&control);
-        validate_value(Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, value, "$", &mut traversal)
+        validate_value(Scope { root: &self.schema, base: &self.schema, documents: &self.documents, patterns: &self.patterns }, &self.schema, value, "$", &mut traversal)
     }
 }
 

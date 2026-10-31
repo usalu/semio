@@ -1,24 +1,26 @@
 {
   "spaces": {
     "sp-9": {
-      "boundary": {
-        "Bounded": {
-          "seed": {
-            "x": 2.0,
-            "y": 2.0
-          }
-        }
-      },
-      "ceiling_finish": "m-paint",
       "entry": "Created",
-      "floor_finish": "m-tile",
-      "name": "Studio",
-      "number": "0.09",
-      "phase": "New",
-      "storey": "st-ground",
-      "usage": "Office",
-      "wall_finish": "m-paint",
-      "zone": "z-day"
+      "value": {
+        "boundary": {
+          "Bounded": {
+            "seed": {
+              "x": 2,
+              "y": 2
+            }
+          }
+        },
+        "ceiling_finish": "m-paint",
+        "floor_finish": "m-tile",
+        "name": "Studio",
+        "number": "0.09",
+        "phase": "New",
+        "storey": "st-ground",
+        "usage": "Office",
+        "wall_finish": "m-paint",
+        "zone": "z-day"
+      }
     }
   }
 }

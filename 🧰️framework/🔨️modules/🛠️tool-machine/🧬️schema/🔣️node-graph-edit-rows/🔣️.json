@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/tool-machine/node-graph-edit-rows/schema.json",
   "title": "NodeGraphEditRows",
   "description": "🔗️ Closed domain-neutral graph gesture rows, bounded to256 per dispatch. Optional gesture, commit and abort values are opaque to the row decoder and decoded by the scrub machine.",

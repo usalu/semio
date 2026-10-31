@@ -1,13 +1,14 @@
 /** 📐️ Units, drawing scales, paper conversion, line weights and quantity formatting for the staffage archive.
  *
  * Model space is SI metres; paper space is millimetres. `mmPerMetre = 1000 / denominator`, so a 1.80 m person measures 3.6, 9, 18 and 36 mm at
- * 1:500, 1:200, 1:100 and 1:50. Custom scales snap to the nearest preset by log-distance for line weights and level of detail.
+ * 1:500, 1:200, 1:100 and 1:50 and at every custom scale alike. Pens, hatches and detail belong to the individually authored representations,
+ * never to this module.
  *
- * @see ../../🧬️schema/🟦️.ts — `ShapeRole`, `Lod`, `Language`
+ * @see ../../🧬️schema/🟦️.ts — `Language`
  * @see ../🔗️contracts/🟦️.ts — `DrawingScale`
  * @see https://www.iso.org/standard/4125.html — ISO 128-20 line conventions and pen series
  */
-import type { Language, Lod, ShapeRole } from "../../🧬️schema/🟦️.ts";
+import type { Language } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScale } from "../🔗️contracts/🟦️.ts";
 
 /** 🖨️ The four standard drawing scale denominators, smallest scale first. */
@@ -19,30 +20,15 @@ export const CSS_PX_PER_MM = 96 / 25.4;
 /** 🔤️ Annotation text height in paper millimetres, constant in paper space. */
 export const ANNOTATION_TEXT_MM = 2.5;
 
+/** ✒️ The thin pen of annotations (dimension lines, scale bars, legend frames) in paper millimetres: ISO 128 thin line 0.13 mm. */
+export const ANNOTATION_PEN_MM = 0.13;
+
 /** 🏷️ Label text height in paper millimetres, constant in paper space. */
 export const LABEL_TEXT_MM = 1.8;
 
-const LINE_WEIGHTS: Readonly<Record<ShapeRole, readonly (number | null)[]>> = {
-  body: [0.18, 0.25, 0.35, 0.5],
-  detail: [0.13, 0.13, 0.18, 0.25],
-  glazing: [0.13, 0.13, 0.18, 0.25],
-  texture: [null, 0.13, 0.13, 0.13],
-  ground: [0.25, 0.35, 0.5, 0.7],
-};
-
-/** 🎯️ The index into {@link SCALE_PRESETS} nearest to the denominator by `|log(d) − log(preset)|`; ties go to the larger scale (lower denominator). */
-export function presetIndex(scale: DrawingScale): number {
-  const logD = Math.log(scale.denominator);
-  let best = 0;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (let index = SCALE_PRESETS.length - 1; index >= 0; index--) {
-    const distance = Math.abs(logD - Math.log(SCALE_PRESETS[index]!));
-    if (distance < bestDistance) {
-      best = index;
-      bestDistance = distance;
-    }
-  }
-  return best;
+/** 📄️ Paper millimetres a real length occupies at a denominator: `metres · 1000 / denominator`. */
+export function paperMm(metres: number, denominator: number): number {
+  return (metres * 1000) / denominator;
 }
 
 /** 📏️ Paper millimetres per model metre at the scale (`1000 / denominator`). */
@@ -60,15 +46,9 @@ export function mmToMetres(mm: number, scale: DrawingScale): number {
   return mm / mmPerMetre(scale);
 }
 
-/** 🔭️ The level of detail at the scale: denominator > 200 → 0, > 100 → 1, > 50 → 2, otherwise 3. */
-export function lodFor(scale: DrawingScale): Lod {
-  const d = scale.denominator;
-  return d > 200 ? 0 : d > 100 ? 1 : d > 50 ? 2 : 3;
-}
-
-/** ✒️ The ISO 128 pen width in paper millimetres for a role at the scale, or `null` when the role is not drawn (texture at 1:500). */
-export function lineWeightMm(scale: DrawingScale, role: ShapeRole): number | null {
-  return LINE_WEIGHTS[role][presetIndex(scale)] ?? null;
+/** 🔍️ The on-screen size in CSS millimetres of a scene of `widthMm` × `heightMm` paper millimetres at a viewport zoom (1 = print size). Zoom is a pure viewport magnification: it never enters evaluation, representation selection or depiction. */
+export function viewportMm(widthMm: number, heightMm: number, zoom: number): { readonly widthMm: number; readonly heightMm: number } {
+  return { widthMm: widthMm * zoom, heightMm: heightMm * zoom };
 }
 
 /** 🔤️ The constant paper text height for a text kind. */

@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "trace": [
+    "receive",
+    "admit",
+    "native",
+    "entries",
+    "store",
+    "birth",
+    "lease",
+    "body",
+    "lease:close",
+    "birth:close",
+    "store:close",
+    "entries:close"
+  ],
+  "before": [
+    "native",
+    "materialized",
+    "store"
+  ],
+  "nativeSpan": "nx.daemon.native",
+  "profileCases": [
+    {
+      "id": "disabled-success",
+      "mode": "off",
+      "failure": false,
+      "duration": 3,
+      "rows": []
+    },
+    {
+      "id": "enabled-success",
+      "mode": "json",
+      "failure": false,
+      "duration": 5,
+      "rows": [
+        [
+          "nx.daemon.native",
+          5
+        ]
+      ]
+    },
+    {
+      "id": "enabled-failure",
+      "mode": "json",
+      "failure": true,
+      "duration": 7,
+      "rows": [
+        [
+          "nx.daemon.native",
+          7
+        ]
+      ]
+    }
+  ],
+  "wallSpans": [
+    [
+      "nx.runtime-entry.capture",
+      [
+        "captureCompilerBuildSourceClosureV1",
+        "captureBuildSourceClosureV1"
+      ]
+    ],
+    [
+      "nx.runtime-entry.publication",
+      [
+        "buildSourceClosureTextV1"
+      ]
+    ],
+    [
+      "nx.runtime-entry.command",
+      [
+        "readCapturedRuntimeEntryCommandV1"
+      ]
+    ],
+    [
+      "nx.daemon.store",
+      [
+        "order.store"
+      ]
+    ],
+    [
+      "nx.daemon.birth",
+      [
+        "order.birth"
+      ]
+    ],
+    [
+      "nx.daemon.lease",
+      [
+        "order.lease"
+      ]
+    ],
+    [
+      "nx.store.image-open",
+      [
+        "openRepositoryCacheStoreImageV1"
+      ]
+    ],
+    [
+      "nx.store.reservation",
+      [
+        "repositoryCacheStoreReservationV1"
+      ]
+    ],
+    [
+      "nx.store.body-recheck",
+      [
+        "storage.recheck"
+      ]
+    ]
+  ]
+}

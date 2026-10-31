@@ -25,6 +25,7 @@ pub fn circle_basis_radius(radius: f64, u: CircleAxis, v: CircleAxis) -> Option<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_value::serde_json;
 
     #[test]
     fn shared_neutral_basis_radius_cases() {

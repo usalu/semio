@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const segmenter = new Intl.Segmenter("und", { granularity: "grapheme" });

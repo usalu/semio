@@ -40,15 +40,11 @@ func searchCommand(factory EngineFactory, config *Config) *command.Command {
 					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			buildOpts.Progress = progress
-			tree, err := BuildMonorepoTreeCached(ctx, buildOpts)
-			if err != nil {
-				return err
-			}
 			limit, _ := cmd.Flags().GetInt("limit")
 			if limit == 0 {
 				limit = 100
 			}
-			tree, err = SearchMonorepoTreeWithOptions(ctx, tree, filter.Query, TreeSearchOptions{Limit: limit, Filter: &filter, Progress: progress})
+			tree, err := SearchMonorepoTreeCachedWithOptions(ctx, filter.Query, buildOpts, TreeSearchOptions{Limit: limit, Filter: &filter, Progress: progress})
 			if err != nil {
 				return err
 			}
@@ -109,15 +105,11 @@ func listCommand(factory EngineFactory, config *Config) *command.Command {
 					filter.OnlyKinds[TreeNodeDefinition],
 			}
 			buildOpts.Progress = progress
-			tree, err := BuildMonorepoTreeCached(ctx, buildOpts)
-			if err != nil {
-				return err
-			}
 			searchLimit := limit
 			if searchLimit == 0 {
 				searchLimit = 100
 			}
-			tree, err = SearchMonorepoTreeWithOptions(ctx, tree, filter.Query, TreeSearchOptions{Limit: searchLimit, Filter: &filter, Progress: progress})
+			tree, err := SearchMonorepoTreeCachedWithOptions(ctx, filter.Query, buildOpts, TreeSearchOptions{Limit: searchLimit, Filter: &filter, Progress: progress})
 			if err != nil {
 				return err
 			}
@@ -287,11 +279,7 @@ func queryCommand(factory EngineFactory, config *Config) *command.Command {
 			ctx := cmd.Context()
 			progress := search.NewProgressReporter(cmd.ErrOrStderr())
 			query := strings.Join(args, " ")
-			tree, err := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true, Progress: progress})
-			if err != nil {
-				return err
-			}
-			matched, err := searchMonorepoTreeWithCache(ctx, tree, query)
+			matched, err := SearchMonorepoTreeCachedWithOptions(ctx, query, TreeBuildOptions{IncludeSections: true, Progress: progress}, TreeSearchOptions{Limit: search.DefaultTreeHits, Progress: progress})
 			if err != nil {
 				return err
 			}

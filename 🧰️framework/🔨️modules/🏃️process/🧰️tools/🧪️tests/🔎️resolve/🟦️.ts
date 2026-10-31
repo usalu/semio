@@ -1,3 +1,13 @@
+import "./📣️invocations/🪟️batch/🟦️.ts";
+import {resolve,dirname} from "node:path";
+import {fileURLToPath} from "node:url";
+import Ajv from "ajv";
+import _ from "lodash";
+import ts from "typescript";
+import {readFileSync} from "node:fs";
+import {runInNewContext} from "node:vm";
+import invocationCases from "./📣️invocations/🔣️.json" with {type:"json"};
+import invocationSchema from "./📣️invocations/🧬️schema/🔣️.json" with {type:"json"};
 import { describe, expect, test } from "bun:test";
 import { findToolV1, readToolDigestsV1, readToolSourceV1, resolveToolV1, toolDigestForHostV1, toolEnvironmentNameMatchesV1, toolEnvironmentV1, toolPointerV1, type ToolHostV1 } from "../../🟦️.ts";
 
@@ -86,4 +96,31 @@ describe("tool environment", () => {
     expect(toolEnvironmentNameMatchesV1("path", "PATH", "win32")).toBe(true);
     expect(toolEnvironmentNameMatchesV1("path", "PATH", "linux")).toBe(false);
   });
+});
+
+/** 📣️ Owned secondary invocations use the qualified primary; genuine sibling programs keep their own lookup. */
+describe("declared primary invocations",()=>{
+ test("closed neutral invocation declarations agree with Ajv",()=>{const validate=new Ajv({strict:true}).compile(invocationSchema);expect(validate(invocationCases)).toBe(true);const row=new Ajv({strict:true}).compile(invocationSchema.definitions.Invocation);expect(row(invocationCases.invocation)).toBe(true);for(const invalid of invocationCases.invalid)expect(row(invalid)).toBe(false);});
+ for(const row of invocationCases.resolutions)test(`actual resolver retains declared invocation ${row.id}`,()=>{
+  const base=findToolV1(row.tool)!,command=row.command??undefined,invocations=row.tool==="bun"?[invocationCases.invocation]:row.tool==="tsc"?[{command:"tscx",prefix:["x"]}]:[],entry={...base,commands:row.tool==="tsc"?[...base.commands,"tscx"]:base.commands,invocations},digest="d".repeat(64),pins=row.source==="provisioned"?{["/repo/"+base.pin.digests!.file]:JSON.stringify({definitions:{Release:{const:{version:"1.4.2",distributions:[{platform:"darwin",arch:"arm64",musl:false,archive:"a",bytes:1,sha256:digest}]}}}})}:{},environment={PATH:"/bin",PATHEXT:".EXE;.CMD;.BAT",...(row.source==="environment"?{SEMIO_TOOL_BUN:"/owned/bun"}:{}),...(row.tool==="cargo"?{SEMIO_TOOL_CARGO:"/owned/cargo"}:{})},actual=resolveToolV1(entry,host({platform:row.platform as "darwin"|"win32",environment,present:row.present,pins,runtimeCommand:row.source==="runtime"||row.source==="package-script"?"bun":"node",execPath:row.source==="runtime"||row.source==="package-script"?"/runtime/bun":"/runtime/node"}),undefined,0,command),declared=_.find(invocations,{command}),oraclePrefix=_.concat(row.tool==="tsc"?row.expected.prefix.slice(0,1):[],declared?.prefix??[]);
+  expect(oraclePrefix).toEqual(row.expected.prefix);expect({command:actual.command,prefix:actual.prefix,suffix:actual.suffix??[]}).toEqual(row.expected);expect(actual.source).toBe(row.source);
+ });
+ test("existing execution expression preserves prefix caller suffix and originally requested capacity",()=>{
+  const source=ts.createSourceFile("run.ts",readFileSync(new URL("../../🏃️run/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),nodes:ts.VariableDeclaration[]=[];const visit=(node:ts.Node)=>{if(ts.isVariableDeclaration(node))nodes.push(node);ts.forEachChild(node,visit);};visit(source);const expression=(name:string)=>nodes.find(node=>node.name.getText(source)===name)!.initializer!.getText(source);
+  for(const row of invocationCases.composition){const actual=runInNewContext(expression("fullArguments"),{resolution:{prefix:row.prefix,suffix:row.suffix},args:row.args}),oracle=_.concat(row.prefix,row.args,row.suffix);expect(JSON.parse(JSON.stringify(actual))).toEqual(row.expected);expect(oracle).toEqual(row.expected);}
+  const row=invocationCases.capacity,entry={commands:[row.primary,row.requested],capacity:{operation:"primary",rules:[{command:row.requested,argumentsPrefix:["test"],operation:row.expected,kind:"test"}]}},actual=runInNewContext(ts.transpileModule("(()=>{const requested="+expression("requested")+",capacity="+expression("capacity")+";return capacity.operation;})()",{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText,{options:{command:row.requested},entry,args:row.args});expect(actual).toBe(row.expected);
+ });
+});
+
+/** 🧭️ The ordinary explicit root discovers the unchanged real CLI execution laws. */
+test("ordinary library discovery imports the real owned-command suite",()=>{
+ const root=fileURLToPath(new URL("../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",import.meta.url)),source=ts.createSourceFile(root,readFileSync(root,"utf8"),ts.ScriptTarget.Latest,true),imports=source.statements.filter(ts.isImportDeclaration).flatMap(node=>ts.isStringLiteral(node.moduleSpecifier)?[resolve(dirname(root),node.moduleSpecifier.text)]:[]),expected=resolve(root.slice(0,-invocationCases.discovery.root.length),invocationCases.discovery.suite);
+ expect(imports.filter(value=>value===expected)).toHaveLength(1);
+ const actual=readFileSync(expected,"utf8");expect(actual).toContain('["exec", "--light", "bunx", "--", "--version"]');expect(actual).toContain("signal outcomes agree with the neutral corpus");
+});
+
+/** 🪟️ Existing registered suffix normalization applies before invocation lookup. */
+for(const row of invocationCases.projections)test(`bare-command suffix projection ${row.id}`,()=>{
+ const base=findToolV1(row.commands[0])!,entry={...base,commands:row.commands,invocations:row.invocations},name=row.requested.replace(/\.(?:exe|cmd|bat)$/iu,""),declared=_.find(row.invocations,{command:name}),oracle={selected:declared?row.commands[0]:name,prefix:declared?.prefix??[]},actual=resolveToolV1(entry,host({platform:"win32",environment:{PATH:"/bin",PATHEXT:".EXE;.CMD;.BAT"},present:[`/bin/${row.selected}.exe`]}),undefined,0,row.requested);
+ expect(oracle).toEqual({selected:row.selected,prefix:row.prefix});expect(actual.command).toBe(`/bin/${row.selected}.exe`);expect(actual.prefix).toEqual(row.prefix);
 });

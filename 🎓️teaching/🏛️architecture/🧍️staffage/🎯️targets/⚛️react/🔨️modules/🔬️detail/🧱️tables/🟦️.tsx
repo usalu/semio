@@ -63,4 +63,4 @@ export function sci(value: number, language: Language): string {
 }
 
 /** 🏷️ The parameter sources in display order. */
-export const SOURCES: readonly ParameterSource[] = ["measured", "literature", "authored-estimate", "illustrative"];
+export const SOURCES: readonly ParameterSource[] = ["measured", "literature", "calibrated", "authored-estimate", "illustrative"];

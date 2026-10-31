@@ -73,3 +73,10 @@ describe("tool registry document", () => {
     expect(toolRawSpawnAllowedV1(cargo, "✏️s/x/🟦️.ts")).toBe(false);
   });
 });
+
+/** 📣️ Production policy admits only same-owner secondary commands with closed argv. */
+test("declared invocations reject foreign primary duplicate and open rows",()=>{
+ const valid=clone(),bun=valid.tools.find((tool:{id:string})=>tool.id==="bun");expect(readToolRegistryV1(valid).tools.find(tool=>tool.id==="bun")?.invocations).toEqual([{command:"bunx",prefix:["x"]}]);
+ for(const invocations of [[{command:"node",prefix:["x"]}],[{command:"bun",prefix:["x"]}],[{command:"bunx",prefix:["x"]},{command:"bunx",prefix:["x"]}]]){const document=clone();document.tools.find((tool:{id:string})=>tool.id==="bun").invocations=invocations;expect(()=>readToolRegistryV1(document)).toThrow("invocation command");}
+ for(const invocations of [null,[{command:"bunx",prefix:[]}],[{command:"bunx",prefix:["x"],target:"node"}],[{command:"bunx",prefix:["\u0000"]}]]){const document=clone();document.tools.find((tool:{id:string})=>tool.id==="bun").invocations=invocations;expect(new Ajv({strict:false}).validate(registrySchema,document)).toBe(false);expect(()=>readToolRegistryV1(document)).toThrow("invalid");}
+});

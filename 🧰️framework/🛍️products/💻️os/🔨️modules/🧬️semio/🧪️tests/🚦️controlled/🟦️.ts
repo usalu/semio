@@ -31,7 +31,7 @@ test("native envelopes admit exact identity without owning their payload",async(
   const canceled=new NativeDecodeControl(0,()=>false);await expect(unwrapBinaryControlled(bytes,f.id,"pack",f.version,canceled)).rejects.toThrow("canceled");expect(canceled.ownedBytes).toBe(0);
 });
 
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { refusalCodecSchema as refusalSchema } from "@semio-tech/value-ts/refusal/codec/schema";
 
 test("original controlled binary envelope refuses through canonical literal ValueError without allocation",async()=>{

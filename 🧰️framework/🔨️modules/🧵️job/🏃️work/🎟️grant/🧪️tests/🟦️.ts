@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import Decimal from "decimal.js";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";

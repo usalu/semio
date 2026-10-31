@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import glob from "fast-glob";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";

@@ -6,13 +6,12 @@
     "de": "Referenz-Fußgänger"
   },
   "summary": {
-    "en": "A two-legged adult walker with planted-foot root motion, used as the engine reference fixture.",
-    "de": "Ein zweibeiniger erwachsener Fußgänger mit Standfuß-Wurzelbewegung als Referenz-Fixture der Engine."
+    "en": "A small complete v2 test figure with four representations, one symbol, layered thermal regions, respiration and a walking clip.",
+    "de": "Eine kleine vollständige v2-Testfigur mit vier Darstellungen, einem Symbol, geschichteten thermischen Regionen, Atmung und einem Gehzyklus."
   },
   "tags": [
-    "human",
-    "walker",
-    "fixture"
+    "test",
+    "human"
   ],
   "provenance": {
     "author": "Semio staffage core engine",
@@ -41,8 +40,8 @@
       }
     ],
     "notes": {
-      "en": "A minimal but complete fixture; poses are authored estimates of gait key frames.",
-      "de": "Eine minimale, aber vollständige Fixture; die Posen sind Schätzungen von Gang-Schlüsselbildern."
+      "en": "Generated test fixture; poses and gait are authored estimates, not a verified person.",
+      "de": "Erzeugte Test-Fixture; Posen und Gang sind Schätzungen, keine verifizierte Person."
     }
   },
   "dimensions": {
@@ -82,6 +81,16 @@
       },
       "emissivity": 0.9,
       "solarAbsorptivity": 0.7,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "hair",
+      "title": {
+        "en": "Hair",
+        "de": "Haar"
+      },
+      "emissivity": 0.95,
+      "solarAbsorptivity": 0.9,
       "source": "authored-estimate"
     }
   ],
@@ -400,17 +409,6 @@
       "frictionCoefficient": 0.6
     },
     {
-      "id": "mouth",
-      "bone": "head",
-      "x": 0.07,
-      "y": -0.09,
-      "kind": "emitter",
-      "title": {
-        "en": "Mouth and nose",
-        "de": "Mund und Nase"
-      }
-    },
-    {
       "id": "bag-strap",
       "bone": "torso",
       "x": 0.4,
@@ -420,288 +418,885 @@
         "en": "Shoulder bag strap",
         "de": "Riemen der Umhängetasche"
       }
+    },
+    {
+      "id": "mouth",
+      "bone": "head",
+      "x": 0.07,
+      "y": -0.09,
+      "kind": "emitter",
+      "title": {
+        "en": "Mouth",
+        "de": "Mund"
+      }
+    },
+    {
+      "id": "nose",
+      "bone": "head",
+      "x": 0.1,
+      "y": -0.1,
+      "kind": "emitter",
+      "title": {
+        "en": "Nostrils",
+        "de": "Nasenlöcher"
+      }
+    },
+    {
+      "id": "crown",
+      "bone": "head",
+      "x": 0.1,
+      "y": 0.095,
+      "kind": "emitter",
+      "title": {
+        "en": "Crown",
+        "de": "Scheitel"
+      }
     }
   ],
-  "geometry": {
-    "elevation": [
-      {
-        "id": "head",
-        "bone": "head",
-        "role": "body",
-        "lod": 0,
-        "z": 5,
-        "filled": true,
-        "tone": 0.85,
-        "kind": "ellipse",
-        "cx": 0.1,
-        "cy": 0,
-        "rx": 0.12,
-        "ry": 0.095,
-        "region": "head-skin",
-        "material": "skin"
+  "representations": {
+    "50": {
+      "status": "authored",
+      "denominator": 50,
+      "validRange": {
+        "minDenominator": 20,
+        "maxDenominator": 75
       },
-      {
-        "id": "neck",
-        "bone": "head",
-        "role": "body",
-        "lod": 1,
-        "z": 4,
-        "filled": true,
-        "tone": 0.85,
-        "kind": "capsule",
-        "x0": -0.06,
-        "y0": 0,
-        "x1": 0.06,
-        "y1": 0,
-        "r0": 0.05,
-        "r1": 0.05,
-        "region": "head-skin",
-        "material": "skin"
+      "pens": {
+        "body": 0.5,
+        "detail": 0.25,
+        "texture": 0.13,
+        "glazing": 0.18,
+        "ground": 0.7
       },
-      {
-        "id": "hair",
-        "bone": "head",
-        "role": "detail",
-        "lod": 2,
-        "z": 6,
-        "filled": true,
-        "tone": 0.2,
-        "kind": "path",
-        "d": "M 0.03 0.09 C 0.10 0.15 0.215 0.10 0.215 0 C 0.215 0.06 0.12 0.08 0.03 0.09 Z"
+      "hatches": [
+        {
+          "id": "cloth",
+          "title": {
+            "en": "Cloth",
+            "de": "Stoff"
+          },
+          "pattern": "lines",
+          "angleDeg": 45,
+          "spacingMm": 0.8,
+          "penMm": 0.13
+        }
+      ],
+      "geometry": {
+        "elevation": [
+          {
+            "id": "head",
+            "bone": "head",
+            "role": "body",
+            "z": 5,
+            "filled": true,
+            "tone": 0.85,
+            "kind": "ellipse",
+            "cx": 0.1,
+            "cy": 0,
+            "rx": 0.1164,
+            "ry": 0.09215,
+            "region": "head",
+            "material": "skin"
+          },
+          {
+            "id": "neck",
+            "bone": "head",
+            "role": "body",
+            "z": 4,
+            "filled": true,
+            "tone": 0.85,
+            "kind": "capsule",
+            "x0": -0.06,
+            "y0": 0,
+            "x1": 0.06,
+            "y1": 0,
+            "r0": 0.0485,
+            "r1": 0.0485,
+            "region": "head",
+            "material": "skin"
+          },
+          {
+            "id": "torso",
+            "bone": "torso",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.45,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.1261,
+            "r1": 0.1552,
+            "region": "torso",
+            "material": "cotton-clothing",
+            "hatch": "cloth"
+          },
+          {
+            "id": "pelvis",
+            "bone": "pelvis",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.1,
+            "y1": 0,
+            "r0": 0.1358,
+            "r1": 0.1358,
+            "region": "torso",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "arm-l",
+            "bone": "arm-l",
+            "role": "body",
+            "z": 0.5,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.04365,
+            "r1": 0.03395,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-l",
+            "bone": "thigh-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.08245,
+            "r1": 0.06305,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-l",
+            "bone": "shank-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.0582,
+            "r1": 0.0388,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-l",
+            "bone": "foot-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          },
+          {
+            "id": "arm-r",
+            "bone": "arm-r",
+            "role": "body",
+            "z": 6,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.04365,
+            "r1": 0.03395,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-r",
+            "bone": "thigh-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.08245,
+            "r1": 0.06305,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-r",
+            "bone": "shank-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.0582,
+            "r1": 0.0388,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-r",
+            "bone": "foot-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          }
+        ]
       },
-      {
-        "id": "torso",
-        "bone": "torso",
-        "role": "body",
-        "lod": 0,
-        "z": 3,
-        "filled": true,
-        "tone": 0.45,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.45,
-        "y1": 0,
-        "r0": 0.13,
-        "r1": 0.16,
-        "region": "torso-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "torso-weave",
-        "bone": "torso",
-        "role": "texture",
-        "lod": 3,
-        "z": 3.1,
-        "filled": false,
-        "tone": 0.5,
-        "kind": "poly",
-        "points": [
-          [
-            0.1,
-            -0.05
-          ],
-          [
-            0.35,
-            -0.05
-          ]
-        ],
-        "closed": false,
-        "region": "torso-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "pelvis",
-        "bone": "pelvis",
-        "role": "body",
-        "lod": 0,
-        "z": 3,
-        "filled": true,
-        "tone": 0.3,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.1,
-        "y1": 0,
-        "r0": 0.14,
-        "r1": 0.14,
-        "region": "leg-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "arm-l",
-        "bone": "arm-l",
-        "role": "body",
-        "lod": 0,
-        "z": 0.5,
-        "filled": true,
-        "tone": 0.5,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.6,
-        "y1": 0,
-        "r0": 0.045,
-        "r1": 0.035,
-        "region": "arm-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "thigh-l",
-        "bone": "thigh-l",
-        "role": "body",
-        "lod": 0,
-        "z": 1,
-        "filled": true,
-        "tone": 0.3,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.45,
-        "y1": 0,
-        "r0": 0.085,
-        "r1": 0.065,
-        "region": "leg-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "shank-l",
-        "bone": "shank-l",
-        "role": "body",
-        "lod": 0,
-        "z": 1,
-        "filled": true,
-        "tone": 0.3,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.43,
-        "y1": 0,
-        "r0": 0.06,
-        "r1": 0.04,
-        "region": "leg-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "foot-l",
-        "bone": "foot-l",
-        "role": "body",
-        "lod": 0,
-        "z": 1,
-        "filled": true,
-        "tone": 0.15,
-        "kind": "rect",
-        "x": -0.06,
-        "y": -0.08,
-        "w": 0.27,
-        "h": 0.07,
-        "r": 0.02,
-        "region": "shoes",
-        "material": "leather-shoe"
-      },
-      {
-        "id": "arm-r",
-        "bone": "arm-r",
-        "role": "body",
-        "lod": 0,
-        "z": 6,
-        "filled": true,
-        "tone": 0.5,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.6,
-        "y1": 0,
-        "r0": 0.045,
-        "r1": 0.035,
-        "region": "arm-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "thigh-r",
-        "bone": "thigh-r",
-        "role": "body",
-        "lod": 0,
-        "z": 2,
-        "filled": true,
-        "tone": 0.3,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.45,
-        "y1": 0,
-        "r0": 0.085,
-        "r1": 0.065,
-        "region": "leg-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "shank-r",
-        "bone": "shank-r",
-        "role": "body",
-        "lod": 0,
-        "z": 2,
-        "filled": true,
-        "tone": 0.3,
-        "kind": "capsule",
-        "x0": 0,
-        "y0": 0,
-        "x1": 0.43,
-        "y1": 0,
-        "r0": 0.06,
-        "r1": 0.04,
-        "region": "leg-clothing",
-        "material": "cotton-clothing"
-      },
-      {
-        "id": "foot-r",
-        "bone": "foot-r",
-        "role": "body",
-        "lod": 0,
-        "z": 2,
-        "filled": true,
-        "tone": 0.15,
-        "kind": "rect",
-        "x": -0.06,
-        "y": -0.08,
-        "w": 0.27,
-        "h": 0.07,
-        "r": 0.02,
-        "region": "shoes",
-        "material": "leather-shoe"
+      "decisions": {
+        "silhouette": {
+          "en": "Test figure at 1:50: shapes follow the bones.",
+          "de": "Testfigur bei 1:50: Die Formen folgen den Knochen."
+        },
+        "retained": {
+          "en": "Head, trunk, limbs.",
+          "de": "Kopf, Rumpf, Gliedmaßen."
+        },
+        "merged": {
+          "en": "Nothing merged beyond the listed regions.",
+          "de": "Nichts über die genannten Regionen hinaus zusammengefasst."
+        },
+        "omitted": {
+          "en": "No facial detail.",
+          "de": "Keine Gesichtsdetails."
+        },
+        "thinElements": {
+          "en": "No thin elements.",
+          "de": "Keine dünnen Elemente."
+        },
+        "hatching": {
+          "en": "Cloth hatch on the trunk.",
+          "de": "Stoffschraffur auf dem Rumpf."
+        },
+        "styles": {
+          "en": "Line and solid read the same masses.",
+          "de": "Linie und Vollton zeigen dieselben Massen."
+        },
+        "overlays": {
+          "en": "Overlays map onto the regions.",
+          "de": "Überlagerungen bilden auf die Regionen ab."
+        }
       }
-    ],
-    "plan": [
-      {
-        "id": "plan-shoulders",
-        "bone": "torso",
-        "role": "body",
-        "lod": 0,
-        "z": 1,
-        "filled": true,
-        "tone": 0.45,
-        "kind": "ellipse",
-        "cx": 0,
-        "cy": 0,
-        "rx": 0.12,
-        "ry": 0.23
+    },
+    "100": {
+      "status": "authored",
+      "denominator": 100,
+      "validRange": {
+        "minDenominator": 75,
+        "maxDenominator": 150
       },
-      {
-        "id": "plan-head",
-        "bone": "head",
-        "role": "body",
-        "lod": 0,
-        "z": 2,
-        "filled": true,
-        "tone": 0.85,
-        "kind": "ellipse",
-        "cx": 0,
-        "cy": 0,
-        "rx": 0.1,
-        "ry": 0.09
+      "pens": {
+        "body": 0.35,
+        "detail": 0.18,
+        "texture": 0.13,
+        "glazing": 0.13,
+        "ground": 0.5
+      },
+      "hatches": [
+        {
+          "id": "cloth",
+          "title": {
+            "en": "Cloth",
+            "de": "Stoff"
+          },
+          "pattern": "lines",
+          "angleDeg": 45,
+          "spacingMm": 0.6,
+          "penMm": 0.13
+        }
+      ],
+      "geometry": {
+        "elevation": [
+          {
+            "id": "head",
+            "bone": "head",
+            "role": "body",
+            "z": 5,
+            "filled": true,
+            "tone": 0.85,
+            "kind": "ellipse",
+            "cx": 0.1,
+            "cy": 0,
+            "rx": 0.12,
+            "ry": 0.095,
+            "region": "head",
+            "material": "skin"
+          },
+          {
+            "id": "neck",
+            "bone": "head",
+            "role": "body",
+            "z": 4,
+            "filled": true,
+            "tone": 0.85,
+            "kind": "capsule",
+            "x0": -0.06,
+            "y0": 0,
+            "x1": 0.06,
+            "y1": 0,
+            "r0": 0.05,
+            "r1": 0.05,
+            "region": "head",
+            "material": "skin"
+          },
+          {
+            "id": "torso",
+            "bone": "torso",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.45,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.13,
+            "r1": 0.16,
+            "region": "torso",
+            "material": "cotton-clothing",
+            "hatch": "cloth"
+          },
+          {
+            "id": "pelvis",
+            "bone": "pelvis",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.1,
+            "y1": 0,
+            "r0": 0.14,
+            "r1": 0.14,
+            "region": "torso",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "arm-l",
+            "bone": "arm-l",
+            "role": "body",
+            "z": 0.5,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.045,
+            "r1": 0.035,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-l",
+            "bone": "thigh-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.085,
+            "r1": 0.065,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-l",
+            "bone": "shank-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.06,
+            "r1": 0.04,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-l",
+            "bone": "foot-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          },
+          {
+            "id": "arm-r",
+            "bone": "arm-r",
+            "role": "body",
+            "z": 6,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.045,
+            "r1": 0.035,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-r",
+            "bone": "thigh-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.085,
+            "r1": 0.065,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-r",
+            "bone": "shank-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.06,
+            "r1": 0.04,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-r",
+            "bone": "foot-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          }
+        ]
+      },
+      "decisions": {
+        "silhouette": {
+          "en": "Test figure at 1:100: shapes follow the bones.",
+          "de": "Testfigur bei 1:100: Die Formen folgen den Knochen."
+        },
+        "retained": {
+          "en": "Head, trunk, limbs.",
+          "de": "Kopf, Rumpf, Gliedmaßen."
+        },
+        "merged": {
+          "en": "Nothing merged beyond the listed regions.",
+          "de": "Nichts über die genannten Regionen hinaus zusammengefasst."
+        },
+        "omitted": {
+          "en": "No facial detail.",
+          "de": "Keine Gesichtsdetails."
+        },
+        "thinElements": {
+          "en": "No thin elements.",
+          "de": "Keine dünnen Elemente."
+        },
+        "hatching": {
+          "en": "Cloth hatch on the trunk.",
+          "de": "Stoffschraffur auf dem Rumpf."
+        },
+        "styles": {
+          "en": "Line and solid read the same masses.",
+          "de": "Linie und Vollton zeigen dieselben Massen."
+        },
+        "overlays": {
+          "en": "Overlays map onto the regions.",
+          "de": "Überlagerungen bilden auf die Regionen ab."
+        }
       }
-    ]
+    },
+    "200": {
+      "status": "authored",
+      "denominator": 200,
+      "validRange": {
+        "minDenominator": 150,
+        "maxDenominator": 350
+      },
+      "pens": {
+        "body": 0.18,
+        "detail": 0.13,
+        "texture": null,
+        "glazing": null,
+        "ground": 0.35
+      },
+      "hatches": [],
+      "geometry": {
+        "elevation": [
+          {
+            "id": "head",
+            "bone": "head",
+            "role": "body",
+            "z": 5,
+            "filled": true,
+            "tone": 0.85,
+            "kind": "ellipse",
+            "cx": 0.1,
+            "cy": 0,
+            "rx": 0.1296,
+            "ry": 0.1026,
+            "region": "head",
+            "material": "skin"
+          },
+          {
+            "id": "torso",
+            "bone": "torso",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.45,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.1404,
+            "r1": 0.1728,
+            "region": "torso",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "pelvis",
+            "bone": "pelvis",
+            "role": "body",
+            "z": 3,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.1,
+            "y1": 0,
+            "r0": 0.1512,
+            "r1": 0.1512,
+            "region": "torso",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "arm-l",
+            "bone": "arm-l",
+            "role": "body",
+            "z": 0.5,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.0486,
+            "r1": 0.0378,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-l",
+            "bone": "thigh-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.0918,
+            "r1": 0.0702,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-l",
+            "bone": "shank-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.0648,
+            "r1": 0.0432,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-l",
+            "bone": "foot-l",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          },
+          {
+            "id": "arm-r",
+            "bone": "arm-r",
+            "role": "body",
+            "z": 6,
+            "filled": true,
+            "tone": 0.5,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.6,
+            "y1": 0,
+            "r0": 0.0486,
+            "r1": 0.0378,
+            "region": "arms",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "thigh-r",
+            "bone": "thigh-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.45,
+            "y1": 0,
+            "r0": 0.0918,
+            "r1": 0.0702,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "shank-r",
+            "bone": "shank-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.3,
+            "kind": "capsule",
+            "x0": 0,
+            "y0": 0,
+            "x1": 0.43,
+            "y1": 0,
+            "r0": 0.0648,
+            "r1": 0.0432,
+            "region": "legs",
+            "material": "cotton-clothing"
+          },
+          {
+            "id": "foot-r",
+            "bone": "foot-r",
+            "role": "body",
+            "z": 2,
+            "filled": true,
+            "tone": 0.15,
+            "kind": "rect",
+            "x": -0.06,
+            "y": -0.08,
+            "w": 0.27,
+            "h": 0.07,
+            "r": 0.02,
+            "region": "feet",
+            "material": "leather-shoe"
+          }
+        ]
+      },
+      "decisions": {
+        "silhouette": {
+          "en": "Test figure at 1:200: shapes follow the bones.",
+          "de": "Testfigur bei 1:200: Die Formen folgen den Knochen."
+        },
+        "retained": {
+          "en": "Head, trunk, limbs.",
+          "de": "Kopf, Rumpf, Gliedmaßen."
+        },
+        "merged": {
+          "en": "Nothing merged beyond the listed regions.",
+          "de": "Nichts über die genannten Regionen hinaus zusammengefasst."
+        },
+        "omitted": {
+          "en": "No facial detail.",
+          "de": "Keine Gesichtsdetails."
+        },
+        "thinElements": {
+          "en": "No thin elements.",
+          "de": "Keine dünnen Elemente."
+        },
+        "hatching": {
+          "en": "None.",
+          "de": "Keine."
+        },
+        "styles": {
+          "en": "Line and solid read the same masses.",
+          "de": "Linie und Vollton zeigen dieselben Massen."
+        },
+        "overlays": {
+          "en": "Overlays map onto the regions.",
+          "de": "Überlagerungen bilden auf die Regionen ab."
+        }
+      }
+    },
+    "500": {
+      "status": "unavailable",
+      "denominator": 500,
+      "reason": {
+        "en": "At 1:500 the figure is 3.6 mm tall: the legs of a striding person come closer than the 0.15 mm minimum gap (75 mm real) and print as one mass, and arms thinner than 0.2 mm (100 mm real) do not print.",
+        "de": "Bei 1:500 ist die Figur 3,6 mm hoch: Die Beine einer schreitenden Person kommen näher als der Mindestabstand von 0,15 mm (75 mm real) und drucken als eine Masse, und Arme unter 0,2 mm (100 mm real) drucken nicht."
+      },
+      "limitingFeature": {
+        "en": "Space between the legs and arm width",
+        "de": "Zwischenraum der Beine und Armbreite"
+      },
+      "limitingSizeM": 0.075,
+      "alternatives": [
+        {
+          "kind": "scale",
+          "denominator": 200
+        },
+        {
+          "kind": "symbol",
+          "symbol": "position-dot"
+        }
+      ]
+    }
   },
+  "symbols": [
+    {
+      "id": "position-dot",
+      "title": {
+        "en": "Position dot",
+        "de": "Standpunkt"
+      },
+      "description": {
+        "en": "A filled dot marking where a person stands.",
+        "de": "Ein gefüllter Punkt, der den Standpunkt einer Person markiert."
+      },
+      "semantics": "true-position",
+      "units": "paper-mm",
+      "denominators": [
+        500,
+        200
+      ],
+      "pens": {
+        "body": 0.18,
+        "detail": null,
+        "texture": null,
+        "glazing": null,
+        "ground": 0.25
+      },
+      "hatches": [],
+      "geometry": {
+        "elevation": [
+          {
+            "kind": "ellipse",
+            "id": "dot",
+            "bone": "pelvis",
+            "role": "body",
+            "z": 1,
+            "filled": true,
+            "tone": 0.1,
+            "cx": 0,
+            "cy": 0,
+            "rx": 0.6,
+            "ry": 0.6
+          }
+        ]
+      },
+      "dimensionalNote": {
+        "en": "The position is true, the dot size is a fixed 1.2 mm on paper and carries no dimension.",
+        "de": "Die Lage ist wahr, die Punktgröße ist fest 1,2 mm auf Papier und trägt kein Maß."
+      }
+    }
+  ],
   "poses": [
     {
       "id": "stand",
@@ -721,8 +1316,32 @@
       ],
       "thermal": {
         "activityMet": 1.2,
+        "externalWorkW": 0,
+        "breathing": "rest",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 0.5
+          "body-plume": 1
         }
       },
       "loads": []
@@ -769,8 +1388,32 @@
       ],
       "thermal": {
         "activityMet": 2.4,
+        "externalWorkW": 0,
+        "breathing": "walk",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 1
+          "body-plume": 1
         }
       },
       "loads": []
@@ -817,8 +1460,32 @@
       ],
       "thermal": {
         "activityMet": 2.4,
+        "externalWorkW": 0,
+        "breathing": "walk",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 1
+          "body-plume": 1
         }
       },
       "loads": []
@@ -865,8 +1532,32 @@
       ],
       "thermal": {
         "activityMet": 2.4,
+        "externalWorkW": 0,
+        "breathing": "walk",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 1
+          "body-plume": 1
         }
       },
       "loads": []
@@ -913,8 +1604,32 @@
       ],
       "thermal": {
         "activityMet": 2.4,
+        "externalWorkW": 0,
+        "breathing": "walk",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 1
+          "body-plume": 1
         }
       },
       "loads": []
@@ -938,6 +1653,9 @@
         },
         "arm-l": {
           "angleDeg": 6
+        },
+        "arm-r": {
+          "angleDeg": -15
         }
       },
       "ground": "auto",
@@ -947,8 +1665,32 @@
       ],
       "thermal": {
         "activityMet": 1.4,
+        "externalWorkW": 0,
+        "breathing": "walk",
+        "regions": {
+          "head": {
+            "exposedFraction": 1,
+            "sunlitFraction": 0
+          },
+          "torso": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "arms": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "legs": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          },
+          "feet": {
+            "exposedFraction": 0.9,
+            "sunlitFraction": 0
+          }
+        },
         "emitters": {
-          "breath": 0.6
+          "body-plume": 1
         }
       },
       "loads": [
@@ -4074,12 +4816,12 @@
       ],
       "tracks": [
         {
-          "target": "emitter:breath",
+          "target": "region:torso:sunlitFraction",
           "ease": "smooth",
           "keys": [
             {
               "t": 0,
-              "v": 0.7
+              "v": 0
             },
             {
               "t": 0.5,
@@ -4087,7 +4829,7 @@
             },
             {
               "t": 1,
-              "v": 0.7
+              "v": 0
             }
           ]
         }
@@ -4164,28 +4906,11 @@
           }
         }
       ],
-      "events": [
-        {
-          "t": 0,
-          "kind": "inhale",
-          "title": {
-            "en": "Start of inhalation",
-            "de": "Beginn des Einatmens"
-          }
-        },
-        {
-          "t": 2,
-          "kind": "exhale",
-          "title": {
-            "en": "Start of exhalation",
-            "de": "Beginn des Ausatmens"
-          }
-        }
-      ],
+      "events": [],
       "tracks": [
         {
-          "target": "emitter:breath",
-          "ease": "smooth",
+          "target": "breathing",
+          "ease": "step",
           "keys": [
             {
               "t": 0,
@@ -4193,19 +4918,7 @@
             },
             {
               "t": 2,
-              "v": 0
-            },
-            {
-              "t": 2.4,
               "v": 1
-            },
-            {
-              "t": 3.6,
-              "v": 0.4
-            },
-            {
-              "t": 4,
-              "v": 0
             }
           ]
         }
@@ -4306,129 +5019,284 @@
     "environment": {
       "airTempC": 20,
       "meanRadiantTempC": 20,
+      "skyTempC": 10,
+      "groundTempC": 20,
       "relativeHumidity": 0.5,
       "windMS": 0.2,
       "windDirectionDeg": 180,
       "solarWM2": 0,
+      "diffuseFraction": 0.2,
       "pressurePa": 101325
     },
     "baseMet": 1.2,
+    "body": {
+      "species": "human",
+      "massKg": 75.1,
+      "skinAreaM2": 1.88,
+      "basalMetabolismW": 80,
+      "metWM2": 58.15,
+      "coreSetPointC": 36.8,
+      "skinSetPointC": 33.7,
+      "sweating": true,
+      "panting": false,
+      "maxSkinBloodFlowLM2H": 90,
+      "minSkinBloodFlowLM2H": 6.3,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    "respiration": {
+      "noseEmitter": "nose-breath",
+      "mouthEmitter": "mouth-breath",
+      "exhaledTempC": 34,
+      "exhaledRelativeHumidity": 0.9,
+      "patterns": [
+        {
+          "id": "rest",
+          "title": {
+            "en": "Rest",
+            "de": "Ruhe"
+          },
+          "rateBpm": 14,
+          "tidalVolumeL": 0.5,
+          "inhaleFraction": 0.38,
+          "pauseAfterInhaleFraction": 0.04,
+          "exhaleFraction": 0.45,
+          "pauseAfterExhaleFraction": 0.13,
+          "route": "nose",
+          "source": "authored-estimate"
+        },
+        {
+          "id": "walk",
+          "title": {
+            "en": "Walking",
+            "de": "Gehen"
+          },
+          "rateBpm": 20,
+          "tidalVolumeL": 1.1,
+          "inhaleFraction": 0.4,
+          "pauseAfterInhaleFraction": 0,
+          "exhaleFraction": 0.5,
+          "pauseAfterExhaleFraction": 0.1,
+          "route": "nose-and-mouth",
+          "source": "authored-estimate"
+        }
+      ],
+      "motion": [
+        {
+          "bone": "torso",
+          "angleDeg": 0.8,
+          "dy": 0.003
+        }
+      ],
+      "source": "authored-estimate"
+    },
+    "operating": [],
     "regions": [
       {
-        "id": "head-skin",
+        "id": "head",
         "title": {
-          "en": "Head and neck skin",
-          "de": "Haut von Kopf und Hals"
+          "en": "Head and neck",
+          "de": "Kopf und Hals"
         },
         "kind": "skin",
+        "model": "body",
         "material": "skin",
-        "model": "core-resistance",
-        "areaM2": 0.1,
-        "characteristicLengthM": 0.2,
-        "coreTempC": 36.8,
-        "insulationM2KW": 0.05,
-        "metabolicShare": 0.1,
-        "source": "literature",
-        "reference": "dubois-1916"
-      },
-      {
-        "id": "torso-clothing",
-        "title": {
-          "en": "Torso clothing",
-          "de": "Rumpfbekleidung"
-        },
-        "kind": "clothing",
-        "material": "cotton-clothing",
-        "model": "core-resistance",
-        "areaM2": 0.58,
-        "characteristicLengthM": 0.3,
-        "coreTempC": 36.8,
-        "insulationM2KW": 0.14,
-        "metabolicShare": 0.4,
-        "source": "literature",
-        "reference": "iso-9920-2007"
-      },
-      {
-        "id": "arm-clothing",
-        "title": {
-          "en": "Arm clothing",
-          "de": "Armbekleidung"
-        },
-        "kind": "clothing",
-        "material": "cotton-clothing",
-        "model": "core-resistance",
-        "areaM2": 0.28,
-        "characteristicLengthM": 0.08,
-        "coreTempC": 36.8,
-        "insulationM2KW": 0.12,
-        "metabolicShare": 0.15,
-        "source": "literature",
-        "reference": "iso-9920-2007"
-      },
-      {
-        "id": "leg-clothing",
-        "title": {
-          "en": "Leg clothing",
-          "de": "Beinbekleidung"
-        },
-        "kind": "clothing",
-        "material": "cotton-clothing",
-        "model": "core-resistance",
-        "areaM2": 0.82,
-        "characteristicLengthM": 0.13,
-        "coreTempC": 36.8,
-        "insulationM2KW": 0.14,
-        "metabolicShare": 0.35,
-        "source": "literature",
-        "reference": "iso-9920-2007"
-      },
-      {
-        "id": "shoes",
-        "title": {
-          "en": "Shoes",
-          "de": "Schuhe"
-        },
-        "kind": "surface",
-        "material": "leather-shoe",
-        "model": "passive",
         "areaM2": 0.12,
+        "characteristicLengthM": 0.2,
+        "geometry": "sphere",
+        "skyViewFactor": 0.6,
+        "layers": [],
+        "heatCapacityJM2K": 15000,
+        "body": {
+          "segment": "head",
+          "metabolicShare": 0.2,
+          "skinFraction": 0.07
+        },
+        "source": "authored-estimate"
+      },
+      {
+        "id": "torso",
+        "title": {
+          "en": "Trunk",
+          "de": "Rumpf"
+        },
+        "kind": "clothing",
+        "model": "body",
+        "material": "cotton-clothing",
+        "areaM2": 0.75,
+        "characteristicLengthM": 0.3,
+        "geometry": "cylinder",
+        "skyViewFactor": 0.5,
+        "layers": [
+          {
+            "id": "garment",
+            "title": {
+              "en": "Garment with enclosed air",
+              "de": "Kleidung mit eingeschlossener Luft"
+            },
+            "kind": "clothing",
+            "material": "cotton-clothing",
+            "thicknessM": 0.003,
+            "resistanceM2KW": 0.155,
+            "vapourResistanceM2PaW": 24.7,
+            "heatCapacityJM2K": 4000,
+            "source": "literature",
+            "reference": "iso-9920-2007"
+          }
+        ],
+        "heatCapacityJM2K": 15000,
+        "body": {
+          "segment": "trunk",
+          "metabolicShare": 0.5,
+          "skinFraction": 0.37
+        },
+        "source": "authored-estimate"
+      },
+      {
+        "id": "arms",
+        "title": {
+          "en": "Arms",
+          "de": "Arme"
+        },
+        "kind": "clothing",
+        "model": "body",
+        "material": "cotton-clothing",
+        "areaM2": 0.3,
+        "characteristicLengthM": 0.07,
+        "geometry": "cylinder",
+        "skyViewFactor": 0.4,
+        "layers": [
+          {
+            "id": "garment",
+            "title": {
+              "en": "Garment with enclosed air",
+              "de": "Kleidung mit eingeschlossener Luft"
+            },
+            "kind": "clothing",
+            "material": "cotton-clothing",
+            "thicknessM": 0.003,
+            "resistanceM2KW": 0.155,
+            "vapourResistanceM2PaW": 24.7,
+            "heatCapacityJM2K": 4000,
+            "source": "literature",
+            "reference": "iso-9920-2007"
+          }
+        ],
+        "heatCapacityJM2K": 15000,
+        "body": {
+          "segment": "arm",
+          "metabolicShare": 0.08,
+          "skinFraction": 0.17
+        },
+        "source": "authored-estimate"
+      },
+      {
+        "id": "legs",
+        "title": {
+          "en": "Legs",
+          "de": "Beine"
+        },
+        "kind": "clothing",
+        "model": "body",
+        "material": "cotton-clothing",
+        "areaM2": 0.65,
         "characteristicLengthM": 0.1,
-        "metabolicShare": 0,
-        "source": "authored-estimate",
-        "reference": "iso-9920-2007"
+        "geometry": "cylinder",
+        "skyViewFactor": 0.3,
+        "layers": [
+          {
+            "id": "garment",
+            "title": {
+              "en": "Garment with enclosed air",
+              "de": "Kleidung mit eingeschlossener Luft"
+            },
+            "kind": "clothing",
+            "material": "cotton-clothing",
+            "thicknessM": 0.003,
+            "resistanceM2KW": 0.155,
+            "vapourResistanceM2PaW": 24.7,
+            "heatCapacityJM2K": 4000,
+            "source": "literature",
+            "reference": "iso-9920-2007"
+          }
+        ],
+        "heatCapacityJM2K": 15000,
+        "body": {
+          "segment": "leg",
+          "metabolicShare": 0.18,
+          "skinFraction": 0.33
+        },
+        "source": "authored-estimate"
+      },
+      {
+        "id": "feet",
+        "title": {
+          "en": "Feet",
+          "de": "Füße"
+        },
+        "kind": "clothing",
+        "model": "body",
+        "material": "leather-shoe",
+        "areaM2": 0.1,
+        "characteristicLengthM": 0.25,
+        "geometry": "horizontal-plate-up",
+        "skyViewFactor": 0.1,
+        "layers": [],
+        "heatCapacityJM2K": 15000,
+        "body": {
+          "segment": "foot",
+          "metabolicShare": 0.04,
+          "skinFraction": 0.06
+        },
+        "source": "authored-estimate"
       }
     ],
     "emitters": [
       {
-        "id": "breath",
+        "id": "nose-breath",
         "kind": "breath",
         "title": {
-          "en": "Exhaled breath",
-          "de": "Ausgeatmete Luft"
+          "en": "Nostrils",
+          "de": "Nasenlöcher"
+        },
+        "anchor": "nose",
+        "directionDeg": -150,
+        "diameterM": 0.0095,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "mouth-breath",
+        "kind": "breath",
+        "title": {
+          "en": "Mouth",
+          "de": "Mund"
         },
         "anchor": "mouth",
+        "directionDeg": -100,
+        "diameterM": 0.0124,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "body-plume",
+        "kind": "plume",
+        "title": {
+          "en": "Body plume",
+          "de": "Körperfahne"
+        },
+        "anchor": "crown",
         "directionDeg": 0,
-        "carries": "vapour",
-        "temperatureC": 34,
-        "velocityMS": 1.5,
-        "diameterM": 0.03,
-        "vapourKgPerKg": 0.034,
-        "periodS": 4,
-        "dutyFrom": 0.5,
-        "dutyTo": 1,
+        "diameterM": 0.3,
+        "region": "torso",
         "source": "authored-estimate"
       }
     ],
     "assumptions": [
       {
-        "en": "Metabolic shares follow the surface-area weighting of the clothed regions.",
-        "de": "Die Stoffwechselanteile folgen der flächengewichteten Verteilung der bekleideten Regionen."
-      },
-      {
-        "en": "Insulation values run from core to outer surface.",
-        "de": "Die Dämmwerte gelten vom Körperkern bis zur Außenoberfläche."
+        "en": "All values are authored estimates for tests.",
+        "de": "Alle Werte sind Schätzungen für Tests."
       }
-    ]
+    ],
+    "passengers": []
   },
   "structure": {
     "gravityMS2": 9.80665,
@@ -4445,6 +5313,7 @@
   "presentation": {
     "defaultPose": "stand",
     "defaultClip": "walk",
+    "defaultScale": 100,
     "viewpoints": [
       "elevation",
       "plan"

@@ -1,0 +1,58 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "kind": "bytes",
+      "bytes": 0,
+      "maxBytes": 1
+    },
+    {
+      "name": "small",
+      "kind": "bytes",
+      "bytes": 3,
+      "maxBytes": 3
+    },
+    {
+      "name": "multiple-blocks",
+      "kind": "bytes",
+      "bytes": 524305,
+      "maxBytes": 524305
+    },
+    {
+      "name": "bounded",
+      "kind": "limit",
+      "bytes": 3,
+      "maxBytes": 2
+    },
+    {
+      "name": "symbolic",
+      "kind": "symlink",
+      "bytes": 3,
+      "maxBytes": 3
+    },
+    {
+      "name": "linked",
+      "kind": "hardlink",
+      "bytes": 3,
+      "maxBytes": 3
+    },
+    {
+      "name": "changed",
+      "kind": "mutation",
+      "bytes": 524305,
+      "maxBytes": 524305
+    },
+    {
+      "name": "cancelled",
+      "kind": "cancel",
+      "bytes": 524305,
+      "maxBytes": 524305
+    },
+    {
+      "name": "capture",
+      "kind": "capture",
+      "bytes": 3,
+      "maxBytes": 3
+    }
+  ]
+}

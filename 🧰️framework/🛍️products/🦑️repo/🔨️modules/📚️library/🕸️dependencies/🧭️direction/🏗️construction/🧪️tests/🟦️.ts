@@ -1,5 +1,5 @@
 import "./🛡️pattern-safety/🟦️.ts";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import {expect,test} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";

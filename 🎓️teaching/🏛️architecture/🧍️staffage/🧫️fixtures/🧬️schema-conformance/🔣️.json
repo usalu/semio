@@ -1,58 +1,77 @@
 {
- "description": "The reference walker must validate against the JSON Schema; each broken variant must be rejected. The twin lists the $defs the TypeScript types restate.",
+ "description": "Invalid variants of the sample figure (semio.staffage/v2); every patch must make the Asset schema reject it.",
  "defs": [
-  "Slug",
-  "Text",
-  "Category",
-  "ParameterSource",
-  "Viewpoint",
-  "ExportFormat",
-  "Completion",
-  "Reference",
-  "Provenance",
-  "Material",
-  "JointType",
-  "Joint",
-  "SegmentMass",
-  "Section",
-  "Bone",
-  "Rig",
-  "AnchorKind",
-  "SupportType",
+  "Alternative",
   "Anchor",
-  "ShapeRole",
-  "Lod",
-  "CapsuleShape",
-  "EllipseShape",
-  "RectShape",
-  "PolyShape",
-  "PathShape",
-  "ShapeGeometry",
-  "Shape",
-  "BoneOffset",
+  "AnchorKind",
   "AppliedLoad",
-  "ThermalBinding",
-  "Pose",
-  "Ease",
-  "ClipKey",
-  "ContactSpan",
-  "Phase",
-  "ClipEvent",
-  "ScalarTrack",
+  "Asset",
+  "AssetDocument",
+  "AuthoredRepresentation",
+  "BodyPhysiology",
+  "Bone",
+  "BoneOffset",
+  "BreathingPattern",
+  "CapsuleShape",
+  "CategoryEntry",
+  "CategoryId",
   "Clip",
+  "ClipEvent",
+  "ClipKey",
+  "Completion",
+  "ContactSpan",
+  "Dimensions",
+  "Ease",
+  "EllipseShape",
+  "Emitter",
   "Environment",
+  "EnvironmentDocument",
+  "EnvironmentPreset",
+  "ExportFormat",
+  "Hatch",
+  "Joint",
+  "JointType",
+  "Manifest",
+  "ManifestEntry",
+  "Material",
+  "OperatingKey",
+  "ParameterSource",
+  "Passenger",
+  "PathShape",
+  "PenSet",
+  "Phase",
+  "PolyShape",
+  "Pose",
+  "Presentation",
+  "PrintProfile",
+  "PrintProfileDocument",
+  "Provenance",
+  "RectShape",
+  "Reference",
+  "RegionBinding",
+  "Representation",
+  "RepresentationDecisions",
+  "Respiration",
+  "Rig",
+  "ScalarTrack",
+  "ScaleDenominator",
+  "Section",
+  "SegmentMass",
+  "Shape",
+  "ShapeGeometry",
+  "ShapeRole",
+  "Slug",
+  "StructuralModel",
+  "SupportType",
+  "SymbolRepresentation",
+  "Text",
+  "ThermalBinding",
+  "ThermalLayer",
+  "ThermalModel",
   "ThermalModelKind",
   "ThermalRegion",
-  "Emitter",
-  "ThermalModel",
-  "StructuralModel",
-  "Dimensions",
-  "Presentation",
-  "Asset",
-  "CategoryDocument",
-  "ManifestEntry",
-  "CategoryEntry",
-  "Manifest"
+  "UnavailableRepresentation",
+  "Viewpoint"
  ],
  "invalid": [
   {
@@ -100,7 +119,7 @@
     {
      "op": "replace",
      "path": "/category",
-     "value": "furniture"
+     "value": "cuisine"
     }
    ]
   },
@@ -125,21 +144,11 @@
    ]
   },
   {
-   "name": "lod out of range",
-   "patch": [
-    {
-     "op": "replace",
-     "path": "/geometry/elevation/id=head/lod",
-     "value": 5
-    }
-   ]
-  },
-  {
    "name": "capsule carrying ellipse fields",
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation/id=neck/rx",
+     "path": "/representations/100/geometry/elevation/id=neck/rx",
      "value": 0.1
     }
    ]
@@ -149,7 +158,7 @@
    "patch": [
     {
      "op": "remove",
-     "path": "/geometry/elevation/id=head/kind"
+     "path": "/representations/100/geometry/elevation/id=head/kind"
     }
    ]
   },
@@ -158,7 +167,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation/id=head/kind",
+     "path": "/representations/100/geometry/elevation/id=head/kind",
      "value": "star"
     }
    ]
@@ -168,7 +177,7 @@
    "patch": [
     {
      "op": "remove",
-     "path": "/geometry/elevation/id=foot-l/w"
+     "path": "/representations/100/geometry/elevation/id=foot-l/w"
     }
    ]
   },
@@ -241,7 +250,7 @@
    "patch": [
     {
      "op": "replace",
-     "path": "/geometry/elevation",
+     "path": "/representations/100/geometry/elevation",
      "value": []
     }
    ]
@@ -302,6 +311,91 @@
     {
      "op": "remove",
      "path": "/thermal"
+    }
+   ]
+  },
+  {
+   "name": "unknown shape role",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/100/geometry/elevation/id=head/role",
+     "value": "ink"
+    }
+   ]
+  },
+  {
+   "name": "representation key set missing a scale",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/500"
+    }
+   ]
+  },
+  {
+   "name": "unavailable without reason",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/500/reason"
+    }
+   ]
+  },
+  {
+   "name": "unavailable denominator is not a preset",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/500/denominator",
+     "value": 300
+    }
+   ]
+  },
+  {
+   "name": "pen set without ground",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/representations/100/pens/ground"
+    }
+   ]
+  },
+  {
+   "name": "hatch pattern unknown",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/representations/100/hatches/0/pattern",
+     "value": "dots-and-dashes"
+    }
+   ]
+  },
+  {
+   "name": "region binding without sunlitFraction",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/poses/id=stand/thermal/regions/head/sunlitFraction"
+    }
+   ]
+  },
+  {
+   "name": "thermal model kind unknown",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/thermal/regions/id=head/model",
+     "value": "magic"
+    }
+   ]
+  },
+  {
+   "name": "passengers missing",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal/passengers"
     }
    ]
   }

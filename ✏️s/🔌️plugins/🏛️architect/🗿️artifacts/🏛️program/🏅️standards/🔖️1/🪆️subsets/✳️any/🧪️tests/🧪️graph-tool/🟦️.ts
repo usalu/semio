@@ -1,6 +1,6 @@
 /** 🕸️ Graphology and Ajv independently judge the graph transaction fixture consumed by the native editor. */
 import { expect, test } from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import { UndirectedGraph } from "graphology";
 import { toolMachineNodeGraphEditRowsSchema as schema } from "@semio-tech/framework/tool-machine/schema/node-graph-edit-rows";
 import fixture from "../🧫️fixtures/🛠️graph-tool/🔣️.json";

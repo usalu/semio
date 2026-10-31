@@ -1,7 +1,7 @@
 /** 🧩️ TS reducer, ring, store and codecs against the shared fixtures; oracles: ajv (schema), xstate (machine built from the matrix), fast-check (random event sequences, reducer vs xstate). */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import fc from "fast-check";
 import { assign, createMachine, initialTransition, transition, type AnyMachineSnapshot } from "xstate";
 import lifecycle from "../🧫️fixtures/⚖️lifecycle-law.json";

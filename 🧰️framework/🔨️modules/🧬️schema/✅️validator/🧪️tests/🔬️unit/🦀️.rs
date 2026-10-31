@@ -59,3 +59,11 @@ fn validator_control_reports_progress_and_preserves_cancellation() {
     cancelled.cancel();
     assert_eq!(validator.validate_json_with_control(r#"{"n":2}"#, &cancelled), Err(SchemaError::Cancelled));
 }
+
+#[test]
+fn malformed_branch_schemas_refuse_before_instance_matching() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for case in corpus["compilationRefusals"].as_array().unwrap() {
+        assert!(OwnedJsonSchemaValidator::compile(&case["input"]["schema"].to_string()).is_err(), "{}", case["id"]);
+    }
+}

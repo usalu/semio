@@ -1,6 +1,6 @@
 import {test,expect} from 'bun:test';
 import {Database} from 'bun:sqlite';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import ts from 'typescript';
 import {readFileSync,existsSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';

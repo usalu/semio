@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/tooling/node-native-bundle/schema.json",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "required": [
+        "name",
+        "provider",
+        "pointer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "type": "boolean"
+        },
+        "pointer": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    }
+  }
+}

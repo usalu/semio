@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "preparation-cancelled",
+      "ownerCancelled": false,
+      "preparationCancelled": true,
+      "usable": true
+    },
+    {
+      "id": "consumer-cancelled",
+      "ownerCancelled": true,
+      "preparationCancelled": false,
+      "usable": false
+    }
+  ],
+  "backends": [
+    {
+      "id": "directory-partition",
+      "source": "../../../../🧱️fixed/🟦️.ts",
+      "entry": "openNativeFixedPlatformV1"
+    },
+    {
+      "id": "mounted-image",
+      "source": "../../../🎛️command/🟦️.ts",
+      "entry": "openPersistentNativeImageV1"
+    }
+  ]
+}

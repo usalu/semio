@@ -1,0 +1,2174 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "sliding-door",
+    "category": "components",
+    "title": {
+      "en": "Sliding Door",
+      "de": "Schiebetür"
+    },
+    "summary": {
+      "en": "A 1.0 m wide, 1.9 m high single-glazed (10 mm toughened glass) steel-framed leaf hung from a carriage in a 3.0 m hollow-section head track between two steel jambs; conditioned element with interior at 20 degC and a winter reference case. The adjacent bays of the opening are not modelled.",
+      "de": "Ein 1,0 m breiter, 1,9 m hoher einfachverglaster (10 mm ESG) Stahlrahmenflügel an einem Laufwagen in einer 3,0 m langen Hohlprofil-Laufschiene zwischen zwei Stahlpfosten; konditioniertes Bauteil mit Innenraum 20 °C und Winter-Referenzfall. Die übrigen Felder der Öffnung sind nicht modelliert."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "door",
+      "sliding",
+      "glass",
+      "track"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-572",
+          "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (E = 70 GPa, density 2500 kg/m3 per EN 1991-1-1 Table A.1)."
+        },
+        {
+          "id": "en-10219",
+          "citation": "EN 10219-2:2019 Cold formed welded structural hollow sections: RHS 100x50x4 section properties."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, Table A.1 densities (glass 25 kN/m3)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties (typical emissivity of glass and painted steel; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        }
+      ],
+      "notes": {
+        "en": "The leaf hangs from its carriage at the centre of the top edge, so the carriage is the prismatic joint and transmits the leaf weight into the track. The wind on the leaf is out of plane and is not in this elevation model.",
+        "de": "Der Flügel hängt mit seinem Wagen mittig an der Oberkante; der Wagen ist das Prismengelenk und leitet das Flügelgewicht in die Schiene. Der Winddruck auf den Flügel wirkt senkrecht zur Ebene und ist in dieser Ansichts-Modellierung nicht enthalten."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.15,
+      "widthM": 3.1,
+      "depthM": 0.1,
+      "massKg": 86.75
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel track",
+          "de": "Gestrichene Stahlschiene"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10219",
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Toughened glass 10 mm",
+          "de": "Einscheibensicherheitsglas 10 mm"
+        },
+        "emissivity": 0.837,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 70000000000,
+        "source": "literature",
+        "reference": "en-12898",
+        "conductivityWmK": 1.0,
+        "specificHeatJKgK": 750
+      },
+      {
+        "id": "frame-cavity",
+        "title": {
+          "en": "Hollow steel profile with enclosed air cavity",
+          "de": "Stahlhohlprofil mit eingeschlossenem Luftraum"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.5,
+        "conductivityWmK": 0.3,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "track",
+      "bones": [
+        {
+          "id": "track",
+          "parent": null,
+          "title": {
+            "en": "Track (rigid root on the jambs)",
+            "de": "Schiene (starre Wurzel auf den Pfosten)"
+          },
+          "x": 0,
+          "y": 2.1,
+          "angleDeg": 0,
+          "lengthM": 3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 26.75,
+            "comX": 1.5,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219"
+          },
+          "section": {
+            "areaM2": 0.001136,
+            "secondMomentM4": 1.44126e-06,
+            "extremeFibreM": 0.05,
+            "material": "steel",
+            "title": {
+              "en": "RHS 100x50x4",
+              "de": "RHS 100x50x4"
+            }
+          }
+        },
+        {
+          "id": "leaf",
+          "parent": "track",
+          "title": {
+            "en": "Leaf on its carriage",
+            "de": "Flügel am Laufwagen"
+          },
+          "x": 1.5,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 2,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 1
+          },
+          "mass": {
+            "kg": 60,
+            "comX": 1,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "west-jamb",
+        "bone": "track",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "West jamb, pin",
+          "de": "Westpfosten, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "east-jamb",
+        "bone": "track",
+        "x": 3,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "East jamb, roller",
+          "de": "Ostpfosten, Rollenlager"
+        },
+        "support": "roller",
+        "normalDeg": 90
+      },
+      {
+        "id": "carriage",
+        "bone": "leaf",
+        "x": 0,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Carriage (prismatic joint)",
+          "de": "Laufwagen (Prismengelenk)"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "portal",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "regions": [
+                "track-steel",
+                "jamb-steel"
+              ],
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  -2.1
+                ],
+                [
+                  0.1,
+                  -2.1
+                ],
+                [
+                  0.1,
+                  -0.1
+                ],
+                [
+                  2.9,
+                  -0.1
+                ],
+                [
+                  2.9,
+                  -2.1
+                ],
+                [
+                  3.05,
+                  -2.1
+                ],
+                [
+                  3.05,
+                  0.05
+                ],
+                [
+                  -0.05,
+                  0.05
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leaf",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.8,
+              "regions": [
+                "leaf-glass",
+                "leaf-frame"
+              ],
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  2.0,
+                  -0.5
+                ],
+                [
+                  2.0,
+                  0.5
+                ],
+                [
+                  0.05,
+                  0.5
+                ],
+                [
+                  0.05,
+                  -0.5
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "An inverted steel U (jambs and head track, 3.10 x 2.15 m, 6.2 x 4.3 mm) with a light leaf rectangle (2 x 3.9 mm) hanging in it; the leaf moves along the track.",
+            "de": "Ein umgekehrtes Stahl-U (Pfosten und Laufschiene, 3,10 x 2,15 m, 6,2 x 4,3 mm) mit einem hellen Flügelrechteck (2 x 3,9 mm), das darin hängt; der Flügel bewegt sich entlang der Schiene."
+          },
+          "retained": {
+            "en": "Opening width, head height, leaf width 1.0 m and leaf position.",
+            "de": "Öffnungsbreite, Sturzhöhe, Flügelbreite 1,0 m und Flügelposition."
+          },
+          "merged": {
+            "en": "Jambs and head track are one U outline; glass, frame and hanger plates are one leaf rectangle that reaches up to the track (hangers merged).",
+            "de": "Pfosten und Laufschiene sind eine U-Kontur; Glas, Rahmen und Hängelaschen sind ein Flügelrechteck, das bis zur Schiene reicht (Laschen zusammengefasst)."
+          },
+          "omitted": {
+            "en": "Frame profile, handle, hangers, carriage, 0.1 m floor gap.",
+            "de": "Rahmenprofil, Griff, Laschen, Laufwagen, 0,1 m Bodenfuge."
+          },
+          "thinElements": {
+            "en": "The 0.1 m jambs and rail (0.2 mm) are drawn 0.15 m (0.3 mm, inside the opening) so the filled U keeps a printable width; the 50 mm hanger gap is closed by extending the leaf 50 mm (0.1 mm).",
+            "de": "Die 0,1-m-Pfosten und -Schiene (0,2 mm) sind 0,15 m (0,3 mm, nach innen) gezeichnet, damit das gefüllte U eine druckbare Breite behält; die 50-mm-Hängefuge ist durch 50 mm (0,1 mm) Flügelverlängerung geschlossen."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Dark U frame, light leaf reads as glass.",
+            "de": "Dunkles U-Rahmen, heller Flügel liest sich als Glas."
+          },
+          "overlays": {
+            "en": "Overlays colour the U (track and jambs merged) and the leaf (glass and frame merged); the leaf cell moves with the leaf.",
+            "de": "Überlagerungen färben das U (Schiene und Pfosten zusammengefasst) und den Flügel (Glas und Rahmen zusammengefasst); die Flügelzelle wandert mit dem Flügel."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "jamb-west",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "jamb-east",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.95,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "track",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.05,
+              "w": 3.1,
+              "h": 0.1
+            },
+            {
+              "id": "leaf-frame-200",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.0,
+                  -0.5
+                ],
+                [
+                  2.0,
+                  0.5
+                ],
+                [
+                  0.05,
+                  0.5
+                ],
+                [
+                  0.05,
+                  -0.5
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leaf-glass-200",
+              "bone": "leaf",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "leaf-glass",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.925,
+                  -0.425
+                ],
+                [
+                  1.925,
+                  0.425
+                ],
+                [
+                  0.125,
+                  0.425
+                ],
+                [
+                  0.125,
+                  -0.425
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Jambs and head track as three steel bars, the leaf as a framed light pane that reaches up to the rail (hangers merged).",
+            "de": "Pfosten und Laufschiene als drei Stahlbalken, der Flügel als gerahmte helle Scheibe, die bis zur Schiene reicht (Laschen zusammengefasst)."
+          },
+          "retained": {
+            "en": "Three frame bars (0.5 mm), leaf frame (5 x 9.75 mm), glass inset by 0.375 mm.",
+            "de": "Drei Rahmenbalken (0,5 mm), Flügelrahmen (5 x 9,75 mm), um 0,375 mm eingerücktes Glas."
+          },
+          "merged": {
+            "en": "Leaf frame sections of 50 mm (0.25 mm) are one frame shape with the glass inset line.",
+            "de": "Flügelrahmenprofile von 50 mm (0,25 mm) bilden eine Rahmenform mit der Glaseinrückung."
+          },
+          "omitted": {
+            "en": "Handle, carriage wheels (hidden in the rail), brush seals and the spacer.",
+            "de": "Griff, Laufwagenrollen (in der Schiene verdeckt), Bürstendichtungen und der Abstandhalter."
+          },
+          "thinElements": {
+            "en": "The 50 mm hanger gap is closed by extending the leaf frame up to the rail; the glass is inset 75 mm instead of 50 mm so frame and glass outlines stay 0.15 mm apart.",
+            "de": "Die 50-mm-Hängefuge ist durch Verlängerung des Flügelrahmens bis zur Schiene geschlossen; das Glas ist um 75 statt 50 mm eingerückt, damit Rahmen- und Glaskontur 0,15 mm Abstand halten."
+          },
+          "hatching": {
+            "en": "No hatch; glass is a light fill.",
+            "de": "Keine Schraffur; Glas ist eine helle Füllung."
+          },
+          "styles": {
+            "en": "Outline 0.18 mm, glass outline 0.1 mm; steel dark, glass light.",
+            "de": "Kontur 0,18 mm, Glaskontur 0,1 mm; Stahl dunkel, Glas hell."
+          },
+          "overlays": {
+            "en": "Jambs and track are separate cells from the leaf frame and the glass, so the glass-versus-frame difference is readable.",
+            "de": "Pfosten und Schiene sind von Flügelrahmen und Glas getrennte Zellen, so ist der Unterschied Glas gegen Rahmen lesbar."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "jamb-west",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "jamb-east",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.95,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "track",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.05,
+              "w": 3.1,
+              "h": 0.1
+            },
+            {
+              "id": "leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.0,
+                  -0.5
+                ],
+                [
+                  2.0,
+                  0.5
+                ],
+                [
+                  0.1,
+                  0.5
+                ],
+                [
+                  0.1,
+                  -0.5
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leaf-glass",
+              "bone": "leaf",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "leaf-glass",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.95,
+                  -0.45
+                ],
+                [
+                  1.95,
+                  0.45
+                ],
+                [
+                  0.15,
+                  0.45
+                ],
+                [
+                  0.15,
+                  -0.45
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-reflection-a",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.6,
+                  -0.3
+                ],
+                [
+                  1.0,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-reflection-b",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.7,
+                  -0.2
+                ],
+                [
+                  1.2,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "hanger-a",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  -0.18
+                ],
+                [
+                  0.1,
+                  -0.14
+                ],
+                [
+                  0.05,
+                  -0.14
+                ],
+                [
+                  0.05,
+                  -0.18
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hanger-b",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.14
+                ],
+                [
+                  0.1,
+                  0.18
+                ],
+                [
+                  0.05,
+                  0.18
+                ],
+                [
+                  0.05,
+                  0.14
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handle",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  1.15,
+                  0.4
+                ],
+                [
+                  1.15,
+                  0.44
+                ],
+                [
+                  0.9,
+                  0.44
+                ],
+                [
+                  0.9,
+                  0.4
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The door elevation as a steel portal with a framed glass leaf, a pair of hanger plates and a pull handle.",
+            "de": "Die Türansicht als Stahlportal mit gerahmtem Glasflügel, einem Laschenpaar und einem Griff."
+          },
+          "retained": {
+            "en": "Jambs and rail (1 mm), leaf frame (10 x 19 mm) with 0.5 mm frame width, the glass pane, two hanger plates (0.4 x 0.5 mm), handle (0.4 x 2.5 mm).",
+            "de": "Pfosten und Schiene (1 mm), Flügelrahmen (10 x 19 mm) mit 0,5 mm Rahmenbreite, die Glasscheibe, zwei Laschen (0,4 x 0,5 mm), Griff (0,4 x 2,5 mm)."
+          },
+          "merged": {
+            "en": "The leaf frame profile is one frame outline around the glass.",
+            "de": "Das Flügelprofil ist eine Rahmenkontur um das Glas."
+          },
+          "omitted": {
+            "en": "Carriage wheels inside the rail, bottom seal, rail screws.",
+            "de": "Laufwagenrollen in der Schiene, Bodendichtung, Schienenschrauben."
+          },
+          "thinElements": {
+            "en": "Hanger plates and handle have 0.1 mm outlines (about 0.2 mm wider than real).",
+            "de": "Laschen und Griff haben 0,1-mm-Konturen (etwa 0,2 mm breiter als real)."
+          },
+          "hatching": {
+            "en": "No material hatch: this is a front elevation, not a cut; glass shows two reflection lines at 0.1 mm (DIN 1356-1).",
+            "de": "Keine Materialschraffur: dies ist eine Vorderansicht, kein Schnitt; Glas zeigt zwei Reflexlinien mit 0,1 mm (DIN 1356-1)."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm, glass 0.1 mm; dark steel, light glass.",
+            "de": "Kontur 0,25 mm, Glas 0,1 mm; dunkler Stahl, helles Glas."
+          },
+          "overlays": {
+            "en": "Leaf frame, leaf glass, track and jambs are separate overlay cells; the leaf cells slide with the leaf.",
+            "de": "Flügelrahmen, Flügelglas, Schiene und Pfosten sind getrennte Überlagerungszellen; die Flügelzellen gleiten mit dem Flügel."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "jamb-west",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "jamb-east",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "jamb-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.95,
+              "y": -2.1,
+              "w": 0.1,
+              "h": 2.05
+            },
+            {
+              "id": "track",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.45,
+              "region": "track-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": -0.05,
+              "y": -0.05,
+              "w": 3.1,
+              "h": 0.1
+            },
+            {
+              "id": "jamb-west-seal",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "jamb-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.035,
+                  -2.1
+                ],
+                [
+                  0.035,
+                  -0.05
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "jamb-east-seal",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.5,
+              "filled": false,
+              "tone": 0.3,
+              "region": "jamb-steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.965,
+                  -2.1
+                ],
+                [
+                  2.965,
+                  -0.05
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "track-screw-0",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "track-steel",
+              "kind": "ellipse",
+              "cx": 0.3,
+              "cy": 0.0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "track-screw-1",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "track-steel",
+              "kind": "ellipse",
+              "cx": 1.0,
+              "cy": 0.0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "track-screw-2",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "track-steel",
+              "kind": "ellipse",
+              "cx": 2.0,
+              "cy": 0.0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "track-screw-3",
+              "bone": "track",
+              "role": "detail",
+              "z": 1.6,
+              "filled": true,
+              "tone": 0.2,
+              "region": "track-steel",
+              "kind": "ellipse",
+              "cx": 2.7,
+              "cy": 0.0,
+              "rx": 0.012,
+              "ry": 0.012
+            },
+            {
+              "id": "leaf-frame",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.5,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  2.0,
+                  -0.5
+                ],
+                [
+                  2.0,
+                  0.5
+                ],
+                [
+                  0.1,
+                  0.5
+                ],
+                [
+                  0.1,
+                  -0.5
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "leaf-glass",
+              "bone": "leaf",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "leaf-glass",
+              "material": "glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.95,
+                  -0.45
+                ],
+                [
+                  1.95,
+                  0.45
+                ],
+                [
+                  0.15,
+                  0.45
+                ],
+                [
+                  0.15,
+                  -0.45
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-reflection-a",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.6,
+                  -0.3
+                ],
+                [
+                  1.0,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-reflection-b",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  1.7,
+                  -0.2
+                ],
+                [
+                  1.2,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "glass-reflection-c",
+              "bone": "leaf",
+              "role": "texture",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "region": "leaf-glass",
+              "kind": "poly",
+              "points": [
+                [
+                  0.9,
+                  -0.35
+                ],
+                [
+                  0.6,
+                  -0.05
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "hanger-a",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  -0.18
+                ],
+                [
+                  0.1,
+                  -0.14
+                ],
+                [
+                  0.05,
+                  -0.14
+                ],
+                [
+                  0.05,
+                  -0.18
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hanger-b",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.14
+                ],
+                [
+                  0.1,
+                  0.18
+                ],
+                [
+                  0.05,
+                  0.18
+                ],
+                [
+                  0.05,
+                  0.14
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "hanger-bolt-a",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.1,
+              "region": "leaf-frame",
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": -0.16,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "hanger-bolt-b",
+              "bone": "leaf",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.1,
+              "region": "leaf-frame",
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": 0.16,
+              "rx": 0.008,
+              "ry": 0.008
+            },
+            {
+              "id": "handle-base",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  1.17,
+                  0.39
+                ],
+                [
+                  1.17,
+                  0.45
+                ],
+                [
+                  0.88,
+                  0.45
+                ],
+                [
+                  0.88,
+                  0.39
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handle-grip",
+              "bone": "leaf",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.25,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  1.12,
+                  0.4
+                ],
+                [
+                  1.12,
+                  0.43
+                ],
+                [
+                  0.93,
+                  0.43
+                ],
+                [
+                  0.93,
+                  0.4
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bottom-seal",
+              "bone": "leaf",
+              "role": "body",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.2,
+              "region": "leaf-frame",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  2.02,
+                  -0.5
+                ],
+                [
+                  2.02,
+                  0.5
+                ],
+                [
+                  2.0,
+                  0.5
+                ],
+                [
+                  2.0,
+                  -0.5
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A framed single-glazed sliding leaf hanging from two plates in a steel head track between two jambs with weather seals; all visible fixings are drawn.",
+            "de": "Ein gerahmter einfachverglaster Schiebeflügel, an zwei Laschen in einer Stahl-Laufschiene zwischen zwei Pfosten mit Dichtungen hängend; alle sichtbaren Befestigungen sind gezeichnet."
+          },
+          "retained": {
+            "en": "Jambs and rail (2 mm) with seal lines and four rail screws, leaf frame (20 x 38 mm, 1 mm frame width), glass, three reflection lines, hanger plates with bolts, handle with base plate, bottom brush seal.",
+            "de": "Pfosten und Schiene (2 mm) mit Dichtungslinien und vier Schienenschrauben, Flügelrahmen (20 x 38 mm, 1 mm Rahmenbreite), Glas, drei Reflexlinien, Hängelaschen mit Bolzen, Griff mit Grundplatte, untere Bürstendichtung."
+          },
+          "merged": {
+            "en": "The 4 mm steel walls of the hollow profiles are not resolved; the frame is one filled shape per element.",
+            "de": "Die 4-mm-Stahlwände der Hohlprofile werden nicht aufgelöst; der Rahmen ist je Element eine gefüllte Form."
+          },
+          "omitted": {
+            "en": "Carriage wheels (hidden inside the closed rail), glazing gaskets, corner welds.",
+            "de": "Laufwagenrollen (in der geschlossenen Schiene verdeckt), Glasdichtungen, Eckschweißnähte."
+          },
+          "thinElements": {
+            "en": "Bolts are 0.32 mm dots (16 mm), seal lines 0.18 mm; the 20 mm bottom seal is 0.4 mm tall with a 0.1 mm outline.",
+            "de": "Bolzen sind Punkte von 0,32 mm (16 mm), Dichtungslinien 0,18 mm; die 20-mm-Bodendichtung ist 0,4 mm hoch mit 0,1 mm Kontur."
+          },
+          "hatching": {
+            "en": "No hatch: front elevation; glazing is shown by the light fill and three reflection lines.",
+            "de": "Keine Schraffur: Vorderansicht; Verglasung zeigt sich durch die helle Füllung und drei Reflexlinien."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, details 0.18 mm, glazing 0.13 mm, reflection 0.1 mm.",
+            "de": "Kontur 0,35 mm, Details 0,18 mm, Verglasung 0,13 mm, Reflex 0,1 mm."
+          },
+          "overlays": {
+            "en": "Glass, leaf frame (with hangers, handle and seal), head track and jambs are separate overlay cells, so the cold glass and the warmer frame read differently.",
+            "de": "Glas, Flügelrahmen (mit Laschen, Griff und Dichtung), Laufschiene und Pfosten sind getrennte Überlagerungszellen; kaltes Glas und wärmerer Rahmen lesen sich verschieden."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "sliding-door-plan",
+        "title": {
+          "en": "Sliding door in plan",
+          "de": "Schiebetür im Grundriss"
+        },
+        "description": {
+          "en": "The conventional plan sign of a sliding door: the leaf as a thin glass rectangle in its track, the jambs as filled squares and an arrow in the sliding direction (DIN 1356-1).",
+          "de": "Das übliche Grundrisszeichen einer Schiebetür: der Flügel als dünnes Glasrechteck in seiner Schiene, die Pfosten als gefüllte Quadrate und ein Pfeil in Schieberichtung (DIN 1356-1)."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "jamb-west",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  -0.1
+                ],
+                [
+                  0.05,
+                  -0.1
+                ],
+                [
+                  0.05,
+                  0.1
+                ],
+                [
+                  -0.05,
+                  0.1
+                ]
+              ],
+              "closed": true,
+              "region": "jamb-steel"
+            },
+            {
+              "id": "jamb-east",
+              "bone": "track",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  2.95,
+                  -0.1
+                ],
+                [
+                  3.05,
+                  -0.1
+                ],
+                [
+                  3.05,
+                  0.1
+                ],
+                [
+                  2.95,
+                  0.1
+                ]
+              ],
+              "closed": true,
+              "region": "jamb-steel"
+            },
+            {
+              "id": "track-line-a",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.05
+                ],
+                [
+                  2.95,
+                  -0.05
+                ]
+              ],
+              "closed": false,
+              "region": "track-steel"
+            },
+            {
+              "id": "track-line-b",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.05
+                ],
+                [
+                  2.95,
+                  0.05
+                ]
+              ],
+              "closed": false,
+              "region": "track-steel"
+            },
+            {
+              "id": "leaf",
+              "bone": "track",
+              "role": "glazing",
+              "z": 1,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "poly",
+              "points": [
+                [
+                  1.0,
+                  -0.02
+                ],
+                [
+                  2.0,
+                  -0.02
+                ],
+                [
+                  2.0,
+                  0.02
+                ],
+                [
+                  1.0,
+                  0.02
+                ]
+              ],
+              "closed": true,
+              "region": "leaf-glass"
+            },
+            {
+              "id": "slide-arrow",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  2.05,
+                  0.0
+                ],
+                [
+                  2.9,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "slide-arrow-head",
+              "bone": "track",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  2.82,
+                  -0.05
+                ],
+                [
+                  2.9,
+                  0.0
+                ],
+                [
+                  2.82,
+                  0.05
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: 3.10 m between jamb faces by 0.20 m deep; the leaf is 1.00 m long and 40 mm thick, the arrow marks the slide direction and has no dimension.",
+          "de": "Echte Größe: 3,10 m über die Pfostenkanten bei 0,20 m Tiefe; der Flügel ist 1,00 m lang und 40 mm dick, der Pfeil markiert die Schieberichtung und hat keine Abmessung."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "closed",
+        "title": {
+          "en": "Closed",
+          "de": "Geschlossen"
+        },
+        "description": {
+          "en": "Leaf centred in the opening, carriage at the track centre.",
+          "de": "Flügel mittig in der Öffnung, Laufwagen in Schienenmitte."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "leaf-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "leaf-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "track-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "jamb-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "half-open",
+        "title": {
+          "en": "Half open",
+          "de": "Halb geöffnet"
+        },
+        "description": {
+          "en": "Leaf slid 0.5 m to the east, moving the jamb reactions.",
+          "de": "Flügel 0,5 m nach Osten verschoben, die Pfostenreaktionen verlagern sich."
+        },
+        "bones": {
+          "leaf": {
+            "dx": 0.5
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "leaf-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "leaf-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "track-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "jamb-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "open",
+        "title": {
+          "en": "Open, parked",
+          "de": "Offen, geparkt"
+        },
+        "description": {
+          "en": "Leaf parked against the east jamb, 1.0 m from closed.",
+          "de": "Flügel am Ostpfosten geparkt, 1,0 m aus der Schließlage."
+        },
+        "bones": {
+          "leaf": {
+            "dx": 1
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "leaf-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "leaf-frame": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "track-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "jamb-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "slide-open-close",
+        "title": {
+          "en": "Slide open and close",
+          "de": "Auf- und Zufahren"
+        },
+        "description": {
+          "en": "The leaf slides east, parks and returns smoothly to closed.",
+          "de": "Der Flügel fährt nach Osten, parkt und kehrt weich in die Schließlage zurück."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "half-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "open",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "half-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "open",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Opening",
+              "de": "Öffnen"
+            }
+          },
+          {
+            "id": "close",
+            "fromS": 4,
+            "toS": 8,
+            "title": {
+              "en": "Closing",
+              "de": "Schließen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "motion",
+            "title": {
+              "en": "Parked",
+              "de": "Geparkt"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "slide-open",
+        "title": {
+          "en": "Slide open",
+          "de": "Auffahren"
+        },
+        "description": {
+          "en": "One-way travel from closed to parked.",
+          "de": "Einfache Fahrt von geschlossen bis geparkt."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "open",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "travel",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Travel",
+              "de": "Fahrt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "motion",
+            "title": {
+              "en": "Parked against the east jamb",
+              "de": "Am Ostpfosten geparkt"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "sun-and-shade",
+        "title": {
+          "en": "Sun and shade",
+          "de": "Sonne und Schatten"
+        },
+        "description": {
+          "en": "A cloud shadow crosses the door: the glass and the leaf frame lose the direct sun and the surface temperatures follow with their heat capacity.",
+          "de": "Ein Wolkenschatten wandert über die Tür: Glas und Flügelrahmen verlieren die direkte Sonne und die Oberflächentemperaturen folgen mit ihrer Wärmekapazität."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "shadow",
+            "fromS": 0,
+            "toS": 8,
+            "title": {
+              "en": "Cloud shadow passes",
+              "de": "Wolkenschatten zieht durch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "thermal",
+            "title": {
+              "en": "Deepest shade",
+              "de": "Tiefster Schatten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:leaf-glass:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "region:leaf-frame:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 0,
+        "meanRadiantTempC": 0,
+        "skyTempC": -12,
+        "groundTempC": 2,
+        "relativeHumidity": 0.8,
+        "windMS": 3,
+        "windDirectionDeg": 0,
+        "solarWM2": 300,
+        "diffuseFraction": 0.25,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "leaf-glass",
+          "title": {
+            "en": "Leaf glass, single 10 mm toughened",
+            "de": "Flügelglas, einfach 10 mm ESG"
+          },
+          "kind": "glazing",
+          "model": "conditioned",
+          "material": "glass",
+          "areaM2": 1.62,
+          "characteristicLengthM": 1.8,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "glass-pane",
+              "title": {
+                "en": "Toughened glass 10 mm",
+                "de": "Einscheibensicherheitsglas 10 mm"
+              },
+              "kind": "glass",
+              "material": "glass",
+              "resistanceM2KW": 0.01,
+              "source": "literature",
+              "thicknessM": 0.01,
+              "heatCapacityJM2K": 18750,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 18750,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "literature",
+          "reference": "en-iso-6946"
+        },
+        {
+          "id": "leaf-frame",
+          "title": {
+            "en": "Leaf frame, hollow steel profile (thermal bridge around the glass)",
+            "de": "Flügelrahmen, Stahlhohlprofil (Wärmebrücke um das Glas)"
+          },
+          "kind": "surface",
+          "model": "conditioned",
+          "material": "steel",
+          "areaM2": 0.28,
+          "characteristicLengthM": 1.9,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "skin-a",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "cavity",
+              "title": {
+                "en": "Enclosed air in the hollow section, equivalent resistance 0.17 m2K/W",
+                "de": "Eingeschlossene Luft im Hohlprofil, äquivalenter Widerstand 0,17 m²K/W"
+              },
+              "kind": "air-gap",
+              "material": "frame-cavity",
+              "resistanceM2KW": 0.17,
+              "source": "authored-estimate",
+              "thicknessM": 0.05,
+              "heatCapacityJM2K": 0,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "skin-b",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 28000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "track-steel",
+          "title": {
+            "en": "Head track, RHS 100x50x4",
+            "de": "Laufschiene, RHS 100x50x4"
+          },
+          "kind": "surface",
+          "model": "conditioned",
+          "material": "steel",
+          "areaM2": 0.3,
+          "characteristicLengthM": 3.0,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "skin-a",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "cavity",
+              "title": {
+                "en": "Enclosed air in the hollow section, equivalent resistance 0.17 m2K/W",
+                "de": "Eingeschlossene Luft im Hohlprofil, äquivalenter Widerstand 0,17 m²K/W"
+              },
+              "kind": "air-gap",
+              "material": "frame-cavity",
+              "resistanceM2KW": 0.17,
+              "source": "authored-estimate",
+              "thicknessM": 0.05,
+              "heatCapacityJM2K": 0,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "skin-b",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 28000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-10077-1"
+        },
+        {
+          "id": "jamb-steel",
+          "title": {
+            "en": "Steel jambs",
+            "de": "Stahlpfosten"
+          },
+          "kind": "surface",
+          "model": "conditioned",
+          "material": "steel",
+          "areaM2": 0.42,
+          "characteristicLengthM": 2.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "skin-a",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            },
+            {
+              "id": "cavity",
+              "title": {
+                "en": "Enclosed air in the hollow section, equivalent resistance 0.17 m2K/W",
+                "de": "Eingeschlossene Luft im Hohlprofil, äquivalenter Widerstand 0,17 m²K/W"
+              },
+              "kind": "air-gap",
+              "material": "frame-cavity",
+              "resistanceM2KW": 0.17,
+              "source": "authored-estimate",
+              "thicknessM": 0.05,
+              "heatCapacityJM2K": 0,
+              "reference": "en-iso-10077-1"
+            },
+            {
+              "id": "skin-b",
+              "title": {
+                "en": "Steel wall 4 mm",
+                "de": "Stahlwand 4 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "thicknessM": 0.004,
+              "heatCapacityJM2K": 14100,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 28000,
+          "conditioned": {
+            "interiorTempC": 20,
+            "interiorFilmM2KW": 0.13
+          },
+          "source": "authored-estimate",
+          "reference": "en-iso-10077-1"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Winter reference case: air 0 degC, sky -12 degC, wind 3 m/s, 300 W/m2 normal irradiance; interior 20 degC with R_si 0.13 m2K/W. The viewer may select any preset.",
+          "de": "Winter-Referenzfall: Luft 0 °C, Himmel -12 °C, Wind 3 m/s, 300 W/m² Normalstrahlung; Innenraum 20 °C mit R_si 0,13 m²K/W. Der Betrachter kann jede Voreinstellung wählen."
+        },
+        {
+          "en": "The single 10 mm pane gives U about 5.9 W/(m2 K) (R_si 0.13 + 0.01 + R_se 0.04); the steel hollow sections with an enclosed air cavity (R 0.17) give about 2.9 W/(m2 K), so the frame is the warmer element on the cold side only by its larger resistance. The frame and track regions approximate the thermal bridges around the glass (authored estimate, EN ISO 10077-1 would resolve them).",
+          "de": "Die einfache 10-mm-Scheibe ergibt U etwa 5,9 W/(m² K) (R_si 0,13 + 0,01 + R_se 0,04); die Stahlhohlprofile mit eingeschlossenem Luftraum (R 0,17) ergeben etwa 2,9 W/(m² K), der Rahmen ist also nur durch seinen größeren Widerstand das wärmere Bauteil auf der kalten Seite. Die Rahmen- und Schienenregionen nähern die Wärmebrücken um das Glas an (Schätzung, EN ISO 10077-1 würde sie auflösen)."
+        },
+        {
+          "en": "The track and jambs are the steel frame of the opening: they separate interior from exterior like the leaf and are modelled as conditioned hollow sections.",
+          "de": "Schiene und Pfosten sind der Stahlrahmen der Öffnung: sie trennen wie der Flügel Innen von Außen und sind als konditionierte Hohlprofile modelliert."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: glass and leaf frame in the sun, track half shaded by the lintel, jambs half shaded.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Glas und Flügelrahmen in der Sonne, Schiene zur Hälfte vom Sturz verschattet, Pfosten halb verschattet."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "west-jamb",
+        "east-jamb"
+      ],
+      "assumptions": [
+        {
+          "en": "Track is a rigid simply supported rail between pin and roller jambs; the leaf weight is transmitted through its carriage as a moving vertical load.",
+          "de": "Die Schiene ist ein starrer, frei aufliegender Träger zwischen Festlager- und Rollenlager-Pfosten; das Flügelgewicht wird über den Laufwagen als wandernde Vertikallast übertragen."
+        },
+        {
+          "en": "Wind on the leaf is out of plane and is not represented in this elevation model; the latch is not modelled.",
+          "de": "Winddruck auf den Flügel wirkt senkrecht zur Ebene und ist in diesem Ansichtsmodell nicht enthalten; der Riegel ist nicht modelliert."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "closed",
+      "defaultClip": "slide-open-close",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

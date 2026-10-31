@@ -392,6 +392,8 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
     const best = Math.max(0, ...scored.map(([score]) => score));
     return scored.filter(([score]) => score === best && best > 0).map(([, item]) => item);
   };
+  const witnessOwners = [...new Set(tree.leaves.filter((leaf) => leaf.directory.startsWith(under)).map((leaf) => leaf.root.replace(/\/🧬️schema\/🧬️mutations$/u, "")))];
+  const admitsWitness = (path: string): boolean => path.startsWith(under) || witnessOwners.some((owner) => path.startsWith(owner + "/"));
   const witnesses = new Map<string, number>();
   const wrapperOf = (leaf: MutationLeafRecord, aggregate: MutationAggregate): MutationLeafWrapper | null => {
     const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(leaf.variant));
@@ -459,11 +461,7 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
     report(aggregate.path, schemaPath, findings);
   }
   for (const fixture of tree.fixtures.sort()) {
-    if (!fixture.startsWith(under)) continue;
-    const target = row(fixture);
-    target.fixtures += 1;
-    const outcome = mutationFixtureOutcome(readJsonObject(repoRoot, `${fixture.slice(0, fixture.lastIndexOf("/🦠️mutation/"))}/🎯️outcome/🔣️.json`));
-    if (outcome.direction === "negative") target.negatives += 1;
+    if (!admitsWitness(fixture)) continue;
     const segments = fixture.split("/").slice(0, -2);
     const anchor = segments.findLastIndex((segment) => segment.endsWith("fixtures") || segment === "🧪️tests");
     const owner = segments.slice(0, anchor).join("/");
@@ -490,6 +488,11 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
       for (const aggregate of nearest(tree.aggregates, (candidate) => candidate.path, fixture))
         for (const [variant, rename] of aggregate.variants)
           if ("payload" in mutationLeafPayload(aggregate.layout, mutationVariantWireName(variant, rename, aggregate.layout.renameAll), mutationFixtureWire(value))) leaf ??= nearest(tree.leaves.filter((candidate) => candidate.variant === variant), (candidate) => candidate.directory, aggregate.path)[0];
+    if (!fixture.startsWith(under) && (leaf === undefined || !leaf.directory.startsWith(under))) continue;
+    const target = row(fixture);
+    target.fixtures += 1;
+    const outcome = mutationFixtureOutcome(readJsonObject(repoRoot, `${fixture.slice(0, fixture.lastIndexOf("/🦠️mutation/"))}/🎯️outcome/🔣️.json`));
+    if (outcome.direction === "negative") target.negatives += 1;
     if (leaf === undefined) {
       report(fixture, null, [{ class: "unmapped", pointer: "", detail: value === undefined ? "the fixture is not JSON" : "no mutation leaf matches the fixture's path, and no nearby aggregate declares the variant its payload names" }]);
       continue;
@@ -529,14 +532,15 @@ export function mutationPayloadParityReport(repoRoot: string, under = ""): Mutat
     return document.allOf.flatMap((branch) => (isRecord(branch) && typeof branch.$ref === "string" ? [aggregatePathById.get(branch.$ref)] : [])).filter((path): path is string => path !== undefined);
   };
   for (const feature of tree.features.sort()) {
-    if (!feature.startsWith(under)) continue;
+    if (!admitsWitness(feature)) continue;
     const owner = feature.slice(0, feature.indexOf("/🧪️tests/"));
     const scopes = [owner, ...reexportedVocabularies(owner)].map(standardScope);
     for (const entry of mutationFeatureRows(readFileSync(join(repoRoot, feature), "utf8"))) {
-      const target = row(feature);
-      target.rows += 1;
       const where = `row ${JSON.stringify(entry.kind)} at line ${entry.line}`;
       const leaf = nearest(tree.leaves.filter((candidate) => candidate.kind === entry.kind && scopes.some((scope) => candidate.directory.startsWith(scope))), (candidate) => candidate.directory, owner)[0];
+      if (!feature.startsWith(under) && (leaf === undefined || !leaf.directory.startsWith(under))) continue;
+      const target = row(feature);
+      target.rows += 1;
       const id = leaf === undefined ? undefined : leafDocument.get(leaf.directory);
       if (leaf === undefined || id === undefined) {
         report(feature, null, [{ class: "unmapped", pointer: "", detail: `${where}: no mutation leaf of kind ${JSON.stringify(entry.kind)} under ${scopes.join(" or ")}` }]);

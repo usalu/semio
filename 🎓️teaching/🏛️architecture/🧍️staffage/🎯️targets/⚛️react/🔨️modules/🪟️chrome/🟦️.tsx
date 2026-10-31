@@ -13,12 +13,20 @@ import { Icon, OverviewCard, cn, type IconName } from "@semio-tech/ui-react/chro
 export { Icon, cn, type IconName };
 
 const CONTROL = "inline-flex min-h-6 items-center justify-center gap-single border border-border bg-panel px-double py-single text-xs font-medium text-foreground transition-colors hover:bg-hover-panel disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none";
+const PRIMARY = "border-primary bg-primary text-primary-foreground hover:bg-primary/90";
+const PRESSED = "border-active-base bg-active-base text-active-foreground hover:bg-active-hover";
 
-/** 🔘️ A button: `primary` inverts, `quiet` drops its frame. */
+/** ☑️ A control is pressed when `aria-pressed` is the boolean or the string true. */
+function pressed(value: unknown): boolean {
+  return value === true || value === "true";
+}
+
+/** 🔘️ A button: `primary` uses the primary color, `quiet` drops its frame, and a pressed toggle uses the active background. */
 export function Button(props: ButtonHTMLAttributes<HTMLButtonElement> & { readonly variant?: "default" | "primary" | "quiet"; readonly icon?: IconName }): ReactElement {
   const { variant = "default", icon, className, children, type = "button", ...rest } = props;
+  const on = pressed(rest["aria-pressed"]);
   return (
-    <button type={type} className={cn(CONTROL, variant === "primary" && "border-foreground bg-foreground text-background hover:bg-foreground/85", variant === "quiet" && "border-transparent bg-transparent", className)} {...rest}>
+    <button type={type} className={cn(CONTROL, variant === "primary" && !on && PRIMARY, variant === "quiet" && !on && "border-transparent bg-transparent", on && PRESSED, className)} {...rest}>
       {icon === undefined ? null : <Icon icon={icon} size="small" className="shrink-0" />}
       {children}
     </button>
@@ -26,10 +34,11 @@ export function Button(props: ButtonHTMLAttributes<HTMLButtonElement> & { readon
 }
 
 /** 🔗️ A link that looks like a button; navigation is the browser's own. */
-export function ButtonLink(props: { readonly href: string; readonly icon?: IconName; readonly variant?: "default" | "primary" | "quiet"; readonly className?: string; readonly children: ReactNode; readonly "aria-label"?: string; readonly title?: string }): ReactElement {
+export function ButtonLink(props: { readonly href: string; readonly icon?: IconName; readonly variant?: "default" | "primary" | "quiet"; readonly className?: string; readonly children: ReactNode; readonly "aria-label"?: string; readonly "aria-current"?: "page"; readonly title?: string }): ReactElement {
   const { href, icon, variant = "default", className, children, ...rest } = props;
+  const current = rest["aria-current"] === "page";
   return (
-    <a href={href} className={cn(CONTROL, "no-underline", variant === "primary" && "border-foreground bg-foreground text-background hover:bg-foreground/85", variant === "quiet" && "border-transparent bg-transparent", className)} {...rest}>
+    <a href={href} className={cn(CONTROL, "no-underline", variant === "primary" && PRIMARY, variant === "quiet" && !current && "border-transparent bg-transparent", current && "border-transparent bg-transparent text-primary", className)} {...rest}>
       {icon === undefined ? null : <Icon icon={icon} size="small" className="shrink-0" />}
       {children}
     </a>
@@ -72,7 +81,7 @@ export function Segmented<T extends string | number>(props: { readonly label: st
             lang={option.lang}
             onKeyDown={(event) => move(event, index)}
             onClick={() => onChange(option.value)}
-            className={cn("inline-flex min-h-6 items-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", option.value === value ? "bg-foreground text-background" : "bg-panel text-foreground hover:bg-hover-panel", index > 0 && "border-l border-border")}
+            className={cn("inline-flex min-h-6 items-center gap-single border-0 px-double py-single text-xs font-medium transition-colors motion-reduce:transition-none", option.value === value ? "bg-active-base text-active-foreground" : "bg-panel text-foreground hover:bg-hover-panel", index > 0 && "border-l border-border")}
           >
             {option.icon === undefined ? null : <Icon icon={option.icon} size="small" className="shrink-0" />}
             {option.label}

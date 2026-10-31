@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 /** 🧠️ Native grammar compilations, neural and domain controls: neural architecture, topology, incidence and references, graph and domain references, critical paths, token publication, actual marks and the hive, self loop, genome, music, meteogram, domain scalar, physics and surface window controls.
  *
  * @see ../🧰️grammar-kit/🟦️.ts — the equality check
@@ -90,7 +91,7 @@ export async function compileNativeNeuralReferenceControls(execution:PrintExecut
 export async function compileNativeDomainReferenceControls(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/domain-reference-controls",async({directory:workDir,execution})=>{
   const neutral=fixture.nativeDomainReferenceControls,control=neutral.vectors,original=JSON.stringify(control),{stratify,partition}=await import("d3-hierarchy"),failures:string[]=[],baseline=process.env.PRINT_NATIVE_DOMAIN_PHASE==="baseline",themes=(["light","dark"]as const).filter(theme=>!process.env.PRINT_NATIVE_CONTROL_THEME||theme===process.env.PRINT_NATIVE_CONTROL_THEME);
   
-  const rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow);
+  const rowValid=new AjvDraft07({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow);
   const oracle=(entry:typeof control.cases[number])=>{if(new Set(entry.rows.map(row=>row.id)).size!==entry.rows.length||!entry.rows.every(row=>rowValid(row)))return;let virtual="__neutral_forest__";while(entry.rows.some(row=>row.id===virtual))virtual+="_";try{return stratify<typeof entry.rows[number]>().id(row=>row.id).parentId(row=>row.id===virtual?null:row.parent||virtual)([{id:virtual,parent:"",value:0,label:""},...entry.rows]).sum(row=>Number(row.value));}catch{return;}};
   for(const entry of control.cases)if(Boolean(oracle(entry))!==entry.valid)throw Error(entry.id+" independent D3/AJV forest admission disagrees");
   const cases=control.cases.filter(entry=>entry.valid&&(!baseline||["ordered","reversed"].includes(entry.id))).flatMap(entry=>control.modes.map(mode=>({entry,mode,id:entry.id+"-"+mode}))),[width,height]=control.frame;
@@ -288,7 +289,7 @@ export async function compileNativeMeteogramWindowControls(execution:PrintExecut
 
 /** 🌲️ Preserves canonical scalar provenance against the shared row policy, D3 hierarchy and native diagnostics. */
 export async function compileNativeDomainScalarControls(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/domain-scalar-controls",async({directory:workDir,execution})=>{
-  const neutral=fixture.nativeDomainScalarControls,original=JSON.stringify(neutral),rowValid=new Ajv2020({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow),{stratify}=await import("d3-hierarchy"),failures:string[]=[],observations:unknown[]=[];
+  const neutral=fixture.nativeDomainScalarControls,original=JSON.stringify(neutral),rowValid=new AjvDraft07({strict:false,strictNumbers:true}).compile(nativeControlSchema.$defs.HierarchyRow),{stratify}=await import("d3-hierarchy"),failures:string[]=[],observations:unknown[]=[];
   
   const preamble=["\\title{Canonical Domain Scalars}","\\author{Semio}","\\date{}","\\errorcontextlines=200","\\ExplSyntaxOn\\int_new:N\\l_semio_viz_test_scalar_int\\cs_new_eq:NN\\semio_viz_test_scalar_lanes:\\semio_viz_dom_op_lanes:\\cs_set_protected:Npn\\semio_viz_dom_op_lanes:{\\semio_viz_test_scalar_lanes:\\int_zero:N\\l_semio_viz_test_scalar_int\\seq_map_inline:Nn\\l_semio_viz_dom_keys_seq{\\int_incr:N\\l_semio_viz_test_scalar_int\\semio_viz_probe_values:xx{scalar/node/\\int_use:N\\l_semio_viz_test_scalar_int}{\\prop_item:Nn\\l_semio_viz_dom_dep_prop{##1},\\prop_item:Nn\\l_semio_viz_dom_sum_prop{##1}}}}\\ExplSyntaxOff"];
   const published:{id:string;valid:boolean;language:string;appearance:"light"|"dark";source:string;expected:number[][]}[]=[];

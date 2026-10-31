@@ -1,4 +1,6 @@
 //! 🎛️ IFC2x3 TC1 details over its own exact Part21 snapshot and mutation authority.
+
+extern crate semio_framework_os_kernel as protocol;
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::Locale;
 use semio_framework_value::{DslValue,FromValue,ToValue};
@@ -78,3 +80,7 @@ pub fn details_edit_special_controlled(event:&SnapshotEditEvent,snapshot:&Ifc2x3
 pub fn details_edit_special(event:&SnapshotEditEvent,snapshot:&Ifc2x3Snapshot)->Result<Option<Vec<Ifc2x3Mutation>>,Fault>{details_edit_special_controlled(event,snapshot,&mut ||Ok(()))}
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

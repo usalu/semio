@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { readFileSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };

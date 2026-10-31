@@ -1,8 +1,10 @@
 {
   "clash_sets": {
     "cs-1": {
-      "clearance": 0.1,
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "clearance": 0.1
+      }
     }
   }
 }

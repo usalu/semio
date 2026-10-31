@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "reason": "memory",
+      "rssMegabytes": 100,
+      "jobs": 1,
+      "outcome": "result"
+    },
+    {
+      "reason": "memory",
+      "rssMegabytes": 100,
+      "jobs": 1,
+      "outcome": "failure"
+    },
+    {
+      "reason": "projects",
+      "rssMegabytes": 1,
+      "jobs": 1,
+      "outcome": "result"
+    },
+    {
+      "reason": "projects",
+      "rssMegabytes": 1,
+      "jobs": 1,
+      "outcome": "failure"
+    }
+  ],
+  "expected": {
+    "beforeExit": 1,
+    "afterExit": 2,
+    "closedBeforeExit": false
+  },
+  "release": {
+    "beforeExit": 0,
+    "afterExit": 1
+  },
+  "failures": {
+    "jobs": [
+      3,
+      4
+    ],
+    "expected": {
+      "failures": 2,
+      "recycled": 2,
+      "retired": 2
+    }
+  }
+}

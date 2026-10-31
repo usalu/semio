@@ -1,3 +1,7 @@
+import {createRepoProfileV1,readRepoProfileModeV1} from "../../../../🏗️build/⏱️profile/🟨️.mjs";
+import Ajv from "ajv";
+import nativeFixture from "./🧫️fixtures/🧲️native.json" with {type:"json"};
+import nativeSchema from "./🧬️schema/🧲️native.json" with {type:"json"};
 /** 🪜️ Nx lock-order laws. The real start orchestrator opens the store and the birth before it takes the exclusive start lease; every declared Nx acquisition sequence (`./🧫️fixtures/🔣️.json`) replays against the authored lock order in TypeScript and in the independent Python model `./🐍️.py` with the same violations, and the order before the fix is flagged; the source facts the inert classes rest on (pins and daemon slots are only ever requested by non-waiting try-locks; the namespace is bound inside the toolkit use) hold in the TypeScript compiler's syntax tree and in the Python scan. */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
@@ -55,6 +59,8 @@ const recording=(trace:string[],failBody=false)=>{
  const resources:string[]=[],steps:NxDaemonStartupStepsV1={
   receive:(_environment,run)=>{trace.push("receive");return run({} as never);},
   admit:()=>{trace.push("admit");return phase();},
+  native:(_original,_phase,environment)=>{trace.push("native");return environment;},
+  entries:async(_original,_phase,run)=>{trace.push("entries");try{return await run();}finally{trace.push("entries:close");}},
   store:async(_original,_control,run)=>{trace.push("store");try{return await run(phase());}finally{trace.push("store:close");}},
   birth:async(_original,_phase,_namespace,_identity,_environment,run)=>{trace.push("birth");try{return await run({BIRTH:"1"},phase());}finally{trace.push("birth:close");}},
   lease:async(_phase,resource,run)=>{trace.push("lease");resources.push(resource);try{return await run();}finally{trace.push("lease:close");}}
@@ -65,7 +71,8 @@ test("a daemon start opens the store and the birth before it takes the exclusive
  const directory=mkdtempSync(join(tmpdir(),"nxl-")),identity="a".repeat(64),trace:string[]=[],run=recording(trace);
  try{
   expect(await withNxDaemonStartupV1(directory,identity,{},run.body,run.steps)).toBe("started");
-  expect(trace).toEqual(["receive","admit","store","birth","lease","body","lease:close","birth:close","store:close"]);
+  expect(new Ajv({strict:true}).compile(nativeSchema)(nativeFixture)).toBe(true);
+  expect(trace).toEqual(nativeFixture.trace);
   expect(run.resources).toHaveLength(1);expect(run.resources[0]).toMatch(/^nx:daemon-startup:[a-f0-9]{64}$/u);
   expect(classifyLeaseResourceV1(policy,run.resources[0]!).id).toBe("daemon-startup");
   const declared=(id:string)=>[...new Set(sequences.find(row=>row.id===id)!.steps.flatMap(step=>step.via&&["store","birth","lease"].includes(step.via)?[step.via]:[]))];
@@ -79,7 +86,7 @@ test("a refused body or a malformed toolkit unwinds the start in reverse order a
  const directory=mkdtempSync(join(tmpdir(),"nxl-")),trace:string[]=[],run=recording(trace,true);
  try{
   await expect(withNxDaemonStartupV1(directory,"a".repeat(64),{},run.body,run.steps)).rejects.toThrow("body refused");
-  expect(trace.slice(-4)).toEqual(["body","lease:close","birth:close","store:close"]);
+  expect(trace.filter(name=>name!=="entries:close").slice(-4)).toEqual(["body","lease:close","birth:close","store:close"]);
   const quiet:string[]=[];await expect(withNxDaemonStartupV1(directory,"toolkit",{},recording(quiet).body,recording(quiet).steps)).rejects.toThrow("toolkit required");expect(quiet).toEqual([]);
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
@@ -124,4 +131,31 @@ test("the syntax-tree check tells the two orders apart",()=>{
  const make=(text:string)=>ts.createSourceFile("f.ts",text,ts.ScriptTarget.Latest,true);
  expect(bindsInsideToolUse(make("function f(){return withRepositoryNxStorageV1(a,async(bind,p)=>withNxToolingUseV1(x,y,p,async()=>{const n=await bind(1);return n;}));}"),"f")).toBe(true);
  expect(bindsInsideToolUse(make("function f(){return withRepositoryNxStorageV1(a,async(bind,p)=>{const n=await bind(1);return withNxToolingUseV1(x,y,p,async()=>n);});}"),"f")).toBe(false);
+});
+
+/** 🧲️ The independent TypeScript parser confirms the admitted caller prepares Native before any physical path or store operation. */
+test("the real startup source binds Native before its first materialized path and store demand",()=>{
+ const source=parse(resolve(import.meta.dir,"../🟦️.ts")),calls=callsOf(source),prepare=calls.find(call=>call.expression.getText(source)==="order.native")!,materialized=calls.find(call=>call.expression.getText(source)==="requireMaterializedPathV1")!,store=calls.find(call=>call.expression.getText(source)==="order.store")!;
+ expect([["native",prepare.getStart(source)],["materialized",materialized.getStart(source)],["store",store.getStart(source)]].sort((a,b)=>Number(a[1])-Number(b[1])).map(row=>row[0])).toEqual(nativeFixture.before);
+ const receive=calls.find(call=>call.expression.getText(source)==="order.receive")!,callback=receive.arguments[1]!;for(const call of [prepare,materialized,store])expect(call.getStart(source)>callback.getStart(source)&&call.end<callback.end).toBe(true);
+});
+
+/** ⏱️ The existing profile preserves exact values and failures while the neutral cases record only real Native work. */
+test("Native profile cases preserve result and thrown identity without creating disabled rows",()=>{
+ for(const row of nativeFixture.profileCases){let now=0;const value={},failure={},profile=createRepoProfileV1({mode:readRepoProfileModeV1({SEMIO_REPO_PROFILE:row.mode}),now:()=>now,write:()=>undefined});let actual:unknown,thrown:unknown;try{actual=profile.phase(nativeFixture.nativeSpan,()=>{now+=row.duration;if(row.failure)throw failure;return value;});}catch(error){thrown=error;}if(row.failure)expect(thrown).toBe(failure);else expect(actual).toBe(value);expect(profile.summary().rows.map(item=>[item.phase,item.duration])).toEqual(row.rows);}
+});
+/** 🔬️ The independent TypeScript parser binds the actual preparation call to the declared synchronous profile span. */
+test("the production Native operation is inside the existing timing interface",()=>{
+ const source=parse(resolve(import.meta.dir,"../🟦️.ts")),calls=callsOf(source),native=calls.find(call=>call.expression.getText(source)==="order.native")!,span=calls.find(call=>call.expression.getText(source)==="profilePhaseV1"&&ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text===nativeFixture.nativeSpan);expect(span).toBeDefined();const callback=span!.arguments[1]!;expect(native.getStart(source)>callback.getStart(source)&&native.end<=callback.end).toBe(true);
+});
+
+/** 🔬️ Actual work spans are attached to existing operations rather than arbitrary heartbeat timers. */
+test("pre-verification wall spans enclose the declared production operations",()=>{
+ const startup=parse(resolve(import.meta.dir,"../🟦️.ts")),runtime=parse(resolve(library,"🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts"));
+ for(const row of nativeFixture.wallSpans){const phase=row[0],operations=row[1];if(typeof phase!=="string"||!Array.isArray(operations))throw Error("Closed wall span fixture required");const source=phase.startsWith("nx.runtime")?runtime:phase.startsWith("nx.store.")?parse(resolve(library,"⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts")):startup,spans=callsOf(source).filter(call=>call.expression.getText(source)==="profilePhaseV1"),span=spans.find(call=>ts.isStringLiteral(call.arguments[0]!)&&call.arguments[0]!.text===phase);expect(span,phase).toBeDefined();const callback=span!.arguments[1]!,found=callsOf(callback).map(call=>call.expression.getText(source));for(const operation of operations)expect(found,phase).toContain(operation);}
+});
+
+/** ⏳️ Async store observations preserve the exact settled value and rejection. */
+test("store profile cases retain async results and original failures",async()=>{
+ for(const row of nativeFixture.profileCases){let now=0;const value={},failure={},profile=createRepoProfileV1({mode:readRepoProfileModeV1({SEMIO_REPO_PROFILE:row.mode}),now:()=>now,write:()=>undefined});let actual:unknown,thrown:unknown;try{actual=await profile.phase("nx.store.image-open",async()=>{await Promise.resolve();now+=row.duration;if(row.failure)throw failure;return value;});}catch(error){thrown=error;}if(row.failure)expect(thrown).toBe(failure);else expect(actual).toBe(value);expect(profile.summary().rows.map(item=>[item.phase,item.duration])).toEqual(row.rows.map(item=>["nx.store.image-open",item[1]]));}
 });

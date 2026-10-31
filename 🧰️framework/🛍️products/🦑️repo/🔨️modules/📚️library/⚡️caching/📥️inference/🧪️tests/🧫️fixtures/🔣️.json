@@ -212,6 +212,195 @@
         "./production.ts",
         "./runtime.ts"
       ]
+    },
+    {
+      "id": "inline-type-reexport-default",
+      "path": "case.ts",
+      "source": "export {type Value} from \"./leaf.ts\";",
+      "imports": [
+        "./leaf.ts"
+      ],
+      "verbatimModuleSyntax": false
+    },
+    {
+      "id": "empty-reexport-default",
+      "path": "case.ts",
+      "source": "export {} from \"./effects.ts\";",
+      "imports": [
+        "./effects.ts"
+      ],
+      "verbatimModuleSyntax": false
+    },
+    {
+      "id": "inline-type-import-default",
+      "path": "case.ts",
+      "source": "import {type Value} from \"./erased.ts\"; export const value=1;",
+      "imports": [],
+      "verbatimModuleSyntax": false
+    },
+    {
+      "id": "default-with-inline-type-import",
+      "path": "case.ts",
+      "source": "import value,{type Value} from \"./leaf.ts\"; export {value};",
+      "imports": [
+        "./leaf.ts"
+      ],
+      "verbatimModuleSyntax": false
+    },
+    {
+      "id": "mixed-type-reexport-default",
+      "path": "case.ts",
+      "source": "export {type Value,value} from \"./leaf.ts\";",
+      "imports": [
+        "./leaf.ts"
+      ],
+      "verbatimModuleSyntax": false
+    },
+    {
+      "id": "declaration-type-star-default",
+      "path": "case.ts",
+      "source": "export type * from \"./erased.ts\";",
+      "imports": [],
+      "verbatimModuleSyntax": false
+    }
+  ],
+  "references": [
+    {
+      "id": "esm-static-reexport",
+      "path": "case.ts",
+      "source": "import {value} from './static.ts'; export {other} from './export.ts'; console.log(value);",
+      "imports": [
+        "./static.ts",
+        "./export.ts"
+      ],
+      "requires": [],
+      "union": [
+        "./static.ts",
+        "./export.ts"
+      ]
+    },
+    {
+      "id": "esm-dynamic",
+      "path": "case.ts",
+      "source": "export const value=import('./dynamic.ts');",
+      "imports": [
+        "./dynamic.ts"
+      ],
+      "requires": [],
+      "union": [
+        "./dynamic.ts"
+      ]
+    },
+    {
+      "id": "commonjs-require",
+      "path": "case.cts",
+      "source": "const value=require('./required.ts'); console.log(value);",
+      "imports": [],
+      "requires": [
+        "./required.ts"
+      ],
+      "union": [
+        "./required.ts"
+      ]
+    },
+    {
+      "id": "typescript-import-equals",
+      "path": "case.ts",
+      "source": "import value=require('./equals.ts'); console.log(value);",
+      "imports": [],
+      "requires": [
+        "./equals.ts"
+      ],
+      "union": [
+        "./equals.ts"
+      ]
+    },
+    {
+      "id": "immediate-create-require",
+      "path": "case.ts",
+      "source": "import {createRequire} from 'node:module'; export const value=createRequire(import.meta.url)('./created.ts');",
+      "imports": [
+        "node:module"
+      ],
+      "requires": [
+        "./created.ts"
+      ],
+      "union": [
+        "node:module",
+        "./created.ts"
+      ],
+      "compilerRequires": []
+    },
+    {
+      "id": "same-specifier-two-modes",
+      "path": "case.ts",
+      "source": "const first=require('./dual.ts'); import {value} from './dual.ts'; export const result=import('./dual.ts'); console.log(first,value);",
+      "imports": [
+        "./dual.ts"
+      ],
+      "requires": [
+        "./dual.ts"
+      ],
+      "union": [
+        "./dual.ts"
+      ]
+    },
+    {
+      "id": "ordered-mode-union",
+      "path": "case.ts",
+      "source": "const first=require('./first.ts'); import {value} from './second.ts'; export const result=import('./third.ts'); console.log(first,value);",
+      "imports": [
+        "./second.ts",
+        "./third.ts"
+      ],
+      "requires": [
+        "./first.ts"
+      ],
+      "union": [
+        "./first.ts",
+        "./second.ts",
+        "./third.ts"
+      ]
+    },
+    {
+      "id": "declaration-types-erased",
+      "path": "case.ts",
+      "source": "import type {Value} from './type-import.ts'; export type {Other} from './type-export.ts'; import type Eq=require('./type-equals.ts'); export const value=1;",
+      "imports": [],
+      "requires": [],
+      "union": []
+    },
+    {
+      "id": "inline-type-reexport-read",
+      "path": "case.ts",
+      "source": "export {type Value} from './inline-type.ts';",
+      "imports": [
+        "./inline-type.ts"
+      ],
+      "requires": [],
+      "union": [
+        "./inline-type.ts"
+      ]
+    },
+    {
+      "id": "command-vitest-guard",
+      "path": "case.ts",
+      "source": "if(import.meta.vitest){require('./test.ts')}else{import('./production.ts')}",
+      "imports": [
+        "./production.ts"
+      ],
+      "requires": [],
+      "union": [
+        "./production.ts"
+      ]
+    },
+    {
+      "id": "nonliteral-refusal",
+      "path": "case.ts",
+      "source": "const name='./variable.ts'; import(name); require(name);",
+      "imports": [],
+      "requires": [],
+      "union": []
     }
   ]
 }

@@ -12,14 +12,18 @@
   "spaces": {
     "sp-1": {
       "entry": "Patched",
-      "zone": {
-        "value": null
+      "value": {
+        "zone": {
+          "value": null
+        }
       }
     },
     "sp-2": {
       "entry": "Patched",
-      "zone": {
-        "value": null
+      "value": {
+        "zone": {
+          "value": null
+        }
       }
     }
   },

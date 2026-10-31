@@ -15,7 +15,7 @@ import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript
 
 
 /** 🧪️ Runs one declared process suite, function proof, or explicit contracts leaf. */
-class CacheTestScript extends BundleScript {
+export class CacheTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { cachingTestRootV1, readCachingTestTableV1 } = await import("./🗂️suites/🟦️.ts"), table = readCachingTestTableV1(),{selectCanonicalCacheTestV1}=await import("./🗂️suites/🧮️aggregate/🟦️.ts"),selected=selectCanonicalCacheTestV1(args,table);
     if (selected === "suite") {

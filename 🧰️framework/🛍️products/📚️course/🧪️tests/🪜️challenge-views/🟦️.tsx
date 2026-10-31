@@ -21,15 +21,19 @@
  * @see ../🪞️challenge-views-kit/🟦️.ts — the shared fixtures
  */
 
+import Ajv from "ajv";
+import { JSDOM } from "jsdom";
+import feedbackIdentity from "../🧫️fixtures/🏷️feedback-identity/🔣️.json";
+import feedbackIdentitySchema from "../🧫️fixtures/🏷️feedback-identity/🧬️schema/🔣️.json";
 import { useState, type ReactElement } from "react";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { answerComplete, type Answer, type RunResult, type RunView, type Sheet, type SheetClassificationTask, type SheetMatchingTask, type SheetSortingTask } from "@semio-tech/course";
+import { answerComplete, type Answer, type RunResult, type RunView, type Sheet, type SheetClassificationTask, type SheetMatchingTask, type SheetSortingTask, type SheetTask, type TaskResult } from "@semio-tech/course";
 import { ClassificationTaskView, SortingTaskView, formatQuantity, formatScore, initialCourseState, courseText, type CourseLocale, type CourseSession } from "@semio-tech/course-react";
 import { TaskView } from "@semio-tech/course-react/modules/run/.tsx";
-import { ResultsScreen, offersDirectRetry } from "@semio-tech/course-react/modules/results/.tsx";
+import { ResultsScreen, TaskResultView, offersDirectRetry } from "@semio-tech/course-react/modules/results/.tsx";
 import { en, factorOf, LAMPS, MASSES, NBSP, PLACES, sheetAt, TEMPERATURES, text } from "../🪞️challenge-views-kit/🟦️.ts";
 
 afterEach(() => {
@@ -350,4 +354,40 @@ describe("🏁️ results by challenge", () => {
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(signal?.aborted).toBe(true);
   });
+});
+
+type FeedbackIdentityCorpusV1 = Readonly<{ version: 1; items: readonly Readonly<{ id: string; label: Readonly<Record<CourseLocale, string>>; explanation: Readonly<Record<CourseLocale, string>> }>[]; order: readonly string[]; dimensions: readonly string[] }>;
+
+describe("🏷️ feedback rows preserve item identities", () => {
+  const validate = new Ajv({ strict: true }).compile<FeedbackIdentityCorpusV1>(feedbackIdentitySchema);
+  const corpus: unknown = feedbackIdentity;
+  if (!validate(corpus)) throw Error("Feedback identity fixture required: " + JSON.stringify(validate.errors));
+  const ordered = corpus.order.map((id) => {
+    const item = corpus.items.find((candidate) => candidate.id === id);
+    if (item === undefined) throw Error("Authored feedback item required: " + id);
+    return item;
+  });
+  const items = corpus.items.map(({ id, label }) => ({ id, label }));
+  const dimensions = corpus.dimensions.map((id) => ({ ...LAMPS.dimensions[0]!, id, cards: [1, 2] }));
+  const scenarios: readonly { readonly task: SheetTask; readonly result: TaskResult }[] = [
+    { task: { ...PLACES, items }, result: { kind: "classification", task: PLACES.id, score: 1, items: ordered.map((item) => ({ item: item.id, assigned: PLACES.categories[0]!.id, correct: PLACES.categories[0]!.id, credit: 1, explanation: item.explanation })) } },
+    { task: { ...MASSES, items, keys: [1, 2] }, result: { kind: "sorting", task: MASSES.id, score: 1, items: ordered.map((item, index) => ({ item: item.id, value: index + 1, position: index, rank: index, explanation: item.explanation })) } },
+    { task: { ...LAMPS, items, dimensions }, result: { kind: "matching", task: LAMPS.id, score: 1, dimensions: dimensions.map((dimension) => ({ dimension: dimension.id, score: 1, items: ordered.map((item, index) => ({ item: item.id, assigned: index + 1, correct: index + 1, explanation: item.explanation })) })) } },
+  ];
+  for (const locale of ["en", "de"] as const) for (const { task, result } of scenarios) {
+    it(task.kind + " retains exact repeated-label identities and explanations in " + locale, () => {
+      expect(corpus.items[0]!.label[locale]).toBe(corpus.items[1]!.label[locale]);
+      expect(corpus.order).toEqual([...corpus.items].reverse().map((item) => item.id));
+      const { container } = render(<TaskResultView name="feedback-identity" title="Feedback" task={task} result={result} text={courseText(locale)} locale={locale} />);
+      const expected = (task.kind === "matching" ? corpus.dimensions : [null]).flatMap((dimension) => ordered.map((item) => ({ id: item.id, dimension, label: item.label[locale], explanation: item.explanation[locale] })));
+      const rows = Array.from(container.querySelectorAll("tbody tr")).map((row) => ({ id: row.getAttribute("data-result-item"), dimension: row.getAttribute("data-result-dimension"), label: row.querySelector("th[scope=row]")?.textContent?.trim(), explanation: row.querySelector('[data-cell="note"]')?.textContent?.trim() }));
+      expect(rows).toEqual(expected);
+      const oracle = new JSDOM(container.innerHTML);
+      try {
+        const extracted = Array.from(oracle.window.document.querySelectorAll("tbody tr")).map((row) => ({ id: row.getAttribute("data-result-item"), dimension: row.getAttribute("data-result-dimension"), label: row.querySelector("th[scope=row]")?.textContent?.trim(), explanation: row.querySelector('[data-cell="note"]')?.textContent?.trim() }));
+        expect(extracted).toEqual(expected);
+        expect(new Set(extracted.map((row) => JSON.stringify([row.dimension, row.id]))).size).toBe(expected.length);
+      } finally { oracle.window.close(); }
+    });
+  }
 });

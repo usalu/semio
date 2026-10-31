@@ -10,7 +10,7 @@ import{readFileSync,mkdtempSync,renameSync,writeFileSync,mkdirSync,utimesSync}fr
 import glob from"fast-glob";
 import{join,resolve}from"node:path";
 import{createHash}from"node:crypto";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import loaderSchema from "../📚️loader/🧬️schema/🔣️.json";
 import loaderFixture from "../📚️loader/🧪️tests/🧫️fixtures/🔣️.json";
 import { rustCompilerLoaderEnvironment } from "../📚️loader/🟦️.ts";

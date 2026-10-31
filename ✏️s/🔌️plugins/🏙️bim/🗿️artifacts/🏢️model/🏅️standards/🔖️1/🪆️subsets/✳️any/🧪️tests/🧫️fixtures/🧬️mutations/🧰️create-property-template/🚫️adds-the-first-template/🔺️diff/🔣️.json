@@ -1,61 +1,63 @@
 {
   "property_templates": {
     "pt-wall": {
-      "applies_to": [
-        "Wall",
-        "WallType"
-      ],
       "entry": "Created",
-      "name": "Pset_WallCommon",
-      "properties": [
-        {
-          "allowed": [
-            {
-              "Text": {
-                "value": "EI30"
+      "value": {
+        "applies_to": [
+          "Wall",
+          "WallType"
+        ],
+        "name": "Pset_WallCommon",
+        "properties": [
+          {
+            "allowed": [
+              {
+                "Text": {
+                  "value": "EI30"
+                }
+              },
+              {
+                "Text": {
+                  "value": "EI60"
+                }
+              },
+              {
+                "Text": {
+                  "value": "EI90"
+                }
+              }
+            ],
+            "kind": "Text",
+            "name": "FireRating",
+            "required": false
+          },
+          {
+            "allowed": [],
+            "default_value": {
+              "Real": {
+                "value": 0.35
               }
             },
-            {
-              "Text": {
-                "value": "EI60"
+            "kind": "Real",
+            "maximum": 5,
+            "minimum": 0,
+            "name": "ThermalTransmittance",
+            "required": true,
+            "unit": "W/(m2.K)"
+          },
+          {
+            "allowed": [],
+            "default_value": {
+              "Boolean": {
+                "value": false
               }
             },
-            {
-              "Text": {
-                "value": "EI90"
-              }
-            }
-          ],
-          "kind": "Text",
-          "name": "FireRating",
-          "required": false
-        },
-        {
-          "allowed": [],
-          "default_value": {
-            "Real": {
-              "value": 0.35
-            }
-          },
-          "kind": "Real",
-          "maximum": 5.0,
-          "minimum": 0.0,
-          "name": "ThermalTransmittance",
-          "required": true,
-          "unit": "W/(m2.K)"
-        },
-        {
-          "allowed": [],
-          "default_value": {
-            "Boolean": {
-              "value": false
-            }
-          },
-          "kind": "Boolean",
-          "name": "IsExternal",
-          "required": false
-        }
-      ]
+            "kind": "Boolean",
+            "name": "IsExternal",
+            "required": false
+          }
+        ]
+      }
     }
   }
 }

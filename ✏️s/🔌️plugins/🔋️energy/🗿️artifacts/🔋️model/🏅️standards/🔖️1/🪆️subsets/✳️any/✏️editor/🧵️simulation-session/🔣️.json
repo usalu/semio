@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "energy.simulation.run.v1",
   "title": "Energy Simulation Run",
   "description": "Source of record for the energy simulation ToolRunDefinition (📋️tool-run-contract.md §2.4). The run is read-only: finalize publishes no document edit. One unit of fuel is one computed warmup or run timestep.",

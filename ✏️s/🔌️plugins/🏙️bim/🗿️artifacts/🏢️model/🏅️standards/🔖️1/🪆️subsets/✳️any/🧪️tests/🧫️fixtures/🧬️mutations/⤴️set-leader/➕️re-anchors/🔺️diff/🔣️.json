@@ -1,16 +1,18 @@
 {
   "leaders": {
     "lead-1": {
-      "anchor": {
-        "WallFace": {
-          "side": "Left",
-          "wall": "w-east"
-        }
-      },
       "entry": "Patched",
-      "offset": {
-        "x": -1.0,
-        "y": 0.5
+      "value": {
+        "anchor": {
+          "WallFace": {
+            "side": "Left",
+            "wall": "w-east"
+          }
+        },
+        "offset": {
+          "x": -1,
+          "y": 0.5
+        }
       }
     }
   }

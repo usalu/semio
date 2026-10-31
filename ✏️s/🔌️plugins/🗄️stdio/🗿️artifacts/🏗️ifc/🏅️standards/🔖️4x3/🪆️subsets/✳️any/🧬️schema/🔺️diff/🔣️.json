@@ -1,5 +1,5 @@
 {
-  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$schema":"http://json-schema.org/draft-07/schema#",
   "$id":"https://semio.tech/s/stdio/ifc/4x3/diff.schema.json",
   "title":"Ifc4x3Diff Decimal Transport",
   "description":"Sparse diff with base coordinates for removals/modifications and final coordinates for additions. Entity removal records retain the original identity and position. Native bigint leaves use decimal strings in JSON.",

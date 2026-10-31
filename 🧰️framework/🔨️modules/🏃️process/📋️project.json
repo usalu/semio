@@ -342,12 +342,30 @@
         "^default",
         "testEnv",
         "reads",
-        "{projectRoot}/**/*"
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧱️script-bases/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🏃️kernel-test-runner/🔣️.json",
+        "{workspaceRoot}/rust-toolchain.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json"
       ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "repo ./📜️script.ts test cargo-driver"
+      },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧱️script-bases/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/🏃️kernel-test-runner/🔣️.json",
+              "{workspaceRoot}/rust-toolchain.toml",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/📋️constraints/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧬️schema/🔣️.json"
+            ]
+          }
+        }
       }
     },
     "test-resource-leases": {

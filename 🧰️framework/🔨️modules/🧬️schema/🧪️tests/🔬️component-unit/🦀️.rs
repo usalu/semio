@@ -480,8 +480,8 @@ async fn framework_schema_exports_match_the_modules_json_schema_defs_and_resolve
             assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, export.id, format), Err(SchemaResolveError::FormatAbsent { scope: FRAMEWORK_SCHEMA_SCOPE.to_string(), export: export.id.to_string(), format }));
         }
     }
-    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "SchemaFormat", SchemaFormat::Rust), Ok(include_str!("../../📇️registry/🦀️.rs")));
-    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../✅️validator/⚠️error/🦀️.rs")));
+    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "SchemaFormat", SchemaFormat::Rust), Ok(include_str!("../../🦀️.rs")));
+    assert_eq!(resolve_schema_export(FRAMEWORK_SCHEMA_SCOPE, "ValidationDiagnostic", SchemaFormat::Rust), Ok(include_str!("../../🦀️.rs")));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -596,7 +596,7 @@ async fn owned_format_policy_matches_the_shared_format_lists() {
 
 #[semio_framework_async_macros::async_test]
 async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
-    let corpus: [(&str, &[(&str, bool)]); 11] = [
+    let corpus: [(&str, &[(&str, bool)]); 13] = [
         ("^[a-z][a-z0-9]*$", &[("scope", true), ("s9", true), ("Scope", false), ("", false)]),
         ("^v\\d{1,3}$", &[("v1", true), ("v123", true), ("v1234", false), ("v", false)]),
         ("^(rust|typescript|graphql)$", &[("rust", true), ("graphql", true), ("proto", false)]),
@@ -608,6 +608,8 @@ async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
         ("^(?!0{4}$)[0-9a-f]{4}$", &[("00a0", true), ("0000", false), ("ffff", true)]),
         ("^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$", &[("a/b", true), ("a/..b", true), ("/a", false), ("a/../b", false), ("..", false)]),
         ("(?=.*x)ab", &[("abx", true), ("xab", false), ("ab", false)]),
+        ("\\ba\\b", &[("a", true), ("-a-", true), ("ba", false), ("ab", false)]),
+        ("\\Ba\\B", &[("bab", true), ("a", false)]),
     ];
     for (pattern, cases) in corpus {
         let matcher = crate::PatternMatcher::compile(pattern).unwrap_or_else(|reason| panic!("{pattern}: {reason}"));
@@ -615,7 +617,7 @@ async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
             assert_eq!(matcher.is_match(text), *expected, "pattern {pattern} against {text}");
         }
     }
-    for rejected in ["(?<=a)", "(?<!a)", "a\\1", "\\ba", "[z-a]", "(a", "*a"] {
+    for rejected in ["(?<=a)", "(?<!a)", "a\\1", "\\b+", "[\\B]", "[z-a]", "(a", "*a"] {
         assert!(crate::PatternMatcher::compile(rejected).is_err(), "expected {rejected} to be rejected");
     }
 }

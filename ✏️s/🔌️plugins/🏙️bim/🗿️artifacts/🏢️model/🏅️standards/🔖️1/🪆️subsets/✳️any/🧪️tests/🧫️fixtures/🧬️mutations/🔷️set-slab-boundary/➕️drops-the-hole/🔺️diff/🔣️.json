@@ -2,7 +2,9 @@
   "slabs": {
     "sl-ground": {
       "entry": "Patched",
-      "holes": []
+      "value": {
+        "holes": []
+      }
     }
   }
 }

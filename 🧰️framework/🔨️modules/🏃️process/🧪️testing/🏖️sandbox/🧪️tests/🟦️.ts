@@ -5,7 +5,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import protocol from "../🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import corpus from "./🧫️fixtures/🔣️.json" with { type: "json" };
@@ -296,7 +296,7 @@ describe("per-run sandbox", () => {
     } finally { first.dispose(); second.dispose(); }
   });
   test("sandboxes live below the root of their agent session, the owner row names the session, and a gone session releases its root unless a live sandbox is left", () => {
-    const parent = mkdtempSync(join(tmpdir(), "sb-session-")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
+    const parent = mkdtempSync(join(dirname(testSandboxParentV1()), "sb-session-")), base = join(parent, declared.layout.parent), dead = spawnSync(process.execPath, ["-e", "0"]).pid!;
     const session = { id: "a1", worktree: "0123456789ab", resources: { tests: { root: "a1" } } }, other = { id: "b2", worktree: "0123456789ab", resources: { tests: { root: "b2" } } };
     try {
       const mine = createTestSandboxV1({ route: "s", parent, reclaim: false, session }), theirs = createTestSandboxV1({ route: "s", parent, reclaim: false, session: other });

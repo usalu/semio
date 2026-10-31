@@ -1,0 +1,3330 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "cargo-bike",
+  "category": "vehicles",
+  "title": {
+   "en": "Cargo Bike",
+   "de": "Lastenrad"
+  },
+  "summary": {
+   "en": "A riderless e-assist long-john cargo bike: 26 inch rear and 20 inch front wheel, low main beam with a front wooden cargo box, mid-drive motor and frame battery, crank, rear stand and a stackable crate; the load sits ahead of the front axle line and shifts the reaction towards the front wheel.",
+   "de": "Ein fahrerloses Long-John-Lastenrad mit Elektrounterstützung: 26-Zoll-Hinterrad und 20-Zoll-Vorderrad, tiefer Hauptrahmen mit vorderer Holz-Transportbox, Mittelmotor und Rahmenakku, Kurbel, Hinterbauständer und stapelbare Kiste; die Last liegt vor der Hinterachse und verlagert die Reaktion zum Vorderrad."
+  },
+  "tags": [
+   "vehicle",
+   "bicycle",
+   "cargo-bike",
+   "long-john",
+   "e-assist",
+   "wheeled"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "etrto-2023",
+     "citation": "ETRTO Standards Manual (2023): tyre 50-559 (26 x 2.0, outer diameter about 660 mm) and 50-406 (20 x 2.0, outer diameter about 510 mm)."
+    },
+    {
+     "id": "en-15194",
+     "citation": "EN 15194:2017 Cycles, electrically power assisted cycles (EPAC): 250 W continuous rated power, assistance cut off at 25 km/h."
+    },
+    {
+     "id": "en-17860",
+     "citation": "EN 17860-1:2023 Cargo cycles: terms and definitions, requirements for stability and load carrying."
+    },
+    {
+     "id": "wong-2008",
+     "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Tyre contact patch and longitudinal load transfer."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer; emissivity and absorptivity of painted aluminium, wood and rubber."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber)."
+    }
+   ],
+   "notes": {
+    "en": "Long-john cargo bike, riderless: the assist, rolling and braking keys describe the machine alone (no rider heat). Motor and battery losses are small (30 W and 9 W at level 1: 12 percent of a 250 W motor and a few percent of the battery draw), so the model shows a warm motor housing rather than a plume. Masses and dimensions are authored typical values (authored-estimate).",
+    "de": "Long-John-Lastenrad ohne Fahrer: die Schlüssel Unterstützung, Rollen und Bremsen beschreiben nur die Maschine (keine Fahrerwärme). Motor- und Akkuverluste sind klein (30 W und 9 W bei Stufe 1: 12 Prozent eines 250-W-Motors und wenige Prozent der Akkuentnahme), daher zeigt das Modell ein warmes Motorgehäuse statt einer Abgasfahne. Massen und Abmessungen sind selbst gesetzte typische Werte (authored-estimate)."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.16,
+   "widthM": 2.69,
+   "depthM": 0.65,
+   "massKg": 45.8
+  },
+  "materials": [
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "Painted aluminium frame",
+     "de": "Lackierter Aluminiumrahmen"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 2700,
+    "conductivityWmK": 160,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "plywood",
+    "title": {
+     "en": "Birch plywood box",
+     "de": "Birkensperrholzbox"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 680,
+    "conductivityWmK": 0.15,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1150,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "wong-2008"
+   },
+   {
+    "id": "alloy-rim",
+    "title": {
+     "en": "Aluminium rim and spokes",
+     "de": "Aluminiumfelge und Speichen"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "steel-disc",
+    "title": {
+     "en": "Steel brake rotor",
+     "de": "Stahl-Bremsscheibe"
+    },
+    "emissivity": 0.4,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7800,
+    "conductivityWmK": 16,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "motor-case",
+    "title": {
+     "en": "Mid-drive motor housing (magnesium)",
+     "de": "Mittelmotorgehäuse (Magnesium)"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 1800,
+    "conductivityWmK": 100,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "battery-case",
+    "title": {
+     "en": "Battery plastic case",
+     "de": "Akku-Kunststoffgehäuse"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.25,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "plastic",
+    "title": {
+     "en": "Fenders, saddle, grips and crate plastic",
+     "de": "Kunststoff von Schutzblechen, Sattel, Griffen und Kiste"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.75,
+    "densityKgM3": 950,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "frame",
+   "bones": [
+    {
+     "id": "frame",
+     "parent": null,
+     "title": {
+      "en": "Frame with rear triangle and main beam",
+      "de": "Rahmen mit Hinterbau und Hauptträger"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.85,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 14,
+      "comX": 0.9,
+      "comY": 0.45,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "fork",
+     "parent": "frame",
+     "title": {
+      "en": "Steering head, fork and steering linkage",
+      "de": "Steuerkopf, Gabel und Lenkgestänge"
+     },
+     "x": 1.85,
+     "y": 0.62,
+     "angleDeg": 0,
+     "lengthM": 0.44,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 2.5,
+      "comX": 0.12,
+      "comY": -0.2,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "bar",
+     "parent": "frame",
+     "title": {
+      "en": "Handlebar and stem",
+      "de": "Lenker und Vorbau"
+     },
+     "x": 0.74,
+     "y": 0.62,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 1.2,
+      "comX": 0,
+      "comY": 0.3,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "box",
+     "parent": "frame",
+     "title": {
+      "en": "Wooden cargo box",
+      "de": "Holz-Transportbox"
+     },
+     "x": 0.95,
+     "y": 0.35,
+     "angleDeg": 0,
+     "lengthM": 1.0,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 14,
+      "comX": 0.5,
+      "comY": 0.25,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "battery",
+     "parent": "frame",
+     "title": {
+      "en": "Frame battery",
+      "de": "Rahmenakku"
+     },
+     "x": 0.4,
+     "y": 0.69,
+     "angleDeg": 0,
+     "lengthM": 0.4,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 2.8,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "motor",
+     "parent": "frame",
+     "title": {
+      "en": "Mid-drive motor",
+      "de": "Mittelmotor"
+     },
+     "x": 0.55,
+     "y": 0.32,
+     "angleDeg": 0,
+     "lengthM": 0.14,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 3.5,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "crank",
+     "parent": "frame",
+     "title": {
+      "en": "Crankset with pedals",
+      "de": "Kurbelgarnitur mit Pedalen"
+     },
+     "x": 0.55,
+     "y": 0.32,
+     "angleDeg": 0,
+     "lengthM": 0.17,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 1.0,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "stand",
+     "parent": "frame",
+     "title": {
+      "en": "Rear stand",
+      "de": "Hinterbauständer"
+     },
+     "x": -0.08,
+     "y": 0.3,
+     "angleDeg": -95,
+     "lengthM": 0.3433,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 0.8,
+      "comX": 0.17,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "frame",
+     "title": {
+      "en": "Rear wheel 26 inch",
+      "de": "Hinterrad 26 Zoll"
+     },
+     "x": 0,
+     "y": 0.33,
+     "angleDeg": 0,
+     "lengthM": 0.33,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 3.5,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "fork",
+     "title": {
+      "en": "Front wheel 20 inch",
+      "de": "Vorderrad 20 Zoll"
+     },
+     "x": 0.25,
+     "y": -0.365,
+     "angleDeg": 0,
+     "lengthM": 0.255,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 2.5,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "crate-x",
+     "parent": "frame",
+     "title": {
+      "en": "Crate position, horizontal (no mass)",
+      "de": "Kistenlage horizontal (ohne Masse)"
+     },
+     "x": 1.15,
+     "y": 0.37,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -3,
+      "maxM": 1
+     }
+    },
+    {
+     "id": "crate-y",
+     "parent": "crate-x",
+     "title": {
+      "en": "Crate position, vertical (no mass)",
+      "de": "Kistenlage vertikal (ohne Masse)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.56,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.6,
+      "maxM": 1.5
+     }
+    },
+    {
+     "id": "crate",
+     "parent": "crate-y",
+     "title": {
+      "en": "Two stacked crates (no mass)",
+      "de": "Zwei gestapelte Kisten (ohne Masse)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "fixed"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-r",
+    "bone": "frame",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patch",
+     "de": "Hinterreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "contact-f",
+    "bone": "fork",
+    "x": 0.25,
+    "y": -0.62,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patch",
+     "de": "Vorderreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.07,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "stand-pad",
+    "bone": "stand",
+    "x": 0.3433,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Stand foot pad",
+     "de": "Ständerfußplatte"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.1,
+    "footprintWidthM": 0.08,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "crate-cog",
+    "bone": "crate",
+    "x": 0.25,
+    "y": 0.28,
+    "kind": "load",
+    "title": {
+     "en": "Crate load centre",
+     "de": "Lastschwerpunkt der Kisten"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0,0.33 L 0.55,0.32 L 0.3,0.98 L 0.285,1.07 M 0,0.33 L 0.34,0.86 L 0.3,0.98 M 0.55,0.32 L 0.95,0.35",
+       "id": "frame-lines",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame",
+        "touch-parts",
+        "battery-pack",
+        "drive-motor"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0,0.43 L -0.14,0.5",
+       "id": "bar-lines",
+       "bone": "bar",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame",
+        "touch-parts"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.3433,0",
+       "id": "stand-line",
+       "bone": "stand",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.72,0 L 0.72,0.1 C 0.74,0.25 0.85,0.32 1.0,0.34 L 1.0,0.65 L 0,0.65 Z",
+       "id": "box-shell",
+       "bone": "box",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "box-wood",
+       "material": "plywood"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.5,
+       "h": 0.56,
+       "id": "crate",
+       "bone": "crate",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.45,
+       "region": "cargo",
+       "material": "plastic"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.33,
+       "ry": 0.33,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.255,
+       "ry": 0.255,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "tyres",
+        "brakes",
+        "fenders"
+       ],
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Two wheel discs, the plywood box with its crate and a frame drawn as centre-lines; the rider-less long-john reads as box and two circles.",
+      "de": "Zwei Radscheiben, der Sperrholzkasten mit Kiste und ein als Mittellinien gezeichneter Rahmen; das fahrerlose Long John liest sich als Kasten und zwei Kreise."
+     },
+     "retained": {
+      "en": "Box, crate, both wheels as discs, frame, fork, handlebar stem and the stand as lines (stand still moves).",
+      "de": "Kasten, Kiste, beide Räder als Scheiben, Rahmen, Gabel, Lenkerschaft und Stütze als Linien (die Stütze bewegt sich weiter)."
+     },
+     "merged": {
+      "en": "Saddle, battery, motor and mudguards are merged into the frame and wheel regions (area-weighted overlay).",
+      "de": "Sattel, Akku, Motor und Schutzbleche gehen in den Rahmen- und Radregionen auf (flächengewichtete Überlagerung)."
+     },
+     "omitted": {
+      "en": "Crank, pedals, rack, lamp, fork spokes, box planks, crate slots, hub and rim.",
+      "de": "Kurbel, Pedale, Gepäckträger, Lampe, Speichen, Kastenbretter, Kistenschlitze, Nabe und Felge."
+     },
+     "thinElements": {
+      "en": "Tubes of 0.022 to 0.06 m would be 0.04 to 0.12 mm: they are drawn as centre-line strokes of 0.13 mm (0.065 m), thicker than real; this exceeds the outline tolerance and is stated here. Wheels are solid discs instead of spoked wire wheels.",
+      "de": "Rohre von 0,022 bis 0,06 m wären 0,04 bis 0,12 mm: sie sind als Mittellinien mit 0,13 mm (0,065 m) gezeichnet, dicker als real; das überschreitet die Konturtoleranz und wird hier ausgewiesen. Räder sind Vollscheiben statt Speichenräder."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Box mid-tone, crate lighter, tyres dark grey, frame lines dark.",
+      "de": "Kasten mittlerer Ton, Kiste heller, Reifen dunkelgrau, Rahmenlinien dunkel."
+     },
+     "overlays": {
+      "en": "Frame, box, crate and wheels are separate overlay shapes; motor, battery, saddle and mudguards share the colour of the frame and wheel shapes that carry them.",
+      "de": "Rahmen, Kasten, Kiste und Räder sind getrennte Überlagerungsformen; Motor, Akku, Sattel und Schutzbleche teilen die Farbe der Formen, die sie tragen."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0,0.33 L 0.55,0.32",
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.33 L 0.34,0.86",
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0.55,0.32 L 0.3,0.98 L 0.285,1.068",
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.15
+      },
+      {
+       "kind": "path",
+       "d": "M 0.55,0.32 L 1.66,0.39",
+       "id": "main-beam",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.3
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0,0.43",
+       "id": "bar-stem",
+       "bone": "bar",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M -1.11,0 L 0,0",
+       "id": "steer-rod",
+       "bone": "fork",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.3433,0",
+       "id": "stand-leg",
+       "bone": "stand",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0.18,1.065 L 0.4,1.075",
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "touch-parts",
+       "material": "plastic",
+       "penMm": 0.3
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.43 L -0.14,0.5",
+       "id": "handlebar",
+       "bone": "bar",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "touch-parts",
+       "material": "plastic",
+       "penMm": 0.2
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.72,0 L 0.72,0.1 C 0.74,0.25 0.85,0.32 1.0,0.34 L 1.0,0.65 L 0,0.65 Z",
+       "id": "box-shell",
+       "bone": "box",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "box-wood",
+       "material": "plywood"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.2 L 0.87,0.2 M 0,0.4 L 1.0,0.4",
+       "id": "box-planks",
+       "bone": "box",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": 0.06,
+       "w": 0.45,
+       "h": 0.22,
+       "id": "crate-lower",
+       "bone": "crate",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.45,
+       "region": "cargo",
+       "material": "plastic",
+       "r": 0.015
+      },
+      {
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.34,
+       "w": 0.42,
+       "h": 0.2,
+       "id": "crate-upper",
+       "bone": "crate",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "cargo",
+       "material": "plastic",
+       "r": 0.015
+      },
+      {
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.13,
+       "w": 0.06,
+       "h": 0.32,
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "kind": "rect",
+       "x": -0.07,
+       "y": -0.07,
+       "w": 0.14,
+       "h": 0.14,
+       "id": "motor-housing",
+       "bone": "motor",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drive-motor",
+       "material": "motor-case",
+       "r": 0.03
+      },
+      {
+       "kind": "path",
+       "d": "M -0.344,0.528 C -0.270,0.657 -0.131,0.733 0.017,0.728 C 0.166,0.721 0.298,0.632 0.361,0.498",
+       "id": "rear-fender",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "fenders",
+       "material": "plastic",
+       "penMm": 0.2
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.33,
+       "ry": 0.33,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.26,
+       "ry": 0.26,
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brakes",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.255,
+       "ry": 0.255,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.18,
+       "ry": 0.18,
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brakes",
+       "material": "steel-disc"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Long-john with box and two crates, spoke-free wheels shown as tyre disc, rim ring and brake disc, frame as tube strokes.",
+      "de": "Long John mit Kasten und zwei Kisten, Räder als Reifenscheibe mit Felgenring und Bremsscheibe, Rahmen als Rohrstriche."
+     },
+     "retained": {
+      "en": "Frame tubes, fork, stem, handlebar, saddle, stand, box with plank lines, two crates, battery, motor, mudguards, rims and discs.",
+      "de": "Rahmenrohre, Gabel, Schaft, Lenker, Sattel, Stütze, Kasten mit Bretterlinien, zwei Kisten, Akku, Motor, Schutzbleche, Felgen und Scheiben."
+     },
+     "merged": {
+      "en": "Hub merges into the brake disc; the crank and pedals are omitted.",
+      "de": "Nabe geht in der Bremsscheibe auf; Kurbel und Pedale entfallen."
+     },
+     "omitted": {
+      "en": "Rack, lamp, crate slots, brake lever, chain ring (below 0.08 m).",
+      "de": "Gepäckträger, Lampe, Kistenschlitze, Bremshebel, Kettenblatt (unter 0,08 m)."
+     },
+     "thinElements": {
+      "en": "Tubes (0.022 to 0.06 m) are strokes of 0.13 to 0.3 mm (0.026 to 0.06 m), close to real width; the wire spokes are not drawn.",
+      "de": "Rohre (0,022 bis 0,06 m) sind Striche von 0,13 bis 0,3 mm (0,026 bis 0,06 m), nahe der realen Breite; die Drahtspeichen entfallen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Box and crates mid-tone, tyres dark grey, frame strokes dark.",
+      "de": "Kasten und Kisten mittlerer Ton, Reifen dunkelgrau, Rahmenstriche dunkel."
+     },
+     "overlays": {
+      "en": "Each region has its own shape; thin tube regions show as stroke colour.",
+      "de": "Jede Region hat eine eigene Form; dünne Rohrregionen zeigen sich als Strichfarbe."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0,0.33 L 0.55,0.32",
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.33 L 0.34,0.86",
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0.55,0.32 L 0.3,0.98 L 0.285,1.068",
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.15
+      },
+      {
+       "kind": "path",
+       "d": "M 0.55,0.32 L 1.66,0.39",
+       "id": "main-beam",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.3
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0,0.43",
+       "id": "bar-stem",
+       "bone": "bar",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.25,-0.365",
+       "id": "fork-leg",
+       "bone": "fork",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.15
+      },
+      {
+       "kind": "path",
+       "d": "M -1.11,0 L 0,0",
+       "id": "steer-rod",
+       "bone": "fork",
+       "role": "detail",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.3433,0",
+       "id": "stand-leg",
+       "bone": "stand",
+       "role": "detail",
+       "z": 1,
+       "filled": false,
+       "tone": 0.4,
+       "regions": [
+        "frame"
+       ],
+       "material": "aluminium",
+       "penMm": 0.13
+      },
+      {
+       "kind": "path",
+       "d": "M 0.18,1.065 L 0.4,1.075",
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "touch-parts",
+       "material": "plastic",
+       "penMm": 0.3
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.43 L -0.14,0.5",
+       "id": "handlebar",
+       "bone": "bar",
+       "role": "body",
+       "z": 2,
+       "filled": false,
+       "tone": 0.2,
+       "region": "touch-parts",
+       "material": "plastic",
+       "penMm": 0.2
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.72,0 L 0.72,0.1 C 0.74,0.25 0.85,0.32 1.0,0.34 L 1.0,0.65 L 0,0.65 Z",
+       "id": "box-shell",
+       "bone": "box",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "region": "box-wood",
+       "material": "plywood"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.2 L 0.87,0.2 M 0,0.4 L 1.0,0.4",
+       "id": "box-planks",
+       "bone": "box",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": 0.06,
+       "w": 0.45,
+       "h": 0.22,
+       "id": "crate-lower",
+       "bone": "crate",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.45,
+       "region": "cargo",
+       "material": "plastic",
+       "r": 0.015
+      },
+      {
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.34,
+       "w": 0.42,
+       "h": 0.2,
+       "id": "crate-upper",
+       "bone": "crate",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "cargo",
+       "material": "plastic",
+       "r": 0.015
+      },
+      {
+       "kind": "rect",
+       "x": 0.0,
+       "y": -0.13,
+       "w": 0.06,
+       "h": 0.32,
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.25,
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "kind": "rect",
+       "x": -0.07,
+       "y": -0.07,
+       "w": 0.14,
+       "h": 0.14,
+       "id": "motor-housing",
+       "bone": "motor",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "drive-motor",
+       "material": "motor-case",
+       "r": 0.03
+      },
+      {
+       "kind": "path",
+       "d": "M -0.344,0.528 C -0.270,0.657 -0.131,0.733 0.017,0.728 C 0.166,0.721 0.298,0.632 0.361,0.498",
+       "id": "rear-fender",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "fenders",
+       "material": "plastic",
+       "penMm": 0.2
+      },
+      {
+       "kind": "path",
+       "d": "M -0.034,-0.202 C 0.025,-0.099 0.133,-0.037 0.250,-0.037 C 0.367,-0.037 0.475,-0.099 0.534,-0.202",
+       "id": "front-fender",
+       "bone": "fork",
+       "role": "detail",
+       "z": 1.5,
+       "filled": false,
+       "tone": 0.4,
+       "region": "fenders",
+       "material": "plastic",
+       "penMm": 0.2
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.33,
+       "ry": 0.33,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.265,
+       "ry": 0.265,
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brakes",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.255,
+       "ry": 0.255,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.185,
+       "ry": 0.185,
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.4,
+       "region": "brakes",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "capsule",
+       "x0": -0.17,
+       "y0": 0,
+       "x1": 0.17,
+       "y1": 0,
+       "r0": 0.014,
+       "r1": 0.014,
+       "id": "crank-arms",
+       "bone": "crank",
+       "role": "detail",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.6,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.78,
+       "w": 0.04,
+       "h": 0.06,
+       "id": "rear-light",
+       "bone": "frame",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.3,
+       "material": "plastic",
+       "r": 0.01
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.1,
+       "cy": 0.0,
+       "rx": 0.04,
+       "ry": 0.03,
+       "id": "head-lamp",
+       "bone": "fork",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.8,
+       "material": "plastic"
+      },
+      {
+       "kind": "path",
+       "d": "M -0.27,0.78 L 0.3,0.86 M -0.02,0.33 L -0.22,0.79",
+       "id": "rear-rack",
+       "bone": "frame",
+       "role": "detail",
+       "z": 1.6,
+       "filled": false,
+       "tone": 0.4,
+       "material": "aluminium"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0.6 L 1.0,0.6",
+       "id": "box-rim",
+       "bone": "box",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy-rim"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.6,
+       "filled": true,
+       "tone": 0.7,
+       "material": "alloy-rim"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The 1:200 drawing plus crank, pedals, lamps, rack and box rim; frame tubes at stroke widths of 0.13 to 0.3 mm.",
+      "de": "Die 1:200-Zeichnung mit Kurbel, Pedalen, Leuchten, Gepäckträger und Kastenrand; Rahmenrohre mit Strichstärken von 0,13 bis 0,3 mm."
+     },
+     "retained": {
+      "en": "Everything of 1:200 plus crank arms, pedals, rear light, head lamp, rack, box rim, hubs.",
+      "de": "Alles aus 1:200 sowie Kurbelarme, Pedale, Rücklicht, Frontlampe, Gepäckträger, Kastenrand, Naben."
+     },
+     "merged": {
+      "en": "Chain ring merges into the crank arms.",
+      "de": "Das Kettenblatt geht in den Kurbelarmen auf."
+     },
+     "omitted": {
+      "en": "Brake lever, crate slots, corner posts, wire spokes.",
+      "de": "Bremshebel, Kistenschlitze, Eckpfosten, Drahtspeichen."
+     },
+     "thinElements": {
+      "en": "Tubes 0.022 to 0.06 m = 0.2 to 0.6 mm: drawn as strokes at about real width.",
+      "de": "Rohre 0,022 bis 0,06 m = 0,2 bis 0,6 mm: als Striche in etwa realer Breite gezeichnet."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:200 with lighter rims; pens 0.25 / 0.18 mm.",
+      "de": "Wie 1:200 mit helleren Felgen; Stifte 0,25 / 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200.",
+      "de": "Wie 1:200."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "chainstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.33,
+       "x1": 0.55,
+       "y1": 0.32,
+       "r0": 0.012,
+       "r1": 0.014,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "seatstay",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.33,
+       "x1": 0.34,
+       "y1": 0.86,
+       "r0": 0.011,
+       "r1": 0.011,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "seat-tube",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0.55,
+       "y0": 0.32,
+       "x1": 0.3,
+       "y1": 0.98,
+       "r0": 0.016,
+       "r1": 0.014,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "seat-post",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 0.3,
+       "y0": 0.98,
+       "x1": 0.285,
+       "y1": 1.04,
+       "r0": 0.01,
+       "r1": 0.01,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "saddle",
+       "bone": "frame",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "capsule",
+       "x0": 0.18,
+       "y0": 1.065,
+       "x1": 0.4,
+       "y1": 1.075,
+       "r0": 0.022,
+       "r1": 0.03,
+       "region": "touch-parts",
+       "material": "plastic"
+      },
+      {
+       "id": "main-beam",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0.55,
+       "y0": 0.32,
+       "x1": 1.78,
+       "y1": 0.4,
+       "r0": 0.03,
+       "r1": 0.03,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "head-riser",
+       "bone": "frame",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 1.78,
+       "y0": 0.4,
+       "x1": 1.85,
+       "y1": 0.62,
+       "r0": 0.025,
+       "r1": 0.025,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "rear-rack",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.27,0.78 L 0.3,0.86 M -0.02,0.33 L -0.22,0.79",
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "rear-fender",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M -0.307,0.507 C -0.241,0.622 -0.117,0.690 0.015,0.685 C 0.148,0.679 0.266,0.600 0.322,0.480",
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "id": "rear-light",
+       "bone": "frame",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.3,
+       "y": 0.78,
+       "w": 0.04,
+       "h": 0.06,
+       "r": 0.01,
+       "material": "plastic"
+      },
+      {
+       "id": "box-shell",
+       "bone": "box",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "path",
+       "d": "M 0,0 L 0.83,0 C 0.85,0.09 0.91,0.15 1.0,0.17 L 1.0,0.65 L 0,0.65 Z",
+       "region": "box-wood",
+       "material": "plywood"
+      },
+      {
+       "id": "box-planks",
+       "bone": "box",
+       "role": "detail",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.45,
+       "kind": "path",
+       "d": "M 0,0.2 L 0.87,0.2 M 0,0.4 L 1.0,0.4",
+       "material": "plywood"
+      },
+      {
+       "id": "box-rim",
+       "bone": "box",
+       "role": "detail",
+       "z": 2.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0,0.6 L 1.0,0.6",
+       "material": "plywood"
+      },
+      {
+       "id": "box-corner-posts",
+       "bone": "box",
+       "role": "texture",
+       "z": 2.6,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.08,0 L 0.08,0.65 M 0.92,0.17 L 0.92,0.65",
+       "material": "plywood"
+      },
+      {
+       "id": "battery-case",
+       "bone": "battery",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M 0.107,-0.19 L 0.167,-0.19 L 0.023,0.19 L -0.037,0.19 Z",
+       "region": "battery-pack",
+       "material": "battery-case"
+      },
+      {
+       "id": "motor-housing",
+       "bone": "motor",
+       "role": "detail",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "rect",
+       "x": -0.07,
+       "y": -0.07,
+       "w": 0.14,
+       "h": 0.14,
+       "r": 0.03,
+       "region": "drive-motor",
+       "material": "motor-case"
+      },
+      {
+       "id": "chainring",
+       "bone": "crank",
+       "role": "detail",
+       "z": 3.4,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.095,
+       "ry": 0.095,
+       "material": "alloy-rim"
+      },
+      {
+       "id": "crank-arms",
+       "bone": "crank",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.17,
+       "y0": 0,
+       "x1": 0.17,
+       "y1": 0,
+       "r0": 0.014,
+       "r1": 0.014,
+       "material": "alloy-rim"
+      },
+      {
+       "id": "pedal-a",
+       "bone": "crank",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": 0.12,
+       "y": -0.012,
+       "w": 0.1,
+       "h": 0.024,
+       "material": "plastic"
+      },
+      {
+       "id": "pedal-b",
+       "bone": "crank",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "rect",
+       "x": -0.19,
+       "y": -0.01,
+       "w": 0.06,
+       "h": 0.02,
+       "material": "plastic"
+      },
+      {
+       "id": "stand-leg",
+       "bone": "stand",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.3433,
+       "y1": 0,
+       "r0": 0.012,
+       "r1": 0.012,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "stand-foot",
+       "bone": "stand",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.15,
+       "kind": "capsule",
+       "x0": 0.3433,
+       "y0": -0.045,
+       "x1": 0.3433,
+       "y1": 0.045,
+       "r0": 0.012,
+       "r1": 0.012,
+       "material": "plastic"
+      },
+      {
+       "id": "bar-stem",
+       "bone": "bar",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0.43,
+       "r0": 0.013,
+       "r1": 0.013,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "handlebar",
+       "bone": "bar",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0.43,
+       "x1": -0.14,
+       "y1": 0.5,
+       "r0": 0.013,
+       "r1": 0.016,
+       "region": "touch-parts",
+       "material": "plastic"
+      },
+      {
+       "id": "brake-lever",
+       "bone": "bar",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.1,0.47 L -0.03,0.43",
+       "material": "aluminium"
+      },
+      {
+       "id": "steer-rod",
+       "bone": "fork",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -1.11,
+       "y0": 0,
+       "x1": 0,
+       "y1": 0,
+       "r0": 0.008,
+       "r1": 0.008,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "fork-leg",
+       "bone": "fork",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": -0.365,
+       "r0": 0.018,
+       "r1": 0.014,
+       "region": "frame",
+       "material": "aluminium"
+      },
+      {
+       "id": "head-lamp",
+       "bone": "fork",
+       "role": "detail",
+       "z": 3.4,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "ellipse",
+       "cx": 0.1,
+       "cy": 0.0,
+       "rx": 0.04,
+       "ry": 0.03,
+       "material": "plastic"
+      },
+      {
+       "id": "front-fender",
+       "bone": "fork",
+       "role": "detail",
+       "z": 3.3,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M 0.003,-0.223 C 0.054,-0.134 0.148,-0.080 0.250,-0.080 C 0.352,-0.080 0.446,-0.134 0.497,-0.223",
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "id": "crate-lower",
+       "bone": "crate",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.5,
+       "h": 0.28,
+       "r": 0.015,
+       "region": "cargo",
+       "material": "plastic"
+      },
+      {
+       "id": "crate-upper",
+       "bone": "crate",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.62,
+       "kind": "rect",
+       "x": 0.02,
+       "y": 0.28,
+       "w": 0.46,
+       "h": 0.28,
+       "r": 0.015,
+       "region": "cargo",
+       "material": "plastic"
+      },
+      {
+       "id": "crate-slots",
+       "bone": "crate",
+       "role": "texture",
+       "z": 3.0,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.15,0.17 L 0.35,0.17 M 0.15,0.45 L 0.35,0.45 M 0.0,0.1 L 0.5,0.1 M 0.02,0.38 L 0.48,0.38",
+       "material": "plastic"
+      },
+      {
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.33,
+       "ry": 0.33,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tread-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.310,0.000 L0.330,0.000 M0.305,0.054 L0.325,0.057 M0.291,0.106 L0.310,0.113 M0.268,0.155 L0.286,0.165 M0.237,0.199 L0.253,0.212 M0.199,0.237 L0.212,0.253 M0.155,0.268 L0.165,0.286 M0.106,0.291 L0.113,0.310 M0.054,0.305 L0.057,0.325 M0.000,0.310 L0.000,0.330 M-0.054,0.305 L-0.057,0.325 M-0.106,0.291 L-0.113,0.310 M-0.155,0.268 L-0.165,0.286 M-0.199,0.237 L-0.212,0.253 M-0.237,0.199 L-0.253,0.212 M-0.268,0.155 L-0.286,0.165 M-0.291,0.106 L-0.310,0.113 M-0.305,0.054 L-0.325,0.057 M-0.310,0.000 L-0.330,0.000 M-0.305,-0.054 L-0.325,-0.057 M-0.291,-0.106 L-0.310,-0.113 M-0.268,-0.155 L-0.286,-0.165 M-0.237,-0.199 L-0.253,-0.212 M-0.199,-0.237 L-0.212,-0.253 M-0.155,-0.268 L-0.165,-0.286 M-0.106,-0.291 L-0.113,-0.310 M-0.054,-0.305 L-0.057,-0.325 M-0.000,-0.310 L-0.000,-0.330 M0.054,-0.305 L0.057,-0.325 M0.106,-0.291 L0.113,-0.310 M0.155,-0.268 L0.165,-0.286 M0.199,-0.237 L0.212,-0.253 M0.237,-0.199 L0.253,-0.212 M0.268,-0.155 L0.286,-0.165 M0.291,-0.106 L0.310,-0.113 M0.305,-0.054 L0.325,-0.057",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.28,
+       "ry": 0.28,
+       "material": "alloy-rim"
+      },
+      {
+       "id": "spokes-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M0.040,0.000 L0.275,0.000 M0.035,0.020 L0.238,0.137 M0.020,0.035 L0.138,0.238 M0.000,0.040 L0.000,0.275 M-0.020,0.035 L-0.137,0.238 M-0.035,0.020 L-0.238,0.137 M-0.040,0.000 L-0.275,0.000 M-0.035,-0.020 L-0.238,-0.138 M-0.020,-0.035 L-0.138,-0.238 M-0.000,-0.040 L-0.000,-0.275 M0.020,-0.035 L0.138,-0.238 M0.035,-0.020 L0.238,-0.138",
+       "material": "alloy-rim"
+      },
+      {
+       "id": "disc-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "region": "brakes",
+       "material": "steel-disc"
+      },
+      {
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "material": "alloy-rim"
+      },
+      {
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.255,
+       "ry": 0.255,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "tread-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.235,0.000 L0.255,0.000 M0.229,0.052 L0.249,0.057 M0.212,0.102 L0.230,0.111 M0.184,0.147 L0.199,0.159 M0.147,0.184 L0.159,0.199 M0.102,0.212 L0.111,0.230 M0.052,0.229 L0.057,0.249 M0.000,0.235 L0.000,0.255 M-0.052,0.229 L-0.057,0.249 M-0.102,0.212 L-0.111,0.230 M-0.147,0.184 L-0.159,0.199 M-0.184,0.147 L-0.199,0.159 M-0.212,0.102 L-0.230,0.111 M-0.229,0.052 L-0.249,0.057 M-0.235,0.000 L-0.255,0.000 M-0.229,-0.052 L-0.249,-0.057 M-0.212,-0.102 L-0.230,-0.111 M-0.184,-0.147 L-0.199,-0.159 M-0.147,-0.184 L-0.159,-0.199 M-0.102,-0.212 L-0.111,-0.230 M-0.052,-0.229 L-0.057,-0.249 M-0.000,-0.235 L-0.000,-0.255 M0.052,-0.229 L0.057,-0.249 M0.102,-0.212 L0.111,-0.230 M0.147,-0.184 L0.159,-0.199 M0.184,-0.147 L0.199,-0.159 M0.212,-0.102 L0.230,-0.111 M0.229,-0.052 L0.249,-0.057",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.203,
+       "ry": 0.203,
+       "material": "alloy-rim"
+      },
+      {
+       "id": "spokes-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.3,
+       "filled": false,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M0.040,0.000 L0.200,0.000 M0.035,0.020 L0.173,0.100 M0.020,0.035 L0.100,0.173 M0.000,0.040 L0.000,0.200 M-0.020,0.035 L-0.100,0.173 M-0.035,0.020 L-0.173,0.100 M-0.040,0.000 L-0.200,0.000 M-0.035,-0.020 L-0.173,-0.100 M-0.020,-0.035 L-0.100,-0.173 M-0.000,-0.040 L-0.000,-0.200 M0.020,-0.035 L0.100,-0.173 M0.035,-0.020 L0.173,-0.100",
+       "material": "alloy-rim"
+      },
+      {
+       "id": "disc-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.4,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.08,
+       "ry": 0.08,
+       "region": "brakes",
+       "material": "steel-disc"
+      },
+      {
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "material": "alloy-rim"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full elevation of the first version: tubes as capsules, box with planks and corner posts, crates with slots, wheels with rims and discs.",
+      "de": "Vollständige Ansicht der ersten Fassung: Rohre als Kapseln, Kasten mit Brettern und Eckpfosten, Kisten mit Schlitzen, Räder mit Felgen und Scheiben."
+     },
+     "retained": {
+      "en": "Everything including crank, pedals, rack, lamps and brake lever.",
+      "de": "Alles einschließlich Kurbel, Pedalen, Gepäckträger, Leuchten und Bremshebel."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Wire spokes (not modelled).",
+      "de": "Drahtspeichen (nicht modelliert)."
+     },
+     "thinElements": {
+      "en": "Seat stay r = 0.011 m is 0.44 mm wide, above the minimum.",
+      "de": "Sattelstrebe r = 0,011 m ist 0,44 mm breit, über dem Minimum."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Three line weights 0.35 / 0.25 / 0.13 mm.",
+      "de": "Drei Linienstärken 0,35 / 0,25 / 0,13 mm."
+     },
+     "overlays": {
+      "en": "All regions at real extent.",
+      "de": "Alle Regionen in realer Ausdehnung."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "parked-on-stand",
+    "title": {
+     "en": "Parked on the rear stand, box empty",
+     "de": "Auf dem Hinterbauständer, Box leer"
+    },
+    "description": {
+     "en": "Standing on the front tyre and the rear stand with the rear wheel 4 cm off the ground; the crate waits on the ground behind the bike.",
+     "de": "Steht auf dem Vorderreifen und dem Hinterbauständer, das Hinterrad 4 cm über dem Boden; die Kiste wartet auf dem Boden hinter dem Rad."
+    },
+    "bones": {
+     "crate-x": {
+      "dx": -2.35
+     },
+     "crate-y": {
+      "dy": -0.393
+     },
+     "crank": {
+      "angleDeg": 20
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -1.09
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "stand-pad"
+    ],
+    "thermal": {
+     "operating": {
+      "assist": 0,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "box-wood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cargo": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "touch-parts": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "drive-motor": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.2
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.02,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loaded-on-stand",
+    "title": {
+     "en": "Parked on the stand, 60 kg in the box",
+     "de": "Auf dem Ständer, 60 kg in der Box"
+    },
+    "description": {
+     "en": "Same stand position with two crates of 60 kg in the box ahead of the front axle line: the front tyre carries most of the weight.",
+     "de": "Gleiche Ständerstellung mit zwei Kisten zu 60 kg in der Box vor der Vorderachse: Der Vorderreifen trägt den größten Teil des Gewichts."
+    },
+    "bones": {
+     "crank": {
+      "angleDeg": 20
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -1.09
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "stand-pad"
+    ],
+    "thermal": {
+     "operating": {
+      "assist": 0,
+      "rolling": 0,
+      "braking": 0
+     },
+     "regions": {
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "box-wood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cargo": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "touch-parts": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "drive-motor": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.2
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.02,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "cargo",
+      "kind": "carried",
+      "title": {
+       "en": "Two crates, 60 kg",
+       "de": "Zwei Kisten, 60 kg"
+      },
+      "anchor": "crate-cog",
+      "fxN": 0,
+      "fyN": -588.4,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "rolling-loaded",
+    "title": {
+     "en": "Rolling loaded, stand up",
+     "de": "Rollend beladen, Ständer hoch"
+    },
+    "description": {
+     "en": "Stand folded up, both tyres on the ground, 60 kg in the box, pushed along at walking pace; the freewheel keeps the crank still.",
+     "de": "Ständer eingeklappt, beide Reifen am Boden, 60 kg in der Box, im Schritttempo geschoben; der Freilauf hält die Kurbel still."
+    },
+    "bones": {
+     "stand": {
+      "angleDeg": 80
+     },
+     "crank": {
+      "angleDeg": 20
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "assist": 0,
+      "rolling": 0.4,
+      "braking": 0
+     },
+     "regions": {
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "box-wood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cargo": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "touch-parts": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "drive-motor": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.2
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.02,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "cargo",
+      "kind": "carried",
+      "title": {
+       "en": "Two crates, 60 kg",
+       "de": "Zwei Kisten, 60 kg"
+      },
+      "anchor": "crate-cog",
+      "fxN": 0,
+      "fyN": -588.4,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "ride-start",
+    "key": true,
+    "title": {
+     "en": "Pushed, start of the lane",
+     "de": "Geschoben, Beginn der Fahrspur"
+    },
+    "description": {
+     "en": "Technical key of roll-by: 4.5 m before the origin; wheel angles encode the rolling distance.",
+     "de": "Technische Schlüsselstellung von Vorbeirollen: 4,5 m vor dem Ursprung; die Radwinkel kodieren die Rollstrecke."
+    },
+    "bones": {
+     "stand": {
+      "angleDeg": 80
+     },
+     "crank": {
+      "angleDeg": 20
+     },
+     "wheel-r": {
+      "angleDeg": 781.27
+     },
+     "wheel-f": {
+      "angleDeg": 1011.08
+     }
+    },
+    "root": {
+     "x": -4.5,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "assist": 0,
+      "rolling": 0.4,
+      "braking": 0
+     },
+     "regions": {
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "box-wood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cargo": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "touch-parts": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "drive-motor": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.2
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.02,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "cargo",
+      "kind": "carried",
+      "title": {
+       "en": "Two crates, 60 kg",
+       "de": "Zwei Kisten, 60 kg"
+      },
+      "anchor": "crate-cog",
+      "fxN": 0,
+      "fyN": -588.4,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "ride-end",
+    "key": true,
+    "title": {
+     "en": "Pushed, end of the lane",
+     "de": "Geschoben, Ende der Fahrspur"
+    },
+    "description": {
+     "en": "Technical key of roll-by: 4.5 m beyond the origin.",
+     "de": "Technische Schlüsselstellung von Vorbeirollen: 4,5 m hinter dem Ursprung."
+    },
+    "bones": {
+     "stand": {
+      "angleDeg": 80
+     },
+     "crank": {
+      "angleDeg": 20
+     },
+     "wheel-r": {
+      "angleDeg": -781.27
+     },
+     "wheel-f": {
+      "angleDeg": -1011.08
+     }
+    },
+    "root": {
+     "x": 4.5,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "assist": 0,
+      "rolling": 0.4,
+      "braking": 0
+     },
+     "regions": {
+      "frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "box-wood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "cargo": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "touch-parts": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "drive-motor": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.2
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.02,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "cargo",
+      "kind": "carried",
+      "title": {
+       "en": "Two crates, 60 kg",
+       "de": "Zwei Kisten, 60 kg"
+      },
+      "anchor": "crate-cog",
+      "fxN": 0,
+      "fyN": -588.4,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "roll-by",
+    "title": {
+     "en": "Roll by at walking pace",
+     "de": "Im Schritttempo vorbeirollen"
+    },
+    "description": {
+     "en": "The loaded bike is pushed 9 m at constant 1.5 m/s with the stand up; the wheels roll with theta = -x / r and the crank stays still on the freewheel.",
+     "de": "Das beladene Rad wird bei hochgeklapptem Ständer mit konstant 1,5 m/s über 9 m geschoben; die Räder rollen mit theta = -x / r und die Kurbel steht im Freilauf still."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "ride-start",
+      "ease": "linear"
+     },
+     {
+      "t": 6,
+      "pose": "ride-end",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "roll",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Constant speed",
+       "de": "Konstante Geschwindigkeit"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 3,
+      "kind": "motion",
+      "title": {
+       "en": "Passes the origin",
+       "de": "Passiert den Ursprung"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.3
+       },
+       {
+        "t": 6,
+        "v": 0.5
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "load-box",
+    "title": {
+     "en": "Load the box",
+     "de": "Box beladen"
+    },
+    "description": {
+     "en": "On the rear stand the two crates are lifted from the ground behind the bike, carried over the box wall and lowered into the box; the 60 kg act on the bike from the moment they rest on the box floor.",
+     "de": "Auf dem Hinterbauständer werden die zwei Kisten vom Boden hinter dem Rad angehoben, über die Boxwand getragen und in die Box abgesenkt; die 60 kg wirken auf das Rad, sobald sie auf dem Boxboden stehen."
+    },
+    "durationS": 10,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "loaded-on-stand",
+      "ease": "smooth",
+      "bones": {
+       "crate-x": {
+        "dx": -2.35
+       },
+       "crate-y": {
+        "dy": -0.393
+       }
+      }
+     },
+     {
+      "t": 1,
+      "pose": "loaded-on-stand",
+      "ease": "smooth",
+      "bones": {
+       "crate-x": {
+        "dx": -2.35
+       },
+       "crate-y": {
+        "dy": -0.393
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "loaded-on-stand",
+      "ease": "smooth",
+      "bones": {
+       "crate-x": {
+        "dx": -1.5
+       },
+       "crate-y": {
+        "dy": 0.75
+       }
+      }
+     },
+     {
+      "t": 5,
+      "pose": "loaded-on-stand",
+      "ease": "smooth",
+      "bones": {
+       "crate-x": {
+        "dx": 0
+       },
+       "crate-y": {
+        "dy": 0.75
+       }
+      }
+     },
+     {
+      "t": 6.5,
+      "pose": "loaded-on-stand",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "loaded-on-stand",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 10
+     },
+     {
+      "anchor": "stand-pad",
+      "fromS": 0,
+      "toS": 10
+     }
+    ],
+    "phases": [
+     {
+      "id": "lift",
+      "fromS": 1,
+      "toS": 3,
+      "title": {
+       "en": "Lifting the crates",
+       "de": "Kisten anheben"
+      }
+     },
+     {
+      "id": "carry",
+      "fromS": 3,
+      "toS": 5,
+      "title": {
+       "en": "Over the box wall",
+       "de": "Über die Boxwand"
+      }
+     },
+     {
+      "id": "lower",
+      "fromS": 5,
+      "toS": 6.5,
+      "title": {
+       "en": "Lowering",
+       "de": "Absenken"
+      }
+     },
+     {
+      "id": "settled",
+      "fromS": 6.5,
+      "toS": 10,
+      "title": {
+       "en": "Loaded",
+       "de": "Beladen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6.5,
+      "kind": "load-on",
+      "title": {
+       "en": "Crates rest in the box",
+       "de": "Kisten stehen in der Box"
+      },
+      "target": "cargo"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:cargo",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6.2,
+        "v": 0
+       },
+       {
+        "t": 6.8,
+        "v": 1
+       },
+       {
+        "t": 10,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 1,
+    "windDirectionDeg": 180,
+    "solarWM2": 500,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "assist",
+     "title": {
+      "en": "Motor assist",
+      "de": "Motorunterstützung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Eco",
+        "de": "Eco"
+       }
+      },
+      {
+       "v": 0.6,
+       "title": {
+        "en": "Tour",
+        "de": "Tour"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Turbo (250 W)",
+        "de": "Turbo (250 W)"
+       }
+      }
+     ]
+    },
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "About 12 km/h",
+        "de": "Etwa 12 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 25 km/h",
+        "de": "Etwa 25 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Braking",
+      "de": "Bremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Light braking",
+        "de": "Leichte Bremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full stop from 25 km/h",
+        "de": "Vollbremsung aus 25 km/h"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "frame",
+     "title": {
+      "en": "Aluminium frame tubes",
+      "de": "Aluminium-Rahmenrohre"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "aluminium",
+     "areaM2": 0.9,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "tube",
+       "title": {
+        "en": "Aluminium tube 2 mm",
+        "de": "Aluminiumrohr 2 mm"
+       },
+       "kind": "metal",
+       "material": "aluminium",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 1.25e-05,
+       "heatCapacityJM2K": 3000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 3000,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "box-wood",
+     "title": {
+      "en": "Plywood cargo box",
+      "de": "Sperrholz-Transportkasten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "plywood",
+     "areaM2": 3.2,
+     "characteristicLengthM": 0.8,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "ply",
+       "title": {
+        "en": "Birch plywood 12 mm",
+        "de": "Birkensperrholz 12 mm"
+       },
+       "kind": "timber",
+       "material": "plywood",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.0857142857142857,
+       "heatCapacityJM2K": 14000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 14000,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "cargo",
+     "title": {
+      "en": "Plastic crates",
+      "de": "Kunststoffkisten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "plastic",
+     "areaM2": 1.2,
+     "characteristicLengthM": 0.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Polypropylene wall 3 mm",
+        "de": "Polypropylenwand 3 mm"
+       },
+       "kind": "polymer",
+       "material": "plastic",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.015,
+       "heatCapacityJM2K": 5400,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 5400,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "fenders",
+     "title": {
+      "en": "Mudguards",
+      "de": "Schutzbleche"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "plastic",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.6,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [],
+     "heatCapacityJM2K": 5400,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "touch-parts",
+     "title": {
+      "en": "Saddle and grips",
+      "de": "Sattel und Griffe"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "plastic",
+     "areaM2": 0.25,
+     "characteristicLengthM": 0.15,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [],
+     "heatCapacityJM2K": 5000,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "battery-pack",
+     "title": {
+      "en": "Frame battery case",
+      "de": "Rahmen-Akkugehäuse"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "battery-case",
+     "areaM2": 0.15,
+     "characteristicLengthM": 0.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 10000,
+     "operating": {
+      "key": "assist",
+      "heatW": 9
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "drive-motor",
+     "title": {
+      "en": "Mid-drive motor housing",
+      "de": "Mittelmotor-Gehäuse"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "motor-case",
+     "areaM2": 0.12,
+     "characteristicLengthM": 0.14,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 11000,
+     "operating": {
+      "key": "assist",
+      "heatW": 30
+     },
+     "source": "authored-estimate",
+     "reference": "en-15194"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyre treads and sidewalls",
+      "de": "Reifenlaufflächen und -flanken"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 0.9,
+     "characteristicLengthM": 0.5,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "tread",
+       "title": {
+        "en": "Rubber tread and casing",
+        "de": "Gummilauffläche und Karkasse"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.02,
+       "heatCapacityJM2K": 7000,
+       "source": "authored-estimate",
+       "reference": "wong-2008"
+      }
+     ],
+     "heatCapacityJM2K": 7000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 86
+     },
+     "source": "authored-estimate",
+     "reference": "wong-2008"
+    },
+    {
+     "id": "brakes",
+     "title": {
+      "en": "Brake rotors",
+      "de": "Bremsscheiben"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "steel-disc",
+     "areaM2": 0.04,
+     "characteristicLengthM": 0.16,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 3450,
+     "operating": {
+      "key": "braking",
+      "heatW": 1700
+     },
+     "source": "authored-estimate"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Heat release at level 1: motor housing 30 W (about +25 K), battery case 9 W (+6 K), tyres 86 W (about 25 km/h), rotors 1.7 kW for a stop from 25 km/h (3.3 kJ in 2 s) on 0.3 kg of steel (3.45 kJ/(m2 K) on 0.04 m2).",
+     "de": "Wärmefreisetzung bei Stufe 1: Motorgehäuse 30 W (etwa +25 K), Akkugehäuse 9 W (+6 K), Reifen 86 W (etwa 25 km/h), Scheiben 1,7 kW für einen Halt aus 25 km/h (3,3 kJ in 2 s) auf 0,3 kg Stahl (3,45 kJ/(m2 K) auf 0,04 m2)."
+    },
+    {
+     "en": "No emitters: the machine has no exhaust or fan; thin tubes (0.03 m) respond within seconds (3 kJ/(m2 K)).",
+     "de": "Keine Emitter: die Maschine hat weder Abgas noch Lüfter; dünne Rohre (0,03 m) reagieren innerhalb von Sekunden (3 kJ/(m2 K))."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "The bike is a rigid body on equally stiff patches; when parked on the stand the rear tyre is lifted and its patch carries nothing, so the stand pad and the front tyre share the weight. The load in the box sits ahead of the front axle line towards the front wheel and shifts the reaction towards the front.",
+     "de": "Das Rad ist ein starrer Körper auf gleich steifen Standflächen; auf dem Ständer ist der Hinterreifen abgehoben und seine Fläche trägt nichts, Ständerfußplatte und Vorderreifen teilen das Gewicht. Die Last in der Box liegt vor der Hinterachse zum Vorderrad hin und verlagert die Reaktion nach vorn."
+    },
+    {
+     "en": "Quasi-static: the roll-by is at constant speed, so no inertia forces act; riderless balance about the longitudinal axis is outside the elevation model.",
+     "de": "Quasi-statisch: Das Vorbeirollen erfolgt mit konstanter Geschwindigkeit, es wirken keine Trägheitskräfte; das fahrerlose Gleichgewicht um die Längsachse liegt außerhalb des Ansichtsmodells."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "loaded-on-stand",
+   "defaultClip": "roll-by",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

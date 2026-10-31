@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { TextError } from "../🟦️.ts";
 import { ValueError, type ValueRefusalKind } from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };

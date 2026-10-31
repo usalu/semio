@@ -1,3 +1,4 @@
+import {pathToFileURL} from "node:url";
 /** 🔮️ The one strict Ajv oracle for semio JSON schemas: Ajv in strict mode with the `x-semio-*` vendor annotation vocabulary
  * (`../../🧬️vendor-annotation-vocabulary/🔣️.json`) registered as annotation keywords, each with its value's meta-schema. Every schema law builds its validator here
  * instead of registering vendor keywords one call site at a time, so a schema that gains an annotation (e.g. `x-semio-note` in
@@ -34,11 +35,10 @@ export type SchemaScopeValidator = ((value: unknown) => boolean) & { errors?: un
 
 /** 🧩️ Compiles one PascalCase export of a committed schema module (or the whole module when `exportId` is null) with the strict semio Ajv, so a consumer's test validates against the owner's document without importing the owner; the module and dependency paths are repository-relative or absolute. */
 export function compileSchemaScopeExport(repoRoot: string, moduleRel: string, exportId: string | null, dependencyModules: readonly string[] = []): SchemaScopeValidator {
-  const module = JSON.parse(readFileSync(resolve(repoRoot, moduleRel), "utf8"));
-  const ajv = semioSchemaAjvV1({ allErrors: true });
-  for (const dependency of dependencyModules) ajv.addSchema(JSON.parse(readFileSync(resolve(repoRoot, dependency), "utf8")));
-  ajv.addSchema(module);
-  return ajv.compile({ $ref: exportId === null ? module.$id : `${module.$id}#/$defs/${exportId}` }) as SchemaScopeValidator;
+  const source=resolve(repoRoot,moduleRel),ajv=semioSchemaAjvV1({allErrors:true});
+  for(const file of [...dependencyModules.map(path=>resolve(repoRoot,path)),source])ajv.addSchema(JSON.parse(readFileSync(file,"utf8")),pathToFileURL(file).href);
+  const pointer=exportId===null?"":"#/$defs/"+encodeURIComponent(exportId.replace(/~/g,"~0").replace(/\//g,"~1"));
+  return ajv.compile({$ref:pathToFileURL(source).href+pointer}) as SchemaScopeValidator;
 }
 
 /** 🧺️ Adds every mutation leaf payload schema (`<mutations>/<leaf>/🧬️schema/🔣️.json`) of one aggregate collection to `ajv`, so the

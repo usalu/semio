@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://semio/repo-test-acceptance/v1",
   "title": "🎯️ Repository acceptance: one check's result, the goal plan, and the goal gate's summary",
   "$defs": {

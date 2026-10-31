@@ -1,8 +1,10 @@
 {
   "classifications": {
     "wt-300": {
-      "cs-din": "331",
-      "entry": "Created"
+      "entry": "Created",
+      "value": {
+        "cs-din": "331"
+      }
     }
   }
 }

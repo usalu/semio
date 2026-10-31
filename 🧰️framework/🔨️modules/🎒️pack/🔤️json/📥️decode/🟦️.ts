@@ -18,7 +18,9 @@ export interface JsonSyntaxControl { readonly maximumBytes: number; readonly max
 export type JsonSyntaxErrorCode = "byte-budget" | "cancelled" | "depth-budget" | "duplicate-member" | "invalid-control" | "invalid-policy" | "invalid-source" | "invalid-unicode" | "malformed-json" | "node-budget";
 /** 🚨️ Identifies a reader refusal and its exact raw-source code-unit offset. */
 export class JsonSyntaxError extends Error {
-  constructor(readonly code: JsonSyntaxErrorCode, readonly offset: number, message: string) { super(message); this.name = "JsonSyntaxError"; }
+  readonly code: JsonSyntaxErrorCode;
+  readonly offset: number;
+  constructor(code: JsonSyntaxErrorCode, offset: number, message: string) { super(message); this.name = "JsonSyntaxError"; this.code = code; this.offset = offset; }
 }
 
 function reject(code: JsonSyntaxErrorCode, offset: number, message: string): never { throw new JsonSyntaxError(code, offset, message); }
@@ -38,7 +40,8 @@ class SegmentedJsonText implements JsonTextSource {
   readonly length: number;
   private part = 0;
   private start = 0;
-  constructor(readonly parts: readonly string[],length:number) { this.length = length; }
+  readonly parts: readonly string[];
+  constructor(parts: readonly string[], length: number) { this.parts = parts; this.length = length; }
   charAt(index: number): string {
     if (index < 0 || index >= this.length) return "";
     while (this.part > 0 && index < this.start) this.start -= this.parts[--this.part]!.length;
@@ -58,7 +61,10 @@ class JsonSyntaxReader {
   #bytes = 0;
   #nodes = 0;
   #chunk = 0;
-  constructor(readonly source: JsonTextSource, readonly policy: JsonMemberPolicy, readonly control: JsonSyntaxControl) {}
+  readonly source: JsonTextSource;
+  readonly policy: JsonMemberPolicy;
+  readonly control: JsonSyntaxControl;
+  constructor(source: JsonTextSource, policy: JsonMemberPolicy, control: JsonSyntaxControl) { this.source = source; this.policy = policy; this.control = control; }
   #check(): void { if (this.control.cancelled()) reject("cancelled", this.#offset, "JSON operation cancelled"); }
   #emit(): void { this.#check(); this.control.progress(Object.freeze({ bytes: this.#bytes, nodes: this.#nodes })); }
   #peek(): string { return this.source.charAt(this.#offset); }

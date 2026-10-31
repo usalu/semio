@@ -1,10 +1,12 @@
 {
   "walls": {
     "w-south": {
-      "base_slab": {
-        "value": null
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "base_slab": {
+          "value": null
+        }
+      }
     }
   }
 }

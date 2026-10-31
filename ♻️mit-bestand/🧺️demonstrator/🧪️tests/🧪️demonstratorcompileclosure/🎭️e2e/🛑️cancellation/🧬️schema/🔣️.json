@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "owners",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "entry",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "function",
+              "class"
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "phase",
+          "trigger",
+          "status",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "ready",
+              "browser"
+            ]
+          },
+          "trigger": {
+            "enum": [
+              "caller",
+              "SIGINT",
+              "SIGTERM",
+              "none"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "expected": {
+            "$ref": "#/definitions/Result"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Result": {
+      "type": "object",
+      "required": [
+        "stop",
+        "exitCode",
+        "fails",
+        "kills",
+        "toolSignal"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stop": {
+          "type": "boolean"
+        },
+        "exitCode": {
+          "enum": [
+            0,
+            130,
+            143
+          ]
+        },
+        "fails": {
+          "type": "boolean"
+        },
+        "kills": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "toolSignal": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

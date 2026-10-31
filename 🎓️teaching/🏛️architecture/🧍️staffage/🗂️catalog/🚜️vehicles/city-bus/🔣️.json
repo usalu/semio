@@ -1,0 +1,4616 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "city-bus",
+  "category": "vehicles",
+  "title": {
+   "en": "City Bus",
+   "de": "Stadtbus"
+  },
+  "summary": {
+   "en": "A 12 m battery-electric low-floor solo bus on two air-sprung axles with a kneeling front, two sliding double doors, roof-mounted traction battery and heat-pump unit, rolling wheels and passenger loads.",
+   "de": "Ein 12 m langer batterieelektrischer Niederflur-Solobus auf zwei luftgefederten Achsen mit Kneeling-Vorderachse, zwei Doppelschiebetüren, Dach-Traktionsbatterie und Wärmepumpenaggregat, rollenden Rädern und Fahrgastlasten."
+  },
+  "tags": [
+   "vehicle",
+   "bus",
+   "public-transport",
+   "battery-electric",
+   "low-floor",
+   "wheeled"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "eu-2001-85",
+     "citation": "Directive 2001/85/EC of the European Parliament and of the Council relating to special provisions for vehicles used for the carriage of passengers comprising more than eight seats in addition to the driver's seat (standing area per passenger; repealed by Regulation (EU) 2018/858, with effect from 1 September 2020). The 68 kg design passenger mass stems from Annex I of Directive 97/27/EC (also repealed by Regulation (EU) 2018/858); both values are used here as authored estimates guided by these texts."
+    },
+    {
+     "id": "wong-2008",
+     "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Tyre contact patch, rolling radius, longitudinal load transfer."
+    },
+    {
+     "id": "gillespie-1992",
+     "citation": "Gillespie, T. D. (1992). Fundamentals of Vehicle Dynamics, SAE International. Axle loads and load transfer under braking and acceleration."
+    },
+    {
+     "id": "limpert-1999",
+     "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Brake disc temperature rise under repeated stops."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 36 Solar Energy Use; surface properties and condenser air temperature rise."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber)."
+    }
+   ],
+   "notes": {
+    "en": "Battery-electric: no exhaust; waste heat leaves through the traction battery housing, the e-axle casting and the roof heat pump (plus brake discs and tyres). The cabin is modelled as conditioned to 21 C (body, roof, doors and glass are conditioned elements). Passenger loads as in the first version (Directive 2001/85/EC). Dimensions, masses and thermal parameters are authored typical values (authored-estimate).",
+    "de": "Batterieelektrisch: kein Auspuff; Abwärme verlässt das Fahrzeug über Batteriegehäuse, E-Achsgehäuse und die Dach-Wärmepumpe (dazu Bremsscheiben und Reifen). Der Innenraum ist auf 21 C konditioniert (Aufbau, Dach, Türen und Glas sind konditionierte Elemente). Fahrgastlasten wie in der ersten Fassung (Richtlinie 2001/85/EG). Abmessungen, Massen und thermische Parameter sind selbst gesetzte typische Werte (authored-estimate)."
+   }
+  },
+  "dimensions": {
+   "heightM": 3.14,
+   "widthM": 12,
+   "depthM": 2.55,
+   "massKg": 12580
+  },
+  "materials": [
+   {
+    "id": "paint",
+    "title": {
+     "en": "Painted aluminium and GRP panels",
+     "de": "Lackierte Aluminium- und GFK-Bleche"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2000,
+    "conductivityWmK": 100,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "glass",
+    "title": {
+     "en": "Toughened tinted glass",
+     "de": "Getöntes Einscheibensicherheitsglas"
+    },
+    "emissivity": 0.84,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 2500,
+    "conductivityWmK": 1,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1150,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "wong-2008"
+   },
+   {
+    "id": "steel-wheel",
+    "title": {
+     "en": "Painted steel wheel",
+     "de": "Lackierte Stahlfelge"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "cast-iron",
+    "title": {
+     "en": "Grey cast iron brake disc",
+     "de": "Graugussbremsscheibe"
+    },
+    "emissivity": 0.65,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7200,
+    "conductivityWmK": 46,
+    "source": "literature",
+    "reference": "limpert-1999"
+   },
+   {
+    "id": "battery-housing",
+    "title": {
+     "en": "Roof battery housing (coated aluminium)",
+     "de": "Dach-Batteriegehäuse (beschichtetes Aluminium)"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 2700,
+    "conductivityWmK": 160,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "hvac-housing",
+    "title": {
+     "en": "Heat pump housing",
+     "de": "Wärmepumpengehäuse"
+    },
+    "emissivity": 0.85,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2000,
+    "conductivityWmK": 100,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "e-axle",
+    "title": {
+     "en": "Electric drive axle casting",
+     "de": "Elektrische Antriebsachse (Guss)"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 7100,
+    "conductivityWmK": 50,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "interior-trim",
+    "title": {
+     "en": "Interior seats and rails",
+     "de": "Sitze und Haltestangen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 400,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "door-leaf",
+    "title": {
+     "en": "Door leaf (aluminium frame, glass)",
+     "de": "Türflügel (Aluminiumrahmen, Glas)"
+    },
+    "emissivity": 0.88,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2000,
+    "conductivityWmK": 100,
+    "source": "authored-estimate"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "body",
+   "bones": [
+    {
+     "id": "body",
+     "parent": null,
+     "title": {
+      "en": "Body with interior",
+      "de": "Aufbau mit Innenraum"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 12,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 7500,
+      "comX": 5.8,
+      "comY": 1.3,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "battery",
+     "parent": "body",
+     "title": {
+      "en": "Roof traction battery",
+      "de": "Dach-Traktionsbatterie"
+     },
+     "x": 1,
+     "y": 2.98,
+     "angleDeg": 0,
+     "lengthM": 6.3,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 2200,
+      "comX": 3.1,
+      "comY": 0.08,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "hvac",
+     "parent": "body",
+     "title": {
+      "en": "Roof heat pump unit",
+      "de": "Dach-Wärmepumpenaggregat"
+     },
+     "x": 8,
+     "y": 2.98,
+     "angleDeg": 0,
+     "lengthM": 2.5,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 450,
+      "comX": 1.25,
+      "comY": 0.08,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-m-aft",
+     "parent": "body",
+     "title": {
+      "en": "Centre door, rear leaf",
+      "de": "Mitteltür, hinterer Flügel"
+     },
+     "x": 6.35,
+     "y": 0.34,
+     "angleDeg": 0,
+     "lengthM": 0.55,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 180,
+      "minM": 0,
+      "maxM": 0.45
+     },
+     "mass": {
+      "kg": 55,
+      "comX": 0.275,
+      "comY": 1,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-m-fwd",
+     "parent": "body",
+     "title": {
+      "en": "Centre door, front leaf",
+      "de": "Mitteltür, vorderer Flügel"
+     },
+     "x": 6.9,
+     "y": 0.34,
+     "angleDeg": 0,
+     "lengthM": 0.55,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.45
+     },
+     "mass": {
+      "kg": 55,
+      "comX": 0.275,
+      "comY": 1,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-f-aft",
+     "parent": "body",
+     "title": {
+      "en": "Front door, rear leaf",
+      "de": "Fronttür, hinterer Flügel"
+     },
+     "x": 10.35,
+     "y": 0.34,
+     "angleDeg": 0,
+     "lengthM": 0.55,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 180,
+      "minM": 0,
+      "maxM": 0.4
+     },
+     "mass": {
+      "kg": 55,
+      "comX": 0.275,
+      "comY": 1,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "door-f-fwd",
+     "parent": "body",
+     "title": {
+      "en": "Front door, front leaf",
+      "de": "Fronttür, vorderer Flügel"
+     },
+     "x": 10.9,
+     "y": 0.34,
+     "angleDeg": 0,
+     "lengthM": 0.55,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.4
+     },
+     "mass": {
+      "kg": 55,
+      "comX": 0.275,
+      "comY": 1,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "axle-f",
+     "parent": "body",
+     "title": {
+      "en": "Front axle with air springs",
+      "de": "Vorderachse mit Luftfederung"
+     },
+     "x": 9.35,
+     "y": 0.48,
+     "angleDeg": 0,
+     "lengthM": 0.48,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.12,
+      "maxM": 0.12
+     },
+     "mass": {
+      "kg": 600,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "axle-r",
+     "parent": "body",
+     "title": {
+      "en": "Electric drive axle with air springs",
+      "de": "Elektrische Antriebsachse mit Luftfederung"
+     },
+     "x": 3.45,
+     "y": 0.48,
+     "angleDeg": 0,
+     "lengthM": 0.48,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 90,
+      "minM": -0.12,
+      "maxM": 0.12
+     },
+     "mass": {
+      "kg": 1100,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "axle-f",
+     "title": {
+      "en": "Front wheels",
+      "de": "Vorderräder"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.48,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 170,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "wong-2008"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "axle-r",
+     "title": {
+      "en": "Rear wheels (twin)",
+      "de": "Hinterräder (Zwilling)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.48,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 340,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "wong-2008"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-f",
+    "bone": "axle-f",
+    "x": 0,
+    "y": -0.48,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patches",
+     "de": "Vorderreifenaufstandsflächen"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.16,
+    "footprintWidthM": 0.55,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "contact-r",
+    "bone": "axle-r",
+    "x": 0,
+    "y": -0.48,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patches",
+     "de": "Hinterreifenaufstandsflächen"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.16,
+    "footprintWidthM": 1.1,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "hvac-vent",
+    "bone": "hvac",
+    "x": 1.25,
+    "y": 0.16,
+    "kind": "emitter",
+    "title": {
+     "en": "Heat pump outlet",
+     "de": "Wärmepumpenaustritt"
+    }
+   },
+   {
+    "id": "step-centre",
+    "bone": "body",
+    "x": 7,
+    "y": 0.34,
+    "kind": "load",
+    "title": {
+     "en": "Centre door step",
+     "de": "Mitteltür-Stufe"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "glass-sheen",
+      "title": {
+       "en": "Glass sheen",
+       "de": "Glasglanz"
+      },
+      "pattern": "lines",
+      "angleDeg": 55,
+      "spacingMm": 1.8,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "body-shell",
+       "bone": "body",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "path",
+       "d": "M 0.15,0.3 L 2.83,0.3 C 2.83,0.8 3.1,1.12 3.45,1.12 C 3.8,1.12 4.07,0.8 4.07,0.3 L 8.73,0.3 C 8.73,0.8 9.0,1.12 9.35,1.12 C 9.7,1.12 9.97,0.8 9.97,0.3 L 11.85,0.3 C 11.97,0.32 12.0,0.4 12.0,0.5 L 12.0,0.95 C 12.0,1.0 11.99,1.05 11.98,1.1 L 11.78,2.7 C 11.76,2.8 11.72,2.88 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.0,2.6 L 0.0,0.5 C 0.0,0.38 0.05,0.3 0.15,0.3 Z",
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "id": "roof-panel",
+       "bone": "body",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "path",
+       "d": "M 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.1,2.8 C 0.2,2.88 0.5,2.9 1.0,2.9 L 11.0,2.9 C 11.3,2.9 11.5,2.88 11.7,2.82 Z",
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "id": "door-opening-m",
+       "bone": "body",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "kind": "rect",
+       "x": 6.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "material": "interior-trim"
+      },
+      {
+       "id": "door-opening-f",
+       "bone": "body",
+       "role": "detail",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.06,
+       "kind": "rect",
+       "x": 10.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "material": "interior-trim"
+      },
+      {
+       "id": "side-windows",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "path",
+       "d": "M 0.3,1.2 L 1.45,1.2 L 1.45,2.4 L 0.3,2.4 Z M 1.55,1.2 L 2.7,1.2 L 2.7,2.4 L 1.55,2.4 Z M 2.8,1.2 L 4.1,1.2 L 4.1,2.4 L 2.8,2.4 Z M 4.2,1.2 L 5.35,1.2 L 5.35,2.4 L 4.2,2.4 Z M 5.45,1.2 L 6.25,1.2 L 6.25,2.4 L 5.45,2.4 Z M 7.55,1.2 L 8.65,1.2 L 8.65,2.4 L 7.55,2.4 Z M 8.75,1.2 L 9.85,1.2 L 9.85,2.4 L 8.75,2.4 Z M 9.95,1.2 L 10.25,1.2 L 10.25,2.4 L 9.95,2.4 Z M 11.5,1.2 L 11.8,1.2 L 11.76,2.4 L 11.5,2.4 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "upper-windows",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "path",
+       "d": "M 0.3,2.48 L 1.45,2.48 L 1.45,2.78 L 0.3,2.78 Z M 1.55,2.48 L 2.7,2.48 L 2.7,2.78 L 1.55,2.78 Z M 2.8,2.48 L 4.1,2.48 L 4.1,2.78 L 2.8,2.78 Z M 4.2,2.48 L 5.35,2.48 L 5.35,2.78 L 4.2,2.78 Z M 5.45,2.48 L 6.25,2.48 L 6.25,2.78 L 5.45,2.78 Z M 6.35,2.48 L 7.45,2.48 L 7.45,2.78 L 6.35,2.78 Z M 7.55,2.48 L 8.65,2.48 L 8.65,2.78 L 7.55,2.78 Z M 8.75,2.48 L 9.85,2.48 L 9.85,2.78 L 8.75,2.78 Z M 9.95,2.48 L 10.25,2.48 L 10.25,2.78 L 9.95,2.78 Z M 10.35,2.48 L 11.45,2.48 L 11.45,2.78 L 10.35,2.78 Z M 11.5,2.48 L 11.76,2.48 L 11.75,2.72 L 11.5,2.72 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "windscreen-edge",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.75,
+       "kind": "path",
+       "d": "M 11.98,1.2 L 11.8,2.68 L 11.73,2.66 L 11.9,1.2 Z",
+       "region": "glazing",
+       "material": "glass",
+       "hatch": "glass-sheen"
+      },
+      {
+       "id": "skirt-line",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.05,0.62 L 2.8,0.62 M 4.1,0.62 L 8.7,0.62 M 10.0,0.62 L 11.98,0.62"
+      },
+      {
+       "id": "belt-line",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.0,1.2 L 6.35,1.2 M 7.45,1.2 L 10.35,1.2 M 11.45,1.2 L 11.98,1.2"
+      },
+      {
+       "id": "pillar-lines",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 1.5,1.12 L 1.5,2.9 M 2.75,1.12 L 2.75,2.9 M 4.15,1.12 L 4.15,2.9 M 5.4,1.12 L 5.4,2.9 M 7.5,1.12 L 7.5,2.9 M 8.7,1.12 L 8.7,2.9 M 9.9,1.12 L 9.9,2.9 M 11.48,1.12 L 11.48,2.9"
+      },
+      {
+       "id": "seat-backs",
+       "bone": "body",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.7,1.2 L 0.8,1.2 L 0.8,1.75 L 0.7,1.75 Z M 1.5,1.2 L 1.6,1.2 L 1.6,1.75 L 1.5,1.75 Z M 2.3,1.2 L 2.4,1.2 L 2.4,1.75 L 2.3,1.75 Z M 3.1,1.2 L 3.2,1.2 L 3.2,1.75 L 3.1,1.75 Z M 3.9,1.2 L 4.0,1.2 L 4.0,1.75 L 3.9,1.75 Z M 4.7,1.2 L 4.8,1.2 L 4.8,1.75 L 4.7,1.75 Z M 5.5,1.2 L 5.6,1.2 L 5.6,1.75 L 5.5,1.75 Z M 7.8,1.2 L 7.9,1.2 L 7.9,1.75 L 7.8,1.75 Z M 8.5,1.2 L 8.6,1.2 L 8.6,1.75 L 8.5,1.75 Z M 9.2,1.2 L 9.3,1.2 L 9.3,1.75 L 9.2,1.75 Z",
+       "material": "interior-trim"
+      },
+      {
+       "id": "grab-rail",
+       "bone": "body",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.4,
+         2.22
+        ],
+        [
+         6.2,
+         2.22
+        ],
+        [
+         7.6,
+         2.22
+        ],
+        [
+         10.1,
+         2.22
+        ]
+       ],
+       "closed": false,
+       "material": "interior-trim"
+      },
+      {
+       "id": "driver-cab",
+       "bone": "body",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.25,
+       "kind": "path",
+       "d": "M 11.5,1.2 L 11.1,1.2 L 11.1,1.45 L 11.5,1.5 Z",
+       "material": "interior-trim"
+      },
+      {
+       "id": "headlamp",
+       "bone": "body",
+       "role": "glazing",
+       "z": 7,
+       "filled": true,
+       "tone": 0.9,
+       "kind": "rect",
+       "x": 11.9,
+       "y": 0.62,
+       "w": 0.1,
+       "h": 0.22,
+       "r": 0.03,
+       "material": "glass"
+      },
+      {
+       "id": "tail-lamp",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": 0,
+       "y": 0.62,
+       "w": 0.06,
+       "h": 0.5,
+       "r": 0.02,
+       "material": "glass"
+      },
+      {
+       "id": "mirror",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": 11.8,
+       "y0": 2.45,
+       "x1": 11.88,
+       "y1": 2.15,
+       "r0": 0.03,
+       "r1": 0.045,
+       "material": "paint"
+      },
+      {
+       "id": "bumper-line-f",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 10.0,0.45 L 11.95,0.45"
+      },
+      {
+       "id": "bumper-line-r",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M 0.05,0.45 L 2.8,0.45"
+      },
+      {
+       "id": "well-front",
+       "bone": "body",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "kind": "path",
+       "d": "M 8.73,0.3 C 8.73,0.8 9.0,1.12 9.35,1.12 C 9.7,1.12 9.97,0.8 9.97,0.3 Z",
+       "material": "paint"
+      },
+      {
+       "id": "well-rear",
+       "bone": "body",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.04,
+       "kind": "path",
+       "d": "M 2.83,0.3 C 2.83,0.8 3.1,1.12 3.45,1.12 C 3.8,1.12 4.07,0.8 4.07,0.3 Z",
+       "material": "paint"
+      },
+      {
+       "id": "battery-pack",
+       "bone": "battery",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.14 L 6.1,0.14 L 6.3,0 Z",
+       "region": "battery-pack",
+       "material": "battery-housing"
+      },
+      {
+       "id": "battery-seams",
+       "bone": "battery",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "path",
+       "d": "M 1.1,0 L 1.1,0.14 M 2.2,0 L 2.2,0.14 M 3.3,0 L 3.3,0.14 M 4.4,0 L 4.4,0.14 M 5.5,0 L 5.5,0.14"
+      },
+      {
+       "id": "hvac-unit",
+       "bone": "hvac",
+       "role": "body",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "path",
+       "d": "M 0,0 L 0.1,0.16 L 2.3,0.16 L 2.5,0 Z",
+       "region": "hvac-unit",
+       "material": "hvac-housing"
+      },
+      {
+       "id": "hvac-louvres",
+       "bone": "hvac",
+       "role": "detail",
+       "z": 2.3,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.6,0.04 L 0.6,0.13 M 0.75,0.04 L 0.75,0.13 M 0.9,0.04 L 0.9,0.13 M 1.05,0.04 L 1.05,0.13 M 1.4,0.04 L 1.4,0.13 M 1.55,0.04 L 1.55,0.13 M 1.7,0.04 L 1.7,0.13 M 1.85,0.04 L 1.85,0.13"
+      },
+      {
+       "id": "leaf-m-aft",
+       "bone": "door-m-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.55,
+       "h": 2.12,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "id": "leaf-m-aft-glass",
+       "bone": "door-m-aft",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.5,
+       "w": 0.45,
+       "h": 1.5,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "id": "leaf-m-fwd",
+       "bone": "door-m-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.55,
+       "h": 2.12,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "id": "leaf-m-fwd-glass",
+       "bone": "door-m-fwd",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.5,
+       "w": 0.45,
+       "h": 1.5,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "id": "leaf-f-aft",
+       "bone": "door-f-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.55,
+       "h": 2.12,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "id": "leaf-f-aft-glass",
+       "bone": "door-f-aft",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.5,
+       "w": 0.45,
+       "h": 1.5,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "id": "leaf-f-fwd",
+       "bone": "door-f-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0,
+       "y": 0,
+       "w": 0.55,
+       "h": 2.12,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "id": "leaf-f-fwd-glass",
+       "bone": "door-f-fwd",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "rect",
+       "x": 0.05,
+       "y": 0.5,
+       "w": 0.45,
+       "h": 1.5,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "id": "leaf-handrail-m-aft",
+       "bone": "door-m-aft",
+       "role": "detail",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0,0.34 L 0.55,0.34"
+      },
+      {
+       "id": "leaf-handrail-m-fwd",
+       "bone": "door-m-fwd",
+       "role": "detail",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0,0.34 L 0.55,0.34"
+      },
+      {
+       "id": "leaf-handrail-f-aft",
+       "bone": "door-f-aft",
+       "role": "detail",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0,0.34 L 0.55,0.34"
+      },
+      {
+       "id": "leaf-handrail-f-fwd",
+       "bone": "door-f-fwd",
+       "role": "detail",
+       "z": 6.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.0,0.34 L 0.55,0.34"
+      },
+      {
+       "id": "e-axle-casting",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "capsule",
+       "x0": -0.25,
+       "y0": 0,
+       "x1": 0.25,
+       "y1": 0,
+       "r0": 0.15,
+       "r1": 0.15,
+       "region": "e-axle",
+       "material": "e-axle"
+      },
+      {
+       "id": "air-spring-r",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.35,
+       "w": 0.28,
+       "h": 0.25,
+       "r": 0.04,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "air-spring-f",
+       "bone": "axle-f",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.35,
+       "w": 0.28,
+       "h": 0.25,
+       "r": 0.04,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "sidewall-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.39,
+       "ry": 0.39,
+       "material": "rubber"
+      },
+      {
+       "id": "tread-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.422,0.000 L0.451,0.000 M0.416,0.073 L0.444,0.079 M0.396,0.144 L0.424,0.155 M0.366,0.211 L0.391,0.226 M0.324,0.272 L0.346,0.290 M0.272,0.324 L0.290,0.346 M0.211,0.366 L0.226,0.391 M0.144,0.396 L0.155,0.424 M0.073,0.416 L0.079,0.444 M0.000,0.422 L0.000,0.451 M-0.073,0.416 L-0.079,0.444 M-0.144,0.396 L-0.155,0.424 M-0.211,0.366 L-0.226,0.391 M-0.272,0.324 L-0.290,0.346 M-0.324,0.272 L-0.346,0.290 M-0.366,0.211 L-0.391,0.226 M-0.396,0.144 L-0.424,0.155 M-0.416,0.073 L-0.444,0.079 M-0.422,0.000 L-0.451,0.000 M-0.416,-0.073 L-0.444,-0.079 M-0.396,-0.144 L-0.424,-0.155 M-0.366,-0.211 L-0.391,-0.226 M-0.324,-0.272 L-0.346,-0.290 M-0.272,-0.324 L-0.290,-0.346 M-0.211,-0.366 L-0.226,-0.391 M-0.144,-0.396 L-0.155,-0.424 M-0.073,-0.416 L-0.079,-0.444 M-0.000,-0.422 L-0.000,-0.451 M0.073,-0.416 L0.079,-0.444 M0.144,-0.396 L0.155,-0.424 M0.211,-0.366 L0.226,-0.391 M0.272,-0.324 L0.290,-0.346 M0.324,-0.272 L0.346,-0.290 M0.366,-0.211 L0.391,-0.226 M0.396,-0.144 L0.424,-0.155 M0.416,-0.073 L0.444,-0.079",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "hand-holes-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.235,0.000 L0.212,0.039 L0.168,0.039 L0.145,0.000 L0.167,-0.039 L0.212,-0.039 Z M0.166,0.166 L0.123,0.178 L0.091,0.146 L0.103,0.103 L0.146,0.091 L0.178,0.123 Z M0.000,0.235 L-0.039,0.213 L-0.039,0.168 L0.000,0.145 L0.039,0.167 L0.039,0.212 Z M-0.166,0.166 L-0.178,0.123 L-0.146,0.091 L-0.103,0.103 L-0.091,0.146 L-0.123,0.178 Z M-0.235,0.000 L-0.213,-0.039 L-0.168,-0.039 L-0.145,0.000 L-0.167,0.039 L-0.213,0.039 Z M-0.166,-0.166 L-0.123,-0.178 L-0.091,-0.146 L-0.103,-0.103 L-0.146,-0.091 L-0.178,-0.123 Z M-0.000,-0.235 L0.039,-0.213 L0.039,-0.168 L-0.000,-0.145 L-0.039,-0.168 L-0.039,-0.212 Z M0.166,-0.166 L0.178,-0.123 L0.146,-0.091 L0.103,-0.103 L0.091,-0.146 L0.123,-0.178 Z",
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "studs-f",
+       "bone": "wheel-f",
+       "role": "texture",
+       "z": 5.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.050,0.050 L0.038,0.050 L0.038,0.038 L0.050,0.038 Z M0.011,0.071 L0.001,0.064 L0.008,0.054 L0.018,0.061 Z M-0.032,0.064 L-0.036,0.052 L-0.025,0.048 L-0.021,0.060 Z M-0.064,0.032 L-0.060,0.021 L-0.048,0.025 L-0.052,0.036 Z M-0.071,-0.011 L-0.061,-0.018 L-0.054,-0.008 L-0.064,-0.001 Z M-0.050,-0.050 L-0.038,-0.050 L-0.038,-0.038 L-0.050,-0.038 Z M-0.011,-0.071 L-0.001,-0.064 L-0.008,-0.054 L-0.018,-0.061 Z M0.032,-0.064 L0.036,-0.052 L0.025,-0.048 L0.021,-0.060 Z M0.064,-0.032 L0.060,-0.021 L0.048,-0.025 L0.052,-0.036 Z M0.071,0.011 L0.061,0.018 L0.054,0.008 L0.064,0.001 Z",
+       "material": "steel-wheel"
+      },
+      {
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "id": "sidewall-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.39,
+       "ry": 0.39,
+       "material": "rubber"
+      },
+      {
+       "id": "tread-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M0.422,0.000 L0.451,0.000 M0.416,0.073 L0.444,0.079 M0.396,0.144 L0.424,0.155 M0.366,0.211 L0.391,0.226 M0.324,0.272 L0.346,0.290 M0.272,0.324 L0.290,0.346 M0.211,0.366 L0.226,0.391 M0.144,0.396 L0.155,0.424 M0.073,0.416 L0.079,0.444 M0.000,0.422 L0.000,0.451 M-0.073,0.416 L-0.079,0.444 M-0.144,0.396 L-0.155,0.424 M-0.211,0.366 L-0.226,0.391 M-0.272,0.324 L-0.290,0.346 M-0.324,0.272 L-0.346,0.290 M-0.366,0.211 L-0.391,0.226 M-0.396,0.144 L-0.424,0.155 M-0.416,0.073 L-0.444,0.079 M-0.422,0.000 L-0.451,0.000 M-0.416,-0.073 L-0.444,-0.079 M-0.396,-0.144 L-0.424,-0.155 M-0.366,-0.211 L-0.391,-0.226 M-0.324,-0.272 L-0.346,-0.290 M-0.272,-0.324 L-0.290,-0.346 M-0.211,-0.366 L-0.226,-0.391 M-0.144,-0.396 L-0.155,-0.424 M-0.073,-0.416 L-0.079,-0.444 M-0.000,-0.422 L-0.000,-0.451 M0.073,-0.416 L0.079,-0.444 M0.144,-0.396 L0.155,-0.424 M0.211,-0.366 L0.226,-0.391 M0.272,-0.324 L0.290,-0.346 M0.324,-0.272 L0.346,-0.290 M0.366,-0.211 L0.391,-0.226 M0.396,-0.144 L0.424,-0.155 M0.416,-0.073 L0.444,-0.079",
+       "material": "rubber"
+      },
+      {
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "hand-holes-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.235,0.000 L0.212,0.039 L0.168,0.039 L0.145,0.000 L0.167,-0.039 L0.212,-0.039 Z M0.166,0.166 L0.123,0.178 L0.091,0.146 L0.103,0.103 L0.146,0.091 L0.178,0.123 Z M0.000,0.235 L-0.039,0.213 L-0.039,0.168 L0.000,0.145 L0.039,0.167 L0.039,0.212 Z M-0.166,0.166 L-0.178,0.123 L-0.146,0.091 L-0.103,0.103 L-0.091,0.146 L-0.123,0.178 Z M-0.235,0.000 L-0.213,-0.039 L-0.168,-0.039 L-0.145,0.000 L-0.167,0.039 L-0.213,0.039 Z M-0.166,-0.166 L-0.123,-0.178 L-0.091,-0.146 L-0.103,-0.103 L-0.146,-0.091 L-0.178,-0.123 Z M-0.000,-0.235 L0.039,-0.213 L0.039,-0.168 L-0.000,-0.145 L-0.039,-0.168 L-0.039,-0.212 Z M0.166,-0.166 L0.178,-0.123 L0.146,-0.091 L0.103,-0.103 L0.091,-0.146 L0.123,-0.178 Z",
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "studs-r",
+       "bone": "wheel-r",
+       "role": "texture",
+       "z": 5.1,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M0.050,0.050 L0.038,0.050 L0.038,0.038 L0.050,0.038 Z M0.011,0.071 L0.001,0.064 L0.008,0.054 L0.018,0.061 Z M-0.032,0.064 L-0.036,0.052 L-0.025,0.048 L-0.021,0.060 Z M-0.064,0.032 L-0.060,0.021 L-0.048,0.025 L-0.052,0.036 Z M-0.071,-0.011 L-0.061,-0.018 L-0.054,-0.008 L-0.064,-0.001 Z M-0.050,-0.050 L-0.038,-0.050 L-0.038,-0.038 L-0.050,-0.038 Z M-0.011,-0.071 L-0.001,-0.064 L-0.008,-0.054 L-0.018,-0.061 Z M0.032,-0.064 L0.036,-0.052 L0.025,-0.048 L0.021,-0.060 Z M0.064,-0.032 L0.060,-0.021 L0.048,-0.025 L0.052,-0.036 Z M0.071,0.011 L0.061,0.018 L0.054,0.008 L0.064,0.001 Z",
+       "material": "steel-wheel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full side elevation of the first version with all panes, door leaves, pillars, wheels and roof pods.",
+      "de": "Vollständige Seitenansicht der ersten Fassung mit allen Scheiben, Türflügeln, Pfosten, Rädern und Dachaufbauten."
+     },
+     "retained": {
+      "en": "Everything: seats, grab rail, driver cab, studs, louvres, battery seams, sidewall.",
+      "de": "Alles: Sitze, Haltestange, Fahrerplatz, Bolzen, Lamellen, Batterienähte, Flanke."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Interior beyond the seat backs.",
+      "de": "Innenraum jenseits der Sitzlehnen."
+     },
+     "thinElements": {
+      "en": "Studs 0.016 m = 0.3 mm at the texture pen.",
+      "de": "Bolzen 0,016 m = 0,3 mm mit Texturstift."
+     },
+     "hatching": {
+      "en": "Windows carry a sheen hatch (55 degrees, 1.8 mm).",
+      "de": "Fenster tragen eine Glanzschraffur (55 Grad, 1,8 mm)."
+     },
+     "styles": {
+      "en": "Three line weights 0.35 / 0.25 / 0.13 mm; tyres black.",
+      "de": "Drei Linienstärken 0,35 / 0,25 / 0,13 mm; Reifen schwarz."
+     },
+     "overlays": {
+      "en": "All regions at real extent.",
+      "de": "Alle Regionen in realer Ausdehnung."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.1,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.15,0.3 L 2.83,0.3 C 2.83,0.8 3.1,1.15 3.45,1.15 C 3.8,1.15 4.07,0.8 4.07,0.3 L 8.73,0.3 C 8.73,0.8 9.0,1.15 9.35,1.15 C 9.7,1.15 9.97,0.8 9.97,0.3 L 11.85,0.3 C 11.97,0.32 12.0,0.4 12.0,0.5 L 12.0,0.95 C 12.0,1.0 11.99,1.05 11.98,1.1 L 11.78,2.7 C 11.76,2.8 11.72,2.88 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.0,2.6 L 0.0,0.5 C 0.0,0.38 0.05,0.3 0.15,0.3 Z",
+       "id": "body-shell",
+       "bone": "body",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      ,
+       "penMm": 0.33
+      },
+      {
+       "kind": "path",
+       "d": "M 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.1,2.8 C 0.2,2.88 0.5,2.9 1.0,2.9 L 11.0,2.9 C 11.3,2.9 11.5,2.88 11.7,2.82 Z",
+       "id": "roof-band",
+       "bone": "body",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 6.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-m",
+       "bone": "body",
+       "role": "detail",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 10.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-f",
+       "bone": "body",
+       "role": "detail",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 0.3,
+       "y": 1.2,
+       "w": 1.15,
+       "h": 1.22,
+       "id": "pane-1",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 1.55,
+       "y": 1.2,
+       "w": 1.1500000000000001,
+       "h": 1.22,
+       "id": "pane-2",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.8,
+       "y": 1.2,
+       "w": 1.2999999999999998,
+       "h": 1.22,
+       "id": "pane-3",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 4.2,
+       "y": 1.2,
+       "w": 1.1499999999999995,
+       "h": 1.22,
+       "id": "pane-4",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 5.45,
+       "y": 1.2,
+       "w": 0.7999999999999998,
+       "h": 1.22,
+       "id": "pane-5",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 7.55,
+       "y": 1.2,
+       "w": 1.1000000000000005,
+       "h": 1.22,
+       "id": "pane-6",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 8.75,
+       "y": 1.2,
+       "w": 1.0999999999999996,
+       "h": 1.22,
+       "id": "pane-7",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 9.95,
+       "y": 1.2,
+       "w": 0.3000000000000007,
+       "h": 1.22,
+       "id": "pane-8",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 11.56,1.2 L 11.88,1.2 L 11.83,2.4 L 11.56,2.4 Z",
+       "id": "pane-cab",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      ,
+       "penMm": 0.25
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,2.48 L 10.25,2.48 L 10.25,2.78 L 0.3,2.78 Z M 10.35,2.48 L 11.68,2.48 L 11.66,2.66 L 10.35,2.66 Z",
+       "id": "upper-band",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.14 L 6.1,0.14 L 6.3,0 Z",
+       "id": "battery-pack",
+       "bone": "battery",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "region": "battery-pack",
+       "material": "battery-housing"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.16 L 2.28,0.16 L 2.5,0 Z",
+       "id": "hvac-unit",
+       "bone": "hvac",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "hvac-housing"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-m-aft",
+       "bone": "door-m-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-m-fwd",
+       "bone": "door-m-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-f-aft",
+       "bone": "door-f-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-f-fwd",
+       "bone": "door-f-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-m-aft-glass",
+       "bone": "door-m-aft",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-m-fwd-glass",
+       "bone": "door-m-fwd",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-f-aft-glass",
+       "bone": "door-f-aft",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-f-fwd-glass",
+       "bone": "door-f-fwd",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.15,
+       "w": 0.5,
+       "h": 0.3,
+       "id": "e-axle-casting",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "e-axle",
+       "material": "e-axle"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.3,
+       "w": 0.28,
+       "h": 0.12,
+       "id": "air-spring-f",
+       "bone": "axle-f",
+       "role": "detail",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel-wheel",
+       "r": 0.04
+      },
+      {
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.3,
+       "w": 0.28,
+       "h": 0.12,
+       "id": "air-spring-r",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel-wheel",
+       "r": 0.04
+      },
+      {
+       "kind": "path",
+       "d": "M 11.98,1.2 L 11.8,2.68 L 11.73,2.66 L 11.9,1.2 Z",
+       "id": "windscreen-edge",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      ,
+       "penMm": 0.25
+      },
+      {
+       "kind": "rect",
+       "x": 11.9,
+       "y": 0.62,
+       "w": 0.1,
+       "h": 0.22,
+       "id": "headlamp",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.85,
+       "material": "glass",
+       "r": 0.03
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": 0.62,
+       "w": 0.06,
+       "h": 0.5,
+       "id": "tail-lamp",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.85,
+       "material": "glass",
+       "r": 0.02
+      },
+      {
+       "kind": "capsule",
+       "x0": 11.85,
+       "y0": 2.45,
+       "x1": 11.95,
+       "y1": 2.15,
+       "r0": 0.03,
+       "r1": 0.045,
+       "id": "mirror",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": true,
+       "tone": 0.3,
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.0,1.2 L 6.35,1.2 M 7.45,1.2 L 10.35,1.2 M 11.45,1.2 L 11.98,1.2",
+       "id": "belt-line",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 1.5,1.2 L 1.5,2.9 M 2.75,1.2 L 2.75,2.9 M 4.15,1.2 L 4.15,2.9 M 5.4,1.2 L 5.4,2.9 M 7.5,1.2 L 7.5,2.9 M 8.7,1.2 L 8.7,2.9 M 9.9,1.2 L 9.9,2.9",
+       "id": "pillar-lines",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "path",
+       "d": "M 0.05,0.62 L 2.8,0.62 M 4.1,0.62 L 8.7,0.62 M 10.0,0.62 L 11.85,0.62",
+       "id": "skirt-line",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.3,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "hand-holes-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.235,0.000 L0.212,0.039 L0.168,0.039 L0.145,0.000 L0.167,-0.039 L0.212,-0.039 Z M0.166,0.166 L0.123,0.178 L0.091,0.146 L0.103,0.103 L0.146,0.091 L0.178,0.123 Z M0.000,0.235 L-0.039,0.213 L-0.039,0.168 L0.000,0.145 L0.039,0.167 L0.039,0.212 Z M-0.166,0.166 L-0.178,0.123 L-0.146,0.091 L-0.103,0.103 L-0.091,0.146 L-0.123,0.178 Z M-0.235,0.000 L-0.213,-0.039 L-0.168,-0.039 L-0.145,0.000 L-0.167,0.039 L-0.213,0.039 Z M-0.166,-0.166 L-0.123,-0.178 L-0.091,-0.146 L-0.103,-0.103 L-0.146,-0.091 L-0.178,-0.123 Z M-0.000,-0.235 L0.039,-0.213 L0.039,-0.168 L-0.000,-0.145 L-0.039,-0.168 L-0.039,-0.212 Z M0.166,-0.166 L0.178,-0.123 L0.146,-0.091 L0.103,-0.103 L0.091,-0.146 L0.123,-0.178 Z",
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hand-holes-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "path",
+       "d": "M0.235,0.000 L0.212,0.039 L0.168,0.039 L0.145,0.000 L0.167,-0.039 L0.212,-0.039 Z M0.166,0.166 L0.123,0.178 L0.091,0.146 L0.103,0.103 L0.146,0.091 L0.178,0.123 Z M0.000,0.235 L-0.039,0.213 L-0.039,0.168 L0.000,0.145 L0.039,0.167 L0.039,0.212 Z M-0.166,0.166 L-0.178,0.123 L-0.146,0.091 L-0.103,0.103 L-0.091,0.146 L-0.123,0.178 Z M-0.235,0.000 L-0.213,-0.039 L-0.168,-0.039 L-0.145,0.000 L-0.167,0.039 L-0.213,0.039 Z M-0.166,-0.166 L-0.123,-0.178 L-0.091,-0.146 L-0.103,-0.103 L-0.146,-0.091 L-0.178,-0.123 Z M-0.000,-0.235 L0.039,-0.213 L0.039,-0.168 L-0.000,-0.145 L-0.039,-0.168 L-0.039,-0.212 Z M0.166,-0.166 L0.178,-0.123 L0.146,-0.091 L0.103,-0.103 L0.091,-0.146 L0.123,-0.178 Z",
+       "region": "brakes",
+       "material": "cast-iron"
+      },
+      {
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "material": "steel-wheel"
+      },
+      {
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.02,
+       "y0": 0.34,
+       "x1": 0.53,
+       "y1": 0.34,
+       "r0": 0.02,
+       "r1": 0.02,
+       "id": "leaf-handrail-m-aft",
+       "bone": "door-m-aft",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.02,
+       "y0": 0.34,
+       "x1": 0.53,
+       "y1": 0.34,
+       "r0": 0.02,
+       "r1": 0.02,
+       "id": "leaf-handrail-m-fwd",
+       "bone": "door-m-fwd",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.02,
+       "y0": 0.34,
+       "x1": 0.53,
+       "y1": 0.34,
+       "r0": 0.02,
+       "r1": 0.02,
+       "id": "leaf-handrail-f-aft",
+       "bone": "door-f-aft",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.02,
+       "y0": 0.34,
+       "x1": 0.53,
+       "y1": 0.34,
+       "r0": 0.02,
+       "r1": 0.02,
+       "id": "leaf-handrail-f-fwd",
+       "bone": "door-f-fwd",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.3,
+       "material": "interior-trim"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The 1:200 profile plus pillar lines, belt line, windscreen, lamps and mirror; wheels with rim, hand holes and hub.",
+      "de": "Das 1:200-Profil mit Pfostenlinien, Gürtellinie, Frontscheibe, Leuchten und Spiegel; Räder mit Felge, Handlöchern und Nabe."
+     },
+     "retained": {
+      "en": "Door handrails on every leaf, hand holes showing the brake discs, roof pods, air springs, e-axle.",
+      "de": "Griffstangen an jedem Flügel, Handlöcher mit Bremsscheiben, Dachaufbauten, Luftfedern, E-Achse."
+     },
+     "merged": {
+      "en": "Studs merge into the hub; battery seams and louvres are omitted.",
+      "de": "Bolzen gehen in der Nabe auf; Batterienähte und Lamellen entfallen."
+     },
+     "omitted": {
+      "en": "Seat backs, grab rails, driver cab, sidewall and wheel studs (below 0.04 m).",
+      "de": "Sitzlehnen, Haltestangen, Fahrerplatz, Flanke und Radbolzen (unter 0,04 m)."
+     },
+     "thinElements": {
+      "en": "Hand holes are 0.08 m (0.8 mm) at real size; all other elements unthickened.",
+      "de": "Handlöcher sind mit 0,08 m (0,8 mm) in Realgröße; alle anderen Elemente nicht verstärkt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body mid-tone, steel wheels lighter, tyres black; 0.25 / 0.18 mm pens.",
+      "de": "Aufbau mittlerer Ton, Stahlräder heller, Reifen schwarz; Stifte 0,25 / 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; the hand holes carry the brakes region and show braking heat.",
+      "de": "Wie 1:200; die Handlöcher tragen die Region Bremsen und zeigen die Bremswärme."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.15,0.3 L 2.83,0.3 C 2.83,0.8 3.1,1.12 3.45,1.12 C 3.8,1.12 4.07,0.8 4.07,0.3 L 8.73,0.3 C 8.73,0.8 9.0,1.12 9.35,1.12 C 9.7,1.12 9.97,0.8 9.97,0.3 L 11.85,0.3 C 11.97,0.32 12.0,0.4 12.0,0.5 L 12.0,0.95 C 12.0,1.0 11.99,1.05 11.98,1.1 L 11.78,2.7 C 11.76,2.8 11.72,2.88 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.0,2.6 L 0.0,0.5 C 0.0,0.38 0.05,0.3 0.15,0.3 Z",
+       "id": "body-shell",
+       "bone": "body",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "region": "body-panels",
+       "material": "paint"
+      },
+      {
+       "kind": "path",
+       "d": "M 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.1,2.8 C 0.2,2.88 0.5,2.9 1.0,2.9 L 11.0,2.9 C 11.3,2.9 11.5,2.88 11.7,2.82 Z",
+       "id": "roof-band",
+       "bone": "body",
+       "role": "detail",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "roof",
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 6.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-m",
+       "bone": "body",
+       "role": "detail",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 10.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-f",
+       "bone": "body",
+       "role": "detail",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim"
+      },
+      {
+       "kind": "rect",
+       "x": 0.3,
+       "y": 1.2,
+       "w": 1.15,
+       "h": 1.2,
+       "id": "pane-1",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 1.55,
+       "y": 1.2,
+       "w": 1.1500000000000001,
+       "h": 1.2,
+       "id": "pane-2",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 2.8,
+       "y": 1.2,
+       "w": 1.2999999999999998,
+       "h": 1.2,
+       "id": "pane-3",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 4.2,
+       "y": 1.2,
+       "w": 1.1499999999999995,
+       "h": 1.2,
+       "id": "pane-4",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 5.45,
+       "y": 1.2,
+       "w": 0.7999999999999998,
+       "h": 1.2,
+       "id": "pane-5",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 7.55,
+       "y": 1.2,
+       "w": 1.1000000000000005,
+       "h": 1.2,
+       "id": "pane-6",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 8.75,
+       "y": 1.2,
+       "w": 1.0999999999999996,
+       "h": 1.2,
+       "id": "pane-7",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 9.95,
+       "y": 1.2,
+       "w": 0.3000000000000007,
+       "h": 1.2,
+       "id": "pane-8",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 11.56,1.2 L 11.88,1.2 L 11.83,2.4 L 11.56,2.4 Z",
+       "id": "pane-cab",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,2.48 L 10.25,2.48 L 10.25,2.78 L 0.3,2.78 Z M 10.35,2.48 L 11.76,2.48 L 11.75,2.72 L 10.35,2.72 Z",
+       "id": "upper-band",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.14 L 6.1,0.14 L 6.3,0 Z",
+       "id": "battery-pack",
+       "bone": "battery",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "region": "battery-pack",
+       "material": "battery-housing"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.16 L 2.28,0.16 L 2.5,0 Z",
+       "id": "hvac-unit",
+       "bone": "hvac",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "hvac-housing"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-m-aft",
+       "bone": "door-m-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-m-fwd",
+       "bone": "door-m-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-f-aft",
+       "bone": "door-f-aft",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0,
+       "y": -0.04,
+       "w": 0.55,
+       "h": 2.2,
+       "id": "leaf-f-fwd",
+       "bone": "door-f-fwd",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.75,
+       "region": "doors",
+       "material": "door-leaf"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-m-aft-glass",
+       "bone": "door-m-aft",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-m-fwd-glass",
+       "bone": "door-m-fwd",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-f-aft-glass",
+       "bone": "door-f-aft",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "rect",
+       "x": 0.07,
+       "y": 0.5,
+       "w": 0.41,
+       "h": 1.5,
+       "id": "leaf-f-fwd-glass",
+       "bone": "door-f-fwd",
+       "role": "glazing",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.05,0.62 L 2.8,0.62 M 4.1,0.62 L 8.7,0.62 M 10.0,0.62 L 11.98,0.62",
+       "id": "skirt-line",
+       "bone": "body",
+       "role": "detail",
+       "z": 7,
+       "filled": false,
+       "tone": 0.5
+      },
+      {
+       "kind": "rect",
+       "x": -0.25,
+       "y": -0.15,
+       "w": 0.5,
+       "h": 0.3,
+       "id": "e-axle-casting",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.3,
+       "region": "e-axle",
+       "material": "e-axle"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "brakes",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.286,
+       "ry": 0.286,
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.5,
+       "region": "brakes",
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 5.2,
+       "filled": true,
+       "tone": 0.7,
+       "material": "steel-wheel"
+      },
+      {
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.3,
+       "w": 0.28,
+       "h": 0.12,
+       "id": "air-spring-f",
+       "bone": "axle-f",
+       "role": "detail",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel-wheel",
+       "r": 0.04
+      },
+      {
+       "kind": "rect",
+       "x": -0.14,
+       "y": 0.3,
+       "w": 0.28,
+       "h": 0.12,
+       "id": "air-spring-r",
+       "bone": "axle-r",
+       "role": "detail",
+       "z": 0.5,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel-wheel",
+       "r": 0.04
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Low-floor bus profile with arches (0.14 m = 0.7 mm clearance to the tyre), separate roof band, eight lower window panes, upper clerestory band, two door openings with sliding leaves, roof pods.",
+      "de": "Niederflurbusprofil mit Radläufen (0,14 m = 0,7 mm Abstand zum Reifen), eigenem Dachband, acht unteren Fensterscheiben, oberem Fensterband, zwei Türöffnungen mit Schiebeflügeln, Dachaufbauten."
+     },
+     "retained": {
+      "en": "Pillars between panes (0.1 m = 0.5 mm), door leaves with glass, skirt line, e-axle casting, air springs, wheels with rim and hub.",
+      "de": "Pfosten zwischen den Scheiben (0,1 m = 0,5 mm), Türflügel mit Glas, Schwellerlinie, E-Achsgehäuse, Luftfedern, Räder mit Felge und Nabe."
+     },
+     "merged": {
+      "en": "Upper clerestory panes form one band; rim and brake disc are one lighter disc (brakes region).",
+      "de": "Obere Scheiben bilden ein Band; Felge und Bremsscheibe sind eine hellere Scheibe (Region Bremsen)."
+     },
+     "omitted": {
+      "en": "Seat backs, handrails, lamps, mirror, wheel studs and hand holes, battery seams, louvres.",
+      "de": "Sitzlehnen, Griffstangen, Leuchten, Spiegel, Radbolzen und Handlöcher, Batterienähte, Lamellen."
+     },
+     "thinElements": {
+      "en": "None thickened; pillars 0.1 m stay above the 0.3 mm gap limit.",
+      "de": "Nichts verstärkt; die Pfosten mit 0,1 m liegen über der Abstandsgrenze von 0,3 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body mid-tone, roof lighter, glass lightest, tyres black, door openings dark; outlines 0.18 mm.",
+      "de": "Aufbau mittlerer Ton, Dach heller, Glas am hellsten, Reifen schwarz, Türöffnungen dunkel; Konturen 0,18 mm."
+     },
+     "overlays": {
+      "en": "Every region has its own shape; the battery and heat-pump pods carry the traction and climate heat, the doors show their own temperature when open.",
+      "de": "Jede Region hat eine eigene Form; Batterie- und Wärmepumpenaufbau tragen die Antriebs- und Klimawärme, die Türen zeigen offen ihre eigene Temperatur."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "path",
+       "d": "M 0.15,0.3 L 11.85,0.3 C 11.97,0.32 12.0,0.4 12.0,0.5 L 12.0,0.95 C 12.0,1.0 11.99,1.05 11.98,1.1 L 11.78,2.7 C 11.76,2.8 11.72,2.88 11.62,2.93 C 11.5,2.97 11.3,2.98 11.0,2.98 L 1.0,2.98 C 0.5,2.98 0.15,2.95 0.06,2.85 L 0.0,2.6 L 0.0,0.5 C 0.0,0.38 0.05,0.3 0.15,0.3 Z",
+       "id": "body-shell",
+       "bone": "body",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.62,
+       "regions": [
+        "body-panels",
+        "roof",
+        "e-axle"
+       ],
+       "material": "paint"
+      },
+      {
+       "kind": "rect",
+       "x": 6.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-m",
+       "bone": "body",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim",
+       "region": "doors"
+      },
+      {
+       "kind": "rect",
+       "x": 10.35,
+       "y": 0.34,
+       "w": 1.1,
+       "h": 2.12,
+       "id": "door-opening-f",
+       "bone": "body",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.05,
+       "material": "interior-trim",
+       "region": "doors"
+      },
+      {
+       "kind": "path",
+       "d": "M 0.3,1.2 L 6.35,1.2 L 6.35,2.78 L 0.3,2.78 Z",
+       "id": "window-band-a",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 7.45,1.2 L 10.35,1.2 L 10.35,2.78 L 7.45,2.78 Z",
+       "id": "window-band-b",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 11.5,1.2 L 11.88,1.2 L 11.78,2.72 L 11.5,2.72 Z",
+       "id": "window-band-c",
+       "bone": "body",
+       "role": "glazing",
+       "z": 6,
+       "filled": true,
+       "tone": 0.85,
+       "region": "glazing",
+       "material": "glass"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.1,0.16 L 6.2,0.16 L 6.3,0 Z",
+       "id": "battery-pack",
+       "bone": "battery",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.45,
+       "region": "battery-pack",
+       "material": "battery-housing"
+      },
+      {
+       "kind": "path",
+       "d": "M 0,0 L 0.12,0.19 L 2.28,0.19 L 2.5,0 Z",
+       "id": "hvac-unit",
+       "bone": "hvac",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "region": "hvac-unit",
+       "material": "hvac-housing"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.48,
+       "ry": 0.48,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brakes"
+       ],
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One long low-floor box with rounded corners, the roof pods on top and two black wheel discs; the wheel arches are closed.",
+      "de": "Ein langer Niederflurkasten mit gerundeten Ecken, den Dachaufbauten und zwei schwarzen Radscheiben; die Radkästen sind geschlossen."
+     },
+     "retained": {
+      "en": "Body, three glazing bands, two dark door openings (region doors; the leaves are not drawn), roof battery, heat pump, both wheels.",
+      "de": "Aufbau, drei Verglasungsbänder, zwei dunkle Türöffnungen (Region Türen; die Flügel sind nicht gezeichnet), Dachbatterie, Wärmepumpe, beide Räder."
+     },
+     "merged": {
+      "en": "All window panes of a bay (pillars 0.1 to 0.15 m = 0.2 to 0.3 mm) form one band; each door opening is one dark shape (leaf glass and frame merge into it; the 0.55 m leaf stroke of 0.45 m is 0.2 mm on paper); rim, hub, brake and tyre form one disc; the e-axle merges into the body fill.",
+      "de": "Alle Scheiben einer Bucht (Pfosten 0,1 bis 0,15 m = 0,2 bis 0,3 mm) bilden ein Band; jede Türöffnung ist eine dunkle Form (Türglas und Rahmen gehen darin auf; der Flügelweg von 0,45 m ist 0,2 mm auf Papier); Felge, Nabe, Bremse und Reifen eine Scheibe; die E-Achse geht in der Aufbaufläche auf."
+     },
+     "omitted": {
+      "en": "Clerestory window row as a separate pane, pillar lines, belt line, skirt, lamps, mirror, seats, rails, wheel details.",
+      "de": "Obere Fensterreihe als eigene Scheibe, Pfostenlinien, Gürtellinie, Schweller, Leuchten, Spiegel, Sitze, Griffstangen, Raddetails."
+     },
+     "thinElements": {
+      "en": "The roof pods are drawn 0.16 m high (battery real 0.14 m) to reach 0.32 mm; everything else is at real size.",
+      "de": "Die Dachaufbauten sind 0,16 m hoch gezeichnet (Batterie real 0,14 m), um 0,32 mm zu erreichen; alles andere in Realgröße."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Body mid-tone, glass light, tyres black; one 0.15 mm outline pen and 0.13 mm for the glass edge.",
+      "de": "Aufbau mittlerer Ton, Glas hell, Reifen schwarz; ein Konturstift 0,15 mm und 0,13 mm für die Glaskante."
+     },
+     "overlays": {
+      "en": "Thermal overlays colour the body by the merged panel, roof and e-axle regions; battery, heat pump, glass, doors and tyres (with brakes) are separate.",
+      "de": "Thermische Überlagerungen färben den Aufbau mit den zusammengefassten Regionen Bleche, Dach und E-Achse; Batterie, Wärmepumpe, Glas, Türen und Reifen (mit Bremsen) sind getrennt."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "level-cruise",
+    "title": {
+     "en": "Level cruise with passengers",
+     "de": "Reisefahrt mit Fahrgästen"
+    },
+    "description": {
+     "en": "Level ride height at 30 km/h with 30 standing and seated passengers; battery at part load, heat pump running.",
+     "de": "Normalniveau bei 30 km/h mit 30 sitzenden und stehenden Fahrgästen; Batterie im Teillastbetrieb, Wärmepumpe läuft."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.8,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers",
+      "kind": "occupant",
+      "title": {
+       "en": "30 passengers",
+       "de": "30 Fahrgäste"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 11,
+       "wxNPerM": 0,
+       "wyNPerM": -2089
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "at-stop-level",
+    "title": {
+     "en": "Stopped at the kerb, doors closed",
+     "de": "Halt am Bord, Türen geschlossen"
+    },
+    "description": {
+     "en": "Standing at level ride height, doors shut, traction off, heat pump idling, 12 passengers inside.",
+     "de": "Stehend auf Normalniveau, Türen zu, Antrieb aus, Wärmepumpe im Leerlauf, 12 Fahrgäste an Bord."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.05,
+      "rolling": 0,
+      "braking": 0.05,
+      "hvac": 0.5
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-inside",
+      "kind": "occupant",
+      "title": {
+       "en": "12 passengers inside",
+       "de": "12 Fahrgäste an Bord"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 6,
+       "wxNPerM": 0,
+       "wyNPerM": -1671
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "kneeling-at-stop",
+    "title": {
+     "en": "Kneeling with doors open",
+     "de": "Kneeling mit offenen Türen"
+    },
+    "description": {
+     "en": "Front axle air springs lowered by 0.07 m, body pitched 0.68 degrees nose down, both double doors open, six passengers boarding at the centre door.",
+     "de": "Luftfedern der Vorderachse um 0,07 m abgesenkt, Aufbau 0,68 Grad nach vorn geneigt, beide Doppeltüren offen, sechs Fahrgäste steigen an der Mitteltür ein."
+    },
+    "bones": {
+     "axle-f": {
+      "dy": 0.07
+     },
+     "door-m-aft": {
+      "dx": -0.45
+     },
+     "door-m-fwd": {
+      "dx": 0.45
+     },
+     "door-f-aft": {
+      "dx": -0.4
+     },
+     "door-f-fwd": {
+      "dx": 0.4
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -0.68
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0,
+      "rolling": 0,
+      "braking": 0.05,
+      "hvac": 0.9
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-inside",
+      "kind": "occupant",
+      "title": {
+       "en": "12 passengers inside",
+       "de": "12 Fahrgäste an Bord"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 6,
+       "wxNPerM": 0,
+       "wyNPerM": -1671
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     },
+     {
+      "id": "passengers-boarding",
+      "kind": "occupant",
+      "title": {
+       "en": "6 passengers on the centre step",
+       "de": "6 Fahrgäste auf der Mitteltürstufe"
+      },
+      "anchor": "step-centre",
+      "fxN": 0,
+      "fyN": -4178,
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "braking",
+    "title": {
+     "en": "Service braking",
+     "de": "Betriebsbremsung"
+    },
+    "description": {
+     "en": "Attitude under service braking: front springs compressed 0.05 m, rear extended, body 0.5 degrees nose down, brake discs hot, traction in recuperation.",
+     "de": "Haltung bei Betriebsbremsung: vordere Federn 0,05 m eingefedert, hintere ausgefedert, Aufbau 0,5 Grad nach vorn geneigt, Bremsscheiben heiß, Antrieb in Rekuperation."
+    },
+    "bones": {
+     "axle-f": {
+      "dy": 0.025
+     },
+     "axle-r": {
+      "dy": -0.025
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": -0.49
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.7,
+      "rolling": 0.9,
+      "braking": 0.05,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers",
+      "kind": "occupant",
+      "title": {
+       "en": "30 passengers",
+       "de": "30 Fahrgäste"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 11,
+       "wxNPerM": 0,
+       "wyNPerM": -2089
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "arriving",
+    "key": true,
+    "title": {
+     "en": "Approaching the stop",
+     "de": "Anfahrt zur Haltestelle"
+    },
+    "description": {
+     "en": "Technical key of arrive-kneel-doors: the bus is 10 m before the stop at 4 m/s; the wheel angle encodes the distance.",
+     "de": "Technische Schlüsselstellung von Ankunft-Kneeling-Türen: der Bus ist 10 m vor der Haltestelle mit 4 m/s; der Radwinkel kodiert die Strecke."
+    },
+    "bones": {
+     "axle-f": {
+      "dy": 0.01
+     },
+     "axle-r": {
+      "dy": -0.01
+     },
+     "wheel-f": {
+      "angleDeg": 1193.66
+     },
+     "wheel-r": {
+      "angleDeg": 1193.66
+     }
+    },
+    "root": {
+     "x": -10,
+     "y": 0,
+     "angleDeg": -0.2
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.4,
+      "rolling": 0.5,
+      "braking": 0.8,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-inside",
+      "kind": "occupant",
+      "title": {
+       "en": "12 passengers inside",
+       "de": "12 Fahrgäste an Bord"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 6,
+       "wxNPerM": 0,
+       "wyNPerM": -1671
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "pull-away-8",
+    "key": true,
+    "title": {
+     "en": "Pulled away 8 m",
+     "de": "Nach 8 m angefahren"
+    },
+    "description": {
+     "en": "Technical key of depart: 8 m from the stop the bus reaches 4 m/s; the wheels have turned minus x / r.",
+     "de": "Technische Schlüsselstellung von Abfahrt: 8 m von der Haltestelle erreicht der Bus 4 m/s; die Räder haben minus x / r gedreht."
+    },
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -954.93
+     },
+     "wheel-r": {
+      "angleDeg": -954.93
+     }
+    },
+    "root": {
+     "x": 8,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.8,
+      "rolling": 0.6,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-inside",
+      "kind": "occupant",
+      "title": {
+       "en": "12 passengers inside",
+       "de": "12 Fahrgäste an Bord"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 6,
+       "wxNPerM": 0,
+       "wyNPerM": -1671
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   },
+   {
+    "id": "pull-away-18",
+    "key": true,
+    "title": {
+     "en": "Pulled away 18 m",
+     "de": "Nach 18 m angefahren"
+    },
+    "description": {
+     "en": "Technical key of depart: 18 m from the stop at constant 4 m/s.",
+     "de": "Technische Schlüsselstellung von Abfahrt: 18 m von der Haltestelle bei konstant 4 m/s."
+    },
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -2148.59
+     },
+     "wheel-r": {
+      "angleDeg": -2148.59
+     }
+    },
+    "root": {
+     "x": 18,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "traction": 0.5,
+      "rolling": 0.8,
+      "braking": 0,
+      "hvac": 0.7
+     },
+     "regions": {
+      "body-panels": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "glazing": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "doors": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "battery-pack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "hvac-unit": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "e-axle": {
+       "exposedFraction": 0.3,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.04,
+        "tempC": 30
+       }
+      },
+      "brakes": {
+       "exposedFraction": 0.4,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {
+      "hvac-vent": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "passengers-inside",
+      "kind": "occupant",
+      "title": {
+       "en": "12 passengers inside",
+       "de": "12 Fahrgäste an Bord"
+      },
+      "bone": "body",
+      "fxN": 0,
+      "fyN": 0,
+      "distributed": {
+       "bone": "body",
+       "fromM": 1,
+       "toM": 6,
+       "wxNPerM": 0,
+       "wyNPerM": -1671
+      },
+      "source": "authored-estimate",
+      "reference": "eu-2001-85"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "arrive-kneel-doors",
+    "title": {
+     "en": "Arrive, kneel, open doors",
+     "de": "Ankommen, Kneeling, Türen öffnen"
+    },
+    "description": {
+     "en": "The bus brakes uniformly from 4 m/s to rest over 10 m in 5 s, kneels to the kerb, opens both double doors and takes on six passengers at the centre door.",
+     "de": "Der Bus bremst gleichmäßig in 5 s auf 10 m von 4 m/s bis zum Stillstand, kniet zum Bord ab, öffnet beide Doppeltüren und nimmt an der Mitteltür sechs Fahrgäste auf."
+    },
+    "durationS": 14,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "arriving",
+      "ease": "out"
+     },
+     {
+      "t": 5,
+      "pose": "at-stop-level",
+      "ease": "linear"
+     },
+     {
+      "t": 5.5,
+      "pose": "at-stop-level",
+      "ease": "smooth",
+      "bones": {
+       "axle-f": {
+        "dy": 0
+       }
+      }
+     },
+     {
+      "t": 7,
+      "pose": "at-stop-level",
+      "ease": "smooth",
+      "bones": {
+       "axle-f": {
+        "dy": 0.07
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "kneeling-at-stop",
+      "ease": "linear"
+     },
+     {
+      "t": 14,
+      "pose": "kneeling-at-stop",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 14
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 14
+     }
+    ],
+    "phases": [
+     {
+      "id": "brake",
+      "fromS": 0,
+      "toS": 5,
+      "title": {
+       "en": "Braking to the stop",
+       "de": "Bremsen zur Haltestelle"
+      }
+     },
+     {
+      "id": "kneel",
+      "fromS": 5.5,
+      "toS": 7,
+      "title": {
+       "en": "Kneeling",
+       "de": "Absenken"
+      }
+     },
+     {
+      "id": "doors",
+      "fromS": 7,
+      "toS": 9,
+      "title": {
+       "en": "Doors opening",
+       "de": "Türen öffnen"
+      }
+     },
+     {
+      "id": "boarding",
+      "fromS": 9,
+      "toS": 14,
+      "title": {
+       "en": "Boarding",
+       "de": "Einsteigen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 5,
+      "kind": "motion",
+      "title": {
+       "en": "Standstill",
+       "de": "Stillstand"
+      }
+     },
+     {
+      "t": 7,
+      "kind": "motion",
+      "title": {
+       "en": "Doors start to open",
+       "de": "Türen beginnen zu öffnen"
+      }
+     },
+     {
+      "t": 10,
+      "kind": "load-on",
+      "title": {
+       "en": "Passengers step on",
+       "de": "Fahrgäste steigen zu"
+      },
+      "target": "passengers-boarding"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:braking",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 5,
+        "v": 0.4
+       },
+       {
+        "t": 14,
+        "v": 0.1
+       }
+      ]
+     },
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.4
+       },
+       {
+        "t": 2.5,
+        "v": 0
+       },
+       {
+        "t": 14,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:passengers-boarding",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 9.5,
+        "v": 0
+       },
+       {
+        "t": 11.5,
+        "v": 1
+       },
+       {
+        "t": 14,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:hvac",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.7
+       },
+       {
+        "t": 8.4,
+        "v": 0.9
+       },
+       {
+        "t": 14,
+        "v": 0.9
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "depart",
+    "title": {
+     "en": "Close doors and depart",
+     "de": "Türen schließen und abfahren"
+    },
+    "description": {
+     "en": "From the kneeled stop the bus rises, closes the doors, and accelerates uniformly over 8 m to 4 m/s, then cruises; the wheels roll with theta = -x / r.",
+     "de": "Aus dem Kneeling-Halt hebt sich der Bus, schließt die Türen und beschleunigt gleichmäßig auf 8 m auf 4 m/s, dann fährt er mit konstanter Geschwindigkeit; die Räder rollen mit theta = -x / r."
+    },
+    "durationS": 11,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "kneeling-at-stop",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "at-stop-level",
+      "ease": "smooth",
+      "bones": {
+       "door-m-aft": {
+        "dx": -0.45
+       },
+       "door-m-fwd": {
+        "dx": 0.45
+       },
+       "door-f-aft": {
+        "dx": -0.4
+       },
+       "door-f-fwd": {
+        "dx": 0.4
+       }
+      }
+     },
+     {
+      "t": 4,
+      "pose": "at-stop-level",
+      "ease": "linear"
+     },
+     {
+      "t": 5,
+      "pose": "at-stop-level",
+      "ease": "in"
+     },
+     {
+      "t": 9,
+      "pose": "pull-away-8",
+      "ease": "linear"
+     },
+     {
+      "t": 11,
+      "pose": "pull-away-18",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 11
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 11
+     }
+    ],
+    "phases": [
+     {
+      "id": "rise",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Rising from kneeling",
+       "de": "Anheben aus dem Kneeling"
+      }
+     },
+     {
+      "id": "close",
+      "fromS": 2,
+      "toS": 4,
+      "title": {
+       "en": "Doors closing",
+       "de": "Türen schließen"
+      }
+     },
+     {
+      "id": "accelerate",
+      "fromS": 5,
+      "toS": 9,
+      "title": {
+       "en": "Uniform acceleration",
+       "de": "Gleichmäßige Beschleunigung"
+      }
+     },
+     {
+      "id": "cruise",
+      "fromS": 9,
+      "toS": 11,
+      "title": {
+       "en": "Cruise",
+       "de": "Reisefahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0.5,
+      "kind": "ignition",
+      "title": {
+       "en": "Traction system ready",
+       "de": "Antrieb betriebsbereit"
+      },
+      "target": "hvac-vent"
+     },
+     {
+      "t": 2,
+      "kind": "motion",
+      "title": {
+       "en": "Doors start to close",
+       "de": "Türen beginnen zu schließen"
+      }
+     },
+     {
+      "t": 4,
+      "kind": "load-off",
+      "title": {
+       "en": "Doors closed, traction enabled",
+       "de": "Türen zu, Antrieb freigegeben"
+      }
+     },
+     {
+      "t": 5,
+      "kind": "motion",
+      "title": {
+       "en": "Pulls away",
+       "de": "Anfahren"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4.5,
+        "v": 0.05
+       },
+       {
+        "t": 6,
+        "v": 0.9
+       },
+       {
+        "t": 9,
+        "v": 0.5
+       },
+       {
+        "t": 11,
+        "v": 0.4
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       },
+       {
+        "t": 9,
+        "v": 0.7
+       },
+       {
+        "t": 11,
+        "v": 0.8
+       }
+      ]
+     },
+     {
+      "target": "load:passengers-boarding",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 2,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:hvac",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.9
+       },
+       {
+        "t": 4,
+        "v": 0.7
+       },
+       {
+        "t": 11,
+        "v": 0.7
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "layover-shutdown",
+    "title": {
+     "en": "Layover shutdown",
+     "de": "Abstellen in der Wendezeit"
+    },
+    "description": {
+     "en": "The kneeling bus at a terminus switches off traction and heat pump; the surfaces cool.",
+     "de": "Der abgesenkte Bus an der Endstelle schaltet Antrieb und Wärmepumpe ab; die Oberflächen kühlen aus."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "kneeling-at-stop",
+      "ease": "linear"
+     },
+     {
+      "t": 6,
+      "pose": "kneeling-at-stop",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 6
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 6
+     }
+    ],
+    "phases": [
+     {
+      "id": "run-down",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Systems run down",
+       "de": "Systeme fahren herunter"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2,
+      "kind": "shutdown",
+      "title": {
+       "en": "Shutdown",
+       "de": "Abschaltung"
+      },
+      "target": "hvac-vent"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:traction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 2,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:hvac",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.9
+       },
+       {
+        "t": 2,
+        "v": 0.9
+       },
+       {
+        "t": 3,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:braking",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.3
+       },
+       {
+        "t": 2,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:hvac-vent",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 3,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "traction",
+     "title": {
+      "en": "Traction drive",
+      "de": "Fahrantrieb"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.05,
+       "title": {
+        "en": "Ready, standing",
+        "de": "Bereit, stehend"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Cruising",
+        "de": "Reisefahrt"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full power",
+        "de": "Volle Leistung"
+       }
+      }
+     ]
+    },
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "About 25 km/h",
+        "de": "Etwa 25 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 50 km/h",
+        "de": "Etwa 50 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Friction braking",
+      "de": "Reibbremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Service braking",
+        "de": "Betriebsbremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full stop from 50 km/h",
+        "de": "Vollbremsung aus 50 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "hvac",
+     "title": {
+      "en": "Heat pump and ventilation",
+      "de": "Wärmepumpe und Lüftung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Ventilation",
+        "de": "Lüftung"
+       }
+      },
+      {
+       "v": 0.7,
+       "title": {
+        "en": "Climate control",
+        "de": "Klimatisierung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Maximum",
+        "de": "Maximum"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "body-panels",
+     "title": {
+      "en": "Painted side and end panels",
+      "de": "Lackierte Seiten- und Endbleche"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "paint",
+     "areaM2": 52,
+     "characteristicLengthM": 2.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium or steel skin 1.5 mm",
+        "de": "Lackierte Aluminium- oder Stahlhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 40 mm",
+        "de": "Mineralwolle-Verkleidung 40 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.04,
+       "resistanceM2KW": 1,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "roof",
+     "title": {
+      "en": "Roof panel",
+      "de": "Dachblech"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "paint",
+     "areaM2": 30,
+     "characteristicLengthM": 2.5,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium or steel skin 1.5 mm",
+        "de": "Lackierte Aluminium- oder Stahlhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 40 mm",
+        "de": "Mineralwolle-Verkleidung 40 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.04,
+       "resistanceM2KW": 1,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "glazing",
+     "title": {
+      "en": "Window and door glass",
+      "de": "Fenster- und Türverglasung"
+     },
+     "kind": "glazing",
+     "model": "conditioned",
+     "material": "glass",
+     "areaM2": 24,
+     "characteristicLengthM": 1.2,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "pane-out",
+       "title": {
+        "en": "Toughened glass 4 mm",
+        "de": "Einscheibensicherheitsglas 4 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.004,
+       "heatCapacityJM2K": 7500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "gap",
+       "title": {
+        "en": "Air gap 12 mm",
+        "de": "Luftspalt 12 mm"
+       },
+       "kind": "air-gap",
+       "material": "glass",
+       "thicknessM": 0.012,
+       "resistanceM2KW": 0.15,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "pane-in",
+       "title": {
+        "en": "Toughened glass 4 mm",
+        "de": "Einscheibensicherheitsglas 4 mm"
+       },
+       "kind": "glass",
+       "material": "glass",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.004,
+       "heatCapacityJM2K": 7500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 15000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "doors",
+     "title": {
+      "en": "Door leaf frames",
+      "de": "Türflügelrahmen"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "door-leaf",
+     "areaM2": 8,
+     "characteristicLengthM": 2.1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "skin",
+       "title": {
+        "en": "Painted aluminium or steel skin 1.5 mm",
+        "de": "Lackierte Aluminium- oder Stahlhaut 1,5 mm"
+       },
+       "kind": "metal",
+       "material": "paint",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.00003,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      },
+      {
+       "id": "insulation",
+       "title": {
+        "en": "Mineral wool lining 40 mm",
+        "de": "Mineralwolle-Verkleidung 40 mm"
+       },
+       "kind": "insulation",
+       "material": "interior-trim",
+       "thicknessM": 0.04,
+       "resistanceM2KW": 1,
+       "heatCapacityJM2K": 800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021",
+     "conditioned": {
+      "interiorTempC": 21,
+      "interiorFilmM2KW": 0.13
+     }
+    },
+    {
+     "id": "battery-pack",
+     "title": {
+      "en": "Roof battery housing",
+      "de": "Dach-Batteriegehäuse"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "battery-housing",
+     "areaM2": 30,
+     "characteristicLengthM": 6.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "housing",
+       "title": {
+        "en": "Aluminium housing 3 mm",
+        "de": "Aluminiumgehäuse 3 mm"
+       },
+       "kind": "metal",
+       "material": "battery-housing",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.000018750000000000002,
+       "heatCapacityJM2K": 8000,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 12000,
+     "operating": {
+      "key": "traction",
+      "heatW": 4200
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "hvac-unit",
+     "title": {
+      "en": "Heat pump housing",
+      "de": "Wärmepumpengehäuse"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "hvac-housing",
+     "areaM2": 10,
+     "characteristicLengthM": 2.5,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [],
+     "heatCapacityJM2K": 6000,
+     "operating": {
+      "key": "hvac",
+      "heatW": 1800
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "e-axle",
+     "title": {
+      "en": "Electric drive axle casting",
+      "de": "Gehäuse der elektrischen Antriebsachse"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "e-axle",
+     "areaM2": 3,
+     "characteristicLengthM": 0.9,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.2,
+     "layers": [
+      {
+       "id": "casting",
+       "title": {
+        "en": "Cast aluminium housing 8 mm",
+        "de": "Aluminiumgussgehäuse 8 mm"
+       },
+       "kind": "metal",
+       "material": "e-axle",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.00005333333333333333,
+       "heatCapacityJM2K": 20000,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 20000,
+     "operating": {
+      "key": "traction",
+      "heatW": 1650
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyre treads and sidewalls",
+      "de": "Reifenlaufflächen und -flanken"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 6,
+     "characteristicLengthM": 0.96,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "tread",
+       "title": {
+        "en": "Rubber tread and carcass",
+        "de": "Gummilauffläche und Karkasse"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.015,
+       "resistanceM2KW": 0.075,
+       "heatCapacityJM2K": 70000,
+       "source": "authored-estimate",
+       "reference": "wong-2008"
+      }
+     ],
+     "heatCapacityJM2K": 70000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 1800
+     },
+     "source": "authored-estimate",
+     "reference": "wong-2008"
+    },
+    {
+     "id": "brakes",
+     "title": {
+      "en": "Brake discs seen through the wheel holes",
+      "de": "Bremsscheiben, durch die Radöffnungen gesehen"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "cast-iron",
+     "areaM2": 1.2,
+     "characteristicLengthM": 0.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.2,
+     "layers": [],
+     "heatCapacityJM2K": 53000,
+     "operating": {
+      "key": "braking",
+      "heatW": 5468.8
+     },
+     "source": "authored-estimate",
+     "reference": "limpert-1999"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "hvac-vent",
+     "kind": "vent",
+     "title": {
+      "en": "Roof heat-pump exhaust air",
+      "de": "Abluft der Dach-Wärmepumpe"
+     },
+     "anchor": "hvac-vent",
+     "directionDeg": 90,
+     "diameterM": 0.7,
+     "operatingKey": "hvac",
+     "volumeFlowM3S": 1.5,
+     "temperatureRiseK": 22,
+     "vapourKgPerKg": 0,
+     "source": "authored-estimate"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Heat release at level 1: traction battery housing 4.2 kW (about +14 K), e-axle 1.65 kW (+55 K), heat-pump housing 1.8 kW (+18 K), tyres 1.8 kW (about 50 km/h), friction discs 200 kW for a full stop from 50 km/h (1.2 MJ in 6 s, regeneration is not credited at level 1).",
+     "de": "Wärmefreisetzung bei Stufe 1: Batteriegehäuse 4,2 kW (etwa +14 K), E-Achse 1,65 kW (+55 K), Wärmepumpengehäuse 1,8 kW (+18 K), Reifen 1,8 kW (etwa 50 km/h), Reibscheiben 200 kW bei einer Vollbremsung aus 50 km/h (1,2 MJ in 6 s, Rekuperation wird bei Stufe 1 nicht angerechnet)."
+    },
+    {
+     "en": "Roof heat-pump exhaust at level 1: 1.5 m3/s through a 0.7 m fan, 22 K warmer than ambient, dry (sensible heat rejection); flow and temperature rise scale with the hvac level.",
+     "de": "Abluft der Dach-Wärmepumpe bei Stufe 1: 1,5 m3/s durch einen 0,7-m-Ventilator, 22 K wärmer als die Umgebung, trocken (fühlbare Wärmeabgabe); Volumenstrom und Temperaturerhöhung skalieren mit der Klimastufe."
+    },
+    {
+     "en": "Interior at 21 C; glazing is double (2 x 4 mm, 12 mm gap, U about 2.9 W/(m2 K)); body panels carry 40 mm lining (U about 0.9 W/(m2 K)). Sun on the visible flank half, roof pods fully.",
+     "de": "Innenraum 21 C; Verglasung doppelt (2 x 4 mm, 12 mm Spalt, U etwa 2,9 W/(m2 K)); Bleche tragen 40 mm Verkleidung (U etwa 0,9 W/(m2 K)). Sonne auf der sichtbaren Flanke zur Hälfte, Dachaufbauten voll."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Body, roof battery, heat pump, axles, wheels and door leaves are rigid point masses; passengers are distributed floor loads of 71 kg each; the tyre patches act as two equally stiff springs.",
+     "de": "Aufbau, Dachbatterie, Wärmepumpe, Achsen, Räder und Türflügel sind starre Punktmassen; Fahrgäste sind verteilte Bodenlasten zu je 71 kg; die Reifenaufstandsflächen wirken als zwei gleich steife Federn."
+    },
+    {
+     "en": "Door leaves shift mass by up to 0.45 m; kneeling and braking change the front axle reaction through pitch and d'Alembert forces.",
+     "de": "Türflügel verlagern Masse um bis zu 0,45 m; Kneeling und Bremsen ändern die Vorderachsreaktion durch Nicken und d'Alembert-Kräfte."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "level-cruise",
+   "defaultClip": "arrive-kneel-doors",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

@@ -10,7 +10,8 @@
     "foreignCallerRefused",
     "foreignDecoderRefused",
     "sameMutationBacking",
-    "originalOldRowUntilPublication"
+    "originalOldRowUntilPublication",
+    "resident"
   ],
   "properties": {
     "contract": {
@@ -50,6 +51,37 @@
               "open"
             ]
           }
+        }
+      }
+    },
+    "resident": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "readerWindow",
+        "readerLeaves",
+        "prefixWindows",
+        "maximumTurns",
+        "sourceLast"
+      ],
+      "properties": {
+        "readerWindow": {
+          "const": "z-source"
+        },
+        "readerLeaves": {
+          "type": "integer",
+          "minimum": 8197
+        },
+        "prefixWindows": {
+          "type": "integer",
+          "minimum": 65
+        },
+        "maximumTurns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sourceLast": {
+          "const": true
         }
       }
     }

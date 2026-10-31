@@ -101,7 +101,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<LowpolySnapshot, Op> for ApplyPaintStroke
 where
-    Op: protocol::ColdMutation<LowpolySnapshot, ReferenceDiff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff>,
+    Op: protocol::ColdMutation<LowpolySnapshot, ReferenceDiff = semio_s_artifact_lowpoly_lowpoly_model_diff::LowpolyDiff> + From<crate::edit_paint_layer::EditPaintLayer>,
 {
     fn diff(&self, base: &LowpolySnapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<LowpolySnapshot>>::ReferenceDiff> {
         super::diff::diff(self, base)

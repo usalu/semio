@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "specifier": "@semio-tech/s-dev-catalog-ts/generated",
+      "target": "📚️catalog/🟦️.ts",
+      "implementation": "🤖️generated/🦀️catalog.json",
+      "values": [
+        {
+          "name": "generatedCatalogSchema",
+          "kind": "object",
+          "source": "default"
+        }
+      ]
+    },
+    {
+      "specifier": "@semio-tech/s-dev-catalog-ts/generated/plugins",
+      "target": "📚️catalog/🧩️plugins/🟦️.ts",
+      "implementation": "🤖️generated/🧩️plugins/🟦️.ts",
+      "values": [
+        {
+          "name": "PLUGIN_HOST_CONFIGS",
+          "kind": "array"
+        },
+        {
+          "name": "PLUGIN_BUILD_TARGETS",
+          "kind": "array"
+        },
+        {
+          "name": "EXTENSION_TARGETS",
+          "kind": "array"
+        },
+        {
+          "name": "COMPONENT_MODULE_DIRECTORIES",
+          "kind": "array"
+        },
+        {
+          "name": "PROGRAM_TARGETS",
+          "kind": "array"
+        },
+        {
+          "name": "pluginModuleUrl",
+          "kind": "function"
+        },
+        {
+          "name": "extensionModuleUrl",
+          "kind": "function"
+        }
+      ]
+    },
+    {
+      "specifier": "@semio-tech/s-dev-catalog-ts/generated/playgrounds",
+      "target": "📚️catalog/🎮️playgrounds/🟦️.ts",
+      "implementation": "🤖️generated/🎮️playgrounds/🟦️.ts",
+      "values": [
+        {
+          "name": "PLAYGROUND_BUILD_TARGETS",
+          "kind": "array"
+        },
+        {
+          "name": "DEFAULT_PLAYGROUND_VARIANT",
+          "kind": "string"
+        }
+      ]
+    }
+  ]
+}

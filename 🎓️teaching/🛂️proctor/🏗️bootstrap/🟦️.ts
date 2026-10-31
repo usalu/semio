@@ -211,9 +211,9 @@ export function proctorSelection(forwarded: readonly string[]): string[] {
   return selection;
 }
 
-/** 🏫️ The course a `check` validates: the named one, else `PROCTOR_COURSE`, else the dev course. */
+/** 🏫️ The course a `check` validates: the named one (resolved against the repository root), else `PROCTOR_COURSE`, else the dev course. */
 export function proctorCourse(repoRoot: string, named?: string, env: NodeJS.ProcessEnv = process.env): string {
-  return resolve(named ?? env.PROCTOR_COURSE ?? join(repoRoot, ...PROCTOR_DEV_COURSE));
+  return resolve(repoRoot, named ?? env.PROCTOR_COURSE ?? join(repoRoot, ...PROCTOR_DEV_COURSE));
 }
 
 /** 🎼️ Admits the closed portable selection of the proctor's native compiler target. */

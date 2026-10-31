@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Retained IDML Decoded Version Field",
   "type": "object",
   "description": "Genuine immutable original member-byte lease, admitted raw version span/decoded length, separately quoted contiguous String reservation, bounded XML numeric-reference reads and ASCII append, fixed-header typed field take, original source and partial String retirement.",

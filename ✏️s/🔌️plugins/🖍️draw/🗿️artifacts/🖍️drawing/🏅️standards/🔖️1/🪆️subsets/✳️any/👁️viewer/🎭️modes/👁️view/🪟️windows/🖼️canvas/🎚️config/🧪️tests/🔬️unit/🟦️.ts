@@ -1,7 +1,6 @@
 /** 📷️ Viewer navigation is local to one window and agrees with an independent JSON Patch reducer. */
 import { expect,test } from "bun:test";
-import Ajv from "ajv/dist/2020.js";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
+import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
@@ -10,7 +9,7 @@ import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 
 test("viewer cameras are independent and restore from the same neutral trace",async () => {
   const viewportSchema = await Bun.file(frameworkSourceUrl("🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json")).json();
-  const ajv = new Ajv().addMetaSchema(draft7);
+  const ajv = new Ajv();
   ajv.addSchema(viewportSchema);
   const validate = ajv.compile(schema);
   const own: Record<string,DrawingViewerCanvasWindowConfig> = {},oracle: typeof own = {};

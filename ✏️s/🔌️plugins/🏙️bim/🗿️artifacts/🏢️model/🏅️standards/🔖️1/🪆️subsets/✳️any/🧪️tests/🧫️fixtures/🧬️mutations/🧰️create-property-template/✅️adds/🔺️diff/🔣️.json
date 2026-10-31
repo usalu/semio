@@ -1,33 +1,35 @@
 {
   "property_templates": {
     "pt-slab": {
-      "applies_to": [
-        "Slab",
-        "SlabType"
-      ],
       "entry": "Created",
-      "name": "Pset_SlabCommon",
-      "properties": [
-        {
-          "allowed": [],
-          "kind": "Boolean",
-          "name": "LoadBearing",
-          "required": true
-        },
-        {
-          "allowed": [],
-          "default_value": {
-            "Length": {
-              "value": 0.2
-            }
+      "value": {
+        "applies_to": [
+          "Slab",
+          "SlabType"
+        ],
+        "name": "Pset_SlabCommon",
+        "properties": [
+          {
+            "allowed": [],
+            "kind": "Boolean",
+            "name": "LoadBearing",
+            "required": true
           },
-          "kind": "Length",
-          "minimum": 0.05,
-          "name": "Thickness",
-          "required": false,
-          "unit": "m"
-        }
-      ]
+          {
+            "allowed": [],
+            "default_value": {
+              "Length": {
+                "value": 0.2
+              }
+            },
+            "kind": "Length",
+            "minimum": 0.05,
+            "name": "Thickness",
+            "required": false,
+            "unit": "m"
+          }
+        ]
+      }
     }
   }
 }

@@ -2,9 +2,11 @@
   "curtain_panel_overrides": {
     "ov-1": {
       "entry": "Patched",
-      "panel": {
-        "Door": {
-          "door_type": "door-2"
+      "value": {
+        "panel": {
+          "Door": {
+            "door_type": "door-2"
+          }
         }
       }
     }

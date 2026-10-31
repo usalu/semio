@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { viewport3dSchema as orbitSchema } from "@semio-tech/framework-ui-viewport-ts/3d/schema";
 import rendererGestures from "@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/testing/fixtures/pointer-gestures.json";

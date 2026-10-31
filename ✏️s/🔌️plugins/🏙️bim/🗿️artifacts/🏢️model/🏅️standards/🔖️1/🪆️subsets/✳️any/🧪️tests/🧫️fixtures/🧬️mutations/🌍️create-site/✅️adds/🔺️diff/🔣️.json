@@ -1,13 +1,15 @@
 {
   "sites": {
     "site-1": {
-      "boundary": [],
-      "elevation": 100.0,
       "entry": "Created",
-      "latitude": 47.0,
-      "longitude": 8.0,
-      "name": "Plot",
-      "true_north": 0.0
+      "value": {
+        "boundary": [],
+        "elevation": 100,
+        "latitude": 47,
+        "longitude": 8,
+        "name": "Plot",
+        "true_north": 0
+      }
     }
   }
 }

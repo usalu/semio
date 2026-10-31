@@ -1,0 +1,153 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "args",
+    "expected",
+    "helper",
+    "interactive",
+    "environments"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "digest",
+              "module",
+              "import"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "args": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "loader",
+        "snapshot",
+        "args"
+      ],
+      "properties": {
+        "identity": {
+          "const": true
+        },
+        "loader": {
+          "const": true
+        },
+        "snapshot": {
+          "type": "null"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "helper": {
+      "const": {
+        "entry": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📜️script.ts",
+        "filesystemBytes": 33554432,
+        "maximumPhysicalBytes": 33554432,
+        "actions": [
+          "allocate",
+          "activate",
+          "inactive",
+          "deactivate",
+          "inactive"
+        ],
+        "outputs": [
+          "",
+          "",
+          "attached\n",
+          "",
+          ""
+        ]
+      }
+    },
+    "interactive": {
+      "const": {
+        "answer": 42
+      }
+    },
+    "environments": {
+      "const": [
+        {
+          "id": "bun",
+          "value": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0"
+          },
+          "accepted": true
+        },
+        {
+          "id": "node-addon",
+          "value": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+            "SEMIO_RUNTIME_NATIVE_ADDON": "/owned/core.node"
+          },
+          "accepted": true
+        },
+        {
+          "id": "node-provider",
+          "value": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+            "SEMIO_RUNTIME_NATIVE_PROVIDER": "/owned/provider.cjs"
+          },
+          "accepted": true
+        },
+        {
+          "id": "opposite-keys",
+          "value": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+            "SEMIO_RUNTIME_NATIVE_ADDON": "/owned/core.node",
+            "SEMIO_RUNTIME_NATIVE_PROVIDER": "/owned/provider.cjs"
+          },
+          "accepted": false
+        },
+        {
+          "id": "ambient-path",
+          "value": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+            "PATH": "/unrelated"
+          },
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

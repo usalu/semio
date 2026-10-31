@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {toByteArray} from "base64-js";
 import fixture from "../🧫️fixtures/🎟️funding.json";
 import { retainedCloneContractSchema as schema } from "@semio-tech/value-ts/retained-clone/contract/schema";

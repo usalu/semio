@@ -87,3 +87,15 @@ An authentic existing owner corpus can improve the remaining native runtime excl
 - Existing owner test 🧪️tests/🟦️.ts explicitly checks the whole data file against definitions.Corpus. The referenced members therefore have concrete authored provenance. This review did not execute additional validators or claim those added witnesses have already been dual-validated.
 
 The other 44 excluded schema files retain conservative exclusion pending their own data witnesses. Earlier nearby-file suggestions are references for investigation, not evidence of schema acceptance. No headers or Source were edited.
+
+## Applied Header Verification
+
+Independently checked all293 change records against current bytes: unique paths, exact after SHA, expected draft07 root header, and inverse single-header substitution recovering each exact before SHA. Every record binds an eligible proof row and its nextSha256; none of the ten excluded paths appears in the changes. The owner reports373 targets,18,298 observations and40 authored references from its final dual-validator run. No other byte change is compatible with the verified before/after hashes. No tests, compiler or Native query were launched.
+
+The remaining eight actual unproved schemas were retained; the deleted FEM path and already-draft07 retirement entry remain distinct cohort exclusions. Additional read-only investigation found38 authentic x-semio-energy-row-birth DATA annotations in720 bounded enclosing schema JSON files. Each passed the current birth schema with Ajv2020; exact references only are in generated/schema-dialect-energy-witnesses.json. These require dualproof before any further header correction. No minimal replacement data was invented, and no unsatisfiability claim is made for the other runtime-generated record schemas.
+
+## Remaining Three Header Corrections
+
+Independently verified current SHA for each of the Energy,Trinity and Pin Source documents against schema-remaining-header-changes.json; inverse exact root-header substitution recovers each original SHA. This demonstrates predicate, definitions, export and reference bytes are preserved. The closed three-selector binds original schema SHA and authentic carrier fixture SHA, rejects nonordinary or oversized carrier files, resolves JSON pointers, and applies exactly one explicit JSON-text decode for Trinity and Pin. Both independent Ajv instances explicitly accept each positive. The owner’s post-header artifact reports3/3 eligible and299 triple-validator observations.
+
+Pin coverage is not only its unconstrained root: Policy,Messages,Pin and Fixture private named definitions each have both positive and negative witnesses. Pin has one authored accepted carrier with1positive/59negative samples; all five target entries are nonvacuous under their constraint status. No concrete blocker found in this delta. No additional tests, Native or compiler jobs launched; mixed consumer constructor coordination remains separate.

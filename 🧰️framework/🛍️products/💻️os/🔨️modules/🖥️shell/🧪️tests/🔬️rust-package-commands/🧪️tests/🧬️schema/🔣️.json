@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method",
+          "callee",
+          "argument",
+          "mode",
+          "expected"
+        ],
+        "properties": {
+          "method": {
+            "enum": [
+              "runTypegenExportTest",
+              "runSchemaCheckScript",
+              "runPreviewGeneratedScript"
+            ]
+          },
+          "callee": {
+            "enum": [
+              "runAdmittedCargoCommandV1",
+              "readRepositoryCargoLaunchV1"
+            ]
+          },
+          "argument": {
+            "enum": [
+              0,
+              3
+            ]
+          },
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2
+          }
+        }
+      }
+    }
+  }
+}

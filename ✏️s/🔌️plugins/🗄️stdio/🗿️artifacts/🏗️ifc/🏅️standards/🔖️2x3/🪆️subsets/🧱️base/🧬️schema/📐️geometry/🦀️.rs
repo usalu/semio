@@ -1,7 +1,6 @@
 //! 🧱️ Native IFC2x3 representation geometry entry points.
 use super::snapshot::Ifc2x3Snapshot;
-#[path="../../../../../../📐️geometry/🦀️.rs"]
-mod shared;
+use semio_s_artifact_stdio_ifc_geometry as shared;
 #[path="📖️reader/🦀️.rs"]
 mod reader;
 pub use shared::boolean;

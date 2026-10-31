@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-tool-typing-edit"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original typing edits with bounded resident exchanges and paid source closure"
+
+[package.metadata.semio]
+role = "framework"
+id = "tool-typing-edit"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-replication = { workspace = true }
+semio-framework-tool-machine = { path = "../../../../📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

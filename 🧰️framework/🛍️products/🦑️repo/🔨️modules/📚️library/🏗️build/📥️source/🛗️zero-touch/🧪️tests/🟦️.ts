@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import { expect, test } from "bun:test";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,7 +14,7 @@ const treeOf = (files: Readonly<Record<string, string>>): ZeroTouchTreeV1 => ({ 
 const subject = (finding: { closure: string; kind: string; file: string; specifier: string }): string => `${finding.closure}|${finding.kind}|${finding.file}|${finding.specifier}`;
 
 test("the fixture cases and the roster satisfy their schemas", () => {
-  const ajv = new Ajv({ strict: false }), cases = ajv.compile(caseSchema), roster = ajv.compile(rosterSchema);
+  const ajv = new Ajv({ strict: false }), cases = ajv.compile(caseSchema), roster = new AjvDraft07({strict:false}).compile(rosterSchema);
   expect(cases(fixture), JSON.stringify(cases.errors)).toBe(true);
   for (const row of fixture.cases) expect(roster(row.roster), `${row.name}: ${JSON.stringify(roster.errors)}`).toBe(true);
   const real = JSON.parse(diskZeroTouchTreeV1(repoRoot).read(ZERO_TOUCH_CLOSURES_FILE)!);

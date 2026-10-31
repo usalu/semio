@@ -121,9 +121,10 @@ const reclaimedDirectoriesV1 = new Set();
  */
 export function createFarmV1({ entry, service, session, workers, megabytes, environment = process.env, signal, policy = P, accept = () => true, report = () => {}, retired = () => {}, spawnProcess = spawn, runtime = graphFarmRuntimeV1(), command = process.execPath, commandArguments = [], auxiliaryFile = undefined }) {
   if (!Number.isSafeInteger(workers) || workers < 1) throw Error("Graph farm of at least one worker required");
+  const retiring = new Set();
   const slots = Array.from({ length: workers }, (_, index) => ({ index, generation: 0, child: undefined, state: "empty", job: undefined, timer: undefined })), queue = [];
   const stats = { workers, jobs: 0, replies: 0, failures: 0, lost: 0, recycled: 0, started: 0, peakRssMegabytes: 0, queuedMilliseconds: 0, workedMilliseconds: 0, bootMilliseconds: 0 };
-  let nextId = 0, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept;
+  let nextId = 0, closed = false, disabled, restarts = 0, sessionDirectory, sessionFile, readyAccept, closeWork;
   const ready = new Promise(done => { readyAccept = done; });
   const childEnvironment = { ...environment, ...graphFarmRuntimeEnvironmentV1(runtime, megabytes, policy), SEMIO_GRAPH_WORKER: "1" };
   delete childEnvironment[policy.workersEnvironment];
@@ -132,13 +133,29 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
   const retire = (slot, graceful) => {
     const child = slot.child, generation = slot.generation;
     clearTimeout(slot.timer);
-    slot.child = undefined; slot.state = "empty";
-    if (!child) return;
+    slot.child = undefined;
+    if (!child) { if (slot.state !== "retiring") slot.state = "empty"; return; }
+    slot.state = "retiring";
     child.removeAllListeners("message");
-    if (graceful && child.connected) { try { child.send({ type: "shutdown" }); } catch {} setTimeout(() => { try { child.kill("SIGKILL"); } catch {} }, policy.shutdownGraceMilliseconds).unref?.(); }
-    else { try { child.kill("SIGKILL"); } catch {} }
-    if (child.exitCode !== null || child.signalCode !== null) retired(slot.index, generation);
-    else child.once("exit", () => retired(slot.index, generation));
+    let finish, timer, finished = false;
+    const exited = new Promise(done => { finish = done; });
+    retiring.add(exited);
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      child.removeListener("exit", done); child.removeListener("close", done);
+      retiring.delete(exited);
+      if (slot.generation === generation && slot.state === "retiring") slot.state = "empty";
+      try { retired(slot.index, generation); } finally { finish(); pump(); }
+    };
+    if (child.exitCode !== null || child.signalCode !== null) { done(); return; }
+    child.once("exit", done); child.once("close", done);
+    if (graceful && child.connected) {
+      timer = setTimeout(() => { try { child.kill("SIGKILL"); } catch {} }, policy.shutdownGraceMilliseconds);
+      timer.unref?.();
+      try { child.send({ type: "shutdown" }); } catch {}
+    } else { try { child.kill("SIGKILL"); } catch {} }
   };
   const lose = (slot, why) => {
     const job = slot.job;
@@ -181,12 +198,14 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
         slot.job = undefined; slot.state = "idle";
         clearTimeout(job.timer);
         if (message.type === "result") {
-          stats.replies++; stats.workedMilliseconds += performance.now() - job.dispatched; stats.peakRssMegabytes = Math.max(stats.peakRssMegabytes, message.rssMegabytes);
+          stats.replies++;
           settle(job, { reply: message.reply, slot: slot.index, generation: slot.generation });
-          slot.served++;
-          const reason = recycleReasonV1({ rssMegabytes: message.rssMegabytes, jobs: slot.served, megabytes }, policy);
-          if (reason !== undefined) { stats.recycled++; report("recycled", { worker: slot.index, megabytes: Math.round(message.rssMegabytes), reason }); retire(slot, true); }
         } else { stats.failures++; settle(job, { failure: { name: message.name, message: message.message, code: message.code ?? null } }); }
+        stats.workedMilliseconds += performance.now() - job.dispatched;
+        stats.peakRssMegabytes = Math.max(stats.peakRssMegabytes, message.rssMegabytes);
+        slot.served++;
+        const reason = recycleReasonV1({ rssMegabytes: message.rssMegabytes, jobs: slot.served, megabytes }, policy);
+        if (reason !== undefined) { stats.recycled++; report("recycled", { worker: slot.index, megabytes: Math.round(message.rssMegabytes), reason }); retire(slot, true); }
         pump();
       }
     });
@@ -210,22 +229,23 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     let waiting = queue.length - slots.filter(slot => slot.state === "starting").length;
     for (const slot of slots) if (waiting > 0 && slot.state === "empty") { launch(slot); waiting--; }
   };
-  const close = async () => {
-    if (closed) return;
+  const close = () => {
+    if (closeWork !== undefined) return closeWork;
     closed = true;
-    signal?.removeEventListener("abort", abort);
-    readyAccept(false);
-    for (const job of queue.splice(0)) settle(job, { lost: "closed" });
-    const exits = [];
-    for (const slot of slots) {
-      const child = slot.child, job = slot.job;
-      slot.job = undefined;
-      if (job) settle(job, { lost: "closed" });
-      if (child) exits.push(new Promise(done => { child.once("exit", done); setTimeout(done, policy.shutdownGraceMilliseconds + 500).unref?.(); }));
-      retire(slot, true);
-    }
-    await Promise.all(exits);
-    if (sessionDirectory !== undefined) rmSync(sessionDirectory, { recursive: true, force: true });
+    closeWork = (async () => {
+      signal?.removeEventListener("abort", abort);
+      readyAccept(false);
+      for (const job of queue.splice(0)) settle(job, { lost: "closed" });
+      for (const slot of slots) {
+        const job = slot.job;
+        slot.job = undefined;
+        if (job) settle(job, { lost: "closed" });
+        retire(slot, true);
+      }
+      await Promise.all([...retiring]);
+      if (sessionDirectory !== undefined) rmSync(sessionDirectory, { recursive: true, force: true });
+    })();
+    return closeWork;
   };
   const abort = () => { void close(); };
   if (signal) { if (signal.aborted) abort(); else signal.addEventListener("abort", abort, { once: true }); }

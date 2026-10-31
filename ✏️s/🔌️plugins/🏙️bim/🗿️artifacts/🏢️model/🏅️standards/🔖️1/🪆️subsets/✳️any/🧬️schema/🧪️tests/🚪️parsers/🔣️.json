@@ -1,0 +1,880 @@
+{
+  "cases": [
+    {
+      "id": "anchor-start",
+      "exported": "AnchorEnd",
+      "value": "Start",
+      "valid": true
+    },
+    {
+      "id": "anchor-end",
+      "exported": "AnchorEnd",
+      "value": "End",
+      "valid": true
+    },
+    {
+      "id": "anchor-wrong-case",
+      "exported": "AnchorEnd",
+      "value": "start",
+      "valid": false
+    },
+    {
+      "id": "phase-temporary",
+      "exported": "Phase",
+      "value": "Temporary",
+      "valid": true
+    },
+    {
+      "id": "phase-unknown",
+      "exported": "Phase",
+      "value": "Proposed",
+      "valid": false
+    },
+    {
+      "id": "point-finite",
+      "exported": "Point2",
+      "value": {
+        "x": 0,
+        "y": -2.5
+      },
+      "valid": true
+    },
+    {
+      "id": "point-missing-y",
+      "exported": "Point2",
+      "value": {
+        "x": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "point-extra-z",
+      "exported": "Point2",
+      "value": {
+        "x": 0,
+        "y": 1,
+        "z": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "point-wrong-coordinate",
+      "exported": "Point2",
+      "value": {
+        "x": "0",
+        "y": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "axis-line",
+      "exported": "Axis",
+      "value": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "axis-arc",
+      "exported": "Axis",
+      "value": {
+        "Arc": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          },
+          "bulge": 0.25
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "axis-wrong-case",
+      "exported": "Axis",
+      "value": {
+        "line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "axis-missing-arc-bulge",
+      "exported": "Axis",
+      "value": {
+        "Arc": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "annotation-point",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "Point": {
+          "point": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "annotation-wall-end",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "WallEnd": {
+          "wall": "wall-1",
+          "end": "Start"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "annotation-wrong-end",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "WallEnd": {
+          "wall": "wall-1",
+          "end": "start"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "annotation-multiple-variants",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "Point": {
+          "point": {
+            "x": 1,
+            "y": 2
+          }
+        },
+        "Grid": {
+          "grid": "grid-1"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "beam-level",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam"
+      },
+      "valid": true
+    },
+    {
+      "id": "beam-inclined",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam",
+        "end_top_offset": -1
+      },
+      "valid": true
+    },
+    {
+      "id": "beam-invalid-phase",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "Proposed",
+        "name": "Beam"
+      },
+      "valid": false
+    },
+    {
+      "id": "beam-extra-field",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam",
+        "unknown": true
+      },
+      "valid": false
+    },
+    {
+      "id": "required-variant-array-present-CurtainGrid",
+      "exported": "CurtainGrid",
+      "value": {
+        "Lines": {
+          "positions": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "required-variant-array-absent-CurtainGrid",
+      "exported": "CurtainGrid",
+      "value": {
+        "Lines": {}
+      },
+      "valid": false
+    },
+    {
+      "id": "required-variant-array-present-ParametricProfile",
+      "exported": "ParametricProfile",
+      "value": {
+        "Polygon": {
+          "points": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "required-variant-array-absent-ParametricProfile",
+      "exported": "ParametricProfile",
+      "value": {
+        "Polygon": {}
+      },
+      "valid": false
+    },
+    {
+      "id": "required-variant-array-present-Profile",
+      "exported": "Profile",
+      "value": {
+        "Custom": {
+          "outline": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "required-variant-array-absent-Profile",
+      "exported": "Profile",
+      "value": {
+        "Custom": {}
+      },
+      "valid": false
+    },
+    {
+      "id": "required-variant-array-present-SolidShape",
+      "exported": "SolidShape",
+      "value": {
+        "Sweep": {
+          "profile": {
+            "Circle": {
+              "diameter": "1"
+            }
+          },
+          "path": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "required-variant-array-absent-SolidShape",
+      "exported": "SolidShape",
+      "value": {
+        "Sweep": {
+          "profile": {
+            "Circle": {
+              "diameter": "1"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "required-variant-array-present-SpaceBoundary",
+      "exported": "SpaceBoundary",
+      "value": {
+        "Explicit": {
+          "outline": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "required-variant-array-absent-SpaceBoundary",
+      "exported": "SpaceBoundary",
+      "value": {
+        "Explicit": {}
+      },
+      "valid": false
+    }
+  ],
+  "modules": [
+    ".",
+    "📸️snapshot",
+    "🔺️diff",
+    "💡️inferences"
+  ],
+  "diffCases": [
+    {
+      "id": "untouched-optional-field",
+      "exported": "BeamPatch",
+      "value": {},
+      "valid": true
+    },
+    {
+      "id": "clear-optional-field",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": {
+          "value": null
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "assign-optional-field",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": {
+          "value": -1
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "bare-scalar-is-not-assignment",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "bare-null-is-not-assignment",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": null
+      },
+      "valid": false
+    },
+    {
+      "id": "assigned-wrong-type",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": {
+          "value": "one"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "assigned-extra-key",
+      "exported": "BeamPatch",
+      "value": {
+        "end_top_offset": {
+          "value": 1,
+          "extra": true
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "clear-classification-source",
+      "exported": "ClassificationSystemPatch",
+      "value": {
+        "source": {
+          "value": null
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "assign-classification-source",
+      "exported": "ClassificationSystemPatch",
+      "value": {
+        "source": {
+          "value": "https://example.invalid/classification"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "assign-space-occupancy-density",
+      "exported": "SpaceConditionsPatch",
+      "value": {
+        "occupancy_density": {
+          "value": 2.5
+        }
+      },
+      "valid": true
+    }
+  ],
+  "inferenceCases": [
+    {
+      "id": "represented-inference-fields",
+      "value": {
+        "element_solids": {},
+        "stair_runs": {},
+        "ramp_runs": {},
+        "spaces": {},
+        "quantities": {
+          "elements": {},
+          "storeys": {},
+          "buildings": {},
+          "project": {
+            "kinds": {},
+            "types": {},
+            "materials": {},
+            "finishes": {}
+          }
+        },
+        "opening_frames": {},
+        "storey_levels": {},
+        "wall_layout": {},
+        "curtain_layout": {},
+        "plan_linework": {},
+        "diagnostics": [],
+        "zone_totals": {},
+        "scheme_totals": {},
+        "diagnostic_index": {
+          "total": {
+            "error": 0,
+            "warning": 0,
+            "info": 0
+          },
+          "elements": {},
+          "categories": {},
+          "codes": {},
+          "storeys": {}
+        },
+        "families": {},
+        "effective_properties": {},
+        "components": {},
+        "mep": {},
+        "analytical_members": {},
+        "structural_analysis": {
+          "members": {},
+          "rigid_links": {},
+          "supports": {},
+          "loads": {},
+          "findings": []
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "missing-native-required-analytical_members",
+      "value": {
+        "element_solids": {},
+        "stair_runs": {},
+        "ramp_runs": {},
+        "spaces": {},
+        "quantities": {
+          "elements": {},
+          "storeys": {},
+          "buildings": {},
+          "project": {
+            "kinds": {},
+            "types": {},
+            "materials": {},
+            "finishes": {}
+          }
+        },
+        "opening_frames": {},
+        "storey_levels": {},
+        "wall_layout": {},
+        "curtain_layout": {},
+        "plan_linework": {},
+        "diagnostics": [],
+        "zone_totals": {},
+        "scheme_totals": {},
+        "diagnostic_index": {
+          "total": {
+            "error": 0,
+            "warning": 0,
+            "info": 0
+          },
+          "elements": {},
+          "categories": {},
+          "codes": {},
+          "storeys": {}
+        },
+        "families": {},
+        "effective_properties": {},
+        "components": {},
+        "mep": {},
+        "structural_analysis": {
+          "members": {},
+          "rigid_links": {},
+          "supports": {},
+          "loads": {},
+          "findings": []
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "missing-native-required-structural_analysis",
+      "value": {
+        "element_solids": {},
+        "stair_runs": {},
+        "ramp_runs": {},
+        "spaces": {},
+        "quantities": {
+          "elements": {},
+          "storeys": {},
+          "buildings": {},
+          "project": {
+            "kinds": {},
+            "types": {},
+            "materials": {},
+            "finishes": {}
+          }
+        },
+        "opening_frames": {},
+        "storey_levels": {},
+        "wall_layout": {},
+        "curtain_layout": {},
+        "plan_linework": {},
+        "diagnostics": [],
+        "zone_totals": {},
+        "scheme_totals": {},
+        "diagnostic_index": {
+          "total": {
+            "error": 0,
+            "warning": 0,
+            "info": 0
+          },
+          "elements": {},
+          "categories": {},
+          "codes": {},
+          "storeys": {}
+        },
+        "families": {},
+        "effective_properties": {},
+        "components": {},
+        "mep": {},
+        "analytical_members": {}
+      },
+      "valid": false
+    }
+  ],
+  "entryCases": [
+    {
+      "id": "created-property-map",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created",
+        "value": {
+          "Pset": {
+            "Fire": {
+              "Text": {
+                "value": "EI60"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "replaced-property-map",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Replaced",
+        "value": {}
+      },
+      "valid": true
+    },
+    {
+      "id": "patched-property-map",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Patched",
+        "value": {
+          "assigned": {
+            "Pset": {
+              "Fire": null
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "deleted-without-payload",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Deleted"
+      },
+      "valid": true
+    },
+    {
+      "id": "map-key-entry-is-payload",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created",
+        "value": {
+          "entry": {
+            "entry": {
+              "Text": {
+                "value": "authored"
+              }
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "flattened-created-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created",
+        "Pset": {
+          "Fire": {
+            "Text": {
+              "value": "EI60"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "flattened-patched-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Patched",
+        "assigned": {}
+      },
+      "valid": false
+    },
+    {
+      "id": "created-missing-payload",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created"
+      },
+      "valid": false
+    },
+    {
+      "id": "deleted-payload-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Deleted",
+        "value": {}
+      },
+      "valid": false
+    },
+    {
+      "id": "created-extra-field-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created",
+        "value": {},
+        "stray": true
+      },
+      "valid": false
+    },
+    {
+      "id": "created-invalid-property-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Created",
+        "value": {
+          "Pset": {
+            "Fire": "EI60"
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-entry-refused",
+      "exported": "PropertySetEntry",
+      "value": {
+        "entry": "Unknown",
+        "value": {}
+      },
+      "valid": false
+    }
+  ],
+  "collectionCases": [
+    {
+      "id": "option-group-created",
+      "value": {
+        "option_groups": {
+          "g": {
+            "entry": "Created",
+            "value": {
+              "name": "Envelope"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "design-option-replaced",
+      "value": {
+        "design_options": {
+          "a": {
+            "entry": "Replaced",
+            "value": {
+              "group": "g",
+              "name": "Timber",
+              "primary": false
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "workset-patched",
+      "value": {
+        "worksets": {
+          "structure": {
+            "entry": "Patched",
+            "value": {
+              "default_visible": false
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "option-membership-patched",
+      "value": {
+        "element_options": {
+          "wall": {
+            "entry": "Patched",
+            "value": {
+              "target": "a"
+            }
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "workset-membership-deleted",
+      "value": {
+        "element_worksets": {
+          "wall": {
+            "entry": "Deleted"
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "design-primary-type-refused",
+      "value": {
+        "design_options": {
+          "a": {
+            "entry": "Patched",
+            "value": {
+              "primary": "true"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "membership-target-type-refused",
+      "value": {
+        "element_options": {
+          "wall": {
+            "entry": "Created",
+            "value": {
+              "target": 7
+            }
+          }
+        }
+      },
+      "valid": false
+    }
+  ]
+}

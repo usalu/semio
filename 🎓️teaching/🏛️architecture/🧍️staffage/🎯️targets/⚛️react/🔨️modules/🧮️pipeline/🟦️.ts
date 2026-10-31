@@ -6,8 +6,20 @@
  * @see ../🧍️figure/🟦️.tsx — the React consumer
  * @see ../📤️downloads/🟦️.ts — the export consumer
  */
-import { VIEWS, defaultDepictionOptions, depict, evaluate, solveStructure, solveThermal, writeSvg } from "@teaching/staffage";
-import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, Language, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import { VIEWS, defaultDepictionOptions, depict, evaluate, resolveDepiction, solveStructure, solveThermal, writeSvg } from "@teaching/staffage";
+import type { Asset, DepictionOptions, DisplayRange, DrawingScene, DrawingScale, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, Language, PrintProfile, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+
+/** 🖥️ The profile of an on-screen figure: the archive is read on a display, so pen and gap floors of a printer do not hide the drawing. A file exported from the site names this profile and does not claim a printer check. */
+const SCREEN_PROFILE: PrintProfile = {
+  id: "screen",
+  title: { en: "Screen", de: "Bildschirm" },
+  description: { en: "On-screen reading of the archive. It does not certify that the drawing meets a print profile.", de: "Bildschirmlesung des Archivs. Sie bescheinigt nicht, dass die Zeichnung ein Druckprofil erfüllt." },
+  minStrokeMm: 0,
+  minGapMm: 0,
+  minFeatureMm: 0,
+  minHatchSpacingMm: 0,
+  source: "authored-estimate",
+};
 
 /** 🧾️ One evaluated instant with lazily solved analyses. */
 export type StaffageFrame = { readonly state: EvaluatedState; readonly thermal: ThermalField; readonly structure: StructuralResult; readonly scene: DrawingScene };
@@ -29,10 +41,11 @@ export type DepictionRequest = {
   readonly environment?: Environment;
 };
 
-const CAPACITY = 96;
+const CAPACITY = 512;
 const states = new WeakMap<Asset, Map<string, EvaluatedState>>();
 const thermals = new WeakMap<EvaluatedState, Map<string, ThermalField>>();
 const structures = new WeakMap<EvaluatedState, StructuralResult>();
+const scenes = new WeakMap<EvaluatedState, Map<string, DrawingScene>>();
 
 function remember<V>(cache: Map<string, V>, key: string, make: () => V): V {
   const hit = cache.get(key);
@@ -53,11 +66,19 @@ export function queryAt(query: EvaluationQuery, timeS: number | null): Evaluatio
   return timeS === null || query.kind === "pose" ? query : { ...query, timeS };
 }
 
-/** 🧮️ Evaluates (memoised) an asset at a query. */
-export function evaluateState(asset: Asset, query: EvaluationQuery): EvaluatedState {
+/** 🧮️ Evaluates (memoised) an asset at a query. A selector picks the authored drawing; without one the state carries rig and physics only. */
+export function evaluateState(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   let cache = states.get(asset);
   if (cache === undefined) states.set(asset, (cache = new Map()));
-  return remember(cache, JSON.stringify(query), () => evaluate(asset, query));
+  return remember(cache, JSON.stringify([query, selector ?? null]), () => evaluate(asset, query, selector));
+}
+
+/** 🖨️ The same instant drawn with the representation the depiction asks for. */
+function represented(state: EvaluatedState, options: DepictionOptions): EvaluatedState {
+  const resolution = resolveDepiction(state.asset, options);
+  const mine = state.representation;
+  const aligned = resolution.kind === "symbol" ? mine.kind === "symbol" && mine.symbol === resolution.symbol.id : mine.kind === "scale" && mine.denominator === resolution.denominator && mine.requested === resolution.requested;
+  return aligned ? state : evaluateState(state.asset, state.query, options.representation);
 }
 
 /** 🌡️ Solves (memoised) the thermal field of a state under an environment. */
@@ -79,6 +100,7 @@ export function depictionOptions(request: DepictionRequest): DepictionOptions {
   const base = defaultDepictionOptions(request.view, request.language, request.scale.denominator, request.viewpoint ?? "elevation", request.theme);
   return {
     ...base,
+    profile: SCREEN_PROFILE,
     scale: request.scale,
     transparent: request.transparent ?? base.transparent,
     annotations: { ...base.annotations, ...request.annotations },
@@ -91,17 +113,22 @@ export function depictionOptions(request: DepictionRequest): DepictionOptions {
   };
 }
 
-/** 🖨️ Depicts a state; only the analyses the view reads are solved. */
+/** 🖨️ Depicts a state; only the analyses the view reads are solved. The state is re-evaluated when it was solved without the depiction's representation. */
 export function sceneOf(state: EvaluatedState, options: DepictionOptions): DrawingScene {
-  const thermal = options.view === "thermal" ? thermalOf(state, options.environment) : undefined;
-  const structure = options.view === "forces" || options.view === "moments" ? structureOf(state) : undefined;
-  return depict(state, options, { ...(thermal === undefined ? {} : { thermal }), ...(structure === undefined ? {} : { structure }) });
+  let cache = scenes.get(state);
+  if (cache === undefined) scenes.set(state, (cache = new Map()));
+  return remember(cache, JSON.stringify(options), () => {
+    const drawn = represented(state, options);
+    const thermal = options.view === "thermal" ? thermalOf(drawn, options.environment) : undefined;
+    const structure = options.view === "forces" || options.view === "moments" ? structureOf(drawn) : undefined;
+    return depict(drawn, options, { ...(thermal === undefined ? {} : { thermal }), ...(structure === undefined ? {} : { structure }) });
+  });
 }
 
 /** 🧾️ One instant as a frame: scene now, analyses on first read. */
 export function figureFrame(asset: Asset, query: EvaluationQuery, request: DepictionRequest): StaffageFrame {
-  const state = evaluateState(asset, query);
   const options = depictionOptions(request);
+  const state = evaluateState(asset, query, options.representation);
   const scene = sceneOf(state, options);
   return {
     state,

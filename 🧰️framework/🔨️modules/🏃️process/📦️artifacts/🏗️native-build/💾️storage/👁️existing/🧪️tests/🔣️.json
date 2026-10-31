@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "capacityBytes": 1024,
+  "events": [
+    {
+      "type": "reserved",
+      "allocation": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "owner": "fixture:a",
+        "kind": "artifact-publication",
+        "bytes": 17,
+        "phase": "reserved"
+      }
+    },
+    {
+      "type": "reserved",
+      "allocation": {
+        "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "owner": "fixture:b",
+        "kind": "artifact-publication",
+        "bytes": 23,
+        "phase": "reserved"
+      }
+    },
+    {
+      "type": "committed",
+      "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "type": "reserved",
+      "allocation": {
+        "id": "cccccccccccccccccccccccccccccccc",
+        "owner": "fixture:c",
+        "kind": "artifact-publication",
+        "bytes": 5,
+        "phase": "reserved"
+      }
+    },
+    {
+      "type": "committed",
+      "id": "cccccccccccccccccccccccccccccccc"
+    },
+    {
+      "type": "retiring",
+      "id": "cccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "usedBytes": 45,
+  "invalid": [
+    "empty",
+    "partial",
+    "invalid-utf8",
+    "unknown-event"
+  ],
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 34603008
+}

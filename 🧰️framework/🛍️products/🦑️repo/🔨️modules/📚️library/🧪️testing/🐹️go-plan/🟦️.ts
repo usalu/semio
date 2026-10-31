@@ -74,11 +74,11 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
     (test ? testReplacements : sourceReplacements)[virtual] = source;
     packages.add(ownerRelative ? `./${ownerRelative}` : ".");
   };
-  const walk = (directory: string): void => {
+  const walk = (directory: string, packageOwner: string = directory): void => {
     if (directory !== root && existsSync(join(directory, "go.mod"))) return;
     const entries = readdirSync(directory, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
     if (entries.some((entry) => entry.isFile() && !entry.isSymbolicLink() && entry.name.endsWith(".go"))) {
-      const ownerRelative = relative(root, directory).split(sep).join("/");
+      const ownerRelative = relative(root, packageOwner).split(sep).join("/");
       packages.add(ownerRelative ? `./${ownerRelative}` : ".");
     }
     for (const entry of entries) {
@@ -89,8 +89,9 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
         const source = join(path, layout.implementationFilename);
         if (existsSync(source)) {
           const info = lstatSync(source);
-          if (info.isFile() && !info.isSymbolicLink()) map(directory, source, false);
+          if (info.isFile() && !info.isSymbolicLink()) map(packageOwner, source, false);
         }
+        walk(path, packageOwner);
         continue;
       }
       if (entry.name === layout.testsDirectory) {
@@ -101,7 +102,7 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
           const info = lstatSync(source);
           if (!info.isFile() || info.isSymbolicLink()) continue;
           if (goPackageClause(readFileSync(source, "utf8")) === GO_HOST_ADAPTER_PACKAGE) continue;
-          map(directory, source, true);
+          map(packageOwner, source, true);
         }
         continue;
       }

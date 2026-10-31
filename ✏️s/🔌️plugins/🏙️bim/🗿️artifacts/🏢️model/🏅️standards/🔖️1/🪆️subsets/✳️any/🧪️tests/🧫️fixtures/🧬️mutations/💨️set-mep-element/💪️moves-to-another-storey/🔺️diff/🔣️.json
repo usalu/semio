@@ -2,7 +2,9 @@
   "mep_elements": {
     "mep-duct": {
       "entry": "Patched",
-      "storey": "st-first"
+      "value": {
+        "storey": "st-first"
+      }
     }
   }
 }

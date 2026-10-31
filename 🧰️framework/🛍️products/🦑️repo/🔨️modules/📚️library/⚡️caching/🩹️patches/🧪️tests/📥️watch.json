@@ -1,0 +1,132 @@
+{
+  "roots": [
+    ".tickets"
+  ],
+  "names": [
+    ".cache",
+    "generated"
+  ],
+  "directories": [
+    "source",
+    "source/ignored",
+    "source/generated/deep",
+    ".tickets/nested/deep",
+    ".cache/browser/profile",
+    "other/.cache/deep",
+    "other",
+    "other/visible",
+    ".cache/service/f",
+    ".p0123abcd/p/many",
+    "source/.dabcdef01/p/many",
+    ".p0123abc/p",
+    ".p0123abcde/p",
+    ".pABCDEF01/p",
+    ".prettier/kept",
+    ".package-cache",
+    ".p0123abcd.txt/kept"
+  ],
+  "files": {
+    ".gitignore": "source/ignored/\n",
+    "source/ignored/project.json": "{}",
+    ".nxignore": "/.tickets/**\n**/generated/**\n",
+    ".p0123abcd/p/many/initial.json": "hidden",
+    "source/.dabcdef01/p/many/initial.json": "hidden"
+  },
+  "expected": [
+    "",
+    ".p0123abc",
+    ".p0123abc/p",
+    ".p0123abcd.txt",
+    ".p0123abcd.txt/kept",
+    ".p0123abcde",
+    ".p0123abcde/p",
+    ".pABCDEF01",
+    ".pABCDEF01/p",
+    ".package-cache",
+    ".prettier",
+    ".prettier/kept",
+    "other",
+    "other/visible",
+    "source",
+    "source/ignored"
+  ],
+  "privateFence": ".cache/service/f",
+  "opaqueDirectory": ".d0000ffff/p",
+  "visibleDirectory": ".d0000fffg/p",
+  "changes": [
+    {
+      "path": ".p89abcdef",
+      "excluded": true
+    },
+    {
+      "path": ".d76543210",
+      "excluded": true
+    },
+    {
+      "path": ".p0123abcd/p/many/new.json",
+      "excluded": true
+    },
+    {
+      "path": "source/.dabcdef01/p/many/new.json",
+      "excluded": true
+    },
+    {
+      "path": ".d0000ffff/p/new.json",
+      "excluded": true
+    },
+    {
+      "path": ".d0000fffg/p/new.json",
+      "excluded": false
+    },
+    {
+      "path": ".p89abcdeg",
+      "excluded": false
+    },
+    {
+      "path": ".p89abcdef.txt",
+      "excluded": false
+    },
+    {
+      "path": ".prettierrc.json",
+      "excluded": false
+    },
+    {
+      "path": ".prettier/new.json",
+      "excluded": false
+    },
+    {
+      "path": ".package-cache/lock",
+      "excluded": false
+    }
+  ],
+  "moves": [
+    {
+      "from": "source/move-visible",
+      "fromExcluded": false,
+      "to": ".pdeadbeef",
+      "file": "deep/change.json",
+      "excluded": true
+    },
+    {
+      "from": "source/move-unmatched",
+      "fromExcluded": false,
+      "to": ".pdeadbee0/inside",
+      "file": "deep/change.json",
+      "excluded": true
+    },
+    {
+      "from": ".ddeadbeef",
+      "fromExcluded": true,
+      "to": "source/move-returned",
+      "file": "deep/change.json",
+      "excluded": false
+    },
+    {
+      "from": "source/move-between",
+      "fromExcluded": false,
+      "to": "source/move-peer",
+      "file": "deep/change.json",
+      "excluded": false
+    }
+  ]
+}

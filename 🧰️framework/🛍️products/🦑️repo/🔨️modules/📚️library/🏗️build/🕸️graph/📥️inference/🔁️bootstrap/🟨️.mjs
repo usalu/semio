@@ -38,6 +38,7 @@ export const loaded = {
   commandInputHash: undefined,
   commandSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).commandSourceImports(path, source),
   runtimeModuleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).runtimeModuleSourceImports(path, source),
+  runtimeModuleSourceReferences: (path, source) => currentCommandInputs(loadedCommandInputs).runtimeModuleSourceReferences(path, source),
   commandUrlReferences: (path, source) => currentCommandInputs(loadedCommandInputs).commandUrlReferences(path, source),
   moduleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).moduleSourceImports(path, source),
   productionModuleSourceImports: (path, source) => currentCommandInputs(loadedCommandInputs).productionModuleSourceImports(path, source),
@@ -71,6 +72,7 @@ export function wire(registry) {
     const admitted = currentCommandInputs(commandInputs);
     loaded.commandSourceImports = admitted.commandSourceImports;
     loaded.runtimeModuleSourceImports = admitted.runtimeModuleSourceImports;
+    loaded.runtimeModuleSourceReferences = admitted.runtimeModuleSourceReferences;
     loaded.commandUrlReferences = admitted.commandUrlReferences;
     loaded.moduleSourceImports = admitted.moduleSourceImports;
     loaded.productionModuleSourceImports = admitted.productionModuleSourceImports;

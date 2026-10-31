@@ -4,11 +4,11 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { VIEWS } from "@teaching/staffage";
-import type { CategoryDocument, Manifest } from "@teaching/staffage";
+import type { Manifest } from "@teaching/staffage";
 import { ArchiveProvider } from "../../🔨️modules/🧭️context/🟦️.tsx";
 import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
 import { ArchiveStore, memoryStorage } from "../../🔨️modules/💾️persistence/🟦️.ts";
-import { CatalogStore } from "../../🔨️modules/📚️catalog/🟦️.ts";
+import { CatalogStore, type CategoryDocument } from "../../🔨️modules/📚️catalog/🟦️.ts";
 import { PlaygroundPage } from "../../🔨️modules/🧪️playground/🟦️.tsx";
 import { keyAction } from "../../🔨️modules/🧪️playground/🧲️keys/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -27,7 +27,7 @@ vi.mock("@semio-tech/ui-react/chrome", async (original) => ({ ...(await original
 
 afterEach(cleanup);
 
-const manifest = { $schema: "", version: "semio.staffage/v1", categories: [{ id: "humans", emoji: "", title: { en: "Humans", de: "Menschen" }, description: { en: "h", de: "h" }, file: "h/🔣️.json" }], collections: [], entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, poses: [], clips: [], analytics: ["thermal", "structural"], viewpoints: ["elevation"], exports: [], distinction: walker.summary, completion: "authored" }] } as unknown as Manifest;
+const manifest = { $schema: "", version: "semio.staffage/v2", categories: [{ id: "humans", emoji: "", title: { en: "Humans", de: "Menschen" }, description: { en: "h", de: "h" }, folder: "humans" }], collections: [], entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: ["thermal", "structural"], viewpoints: ["elevation"], exports: [], distinction: walker.summary, completion: "authored" }] } as unknown as Manifest;
 const catalog = () => new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker] }) as unknown as CategoryDocument });
 
 async function setup() {

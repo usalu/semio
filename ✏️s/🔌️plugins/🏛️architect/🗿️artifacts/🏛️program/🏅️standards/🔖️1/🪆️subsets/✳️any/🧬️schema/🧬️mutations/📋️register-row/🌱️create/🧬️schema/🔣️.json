@@ -15,8 +15,7 @@
     "row": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json#/$defs/RegisterRow",
       "x-semio-ui": {
-        "widget": "record",
-        "role": "payload",
+        "role": "value",
         "label": {
           "en": "Row",
           "de": "Zeile"
@@ -33,8 +32,8 @@
       "type": "integer",
       "minimum": 0,
       "x-semio-ui": {
-        "widget": "number",
-        "role": "position",
+        "widget": "stepper",
+        "role": "value",
         "label": {
           "en": "Index",
           "de": "Index"
@@ -44,7 +43,8 @@
           "de": "Position im Register; ohne Angabe wird angehängt."
         },
         "group": "position",
-        "order": 20
+        "order": 20,
+        "step": 1
       }
     }
   }

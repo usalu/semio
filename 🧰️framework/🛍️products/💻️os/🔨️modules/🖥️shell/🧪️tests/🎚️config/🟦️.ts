@@ -19,7 +19,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-os-shell",
     environment: "node",
-    include: ["../../🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts", "../../🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts"],
+    include: ["../../🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts", "../../🧪️tests/🔬️rust-package-commands/🧪️tests/🟦️.ts", "../../🧬️schema/🧪️tests/🧪️os-shell-schema-module/🟦️.ts"],
     coverage: { include: ["../../../../../../🔨️modules/🐚️shell/🟦️.ts", "../../🧬️schema/🟦️.ts"] },
     passWithNoTests: false,
   },

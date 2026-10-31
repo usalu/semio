@@ -15,9 +15,13 @@ export type ToolchainHostV1 = (typeof document.hosts)[number];
 /** 🧰️ The toolchain classes keyed by identity. */
 export type ToolchainKindV1 = "python" | "dotnet" | "cmake" | "go";
 /** 🔨️ The pinned archive tools provisioned below the tools partition. */
-export type NativeToolV1 = "cmake" | "ninja" | "go" | "uv";
+export type NativeToolV1 = "cmake" | "ninja" | "go" | "uv" | CargoToolV1;
+/** 🦀️ Cargo archive tool names are owned by the closed pin document. */
+export type CargoToolV1 = keyof typeof document.cargo;
+/** 🧲️ The pinned Cargo tools in their authored provisioning order. */
+export const CARGO_TOOL_IDS_V1: readonly CargoToolV1[] = Object.freeze(Object.keys(document.cargo) as CargoToolV1[]);
 /** 🧲️ Every pinned archive tool, in the order the repository provisions them. */
-export const NATIVE_TOOL_IDS_V1: readonly NativeToolV1[] = Object.freeze(["go", "uv", "cmake", "ninja"] as const);
+export const NATIVE_TOOL_IDS_V1: readonly NativeToolV1[] = Object.freeze(["go", "uv", "cmake", "ninja", ...CARGO_TOOL_IDS_V1] as const);
 /** 📦️ One pinned archive of one tool for one host. */
 export type NativeDistributionV1 = (typeof document.cmake.cmake.distributions)[number];
 /** 🐍️ One uv project of the policy. */
@@ -158,7 +162,7 @@ export function dotnetDirectoryBuildPropsV1(): string {
 
 /** 📕️ The pinned release of one tool: version, release address, version arguments and archives. */
 export function nativeToolSpecV1(tool: NativeToolV1): typeof document.cmake.cmake {
-  return tool === "go" ? document.go.tool : tool === "uv" ? document.python.tool : document.cmake[tool];
+  return tool === "go" ? document.go.tool : tool === "uv" ? document.python.tool : tool === "cargo-nextest" || tool === "cargo-llvm-cov" ? document.cargo[tool] : document.cmake[tool];
 }
 
 /** 💻️ Selects the pinned archive of one tool for one host. */

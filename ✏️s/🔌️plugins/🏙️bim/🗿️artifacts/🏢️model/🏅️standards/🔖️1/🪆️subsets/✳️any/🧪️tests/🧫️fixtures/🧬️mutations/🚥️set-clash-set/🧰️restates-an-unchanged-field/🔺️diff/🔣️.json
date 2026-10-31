@@ -2,7 +2,9 @@
   "clash_sets": {
     "cs-1": {
       "entry": "Patched",
-      "tolerance": 0.002
+      "value": {
+        "tolerance": 0.002
+      }
     }
   }
 }

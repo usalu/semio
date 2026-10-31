@@ -131,6 +131,19 @@ type TreeSearchOptions struct {
 	Progress func(search.Progress)
 }
 
+// 📸️ SearchMonorepoTreeCachedWithOptions refreshes Source identity and domain records for one composed query.
+func SearchMonorepoTreeCachedWithOptions(ctx context.Context, query string, build TreeBuildOptions, options TreeSearchOptions) (*TreeNode, error) {
+	root, capture, err := buildMonorepoTreeCaptured(ctx, build)
+	if err != nil { return nil, err }
+	if query == "" { return root, nil }
+	if options.Limit < 1 || options.Limit > search.MaxQueryResults {
+		return nil, fmt.Errorf("%w: search result limit must be between 1 and %d", search.ErrTooLarge, search.MaxQueryResults)
+	}
+	index, err := ensureCacheIndexedCaptured(ctx, root, options.Scope, options.Progress, capture)
+	if err != nil { return nil, err }
+	return queryTreeSearchIndex(ctx, root, query, options, index)
+}
+
 // 🔎️ Searches a streamed generation while retaining a bounded ranked page and its tree context.
 func SearchMonorepoTreeWithOptions(ctx context.Context, root *TreeNode, query string, options TreeSearchOptions) (*TreeNode, error) {
 	if query == "" {

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import factorySelectorSchema from "../../🧬️schema/🎯️factory-selector/🔣️.json";
 import { describe, expect, it } from "vitest";
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1 } from "../../♻️native-receipt/🟦️.ts";

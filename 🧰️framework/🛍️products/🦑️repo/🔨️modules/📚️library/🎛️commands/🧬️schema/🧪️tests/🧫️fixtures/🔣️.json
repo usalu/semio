@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "id": "unselected",
+      "environment": {},
+      "expected": "prototype"
+    },
+    {
+      "id": "environment-release",
+      "environment": {
+        "SEMIO_BUILD_MODE": "release"
+      },
+      "expected": "release"
+    },
+    {
+      "id": "original-release",
+      "selected": "release",
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype"
+      },
+      "expected": "release"
+    },
+    {
+      "id": "original-prototype",
+      "selected": "prototype",
+      "environment": {
+        "SEMIO_BUILD_MODE": "release"
+      },
+      "expected": "prototype"
+    },
+    {
+      "id": "invalid-original",
+      "selected": "debug",
+      "environment": {
+        "SEMIO_BUILD_MODE": "release"
+      },
+      "expected": null
+    },
+    {
+      "id": "invalid-environment",
+      "environment": {
+        "SEMIO_BUILD_MODE": "debug"
+      },
+      "expected": null
+    },
+    {
+      "id": "original-overrides-ambient",
+      "selected": "release",
+      "environment": {
+        "SEMIO_BUILD_MODE": "debug"
+      },
+      "expected": "release"
+    }
+  ]
+}

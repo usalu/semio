@@ -53,7 +53,7 @@ test("every ordinary Repo Rust package build declares its actual package and red
 
 import {readBuildGraphV1,resolveBuildTargetV1} from "../../../🟦️.ts";
 import graphSchema from "../../../../🧬️schema/🔣️.json";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 test("bounded Rust fallback keeps mode execution inside the portable graph contract",()=>{
  const decision=qualifyRustBuildFallbackV1(readRustBuildIntentV1(fixture.fallback.intent),fixture.fallback.unsupported)!,target=selectedRustFallbackTargetV1({...fixture.fallbackTarget,execution:{...fixture.fallbackTarget.execution,kind:"command"}},decision,"leaf","build"),value={version:1,projects:{leaf:{name:"leaf",root:"leaf",targets:{build:target}}},dependencies:[]};expect(new Ajv2020({strict:false}).compile(graphSchema)(value)).toBe(true);const graph=readBuildGraphV1(value);for(const mode of ["prototype","release"]){const selected=resolveBuildTargetV1(graph.projects.leaf!.targets.build!,mode);expect(selected.cache).toBe(false);expect(selected.outputs).toEqual([]);expect(selected.execution.command).toBe(fixture.fallbackTarget.execution.command);expect(selected.execution.args).toEqual([mode]);expect(selected.execution.env?.BASE).toBe("original");expect(selected.execution.env?.MODE).toBe(mode);expect(JSON.parse(selected.execution.env!.SEMIO_RUST_BUILD_FALLBACK!)).toEqual({...decision,project:"leaf",target:"build"});}
 });

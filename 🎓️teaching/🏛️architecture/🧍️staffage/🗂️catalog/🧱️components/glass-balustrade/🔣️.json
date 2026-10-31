@@ -1,0 +1,1280 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "glass-balustrade",
+    "category": "components",
+    "title": {
+      "en": "Glass Balustrade",
+      "de": "Glasgeländer"
+    },
+    "summary": {
+      "en": "A 1.1 m high laminated glass balustrade panel (2 x 10 mm glass with PVB interlayer, 21.5 mm) cantilevered from a steel floor shoe with gaskets and bolts and topped by a 42.4 mm tube handrail, shown in section; loaded by a handrail line load, a crowd impact and wind.",
+      "de": "Ein 1,1 m hohes Brüstungsfeld aus Verbundglas (2 x 10 mm Glas mit PVB-Folie, 21,5 mm), im Stahl-Bodenklemmschuh mit Dichtungen und Schrauben eingespannt und mit einem Rohrhandlauf 42,4 mm bekrönt, im Schnitt gezeigt; belastet durch Handlauf-Linienlast, Menschenanprall und Wind."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "glass",
+      "balustrade",
+      "barrier"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-572",
+          "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (E = 70 GPa)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, clause 6.3.2 barriers: horizontal line load at handrail height (1.0 kN/m, an authored value; the actual value depends on the use category), Table A.1 glass density 25 kN/m3."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind pressure on a vertical infill (0.8 kN/m2 estimate per metre width)."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (clamp and handrail)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties (typical emissivity of glass and steel; typical rounded values guided by this chapter, not table look-ups)."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, general principles of presentation, part 50: basic conventions for areas on sections and cuts (hatching)."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, part 1: types of drawings, contents and basic principles of presentation (scales, line groups, symbols for doors, windows and stairs)."
+        },
+        {
+          "id": "en-iso-6946",
+          "citation": "EN ISO 6946:2017 Building components and building elements, thermal resistance and thermal transmittance (surface resistances R_si 0.13 and R_se 0.04 m2K/W for horizontal heat flow)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (design thermal conductivity, specific heat capacity: concrete 2.3 W/mK, 1000 J/kgK; mineral wool 0.035 W/mK; softwood 0.13 W/mK, 1600 J/kgK; steel 50 W/mK, 450 J/kgK; flat glass 1.0 W/mK, 750 J/kgK)."
+        },
+        {
+          "id": "en-iso-10077-1",
+          "citation": "EN ISO 10077-1:2017 Thermal performance of windows, doors and shutters, calculation of thermal transmittance, part 1 (U_g, U_f, edge-of-glass linear transmittance psi_g)."
+        },
+        {
+          "id": "en-iso-10211",
+          "citation": "EN ISO 10211:2017 Thermal bridges in building construction, heat flows and surface temperatures, detailed calculations (linear transmittance psi)."
+        },
+        {
+          "id": "en-12898",
+          "citation": "EN 12898:2019 Glass in building, determination of the emissivity (uncoated float glass, corrected emissivity 0.837)."
+        },
+        {
+          "id": "en-iso-13786",
+          "citation": "EN ISO 13786:2017 Thermal performance of building components, dynamic thermal characteristics: periodic penetration depth delta = sqrt(lambda T / (pi rho c)); about half of it is taken as the effective storage depth of an exposed face."
+        }
+      ],
+      "notes": {
+        "en": "Shown in section: the glass is a one-metre strip, cantilevered from a fixed clamp, and its normal load acts in the section plane. The manifest width 2.0 m is the panel length, not drawn.",
+        "de": "Im Schnitt gezeigt: das Glas ist ein ein Meter breiter Streifen, am festen Klemmteil eingespannt; seine Normallast wirkt in der Schnittebene. Die Manifestbreite 2,0 m ist die Feldlänge und wird nicht gezeichnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.1,
+      "widthM": 0.3,
+      "depthM": 2.0,
+      "massKg": 59.13
+    },
+    "materials": [
+      {
+        "id": "glass",
+        "title": {
+          "en": "Laminated glass 2 x 10 mm with PVB",
+          "de": "Verbundglas 2 x 10 mm mit PVB"
+        },
+        "emissivity": 0.837,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 70000000000,
+        "strengthPa": 45000000,
+        "source": "literature",
+        "reference": "en-12898",
+        "conductivityWmK": 1.0,
+        "specificHeatJKgK": 750
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2",
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "panel",
+      "bones": [
+        {
+          "id": "panel",
+          "parent": null,
+          "title": {
+            "en": "Glass panel (rigid root in the clamp)",
+            "de": "Glasfeld (starre Wurzel im Klemmteil)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 1.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 59.13,
+            "comX": 0.55,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.0215,
+            "secondMomentM4": 8.28198e-07,
+            "extremeFibreM": 0.01075,
+            "material": "glass",
+            "title": {
+              "en": "1 m strip, 21.5 mm laminate",
+              "de": "1 m Streifen, 21,5 mm Verbundglas"
+            }
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-clamp",
+        "bone": "panel",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Floor clamp, fixed",
+          "de": "Bodenklemmteil, eingespannt"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "impact-point",
+        "bone": "panel",
+        "x": 0.9,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Crowd impact point",
+          "de": "Anprallpunkt der Personen"
+        }
+      },
+      {
+        "id": "handrail-top",
+        "bone": "panel",
+        "x": 1.1,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Handrail height",
+          "de": "Handlaufhöhe"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "A balustrade section is 0.30 x 1.10 m, i.e. 0.6 x 2.2 mm at 1:500; the 21.5 mm glass is 0.04 mm and the 42 mm handrail 0.08 mm thick, far below every printable stroke; a line would overstate the glass by a factor of three.",
+          "de": "Ein Brüstungsschnitt ist 0,30 x 1,10 m groß, bei 1:500 also 0,6 x 2,2 mm; das 21,5-mm-Glas ist 0,04 mm und der 42-mm-Handlauf 0,08 mm dick, weit unter jeder druckbaren Strichstärke; eine Linie würde das Glas um das Dreifache überzeichnen."
+        },
+        "limitingFeature": {
+          "en": "Laminated glass thickness 21.5 mm",
+          "de": "Verbundglasdicke 21,5 mm"
+        },
+        "limitingSizeM": 0.0215,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 200
+          },
+          {
+            "kind": "symbol",
+            "symbol": "balustrade-plan"
+          }
+        ]
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "shoe-block",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.125,
+                  -0.15
+                ],
+                [
+                  0.125,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-line",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": false,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.125,
+                  0.0
+                ],
+                [
+                  1.07,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-disc",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "ellipse",
+              "cx": 1.0735,
+              "cy": 0.0,
+              "rx": 0.0265,
+              "ry": 0.0265
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A glass line standing on a small steel shoe with a round handrail on top; 5.5 mm tall on paper.",
+            "de": "Eine Glaslinie auf einem kleinen Stahlschuh mit rundem Handlauf darauf; 5,5 mm hoch auf dem Papier."
+          },
+          "retained": {
+            "en": "Shoe (1.5 x 0.625 mm), the glass line (4.7 mm) and the handrail disc (0.265 mm).",
+            "de": "Schuh (1,5 x 0,625 mm), die Glaslinie (4,7 mm) und die Handlaufscheibe (0,265 mm)."
+          },
+          "merged": {
+            "en": "The two glass panes with the PVB layer are one glass line; gaskets and bolts are merged into the shoe.",
+            "de": "Die zwei Glasscheiben mit der PVB-Schicht sind eine Glaslinie; Dichtungen und Schrauben sind im Schuh zusammengefasst."
+          },
+          "omitted": {
+            "en": "Laminate layers, gaskets, bolts, the shoe slot and the handrail wall.",
+            "de": "Verbundschichten, Dichtungen, Schrauben, der Schuhschlitz und die Handlaufwand."
+          },
+          "thinElements": {
+            "en": "The 21.5 mm glass is a 0.1 mm pen line (20 mm); the 42.4 mm handrail is a filled disc of 53 mm diameter (0.265 mm, the smallest filled feature that prints with a margin); the shoe is drawn 125 mm tall instead of 100 mm for the same reason.",
+            "de": "Das 21,5-mm-Glas ist eine Linie mit 0,1 mm Feder (20 mm); der 42,4-mm-Handlauf ist eine gefüllte Scheibe von 53 mm Durchmesser (0,265 mm, die kleinste gefüllte Einzelheit, die mit Reserve druckt); der Schuh ist aus demselben Grund 125 statt 100 mm hoch gezeichnet."
+          },
+          "hatching": {
+            "en": "No hatch.",
+            "de": "Keine Schraffur."
+          },
+          "styles": {
+            "en": "Dark shoe and handrail, a thin light glass line.",
+            "de": "Dunkler Schuh und Handlauf, eine dünne helle Glaslinie."
+          },
+          "overlays": {
+            "en": "Shoe, glass line and handrail are separate overlay cells; the loaded glass line shows the load path from the handrail to the shoe.",
+            "de": "Schuh, Glaslinie und Handlauf sind getrennte Überlagerungszellen; die belastete Glaslinie zeigt den Lastpfad vom Handlauf zum Schuh."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": 0.1,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "shoe-base",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass-sheet",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": false,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.0
+                ],
+                [
+                  1.08,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "handrail-tube",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "ellipse",
+              "cx": 1.079,
+              "cy": 0.0,
+              "rx": 0.0212,
+              "ry": 0.0212
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A light glass strip rising from a dark steel shoe to a round handrail.",
+            "de": "Ein heller Glasstreifen, der aus einem dunklen Stahlschuh zu einem runden Handlauf aufsteigt."
+          },
+          "retained": {
+            "en": "Shoe (3 x 1 mm), glass strip (0.22 x 9.8 mm) and handrail (0.42 mm).",
+            "de": "Schuh (3 x 1 mm), Glasstreifen (0,22 x 9,8 mm) und Handlauf (0,42 mm)."
+          },
+          "merged": {
+            "en": "Laminate layers and gaskets are merged into the glass strip and the shoe.",
+            "de": "Verbundschichten und Dichtungen sind im Glasstreifen und im Schuh zusammengefasst."
+          },
+          "omitted": {
+            "en": "Bolts (14 mm, 0.14 mm), the shoe slot and the PVB layer.",
+            "de": "Schrauben (14 mm, 0,14 mm), der Schuhschlitz und die PVB-Schicht."
+          },
+          "thinElements": {
+            "en": "The glass is a single 0.2 mm stroke (20 mm, real 21.5 mm); a filled 0.215 mm strip would be below the printable feature.",
+            "de": "Das Glas ist ein einzelner 0,2-mm-Strich (20 mm, real 21,5 mm); ein gefüllter 0,215-mm-Streifen läge unter dem druckbaren Merkmal."
+          },
+          "hatching": {
+            "en": "No hatch: the shoe is 1 mm tall, the glass 0.2 mm wide.",
+            "de": "Keine Schraffur: der Schuh ist 1 mm hoch, das Glas 0,2 mm breit."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm; dark steel, light glass.",
+            "de": "Kontur 0,25 mm; dunkler Stahl, helles Glas."
+          },
+          "overlays": {
+            "en": "Shoe, glass and handrail are separate overlay cells.",
+            "de": "Schuh, Glas und Handlauf sind getrennte Überlagerungszellen."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "steel",
+            "title": {
+              "en": "Steel, cut",
+              "de": "Stahl, geschnitten"
+            },
+            "pattern": "lines",
+            "angleDeg": 45,
+            "spacingMm": 0.6,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "shoe",
+              "bone": "panel",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "clamp-steel",
+              "material": "steel",
+              "hatch": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.15
+                ],
+                [
+                  0.0,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  -0.15
+                ],
+                [
+                  0.1,
+                  -0.0275
+                ],
+                [
+                  0.02,
+                  -0.0275
+                ],
+                [
+                  0.02,
+                  0.0275
+                ],
+                [
+                  0.1,
+                  0.0275
+                ],
+                [
+                  0.1,
+                  0.15
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gasket-a",
+              "bone": "panel",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.0275
+                ],
+                [
+                  0.02,
+                  0.01075
+                ],
+                [
+                  0.1,
+                  0.01075
+                ],
+                [
+                  0.1,
+                  0.0275
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "gasket-b",
+              "bone": "panel",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "clamp-steel",
+              "material": "steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.01075
+                ],
+                [
+                  0.02,
+                  -0.0275
+                ],
+                [
+                  0.1,
+                  -0.0275
+                ],
+                [
+                  0.1,
+                  -0.01075
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "glass",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 3,
+              "filled": true,
+              "tone": 0.92,
+              "region": "panel-glass",
+              "material": "glass",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.01075
+                ],
+                [
+                  0.02,
+                  -0.01075
+                ],
+                [
+                  1.08,
+                  -0.01075
+                ],
+                [
+                  1.08,
+                  0.01075
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "bolt-a",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "ellipse",
+              "cx": 0.05,
+              "cy": 0.1,
+              "rx": 0.007,
+              "ry": 0.007
+            },
+            {
+              "id": "bolt-b",
+              "bone": "panel",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "region": "clamp-steel",
+              "kind": "ellipse",
+              "cx": 0.05,
+              "cy": -0.1,
+              "rx": 0.007,
+              "ry": 0.007
+            },
+            {
+              "id": "handrail",
+              "bone": "panel",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "hatch": "steel",
+              "kind": "ellipse",
+              "cx": 1.079,
+              "cy": 0.0,
+              "rx": 0.0212,
+              "ry": 0.0212
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The section of a clamped glass balustrade: a hatched steel shoe with a slot, two EPDM gaskets around the laminated glass, bolts and a hatched tube handrail.",
+            "de": "Der Schnitt einer eingespannten Glasbrüstung: ein schraffierter Stahlschuh mit Schlitz, zwei EPDM-Dichtungen um das Verbundglas, Schrauben und ein schraffierter Rohrhandlauf."
+          },
+          "retained": {
+            "en": "Shoe (6 x 2 mm) with its 1.1 mm slot, gaskets (0.33 x 1.6 mm), glass (0.43 x 21 mm) running into the slot, two bolts (0.28 mm), handrail (0.85 mm).",
+            "de": "Schuh (6 x 2 mm) mit 1,1 mm Schlitz, Dichtungen (0,33 x 1,6 mm), Glas (0,43 x 21 mm) bis in den Schlitz, zwei Schrauben (0,28 mm), Handlauf (0,85 mm)."
+          },
+          "merged": {
+            "en": "The two 10 mm glass panes and the PVB are one glass body.",
+            "de": "Die zwei 10-mm-Glasscheiben und das PVB sind ein Glaskörper."
+          },
+          "omitted": {
+            "en": "The 2 mm tube wall (0.04 mm), the setting blocks and the base anchors.",
+            "de": "Die 2-mm-Rohrwand (0,04 mm), die Klotzungen und die Fußanker."
+          },
+          "thinElements": {
+            "en": "The 1.5 mm PVB layer is omitted: inside a 0.43 mm glass body a line would leave white channels of 0.115 mm, below the printable gap; the slot is widened to 55 mm so the gaskets are 0.33 mm wide filled strips; the handrail wall is not resolved and the tube is drawn solid with hatch.",
+            "de": "Die 1,5-mm-PVB-Schicht entfällt: in einem 0,43 mm breiten Glaskörper ließe eine Linie weiße Kanäle von 0,115 mm, unter der druckbaren Lücke; der Schlitz ist auf 55 mm erweitert, damit die Dichtungen 0,33 mm breite gefüllte Streifen sind; die Handlaufwand wird nicht aufgelöst, das Rohr ist voll mit Schraffur gezeichnet."
+          },
+          "hatching": {
+            "en": "Cut steel is hatched at 45 degrees, 0.6 mm (DIN ISO 128-50); glass is not hatched, which is the convention for glass.",
+            "de": "Geschnittener Stahl ist 45° schraffiert, 0,6 mm (DIN ISO 128-50); Glas wird nicht schraffiert, das ist die Konvention für Glas."
+          },
+          "styles": {
+            "en": "Outline 0.35 mm, glass 0.13 mm, hatch 0.1 mm.",
+            "de": "Kontur 0,35 mm, Glas 0,13 mm, Schraffur 0,1 mm."
+          },
+          "overlays": {
+            "en": "Shoe group, glass and handrail are separate overlay cells; the PVB is part of the glass cell.",
+            "de": "Schuhgruppe, Glas und Handlauf sind getrennte Überlagerungszellen; das PVB gehört zur Glaszelle."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "balustrade-plan",
+        "title": {
+          "en": "Glass balustrade in plan",
+          "de": "Glasbrüstung im Grundriss"
+        },
+        "description": {
+          "en": "The plan sign of a glass balustrade panel seen from above: the tube handrail as a long narrow bar over the glass line, the floor shoe as a dashed-style outline behind it.",
+          "de": "Das Grundrisszeichen eines Glasbrüstungsfeldes von oben: der Rohrhandlauf als langer schmaler Balken über der Glaslinie, der Bodenschuh als Umriss dahinter."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          500,
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.1,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "handrail",
+              "bone": "panel",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.0212
+                ],
+                [
+                  2.0,
+                  -0.0212
+                ],
+                [
+                  2.0,
+                  0.0212
+                ],
+                [
+                  0,
+                  0.0212
+                ]
+              ],
+              "closed": true,
+              "region": "handrail-steel"
+            },
+            {
+              "id": "shoe-outline",
+              "bone": "panel",
+              "role": "detail",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  -0.15
+                ],
+                [
+                  2.0,
+                  -0.15
+                ],
+                [
+                  2.0,
+                  0.15
+                ],
+                [
+                  0,
+                  0.15
+                ]
+              ],
+              "closed": true,
+              "region": "clamp-steel"
+            },
+            {
+              "id": "glass-line",
+              "bone": "panel",
+              "role": "glazing",
+              "z": 1,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  2.0,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "panel-glass"
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Real size: panel length 2.00 m; handrail 42.4 mm wide, shoe 0.30 m deep. At 1:500 the sign is 4 mm long and the handrail is drawn by its pen.",
+          "de": "Echte Größe: Feldlänge 2,00 m; Handlauf 42,4 mm breit, Schuh 0,30 m tief. Bei 1:500 ist das Zeichen 4 mm lang und der Handlauf entsteht durch die Federbreite."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "self-weight-unloaded",
+        "title": {
+          "en": "Self-weight only",
+          "de": "Nur Eigengewicht"
+        },
+        "description": {
+          "en": "Glass panel and clamp under their own weight.",
+          "de": "Glasfeld und Klemmteil unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "panel-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "clamp-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "handrail-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "handrail-line-load",
+        "title": {
+          "en": "Handrail line load",
+          "de": "Handlauf-Linienlast"
+        },
+        "description": {
+          "en": "A horizontal line load of 1.0 kN/m at handrail height, taken as 1.0 kN over a one-metre strip.",
+          "de": "Horizontale Linienlast 1,0 kN/m in Handlaufhöhe, als 1,0 kN über einen Meter Streifen."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "panel-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "clamp-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "handrail-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "handrail-line",
+            "kind": "live",
+            "title": {
+              "en": "Handrail line load 1.0 kN/m",
+              "de": "Handlauf-Linienlast 1,0 kN/m"
+            },
+            "anchor": "handrail-top",
+            "fxN": 1000,
+            "fyN": 0,
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "crowd-impact-point",
+        "title": {
+          "en": "Crowd impact",
+          "de": "Menschenanprall"
+        },
+        "description": {
+          "en": "A 1.0 kN crowd impact at 0.9 m height.",
+          "de": "Menschenanprall 1,0 kN in 0,9 m Höhe."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "panel-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "clamp-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "handrail-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "crowd-impact",
+            "kind": "occupant",
+            "title": {
+              "en": "Crowd impact 1.0 kN",
+              "de": "Menschenanprall 1,0 kN"
+            },
+            "anchor": "impact-point",
+            "fxN": 1000,
+            "fyN": 0,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "wind-pressure",
+        "title": {
+          "en": "Wind pressure",
+          "de": "Winddruck"
+        },
+        "description": {
+          "en": "Wind pressure of 0.8 kN/m2 over the 1.1 m height, pushing outward.",
+          "de": "Winddruck 0,8 kN/m² über 1,1 m Höhe, nach außen wirkend."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "panel-glass": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            },
+            "clamp-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.5
+            },
+            "handrail-steel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 1.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "wind-panel",
+            "kind": "wind",
+            "title": {
+              "en": "Wind pressure 800 N/m",
+              "de": "Winddruck 800 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "panel",
+              "fromM": 0,
+              "toM": 1.1,
+              "wxNPerM": 800,
+              "wyNPerM": 0
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "handrail-push",
+        "title": {
+          "en": "Handrail push",
+          "de": "Handlaufschub"
+        },
+        "description": {
+          "en": "The handrail line load rises to 1.0 kN/m and holds.",
+          "de": "Die Handlauf-Linienlast steigt auf 1,0 kN/m und hält."
+        },
+        "durationS": 3,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "handrail-line-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "handrail-line-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "push",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Push",
+              "de": "Schub"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "load-on",
+            "title": {
+              "en": "Full line load",
+              "de": "Volle Linienlast"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:handrail-line",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "impact-pulse",
+        "title": {
+          "en": "Impact pulse",
+          "de": "Anprallimpuls"
+        },
+        "description": {
+          "en": "A crowd impact pulse peaks at 0.4 s and returns to zero.",
+          "de": "Ein Anprallimpuls erreicht bei 0,4 s sein Maximum und fällt auf null."
+        },
+        "durationS": 2,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crowd-impact-point",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "crowd-impact-point",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "impact",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Impact",
+              "de": "Anprall"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.4,
+            "kind": "load-on",
+            "title": {
+              "en": "Impact peak",
+              "de": "Anprallspitze"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:crowd-impact",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 1.2,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "skyTempC": 8,
+        "groundTempC": 18,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "panel-glass",
+          "title": {
+            "en": "Laminated glass panel faces",
+            "de": "Verbundglasfeldflächen"
+          },
+          "kind": "glazing",
+          "model": "passive",
+          "material": "glass",
+          "areaM2": 2.2,
+          "characteristicLengthM": 1.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 40000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "clamp-steel",
+          "title": {
+            "en": "Floor shoe, gaskets and bolts",
+            "de": "Bodenklemmschuh, Dichtungen und Schrauben"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.1,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.4,
+          "layers": [],
+          "heatCapacityJM2K": 20000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "handrail-steel",
+          "title": {
+            "en": "Tube handrail",
+            "de": "Rohrhandlauf"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.13,
+          "characteristicLengthM": 0.0424,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.9,
+          "layers": [],
+          "heatCapacityJM2K": 6000,
+          "source": "authored-estimate",
+          "reference": "en-iso-10456"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "The balustrade is an open exterior element (no conditioned side): the glass reacts with the full laminate thickness of 21.5 mm (heat capacity 40 kJ/(m2 K)), the 42.4 x 2 mm tube handrail much faster (6 kJ/(m2 K)).",
+          "de": "Die Brüstung ist ein offenes Außenbauteil (keine konditionierte Seite): das Glas reagiert mit der vollen Verbundglasdicke von 21,5 mm (Wärmekapazität 40 kJ/(m² K)), der Rohrhandlauf 42,4 x 2 mm viel schneller (6 kJ/(m² K))."
+        },
+        {
+          "en": "Sun-exposed and shaded faces differ through the pose sunlit fractions: glass and handrail fully sunlit, the shoe half shaded.",
+          "de": "Besonnte und verschattete Flächen unterscheiden sich über die Besonnungsanteile der Posen: Glas und Handlauf voll besonnt, der Schuh halb verschattet."
+        },
+        {
+          "en": "Reference case: a mild sunny day, all values authored estimates.",
+          "de": "Referenzfall: ein milder sonniger Tag, alle Werte sind Schätzungen."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-clamp"
+      ],
+      "assumptions": [
+        {
+          "en": "Laminated glass cantilever, E = 70 GPa, section 21.5 mm by 1 m, fixed at the floor clamp; the handrail load is a point load at 1.1 m.",
+          "de": "Verbundglas-Kragarm, E = 70 GPa, Querschnitt 21,5 mm mal 1 m, am Bodenklemmteil eingespannt; die Handlauflast ist eine Einzellast in 1,1 m Höhe."
+        },
+        {
+          "en": "Laminate effective thickness is simplified to the sum of the two lites; PVB stiffness, load duration and glass strength factors are not modelled.",
+          "de": "Die wirksame Dicke des Verbunds ist vereinfacht als Summe der beiden Scheiben angesetzt; PVB-Steifigkeit, Lastdauer und Festigkeitsbeiwerte sind nicht modelliert."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "handrail-line-load",
+      "defaultClip": "handrail-push",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

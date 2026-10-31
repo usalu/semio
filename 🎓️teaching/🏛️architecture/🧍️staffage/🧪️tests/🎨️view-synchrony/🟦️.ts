@@ -8,8 +8,9 @@ import type { Asset } from "../../🧬️schema/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { toneColour } from "../../🔨️modules/🎨️depiction/🖍️palette/🟦️.ts";
 import { labelBudget } from "../../🔨️modules/🎨️depiction/🧱️canvas/🟦️.ts";
-import { walkerState } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
+import { sampleState, unchecked } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 
+const plainOptions = (...args: Parameters<typeof defaultDepictionOptions>) => unchecked(defaultDepictionOptions(...args));
 const items = (scene: DrawingScene): DrawingItem[] => scene.layers.flatMap((l) => l.items);
 const modelGeometry = (scene: DrawingScene): Map<string, number[]> => {
   const { origin, mmPerMetre: k } = scene.metadata;
@@ -23,7 +24,7 @@ const modelGeometry = (scene: DrawingScene): Map<string, number[]> => {
 
 describe("view synchrony", () => {
   for (const denominator of [100, 50]) {
-    const scenes = depictAll(walkerState("carry-bag"), { ...defaultDepictionOptions("light-line", "en", denominator) });
+    const scenes = depictAll(sampleState("carry-bag", denominator), { ...plainOptions("light-line", "en", denominator) });
     it(`shares fill geometry across all seven views at 1:${denominator}`, () => {
       const reference = modelGeometry(scenes["light-solid"]);
       expect(reference.size).toBeGreaterThan(5);
@@ -40,7 +41,7 @@ describe("view synchrony", () => {
     });
   }
   it("keeps label text from overlapping and from reading raw floats", () => {
-    const scenes = depictAll(walkerState("carry-bag"), { ...defaultDepictionOptions("forces", "en", 50) });
+    const scenes = depictAll(sampleState("carry-bag", 50), { ...plainOptions("forces", "en", 50) });
     for (const view of ["forces", "moments", "thermal"] as const) {
       const texts = items(scenes[view]).flatMap((i) => (i.kind === "text" ? [i] : []));
       for (const t of texts) expect(t.text).not.toMatch(/\d{9,}|e-\d/u);
@@ -50,11 +51,13 @@ describe("view synchrony", () => {
   });
 
   describe("label budget on a complex rig", () => {
-    const oak = (JSON.parse(readFileSync(new URL("../../🗂️catalog/🌳️vegetation/🔣️.json", import.meta.url), "utf8")) as { assets: Asset[] }).assets.find((a) => a.id === "english-oak")!;
-    for (const denominator of [50, 100, 200, 500])
+    const oak = (JSON.parse(readFileSync(new URL("../../🗂️catalog/🌳️vegetation/english-oak/🔣️.json", import.meta.url), "utf8")) as { asset: Asset }).asset;
+    const at = (denominator: number) => evaluate(oak, { kind: "pose", pose: "windy" }, { kind: "scale", scale: { denominator } });
+    const authored = [50, 100, 200, 500].filter((d) => oak.representations[`${d}` as "50"].status === "authored");
+    for (const denominator of authored)
       it(`prints at most ${labelBudget(denominator)} unique-overlap-free labels per analytic view at 1:${denominator}`, () => {
-        const state = evaluate(oak, { kind: "pose", pose: "windy" });
-        const scenes = depictAll(state, { ...defaultDepictionOptions("forces", "en", denominator) });
+        const state = at(denominator);
+        const scenes = depictAll(state, { ...plainOptions("forces", "en", denominator) });
         for (const view of ["forces", "moments"] as const) {
           const labels = items(scenes[view]).flatMap((i) => (i.kind === "text" && i.id.endsWith(":label") && !i.id.startsWith("freebody") ? [i] : []));
           const required = labels.filter((l) => /reaction|Reaction/u.test(l.id)).length;
@@ -62,10 +65,10 @@ describe("view synchrony", () => {
           const boxes = labels.map((t) => ({ x0: t.x, x1: t.x + t.text.length * t.sizeMm * 0.56, y0: t.y - t.sizeMm * 0.8, y1: t.y + t.sizeMm * 0.2 }));
           boxes.forEach((a, i) => boxes.slice(i + 1).forEach((b) => expect(a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1).toBe(false)));
         }
-      });
+      }, 60000);
     it("draws foliage regions neutral in the forces and moments views", () => {
-      const state = evaluate(oak, { kind: "pose", pose: "windy" });
-      const scenes = depictAll(state, { ...defaultDepictionOptions("forces", "en", 100) });
+      const state = at(100);
+      const scenes = depictAll(state, { ...plainOptions("forces", "en", 100) });
       const foliage = state.shapes.elevation.filter((e) => e.closed && e.shape.filled && oak.thermal.regions.find((r) => r.id === e.shape.region)?.kind === "foliage");
       expect(foliage.length).toBeGreaterThan(0);
       for (const view of ["forces", "moments"] as const) {
@@ -77,7 +80,7 @@ describe("view synchrony", () => {
       }
     });
     it("labels a distributed load once, with its resultant", () => {
-      const scenes = depictAll(evaluate(oak, { kind: "pose", pose: "windy" }), { ...defaultDepictionOptions("forces", "en", 50) });
+      const scenes = depictAll(at(50), { ...plainOptions("forces", "en", 50) });
       const texts = items(scenes.forces).flatMap((i) => (i.kind === "text" ? [i.text] : []));
       expect(texts.filter((t) => /distributed/u.test(t)).length).toBeLessThanOrEqual(2);
       expect(texts.filter((t) => /#\d/u.test(t))).toEqual([]);

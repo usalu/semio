@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "invocation": {
+    "command": "bunx",
+    "prefix": [
+      "x"
+    ]
+  },
+  "resolutions": [
+    {
+      "id": "environment",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "darwin",
+      "source": "environment",
+      "present": [
+        "/owned/bun"
+      ],
+      "expected": {
+        "command": "/owned/bun",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "runtime",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "darwin",
+      "source": "runtime",
+      "present": [],
+      "expected": {
+        "command": "/runtime/bun",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "provisioned",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "darwin",
+      "source": "provisioned",
+      "present": [
+        "/repo/.cache/b/t/m/bun/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/bun"
+      ],
+      "expected": {
+        "command": "/repo/.cache/b/t/m/bun/dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd/bun",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "primary-path",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "darwin",
+      "source": "path",
+      "present": [
+        "/bin/bun",
+        "/bin/bunx"
+      ],
+      "expected": {
+        "command": "/bin/bun",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "windows-exe",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "win32",
+      "source": "path",
+      "present": [
+        "/bin/bun.exe"
+      ],
+      "expected": {
+        "command": "/bin/bun.exe",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "windows-cmd",
+      "tool": "bun",
+      "command": "bunx",
+      "platform": "win32",
+      "source": "path",
+      "present": [
+        "/bin/bun.cmd"
+      ],
+      "expected": {
+        "command": "/bin/bun.cmd",
+        "prefix": [
+          "x"
+        ],
+        "suffix": []
+      }
+    },
+    {
+      "id": "tool-id-primary",
+      "tool": "bun",
+      "command": null,
+      "platform": "darwin",
+      "source": "runtime",
+      "present": [],
+      "expected": {
+        "command": "/runtime/bun",
+        "prefix": [],
+        "suffix": []
+      }
+    },
+    {
+      "id": "genuine-sibling",
+      "tool": "cargo",
+      "command": "rustc",
+      "platform": "darwin",
+      "source": "path",
+      "present": [
+        "/bin/rustc",
+        "/owned/cargo"
+      ],
+      "expected": {
+        "command": "/bin/rustc",
+        "prefix": [],
+        "suffix": []
+      }
+    },
+    {
+      "id": "interpreter-prefix",
+      "tool": "tsc",
+      "command": "tscx",
+      "platform": "darwin",
+      "source": "package-script",
+      "present": [
+        "/repo/node_modules/typescript/bin/tsc"
+      ],
+      "expected": {
+        "command": "/runtime/bun",
+        "prefix": [
+          "/repo/node_modules/typescript/bin/tsc",
+          "x"
+        ],
+        "suffix": []
+      }
+    }
+  ],
+  "composition": [
+    {
+      "id": "mapped-prefix-suffix",
+      "prefix": [
+        "runtime",
+        "script",
+        "x"
+      ],
+      "args": [
+        "--yes",
+        "package"
+      ],
+      "suffix": [
+        "--sysroot=/sdk"
+      ],
+      "expected": [
+        "runtime",
+        "script",
+        "x",
+        "--yes",
+        "package",
+        "--sysroot=/sdk"
+      ]
+    },
+    {
+      "id": "primary-unchanged",
+      "prefix": [],
+      "args": [
+        "test"
+      ],
+      "suffix": [],
+      "expected": [
+        "test"
+      ]
+    },
+    {
+      "id": "windows-command-wrapper-order",
+      "prefix": [
+        "/c",
+        "/bin/bun.cmd",
+        "x"
+      ],
+      "args": [
+        "package"
+      ],
+      "suffix": [
+        "tail"
+      ],
+      "expected": [
+        "/c",
+        "/bin/bun.cmd",
+        "x",
+        "package",
+        "tail"
+      ]
+    }
+  ],
+  "capacity": {
+    "requested": "bunx",
+    "primary": "bun",
+    "args": [
+      "test"
+    ],
+    "expected": "alias:test"
+  },
+  "invalid": [
+    {
+      "command": "bunx",
+      "prefix": [
+        "x"
+      ],
+      "target": "other"
+    },
+    {
+      "command": "bunx",
+      "prefix": []
+    },
+    {
+      "command": "bunx",
+      "prefix": [
+        "x"
+      ],
+      "chain": [
+        "other"
+      ]
+    },
+    {
+      "command": "bunx",
+      "prefix": [
+        1
+      ]
+    },
+    {
+      "command": 7,
+      "prefix": [
+        "x"
+      ]
+    },
+    {
+      "command": "bunx",
+      "prefix": [
+        ""
+      ]
+    },
+    {
+      "command": "bunx",
+      "prefix": [
+        "\u0000"
+      ]
+    }
+  ],
+  "projections": [
+    {
+      "id": "mapped",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bunx",
+      "selected": "bun",
+      "prefix": [
+        "x"
+      ]
+    },
+    {
+      "id": "primary",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bun",
+      "selected": "bun",
+      "prefix": []
+    },
+    {
+      "id": "sibling",
+      "commands": [
+        "cargo",
+        "rustc"
+      ],
+      "invocations": [],
+      "requested": "rustc",
+      "selected": "rustc",
+      "prefix": []
+    },
+    {
+      "id": "windows-owned-suffix",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bunx.exe",
+      "selected": "bun",
+      "prefix": [
+        "x"
+      ]
+    },
+    {
+      "id": "windows-owned-cmd-uppercase",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bunx.CMD",
+      "selected": "bun",
+      "prefix": [
+        "x"
+      ]
+    },
+    {
+      "id": "windows-owned-bat",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bunx.bat",
+      "selected": "bun",
+      "prefix": [
+        "x"
+      ]
+    },
+    {
+      "id": "primary-owned-suffix",
+      "commands": [
+        "bun",
+        "bunx"
+      ],
+      "invocations": [
+        {
+          "command": "bunx",
+          "prefix": [
+            "x"
+          ]
+        }
+      ],
+      "requested": "bun.EXE",
+      "selected": "bun",
+      "prefix": []
+    },
+    {
+      "id": "genuine-sibling-suffix",
+      "commands": [
+        "cargo",
+        "rustc"
+      ],
+      "invocations": [],
+      "requested": "rustc.cmd",
+      "selected": "rustc",
+      "prefix": []
+    }
+  ],
+  "discovery": {
+    "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "suite": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧰️tool-registry/🧪️tests/🔎️exec-command/🟦️.ts"
+  },
+  "invalidLists": [
+    null,
+    {},
+    [
+      null
+    ],
+    true
+  ]
+}

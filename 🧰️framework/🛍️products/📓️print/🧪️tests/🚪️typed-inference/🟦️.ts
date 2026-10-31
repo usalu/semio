@@ -7,7 +7,7 @@ import {inferVizLayerTable} from "@semio-tech/print-viz-inference/transform";
 import type {VizChartSpecification,VizRow} from "../../🧬️schema/📸️snapshot/📊️chart/🟦️.ts";
 import fixture from "./🔣️.json";
 import ownership from "../../🚪️io/🧪️tests/🧫️fixtures/🏛️ownership/🔣️.json";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import chartSchema from "../../🧬️schema/📸️snapshot/📊️chart/🔣️.json";
 import snapshotSchema from "../../🧬️schema/📸️snapshot/🔣️.json";
 import catalogSchema from "../../🧬️schema/🔣️.json";

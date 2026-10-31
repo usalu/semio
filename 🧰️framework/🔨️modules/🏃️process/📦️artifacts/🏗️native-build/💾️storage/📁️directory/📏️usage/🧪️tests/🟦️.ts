@@ -125,3 +125,51 @@ test("the capacity meter shares one walk between simultaneous commits and tolera
  const controller=new AbortController(),waiting=meter.admit({mode:"commit",requestBytes:0},controller.signal);controller.abort(new Error("caller left"));await expect(waiting).rejects.toThrow("caller left");
  disk=0;await meter.admit({mode:"commit",requestBytes:0});
 });
+
+import {Database} from "bun:sqlite";
+test("accepted stat failures drain before exact primary rejection escapes the actual walker",async()=>{
+ const database=new Database(":memory:");try{for(const row of fixture.drain){
+  const root=resolve("walk-model"),primary=row.reason==="undefined"?undefined:Error("exact accepted stat failure"),controller=new AbortController();let release!:()=>void,entered!:()=>void,completed=0,returned=false,rejected=false,actual:unknown;
+  const pending=new Promise<void>(yes=>{release=yes;}),started=new Promise<void>(yes=>{entered=yes;}),directory={isFile:()=>false,isDirectory:()=>true,nlink:1n,blocks:0n,size:0n,dev:1n,ino:1n},file={...directory,isDirectory:()=>false,isFile:()=>true,blocks:1n,size:1n};
+  const port:NativeDirectoryWalkPortV1={list:async()=>["failed","pending"],stat:async path=>{if(path===root)return directory;if(path===join(root,"failed")){completed++;throw primary;}entered();await pending;completed++;return file;}};
+  const work=measureNativeDirectoryUsageAsyncV1(root,{port,signal:controller.signal}).then(value=>{returned=true;actual=value;},error=>{returned=true;rejected=true;actual=error;});
+  try{await started;await new Promise<void>(done=>setImmediate(done));const eligible=(database.query("select ? = ? as settled").get(completed,row.accepted) as {settled:number}).settled===1;expect(eligible,row.id).toBe(false);expect(returned,row.id+" must retain every accepted stat").toBe(eligible);}finally{release();await work;}
+  expect(completed,row.id).toBe(row.accepted);expect(rejected,row.id).toBe(true);expect(actual,row.id).toBe(primary);expect((database.query("select ? = ? as settled").get(completed,row.accepted) as {settled:number}).settled).toBe(1);
+ }}finally{database.close();}
+});
+
+import {readFileSync} from "node:fs";
+import {posix,win32} from "node:path";
+import ts from "typescript";
+import {transformSync} from "esbuild";
+import {evaluateExtractedFunctionV1} from "../../../../../../🧪️testing/🧩️extracted-function/🟦️.ts";
+test("the actual walk admits atomic entry names before child stat effects",async()=>{
+ const root=resolve("entry-model"),policy=protocol.usage.entry,host=process.platform==="win32"?"win32":"linux";
+ for(const row of fixture.entryNames.filter(row=>row.platform===host)){
+  const calls:string[]=[],directory={isFile:()=>false,isDirectory:()=>true,nlink:1n,blocks:0n,size:0n,dev:1n,ino:1n},file={...directory,isDirectory:()=>false,isFile:()=>true};let actual:unknown;
+  const port:NativeDirectoryWalkPortV1={list:async()=>[row.name],stat:async path=>{if(path===root)return directory;calls.push(path);return file;}};
+  try{await measureNativeDirectoryUsageAsyncV1(root,{port,maximumEntries:3});}catch(error){actual=error;}
+  if(row.valid){expect(actual,row.name).toBeUndefined();expect(calls).toEqual([join(root,row.name)]);}else{expect(actual,row.name).toBeInstanceOf(Error);expect((actual as Error).message,row.name).toBe(policy.refusal);expect(calls,row.name).toEqual([]);}
+ }
+});
+test("the private atomic append equals independent POSIX and Windows path oracles without Unicode normalization",()=>{
+ const source=ts.createSourceFile("usage.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="appendNativeDirectoryEntryV1");expect(node,"actual fast append required").toBeDefined();
+ const append=evaluateExtractedFunctionV1(transformSync(node!.getText(source),{loader:"ts",format:"cjs"}).code,"appendNativeDirectoryEntryV1",{protocol});
+ for(const row of fixture.entryNames){const system=row.platform==="win32"?win32:posix,parent=system.resolve(row.parent),prefix=parent.endsWith(system.sep)?parent:parent+system.sep;if(row.valid)expect(append(prefix,row.name,row.platform==="win32")).toBe(system.join(parent,row.name));else expect(()=>append(prefix,row.name,row.platform==="win32")).toThrow(protocol.usage.entry.refusal);}
+ const compose=fixture.entryNames.filter(row=>row.name==="é"||row.name==="é").map(row=>append("/data/",row.name,false));expect(compose[0]).not.toBe(compose[1]);
+});
+test("the system walk preserves exact scalar metadata and required precision observations without ignored errors",async()=>{
+ const source=ts.createSourceFile("usage.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),node=source.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="systemNativeDirectoryWalkV1");expect(node,"actual exact metadata system port required").toBeDefined();
+ for(const row of fixture.metadata){
+  const calls:string[]=[],stop=new AbortController(),failure=Error("exact metadata failure"),abort=Error("metadata preparation cancelled"),numeric:{dev:number;ino:number;nlink:number;blocks:number;size:number}&Record<string,number>={dev:1,ino:2,nlink:1,blocks:8,size:4};numeric[row.field]=row.value;const flags={isFile:()=>true,isDirectory:()=>false},number={...flags,...numeric},exact={...flags,dev:1n,ino:9007199254740993n,nlink:1n,blocks:8n,size:4n};
+  const factory=evaluateExtractedFunctionV1(transformSync(node!.getText(source),{loader:"ts",format:"cjs"}).code,"systemNativeDirectoryWalkV1",{protocol,listEntries:async()=>[],statEntry:async(_path:unknown,options?:{bigint?:boolean})=>{calls.push(options?.bigint?"bigint":"number");if(row.kind==="initial-error"||row.kind==="exact-error"&&options?.bigint)throw failure;if(row.kind==="cancel")stop.abort(abort);return options?.bigint?exact:number;}}),port:NativeDirectoryWalkPortV1=factory(stop.signal);let observed:unknown,caught:unknown;
+  try{observed=await port.stat("first");}catch(error){caught=error;}
+  if(row.kind==="initial-error"||row.kind==="exact-error"||row.kind==="cancel"){expect(caught,row.id).toBe(row.kind==="cancel"?abort:failure);expect(calls,row.id).toEqual(row.kind==="exact-error"?["number","bigint"]:["number"]);continue;}
+  expect(caught,row.id).toBeUndefined();expect(observed,row.id).toBe(row.kind==="safe"?number:exact);expect(await port.stat("next"),row.id).toBe(row.kind==="safe"?number:exact);expect(calls,row.id).toEqual(row.kind==="safe"?["number","number"]:["number","bigint","bigint"]);
+  if(row.kind==="safe")for(const field of ["dev","ino","nlink","blocks","size"])expect(BigInt((observed as Record<string,number>)[field]!),row.id).toBe(BigInt(numeric[field]!));
+ }
+});
+
+test("actual system stat observations replay neutral files against independent Python metadata",async()=>{
+ const root=scratch();try{const files=fixture.trees[0]!.files.filter(([name])=>!String(name).includes("/"));for(const[name,bytes]of files)writeFileSync(join(root,String(name)),Buffer.alloc(Number(bytes)));const actual=await measureNativeDirectoryUsageAsyncV1(root);expect(actual.entries).toBe(files.length+1);expect(actual.logicalBytes).toBe(files.reduce((sum,[,bytes])=>sum+Number(bytes),0));expect(hasPython).toBe(true);const answer=sh(testPythonV1()??"python3","-c",python,root);expect(answer.exitCode,answer.stderr.toString()).toBe(0);expect(actual).toEqual(JSON.parse(answer.stdout.toString()));}finally{rmSync(root,{recursive:true,force:true});}
+});

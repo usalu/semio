@@ -1,0 +1,13 @@
+# Restart Recovery Query Audit
+
+Prepared proctor-http-all-quizzes-restarted.mjs reads only the retained baseline JSON and performs GET /instance plus POST /queries (authority consistency),40run queries+learner+leaderboard. It issues no commands/registration, accesses no database and creates no learner. Every query has3s timeout and the sequence has120s bound. Actual retained baseline independently contains40unique run IDs,10quizzes/4levels,112task-answer entries, total4000 and13badges. It compares submitted status, score/points/challenge/answer counts, learner best/badges/total and private-ID-redacted leaderboard own total.
+
+Concrete gap sent backend: requested exact run IDs are not independently checked against the returned learner run roster (only length40), nor is each returned sheet quiz checked against its expected quiz. Different quizzes share challenge/score/taskcount. Use actual view schema to assert exact returned roster/quiz identities, plus explicit42query and112answer totals before writing success. The baseline summary stores counts rather than full submitted answer bodies, so this script must not claim full body equality.
+
+Output is parameterized under generated and name-validated, but its default filename may replace an earlier recovery result. Supply a distinct output filename and currentServer4262 actual owner description; default68016 is historical. The script itself does not prove service restart/DBidentity; combine its future result with independently retained owner/settlement/readiness receipts. No execution before actual8791 readiness and no duplicate run; backend owns it. This audit did not change the script or perform HTTP.
+
+## Strengthened Input Review
+
+Current6dc8d154 checkpoint resolves the identity gaps using actual schema fields: RunView.run/learner/quiz, sheet.quiz and result.quiz; LearnerView.learner and exact sorted run/quiz/challenge/status/score/points roster. Explicit totals42queries/112answers/13badges are asserted. Output basename and current owner description are mandatory; stale68016 defaults removed. Result explicitly says answerBodyEquality:false, matching baseline limitations. No further concrete schema/identity defect found. Caller must still choose a fresh output basename because writeFileSync does not enforce exclusive creation. Backend reports syntax check only; no HTTP/recovery success inferred. Actual server readiness and execution remain separately owned.
+
+Final9f34b9d7 checkpoint now writes its generated result with flag wx, so an existing output is refused rather than overwritten. This resolves the remaining output-custody caveat while preserving all query/identity/count assertions. No network execution occurred in this review.

@@ -1,7 +1,7 @@
 /** 📐️ Dimensions and metadata of an asset, and what its size is on paper at every preset scale: the scale semantics made explicit.
- * @see ../../../../../../📐️units/🟦️.ts — `mmPerMetre`, `lodFor`, `lineWeightMm` */
+ * @see ../../../../../../📐️units/🟦️.ts — `mmPerMetre` */
 import type { ReactElement } from "react";
-import { SCALE_PRESETS, lineWeightMm, lodFor, mmPerMetre } from "@teaching/staffage";
+import { SCALE_PRESETS, mmPerMetre } from "@teaching/staffage";
 import type { Asset } from "@teaching/staffage";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
 import { Tag } from "../../🪟️chrome/🟦️.tsx";
@@ -31,12 +31,14 @@ export function DimensionsSection(props: { readonly asset: Asset; readonly row: 
           <span className="flex flex-wrap gap-single">{asset.tags.map((tag) => <Tag key={tag}>{tag}</Tag>)}</span>
         </Fact>
       </dl>
-      <DataTable caption={t("detail.paper.caption", { height: num(dimensions.heightM, language), width: num(dimensions.widthM, language) })} head={[t("detail.paper.scale"), t("detail.paper.height"), t("detail.paper.width"), t("detail.paper.lod"), t("detail.paper.line")]}>
+      <DataTable caption={t("detail.paper.caption", { height: num(dimensions.heightM, language), width: num(dimensions.widthM, language) })} head={[t("detail.paper.scale"), t("detail.paper.height"), t("detail.paper.width"), t("detail.paper.drawing"), t("detail.paper.line")]}>
         {SCALE_PRESETS.map((denominator) => {
           const scale = { denominator };
           const k = mmPerMetre(scale);
+          const representation = asset.representations[`${denominator}`];
+          const pen = representation.status === "authored" ? representation.pens.body : null;
           return (
-            <Row key={denominator} head={<span data-scale={denominator}>1:{denominator}</span>} cells={[`${num(dimensions.heightM * k, language)} mm`, `${num(dimensions.widthM * k, language)} mm`, t("detail.paper.lodLevel", { level: lodFor(scale) }), `${num(lineWeightMm(scale, "body") ?? 0, language)} mm`]} />
+            <Row key={denominator} head={<span data-scale={denominator}>1:{denominator}</span>} cells={[`${num(dimensions.heightM * k, language)} mm`, `${num(dimensions.widthM * k, language)} mm`, t(representation.status === "authored" ? "detail.paper.authored" : "detail.paper.unavailable"), pen === null ? "—" : `${num(pen, language)} mm`]} />
           );
         })}
       </DataTable>

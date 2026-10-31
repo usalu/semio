@@ -12,7 +12,7 @@ export type ClockScheduler = { readonly request: (tick: (nowMs: number) => void)
 /** 🎛️ How a clock is created. */
 export type ClockOptions = { readonly fps?: number; readonly durationS?: number | null; readonly loop?: boolean; readonly rate?: number; readonly playing?: boolean; readonly scheduler?: ClockScheduler; readonly reducedMotion?: boolean };
 
-/** 📸️ An immutable snapshot of a clock; a new object is published on every change. */
+/** 📸️ An immutable snapshot of a clock. Playback publishes a new object when the frame or the playing flag changes; `seek`, `step` and the transport controls publish at once. */
 export type ClockState = { readonly timeS: number; readonly frame: number; readonly playing: boolean; readonly rate: number; readonly loop: boolean; readonly fps: number; readonly durationS: number | null };
 
 const FRAME_EPSILON = 1e-9;
@@ -105,9 +105,15 @@ export class StaffageClock {
   }
 
   #tick = (nowMs: number): void => {
-    if (this.#lastMs !== null) this.advance((nowMs - this.#lastMs) / 1000);
+    const prevFrame = this.#state.frame;
+    const prevPlaying = this.#state.playing;
+    if (this.#lastMs !== null) {
+      const elapsedS = (nowMs - this.#lastMs) / 1000;
+      this.#state = { ...this.#state, ...this.#timeFields(this.#state.timeS + elapsedS * this.#state.rate, this.#state.loop, this.#state.durationS) };
+    }
     this.#lastMs = nowMs;
     this.#handle = this.#state.playing ? this.#scheduler.request(this.#tick) : null;
+    if (this.#state.frame !== prevFrame || this.#state.playing !== prevPlaying) for (const listener of [...this.#listeners]) listener();
   };
 
   #timeFields(timeS: number, loop: boolean, durationS: number | null): Pick<ClockState, "timeS" | "frame"> {

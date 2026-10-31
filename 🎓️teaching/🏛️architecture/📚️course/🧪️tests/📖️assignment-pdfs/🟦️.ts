@@ -1,3 +1,4 @@
+import "../../../📐️parametric/📝️assignment/🧪️quality/🟦️.ts";
 import { verifyParametrizationAssignmentContentV1 } from "../../../📐️parametric/📝️assignment/🧪️tests/🟦️.ts";
 import { courseAssignmentPdfDocumentsV1 } from "../../🏗️builder/🌐️vite/📃️documents/🟦️.ts";
 import Ajv from "ajv";

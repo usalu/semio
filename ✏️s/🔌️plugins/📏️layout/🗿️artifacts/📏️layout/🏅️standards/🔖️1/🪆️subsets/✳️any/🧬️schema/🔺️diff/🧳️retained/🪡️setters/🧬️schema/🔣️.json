@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Typed Sparse Layout Field Exchanges",
   "description": "Each supplied owned setter exchanges one fixed field header with live post under central capability and exact original grant. Unrelated fields are untouched; displaced owner remains in the admitted patch for typed retirement. Presence and nullable clearing remain distinct. Nested lists, derived caches and child text edits have separate retained owners.",
   "type": "object",

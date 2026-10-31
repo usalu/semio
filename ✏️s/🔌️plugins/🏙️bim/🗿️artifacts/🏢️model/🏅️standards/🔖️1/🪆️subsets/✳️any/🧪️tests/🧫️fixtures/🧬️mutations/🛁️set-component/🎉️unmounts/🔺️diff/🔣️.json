@@ -2,8 +2,10 @@
   "components": {
     "cmp-basin": {
       "entry": "Patched",
-      "host": {
-        "value": null
+      "value": {
+        "host": {
+          "value": null
+        }
       }
     }
   }

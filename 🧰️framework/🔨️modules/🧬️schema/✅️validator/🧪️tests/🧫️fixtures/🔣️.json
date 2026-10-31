@@ -1593,6 +1593,607 @@
           "additionalItems": false
         }
       }
+    },
+    {
+      "id": "conditional-then-valid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "number",
+        "value": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "conditional-then-invalid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "number",
+        "value": -1
+      },
+      "valid": false
+    },
+    {
+      "id": "conditional-then-type-invalid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "number",
+        "value": "x"
+      },
+      "valid": false
+    },
+    {
+      "id": "conditional-else-valid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "text",
+        "value": "x"
+      },
+      "valid": true
+    },
+    {
+      "id": "conditional-else-invalid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "text",
+        "value": ""
+      },
+      "valid": false
+    },
+    {
+      "id": "conditional-else-type-invalid",
+      "input": {
+        "schema": {
+          "type": "object",
+          "required": [
+            "mode",
+            "value"
+          ],
+          "properties": {
+            "mode": {
+              "enum": [
+                "number",
+                "text"
+              ]
+            },
+            "value": {}
+          },
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "number"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "value": {
+        "mode": "text",
+        "value": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "conditional-condition-only-6",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "string"
+          }
+        }
+      },
+      "value": null,
+      "valid": true
+    },
+    {
+      "id": "conditional-condition-only-7",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "string"
+          }
+        }
+      },
+      "value": 0,
+      "valid": true
+    },
+    {
+      "id": "conditional-condition-only-8",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "string"
+          }
+        }
+      },
+      "value": "x",
+      "valid": true
+    },
+    {
+      "id": "conditional-condition-only-9",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "string"
+          }
+        }
+      },
+      "value": {},
+      "valid": true
+    },
+    {
+      "id": "conditional-condition-only-10",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "string"
+          }
+        }
+      },
+      "value": [],
+      "valid": true
+    },
+    {
+      "id": "conditional-orphan-branches",
+      "input": {
+        "schema": {
+          "then": false,
+          "else": false
+        }
+      },
+      "value": null,
+      "valid": true
+    },
+    {
+      "id": "conditional-true-selects-then",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": {
+            "const": 1
+          },
+          "else": false
+        }
+      },
+      "value": 1,
+      "valid": true
+    },
+    {
+      "id": "conditional-true-refuses-then",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": false,
+          "else": true
+        }
+      },
+      "value": null,
+      "valid": false
+    },
+    {
+      "id": "conditional-false-selects-else",
+      "input": {
+        "schema": {
+          "if": false,
+          "then": false,
+          "else": {
+            "const": 2
+          }
+        }
+      },
+      "value": 2,
+      "valid": true
+    },
+    {
+      "id": "conditional-false-refuses-else",
+      "input": {
+        "schema": {
+          "if": false,
+          "then": true,
+          "else": false
+        }
+      },
+      "value": null,
+      "valid": false
+    },
+    {
+      "id": "conditional-missing-else",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "number"
+          },
+          "then": false
+        }
+      },
+      "value": "x",
+      "valid": true
+    },
+    {
+      "id": "conditional-missing-then",
+      "input": {
+        "schema": {
+          "if": {
+            "type": "number"
+          },
+          "else": false
+        }
+      },
+      "value": 1,
+      "valid": true
+    },
+    {
+      "id": "conditional-local-condition-ref",
+      "input": {
+        "schema": {
+          "definitions": {
+            "integer": {
+              "type": "integer"
+            }
+          },
+          "if": {
+            "$ref": "#/definitions/integer"
+          },
+          "then": {
+            "minimum": 2
+          },
+          "else": {
+            "type": "string"
+          }
+        }
+      },
+      "value": 1,
+      "valid": false
+    },
+    {
+      "id": "conditional-local-branch-ref",
+      "input": {
+        "schema": {
+          "definitions": {
+            "accepted": {
+              "const": "yes"
+            }
+          },
+          "if": true,
+          "then": {
+            "$ref": "#/definitions/accepted"
+          }
+        }
+      },
+      "value": "no",
+      "valid": false
+    },
+    {
+      "id": "conditional-negated-condition-valid",
+      "input": {
+        "schema": {
+          "if": {
+            "not": {
+              "type": "string"
+            }
+          },
+          "then": {
+            "const": 2
+          },
+          "else": {
+            "const": "yes"
+          }
+        }
+      },
+      "value": 2,
+      "valid": true
+    },
+    {
+      "id": "conditional-negated-condition-invalid",
+      "input": {
+        "schema": {
+          "if": {
+            "not": {
+              "type": "string"
+            }
+          },
+          "then": {
+            "const": 2
+          },
+          "else": {
+            "const": "yes"
+          }
+        }
+      },
+      "value": 3,
+      "valid": false
+    },
+    {
+      "id": "conditional-nested-branch",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": {
+            "if": {
+              "type": "integer"
+            },
+            "then": {
+              "minimum": 5
+            },
+            "else": false
+          }
+        }
+      },
+      "value": 2,
+      "valid": false
+    },
+    {
+      "id": "conditional-unselected-branch-does-not-assert",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": true,
+          "else": {
+            "not": true
+          }
+        }
+      },
+      "value": null,
+      "valid": true
+    },
+    {
+      "id": "conditional-not-valid",
+      "input": {
+        "schema": {
+          "not": {
+            "type": "string"
+          }
+        }
+      },
+      "value": 2,
+      "valid": true
+    },
+    {
+      "id": "conditional-not-invalid",
+      "input": {
+        "schema": {
+          "not": {
+            "type": "string"
+          }
+        }
+      },
+      "value": "x",
+      "valid": false
+    },
+    {
+      "id": "conditional-not-true",
+      "input": {
+        "schema": {
+          "not": true
+        }
+      },
+      "value": null,
+      "valid": false
+    },
+    {
+      "id": "conditional-not-false",
+      "input": {
+        "schema": {
+          "not": false
+        }
+      },
+      "value": null,
+      "valid": true
     }
   ],
   "comparisons": [
@@ -1657,6 +2258,156 @@
         "b": 1
       },
       "equal": false
+    }
+  ],
+  "compilationRefusals": [
+    {
+      "id": "root-reference",
+      "input": {
+        "schema": {
+          "$ref": "#/missing"
+        }
+      }
+    },
+    {
+      "id": "negated-reference",
+      "input": {
+        "schema": {
+          "not": {
+            "$ref": "#/missing"
+          }
+        }
+      }
+    },
+    {
+      "id": "conditional-reference",
+      "input": {
+        "schema": {
+          "if": {
+            "$ref": "#/missing"
+          },
+          "then": {
+            "const": 1
+          },
+          "else": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "then-reference",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": {
+            "$ref": "#/missing"
+          }
+        }
+      }
+    },
+    {
+      "id": "else-reference",
+      "input": {
+        "schema": {
+          "if": false,
+          "else": {
+            "$ref": "#/missing"
+          }
+        }
+      }
+    },
+    {
+      "id": "any-reference",
+      "input": {
+        "schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/missing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "all-reference",
+      "input": {
+        "schema": {
+          "allOf": [
+            {
+              "$ref": "#/missing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "one-reference",
+      "input": {
+        "schema": {
+          "oneOf": [
+            true,
+            {
+              "$ref": "#/missing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "negated-null",
+      "input": {
+        "schema": {
+          "not": null
+        }
+      }
+    },
+    {
+      "id": "conditional-number",
+      "input": {
+        "schema": {
+          "if": 17,
+          "then": true
+        }
+      }
+    },
+    {
+      "id": "then-array",
+      "input": {
+        "schema": {
+          "if": true,
+          "then": []
+        }
+      }
+    },
+    {
+      "id": "property-null",
+      "input": {
+        "schema": {
+          "properties": {
+            "field": null
+          }
+        }
+      }
+    },
+    {
+      "id": "orphan-then-number",
+      "input": {
+        "schema": {
+          "then": 42
+        }
+      }
+    },
+    {
+      "id": "orphan-else-array",
+      "input": {
+        "schema": {
+          "else": []
+        }
+      }
     }
   ]
 }

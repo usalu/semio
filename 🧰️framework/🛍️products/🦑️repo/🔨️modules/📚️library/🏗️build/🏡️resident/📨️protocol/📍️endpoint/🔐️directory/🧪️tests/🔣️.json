@@ -1,0 +1,32 @@
+[
+  {
+    "kind": "missing",
+    "directory": 1,
+    "link": 0,
+    "private": 1
+  },
+  {
+    "kind": "private",
+    "directory": 1,
+    "link": 0,
+    "private": 1
+  },
+  {
+    "kind": "public",
+    "directory": 1,
+    "link": 0,
+    "private": 0
+  },
+  {
+    "kind": "symlink",
+    "directory": 1,
+    "link": 1,
+    "private": 1
+  },
+  {
+    "kind": "file",
+    "directory": 0,
+    "link": 0,
+    "private": 1
+  }
+]

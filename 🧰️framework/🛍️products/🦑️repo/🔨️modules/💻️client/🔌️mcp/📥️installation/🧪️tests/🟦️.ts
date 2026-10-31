@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { posix, win32 } from "node:path";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import ts from "typescript";
 import { transformSync } from "esbuild";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };

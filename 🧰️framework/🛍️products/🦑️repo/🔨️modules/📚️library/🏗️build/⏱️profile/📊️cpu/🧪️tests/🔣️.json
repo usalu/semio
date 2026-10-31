@@ -1,0 +1,157 @@
+{
+  "cases": [
+    {
+      "name": "off",
+      "platform": "linux",
+      "environment": {},
+      "expected": []
+    },
+    {
+      "name": "linux",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/tmp/generated\"}",
+        "SEMIO_TEST_ARTIFACT_DIR": "/unrelated-managed"
+      },
+      "expected": [
+        "--cpu-prof",
+        "--cpu-prof-interval=10000",
+        "--cpu-prof-dir=/tmp/generated",
+        "--cpu-prof-name=repo-123-1.cpuprofile"
+      ]
+    },
+    {
+      "name": "darwin",
+      "platform": "darwin",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/Users/dev/generated\"}"
+      },
+      "expected": [
+        "--cpu-prof",
+        "--cpu-prof-interval=10000",
+        "--cpu-prof-dir=/Users/dev/generated",
+        "--cpu-prof-name=repo-123-1.cpuprofile"
+      ]
+    },
+    {
+      "name": "win32",
+      "platform": "win32",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"C:\\\\repo\\\\generated\"}"
+      },
+      "expected": [
+        "--cpu-prof",
+        "--cpu-prof-interval=10000",
+        "--cpu-prof-dir=C:\\repo\\generated",
+        "--cpu-prof-name=repo-123-1.cpuprofile"
+      ]
+    },
+    {
+      "name": "unc",
+      "platform": "win32",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"\\\\\\\\server\\\\share\\\\generated\"}"
+      },
+      "expected": [
+        "--cpu-prof",
+        "--cpu-prof-interval=10000",
+        "--cpu-prof-dir=\\\\server\\share\\generated",
+        "--cpu-prof-name=repo-123-1.cpuprofile"
+      ]
+    },
+    {
+      "name": "no-directory",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1}",
+        "SEMIO_TEST_ARTIFACT_DIR": "/unrelated-managed"
+      },
+      "expected": null
+    },
+    {
+      "name": "relative-directory",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"generated\"}"
+      },
+      "expected": null
+    },
+    {
+      "name": "noncanonical-directory",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/tmp/../generated\"}"
+      },
+      "expected": null
+    },
+    {
+      "name": "unknown-option",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"preload\":\"hostile\",\"directory\":\"/tmp/generated\"}"
+      },
+      "expected": null
+    },
+    {
+      "name": "bad-version",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":2,\"directory\":\"/tmp/generated\"}"
+      },
+      "expected": null
+    },
+    {
+      "name": "malformed",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{"
+      },
+      "expected": null
+    },
+    {
+      "name": "long-output",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}"
+      },
+      "expected": null
+    },
+    {
+      "name": "ignore-ambient-options",
+      "platform": "linux",
+      "environment": {
+        "SEMIO_REPO_CPU_PROFILE": "{\"version\":1,\"directory\":\"/tmp/generated\"}",
+        "BUN_OPTIONS": "--preload=hostile"
+      },
+      "expected": [
+        "--cpu-prof",
+        "--cpu-prof-interval=10000",
+        "--cpu-prof-dir=/tmp/generated",
+        "--cpu-prof-name=repo-123-1.cpuprofile"
+      ]
+    }
+  ],
+  "bunArtifact": {
+    "version": 1,
+    "runtime": "bun",
+    "pid": 123,
+    "functions": "1 work",
+    "bytecodes": "1 FTL",
+    "stackTraces": {
+      "interval": 0.01,
+      "traces": [
+        {
+          "timestamp": 1,
+          "frames": [
+            {
+              "name": "work",
+              "sourceURL": "/fixture.ts",
+              "line": 1,
+              "column": 1
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

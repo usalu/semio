@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio.framework.text-editor.explicit-draft.v1",
   "title": "Text Editor Explicit Draft Settings",
   "type": "object",

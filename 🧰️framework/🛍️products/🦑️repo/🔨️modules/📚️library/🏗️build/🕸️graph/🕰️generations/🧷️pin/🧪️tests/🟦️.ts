@@ -1,6 +1,6 @@
 /** 🧷️ Contract: the generation pin that an Original run hands to its nested commands is a closed document; encoding, reading, the binding to the invocation chain and the owners a pin leaves open equal the independent Python model on closed vectors, every malformed pin is refused by both, and the constants follow the schema and the lease protocol. */
 import{expect,test}from"bun:test";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{readFileSync}from"node:fs";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";

@@ -1,0 +1,222 @@
+{
+  "cfg": [
+    "unix",
+    "target_os=linux",
+    "target_arch=x86_64",
+    "target_pointer_width=64",
+    "debug_assertions"
+  ],
+  "components": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml"
+  ],
+  "contributors": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧬️mvd/🦀️.rs",
+      "sha256": "602daffd8e1287001c9e582f36bc42466193127ac3ff5b5204526928851f3112"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/📖️reader/🦀️.rs",
+      "sha256": "8c113f209d4c2d22eda99a01b434a578981ad73fe75cc992eef881a86396bf9b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/🦀️.rs",
+      "sha256": "5259ea565591db2ec50c48146682b9a74b970b6dd81a6d0f3027d5e7ae572901"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/🦀️.rs",
+      "sha256": "d1807c774d832d84bf074939655432ef25caf73bb16dc55127de9d8634f09a01"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "b88bf78fec81d623a169d1d9008e3adb954dbb58499995c0578f7722b94e84b5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+      "sha256": "312b9c8b20aeb7983e88accbaee0e72081a8d9bff60d56115e6abb38b58844b6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+      "sha256": "bacf71caf4a7e0bddabcf14efee19087a1ae240889994a8ec8363845fe3133a5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🦀️.rs",
+      "sha256": "24e5f121a3cb392bf7bd0ab69803aeef42a56788eeb5e67905294ff7c03ae9a8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+      "sha256": "1e1005adfdf0a2b0f7afaafd4d472b9fa0a29d4adad486b7a3bc5747849c61d1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "sha256": "ff6c65dac67824e3dc35d728005d5cc04efc3dd801931761f83a34a955b298c3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/📡️.protocol.semio",
+      "sha256": "772b46f979375759738e0a9f25924a05041a135860edddd1e31d996224a53fa4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+      "sha256": "bdc6d45fecebfade0b0782586ee4358a05dce7e0912a21ec997c4a916704375c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🦀️.rs",
+      "sha256": "c150fdec9af25ea8aa893ebfe8e6dcbf9d77961988a33596bb2517f897feb77d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio",
+      "sha256": "73c16f629806dd88445f6fe3cf3bce0c34abe8e699a0493cd2ede6bbac6f4d6f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "sha256": "3e7be970039430d41f7f8acf6f1b52f65ac446bd03a98408c7fae60da63d80f7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/📖️.grammar.semio",
+      "sha256": "abcb4c171f85c5a84c7feb859d58b0ab3c9185333dff090fea2b80c0756fa140"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+      "sha256": "ef6ee5fb587f2dc249aef6675c3f1a4fa45b5d2a1fa60bb30955dc8c38398b3d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🦀️.rs",
+      "sha256": "c150fdec9af25ea8aa893ebfe8e6dcbf9d77961988a33596bb2517f897feb77d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+      "sha256": "2b7b9f421cb3718e4152155b4493d1c1b19f07a0c966e387974030796399c940"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🔎️mvd/💰️diagnostics/🦀️.rs",
+      "sha256": "ceae90110ae572989185bb7edb724d5c49b7663c26b09cabf403b36beaa73ed1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+      "sha256": "6528f3f78db6c4c3e6fd81114e4cd0f67f7eb0b160616e63b230efc9103c9f30"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+      "sha256": "ba9f530310599b43ad4ac7b17e970e13ce2d215ab89b7fb4c8324f3bd91fece1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+      "sha256": "e0032f9bb8483dd522cb81b5f26f8ba7134a22504c004c3852e45718910a9b13"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🔎️census/🦀️.rs",
+      "sha256": "55e56fed6bd1c04dafb9009638d31e6f5e34020f8348db953e9195835b714da1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+      "sha256": "201b5809a480868ad00523f1d68efcdf118e7c3dccaa938eda69f20419e32ec4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🪆️binding/🦀️.rs",
+      "sha256": "f5f5743b576304654138e885c5ce0f7cd5579325428d09a861a5848edcf6be8d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️reconstruction/🦀️.rs",
+      "sha256": "7b8d6dbfa96d548a60d776c01221edbd85e8e96500fee7747ee22e4f75116aea"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/🦀️.rs",
+      "sha256": "3c1e0e7af7034ccd0d28a705d24309d49174c406d9274384e3b02ed37e909c9e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+      "sha256": "127d206b5495e380efad13df9013005cd8760c3f4f3692cf4037a7a00c87be8e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📏️units/🦀️.rs",
+      "sha256": "bf6a4564ec7e5f3ca2b1ad1ecdb8bb5c203eeefb1f7577945f48b779869b1cf9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+      "sha256": "357741b2cc9d09b185a15a580f9d9058c08f83e87345e6532254f6d3548312c7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️product/🦀️.rs",
+      "sha256": "f9a172d9ec5cd61d38f36a2d91dc2541d804eb90ee2b2b7ad62a7db397d130b7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs",
+      "sha256": "771d2898116e70b8c4016e96223325670fa440334d7fe953485e9642b8a7f389"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🦀️.rs",
+      "sha256": "fa3818fb20bb52e592693bf4f85146ea2b337b0a4cbc0867def72e979187ce1f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+      "sha256": "58d3e6a2dd3758ef5a44b2e75ad4632da95c044b4fa8d282dbbe22ab691b4b40"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🦀️.rs",
+      "sha256": "4d28b85f57c780e5ed629fb9a80b6bef7d56104b3288bbabcbf30263ea630487"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧮️matrix/🦀️.rs",
+      "sha256": "80150876f5378daf00148a50763d889d618c2345bf1fa38c903e15bb6adc5347"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧱️primitive/🦀️.rs",
+      "sha256": "212e70cd0803cb68709ef382ee98c004d0b69cc932404f88c5dbea3a57de7f69"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🌐️model/🦀️.rs",
+      "sha256": "cf3341c2198b2f8ecaea5e7ed2eac0eda10724c8dc20a7c5f512f36dfbc71f2a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🦀️.rs",
+      "sha256": "c1b88eb06feb8536012adf2bf2d37203c75c312bbabe630fc83c835e9cc5f102"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+      "sha256": "efc1676fe17958a953496c95dec187b7d1986fb283635653f190bad318e16bcb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+      "sha256": "45da1195d721cd3bd9cadbd77e6a55863a06f364546ebea2155ff5fd1629f24a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🦀️.rs",
+      "sha256": "1b25f03d4f4d5b11f5c1a21677a815ce00ffb65524158ced39c2c3b17e007db2"
+    }
+  ],
+  "mutableContributors": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/📖️reader/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs"
+  ],
+  "addedContributors": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs"
+  ],
+  "relocatedImpl": {
+    "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/📖️reader/🦀️.rs",
+    "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs",
+    "sha256": "11b9f52333791586f9f3d868bbb657e85c1feeae998258dd1f273e5de255f5c4"
+  },
+  "consumers": [
+    {
+      "name": "semio-s-artifact-stdio-ifc-2x3-base-model",
+      "module": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/🦀️.rs",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml"
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-4-model",
+      "module": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml"
+    }
+  ],
+  "unitComponents": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

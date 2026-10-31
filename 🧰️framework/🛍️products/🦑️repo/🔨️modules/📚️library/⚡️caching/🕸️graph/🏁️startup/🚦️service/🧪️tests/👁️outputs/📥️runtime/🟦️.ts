@@ -1,3 +1,5 @@
+import {prepareRepoCpuProfileArgumentsV1} from "./../../../../../../../🏗️build/⏱️profile/📊️cpu/🟨️.mjs";
+import {withRepositoryCompilerRuntimeEntriesV1} from "../../../../../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {withNxToolingUseV1,nxToolingUseStorageV1} from "../../../../../../🚀️bootstrap/🛠️tools/📥️use/🟦️.ts";
 import {withRepositoryToolingStoreV1} from "../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import assert from "node:assert/strict";
@@ -11,7 +13,7 @@ import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "../🔣️.json";
 import {createIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {toolForCommandV1,resolveRegisteredToolV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import {withRepositoryNxStorageV1} from "../../../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 import {withNxDaemonServiceBirthV1} from "../../../🟦️.ts";
@@ -25,15 +27,27 @@ async function watchCount(pid:number):Promise<number|null>{
  return count;
 }
 
+/** 📊️ Starts the qualified daemon with only the caller’s closed profiler request. */
+function startNxDaemonObservationServiceV1(driver:Readonly<{command:string;prefix:readonly string[];suffix?:readonly string[]}>,entry:string,workspace:string,environment:Readonly<Record<string,string|undefined>>,original:ScriptInvocation):ChildProcess{return spawn(driver.command,[...driver.prefix,...prepareRepoCpuProfileArgumentsV1(environment),entry,...driver.suffix??[]],{cwd:workspace,env:scriptInvocationEnvironment(original,{...environment}),stdio:["ignore","pipe","pipe","ipc"]});}
+
+/** 📨️ Reflects the same issued parent for the actual SDK client and its asynchronous request queue. */
+function reflectNxDaemonClientEnvironmentV1(original:ScriptInvocation,environment:Readonly<Record<string,string|undefined>>):void{const forwarded=scriptInvocationEnvironment(original,environment);Object.assign(process.env,forwarded);for(const[key,value]of Object.entries(forwarded))if(value===undefined)delete process.env[key];}
+
 /** 👁️ Proves actual immutable daemon subscriptions and immediate invalidation under the received infrastructure Original. */
 export async function proveNxDaemonOutputObservationV1(root:string,artifacts:string,original:ScriptInvocation):Promise<void>{
+ const phase=createIssuedResourceControlV1(original,"nx:output-acceptance",110000);
+ return withRepositoryCompilerRuntimeEntriesV1(root,original,phase,()=>proveNxDaemonOutputObservationInScopeV1(root,artifacts,original,phase));
+}
+
+/** 🛟️ Settles the complete infrastructure operation before its admitted runtime provider retires. */
+async function proveNxDaemonOutputObservationInScopeV1(root:string,artifacts:string,original:ScriptInvocation,phase:ResourceLeaseControl):Promise<void>{
  assert.equal(validate(fixture),true,JSON.stringify(validate.errors));const db=new Database(":memory:");
  try{const row=db.query("SELECT ?1 > ?2 AND ?1 > ?3 bounded").get(fixture.unrelatedDirectories,fixture.maximumInitialWatches,fixture.maximumRegisteredWatches) as {bounded:number};assert.equal(row.bounded,1);}finally{db.close();}
  const toolkitRoot=await realpath(join(root,".nx/installation"));if(!artifacts)throw Error("Caller artifacts required");
  const identity=JSON.parse(await readFile(join(toolkitRoot,".semio-nx-tooling.json"),"utf8")).digest;
  const require=createRequire(join(toolkitRoot,"package.json")),sdkWatcher=await readFile(require.resolve("nx/src/daemon/server/watcher"),"utf8");
  assert.ok(sdkWatcher.includes("semioOutputObservationV1"));assert.ok(sdkWatcher.includes("Relative Native output event required"));
- const implementation=nxBuildDependencyImplementationV1(),phase=createIssuedResourceControlV1(original,"nx:output-acceptance",110000);
+ const implementation=nxBuildDependencyImplementationV1();
  await mkdir(artifacts,{recursive:true});const workspace=await realpath(await mkdtemp(join(artifacts,"d"))),resultPath=join(artifacts,"daemon-output-acceptance.json"),logPath=join(artifacts,"daemon-output-service.log");
  const plugin="const fs=require('node:fs'),path=require('node:path');exports.createNodesV2=['project.json',async files=>files.map(file=>[file,{projects:{app:{name:'app',root:'.',metadata:{environment:fs.readFileSync(path.join(__dirname,'.env'),'utf8').trim()},targets:{proof:{executor:'nx:noop'}}}}}])];\n";
  await writeFile(join(workspace,"package.json"),JSON.stringify({name:"output-observation-fixture",version:"1.0.0",private:true}));
@@ -45,10 +59,10 @@ export async function proveNxDaemonOutputObservationV1(root:string,artifacts:str
  try{await withRepositoryToolingStoreV1(root,original,phase,(_store,storePhase)=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,invocation:original},storePhase,(_witness,actualPhase)=>withRepositoryNxStorageV1(root,original,actualPhase,async(bind,nxPhase)=>{
   const namespace=await bind(identity,null,implementation,workspace);
   await withNxDaemonServiceBirthV1(original,nxPhase,namespace.environment.NX_WORKSPACE_DATA_DIRECTORY!,identity,{...process.env,...namespace.environment,NX_WORKSPACE_ROOT_PATH:workspace,SEMIO_WORKSPACE_ROOT_PATH:workspace,SEMIO_NX_TOOLING_ROOT:toolkitRoot,SEMIO_NX_TOOLING_IDENTITY:identity,SEMIO_NX_IMPLEMENTATION_IDENTITY:implementation,NX_ISOLATE_PLUGINS:"false",NX_DAEMON:"true",NX_VERBOSE_LOGGING:"true",NODE_PATH:join(toolkitRoot,"node_modules")},async environment=>{
-   Object.assign(process.env,environment);for(const[key,value]of Object.entries(environment))if(value===undefined)delete process.env[key];
+   reflectNxDaemonClientEnvironmentV1(original,environment);
    let failure:unknown;const receive=(bytes:Buffer)=>{log.write(bytes);trace+=bytes.toString();if(trace.length>262144)trace=trace.slice(-262144);};
    const entry=toolForCommandV1("node");if(!entry)throw Error("Registered Node service driver required");const driver=resolveRegisteredToolV1(entry,root,{env:environment});if(!driver.command)throw Error("Provisioned Node service driver required");
-   child=spawn(driver.command,[...driver.prefix,require.resolve("nx/src/daemon/server/start"),...driver.suffix??[]],{cwd:workspace,env:scriptInvocationEnvironment(original,{...environment}),stdio:["ignore","pipe","pipe","ipc"]});
+   child=startNxDaemonObservationServiceV1({command:driver.command,prefix:driver.prefix,suffix:driver.suffix},require.resolve("nx/src/daemon/server/start"),workspace,environment,original);
    child.stdout!.on("data",receive);child.stderr!.on("data",receive);terminal=new Promise((accept,reject)=>{child!.once("error",reject);child!.once("close",accept);});void terminal.then(status=>{if(!stopped&&status!==null)failure=Error("Actual daemon exited: "+status+"\n"+trace);},error=>{failure=error;});
    const cancel=()=>{child?.kill("SIGTERM");hard??=setTimeout(()=>child?.kill("SIGKILL"),2000);};phase.signal.addEventListener("abort",cancel,{once:true});const timer=setTimeout(cancel,105000);
    try{

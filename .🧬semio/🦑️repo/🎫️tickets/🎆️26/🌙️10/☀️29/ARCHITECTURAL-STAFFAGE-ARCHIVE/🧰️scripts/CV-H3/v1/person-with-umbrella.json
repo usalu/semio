@@ -1,0 +1,3050 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "person-with-umbrella",
+    "category": "humans",
+    "title": {
+      "en": "Person with Umbrella",
+      "de": "Person mit Regenschirm"
+    },
+    "summary": {
+      "en": "A person in a knee-length raincoat holds an open umbrella: shaft and ribs are bones, and the wind on the canopy is a wind load whose track rises in a gust while the body leans into it and the umbrella tilts.",
+      "de": "Eine Person im knielangen Regenmantel hält einen aufgespannten Schirm: Stock und Streben sind Knochen, und der Wind auf dem Schirm ist eine Windlast, deren Spur in einer Böe ansteigt, während sich der Körper in den Wind lehnt und der Schirm neigt."
+    },
+    "tags": [
+      "human",
+      "rain",
+      "umbrella",
+      "wind",
+      "raincoat",
+      "gust",
+      "lean"
+    ],
+    "provenance": {
+      "author": "Semio staffage humans-b content worker",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (male segment mass fractions and centre-of-mass positions)."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-8996-2021",
+          "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate (activity classes and met values)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiration, skin wettedness)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, wind actions: F = q_p c_f A_ref with q_p = 0.5 rho v^2 (rho = 1.25 kg/m3)."
+        },
+        {
+          "id": "hoerner-1965",
+          "citation": "Hoerner, S. F. (1965). Fluid-Dynamic Drag. Hoerner Fluid Dynamics (drag coefficients: open hollow hemisphere facing the flow cd about 1.4)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, actions on structures, general actions (densities, self-weight, imposed loads)."
+        }
+      ],
+      "notes": {
+        "en": "The lean angle for each wind speed is solved so that the moment of weight and wind about the middle of the feet vanishes; arms by inverse kinematics; the umbrella bone counter-rotates the hand so the shaft keeps the authored tilt.",
+        "de": "Der Vorlagewinkel jeder Windgeschwindigkeit wird so gelöst, dass das Moment aus Gewicht und Wind um die Fußmitte verschwindet; Arme per Inverskinematik; der Schirmknochen gleicht die Handdrehung aus, sodass der Stock die geplante Neigung behält."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.1,
+      "widthM": 1.05,
+      "depthM": 1,
+      "massKg": 70.46
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "cotton-clothing",
+        "title": {
+          "en": "Cotton clothing",
+          "de": "Baumwollkleidung"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.5,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leather-shoe",
+        "title": {
+          "en": "Shoe",
+          "de": "Schuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Hair",
+          "de": "Haar"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "rain-shell",
+        "title": {
+          "en": "Coated polyester raincoat",
+          "de": "Beschichteter Polyester-Regenmantel"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "umbrella-fabric",
+        "title": {
+          "en": "Nylon pongee canopy",
+          "de": "Nylon-Pongee-Bespannung"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 1140,
+        "conductivityWmK": 0.25,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "umbrella-metal",
+        "title": {
+          "en": "Steel and aluminium frame",
+          "de": "Stahl- und Aluminiumgestänge"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "source": "literature",
+        "reference": "en-1991-1-1"
+      },
+      {
+        "id": "umbrella-handle",
+        "title": {
+          "en": "Wooden handle",
+          "de": "Holzgriff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 700,
+        "conductivityWmK": 0.15,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.0977,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 7.819,
+            "comX": 0.0489,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.0977,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4495,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 22.603,
+            "comX": 0.2052,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4495,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2639,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 4.858,
+            "comX": 0.1319,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4202,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.303,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.897,
+            "comX": 0.1749,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.303,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2639,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.134,
+            "comX": 0.1207,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.2639,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1759,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.427,
+            "comX": 0.088,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4202,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.912,
+            "comX": 0.1721,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4202,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4105,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.031,
+            "comX": 0.183,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.4105,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.215,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 0.959,
+            "comX": 0.1075,
+            "comY": -0.0391,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.127,
+          "y": -0.0782,
+          "angleDeg": 0,
+          "lengthM": 0.0958,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4202,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.303,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.897,
+            "comX": 0.1749,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.303,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2639,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.134,
+            "comX": 0.1207,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.2639,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1759,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.427,
+            "comX": 0.088,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4202,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.912,
+            "comX": 0.1721,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4202,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4105,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.031,
+            "comX": 0.183,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.4105,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.215,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 38
+          },
+          "mass": {
+            "kg": 0.959,
+            "comX": 0.1075,
+            "comY": -0.0391,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.127,
+          "y": -0.0782,
+          "angleDeg": 0,
+          "lengthM": 0.0958,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "umbrella",
+          "parent": "hand-r",
+          "title": {
+            "en": "Umbrella shaft with handle",
+            "de": "Schirmstock mit Griff"
+          },
+          "x": 0.0733,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.78,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -170,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 0.22,
+            "comX": 0.3,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-front",
+          "parent": "umbrella",
+          "title": {
+            "en": "Front ribs and canopy half",
+            "de": "Vordere Streben und Schirmhälfte"
+          },
+          "x": 0.78,
+          "y": 0,
+          "angleDeg": -114,
+          "lengthM": 0.56,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -70,
+            "maxDeg": 20
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0.3,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "rib-back",
+          "parent": "umbrella",
+          "title": {
+            "en": "Rear ribs and canopy half",
+            "de": "Hintere Streben und Schirmhälfte"
+          },
+          "x": 0.78,
+          "y": 0,
+          "angleDeg": 114,
+          "lengthM": 0.56,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 0.12,
+            "comX": 0.3,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.127,
+        "y": -0.0782,
+        "kind": "contact",
+        "title": {
+          "en": "Left sole",
+          "de": "Linke Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1955,
+        "footprintWidthM": 0.0977,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.127,
+        "y": -0.0782,
+        "kind": "contact",
+        "title": {
+          "en": "Right sole",
+          "de": "Rechte Sohle"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1955,
+        "footprintWidthM": 0.0977,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0293,
+        "y": -0.0782,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0782,
+        "footprintWidthM": 0.0782,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0293,
+        "y": -0.0782,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0782,
+        "footprintWidthM": 0.0782,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1114,
+        "y": -0.0928,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth and nose",
+          "de": "Mund und Nase"
+        }
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.0733,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.0733,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "canopy-centre",
+        "bone": "umbrella",
+        "x": 0.78,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Canopy centre of pressure",
+          "de": "Druckmittelpunkt des Schirms"
+        }
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M 0.0 0.044 L 0.0733 0.0391 C 0.0977 0.0645 0.127 0.0977 0.1857 0.0958 C 0.2394 0.0928 0.2697 0.0391 0.2658 -0.0147 C 0.2619 -0.0635 0.2326 -0.086 0.2003 -0.087 L 0.1837 -0.0899 C 0.174 -0.0938 0.1583 -0.1055 0.1456 -0.1153 C 0.1378 -0.1095 0.1349 -0.0977 0.131 -0.0919 C 0.1212 -0.0958 0.1134 -0.0919 0.1075 -0.086 C 0.0997 -0.0899 0.0899 -0.086 0.086 -0.0782 C 0.0782 -0.0606 0.0743 -0.044 0.0704 -0.0332 C 0.0489 -0.041 0.0215 -0.0489 0.0 -0.0508 Z",
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "hair",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5.4,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.2033 -0.088 C 0.2424 -0.0919 0.2766 -0.0508 0.2746 -0.0049 C 0.2727 0.0606 0.2365 0.1055 0.1818 0.1026 C 0.1466 0.1007 0.1192 0.086 0.1055 0.0586 L 0.1466 0.0508 C 0.1915 0.045 0.2209 0.0078 0.2248 -0.0391 C 0.2258 -0.0645 0.2209 -0.0821 0.2033 -0.088 Z",
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "hair-strands",
+          "bone": "head",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2297,
+              0.0733
+            ],
+            [
+              0.256,
+              0.0293
+            ],
+            [
+              0.2619,
+              -0.0195
+            ]
+          ],
+          "closed": false,
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.174,
+          "cy": -0.0586,
+          "rx": 0.0054,
+          "ry": 0.0073,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "brow",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1896,
+              -0.045
+            ],
+            [
+              0.1925,
+              -0.0782
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "ear",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.7,
+          "kind": "ellipse",
+          "cx": 0.1544,
+          "cy": 0.0195,
+          "rx": 0.0235,
+          "ry": 0.0117,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "mouth-line",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1095,
+              -0.0733
+            ],
+            [
+              0.1075,
+              -0.088
+            ]
+          ],
+          "closed": false,
+          "region": "head-skin",
+          "material": "skin"
+        },
+        {
+          "id": "pelvis",
+          "bone": "pelvis",
+          "role": "body",
+          "lod": 0,
+          "z": 3.05,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "path",
+          "d": "M -0.0928 -0.0899 C -0.0839 -0.0941 -0.0595 -0.1104 -0.0391 -0.1153 C -0.0187 -0.1202 0.0065 -0.1196 0.0293 -0.1192 C 0.0521 -0.1189 0.0863 -0.1143 0.0977 -0.1134 L 0.0977 0.1075 C 0.0863 0.1104 0.0521 0.121 0.0293 0.1251 C 0.0065 0.1292 -0.0187 0.1349 -0.0391 0.1319 C -0.0595 0.129 -0.0839 0.1116 -0.0928 0.1075 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "upper-arm-l",
+          "bone": "upper-arm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.4,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.044 0.0207 C -0.0383 0.0249 -0.0171 0.0417 -0.0098 0.0459 C -0.0024 0.0501 -0.0147 0.0456 0.0 0.0459 C 0.0147 0.0463 0.0456 0.0489 0.0782 0.0479 C 0.1108 0.0469 0.158 0.042 0.1955 0.0401 C 0.2329 0.0381 0.285 0.0368 0.303 0.0362 L 0.303 -0.0332 C 0.285 -0.0339 0.2329 -0.0353 0.1955 -0.0371 C 0.158 -0.0389 0.1108 -0.0427 0.0782 -0.044 C 0.0456 -0.0453 0.0147 -0.0448 0.0 -0.045 C -0.0147 -0.0451 -0.0024 -0.0491 -0.0098 -0.045 C -0.0171 -0.0408 -0.0383 -0.0244 -0.044 -0.0202 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "forearm-l",
+          "bone": "forearm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.42000000000000004,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.0049 0.0391 C -0.0041 0.0391 -0.0138 0.0386 0.0 0.0391 C 0.0138 0.0396 0.0489 0.0432 0.0782 0.042 C 0.1075 0.0409 0.145 0.0349 0.1759 0.0323 C 0.2069 0.0296 0.2476 0.0291 0.2639 0.0264 C 0.2802 0.0237 0.272 0.0176 0.2736 0.0158 L 0.2736 -0.0147 C 0.272 -0.0163 0.2802 -0.0222 0.2639 -0.0244 C 0.2476 -0.0267 0.2069 -0.0264 0.1759 -0.0283 C 0.145 -0.0303 0.1075 -0.0347 0.0782 -0.0362 C 0.0489 -0.0376 0.0138 -0.037 0.0 -0.0371 C -0.0138 -0.0373 -0.0041 -0.0371 -0.0049 -0.0371 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "cuff-l",
+          "bone": "forearm-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.43000000000000005,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2394,
+              0.0274
+            ],
+            [
+              0.2394,
+              -0.0254
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.45,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M -0.0139 -0.0278 C 0.0278 -0.0324 0.0694 -0.0315 0.0972 -0.0287 L 0.1491 -0.0278 C 0.1611 -0.0278 0.1611 -0.0139 0.1491 -0.0139 L 0.1268 -0.0135 L 0.162 -0.0146 C 0.174 -0.0146 0.174 0.0007 0.162 0.0007 L 0.1268 0.0011 L 0.1694 0 C 0.1815 0 0.1815 0.0157 0.1694 0.0157 L 0.1268 0.0161 L 0.1629 0.0153 C 0.175 0.0153 0.175 0.0301 0.1629 0.0301 C 0.1204 0.0315 0.0555 0.0352 0 0.038 L -0.0139 0.0343 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 2,
+          "z": 0.47,
+          "filled": true,
+          "tone": 0.8148,
+          "kind": "path",
+          "d": "M -0.0037 0.0222 C 0.0241 0.0463 0.0611 0.0667 0.0907 0.0759 C 0.1009 0.0787 0.1083 0.0694 0.1009 0.0602 C 0.0852 0.0463 0.0648 0.037 0.0426 0.0204 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-0",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              -0.0142
+            ],
+            [
+              0.1268,
+              -0.0142
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-1",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              0.0003
+            ],
+            [
+              0.1268,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-2",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.48,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              0.0156
+            ],
+            [
+              0.1268,
+              0.0156
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "path",
+          "d": "M 0.0 0.0958 C 0.0114 0.0958 0.0407 0.0971 0.0684 0.0958 C 0.0961 0.0945 0.1303 0.0919 0.1661 0.088 C 0.202 0.084 0.2492 0.0769 0.2834 0.0723 C 0.3176 0.0678 0.3486 0.0632 0.3714 0.0606 C 0.3942 0.058 0.4101 0.0611 0.4202 0.0567 C 0.4303 0.0523 0.43 0.0378 0.432 0.034 L 0.432 -0.034 C 0.43 -0.0378 0.4303 -0.0523 0.4202 -0.0567 C 0.4101 -0.0611 0.3942 -0.0577 0.3714 -0.0606 C 0.3486 -0.0635 0.3176 -0.0686 0.2834 -0.0743 C 0.2492 -0.08 0.202 -0.0896 0.1661 -0.0948 C 0.1303 -0.1 0.0961 -0.1038 0.0684 -0.1055 C 0.0407 -0.1073 0.0114 -0.1055 0.0 -0.1055 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-l",
+          "bone": "shank-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.02,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "path",
+          "d": "M -0.0098 0.0586 C -0.0081 0.0586 -0.0163 0.0596 0.0 0.0586 C 0.0163 0.0577 0.0554 0.0547 0.088 0.0528 C 0.1205 0.0508 0.158 0.049 0.1955 0.0469 C 0.2329 0.0448 0.2802 0.0417 0.3127 0.0401 C 0.3453 0.0384 0.3763 0.0399 0.3909 0.0369 C 0.4056 0.034 0.3991 0.0246 0.4007 0.0222 L 0.4007 -0.024 C 0.3991 -0.0267 0.4056 -0.0361 0.3909 -0.0401 C 0.3763 -0.044 0.3453 -0.0432 0.3127 -0.0479 C 0.2802 -0.0526 0.2329 -0.064 0.1955 -0.0684 C 0.158 -0.0728 0.1205 -0.0759 0.088 -0.0743 C 0.0554 -0.0726 0.0163 -0.0612 0.0 -0.0586 C -0.0163 -0.056 -0.0081 -0.0586 -0.0098 -0.0586 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-l",
+          "bone": "shank-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3763,
+              0.0391
+            ],
+            [
+              0.3763,
+              -0.043
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-l",
+          "bone": "foot-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "path",
+          "d": "M 0.127 -0.0782 L -0.0606 -0.0782 L -0.0645 0 C -0.0645 0.0489 -0.0586 0.0977 -0.0508 0.1222 L 0.0508 0.1222 L 0.0528 0.044 C 0.0701 0.0273 0.0984 0.0074 0.127 -0.0103 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-l",
+          "bone": "toe-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "path",
+          "d": "M -0 0.0679 C 0.0133 0.0596 0.0267 0.0518 0.0391 0.045 C 0.0733 0.0313 0.0958 0.0235 0.0958 0.0098 C 0.0958 0.002 0.09 0 0.0802 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-l",
+          "bone": "foot-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0625,
+              -0.0508
+            ],
+            [
+              0.127,
+              -0.0508
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-l",
+          "bone": "toe-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0274
+            ],
+            [
+              0.0939,
+              0.0274
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "upper-arm-r",
+          "bone": "upper-arm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.044 0.0207 C -0.0383 0.0249 -0.0171 0.0417 -0.0098 0.0459 C -0.0024 0.0501 -0.0147 0.0456 0.0 0.0459 C 0.0147 0.0463 0.0456 0.0489 0.0782 0.0479 C 0.1108 0.0469 0.158 0.042 0.1955 0.0401 C 0.2329 0.0381 0.285 0.0368 0.303 0.0362 L 0.303 -0.0332 C 0.285 -0.0339 0.2329 -0.0353 0.1955 -0.0371 C 0.158 -0.0389 0.1108 -0.0427 0.0782 -0.044 C 0.0456 -0.0453 0.0147 -0.0448 0.0 -0.045 C -0.0147 -0.0451 -0.0024 -0.0491 -0.0098 -0.045 C -0.0171 -0.0408 -0.0383 -0.0244 -0.044 -0.0202 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "forearm-r",
+          "bone": "forearm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.02,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.0049 0.0391 C -0.0041 0.0391 -0.0138 0.0386 0.0 0.0391 C 0.0138 0.0396 0.0489 0.0432 0.0782 0.042 C 0.1075 0.0409 0.145 0.0349 0.1759 0.0323 C 0.2069 0.0296 0.2476 0.0291 0.2639 0.0264 C 0.2802 0.0237 0.272 0.0176 0.2736 0.0158 L 0.2736 -0.0147 C 0.272 -0.0163 0.2802 -0.0222 0.2639 -0.0244 C 0.2476 -0.0267 0.2069 -0.0264 0.1759 -0.0283 C 0.145 -0.0303 0.1075 -0.0347 0.0782 -0.0362 C 0.0489 -0.0376 0.0138 -0.037 0.0 -0.0371 C -0.0138 -0.0373 -0.0041 -0.0371 -0.0049 -0.0371 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "cuff-r",
+          "bone": "forearm-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.03,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2394,
+              0.0274
+            ],
+            [
+              0.2394,
+              -0.0254
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "hand-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M -0.0139 -0.0278 C 0.0278 -0.0324 0.0694 -0.0315 0.0972 -0.0287 L 0.1491 -0.0278 C 0.1611 -0.0278 0.1611 -0.0139 0.1491 -0.0139 L 0.1268 -0.0135 L 0.162 -0.0146 C 0.174 -0.0146 0.174 0.0007 0.162 0.0007 L 0.1268 0.0011 L 0.1694 0 C 0.1815 0 0.1815 0.0157 0.1694 0.0157 L 0.1268 0.0161 L 0.1629 0.0153 C 0.175 0.0153 0.175 0.0301 0.1629 0.0301 C 0.1204 0.0315 0.0555 0.0352 0 0.038 L -0.0139 0.0343 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 2,
+          "z": 6.22,
+          "filled": true,
+          "tone": 0.8148,
+          "kind": "path",
+          "d": "M -0.0037 0.0222 C 0.0241 0.0463 0.0611 0.0667 0.0907 0.0759 C 0.1009 0.0787 0.1083 0.0694 0.1009 0.0602 C 0.0852 0.0463 0.0648 0.037 0.0426 0.0204 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-0",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              -0.0142
+            ],
+            [
+              0.1268,
+              -0.0142
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-1",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              0.0003
+            ],
+            [
+              0.1268,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-2",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.462,
+          "kind": "poly",
+          "points": [
+            [
+              0.0694,
+              0.0156
+            ],
+            [
+              0.1268,
+              0.0156
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "path",
+          "d": "M 0.0 0.0958 C 0.0114 0.0958 0.0407 0.0971 0.0684 0.0958 C 0.0961 0.0945 0.1303 0.0919 0.1661 0.088 C 0.202 0.084 0.2492 0.0769 0.2834 0.0723 C 0.3176 0.0678 0.3486 0.0632 0.3714 0.0606 C 0.3942 0.058 0.4101 0.0611 0.4202 0.0567 C 0.4303 0.0523 0.43 0.0378 0.432 0.034 L 0.432 -0.034 C 0.43 -0.0378 0.4303 -0.0523 0.4202 -0.0567 C 0.4101 -0.0611 0.3942 -0.0577 0.3714 -0.0606 C 0.3486 -0.0635 0.3176 -0.0686 0.2834 -0.0743 C 0.2492 -0.08 0.202 -0.0896 0.1661 -0.0948 C 0.1303 -0.1 0.0961 -0.1038 0.0684 -0.1055 C 0.0407 -0.1073 0.0114 -0.1055 0.0 -0.1055 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shank-r",
+          "bone": "shank-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.02,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "path",
+          "d": "M -0.0098 0.0586 C -0.0081 0.0586 -0.0163 0.0596 0.0 0.0586 C 0.0163 0.0577 0.0554 0.0547 0.088 0.0528 C 0.1205 0.0508 0.158 0.049 0.1955 0.0469 C 0.2329 0.0448 0.2802 0.0417 0.3127 0.0401 C 0.3453 0.0384 0.3763 0.0399 0.3909 0.0369 C 0.4056 0.034 0.3991 0.0246 0.4007 0.0222 L 0.4007 -0.024 C 0.3991 -0.0267 0.4056 -0.0361 0.3909 -0.0401 C 0.3763 -0.044 0.3453 -0.0432 0.3127 -0.0479 C 0.2802 -0.0526 0.2329 -0.064 0.1955 -0.0684 C 0.158 -0.0728 0.1205 -0.0759 0.088 -0.0743 C 0.0554 -0.0726 0.0163 -0.0612 0.0 -0.0586 C -0.0163 -0.056 -0.0081 -0.0586 -0.0098 -0.0586 Z",
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "trouser-hem-r",
+          "bone": "shank-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.03,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.3763,
+              0.0391
+            ],
+            [
+              0.3763,
+              -0.043
+            ]
+          ],
+          "closed": false,
+          "region": "leg-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "shoe-r",
+          "bone": "foot-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "path",
+          "d": "M 0.127 -0.0782 L -0.0606 -0.0782 L -0.0645 0 C -0.0645 0.0489 -0.0586 0.0977 -0.0508 0.1222 L 0.0508 0.1222 L 0.0528 0.044 C 0.0701 0.0273 0.0984 0.0074 0.127 -0.0103 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-r",
+          "bone": "toe-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "path",
+          "d": "M -0 0.0679 C 0.0133 0.0596 0.0267 0.0518 0.0391 0.045 C 0.0733 0.0313 0.0958 0.0235 0.0958 0.0098 C 0.0958 0.002 0.09 0 0.0802 0 L 0 0 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-r",
+          "bone": "foot-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0625,
+              -0.0508
+            ],
+            [
+              0.127,
+              -0.0508
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sole-toe-r",
+          "bone": "toe-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.21,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0.0274
+            ],
+            [
+              0.0939,
+              0.0274
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "torso",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.1564 -0.1173 C -0.1401 -0.1173 -0.0912 -0.1155 -0.0586 -0.1173 C -0.0261 -0.1191 0.0065 -0.1253 0.0391 -0.128 C 0.0717 -0.1308 0.1042 -0.1319 0.1368 -0.1339 C 0.1694 -0.1358 0.2052 -0.1378 0.2345 -0.1398 C 0.2639 -0.1417 0.2867 -0.1477 0.3127 -0.1456 C 0.3388 -0.1435 0.3714 -0.1357 0.3909 -0.127 C 0.4105 -0.1184 0.4202 -0.1036 0.43 -0.0938 C 0.4398 -0.084 0.4463 -0.0726 0.4495 -0.0684 L 0.4495 0.0762 C 0.4463 0.0818 0.4398 0.0994 0.43 0.1095 C 0.4202 0.1196 0.4105 0.1319 0.3909 0.1368 C 0.3714 0.1417 0.3388 0.1398 0.3127 0.1388 C 0.2867 0.1378 0.2639 0.1336 0.2345 0.131 C 0.2052 0.1283 0.1694 0.1254 0.1368 0.1231 C 0.1042 0.1209 0.0717 0.1186 0.0391 0.1173 C 0.0065 0.116 -0.0261 0.1156 -0.0586 0.1153 C -0.0912 0.115 -0.1401 0.1153 -0.1564 0.1153 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-skirt-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 2.4,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.1368 0.1231 C -0.114 0.1231 -0.0342 0.1231 0.0 0.1231 C 0.0342 0.1231 0.0407 0.1244 0.0684 0.1231 C 0.0961 0.1218 0.1303 0.1192 0.1661 0.1153 C 0.202 0.1114 0.259 0.1029 0.2834 0.0997 C 0.3078 0.0964 0.3078 0.0964 0.3127 0.0958 L 0.3127 -0.0971 C 0.3078 -0.0978 0.3078 -0.0975 0.2834 -0.1016 C 0.259 -0.1058 0.202 -0.1169 0.1661 -0.1222 C 0.1303 -0.1274 0.0961 -0.1311 0.0684 -0.1329 C 0.0407 -0.1347 0.0342 -0.1329 0.0 -0.1329 C -0.0342 -0.1329 -0.114 -0.1329 -0.1368 -0.1329 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-skirt-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "path",
+          "d": "M -0.1368 0.1231 C -0.114 0.1231 -0.0342 0.1231 0.0 0.1231 C 0.0342 0.1231 0.0407 0.1244 0.0684 0.1231 C 0.0961 0.1218 0.1303 0.1192 0.1661 0.1153 C 0.202 0.1114 0.259 0.1029 0.2834 0.0997 C 0.3078 0.0964 0.3078 0.0964 0.3127 0.0958 L 0.3127 -0.0971 C 0.3078 -0.0978 0.3078 -0.0975 0.2834 -0.1016 C 0.259 -0.1058 0.202 -0.1169 0.1661 -0.1222 C 0.1303 -0.1274 0.0961 -0.1311 0.0684 -0.1329 C 0.0407 -0.1347 0.0342 -0.1329 0.0 -0.1329 C -0.0342 -0.1329 -0.114 -0.1329 -0.1368 -0.1329 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-hem-r",
+          "bone": "thigh-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.45,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.3127,
+              0.1222
+            ],
+            [
+              0.3127,
+              -0.1319
+            ]
+          ],
+          "closed": false,
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-hem-l",
+          "bone": "thigh-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.45,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.3127,
+              0.1222
+            ],
+            [
+              0.3127,
+              -0.1319
+            ]
+          ],
+          "closed": false,
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-belt",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1173,
+              -0.127
+            ],
+            [
+              0.1173,
+              0.1222
+            ]
+          ],
+          "closed": false,
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-front-seam",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.1564,
+              -0.1231
+            ],
+            [
+              0.2932,
+              -0.1251
+            ],
+            [
+              0.4495,
+              -0.0733
+            ]
+          ],
+          "closed": false,
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-hood",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "path",
+          "d": "M 0.0586 0.0195 C 0.0391 0.0684 0.0684 0.1173 0.127 0.127 C 0.1759 0.1173 0.1857 0.088 0.1466 0.0586 C 0.127 0.0293 0.0977 -0.0195 0.0586 -0.0391 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "coat-collar",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 4.6,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "path",
+          "d": "M -0.0098 -0.0586 C 0.0489 -0.0684 0.0733 -0.0489 0.0762 -0.0195 L 0.0684 0.0586 C 0.0489 0.0831 0.0 0.0782 -0.0098 0.0733 Z",
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "rain-spots-coat",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 3.3,
+          "filled": false,
+          "tone": 0.9,
+          "kind": "poly",
+          "points": [
+            [
+              0.342,
+              -0.0391
+            ],
+            [
+              0.3323,
+              -0.0391
+            ],
+            [
+              0.2736,
+              0.0489
+            ],
+            [
+              0.2639,
+              0.0489
+            ],
+            [
+              0.1955,
+              -0.0684
+            ],
+            [
+              0.1857,
+              -0.0684
+            ],
+            [
+              0.1173,
+              0.0684
+            ]
+          ],
+          "closed": false,
+          "region": "coat",
+          "material": "rain-shell"
+        },
+        {
+          "id": "shaft",
+          "bone": "umbrella",
+          "role": "body",
+          "lod": 0,
+          "z": 6.1,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "capsule",
+          "x0": -0.12,
+          "y0": 0,
+          "x1": 0.86,
+          "y1": 0,
+          "r0": 0.0075,
+          "r1": 0.0075,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "handle",
+          "bone": "umbrella",
+          "role": "body",
+          "lod": 0,
+          "z": 6.15,
+          "filled": true,
+          "tone": 0.18,
+          "kind": "path",
+          "d": "M 0.03 0.017 L -0.09 0.017 C -0.16 0.017 -0.18 -0.06 -0.12 -0.07 C -0.08 -0.075 -0.08 -0.04 -0.1 -0.03 L -0.1 -0.017 L 0.03 -0.017 Z",
+          "region": "umbrella-frame",
+          "material": "umbrella-handle"
+        },
+        {
+          "id": "ferrule",
+          "bone": "umbrella",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "capsule",
+          "x0": 0.82,
+          "y0": 0,
+          "x1": 0.88,
+          "y1": 0,
+          "r0": 0.012,
+          "r1": 0.004,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "hub",
+          "bone": "umbrella",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.16,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0.78,
+          "cy": 0,
+          "rx": 0.025,
+          "ry": 0.025,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "canopy-front",
+          "bone": "rib-front",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0 0.0 C 0.16 0.115 0.42 0.135 0.56 0.01 C 0.42 0.04 0.18 0.03 0.0 0.0 Z",
+          "region": "canopy",
+          "material": "umbrella-fabric"
+        },
+        {
+          "id": "canopy-back",
+          "bone": "rib-back",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0 0.0 C 0.16 -0.115 0.42 -0.135 0.56 -0.01 C 0.42 -0.04 0.18 -0.03 0.0 0.0 Z",
+          "region": "canopy",
+          "material": "umbrella-fabric"
+        },
+        {
+          "id": "rib-line-front",
+          "bone": "rib-front",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.05,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0.56,
+              0
+            ]
+          ],
+          "closed": false,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "rib-line-back",
+          "bone": "rib-back",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.05,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0.56,
+              0
+            ]
+          ],
+          "closed": false,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "panel-seam-front",
+          "bone": "rib-front",
+          "role": "texture",
+          "lod": 2,
+          "z": 6.02,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1,
+              0.07
+            ],
+            [
+              0.3,
+              0.1
+            ],
+            [
+              0.5,
+              0.04
+            ]
+          ],
+          "closed": false,
+          "region": "canopy",
+          "material": "umbrella-fabric"
+        },
+        {
+          "id": "panel-seam-back",
+          "bone": "rib-back",
+          "role": "texture",
+          "lod": 2,
+          "z": 6.02,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.1,
+              -0.07
+            ],
+            [
+              0.3,
+              -0.1
+            ],
+            [
+              0.5,
+              -0.04
+            ]
+          ],
+          "closed": false,
+          "region": "canopy",
+          "material": "umbrella-fabric"
+        },
+        {
+          "id": "rim-tip-front",
+          "bone": "rib-front",
+          "role": "detail",
+          "lod": 3,
+          "z": 6.06,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.56,
+          "cy": 0.004,
+          "rx": 0.011,
+          "ry": 0.011,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "rim-tip-back",
+          "bone": "rib-back",
+          "role": "detail",
+          "lod": 3,
+          "z": 6.06,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.56,
+          "cy": -0.004,
+          "rx": 0.011,
+          "ry": 0.011,
+          "region": "umbrella-frame",
+          "material": "umbrella-metal"
+        },
+        {
+          "id": "furl-strap",
+          "bone": "rib-front",
+          "role": "detail",
+          "lod": 3,
+          "z": 6.07,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.3,
+              -0.03
+            ],
+            [
+              0.3,
+              0.1
+            ]
+          ],
+          "closed": false,
+          "region": "canopy",
+          "material": "umbrella-fabric"
+        },
+        {
+          "id": "shirt-neck",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.7,
+          "filled": false,
+          "tone": 0.8,
+          "kind": "poly",
+          "points": [
+            [
+              0.0049,
+              -0.0489
+            ],
+            [
+              0.0049,
+              0.0489
+            ]
+          ],
+          "closed": false,
+          "region": "torso-clothing",
+          "material": "cotton-clothing"
+        },
+        {
+          "id": "sleeve-cuff-r",
+          "bone": "forearm-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.1,
+          "filled": false,
+          "tone": 0.8,
+          "kind": "poly",
+          "points": [
+            [
+              0.2345,
+              0.0293
+            ],
+            [
+              0.2345,
+              -0.0264
+            ]
+          ],
+          "closed": false,
+          "region": "arm-clothing",
+          "material": "cotton-clothing"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "umbrella-up-still",
+        "title": {
+          "en": "Umbrella up, standing",
+          "de": "Schirm aufgespannt, stehend"
+        },
+        "description": {
+          "en": "Standing upright in light rain, umbrella held vertically above the head at chest height; a light drizzle breeze of 3 m/s loads the canopy.",
+          "de": "Aufrecht stehend im leichten Regen, der Schirm senkrecht über dem Kopf in Brusthöhe gehalten; ein leichter Nieselwind von 3 m/s belastet den Schirm."
+        },
+        "bones": {
+          "foot-l": {
+            "angleDeg": 0
+          },
+          "foot-r": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 0
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": 0.03
+          },
+          "forearm-l": {
+            "angleDeg": 94.21
+          },
+          "hand-l": {
+            "angleDeg": 55.76
+          },
+          "upper-arm-r": {
+            "angleDeg": 0.03
+          },
+          "forearm-r": {
+            "angleDeg": 94.21
+          },
+          "hand-r": {
+            "angleDeg": 55.76
+          },
+          "umbrella": {
+            "angleDeg": 30
+          },
+          "rib-front": {
+            "angleDeg": 0
+          },
+          "rib-back": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 1.3,
+          "emitters": {
+            "breath": 0.5
+          },
+          "regions": {
+            "coat": {
+              "wettedness": 0.2
+            },
+            "canopy": {
+              "wettedness": 0.2
+            }
+          }
+        },
+        "loads": [
+          {
+            "id": "wind",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on the canopy",
+              "de": "Wind auf dem Schirm"
+            },
+            "anchor": "canopy-centre",
+            "fxN": -1.55,
+            "fyN": 0.54,
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      },
+      {
+        "id": "umbrella-tilted-to-wind",
+        "title": {
+          "en": "Leaning into the gust",
+          "de": "In die Böe gelehnt"
+        },
+        "description": {
+          "en": "Whole body leaning 5 degrees into a 12 m/s wind with the umbrella tilted 32 degrees towards it; the lean puts the centre of mass ahead of the feet so that the wind moment is balanced.",
+          "de": "Der ganze Körper lehnt sich in einen Wind von 12 m/s, der Schirm ist 32 Grad zum Wind geneigt; die Vorlage schiebt den Schwerpunkt vor die Füße, sodass das Windmoment ausgeglichen wird."
+        },
+        "bones": {
+          "foot-l": {
+            "angleDeg": 5.72
+          },
+          "foot-r": {
+            "angleDeg": 5.72
+          },
+          "torso": {
+            "angleDeg": -5
+          },
+          "head": {
+            "angleDeg": 5
+          },
+          "upper-arm-l": {
+            "angleDeg": 2.32
+          },
+          "forearm-l": {
+            "angleDeg": 90.63
+          },
+          "hand-l": {
+            "angleDeg": 67.77
+          },
+          "upper-arm-r": {
+            "angleDeg": 2.32
+          },
+          "forearm-r": {
+            "angleDeg": 90.63
+          },
+          "hand-r": {
+            "angleDeg": 67.77
+          },
+          "umbrella": {
+            "angleDeg": -2
+          },
+          "rib-front": {
+            "angleDeg": 0
+          },
+          "rib-back": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 1.9,
+          "emitters": {
+            "breath": 0.8
+          },
+          "regions": {
+            "coat": {
+              "wettedness": 0.4
+            },
+            "canopy": {
+              "wettedness": 0.4
+            }
+          }
+        },
+        "loads": [
+          {
+            "id": "wind",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on the canopy",
+              "de": "Wind auf dem Schirm"
+            },
+            "anchor": "canopy-centre",
+            "fxN": -24.75,
+            "fyN": 8.66,
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ],
+        "root": {
+          "angleDeg": -5.72
+        }
+      },
+      {
+        "id": "umbrella-furled",
+        "title": {
+          "en": "Umbrella furled",
+          "de": "Schirm geschlossen"
+        },
+        "description": {
+          "en": "Rain has stopped: the umbrella is closed and carried tip-down like a cane in the right hand.",
+          "de": "Der Regen hat aufgehört: der Schirm ist geschlossen und wird wie ein Stock mit der Spitze nach unten in der rechten Hand getragen."
+        },
+        "bones": {
+          "foot-l": {
+            "angleDeg": 0
+          },
+          "foot-r": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": 0
+          },
+          "head": {
+            "angleDeg": 0
+          },
+          "upper-arm-l": {
+            "angleDeg": -19.63
+          },
+          "forearm-l": {
+            "angleDeg": 50.83
+          },
+          "hand-l": {
+            "angleDeg": -11.2
+          },
+          "upper-arm-r": {
+            "angleDeg": -19.63
+          },
+          "forearm-r": {
+            "angleDeg": 50.83
+          },
+          "hand-r": {
+            "angleDeg": -11.2
+          },
+          "umbrella": {
+            "angleDeg": 12
+          },
+          "rib-front": {
+            "angleDeg": -66
+          },
+          "rib-back": {
+            "angleDeg": 66
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 1.2,
+          "emitters": {
+            "breath": 0.5
+          },
+          "regions": {
+            "coat": {
+              "wettedness": 0.1
+            },
+            "canopy": {
+              "wettedness": 0.1
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "gust-light",
+        "title": {
+          "en": "Gust building up",
+          "de": "Anschwellende Böe"
+        },
+        "description": {
+          "en": "Light gust of 8 m/s: slight lean and the umbrella starts to tilt.",
+          "de": "Leichte Böe von 8 m/s: leichte Vorlage, der Schirm beginnt sich zu neigen."
+        },
+        "bones": {
+          "foot-l": {
+            "angleDeg": 3.82
+          },
+          "foot-r": {
+            "angleDeg": 3.82
+          },
+          "torso": {
+            "angleDeg": -3
+          },
+          "head": {
+            "angleDeg": 3
+          },
+          "upper-arm-l": {
+            "angleDeg": 1.46
+          },
+          "forearm-l": {
+            "angleDeg": 91.91
+          },
+          "hand-l": {
+            "angleDeg": 63.45
+          },
+          "upper-arm-r": {
+            "angleDeg": 1.46
+          },
+          "forearm-r": {
+            "angleDeg": 91.91
+          },
+          "hand-r": {
+            "angleDeg": 63.45
+          },
+          "umbrella": {
+            "angleDeg": 12
+          },
+          "rib-front": {
+            "angleDeg": 0
+          },
+          "rib-back": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 1.6,
+          "emitters": {
+            "breath": 0.7
+          },
+          "regions": {
+            "coat": {
+              "wettedness": 0.3
+            },
+            "canopy": {
+              "wettedness": 0.3
+            }
+          }
+        },
+        "loads": [
+          {
+            "id": "wind",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on the canopy",
+              "de": "Wind auf dem Schirm"
+            },
+            "anchor": "canopy-centre",
+            "fxN": -11,
+            "fyN": 3.85,
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ],
+        "root": {
+          "angleDeg": -3.82
+        },
+        "key": true
+      },
+      {
+        "id": "gust-heavy",
+        "title": {
+          "en": "Strong gust",
+          "de": "Starke Böe"
+        },
+        "description": {
+          "en": "Strong gust of 16 m/s: steep lean and a strongly tilted umbrella.",
+          "de": "Starke Böe von 16 m/s: starke Vorlage und ein stark geneigter Schirm."
+        },
+        "bones": {
+          "foot-l": {
+            "angleDeg": 8.3
+          },
+          "foot-r": {
+            "angleDeg": 8.3
+          },
+          "torso": {
+            "angleDeg": -7
+          },
+          "head": {
+            "angleDeg": 7
+          },
+          "upper-arm-l": {
+            "angleDeg": 3.36
+          },
+          "forearm-l": {
+            "angleDeg": 89.16
+          },
+          "hand-l": {
+            "angleDeg": 72.78
+          },
+          "upper-arm-r": {
+            "angleDeg": 3.36
+          },
+          "forearm-r": {
+            "angleDeg": 89.16
+          },
+          "hand-r": {
+            "angleDeg": 72.78
+          },
+          "umbrella": {
+            "angleDeg": -10
+          },
+          "rib-front": {
+            "angleDeg": 0
+          },
+          "rib-back": {
+            "angleDeg": 0
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "toe-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "contact-l",
+          "heel-r",
+          "contact-r"
+        ],
+        "thermal": {
+          "activityMet": 2.2,
+          "emitters": {
+            "breath": 0.9
+          },
+          "regions": {
+            "coat": {
+              "wettedness": 0.45
+            },
+            "canopy": {
+              "wettedness": 0.45
+            }
+          }
+        },
+        "loads": [
+          {
+            "id": "wind",
+            "kind": "wind",
+            "title": {
+              "en": "Wind on the canopy",
+              "de": "Wind auf dem Schirm"
+            },
+            "anchor": "canopy-centre",
+            "fxN": -44,
+            "fyN": 15.4,
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ],
+        "root": {
+          "angleDeg": -8.3
+        },
+        "key": true
+      }
+    ],
+    "clips": [
+      {
+        "id": "rain-gust-sway",
+        "title": {
+          "en": "Gust in the rain",
+          "de": "Böe im Regen"
+        },
+        "description": {
+          "en": "A gust rises from 3 to 16 m/s and fades: the person leans into the wind, the umbrella tilts and the wind load on the canopy follows the gust track while the lean keeps the moment about the feet balanced.",
+          "de": "Eine Böe steigt von 3 auf 16 m/s und klingt ab: die Person lehnt sich in den Wind, der Schirm neigt sich und die Windlast am Schirm folgt der Böenspur, während die Vorlage das Moment um die Füße im Gleichgewicht hält."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "umbrella-up-still",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "umbrella-up-still",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.7,
+            "pose": "gust-light",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.8,
+            "pose": "umbrella-tilted-to-wind",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.8,
+            "pose": "gust-heavy",
+            "ease": "smooth"
+          },
+          {
+            "t": 6.2,
+            "pose": "umbrella-tilted-to-wind",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "umbrella-up-still",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 8
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "calm",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "Light drizzle",
+              "de": "Leichter Nieselregen"
+            }
+          },
+          {
+            "id": "gust",
+            "fromS": 1.5,
+            "toS": 6.2,
+            "title": {
+              "en": "Gust",
+              "de": "Böe"
+            }
+          },
+          {
+            "id": "fade",
+            "fromS": 6.2,
+            "toS": 8,
+            "title": {
+              "en": "Gust fades",
+              "de": "Böe klingt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.5,
+            "kind": "motion",
+            "title": {
+              "en": "Gust arrives",
+              "de": "Böe trifft ein"
+            }
+          },
+          {
+            "t": 4.8,
+            "kind": "motion",
+            "title": {
+              "en": "Gust peak, 16 m/s",
+              "de": "Böenspitze, 16 m/s"
+            }
+          },
+          {
+            "t": 6.2,
+            "kind": "motion",
+            "title": {
+              "en": "Gust passes",
+              "de": "Böe zieht ab"
+            }
+          },
+          {
+            "t": 2,
+            "kind": "inhale",
+            "title": {
+              "en": "Breath against the wind",
+              "de": "Atemzug gegen den Wind"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              },
+              {
+                "t": 2.7,
+                "v": 1.1
+              },
+              {
+                "t": 3.8,
+                "v": 1
+              },
+              {
+                "t": 4.3,
+                "v": 1.25
+              },
+              {
+                "t": 4.8,
+                "v": 1
+              },
+              {
+                "t": 6.2,
+                "v": 0.8
+              },
+              {
+                "t": 8,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.3
+              },
+              {
+                "t": 3.8,
+                "v": 1.9
+              },
+              {
+                "t": 4.8,
+                "v": 2.2
+              },
+              {
+                "t": 8,
+                "v": 1.3
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.4
+              },
+              {
+                "t": 3.8,
+                "v": 0.8
+              },
+              {
+                "t": 4.8,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "close-umbrella",
+        "title": {
+          "en": "Closing the umbrella",
+          "de": "Schirm schließen"
+        },
+        "description": {
+          "en": "The rain stops: the person straightens up, lowers the umbrella and folds the ribs along the shaft until it hangs furled from the hand.",
+          "de": "Der Regen hört auf: die Person richtet sich auf, senkt den Schirm und klappt die Streben an den Stock, bis er geschlossen an der Hand hängt."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "umbrella-tilted-to-wind",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.2,
+            "pose": "umbrella-up-still",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.4,
+            "pose": "umbrella-up-still",
+            "ease": "smooth",
+            "bones": {
+              "rib-front": {
+                "angleDeg": -30
+              },
+              "rib-back": {
+                "angleDeg": 30
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "umbrella-furled",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "contact-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "contact-r",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "straighten",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Straighten up",
+              "de": "Aufrichten"
+            }
+          },
+          {
+            "id": "fold",
+            "fromS": 1.2,
+            "toS": 2.4,
+            "title": {
+              "en": "Fold the ribs",
+              "de": "Streben einklappen"
+            }
+          },
+          {
+            "id": "lower",
+            "fromS": 2.4,
+            "toS": 4,
+            "title": {
+              "en": "Lower the umbrella",
+              "de": "Schirm senken"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.2,
+            "kind": "load-off",
+            "title": {
+              "en": "Wind load vanishes",
+              "de": "Windlast entfällt"
+            },
+            "target": "canopy-centre"
+          },
+          {
+            "t": 2.4,
+            "kind": "motion",
+            "title": {
+              "en": "Canopy closed",
+              "de": "Schirm geschlossen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1.2,
+                "v": 0.3
+              },
+              {
+                "t": 2.4,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.9
+              },
+              {
+                "t": 4,
+                "v": 1.2
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 4,
+                "v": 0.4
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 8,
+        "meanRadiantTempC": 8,
+        "relativeHumidity": 0.95,
+        "windMS": 4,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.3,
+      "regions": [
+        {
+          "id": "head-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.055,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.06,
+          "metabolicShare": 0.06,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "material": "hair",
+          "model": "core-resistance",
+          "areaM2": 0.055,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "coat",
+          "title": {
+            "en": "Raincoat with sleeves and hood",
+            "de": "Regenmantel mit Ärmeln und Kapuze"
+          },
+          "kind": "clothing",
+          "material": "rain-shell",
+          "model": "core-resistance",
+          "areaM2": 1.132,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.21,
+          "metabolicShare": 0.62,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "torso-clothing",
+          "title": {
+            "en": "Shirt visible at the neck",
+            "de": "Am Hals sichtbares Hemd"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.037,
+          "characteristicLengthM": 0.05,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.15,
+          "metabolicShare": 0,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "arm-clothing",
+          "title": {
+            "en": "Cuffs",
+            "de": "Ärmelabschlüsse"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.018,
+          "characteristicLengthM": 0.05,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.15,
+          "metabolicShare": 0,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "hand-skin",
+          "title": {
+            "en": "Hands",
+            "de": "Hände"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.091,
+          "characteristicLengthM": 0.07,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.05,
+          "wettedness": 0.06,
+          "metabolicShare": 0.03,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "leg-clothing",
+          "title": {
+            "en": "Trousers below the coat",
+            "de": "Hose unter dem Mantel"
+          },
+          "kind": "clothing",
+          "material": "cotton-clothing",
+          "model": "core-resistance",
+          "areaM2": 0.365,
+          "characteristicLengthM": 0.12,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.16,
+          "metabolicShare": 0.29,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shoes",
+          "title": {
+            "en": "Waterproof boots",
+            "de": "Wasserdichte Stiefel"
+          },
+          "kind": "surface",
+          "material": "leather-shoe",
+          "model": "passive",
+          "areaM2": 0.128,
+          "characteristicLengthM": 0.12,
+          "metabolicShare": 0,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "canopy",
+          "title": {
+            "en": "Umbrella canopy",
+            "de": "Schirmbespannung"
+          },
+          "kind": "surface",
+          "material": "umbrella-fabric",
+          "model": "passive",
+          "areaM2": 1,
+          "characteristicLengthM": 0.55,
+          "source": "authored-estimate",
+          "reference": "hoerner-1965"
+        },
+        {
+          "id": "umbrella-frame",
+          "title": {
+            "en": "Shaft, ribs and handle",
+            "de": "Stock, Streben und Griff"
+          },
+          "kind": "surface",
+          "material": "umbrella-metal",
+          "model": "passive",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.02,
+          "source": "authored-estimate",
+          "reference": "hoerner-1965"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath",
+          "kind": "breath",
+          "title": {
+            "en": "Exhaled breath",
+            "de": "Ausgeatmete Luft"
+          },
+          "anchor": "mouth",
+          "directionDeg": -90,
+          "carries": "vapour",
+          "temperatureC": 34,
+          "velocityMS": 1.6,
+          "diameterM": 0.03,
+          "vapourKgPerKg": 0.034,
+          "periodS": 4,
+          "dutyFrom": 0.5,
+          "dutyTo": 1,
+          "source": "authored-estimate",
+          "reference": "ashrae-2021"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Rainy reference case: 8 degrees C, 95 % humidity, 4 m/s wind from the front; coated raincoat over light clothing about 1.35 clo (ISO 9920), wet coat surface (wettedness 0.2 to 0.45) cools by evaporation.",
+          "de": "Regen-Referenzfall: 8 Grad C, 95 % Feuchte, 4 m/s Wind von vorn; beschichteter Regenmantel über leichter Kleidung etwa 1,35 clo (ISO 9920), nasse Mantelfläche (Benetzung 0,2 bis 0,45) kühlt durch Verdunstung."
+        },
+        {
+          "en": "Metabolic rate 1.3 met standing, 1.9 to 2.2 met while leaning against a gust (ISO 8996 class 1 to 2).",
+          "de": "Stoffwechselrate 1,3 met im Stand, 1,9 bis 2,2 met beim Lehnen gegen eine Böe (ISO 8996 Klasse 1 bis 2)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Wind load F = 0.5 rho cd A v^2 at the canopy centre with rho 1.25 kg/m3 (EN 1991-1-4), cd 0.5 for a convex dome facing the flow (Hoerner), A 0.55 m2 projected at 32 degrees tilt; 35 % of F is added as uplift. The pose load is the 12 m/s value, the track scales it.",
+          "de": "Windlast F = 0,5 rho cd A v^2 im Schirmmittelpunkt mit rho 1,25 kg/m3 (EN 1991-1-4), cd 0,5 für eine dem Strom zugewandte konvexe Kuppel (Hoerner), A 0,55 m2 projiziert bei 32 Grad Neigung; 35 % von F kommen als Auftrieb hinzu. Die Posenlast ist der Wert bei 12 m/s, die Spur skaliert ihn."
+        },
+        {
+          "en": "Equal-stiffness support model: the lean puts the centre of mass ahead of the cop so the heel contacts may lift; both feet carry the horizontal wind force by friction.",
+          "de": "Gleichsteifigkeits-Auflagermodell: die Vorlage bringt den Schwerpunkt vor den Druckpunkt, sodass die Fersenkontakte abheben können; beide Füße tragen die horizontale Windkraft durch Reibung."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "umbrella-up-still",
+      "defaultClip": "rain-gust-sway",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,40 +1,42 @@
 {
   "classification_systems": {
     "cs-uni": {
-      "edition": "2024-03",
-      "entries": [
-        {
-          "code": "EF",
-          "title": "Elements and functions"
-        },
-        {
-          "code": "EF_25",
-          "parent": "EF",
-          "title": "Walls and barriers"
-        },
-        {
-          "code": "EF_25_10",
-          "parent": "EF_25",
-          "title": "Walls"
-        },
-        {
-          "code": "Pr",
-          "title": "Products"
-        },
-        {
-          "code": "Pr_20",
-          "parent": "Pr",
-          "title": "Structure and general products"
-        },
-        {
-          "code": "Pr_20_93",
-          "parent": "Pr_20",
-          "title": "Structural units and assemblies"
-        }
-      ],
       "entry": "Created",
-      "name": "Uniclass 2015",
-      "source": "https://www.thenbs.com/our-tools/uniclass"
+      "value": {
+        "edition": "2024-03",
+        "entries": [
+          {
+            "code": "EF",
+            "title": "Elements and functions"
+          },
+          {
+            "code": "EF_25",
+            "parent": "EF",
+            "title": "Walls and barriers"
+          },
+          {
+            "code": "EF_25_10",
+            "parent": "EF_25",
+            "title": "Walls"
+          },
+          {
+            "code": "Pr",
+            "title": "Products"
+          },
+          {
+            "code": "Pr_20",
+            "parent": "Pr",
+            "title": "Structure and general products"
+          },
+          {
+            "code": "Pr_20_93",
+            "parent": "Pr_20",
+            "title": "Structural units and assemblies"
+          }
+        ],
+        "name": "Uniclass 2015",
+        "source": "https://www.thenbs.com/our-tools/uniclass"
+      }
     }
   }
 }

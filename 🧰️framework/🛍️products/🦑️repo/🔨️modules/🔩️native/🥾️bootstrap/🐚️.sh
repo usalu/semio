@@ -272,15 +272,6 @@ linux_toolchain_packages() {
   esac
 }
 
-linux_browser_packages() {
-  case "$1" in
-  dnf) printf '%s\n' nss nspr atk at-spi2-atk cups-libs libdrm libxkbcommon libXcomposite libXdamage libXfixes libXrandr mesa-libgbm alsa-lib libX11 libxcb libXext dbus-libs expat glib2 xorg-x11-server-Xvfb ;;
-  pacman) printf '%s\n' nss nspr at-spi2-core libcups libdrm libxkbcommon libxcomposite libxdamage libxfixes libxrandr mesa alsa-lib libx11 libxcb libxext dbus expat glib2 xorg-server-xvfb ;;
-  zypper) printf '%s\n' mozilla-nss mozilla-nspr libatk-1_0-0 libatk-bridge-2_0-0 libcups2 libdrm2 libxkbcommon0 libXcomposite1 libXdamage1 libXfixes3 libXrandr2 libgbm1 libasound2 libX11-6 libxcb1 libXext6 libdbus-1-3 libexpat1 libglib-2_0-0 xvfb-run xorg-x11-server-Xvfb ;;
-  *) return 1 ;;
-  esac
-}
-
 install_linux_packages() {
   local manager="$1"
   shift
@@ -418,27 +409,6 @@ ensure_dotnet() {
   ln -sf "$DOTNET_ROOT/dotnet" "$LOCAL_BIN/dotnet"
 }
 
-ensure_browser_libraries() {
-  [ "$(uname -s)" = Linux ] || return 0
-  local manager packages=() package
-  manager="$(linux_package_manager)" || {
-    log "No supported package manager found for the Chromium system libraries."
-    return 1
-  }
-  if [ "$manager" = apt-get ]; then
-    local cli="$REPO_ROOT/node_modules/playwright/cli.js"
-    [ -f "$cli" ] || {
-      log "Playwright is not installed; skipping the Chromium system libraries."
-      return 0
-    }
-    run_privileged env "PATH=$PATH" node "$cli" install-deps chromium
-    return $?
-  fi
-  while IFS= read -r package; do packages+=("$package"); done < <(linux_browser_packages "$manager")
-  [ "${#packages[@]}" -gt 0 ] || return 1
-  log "Installing the Chromium system libraries with $manager: ${packages[*]}"
-  install_linux_packages "$manager" "${packages[@]}"
-}
 #endregion 🔖️NativeToolchain
 
 #region 🔖️EnsureLauncher
@@ -471,7 +441,6 @@ repo_bootstrap() {
   log "workspace:setup…"
   repo run workspace:setup || return 1
   repo run @semio-tech/repo-developer-tools:setup-debugger || return 1
-  ensure_browser_libraries || log "The Chromium system libraries could not be installed; use the owned browser setup control with root privileges."
 
 }
 #endregion 🔖️RepoBootstrap

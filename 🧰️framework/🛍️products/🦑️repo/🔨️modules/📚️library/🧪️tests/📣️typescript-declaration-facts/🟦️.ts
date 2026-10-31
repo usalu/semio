@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, parse, resolve, sep } from "node:path";
 import * as discovery from "../../🔍️discovery/🟦️typescript/📋️declarations/🟦️.ts";

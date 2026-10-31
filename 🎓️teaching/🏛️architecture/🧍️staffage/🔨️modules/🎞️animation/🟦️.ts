@@ -1,6 +1,6 @@
 /** 🎞️ Deterministic clip sampling: eases, time wrapping, key interpolation, scalar tracks, contacts, phases, thermal bindings, load scales, transitions and planted root motion.
  *
- * Sampling is a pure function of (asset, clip, time). A key's `ease` shapes the way to the next key: `linear`, `in`, `out`, `step` blend the two key states by the eased weight (angles linearly in degrees, translations linearly); `smooth` is a cubic Hermite (Catmull-Rom) segment through the neighbouring keys, so offsets, root and scalar tracks have continuous velocity across keys (zero end tangents for non-looping clips, wrap-around tangents for looping ones). Thermal bindings and loads blend by the smoothstep weight.
+ * Sampling is a pure function of (asset, clip, time) on the absolute timeline: the pose wraps at the clip duration, {@link cycleOf} counts the loops and the planted root advance accumulates over cycles without ever resetting. A key's `ease` shapes the way to the next key: `linear`, `in`, `out`, `step` blend the two key states by the eased weight (angles linearly in degrees, translations linearly); `smooth` is a cubic Hermite (Catmull-Rom) segment through the neighbouring keys, so offsets, root and scalar tracks have continuous velocity across keys (zero end tangents for non-looping clips, wrap-around tangents for looping ones). Thermal bindings and loads blend by the smoothstep weight.
  * looping clips wrap past the last key towards the first (at `first.t + duration`) unless they end with a closing key at the duration, which is the end of the last segment and may differ from the first key by whole turns of an unlimited revolute joint (each cycle then adds that difference, so wheels keep spinning); others clamp. Root motion `plant` integrates at {@link PLANT_HZ} from t = 0 over the span boundaries:
  * the earliest-planted active contact anchor is held at the world x it had when its span began, and the root x follows; when a later-planted span outlasts it, the root crossfades (smoothstep over the overlap) to the new anchor, so x and its velocity stay continuous at handovers; free spans continue with the last velocity. Looping clips advance
  * by `advanceM` per cycle. `ground: "auto"` puts the lowest active contact anchor on y = 0.
@@ -9,7 +9,7 @@
  * @see ../🔗️contracts/🟦️.ts — `ThermalInputs`
  * @see https://en.wikipedia.org/wiki/Smoothstep — the `smooth` ease
  */
-import type { Anchor, AppliedLoad, Asset, BoneOffset, Clip, ContactSpan, Ease, Pose, Slug, ThermalBinding } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, AppliedLoad, Asset, BoneOffset, Clip, ContactSpan, Ease, Pose, RegionBinding, Slug, ThermalBinding } from "../../🧬️schema/🟦️.ts";
 import type { Affine, ThermalInputs } from "../🔗️contracts/🟦️.ts";
 import { apply, solveRig } from "../🦴️rig/🟦️.ts";
 
@@ -207,55 +207,82 @@ function blendRecord(a: Readonly<Record<Slug, number>> | undefined, b: Readonly<
   return result;
 }
 
-const REGION_FIELDS = ["surfaceTempC", "coreTempC", "wettedness"] as const;
+type RegionInput = ThermalInputs["regions"][Slug];
 
-/** 🌡️ The thermal inputs of two bindings blended by weight `w` (absent operating levels and emitter strengths count as 0, absent exposure as 1, absent region temperatures stay absent); every declared region, emitter and operating key is present. */
+type MutableRegion = { exposedFraction: number; sunlitFraction: number; wettedness?: number; contact?: { fraction: number; tempC: number } };
+
+function blendContact(a: RegionBinding["contact"], b: RegionBinding["contact"], w: number): { fraction: number; tempC: number } | undefined {
+  if (a === undefined && b === undefined) return undefined;
+  if (a === undefined) return { fraction: lerp(0, b!.fraction, w), tempC: b!.tempC };
+  if (b === undefined) return { fraction: lerp(a.fraction, 0, w), tempC: a.tempC };
+  return { fraction: lerp(a.fraction, b.fraction, w), tempC: lerp(a.tempC, b.tempC, w) };
+}
+
+function blendRegion(a: RegionBinding | undefined, b: RegionBinding | undefined, w: number): RegionInput {
+  const entry: MutableRegion = { exposedFraction: lerp(a?.exposedFraction ?? 1, b?.exposedFraction ?? 1, w), sunlitFraction: lerp(a?.sunlitFraction ?? 0, b?.sunlitFraction ?? 0, w) };
+  const wettedness = blendOptional(a?.wettedness, b?.wettedness, w);
+  if (wettedness !== undefined) entry.wettedness = wettedness;
+  const contact = blendContact(a?.contact, b?.contact, w);
+  if (contact !== undefined) entry.contact = contact;
+  return entry;
+}
+
+/** 🌡️ The thermal inputs of two bindings blended by weight `w`: scalars interpolate; absent operating levels and emitter strengths count as 0, absent exposure as 1, absent sunlit fraction as 0; a contact present in one binding fades with its fraction; the breathing pattern holds the first binding's pattern until the weight passes 1/2 (patterns are discrete). Every declared region, non-respiratory emitter and operating key is present. */
 export function blendThermal(asset: Asset, a: ThermalBinding, b: ThermalBinding, w: number): ThermalInputs {
-  const operatingKeys = new Set<Slug>([...Object.keys(a.operating ?? {}), ...Object.keys(b.operating ?? {})]);
-  for (const region of asset.thermal.regions) if (region.operatingKey !== undefined) operatingKeys.add(region.operatingKey);
-  const emitterKeys = new Set<Slug>([...asset.thermal.emitters.map((emitter) => emitter.id), ...Object.keys(a.emitters ?? {}), ...Object.keys(b.emitters ?? {})]);
+  const operatingKeys = new Set<Slug>([...asset.thermal.operating.map((key) => key.id), ...Object.keys(a.operating ?? {}), ...Object.keys(b.operating ?? {})]);
+  for (const region of asset.thermal.regions) if (region.operating !== undefined) operatingKeys.add(region.operating.key);
+  const breathEmitters = new Set(asset.thermal.emitters.filter((emitter) => emitter.kind === "breath").map((emitter) => emitter.id));
+  const emitterKeys = new Set<Slug>(asset.thermal.emitters.filter((emitter) => emitter.kind !== "breath").map((emitter) => emitter.id));
+  for (const id of [...Object.keys(a.emitters ?? {}), ...Object.keys(b.emitters ?? {})]) if (!breathEmitters.has(id)) emitterKeys.add(id);
   const regionKeys = new Set<Slug>([...asset.thermal.regions.map((region) => region.id), ...Object.keys(a.regions ?? {}), ...Object.keys(b.regions ?? {})]);
-  const regions: Record<Slug, { exposedFraction: number; surfaceTempC?: number; coreTempC?: number; wettedness?: number }> = {};
-  for (const id of [...regionKeys].sort()) {
-    const x = a.regions?.[id];
-    const y = b.regions?.[id];
-    const entry: { exposedFraction: number; surfaceTempC?: number; coreTempC?: number; wettedness?: number } = { exposedFraction: lerp(x?.exposedFraction ?? 1, y?.exposedFraction ?? 1, w) };
-    for (const field of REGION_FIELDS) {
-      const value = blendOptional(x?.[field], y?.[field], w);
-      if (value !== undefined) entry[field] = value;
-    }
-    regions[id] = entry;
+  const regions: Record<Slug, RegionInput> = {};
+  for (const id of [...regionKeys].sort()) regions[id] = blendRegion(a.regions?.[id], b.regions?.[id], w);
+  const breathing = (w < 0.5 ? a.breathing ?? b.breathing : b.breathing ?? a.breathing) ?? null;
+  const passengers: Record<Slug, { activityMet: number; breathing: Slug | null }> = {};
+  for (const { id } of asset.thermal.passengers ?? []) {
+    const from = a.passengers?.[id];
+    const to = b.passengers?.[id];
+    const met = blendOptional(from?.activityMet, to?.activityMet, w) ?? 1;
+    passengers[id] = { activityMet: met, breathing: (w < 0.5 ? from?.breathing ?? to?.breathing : to?.breathing ?? from?.breathing) ?? null };
   }
   return {
     activityMet: blendOptional(a.activityMet, b.activityMet, w) ?? asset.thermal.baseMet ?? 1,
+    externalWorkW: blendOptional(a.externalWorkW, b.externalWorkW, w) ?? 0,
     operating: blendRecord(a.operating, b.operating, w, [...operatingKeys].sort()),
     regions,
     emitters: blendRecord(a.emitters, b.emitters, w, [...emitterKeys].sort()),
+    breathing,
+    passengers,
   };
 }
 
-function applyTracks(clip: Clip, timeS: number, thermal: ThermalInputs): { readonly thermal: ThermalInputs; readonly loadScales: Record<Slug, number> } {
+const REGION_TRACK_FIELDS = ["exposedFraction", "sunlitFraction", "wettedness"] as const;
+
+function applyTracks(asset: Asset, clip: Clip, timeS: number, thermal: ThermalInputs): { readonly thermal: ThermalInputs; readonly loadScales: Record<Slug, number> } {
   let activityMet = thermal.activityMet;
+  let externalWorkW = thermal.externalWorkW;
+  let breathing = thermal.breathing;
   const operating = { ...thermal.operating };
   const emitters = { ...thermal.emitters };
-  const regions: Record<Slug, { exposedFraction: number; surfaceTempC?: number; coreTempC?: number; wettedness?: number }> = {};
+  const regions: Record<Slug, MutableRegion> = {};
   for (const [id, region] of Object.entries(thermal.regions)) regions[id] = { ...region };
   const loadScales: Record<Slug, number> = {};
   for (const track of clip.tracks) {
     const value = sampleTrack(track, timeS, clip.loop, clip.durationS);
     if (value === undefined) continue;
     const [kind, id, field] = track.target.split(":");
-    if (track.target === "activityMet") activityMet = value;
-    else if (kind === "emitter" && id !== undefined) emitters[id] = value;
-    else if (kind === "operating" && id !== undefined) operating[id] = value;
+    if (track.target === "activityMet") activityMet = Math.max(0, value);
+    else if (track.target === "externalWorkW") externalWorkW = value;
+    else if (track.target === "breathing") breathing = asset.thermal.respiration?.patterns[Math.min(Math.max(Math.round(value), 0), asset.thermal.respiration.patterns.length - 1)]?.id ?? breathing;
+    else if (kind === "emitter" && id !== undefined) emitters[id] = Math.max(0, value);
+    else if (kind === "operating" && id !== undefined) operating[id] = Math.min(1, Math.max(0, value));
     else if (kind === "load" && id !== undefined) loadScales[id] = value;
-    else if (kind === "region" && id !== undefined && field !== undefined) {
-      const region = (regions[id] ??= { exposedFraction: 1 });
-      if (field === "exposedFraction") region.exposedFraction = value;
-      else if (field === "surfaceTempC" || field === "coreTempC" || field === "wettedness") region[field] = value;
+    else if (kind === "region" && id !== undefined && field !== undefined && (REGION_TRACK_FIELDS as readonly string[]).includes(field)) {
+      const region = (regions[id] ??= { exposedFraction: 1, sunlitFraction: 0 });
+      region[field as (typeof REGION_TRACK_FIELDS)[number]] = Math.min(1, Math.max(0, value));
     }
   }
-  return { thermal: { activityMet, operating, regions, emitters }, loadScales };
+  return { thermal: { activityMet, externalWorkW, operating, regions, emitters, breathing, passengers: thermal.passengers }, loadScales };
 }
 
 function scaleLoad(load: AppliedLoad, k: number): AppliedLoad {
@@ -466,7 +493,7 @@ export function sampleClip(asset: Asset, clip: Clip, timeS: number): Sample {
   const t = wrapTime(timeS, clip.durationS, clip.loop);
   const c = core(asset, clip, t, cycleOf(timeS, clip.durationS, clip.loop));
   const blended = blendThermal(asset, c.from.thermal, c.to.thermal, c.weight);
-  const { thermal, loadScales } = applyTracks(clip, t, blended);
+  const { thermal, loadScales } = applyTracks(asset, clip, t, blended);
   const contacts = contactsAt(clip, t);
   const auto = c.from.ground === "auto" && c.to.ground === "auto";
   const advance = clip.rootMotion === "plant" && clip.loop ? cycleOf(timeS, clip.durationS, clip.loop) * (clip.advanceM ?? 0) : 0;

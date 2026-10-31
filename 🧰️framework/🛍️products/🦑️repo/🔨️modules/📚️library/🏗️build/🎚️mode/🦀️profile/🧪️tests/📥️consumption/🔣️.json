@@ -1890,11 +1890,21 @@
     {
       "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
       "function": "buildCargoArtifacts",
-      "call": "withCargoCompilerInputsV1"
+      "call": "withCargoArtifactPlanV1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "function": "withCargoArtifactPlanV1",
+      "call": "withCargoArtifactPlanInputsV1"
     },
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
       "function": "buildRepositoryCargoArtifacts",
+      "call": "withRepositoryCargoArtifactPlanV1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+      "function": "withRepositoryCargoArtifactPlanV1",
       "call": "repositoryCargoCompilerInputsV1"
     }
   ],
@@ -2049,6 +2059,22 @@
       ],
       "head": [],
       "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "report",
+        "--profile",
+        "prototype"
+      ],
+      "head": [
+        "llvm-cov",
+        "report",
+        "--profile",
+        "prototype"
+      ],
+      "accept": true
     }
   ],
   "recheckCapacityOwners": [
@@ -2232,6 +2258,166 @@
       ],
       "accept": true,
       "prebuilt": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest-archive",
+        "--profile",
+        "quick",
+        "--archive-file",
+        "/a"
+      ],
+      "head": [
+        "llvm-cov",
+        "nextest-archive",
+        "--profile",
+        "quick",
+        "--archive-file",
+        "/a",
+        "--cargo-profile",
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--archive-file",
+        "/a",
+        "--profile",
+        "quick"
+      ],
+      "head": [
+        "llvm-cov",
+        "nextest",
+        "--archive-file",
+        "/a",
+        "--profile",
+        "quick"
+      ],
+      "accept": true,
+      "prebuilt": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--cargo-profile",
+        "prototype",
+        "--profile",
+        "quick"
+      ],
+      "head": [
+        "llvm-cov",
+        "nextest",
+        "--cargo-profile",
+        "prototype",
+        "--profile",
+        "quick"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "release",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--release",
+        "--profile",
+        "long"
+      ],
+      "head": [
+        "llvm-cov",
+        "nextest",
+        "--cargo-profile",
+        "release",
+        "--profile",
+        "long"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest-archive",
+        "--cargo-profile",
+        "release",
+        "--profile",
+        "quick"
+      ],
+      "head": [],
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--cargo-profile",
+        "prototype",
+        "--cargo-profile",
+        "prototype"
+      ],
+      "head": [],
+      "accept": false
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "nextest",
+        "archive",
+        "--archive-file",
+        "/a",
+        "--profile",
+        "long"
+      ],
+      "head": [
+        "nextest",
+        "archive",
+        "--archive-file",
+        "/a",
+        "--profile",
+        "long",
+        "--cargo-profile",
+        "prototype"
+      ],
+      "accept": true
+    },
+    {
+      "mode": "prototype",
+      "args": [
+        "llvm-cov",
+        "nextest",
+        "--profile",
+        "quick",
+        "--",
+        "--cargo-profile",
+        "release",
+        "--profile",
+        "foreign"
+      ],
+      "head": [
+        "llvm-cov",
+        "nextest",
+        "--profile",
+        "quick",
+        "--cargo-profile",
+        "prototype"
+      ],
+      "tail": [
+        "--",
+        "--cargo-profile",
+        "release",
+        "--profile",
+        "foreign"
+      ],
+      "accept": true
     }
   ]
 }

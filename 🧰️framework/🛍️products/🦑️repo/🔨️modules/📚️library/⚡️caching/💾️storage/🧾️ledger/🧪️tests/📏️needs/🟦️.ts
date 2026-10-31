@@ -28,7 +28,7 @@ test("the graph partition is declared large enough for its measured need, derive
  expect(budgetPolicy.partitions.graph.capacityBytes).toBe(6*GIB);
  expect(budgetPolicy.partitions.graph.capacityBytes-required).toBeLessThan(GIB);
  for(const part of need.components)expect(part.measuredBytes).toBeLessThanOrEqual(part.area?cacheAreaBudgetBytesV1(ledger,ledger.areas.find(area=>area.id===part.area)!)!:part.bytes!);
- expect(need.floorBytes).toBe(quota.definitions.OptionalQuota.policy.minimumAvailableBytes);
+ expect(need.floorBytes).toBe(quota.definitions.OptionalQuota.definitions.DefaultPolicy.const.minimumAvailableBytes);
  const reclaim=ledger.areas.find(area=>area.id==="graph-inference")!.reclaim!;
  expect(reclaim.softAvailableBytes).toBeGreaterThan(need.floorBytes);
  expect(budgetPolicy.partitions.graph.maximumLogicalBytes).toBe(budgetPolicy.partitions.graph.capacityBytes-1048576);

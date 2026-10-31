@@ -2,7 +2,9 @@
   "storeys": {
     "st-first": {
       "entry": "Patched",
-      "level": 2
+      "value": {
+        "level": 2
+      }
     }
   }
 }

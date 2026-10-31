@@ -41,3 +41,16 @@ export async function retireJavascriptDependencyPreservationDescriptorsV1(bindin
  });}
  checkpoint();return Object.freeze({retired:Object.freeze(retired),retained:Object.freeze(retained.map(row=>Object.freeze(row))),entries});
 }
+
+/** 👓️ A bounded Source-parent observation grants no mutation or Store authority. */
+export type JavascriptDependencyPreservationPresenceV1=Readonly<{version:1;state:"empty"|"present";parents:number;entries:number}>;
+/** 🔎️ Observes exact protocol names under no-follow parent descriptors without opening endpoints or payloads. */
+export async function queryJavascriptDependencyPreservationDescriptorsV1(sourceDirectories:readonly string[],checkpoint:()=>void,advance:(work:number)=>Promise<void>):Promise<JavascriptDependencyPreservationPresenceV1>{
+ if(arguments.length!==3||!Array.isArray(sourceDirectories)||!sourceDirectories.length||sourceDirectories.length>installSchema.$defs.SourceOwnerProtocol.const.maximumSources)throw Error("Complete bounded preservation Source directories required");
+ const seen=new Set<string>(),parents:string[]=[],snapshots:{path:string;identity:string}[]=[];let entries=0,observed=0,work=0;
+ for(const source of sourceDirectories){if(typeof source!=="string"||source!==resolve(source)||source.length>256||basename(source)!==policy.endpoint||seen.has(source))throw Error("Disjoint canonical preservation Source endpoint required");seen.add(source);parents.push(dirname(source));}
+ const charge=async()=>{checkpoint();if(++work>policy.maximumEntries)throw Error("Dependency preservation presence work capacity exceeded");if(work%policy.progressEntries===0){await advance(work);checkpoint();}};
+ const result=(state:"empty"|"present"):JavascriptDependencyPreservationPresenceV1=>Object.freeze({version:1,state,parents:observed,entries});
+ for(const path of parents){checkpoint();const present=await withArtifactRelativeDirectoryV1(path,checkpoint,async parent=>{const identity=stamp(parent.stat());observed++;await charge();const names=await parent.names();if(names.length>policy.maximumEntries-work||new Set(names).size!==names.length)throw Error("Complete bounded preservation parent roster required");let found=false;for(const name of names){await charge();entries++;if(isCapsule(name)||isJournal(name))found=true;}checkpoint();if(stamp(parent.stat())!==identity)throw Error("Preservation presence parent changed");snapshots.push({path,identity});return found;});if(present)return result("present");}
+ for(const before of snapshots){await charge();await withArtifactRelativeDirectoryV1(before.path,checkpoint,async parent=>{checkpoint();if(stamp(parent.stat())!==before.identity)throw Error("Preservation presence parent changed");});}checkpoint();return result("empty");
+}

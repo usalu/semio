@@ -227,7 +227,9 @@
             "resources": [
               "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🔣️.json",
               "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs",
-              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts",
+              "{projectRoot}/🔨️modules/🧪️e2e/🟦️.ts",
+              "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts"
             ]
           }
         }
@@ -236,7 +238,9 @@
         "default",
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json"
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json",
+        "{projectRoot}/🔨️modules/🧪️e2e/🟦️.ts",
+        "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts"
       ]
     },
     "activate-prototype": {
@@ -449,7 +453,9 @@
           "env": "SEMIO_BUILD_BUDGET_MS"
         },
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
-        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json"
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json",
+        "{projectRoot}/🔨️modules/🧪️e2e/🟦️.ts",
+        "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts"
       ],
       "metadata": {
         "semio": {
@@ -480,7 +486,9 @@
             "resources": [
               "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️simulation-session/🔣️.json",
               "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs",
-              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts"
+              "{projectRoot}/🧪️tests/🎭️acceptance/🟦️.ts",
+              "{projectRoot}/🔨️modules/🧪️e2e/🟦️.ts",
+              "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts"
             ]
           }
         }

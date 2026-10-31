@@ -221,3 +221,46 @@ Preview 81722 failed with `Original captured runtime entry provider required` at
 The supported boundary is inside each authenticated receive callback, after deriving repository root and control from its received Original, before any Native preparation/opening. Publication currently opens graph store at publication Source line 31. Received fixed cache opens the rust partition at nx Source line 92 before opening graph store at 93; received graph custody calls preparation at graph Source line 126 before its store. Consequently a graph-store-only binder would leave real early opens uncovered.
 
 The current repository binder captures Source through compiler-admitted physical-source/resolution tables, bounded no-follow reads and matching hashes, then retains the immutable command around its callback. Inspection found no Native-store acquisition in that capture path, so no capture-to-store recursion was demonstrated. Keep this repository binding above the neutral process boundary. Coverage must exercise an actual normal compiled public received-request owner without a fixture-installed binder; the earlier explicit-binder lifecycle successes do not prove this admission path. Frontend owns implementation and execution; this audit launches no jobs and claims no corrected runtime success.
+
+
+### Received-Owner Patch And Shared-Image Scope — 2026-10-29
+
+Independent current-Source review finds binder installation inside authenticated receive callbacks in publication, received fixed cache and received native graph owners. The same received Original supplies repository authority and issued control; binding precedes Native partition opening/preparation and encloses awaited namespace release/image close. Publisher-control callbacks are covered too. No process-global fallback, neutral-process repository dependency or Native-store call in Source capture was observed. Existing Source bounds/hash checks remain in use.
+
+The new request fixture compiles the actual authorizer Source snapshot into a relocated parent, forwards a genuinely issued resource envelope, and calls real public control/publication/fixed/native APIs without installing its own binder. It asserts child status zero, no signal, entered mode and relocated module URL. Root reports standalone control regression 68571 passed seven assertions after baseline 57728 reproduced the exact missing-provider error. This proves that control route only; the full Native modes have not been accepted by that result.
+
+Fixture isolation is namespace-level: its fresh artifact area contributes graphIdentity and stores the compiled parent. Workspace stays process.cwd; graph/rust/lease images derive from repositoryCachePartitionRootV1(workspace,id). The directory-partition selector changes backend only. Opening uses declared repository budget directories and the real lease image; no fixture root/port override is present in inspected APIs. Consequently unique graphIdentity does not isolate shared image/charge admission. The reported SEMIO_LEASE_ORDER charge-exclusive to native-storage-exclusive failure remains an actual unresolved Native-path result, not evidence of either mere contention or a completed provider fix. Keep those Native modes and normal preview proof required; do not invent an override or relax lease order.
+
+
+### Managed 94822 Startup Contract Review
+
+Current runDevStack resolves backend through proctorDevelopmentEnvironment then proctorOrigin:127.0.0.1 and PROCTOR_PORT(default8791). Its launched dev-site inherits that exact resolved port. Vite proxies actual gateway routes including WebSockets to the same loopback endpoint; development client has empty proctor base and uses same-origin routes, whereas only build mode bakes PROCTOR_URL. Configured persistent allowed origins localhost:6061 and127.0.0.1:6061 therefore match intended browser origins; no concrete endpoint/CORS mismatch found in Source.
+
+Backend reuse requires ready response containing package identity and checks compatible wire contract (warning on disagreement), not product digest/course/data identity. Reused backend is never stored as owned SupervisedProctor, so final cleanup cannot stop it. Site reuse tests HTTP answer only. A launched site is announced ready only after its HTTP probe succeeds; retained manager awaits owned site exit/cancellation. Reused ready endpoints and printed ready lines still need actual rendered intro/backend identity proof for user-facing acceptance. Current normal94822 startup and semantic60268 remain separate live work; this read-only contract review makes no readiness claim and launches no browser or duplicate owner.
+
+
+### Actual First TSC Boundary And Assignment Typing Review
+
+60268 reached actual TSC after all six prerequisites completed, then failed16diagnostics:15 assignment-test inference diagnostics and one peer watchdog callback pid annotation. Reviewed Root assignment correction: erased type-only import of existing JSON fixture plus explicit typeof fixtureData on unchanged runtime JSON.parse, and explicit Map<string,number> reduce type. These recover structural inference and accumulator typing without changing grouping logic, fixture bytes, mutations, assertions or D3/Ajv/mathjs oracles. No new any cast is present in these edits; older explicit any annotations remain outside this narrow correction. This Source review does not substitute for the pending actual full semantic retry or claim a typecheck pass. Managed94822 readiness checkpoint remains pending separately.
+
+
+### Managed 94822 Actual Terminal Blocker
+
+Frontend confirms outer94822 returned0 but actual dev-site child exited1 before listener readiness: Actual inherited control restriction required. Current assignment PDF helper invokes its channels-only body inside nested retained published-artifact consumer scopes. Dev-site then creates a fresh compiler control from the invocation, a sibling lacking the current artifact consumer restrictions, and Vite dependency-store admission correctly refuses that control refinement. The required fix is to thread the actual retained callback control through the PDF channel body into Vite, preserving all nested restrictions; guard weakening or sibling-control recreation is not justified. Frontend owns this implementation and separate outer-child failure propagation regression. No6061readiness/rendered result is established; backend8791 remains independently healthy. This audit reviewed actual Source, launched no retry and changed no Source.
+
+
+### Managed 1143 Dependency Binding Refusal
+
+Actual1143 terminates before dev listener in both PDF prerequisites with Current expected JavaScript dependency binding required. Source read-context30 first validates planned target physical ancestry, then requires sourceDirectory be a symlink whose realpath equals target. storage389–390 obtains supplied or fresh sync plan projection and observes every required-owner binding into beforeMap before checking ready receipts or consuming/replaying Source execution. Thus this trace is an initial current-plan binding refusal, not evidence of the later during-consumption drift check firing.
+
+Retained failure contains no concrete sourceDirectory, expected target, observed link kind/resolved target or corresponding published receipt generation. These exact bounded DATA facts are required to distinguish stale planned binding from missing/current generation publication. Frontend and Root received this causal limit. No raw cache value is adopted as authority; no link mutation, installer ensure/repair guess, probe or guard relaxation was performed. The previous PDF control correction does not establish frontend readiness; this new refusal is separate.
+
+
+### Actual Managed Pair Ready Checkpoint
+
+Independent retained-log read now confirms managed course-dev-source-stable.log announces proctor127.0.0.1:8791ready after253ms, Vite Local127.0.0.1:6061, site HTTP ready after21883ms, then Ctrl+C stops the proctor and the site. This run owns both services, rather than merely reusing an external backend. Root additionally reports current HTTP200 on both endpoints; this review launches no duplicate requests. Existing live service progress is retention, not a terminal failure. Rendered browser74113 and full both-topology suite remain separate evidence.
+
+
+### Complete Unit33103 Evidence
+
+Independent current course-unit-source-bound-fixed.log read matches19/19testfiles and821/821tests passed, plus Nx targettest and all six prerequisites successful. Root/backend confirm authoritative outerexit0. Earlier course-unit-all-fixed99366 exited75 before tests and remains historical, not contradictory current test evidence. Root supplemental74113 rendered-intro case has passed23.5s while language case remains pending; that owner-reported partial browser result is not full both-topology acceptance.

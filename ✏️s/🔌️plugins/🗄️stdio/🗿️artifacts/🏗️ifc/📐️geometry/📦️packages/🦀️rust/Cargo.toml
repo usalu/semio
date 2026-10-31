@@ -1,0 +1,31 @@
+[package]
+workspace = "../../.."
+name = "semio-s-artifact-stdio-ifc-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Schema-neutral IFC geometry projection and retained preparation."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { workspace = true }
+
+[dependencies.semio-s-artifact-stdio-ifc-geometry-rings]
+path = "../../🕳️rings/📦️packages/🦀️rust"

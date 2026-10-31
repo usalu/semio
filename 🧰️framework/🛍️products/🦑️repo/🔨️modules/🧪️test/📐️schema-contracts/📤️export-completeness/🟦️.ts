@@ -1,6 +1,7 @@
 /** 📤️ The named schema exports of a scope: the export files, the declared formats, the completeness diagnostics and the declaration parsers of every format. */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { ecmaTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
 import { TAXONOMY_REL_PATH } from "../../🗂️taxonomy/🟦️.ts";
 import { normativeSchemaFormat, rawTaxonomy, type SchemaCatalogScope, schemaDiagnostic, type SchemaDiagnostic, schemaExportFile, schemaJsonDialect, schemaScopeFile } from "../🟦️.ts";
 import { isDeclaredDialectDefinition, readJson } from "../🏗️scope-eligibility-and-tree/🟦️.ts";
@@ -142,10 +143,48 @@ export function declaresSchemaExport(format: string, source: string, exported: s
     case "🦀️rust":
       return new RegExp(`^\\s*pub\\s+(?:struct|enum|type)\\s+${name}\\b`, "mu").test(source) || declaresRustReExport(source, name);
     case "🟦️typescript":
-      return new RegExp(`^\\s*export\\s+(?:interface|type|const|class)\\s+${name}\\b`, "mu").test(source);
+      return new RegExp(`^\\s*export\\s+(?:interface|type|const|class)\\s+${name}\\b`, "mu").test(source) || declaresEcmaNamedExport(source, exported);
     default:
       return false;
   }
+}
+
+let namedExportSource: string | null = null;
+let namedExports = new Map<string, boolean>();
+
+/** 📣️ A top-level named ECMAScript publication; type-only entries publish no runtime parser. The last source alone is retained across its repeated named-export queries. */
+function declaresEcmaNamedExport(source: string, name: string, runtime = false): boolean {
+  if (namedExportSource === source) return namedExports.has(name) && (!runtime || namedExports.get(name) === true);
+  const publications = new Map<string, boolean>(), tokens = ecmaTokens(source);
+  let depth = 0;
+  for (const [index, token] of tokens.entries()) {
+    if (depth === 0 && token.text === "export") {
+      let cursor = index + 1;
+      const typeOnly = tokens[cursor]?.text === "type";
+      if (typeOnly) cursor++;
+      if (tokens[cursor++]?.text === "{") {
+        while (cursor < tokens.length && tokens[cursor]?.text !== "}") {
+          const inlineType = tokens[cursor]?.text === "type" && tokens[cursor + 1]?.kind === "identifier" && tokens[cursor + 1]?.text !== "as";
+          if (inlineType) cursor++;
+          if (tokens[cursor]?.kind !== "identifier") break;
+          let published = tokens[cursor++]!.text;
+          if (tokens[cursor]?.text === "as") {
+            cursor++;
+            if (tokens[cursor]?.kind !== "identifier") break;
+            published = tokens[cursor++]!.text;
+          }
+          if (![",", "}"].includes(tokens[cursor]?.text ?? "")) break;
+          publications.set(published, publications.get(published) === true || !typeOnly && !inlineType);
+          if (tokens[cursor]?.text === ",") cursor++;
+        }
+      }
+    }
+    if (["{", "(", "["].includes(token.text)) depth++;
+    else if (["}", ")", "]"].includes(token.text)) depth--;
+  }
+  namedExportSource = source;
+  namedExports = publications;
+  return publications.has(name) && (!runtime || publications.get(name) === true);
 }
 
 /**
@@ -177,7 +216,7 @@ function declaresRustReExport(source: string, name: string): boolean {
 export function declaresSchemaExportParser(format: string, source: string, exported: string): boolean {
   if (format !== "🟦️typescript") return true;
   const name = exported.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  return new RegExp(`^\\s*export\\s+(?:(?:async\\s+)?function|const|let|declare\\s+function)\\s+parse${name}\\b`, "mu").test(source);
+  return new RegExp(`^\\s*export\\s+(?:(?:async\\s+)?function|const|let|declare\\s+function)\\s+parse${name}\\b`, "mu").test(source) || declaresEcmaNamedExport(source, `parse${exported}`, true);
 }
 
 /**

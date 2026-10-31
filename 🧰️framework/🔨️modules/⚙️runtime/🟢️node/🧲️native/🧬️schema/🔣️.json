@@ -1,122 +1,476 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Protocol": {
       "const": {
         "version": 1,
-        "primitives": ["open", "symbol", "close", "call", "addressOf", "peek", "view"],
+        "primitives": [
+          "open",
+          "symbol",
+          "close",
+          "call",
+          "addressOf",
+          "peek",
+          "view"
+        ],
         "words": 8,
         "cstringMaximumBytes": 1048576,
         "types": {
-          "void": {"kind": "void"},
-          "bool": {"kind": "bool", "bits": 8},
-          "i8": {"kind": "int", "bits": 8, "signed": true},
-          "u8": {"kind": "int", "bits": 8, "signed": false},
-          "i16": {"kind": "int", "bits": 16, "signed": true},
-          "u16": {"kind": "int", "bits": 16, "signed": false},
-          "i32": {"kind": "int", "bits": 32, "signed": true},
-          "u32": {"kind": "int", "bits": 32, "signed": false},
-          "i64": {"kind": "int", "bits": 64, "signed": true},
-          "u64": {"kind": "int", "bits": 64, "signed": false},
-          "f32": {"kind": "float", "bits": 32},
-          "f64": {"kind": "float", "bits": 64},
-          "ptr": {"kind": "pointer", "bits": 64},
-          "cstring": {"kind": "string", "bits": 64}
+          "void": {
+            "kind": "void"
+          },
+          "bool": {
+            "kind": "bool",
+            "bits": 8
+          },
+          "i8": {
+            "kind": "int",
+            "bits": 8,
+            "signed": true
+          },
+          "u8": {
+            "kind": "int",
+            "bits": 8,
+            "signed": false
+          },
+          "i16": {
+            "kind": "int",
+            "bits": 16,
+            "signed": true
+          },
+          "u16": {
+            "kind": "int",
+            "bits": 16,
+            "signed": false
+          },
+          "i32": {
+            "kind": "int",
+            "bits": 32,
+            "signed": true
+          },
+          "u32": {
+            "kind": "int",
+            "bits": 32,
+            "signed": false
+          },
+          "i64": {
+            "kind": "int",
+            "bits": 64,
+            "signed": true
+          },
+          "u64": {
+            "kind": "int",
+            "bits": 64,
+            "signed": false
+          },
+          "f32": {
+            "kind": "float",
+            "bits": 32
+          },
+          "f64": {
+            "kind": "float",
+            "bits": 64
+          },
+          "ptr": {
+            "kind": "pointer",
+            "bits": 64
+          },
+          "cstring": {
+            "kind": "string",
+            "bits": 64
+          }
         },
         "addon": {
           "file": "semio-node-native.node",
-          "directory": ["native", "node"],
+          "directory": [
+            "native",
+            "node"
+          ],
           "digestCharacters": 16,
           "maximumPathCharacters": 256,
-          "environment": {"cache": "SEMIO_RUNTIME_CACHE", "addon": "SEMIO_RUNTIME_NATIVE_ADDON", "compiler": "SEMIO_RUSTC", "cargoHome": "CARGO_HOME", "provider": "SEMIO_RUNTIME_NATIVE_PROVIDER"}
+          "environment": {
+            "cache": "SEMIO_RUNTIME_CACHE",
+            "addon": "SEMIO_RUNTIME_NATIVE_ADDON",
+            "compiler": "SEMIO_RUSTC",
+            "cargoHome": "CARGO_HOME",
+            "provider": "SEMIO_RUNTIME_NATIVE_PROVIDER",
+            "linker": "SEMIO_RUNTIME_NATIVE_LINKER"
+          }
         },
         "compiler": {
           "program": "rustc",
           "crateName": "semio_node_native",
-          "arguments": ["--edition", "2021", "--crate-type", "cdylib", "-C", "opt-level=3", "-C", "panic=abort", "-C", "strip=symbols"],
+          "arguments": [
+            "--edition",
+            "2021",
+            "--crate-type",
+            "cdylib",
+            "-C",
+            "opt-level=3",
+            "-C",
+            "panic=abort",
+            "-C",
+            "strip=symbols"
+          ],
           "timeoutSeconds": 600,
-          "licenseRetry": {"marker": "Xcode license", "developerDirectory": "/Library/Developer/CommandLineTools"}
+          "licenseRetry": {
+            "marker": "Xcode license",
+            "developerDirectory": "/Library/Developer/CommandLineTools"
+          }
         },
-        "lock": {"staleSeconds": 900, "pollMilliseconds": 50, "waitSeconds": 900},
+        "lock": {
+          "staleSeconds": 900,
+          "pollMilliseconds": 50,
+          "waitSeconds": 900
+        },
         "targets": [
-          {"platform": "darwin", "arch": "arm64", "triple": "aarch64-apple-darwin", "linkArguments": ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]},
-          {"platform": "darwin", "arch": "x64", "triple": "x86_64-apple-darwin", "linkArguments": ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]},
-          {"platform": "linux", "arch": "arm64", "triple": "aarch64-unknown-linux-gnu", "linkArguments": ["-C", "target-feature=-crt-static"]},
-          {"platform": "linux", "arch": "x64", "triple": "x86_64-unknown-linux-gnu", "linkArguments": ["-C", "target-feature=-crt-static"]},
-          {"platform": "win32", "arch": "arm64", "triple": "aarch64-pc-windows-msvc", "linkArguments": []},
-          {"platform": "win32", "arch": "x64", "triple": "x86_64-pc-windows-msvc", "linkArguments": []}
+          {
+            "platform": "darwin",
+            "arch": "arm64",
+            "triple": "aarch64-apple-darwin",
+            "linkArguments": [
+              "-C",
+              "link-arg=-Wl,-undefined,dynamic_lookup"
+            ]
+          },
+          {
+            "platform": "darwin",
+            "arch": "x64",
+            "triple": "x86_64-apple-darwin",
+            "linkArguments": [
+              "-C",
+              "link-arg=-Wl,-undefined,dynamic_lookup"
+            ]
+          },
+          {
+            "platform": "linux",
+            "arch": "arm64",
+            "triple": "aarch64-unknown-linux-gnu",
+            "linkArguments": [
+              "-C",
+              "target-feature=-crt-static"
+            ]
+          },
+          {
+            "platform": "linux",
+            "arch": "x64",
+            "triple": "x86_64-unknown-linux-gnu",
+            "linkArguments": [
+              "-C",
+              "target-feature=-crt-static"
+            ]
+          },
+          {
+            "platform": "win32",
+            "arch": "arm64",
+            "triple": "aarch64-pc-windows-msvc",
+            "linkArguments": []
+          },
+          {
+            "platform": "win32",
+            "arch": "x64",
+            "triple": "x86_64-pc-windows-msvc",
+            "linkArguments": []
+          }
         ],
         "cacheRoots": {
-          "darwin": {"environment": null, "homeSegments": ["Library", "Caches"], "segments": ["semio"]},
-          "linux": {"environment": "XDG_CACHE_HOME", "homeSegments": [".cache"], "segments": ["semio"]},
-          "win32": {"environment": "LOCALAPPDATA", "homeSegments": ["AppData", "Local"], "segments": ["semio"]}
+          "darwin": {
+            "environment": null,
+            "homeSegments": [
+              "Library",
+              "Caches"
+            ],
+            "segments": [
+              "semio"
+            ]
+          },
+          "linux": {
+            "environment": "XDG_CACHE_HOME",
+            "homeSegments": [
+              ".cache"
+            ],
+            "segments": [
+              "semio"
+            ]
+          },
+          "win32": {
+            "environment": "LOCALAPPDATA",
+            "homeSegments": [
+              "AppData",
+              "Local"
+            ],
+            "segments": [
+              "semio"
+            ]
+          }
         }
       }
     },
     "Corpus": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "environment", "calls", "memory", "view", "refusals", "host"],
+      "required": [
+        "version",
+        "environment",
+        "calls",
+        "memory",
+        "view",
+        "refusals",
+        "host"
+      ],
       "properties": {
-        "version": {"const": 1},
-        "environment": {"type": "object", "additionalProperties": {"type": "string"}},
-        "calls": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Call"}},
-        "memory": {"type": "array", "items": {"$ref": "#/definitions/Memory"}},
-        "view": {"$ref": "#/definitions/View"},
-        "refusals": {"type": "array", "items": {"$ref": "#/definitions/Refusal"}},
-        "host": {"type": "array", "items": {"enum": ["rename-swap", "statfs", "case-sensitivity", "process-tree"]}}
+        "version": {
+          "const": 1
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "calls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Call"
+          }
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Memory"
+          }
+        },
+        "view": {
+          "$ref": "#/definitions/View"
+        },
+        "refusals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Refusal"
+          }
+        },
+        "host": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "rename-swap",
+              "statfs",
+              "case-sensitivity",
+              "process-tree"
+            ]
+          }
+        }
       }
     },
     "Call": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "symbol", "args", "returns", "expect"],
+      "required": [
+        "id",
+        "symbol",
+        "args",
+        "returns",
+        "expect"
+      ],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "symbol": {"type": "string", "minLength": 1},
-        "args": {"type": "array", "items": {"type": "array", "minItems": 2, "maxItems": 2}},
-        "returns": {"enum": ["void", "bool", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "ptr", "cstring"]},
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "returns": {
+          "enum": [
+            "void",
+            "bool",
+            "i8",
+            "u8",
+            "i16",
+            "u16",
+            "i32",
+            "u32",
+            "i64",
+            "u64",
+            "ptr",
+            "cstring"
+          ]
+        },
         "expect": {},
-        "buffers": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "bytes"], "properties": {"id": {"type": "string"}, "bytes": {"type": "string", "pattern": "^([0-9a-f]{2})*$"}}}},
-        "after": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^([0-9a-f]{2})*$"}},
-        "errno": {"type": "integer"}
+        "buffers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "bytes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "bytes": {
+                "type": "string",
+                "pattern": "^([0-9a-f]{2})*$"
+              }
+            }
+          }
+        },
+        "after": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^([0-9a-f]{2})*$"
+          }
+        },
+        "errno": {
+          "type": "integer"
+        }
       }
     },
     "Memory": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bytes", "reads"],
+      "required": [
+        "id",
+        "bytes",
+        "reads"
+      ],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "bytes": {"type": "string", "pattern": "^([0-9a-f]{2})*$"},
-        "reads": {"type": "array", "items": {"type": "array", "minItems": 3, "maxItems": 3}}
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "reads": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
       }
     },
     "View": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "bytes", "offset", "length", "fill", "fillLength", "expectBefore", "expectAfter"],
+      "required": [
+        "id",
+        "bytes",
+        "offset",
+        "length",
+        "fill",
+        "fillLength",
+        "expectBefore",
+        "expectAfter"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "bytes": {"type": "string", "pattern": "^([0-9a-f]{2})*$"},
-        "offset": {"type": "integer", "minimum": 0},
-        "length": {"type": "integer", "minimum": 1},
-        "fill": {"type": "integer", "minimum": 0, "maximum": 255},
-        "fillLength": {"type": "integer", "minimum": 1},
-        "expectBefore": {"type": "string", "pattern": "^([0-9a-f]{2})*$"},
-        "expectAfter": {"type": "string", "pattern": "^([0-9a-f]{2})*$"}
+        "id": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fill": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "fillLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expectBefore": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "expectAfter": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        }
       }
     },
     "Refusal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "library", "symbol", "args", "returns"],
+      "required": [
+        "id",
+        "library",
+        "symbol",
+        "args",
+        "returns"
+      ],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "library": {"type": "string", "minLength": 1},
-        "symbol": {"type": "string", "minLength": 1},
-        "args": {"type": "array"},
-        "returns": {"type": "string"}
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "library": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "type": "array"
+        },
+        "returns": {
+          "type": "string"
+        }
+      }
+    },
+    "Linker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "command",
+        "arguments"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "arguments": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
       }
     }
   }

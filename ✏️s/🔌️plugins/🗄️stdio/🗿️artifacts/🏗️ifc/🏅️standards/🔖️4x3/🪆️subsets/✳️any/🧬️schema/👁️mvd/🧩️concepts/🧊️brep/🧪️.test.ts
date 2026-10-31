@@ -1,6 +1,6 @@
 /** 🧊️ Exact basic Brep clauses preserve the separate advanced family and original source labels. */
 import {test,expect} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {compare,applyPatch} from 'fast-json-patch';
 import * as api from './🟦️.ts';
 import {validateIfcBodyBrep as standardEndpoint,ifcBodyBrepDefinition as standardDefinition} from '../../../../🟦️.ts';

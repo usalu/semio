@@ -2,10 +2,12 @@
   "columns": {
     "c-a1": {
       "entry": "Patched",
-      "tilt": {
-        "value": {
-          "angle": 0.1,
-          "direction": 1.5707963267948966
+      "value": {
+        "tilt": {
+          "value": {
+            "angle": 0.1,
+            "direction": 1.5707963267948966
+          }
         }
       }
     }

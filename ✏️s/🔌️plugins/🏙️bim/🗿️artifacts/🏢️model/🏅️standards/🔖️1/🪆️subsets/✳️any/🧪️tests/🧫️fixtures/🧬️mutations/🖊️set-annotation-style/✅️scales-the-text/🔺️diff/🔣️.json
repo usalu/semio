@@ -2,7 +2,9 @@
   "annotation_styles": {
     "as-plan": {
       "entry": "Patched",
-      "text_height": 0.35
+      "value": {
+        "text_height": 0.35
+      }
     }
   }
 }

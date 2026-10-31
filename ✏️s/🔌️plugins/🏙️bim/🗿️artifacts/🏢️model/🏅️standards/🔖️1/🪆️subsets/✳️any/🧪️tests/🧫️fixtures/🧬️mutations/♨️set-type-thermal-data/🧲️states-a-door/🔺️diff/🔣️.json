@@ -2,8 +2,10 @@
   "door_types": {
     "dr-1": {
       "entry": "Patched",
-      "u_value": {
-        "value": 1.3
+      "value": {
+        "u_value": {
+          "value": 1.3
+        }
       }
     }
   }

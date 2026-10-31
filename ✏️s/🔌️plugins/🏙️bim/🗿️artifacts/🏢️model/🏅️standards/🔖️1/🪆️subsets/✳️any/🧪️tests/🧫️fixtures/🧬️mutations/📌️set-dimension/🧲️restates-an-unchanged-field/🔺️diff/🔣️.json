@@ -2,7 +2,9 @@
   "dimensions": {
     "dim-south": {
       "entry": "Patched",
-      "name": "South wall length"
+      "value": {
+        "name": "South wall length"
+      }
     }
   }
 }

@@ -2,10 +2,12 @@
   "family_parameters": {
     "fam-table.height": {
       "entry": "Created",
-      "family": "fam-table",
-      "kind": "Length",
-      "name": "height",
-      "value": "0.74 m"
+      "value": {
+        "family": "fam-table",
+        "kind": "Length",
+        "name": "height",
+        "value": "0.74 m"
+      }
     }
   }
 }

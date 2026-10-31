@@ -4,8 +4,7 @@ use std::sync::OnceLock;
 pub mod query;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 
-#[path="../../../../../../📚️catalog/🦀️.rs"]
-mod declaration;
+use semio_s_artifact_stdio_ifc_declarations as declaration;
 pub use declaration::{IfcCatalog,IfcTypeExpression,IfcAttributeDeclaration,IfcDerivedDeclaration,IfcEntityDeclaration,IfcTypeDeclaration};
 #[path="../../../../../../📚️catalog/⚖️domain/🦀️.rs"]
 mod domain;
@@ -19,7 +18,7 @@ pub struct IfcDiagnostic {
 
 /// 📏️ Largest inherited serialized tuple in this pinned normative profile.
 pub const IFC4X3_MAXIMUM_ATTRIBUTES: usize = 21;
-include!("data.rs");
+use semio_s_artifact_stdio_ifc4x3_add2_catalog::build_catalog;
 static IFC4X3_CATALOG: OnceLock<IfcCatalog> = OnceLock::new();
 
 /// 📖 Resolve the complete retained catalog without a runtime parser or external dependency.

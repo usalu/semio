@@ -24,6 +24,11 @@ export function createExecutorPoolV1({command,environment,cwd,size,readyTimeoutM
   starts++;
   const child=spawnProcess(command[0],command.slice(1),{cwd,env:environment,stdio:["ignore","pipe","pipe","pipe"]});
   const executor={child,state:"starting",pending:undefined,listeners:new Map()};
+  child.stdio[3].on("error",error=>{
+   log("executor-protocol",String(error?.message??error));
+   executor.pending?.resolve({exit:70,lost:true});executor.pending=undefined;
+   if(!closed)child.kill("SIGTERM");
+  });
   executor.ready=new Promise(resolve=>{
    const timer=setTimeout(()=>{if(executor.state==="starting"){child.kill("SIGKILL");resolve(false);}},readyTimeoutMilliseconds);timer.unref?.();
    lines(child.stdio[3],line=>{

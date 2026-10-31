@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -778,4 +779,83 @@ func physicalSearchTempDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 	return root
+}
+
+func TestSourceFingerprintReusesBoundedStreamingScratch(t *testing.T) {
+ data, err := os.ReadFile(filepath.Join("..", "..", "🧪️tests", "🧫️fixtures", "🌲️snapshot", "💾️streaming", "🔣️.json"))
+ if err != nil { t.Fatal(err) }
+ var fixture struct { Cases []struct { Name string; Prefix string; Files int; Unit string; Repeat int; MaximumAllocatedBytes uint64; SHA256 string } }
+ if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
+ for _, row := range fixture.Cases { t.Run(row.Name, func(t *testing.T) {
+  root := physicalSearchTempDir(t)
+  body := []byte(strings.Repeat(row.Unit, row.Repeat))
+  for index := 0; index < row.Files; index++ { if err := os.WriteFile(filepath.Join(root, fmt.Sprintf("%s%04d.txt", row.Prefix, index)), body, 0600); err != nil { t.Fatal(err) } }
+  var before, after runtime.MemStats
+  runtime.ReadMemStats(&before)
+  actual, err := FingerprintSource(context.Background(), root, func(string) bool { return false }, nil)
+  runtime.ReadMemStats(&after)
+  if err != nil { t.Fatal(err) }
+  if actual != row.SHA256 { t.Fatalf("Node fingerprint oracle mismatch: %s != %s", actual, row.SHA256) }
+  allocated := after.TotalAlloc - before.TotalAlloc
+  t.Logf("streamed %d files; allocated %d bytes", row.Files, allocated)
+  if allocated > row.MaximumAllocatedBytes { t.Fatalf("streaming scratch allocation %d exceeds %d bytes", allocated, row.MaximumAllocatedBytes) }
+ }) }
+}
+
+func TestShardReplayRetainsBoundedDecoderScratch(t *testing.T) {
+ data, err := os.ReadFile(filepath.Join("..", "..", "🧪️tests", "🧫️fixtures", "🌲️snapshot", "💾️streaming", "🔣️.json"))
+ if err != nil { t.Fatal(err) }
+ var fixture struct {
+  Replay struct { Events int; MaximumAllocatedBytes uint64; ID string; Text string }
+  Framing []struct { Name string; Body string; Accepted bool; Events uint64; SHA256 string }
+ }
+ if err = json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }
+ t.Run("allocation", func(t *testing.T) {
+  var body bytes.Buffer
+  for seq := 1; seq <= fixture.Replay.Events; seq++ {
+   encoded, err := json.Marshal(event{Schema:schema, Seq:uint64(seq), Kind:"indexed", ID:fixture.Replay.ID, Text:fixture.Replay.Text})
+   if err != nil { t.Fatal(err) }
+   body.Write(encoded); body.WriteByte('\n')
+  }
+  name := filepath.Join(physicalSearchTempDir(t), "events.jsonl")
+  if err = os.WriteFile(name, body.Bytes(), 0600); err != nil { t.Fatal(err) }
+  file, err := os.Open(name); if err != nil { t.Fatal(err) }; defer file.Close()
+  var before, after runtime.MemStats
+  runtime.ReadMemStats(&before)
+  index, info, err := replayShard(context.Background(), file, shardName(fixture.Replay.ID), nil)
+  runtime.ReadMemStats(&after)
+  if err != nil { t.Fatal(err) }
+  if info.Events != uint64(fixture.Replay.Events) || info.Documents != 1 || index.docs[fixture.Replay.ID] != fixture.Replay.Text { t.Fatalf("replay changed semantics: %+v", info) }
+  allocated := after.TotalAlloc-before.TotalAlloc
+  t.Logf("replayed %d events; allocated %d bytes", fixture.Replay.Events, allocated)
+  if allocated > fixture.Replay.MaximumAllocatedBytes { t.Fatalf("decoder scratch allocation %d exceeds %d bytes", allocated, fixture.Replay.MaximumAllocatedBytes) }
+ })
+ for _, row := range fixture.Framing { t.Run(row.Name, func(t *testing.T) {
+  name := filepath.Join(physicalSearchTempDir(t), "events.jsonl")
+  if err := os.WriteFile(name, []byte(row.Body), 0600); err != nil { t.Fatal(err) }
+  file, err := os.Open(name); if err != nil { t.Fatal(err) }; defer file.Close()
+  _, info, err := replayShard(context.Background(), file, shardName(fixture.Replay.ID), nil)
+  if row.Accepted {
+   if err != nil || info.Events != row.Events || info.Bytes != int64(len(row.Body)) || info.SHA256 != row.SHA256 { t.Fatalf("framing/hash changed: %+v %v", info, err) }
+  } else if !errors.Is(err, ErrCorrupt) { t.Fatalf("invalid frame accepted: %+v %v", info, err) }
+ }) }
+}
+
+func TestFuzzyMatchingReusesBoundedDistanceScratch(t *testing.T) {
+ data, err := os.ReadFile(filepath.Join("..", "..", "🧪️tests", "🧫️fixtures", "🌲️snapshot", "💾️streaming", "🔣️.json"))
+ if err != nil { t.Fatal(err) }
+ var fixture struct { Matching []struct { Name string; Unit string; Repeat int; Term string; Fuzziness int; Score float64; MaximumAllocatedBytes uint64 } }
+ if err = json.Unmarshal(data,&fixture); err != nil { t.Fatal(err) }
+ for _, row := range fixture.Matching { t.Run(row.Name,func(t *testing.T) {
+  text := strings.Repeat(row.Unit,row.Repeat)
+  queries := []*MatchQuery{{Term:row.Term,Fuzziness:row.Fuzziness}}
+  var before,after runtime.MemStats
+  runtime.ReadMemStats(&before)
+  actual,matched := scoreContext(context.Background(),text,queries)
+  runtime.ReadMemStats(&after)
+  if !matched || actual != row.Score { t.Fatalf("score=%v matched=%v expected=%v",actual,matched,row.Score) }
+  allocated := after.TotalAlloc-before.TotalAlloc
+  t.Logf("matched %d candidates; allocated %d bytes",row.Repeat,allocated)
+  if allocated > row.MaximumAllocatedBytes { t.Fatalf("distance scratch allocation %d exceeds %d bytes",allocated,row.MaximumAllocatedBytes) }
+ }) }
 }

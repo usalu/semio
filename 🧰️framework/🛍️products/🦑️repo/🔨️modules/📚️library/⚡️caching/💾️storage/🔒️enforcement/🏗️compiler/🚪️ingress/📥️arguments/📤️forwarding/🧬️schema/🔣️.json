@@ -46,7 +46,8 @@
             "command": {
               "enum": [
                 "rustc",
-                "rustdoc"
+                "rustdoc",
+                "clippy"
               ]
             }
           }
@@ -91,7 +92,8 @@
         ],
         "compilerCommands": [
           "rustc",
-          "rustdoc"
+          "rustdoc",
+          "clippy"
         ],
         "globalValueFlags": [
           "--config",
@@ -149,6 +151,33 @@
           "overflow-checks=false",
           "panic=abort",
           "panic=unwind"
+        ],
+        "lintFlags": [
+          "-A",
+          "-W",
+          "-D",
+          "-F",
+          "--allow",
+          "--warn",
+          "--deny",
+          "--forbid"
+        ],
+        "lintNamePattern": "^[a-z][a-z0-9_:]*$",
+        "nestedProgramReceivers": [
+          {
+            "prefix": [
+              "llvm-cov",
+              "test"
+            ],
+            "command": "test"
+          },
+          {
+            "prefix": [
+              "llvm-cov",
+              "nextest"
+            ],
+            "command": "nextest"
+          }
         ]
       }
     }

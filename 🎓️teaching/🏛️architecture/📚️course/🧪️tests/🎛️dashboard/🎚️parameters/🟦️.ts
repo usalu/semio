@@ -1,7 +1,7 @@
 /** 🎚️ Owner-local course forms preserve their argument boundaries and current parser semantics.
  * @see ../../../🧫️fixtures/🎛️dashboard/🎚️parameters/🔣️.json */
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

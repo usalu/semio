@@ -20,10 +20,12 @@
       "required": [
         "id",
         "name",
-        "paintLayers",
-        "smoothShading",
         "transform",
-        "mesh"
+        "smoothShading",
+        "mesh",
+        "paintLayers",
+        "meshContent",
+        "meshState"
       ],
       "properties": {
         "id": {
@@ -303,7 +305,9 @@
             }
           }
         },
-        "meshState": null
+        "meshState": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/artifact.json#/$defs/LowpolyObject/properties/meshState"
+        }
       },
       "x-semio-ui": {
         "role": "value",

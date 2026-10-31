@@ -6,6 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import deployment from "../../../🚀️deploy/🔣️.json" with { type: "json" };
+import publication from "../../../🧫️fixtures/🌐️publication/🔣️.json" with { type: "json" };
 
 export const site = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -66,5 +67,5 @@ export function sealed(origin: string, policy = `default-src 'self'; script-src 
 
 /** 📦️ A whole CDN artifact baked for `origin`. */
 export function released(origin: string): Record<string, string | Uint8Array> {
-  return { "index.html": sealed(origin), "404.html": sealed(origin), ".nojekyll": "", CNAME: `${deployment.site.host}\n`, "robots.txt": "User-agent: *\nAllow: /\n", "manifest.webmanifest": "{}", "favicon.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>", "assets/app-AbCd1234.js": `const proctor = ${JSON.stringify(origin)};`, "assets/app-EfGh5678.css": STYLE };
+  return { ...Object.fromEntries(publication.assignmentFiles.map(path => [path, publication.pdf])), "index.html": sealed(origin), "404.html": sealed(origin), ".nojekyll": "", CNAME: `${deployment.site.host}\n`, "robots.txt": "User-agent: *\nAllow: /\n", "manifest.webmanifest": "{}", "favicon.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>", "assets/app-AbCd1234.js": `const proctor = ${JSON.stringify(origin)};`, "assets/app-EfGh5678.css": STYLE };
 }

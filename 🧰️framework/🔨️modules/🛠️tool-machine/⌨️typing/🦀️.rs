@@ -1,5 +1,8 @@
 //! 🛠️ Typing tool: the typing statechart, its idle-timer host and the typing ledger that commits a buffer as one transaction.
 
+#[path="🗃️resident/🦀️.rs"]
+mod resident;
+use resident::TypingWindow;
 use super::*;
 
 //#region 🔖️Typing
@@ -229,7 +232,7 @@ pub struct TypingState<M> {
     pub buffer: String,
     pub deadline_ms: u64,
     pub transaction: TransactionRef,
-    pub entries: Vec<(String, M)>,
+    pub net: Vec<M>,
 }
 
 /// ✍️ One typing run: [`TypingMachine`] under a [`ToolMachineRunner`]. Every input runs on its own clock, which must be unique
@@ -249,9 +252,9 @@ impl<M: Clone + 'static> Typing<M> {
     /// cannot restore is refused (`Closed`).
     pub fn resume(state: TypingState<M>) -> Result<Self, ToolRefusal> {
         let persisted = machine::PersistedSnapshot { version: 1, fingerprint: TYPING_FINGERPRINT, states: state.states, history: Vec::new(), done: false };
-        let context = TypingContext { buffer: Some(state.buffer), keys: state.entries.len() };
+        let context = TypingContext { buffer: Some(state.buffer), keys: state.net.len() };
         let snapshot = machine::restore::<TypingMachine<M>, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
-        let transaction = ToolTransaction::resume(state.transaction, state.entries);
+        let transaction = ToolTransaction::resume(state.transaction, state.net.into_iter().enumerate().map(|(index,mutation)|(index.to_string(),mutation)).collect());
         let host = TypingHost { now_ms: 0, deadline_ms: Some(state.deadline_ms) };
         let runner = ToolMachineRunner::resume(state.tool, state.actor, TypingContext::default(), snapshot, Some(transaction), host)?;
         Ok(Self { runner })
@@ -319,7 +322,7 @@ impl<M: Clone + 'static> Typing<M> {
         let (snapshot, transaction) = self.runner.into_parts();
         let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
         let buffer = snapshot.context.buffer.clone()?;
-        Some(TypingState { states: machine::persist(&snapshot).states, tool, actor, buffer, deadline_ms, transaction: transaction.reference().clone(), entries: transaction.entries().to_vec() })
+        Some(TypingState { states: machine::persist(&snapshot).states, tool, actor, buffer, deadline_ms, transaction: transaction.reference().clone(), net: transaction.entries().iter().map(|(_,mutation)|mutation.clone()).collect() })
     }
 }
 
@@ -330,12 +333,13 @@ impl<M: Clone + 'static> Typing<M> {
 pub struct TypingLedger<M> {
     pub(super) source_revision:u64,
     pub(super) live_windows:usize,
-    pub(crate) windows: std::collections::BTreeMap<semio_framework_value::SharedUtf8, RetainedOriginalSlot<TypingState<M>>>,
+    pub(crate) windows: Vec<TypingWindow<M>>,
+    pub(super) writing:bool,
 }
 
 impl<M> Default for TypingLedger<M> {
     fn default() -> Self {
-        Self { source_revision:0,live_windows:0, windows: std::collections::BTreeMap::new() }
+        Self { source_revision:0,live_windows:0, windows: Vec::new(),writing:false }
     }
 }
 
@@ -352,27 +356,27 @@ impl<M: 'static> TypingLedger<M> {
 
     /// 🔎️ The open run of `window`.
     pub fn open(&self, window: &str) -> Option<&TypingState<M>> {
-        self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
+        self.original_slot(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
     }
 
     /// 🪟️ The windows holding an open run, in window id order.
     pub fn windows(&self) -> impl Iterator<Item = &str> {
-        self.windows.iter().filter(|(_,slot)|!slot.is_empty()).map(|(key,_)|key.as_str())
+        self.windows.iter().filter(|row|!row.state.is_empty()).map(|row|row.key.as_str())
     }
 
     /// 👁️ Every open run's net leaves, window by window in window id order — the overlay a render applies on the committed
     /// document; never history.
     pub fn provisional(&self) -> impl Iterator<Item = &M> {
-        self.windows.values().filter(|state|!state.is_empty()).flat_map(|state| state.get().entries.iter().map(|(_, leaf)| leaf))
+        self.windows.iter().filter(|row|!row.state.is_empty()).flat_map(|row|row.state.get().net.iter())
     }
 
     /// 🔜️ The earliest idle deadline of any open run.
     pub fn next_deadline_ms(&self) -> Option<u64> {
-        self.windows.values().filter(|state|!state.is_empty()).map(|state| state.get().deadline_ms).min()
+        self.windows.iter().filter(|row|!row.state.is_empty()).map(|row|row.state.get().deadline_ms).min()
     }
 
     fn run(&mut self, window: &str, tool: &str, actor: &ActorId) -> (Typing<M>, Option<ToolStep<M>>) where M:Clone {
-        match self.windows.remove(window).filter(|slot|!slot.is_empty()).map(|slot|Typing::resume(slot.try_into_original().unwrap_or_else(|_|unreachable!("original typing write fence")))) {
+        match self.cold_take(window).map(Typing::resume) {
             Some(Ok(typing)) if typing.tool() == tool => (typing, None),
             Some(Ok(mut other)) => {
                 let step = other.runner.send(TypingEvent::Commit { reason: TypingCommit::SelectionJump }, HybridLogicalTimestamp { actor: 0, physical_ms: other.runner.host.now_ms, logical: 0 }).ok();
@@ -384,14 +388,14 @@ impl<M: 'static> TypingLedger<M> {
 
     fn keep(&mut self, window: &str, typing: Typing<M>) where M:Clone {
         if let Some(state) = typing.persist() {
-            self.windows.insert(window.to_string().into(), RetainedOriginalSlot::new(state));
+            self.cold_install(window,state);
         }
     }
 
     /// 📮️ Runs one input of `window`'s run on `clock`: an open run of another tool in the window commits first (`selectionJump`).
     /// Answers every step in order.
     pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, input: TypingInput<M>, fold: impl Fn(&[M], &[M]) -> TypingFold<M>, clock: HybridLogicalTimestamp) -> Result<Vec<ToolStep<M>>, ToolRefusal> where M:Clone {
-        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed)}
+        if self.original_write_pending()||self.retained_read_pending(window){return Err(ToolRefusal::Unclosed)}
         let was_open=self.open(window).is_some();
         let (mut typing, other) = self.run(window, tool, actor);
         let steps = typing.send(input, fold, clock);
@@ -403,9 +407,8 @@ impl<M: 'static> TypingLedger<M> {
 
     /// 🏁️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
     pub fn commit(&mut self, window: &str, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
-        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed)}
-        let Some(slot) = self.windows.remove(window).filter(|slot|!slot.is_empty()) else { return Ok(ToolStep::Idle) };
-        let state=slot.try_into_original().unwrap_or_else(|_|unreachable!("original typing write fence"));
+        if self.original_write_pending()||self.retained_read_pending(window){return Err(ToolRefusal::Unclosed)}
+        let Some(state)=self.cold_take(window)else{return Ok(ToolStep::Idle)};
         let mut typing = Typing::resume(state)?;
         typing.runner.host.now_ms = clock.physical_ms;
         let step = typing.runner.send(TypingEvent::Commit { reason }, clock);
@@ -417,17 +420,18 @@ impl<M: 'static> TypingLedger<M> {
 
     /// 🏁️ Commits every open run (another verb needs the typed text first, the page is left): one step per window.
     pub fn commit_all(&mut self, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
-        let windows: Vec<String> = self.windows.keys().map(|key|key.to_string()).collect();
+        let windows: Vec<String> = self.windows().map(str::to_owned).collect();
         windows.into_iter().map(|window| (window.clone(), self.commit(&window, reason, clock))).collect()
     }
 
     /// ⏱️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
     pub fn lapse(&mut self, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
-        let lapsed: Vec<String> = self.windows.iter().filter(|(_, state)| !state.is_empty()&&!state.has_read()&&state.get().deadline_ms <= clock.physical_ms).map(|(window, _)| window.to_string()).collect();
+        if self.original_write_pending(){return Vec::new()}
+        let lapsed: Vec<String> = self.windows.iter().filter(|row|!row.state.is_empty()&&!row.state.has_read()&&row.state.get().deadline_ms<=clock.physical_ms).map(|row|row.key.to_string()).collect();
         lapsed
             .into_iter()
             .filter_map(|window| {
-                let mut typing = match Typing::resume(self.windows.remove(window.as_str())?.try_into_original().unwrap_or_else(|_|unreachable!("original typing write fence"))) {
+                let mut typing = match Typing::resume(self.cold_take(window.as_str())?) {
                     Ok(typing) => typing,
                     Err(refusal) => return Some((window, Err(refusal))),
                 };
@@ -442,19 +446,19 @@ impl<M: 'static> TypingLedger<M> {
 
     /// 🧯️ Host abort of `window`'s open run (a conflicting base): zero trace. `Aborted(ref, reason)`, or `Idle`.
     pub fn abort(&mut self, window: &str, reason: ToolAbortReason) -> ToolStep<M> {
-        if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return ToolStep::Idle}
-        let Some(slot)=self.windows.remove(window).filter(|slot|!slot.is_empty())else{return ToolStep::Idle};self.live_windows-=1;self.change_source_revision();ToolStep::Aborted(slot.try_into_original().unwrap_or_else(|_|unreachable!("original typing write fence")).transaction,reason)
+        if self.original_write_pending()||self.retained_read_pending(window){return ToolStep::Idle}
+        let Some(state)=self.cold_take(window)else{return ToolStep::Idle};self.live_windows-=1;self.change_source_revision();ToolStep::Aborted(state.transaction,reason)
     }
 
     /// 🧊️ Host abort of every open run (a frozen document): zero trace, one step per window.
     pub fn abort_all(&mut self, reason: ToolAbortReason) -> Vec<(String, ToolStep<M>)> {
-        let windows: Vec<String> = self.windows.keys().map(|key|key.to_string()).collect();
+        let windows: Vec<String> = self.windows().map(str::to_owned).collect();
         windows.into_iter().map(|window| (window.clone(), self.abort(&window, reason))).collect()
     }
 
     /// 🪦️ A window that left the roster ends its run like a blur: the typed text commits as ONE edit.
     pub fn retain_windows(&mut self, keep: impl Fn(&str) -> bool, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
-        let retired: Vec<String> = self.windows.keys().filter(|window| !keep(window)).map(|key|key.to_string()).collect();
+        let retired: Vec<String> = self.windows().filter(|window|!keep(window)).map(str::to_owned).collect();
         retired.into_iter().map(|window| (window.clone(), self.commit(&window, TypingCommit::Blur, clock))).collect()
     }
 }
@@ -462,16 +466,15 @@ impl<M: 'static> TypingLedger<M> {
 
 impl<M:Send+Sync+'static> TypingLedger<M>{
  /// 🔎️ Locates the next original resident address without scanning preceding typing slots.
- pub fn next_retained_window(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{let next=match after{Some(after)=>self.windows.range::<str,_>((std::ops::Bound::Excluded(after),std::ops::Bound::Unbounded)).next(),None=>self.windows.iter().next()};next.map(|(key,slot)|(key,slot.key()))}
+ pub fn next_retained_window(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{let index=match after{Some(after)=>match self.position(after){Ok(index)=>index+1,Err(index)=>index},None=>0};self.windows.get(index).map(|row|(&row.key,row.state.key()))}
 
- /// 🔗️ Captures the exact original authored state slot without cloning its entries.
- pub fn retained_read_key(&self,window:&str)->Option<RetainedOriginalSlotKey>{self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::key)}
- pub fn retained_read_pending(&self,window:&str)->bool{self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read)}
- pub fn retained_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.demands(key)}
- pub fn advance_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.advance_read(key,factory,grant)}
- pub fn retained_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::retained_clone::RetainedCloneRef<'_,TypingState<M>>,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.borrow(key)}
+ /// 🔗️ Captures the exact original authored state slot without cloning its net.
+ pub fn retained_read_key(&self,window:&str)->Option<RetainedOriginalSlotKey>{self.original_slot(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::key)}
+ pub fn retained_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original_slot(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.demands(key)}
+ pub fn advance_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.original_slot_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.advance_read(key,factory,grant)}
+ pub fn retained_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::retained_clone::RetainedCloneRef<'_,TypingState<M>>,semio_framework_value::ValueError>{self.original_slot(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.borrow(key)}
  /// 🎟️ Retains the actual current typing source under its exact original slot key.
- pub fn retain_original_read(&self,window:&str,key:RetainedOriginalSlotKey,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<TypingState<M>>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.retain_read(key,grant)}
- pub fn retained_read_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_demands(key,body)}
- pub fn return_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<M>>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_read(key,factory,grant)}
+ pub fn retain_original_read(&self,window:&str,key:RetainedOriginalSlotKey,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<TypingState<M>>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework_value::ValueError>{self.original_slot(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.retain_read(key,grant)}
+ pub fn retained_read_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original_slot(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.return_demands(key,body)}
+ pub fn return_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<M>>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.original_slot_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.return_read(key,factory,grant)}
 }

@@ -1,0 +1,45 @@
+# Current Schema Source Checkpoint
+
+Captured 2026-10-30T05:06:18.068Z. This is a hash inventory of current relevant Source, not a claim that every listed format passed. The actual program compiler scope is all21 physical TypeScript files below its schema owner, excluding tests and packages; no narrowed file filter was introduced.
+
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🏗️program-structure/🚪️parsers/🟦️.ts — 520f4e3b1a12ca14ef3569e225bf32c123463154c4b74a121fe51c60c745dd97
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🏗️program-structure/🟦️.ts — a70edaf0bc44696e0cd6adc15b645716df08bb7219af5faeb7d3da599150da1d
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts — 51edeac692961480c97073ed4e6d1e583d411e2a9362cde81ed6d78fa4222768
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🟦️.ts — 40890a244fbc95b85a5215380b9242382e8c20d03227eea538b12a21011ee3d7
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📋️requirements/🚪️parsers/🟦️.ts — f4ffd23da0a3b56ac764e951286241df82149aefdc1be35451721814d4d2cda7
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📋️requirements/🟦️.ts — ad69ec7e38fa48c081e7e81d08fdc2ce72f850bb506c10dc6a26d8d02d1fa705
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json — a1597d4a071ffbaeb57c00f29f7bdde2f9d71711340c2a66d50085bef133c228
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts — 568a55baa73baf31b986aae2bef05c5d1c865ceef8ef75a286c9314831f8020e
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json — 18021e7c34b256451a7139487ee6ccca3cd92446f39227f26e88906d953de78a
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🟦️.ts — fb7113b7f6743f74dbfbc000ef9eaeacdb4d3e30ad5e09597f542a4aa1a17888
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json — f1d3d5f901c886b4b451099b439d6354f362cbf6e3933093c5779e7c3d60c824
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🟦️.ts — 5bed7c0ac758a9263227ad9f790a82cf4e2655de9dfae7da7823d7028b1d1cab
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts — f6cb5458664d368c5776d0283a57bede79ee5ddb017a622a7e2e184ba076339f
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🟦️.ts — 735c3092ed78ac136374ee573e8a7d455cd5f2f3d848d0eae551c6423e71a42e
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧾️program-diff/🟦️.ts — 5b39da0118b8dc5dd9c588351a4b19da1a4f2babe6df7b6327e12c6204b41a16
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts — a234853e5b98b13b66524ad2a706dc0af9033c9c2c76efb2a0094bee3622e843
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🟦️.ts — 247ddccf296f7c584126c4e8efe466cf87bd05d3a93a3feac96117b67df2ec8b
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗃️decision-records/🚪️parsers/🟦️.ts — fef64efb629742623a458810592a55b51da4f402dc7ad3af7657ff6d55004bba
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗃️decision-records/🟦️.ts — 7f16717859643fdc46528395631dc67c639f7e9fdb0ea3726316cb4534cdc2f6
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🗂️catalog/🟦️.ts — af3ce62f87edf5a0303afe4290305267aa30b8a23c777bac5e5a8ce54df1bdfe
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts — e4f3c2fa5de472c4ebf3d9848646bee586ed2937d27cfd98ad62094fa72012ee
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🔣️.json — 47f026af19af2e42977f4c8571785cfaf3fa3586ba8cecded0fe441a92094292
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts — b8a013d25446d94d5f2cc91005ed9f9229850177607bc2761c7e5acb5391a023
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/🧬️schema/🔣️.json — 8c491d69276e1c6ccb3d33e369bf0c66ee04a60aaa6d6b9b0717ba4ffab5e2fe
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/🧬️schema/🔣️.json — bb2d9c2c3781ed7c14a4b4bc2d6adb51c3dce7849ad74929476d6cfc9bfcf318
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/🧬️schema/🔣️.json — e8199797dbc04266abfb5df7ffc4398dc478fae1f691ef8f7dafe04511f5fb22
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/🧬️schema/🔣️.json — 245f3791bcb2446f9d038aa6f27349c0c278483672a992d1527e1935ceba19f2
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts — 655ff3a67341d1529f15909c7ecb3c87564f9404d28b9f0814c244e165481786
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🧬️schema/🔣️.json — 015683856d8f3e1c2e9e5306e7f4854c0f2bb015dc9a17f0f816972a8fa3bdb8
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/🧬️schema/🔣️.json — 96c38661edfbb52b169c373ce720e8a2c866ce4ebfe0c80e310df6b44b2acf5f
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪪️entity-foundation/🚪️parsers/🟦️.ts — c064e094db5e07e218a797302448db6d80a1184f706318cb1e253f3d2aa59f27
+- ✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪪️entity-foundation/🟦️.ts — a34acbadadbeeaf5d21c0554fdd089ded7aae87faa1e29fec54bdc2ec34aaea3
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🧬️schema/🔣️.json — 7383813dafaad99fcebc478224e558a160a6cd61ab10ca6cedabcf86aacfc987
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📐️schema-contracts/📤️export-completeness/🟦️.ts — c889ac849595d708a77ffaffdcafd10d922485deafdf4f2dbfbb88d674e2ca69
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📐️schema-contracts/🩺️placement-diagnostics/🟦️.ts — f2cd1bd61a0b4ec282c402aa09b7a775c0bfa540c58b69f150cf41a2003630d6
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🚷️discovery-boundaries/🟦️.ts — 3bb0979bd03e9f31a38e4ba61f4c1bef2749c4bb5ed5a9cb5bc6e60a5ebfc8c1
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️mutation-payload-parity/🟦️.ts — be1579df0400190c10046f60f8f49e7e8232412d312ad9d42afad2cd1f112545
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧫️mutation-payload-parity/🔣️.json — e5e8b0c30e06f9fc2fc8cd684e54201aac8556059ceb68a821e70b8735a955d1
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧫️fixtures/🧬️schema-invariants/🔣️.json — 36ea19eb8228cee87a2877976f5efb2ac3d5d30833599ac8581a17fb8f675389
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️schema-invariants/🟦️.ts — 26ef1d057155975a9ab6ad4176bb654a0661fb425bb3421b998a1808aabc6425
+- 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/⚖️mutation-payload-parity/🟦️.ts — ea9f88051f84f849b1661578f254327c8534014608c2ee46d9e111963829cf5f

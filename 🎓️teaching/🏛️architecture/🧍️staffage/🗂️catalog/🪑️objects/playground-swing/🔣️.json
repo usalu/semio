@@ -1,0 +1,2383 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "playground-swing",
+    "category": "objects",
+    "title": {
+      "en": "Playground Swing",
+      "de": "Spielplatzschaukel"
+    },
+    "summary": {
+      "en": "A steel A-frame with a top beam, two chains and a rubber seat; the seat swings as a pendulum of 1.9 m chain length with a period of 2.77 s.",
+      "de": "Stahl-A-Rahmen mit Oberholm, zwei Ketten und Gummisitz; der Sitz schwingt als Pendel mit 1,9 m Kettenlänge und einer Periode von 2,77 s."
+    },
+    "tags": [
+      "swing",
+      "playground",
+      "pendulum",
+      "steel",
+      "rubber"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (CV-FO)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1: General rules (E = 210 GPa, density 7850 kg/m3)."
+        },
+        {
+          "id": "ashby-2011",
+          "citation": "Ashby, M. F. (2011). Materials Selection in Mechanical Design, 4th ed., Butterworth-Heinemann (densities and properties of polymers, elastomers and metals)."
+        },
+        {
+          "id": "pendulum-halliday",
+          "citation": "Halliday, D., Resnick, R., Walker, J. (2014). Fundamentals of Physics, 10th ed., Wiley, chapter 15: small-angle pendulum period T = 2 pi sqrt(L/g)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (conductivity, specific heat capacity and density of timber, steel, aluminium, concrete, plastics)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations)."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort (typical outer clothing surface temperatures of seated persons around 28-32 degC in comfort conditions)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation. Pendulum length L = 1.9 m from beam pivot to seat, T = 2 pi sqrt(L/g) = 2.7656 s at g = 9.80665 m/s2. The seat is a child of the left chain with a hitch joint whose angle the pose counter-rotates (-theta), so the seat translates as in the real two-chain parallelogram; the right chain is kinematically coupled by the same angle. Amplitude 30 degrees (authored). Occupant: child of 25 kg (authored estimate). The seat stays horizontal; the swing is modelled as a one-degree-of-freedom pendulum with a rigid occupant.",
+        "de": "Seitenansicht. Pendellänge L = 1,9 m vom Oberholmgelenk bis zum Sitz, T = 2 pi sqrt(L/g) = 2,7656 s bei g = 9,80665 m/s². Der Sitz ist Kind der linken Kette mit einem Hitch-Gelenk, dessen Winkel die Pose gegendreht (-theta) setzt, sodass der Sitz wie im realen Zwei-Ketten-Parallelogramm translatiert; die rechte Kette ist kinematisch über denselben Winkel gekoppelt. Amplitude 30 Grad (Festlegung). Insasse: Kind mit 25 kg (Schätzung). Der Sitz bleibt waagerecht; das Die Schaukel ist als Pendel mit einem Freiheitsgrad und starrem Insassen modelliert."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.35,
+      "widthM": 2.78,
+      "depthM": 1.2,
+      "massKg": 54.3
+    },
+    "materials": [
+      {
+        "id": "steel-galvanised",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.28,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "Moulded rubber",
+          "de": "Formgummi"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 1000,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "ground",
+      "bones": [
+        {
+          "id": "ground",
+          "parent": null,
+          "title": {
+            "en": "Ground frame",
+            "de": "Bezugsrahmen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "leg-left",
+          "parent": "ground",
+          "title": {
+            "en": "Left A-frame leg",
+            "de": "Linkes A-Bein"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 60.5,
+          "lengthM": 2.64,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 11.7,
+            "comX": 1.32,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "leg-right",
+          "parent": "ground",
+          "title": {
+            "en": "Right A-frame leg",
+            "de": "Rechtes A-Bein"
+          },
+          "x": 2.6,
+          "y": 0,
+          "angleDeg": 119.5,
+          "lengthM": 2.64,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 11.7,
+            "comX": 1.32,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "brace",
+          "parent": "ground",
+          "title": {
+            "en": "Cross brace",
+            "de": "Querstrebe"
+          },
+          "x": 0.34,
+          "y": 0.6,
+          "angleDeg": 0,
+          "lengthM": 1.92,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5.7,
+            "comX": 0.96,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "beam",
+          "parent": "ground",
+          "title": {
+            "en": "Top beam and apex",
+            "de": "Oberholm und Scheitel"
+          },
+          "x": 1.3,
+          "y": 2.3,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 20,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "chain-left",
+          "parent": "beam",
+          "title": {
+            "en": "Left chain",
+            "de": "Linke Kette"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 1.9,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 1.2,
+            "comX": 0.95,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "ashby-2011"
+          }
+        },
+        {
+          "id": "chain-right",
+          "parent": "beam",
+          "title": {
+            "en": "Right chain",
+            "de": "Rechte Kette"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 1.9,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 1.2,
+            "comX": 0.95,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "ashby-2011"
+          }
+        },
+        {
+          "id": "seat",
+          "parent": "chain-left",
+          "title": {
+            "en": "Seat (hitch)",
+            "de": "Sitz (Gelenk)"
+          },
+          "x": 1.9,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.42,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 2.8,
+            "comX": 0,
+            "comY": -0.065,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "ashby-2011"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "pin-left",
+        "bone": "leg-left",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Left foot pin",
+          "de": "Linker Fußbolzen"
+        },
+        "support": "pin",
+        "footprintLengthM": 0.1,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "roller-right",
+        "bone": "leg-right",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Right foot roller",
+          "de": "Rechte Fußrolle"
+        },
+        "support": "roller",
+        "normalDeg": 90,
+        "footprintLengthM": 0.1,
+        "footprintWidthM": 0.1
+      },
+      {
+        "id": "seat-centre",
+        "bone": "seat",
+        "x": 0,
+        "y": -0.04,
+        "kind": "load",
+        "title": {
+          "en": "Occupant seat point",
+          "de": "Sitzpunkt des Insassen"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  2.641723,
+                  0.001547
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  2.641723,
+                  -0.001547
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-left-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0.0,
+              "w": 0.18,
+              "h": 0.012,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-right-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 2.51,
+              "y": 0.0,
+              "w": 0.18,
+              "h": 0.012,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "brace-tube",
+              "bone": "brace",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.92,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "beam-end",
+              "bone": "beam",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.06,
+              "ry": 0.06,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link",
+              "bone": "chain-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  1.9,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "seat-plank",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.21 -0.04 L 0.21 -0.04 L 0.21 -0.098 L -0.21 -0.098 Z",
+              "region": "seat-rubber",
+              "material": "rubber"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Composed swing sign 5.6 x 4.7 mm: an A of two strokes with a crossbar, a beam dot at the apex, one chain stroke and a seat bar.",
+            "de": "Zusammengesetztes Schaukelzeichen 5,6 x 4,7 mm: ein A aus zwei Strichen mit Querstrich, ein Holmpunkt an der Spitze, ein Kettenstrich und ein Sitzbalken."
+          },
+          "retained": {
+            "en": "Frame width and height, apex, crossbar, chain length, seat height (0.30 m above ground).",
+            "de": "Rahmenbreite und -höhe, Spitze, Querstrich, Kettenlänge, Sitzhöhe (0,30 m über dem Boden)."
+          },
+          "merged": {
+            "en": "Legs with welds and clamps are one stroke each; foot plates are 0.36 mm stubs; cap, hanger and beam are one dot; both chains and the shackle are one stroke; plank and edge are one bar.",
+            "de": "Beine mit Schweißnähten und Schellen sind je ein Strich; Fußplatten sind 0,36-mm-Stummel; Kappe, Aufhängung und Holm sind ein Punkt; beide Ketten und der Schäkel sind ein Strich; Brett und Kante sind ein Balken."
+          },
+          "omitted": {
+            "en": "Links, bolts, clamps, welds, tread, the second chain - all below 0.05 m.",
+            "de": "Glieder, Bolzen, Schellen, Schweißnähte, Profil, die zweite Kette - alle unter 0,05 m."
+          },
+          "thinElements": {
+            "en": "The 0.011 m chain is drawn as a 0.18 mm stroke (90 mm real, an 8-fold inflation that cannot be avoided without losing the swing); legs (0.06 m) and brace (0.04 m) are 0.18 mm strokes; the beam is thickened from r 0.05 to 0.06 m.",
+            "de": "Die 0,011 m starke Kette wird als 0,18-mm-Strich gezeichnet (90 mm real, eine 8-fache Aufweitung, die sich ohne Verlust der Schaukel nicht vermeiden lässt); Beine (0,06 m) und Rohr (0,04 m) sind 0,18-mm-Striche; der Holm wird von r 0,05 auf 0,06 m verstärkt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Black strokes, beam dot 0.38, seat bar dark; one 0.18 mm weight; ground 0.25 mm.",
+            "de": "Schwarze Striche, Holmpunkt 0,38, Sitzbalken dunkel; eine Strichstärke 0,18 mm; Boden 0,25 mm."
+          },
+          "overlays": {
+            "en": "Legs, plates, brace, beam = frame-galv, chain = chain-steel (line colour), seat bar = seat-rubber; the swinging chain and seat stay separate bone-bound shapes.",
+            "de": "Beine, Platten, Rohr, Holm = frame-galv, Kette = chain-steel (Linienfarbe), Sitzbalken = seat-rubber; die schwingende Kette und der Sitz bleiben getrennte, an Knochen gebundene Formen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  2.641723,
+                  0.001547
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  2.641723,
+                  -0.001547
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-left-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0.0,
+              "w": 0.18,
+              "h": 0.012,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-right-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 2.51,
+              "y": 0.0,
+              "w": 0.18,
+              "h": 0.012,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "brace-tube",
+              "bone": "brace",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.92,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "beam-end",
+              "bone": "beam",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.0
+                ],
+                [
+                  1.9,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            ,
+              "penMm": 0.146
+             },
+            {
+              "id": "seat-plank",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.21 -0.04 L 0.21 -0.04 L 0.21 -0.098 L -0.21 -0.098 Z",
+              "region": "seat-rubber",
+              "material": "rubber"
+            ,
+              "penMm": 0.266
+             }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "End elevation 13.9 x 11.8 mm: an A of two leg strokes with a brace hairline, a beam dot at the apex, a chain hairline and a dark seat bar.",
+            "de": "Stirnansicht 13,9 x 11,8 mm: ein A aus zwei Beinstrichen mit einer Rohrhaarlinie, einem Holmpunkt an der Spitze, einer Kettenhaarlinie und einem dunklen Sitzbalken."
+          },
+          "retained": {
+            "en": "Frame geometry (leg splay, brace height), apex beam, foot plates as short strokes, chain, seat.",
+            "de": "Rahmengeometrie (Beinspreizung, Rohrhöhe), Holm an der Spitze, Fußplatten als kurze Striche, Kette, Sitz."
+          },
+          "merged": {
+            "en": "Leg solids (0.06 m = 0.3 mm), welds and clamps become one stroke per leg; cap, hanger and beam become one dot; shackle and plank merge into the seat bar.",
+            "de": "Beinflächen (0,06 m = 0,3 mm), Schweißnähte und Schellen werden ein Strich je Bein; Kappe, Aufhängung und Holm werden ein Punkt; Schäkel und Brett gehen im Sitzbalken auf."
+          },
+          "omitted": {
+            "en": "Links, bolts, weld lines, clamps, seat edge and tread, the hidden second chain.",
+            "de": "Glieder, Bolzen, Schweißlinien, Schellen, Sitzkante und Profil, die verdeckte zweite Kette."
+          },
+          "thinElements": {
+            "en": "Legs (0.06 m) are single 0.25 mm strokes (50 mm real); the 0.04 m brace and 0.011 m chain are 0.13 mm hairlines (26 mm real weight for the chain: the minimum drawn).",
+            "de": "Beine (0,06 m) sind einzelne 0,25-mm-Striche (50 mm real); das 0,04 m starke Rohr und die 0,011 m starke Kette sind 0,13-mm-Haarlinien (26 mm reale Stärke für die Kette: das gezeichnete Minimum)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Strokes black, beam dot 0.38, seat dark (0.25); body pen 0.25, detail 0.13.",
+            "de": "Striche schwarz, Holmpunkt 0,38, Sitz dunkel (0,25); Körperstift 0,25, Detail 0,13."
+          },
+          "overlays": {
+            "en": "Legs, plates, brace, beam = frame-galv, chain = chain-steel (line colour), seat = seat-rubber.",
+            "de": "Beine, Platten, Rohr, Holm = frame-galv, Kette = chain-steel (Linienfarbe), Sitz = seat-rubber."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "leg-left-tube",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.017,
+                  0.03
+                ],
+                [
+                  0.017,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  0.03
+                ]
+              ],
+              "closed": true,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-right-tube",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.017,
+                  0.03
+                ],
+                [
+                  -0.017,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  0.03
+                ]
+              ],
+              "closed": true,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-left-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.25
+            },
+            {
+              "id": "foot-right-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 2.51,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.25
+            },
+            {
+              "id": "beam-end",
+              "bone": "beam",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.07,
+              "y0": 0,
+              "x1": 1.9,
+              "y1": 0,
+              "r0": 0.0055,
+              "r1": 0.0055,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            ,
+              "penMm": 0.267
+             },
+            {
+              "id": "brace-tube",
+              "bone": "brace",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.45,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.92,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "seat-plank",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.21 -0.06 C -0.21 -0.045 -0.2 -0.038 -0.18 -0.04 L 0.18 -0.04 C 0.2 -0.038 0.21 -0.045 0.21 -0.06 C 0.21 -0.092 0.19 -0.098 0.17 -0.098 L -0.17 -0.098 C -0.19 -0.098 -0.21 -0.092 -0.21 -0.06 Z",
+              "region": "seat-rubber",
+              "material": "rubber"
+            ,
+              "penMm": 0.437
+             }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "End elevation 27.8 x 23.5 mm: an A-frame of two leg solids on foot plates, a brace stroke, the beam as a dot, a single chain stroke and a dark seat plank.",
+            "de": "Stirnansicht 27,8 x 23,5 mm: ein A-Rahmen aus zwei Beinflächen auf Fußplatten, ein Rohrstrich, der Holm als Punkt, ein einzelner Kettenstrich und ein dunkles Sitzbrett."
+          },
+          "retained": {
+            "en": "Both legs with their chamfered foot, the foot plates, the brace, the beam end, the chain, the seat.",
+            "de": "Beide Beine mit ihrem abgeschrägten Fuß, die Fußplatten, das Rohr, das Holmende, die Kette, der Sitz."
+          },
+          "merged": {
+            "en": "Welds, clamps, bolts, cap, hanger and shackle disappear into the leg and beam solids; the two chains are one stroke.",
+            "de": "Schweißnähte, Schellen, Bolzen, Kappe, Aufhängung und Schäkel gehen in den Bein- und Holmflächen auf; die zwei Ketten sind ein Strich."
+          },
+          "omitted": {
+            "en": "All details of the 1:50 drawing, the chain links (0.034 m = 0.34 mm, spacing 1 mm: they would print as noise next to the 0.18 mm chain line), seat edge and tread.",
+            "de": "Alle Details der Zeichnung 1:50, die Kettenglieder (0,034 m = 0,34 mm, Abstand 1 mm: sie würden neben der 0,18-mm-Kettenlinie als Rauschen drucken), Sitzkante und Profil."
+          },
+          "thinElements": {
+            "en": "The 0.011 m chain is one 0.18 mm stroke (18 mm real weight, the minimum to see it); the 0.04 m brace a 0.35 mm stroke; the 0.012 m foot plates 0.25 mm solids; legs are 0.6 mm solids.",
+            "de": "Die 0,011 m starke Kette ist ein einzelner 0,18-mm-Strich (18 mm reale Stärke, das Minimum, um sie zu sehen); das 0,04 m starke Rohr ein 0,35-mm-Strich; die 0,012 m dicken Fußplatten 0,25 mm Flächen; Beine sind 0,6 mm Flächen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Frame 0.4, brace and chain black strokes, seat dark; body pen 0.35, chain 0.18.",
+            "de": "Rahmen 0,4, Rohr und Kette schwarze Striche, Sitz dunkel; Körperstift 0,35, Kette 0,18."
+          },
+          "overlays": {
+            "en": "Legs, plates, brace, beam dot = frame-galv; chain stroke = chain-steel (line colour); seat = seat-rubber.",
+            "de": "Beine, Platten, Rohr, Holmpunkt = frame-galv; Kettenstrich = chain-steel (Linienfarbe); Sitz = seat-rubber."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": 0.18,
+          "ground": 0.7
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "leg-left-tube",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.017,
+                  0.03
+                ],
+                [
+                  0.017,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  0.03
+                ]
+              ],
+              "closed": true,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.35
+            },
+            {
+              "id": "leg-left-weld",
+              "bone": "leg-left",
+              "role": "detail",
+              "z": 2.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.28,
+                  -0.03
+                ],
+                [
+                  0.28,
+                  0.03
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-left-clamp",
+              "bone": "leg-left",
+              "role": "detail",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 2.3,
+              "y": -0.04,
+              "w": 0.1,
+              "h": 0.08,
+              "r": 0.006,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-right-tube",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  0.017,
+                  0.03
+                ],
+                [
+                  -0.017,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  -0.03
+                ],
+                [
+                  2.64,
+                  0.03
+                ]
+              ],
+              "closed": true,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.35
+            },
+            {
+              "id": "leg-right-weld",
+              "bone": "leg-right",
+              "role": "detail",
+              "z": 2.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.28,
+                  -0.03
+                ],
+                [
+                  0.28,
+                  0.03
+                ]
+              ],
+              "closed": false,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "leg-right-clamp",
+              "bone": "leg-right",
+              "role": "detail",
+              "z": 2.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 2.3,
+              "y": -0.04,
+              "w": 0.1,
+              "h": 0.08,
+              "r": 0.006,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "foot-left-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": -0.09,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.3
+            },
+            {
+              "id": "foot-right-plate",
+              "bone": "ground",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 2.51,
+              "y": 0,
+              "w": 0.18,
+              "h": 0.012,
+              "r": 0.002,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.3
+            },
+            {
+              "id": "brace-tube",
+              "bone": "brace",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "capsule",
+              "x0": 0,
+              "y0": 0,
+              "x1": 1.92,
+              "y1": 0,
+              "r0": 0.02,
+              "r1": 0.02,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.3
+            },
+            {
+              "id": "brace-clamp-l",
+              "bone": "brace",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": -0.02,
+              "y": -0.032,
+              "w": 0.05,
+              "h": 0.064,
+              "r": 0.005,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "brace-clamp-r",
+              "bone": "brace",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "rect",
+              "x": 1.89,
+              "y": -0.032,
+              "w": 0.05,
+              "h": 0.064,
+              "r": 0.005,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "beam-end",
+              "bone": "beam",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.38,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "frame-galv",
+              "material": "steel-galvanised",
+              "penMm": 0.35
+            },
+            {
+              "id": "beam-cap",
+              "bone": "beam",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": 0,
+              "rx": 0.034,
+              "ry": 0.034,
+              "region": "frame-galv",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "beam-hanger",
+              "bone": "beam",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.025 -0.045 C -0.03 -0.09 0.03 -0.09 0.025 -0.045",
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link",
+              "bone": "chain-left",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.07,
+              "y0": 0,
+              "x1": 1.9,
+              "y1": 0,
+              "r0": 0.0055,
+              "r1": 0.0055,
+              "region": "chain-steel",
+              "material": "steel-galvanised",
+              "penMm": 0.13
+            },
+            {
+              "id": "chain-right-link",
+              "bone": "chain-right",
+              "role": "body",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.07,
+              "y0": 0,
+              "x1": 1.9,
+              "y1": 0,
+              "r0": 0.0055,
+              "r1": 0.0055,
+              "region": "chain-steel",
+              "material": "steel-galvanised",
+              "penMm": 0.13
+            },
+            {
+              "id": "seat-shackle",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0,
+              "cy": -0.025,
+              "rx": 0.011,
+              "ry": 0.027,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "seat-plank",
+              "bone": "seat",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.21 -0.06 C -0.21 -0.045 -0.20 -0.038 -0.18 -0.04 L 0.18 -0.04 C 0.20 -0.038 0.21 -0.045 0.21 -0.06 C 0.21 -0.092 0.19 -0.098 0.17 -0.098 L -0.17 -0.098 C -0.19 -0.098 -0.21 -0.092 -0.21 -0.06 Z",
+              "region": "seat-rubber",
+              "material": "rubber",
+              "penMm": 0.35
+            },
+            {
+              "id": "seat-edge",
+              "bone": "seat",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  -0.068
+                ],
+                [
+                  0.19,
+                  -0.068
+                ]
+              ],
+              "closed": false,
+              "region": "seat-rubber",
+              "material": "rubber"
+            },
+            {
+              "id": "seat-tread",
+              "bone": "seat",
+              "role": "texture",
+              "z": 4.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.15 -0.05 L -0.12 -0.05 M -0.07 -0.05 L -0.04 -0.05 M 0.02 -0.05 L 0.05 -0.05 M 0.10 -0.05 L 0.13 -0.05",
+              "region": "seat-rubber",
+              "material": "rubber"
+            },
+            {
+              "id": "chain-left-link-0",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-1",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 0.156,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-2",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.275,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-3",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 0.35600000000000004,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-4",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.47500000000000003,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-5",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 0.5559999999999999,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-6",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.675,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-7",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 0.756,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-8",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.875,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-9",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 0.956,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-10",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 1.075,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-11",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 1.1560000000000001,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-12",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 1.2750000000000001,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-13",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 1.356,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-14",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 1.475,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-15",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 1.556,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-16",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 1.675,
+              "cy": 0,
+              "rx": 0.017,
+              "ry": 0.0075,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            },
+            {
+              "id": "chain-left-link-17",
+              "bone": "chain-left",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "rect",
+              "x": 1.7560000000000002,
+              "y": -0.0035,
+              "w": 0.038,
+              "h": 0.007,
+              "region": "chain-steel",
+              "material": "steel-galvanised"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "End elevation 55.6 x 47 mm: an A-frame of two splayed legs with foot plates, welds and clamps, a brace tube, the beam seen end-on with cap and hanger, a chain of alternating links and a rubber seat plank on a shackle.",
+            "de": "Stirnansicht 55,6 x 47 mm: ein A-Rahmen aus zwei gespreizten Beinen mit Fußplatten, Schweißnähten und Schellen, ein Verbindungsrohr, der Holm im Schnitt mit Kappe und Aufhängung, eine Kette aus wechselnden Gliedern und ein Gummisitzbrett am Schäkel."
+          },
+          "retained": {
+            "en": "Legs with welds and clamps, foot plates, brace with both clamps, beam end with cap and hanger, 18 chain links (rings and edge-on bars alternating) with the chain line, shackle, seat plank with edge and tread strokes.",
+            "de": "Beine mit Schweißnähten und Schellen, Fußplatten, Rohr mit beiden Schellen, Holmende mit Kappe und Aufhängung, 18 Kettenglieder (Ringe und hochkant gesehene Stege im Wechsel) mit der Kettenlinie, Schäkel, Sitzbrett mit Kanten- und Profilstrichen."
+          },
+          "merged": {
+            "en": "The second chain is hidden behind the first one in this view and is drawn once as a coincident capsule.",
+            "de": "Die zweite Kette liegt in dieser Ansicht hinter der ersten und wird als deckungsgleiche Kapsel einmal gezeichnet."
+          },
+          "omitted": {
+            "en": "Foot and seat bolts (0.3 mm dots), the chain centre texture line.",
+            "de": "Fuß- und Sitzbolzen (0,3-mm-Punkte), die Kettenmittellinie."
+          },
+          "thinElements": {
+            "en": "The 0.011 m chain is a 0.22 mm capsule with 0.13 mm outline plus link outlines of 0.68 x 0.3 mm; the brace (0.04 m) a 0.8 mm capsule; welds and tread are single 0.25-0.13 mm strokes.",
+            "de": "Die 0,011 m starke Kette ist eine 0,22 mm breite Kapsel mit 0,13-mm-Kontur plus Gliedkonturen von 0,68 x 0,3 mm; das Rohr (0,04 m) eine 0,8 mm breite Kapsel; Schweißnähte und Profil sind einzelne 0,25-0,13-mm-Striche."
+          },
+          "hatching": {
+            "en": "None; the seat tread is three short 0.13 mm strokes, galvanised steel stays plain tone.",
+            "de": "Keine; das Sitzprofil sind drei kurze 0,13-mm-Striche, verzinkter Stahl bleibt einfarbig."
+          },
+          "styles": {
+            "en": "Frame 0.4, brace 0.45, chain 0.3 with dark links, rubber seat dark (0.25); body pen 0.3-0.35, detail 0.13-0.25.",
+            "de": "Rahmen 0,4, Rohr 0,45, Kette 0,3 mit dunklen Gliedern, Gummisitz dunkel (0,25); Körperstift 0,3-0,35, Detail 0,13-0,25."
+          },
+          "overlays": {
+            "en": "Legs, plates, brace, beam = frame-galv; chain, links, hanger, shackle = chain-steel; seat plank = seat-rubber (sun-heated, with the child in contact).",
+            "de": "Beine, Platten, Rohr, Holm = frame-galv; Kette, Glieder, Aufhängung, Schäkel = chain-steel; Sitzbrett = seat-rubber (sonnenerwärmt, mit dem Kind im Kontakt)."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "rest",
+        "title": {
+          "en": "At rest",
+          "de": "In Ruhe"
+        },
+        "description": {
+          "en": "Seat hanging vertically with the child on it.",
+          "de": "Sitz senkrecht hängend mit dem Kind darauf."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "pin-left",
+          "roller-right"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "chain-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "seat-rubber": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0.5,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 30
+              }
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "child-occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Child occupant (25 kg)",
+              "de": "Kind (25 kg)"
+            },
+            "bone": "seat",
+            "x": 0,
+            "y": -0.04,
+            "fxN": 0,
+            "fyN": -245.2,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "pendulum-forward",
+        "title": {
+          "en": "Forward swing at 30 degrees",
+          "de": "Vorwärtsschwung 30 Grad"
+        },
+        "description": {
+          "en": "Maximum forward swing; the seat is counter-rotated so it stays horizontal, and the child pushes forward with 80 N.",
+          "de": "Maximaler Vorwärtsschwung; der Sitz wird gegengedreht und bleibt waagerecht; das Kind schiebt mit 80 N nach vorn."
+        },
+        "bones": {
+          "chain-left": {
+            "angleDeg": 30
+          },
+          "chain-right": {
+            "angleDeg": 30
+          },
+          "seat": {
+            "angleDeg": -30
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pin-left",
+          "roller-right"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "chain-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "seat-rubber": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0.5,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 30
+              }
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "child-occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Child occupant (25 kg)",
+              "de": "Kind (25 kg)"
+            },
+            "bone": "seat",
+            "x": 0,
+            "y": -0.04,
+            "fxN": 0,
+            "fyN": -245.2,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "child-push",
+            "kind": "live",
+            "title": {
+              "en": "Push from behind (80 N)",
+              "de": "Schub von hinten (80 N)"
+            },
+            "bone": "seat",
+            "x": 0,
+            "y": -0.04,
+            "fxN": 80,
+            "fyN": 0,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "pendulum-back",
+        "title": {
+          "en": "Backward swing at 30 degrees",
+          "de": "Rückschwung 30 Grad"
+        },
+        "description": {
+          "en": "Maximum backward swing with the seat counter-rotated to horizontal.",
+          "de": "Maximaler Rückschwung mit dem gegengedrehten Sitz in der Waagerechten."
+        },
+        "bones": {
+          "chain-left": {
+            "angleDeg": -30
+          },
+          "chain-right": {
+            "angleDeg": -30
+          },
+          "seat": {
+            "angleDeg": 30
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pin-left",
+          "roller-right"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-galv": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "chain-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "seat-rubber": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0.5,
+              "contact": {
+                "fraction": 0.5,
+                "tempC": 30
+              }
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "child-occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Child occupant (25 kg)",
+              "de": "Kind (25 kg)"
+            },
+            "bone": "seat",
+            "x": 0,
+            "y": -0.04,
+            "fxN": 0,
+            "fyN": -245.2,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "pendulum-swing",
+        "title": {
+          "en": "Pendulum swing",
+          "de": "Pendelschwung"
+        },
+        "description": {
+          "en": "One full period T = 2.7656 s of a 30 degree pendulum, theta(t) = 30 cos(2 pi t / T), looping; the seat is counter-rotated to stay horizontal.",
+          "de": "Eine volle Periode T = 2,7656 s eines 30-Grad-Pendels, theta(t) = 30 cos(2 pi t / T), wiederkehrend; der Sitz wird gegengedreht und bleibt waagerecht."
+        },
+        "durationS": 2.7656,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 30
+              },
+              "chain-right": {
+                "angleDeg": 30
+              },
+              "seat": {
+                "angleDeg": -30
+              }
+            }
+          },
+          {
+            "t": 0.2305,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 25.981
+              },
+              "chain-right": {
+                "angleDeg": 25.981
+              },
+              "seat": {
+                "angleDeg": -25.981
+              }
+            }
+          },
+          {
+            "t": 0.4609,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 15
+              },
+              "chain-right": {
+                "angleDeg": 15
+              },
+              "seat": {
+                "angleDeg": -15
+              }
+            }
+          },
+          {
+            "t": 0.6914,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 0
+              },
+              "chain-right": {
+                "angleDeg": 0
+              },
+              "seat": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.9219,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": -15
+              },
+              "chain-right": {
+                "angleDeg": -15
+              },
+              "seat": {
+                "angleDeg": 15
+              }
+            }
+          },
+          {
+            "t": 1.1524,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": -25.981
+              },
+              "chain-right": {
+                "angleDeg": -25.981
+              },
+              "seat": {
+                "angleDeg": 25.981
+              }
+            }
+          },
+          {
+            "t": 1.3828,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": -30
+              },
+              "chain-right": {
+                "angleDeg": -30
+              },
+              "seat": {
+                "angleDeg": 30
+              }
+            }
+          },
+          {
+            "t": 1.6133,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": -25.981
+              },
+              "chain-right": {
+                "angleDeg": -25.981
+              },
+              "seat": {
+                "angleDeg": 25.981
+              }
+            }
+          },
+          {
+            "t": 1.8438,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": -15
+              },
+              "chain-right": {
+                "angleDeg": -15
+              },
+              "seat": {
+                "angleDeg": 15
+              }
+            }
+          },
+          {
+            "t": 2.0742,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 0
+              },
+              "chain-right": {
+                "angleDeg": 0
+              },
+              "seat": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.3047,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 15
+              },
+              "chain-right": {
+                "angleDeg": 15
+              },
+              "seat": {
+                "angleDeg": -15
+              }
+            }
+          },
+          {
+            "t": 2.5352,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 25.981
+              },
+              "chain-right": {
+                "angleDeg": 25.981
+              },
+              "seat": {
+                "angleDeg": -25.981
+              }
+            }
+          },
+          {
+            "t": 2.7656,
+            "pose": "rest",
+            "ease": "smooth",
+            "bones": {
+              "chain-left": {
+                "angleDeg": 30
+              },
+              "chain-right": {
+                "angleDeg": 30
+              },
+              "seat": {
+                "angleDeg": -30
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pin-left",
+            "fromS": 0,
+            "toS": 2.7656
+          },
+          {
+            "anchor": "roller-right",
+            "fromS": 0,
+            "toS": 2.7656
+          }
+        ],
+        "phases": [
+          {
+            "id": "forward-half",
+            "fromS": 0,
+            "toS": 1.3828,
+            "title": {
+              "en": "Forward half-swing",
+              "de": "Vorderer Halbschwung"
+            }
+          },
+          {
+            "id": "back-half",
+            "fromS": 1.3828,
+            "toS": 2.7656,
+            "title": {
+              "en": "Backward half-swing",
+              "de": "Hinterer Halbschwung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Turning point forward",
+              "de": "Umkehrpunkt vorn"
+            }
+          },
+          {
+            "t": 1.3828,
+            "kind": "motion",
+            "title": {
+              "en": "Turning point backward",
+              "de": "Umkehrpunkt hinten"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "occupant-push",
+        "title": {
+          "en": "Occupant push",
+          "de": "Anschub durch Insassen"
+        },
+        "description": {
+          "en": "The child pushes forward at the start of the swing; the push load switches on and off by its track.",
+          "de": "Das Kind schiebt zu Beginn des Schwungs nach vorn; die Schublast wird über ihre Spur ein- und ausgeschaltet."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "rest",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "pendulum-forward",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "pendulum-back",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pin-left",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "roller-right",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "push",
+            "fromS": 0.8,
+            "toS": 2.2,
+            "title": {
+              "en": "Push applied",
+              "de": "Schub aufgebracht"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.0,
+            "kind": "load-on",
+            "title": {
+              "en": "Child pushes",
+              "de": "Kind schiebt"
+            },
+            "target": "child-push"
+          },
+          {
+            "t": 2.2,
+            "kind": "load-off",
+            "title": {
+              "en": "Push released",
+              "de": "Schub endet"
+            },
+            "target": "child-push"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:child-push",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 1
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              },
+              {
+                "t": 2.2,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 25,
+        "meanRadiantTempC": 30,
+        "relativeHumidity": 0.4,
+        "windMS": 2.0,
+        "windDirectionDeg": 180,
+        "solarWM2": 700,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "emitters": [],
+      "regions": [
+        {
+          "id": "frame-galv",
+          "title": {
+            "en": "Galvanised A-frame and beam",
+            "de": "Verzinkter A-Rahmen und Holm"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-galvanised",
+          "areaM2": 1.3,
+          "characteristicLengthM": 0.05,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Galvanised tube wall 3 mm",
+                "de": "Verzinkte Rohrwand 3 mm"
+              },
+              "kind": "metal",
+              "material": "steel-galvanised",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 6e-05,
+              "source": "literature",
+              "heatCapacityJM2K": 10530,
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 10530,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "chain-steel",
+          "title": {
+            "en": "Steel chains",
+            "de": "Stahlketten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-galvanised",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.01,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "link",
+              "title": {
+                "en": "Galvanised link bar 8 mm (4 mm active)",
+                "de": "Verzinkter Kettenstab 8 mm (4 mm aktiv)"
+              },
+              "kind": "metal",
+              "material": "steel-galvanised",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 8e-05,
+              "source": "literature",
+              "heatCapacityJM2K": 14040,
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 14040,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "seat-rubber",
+          "title": {
+            "en": "Rubber seat",
+            "de": "Gummisitz"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rubber",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.28,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "rubber",
+              "title": {
+                "en": "Moulded rubber 40 mm (28 mm active)",
+                "de": "Formgummi 40 mm (28 mm aktiv)"
+              },
+              "kind": "polymer",
+              "material": "rubber",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.12,
+              "source": "literature",
+              "heatCapacityJM2K": 32171,
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 32171,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Outdoor summer reference case: 700 W/m2 sun, 25 degC air, 2 m/s wind; passive surfaces, no emitters, no authored temperatures. The dark rubber seat (absorptivity 0.9) is the surface that heats most in the sun; its low conductivity and 32 kJ/m2K capacity make it a slow store.",
+          "de": "Sommerlicher Außen-Referenzfall: 700 W/m2 Sonne, 25 degC Luft, 2 m/s Wind; passive Flächen, keine Emitter, keine festgelegten Temperaturen. Der dunkle Gummisitz (Absorptionsgrad 0,9) ist die Fläche, die sich in der Sonne am stärksten erwärmt; seine geringe Leitfähigkeit und 32 kJ/m2K Kapazität machen ihn zu einem trägen Speicher."
+        },
+        {
+          "en": "The seated child (25 kg) covers about half of the seat with clothing at about 30 degC (ISO 7730 range) and shades it; the contact and shade fractions are authored estimates.",
+          "de": "Das sitzende Kind (25 kg) bedeckt etwa die Hälfte des Sitzes mit Bekleidung bei etwa 30 degC (ISO-7730-Bereich) und beschattet ihn; Kontakt- und Schattenanteile sind Schätzwerte."
+        },
+        {
+          "en": "Heat capacities rho*cp*min(thickness, sqrt(alpha*3600 s)) with ISO 10456 values; the second chain is hidden in the drawing but counts in the 0.1 m2 chain area.",
+          "de": "Wärmekapazitäten rho*cp*min(Dicke, sqrt(alpha*3600 s)) mit ISO-10456-Werten; die zweite Kette ist in der Zeichnung verdeckt, zählt aber zur Kettenfläche von 0,1 m2."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [
+        "pin-left",
+        "roller-right"
+      ],
+      "assumptions": [
+        {
+          "en": "The A-frame is supported by a pin and a roller on the ground; the seat swings as a one-DOF pendulum, so its inertia enters through the kinematics of the clip.",
+          "de": "Der A-Rahmen ist am Boden durch Festlager und Rollenlager gestützt; der Sitz schwingt als Ein-Freiheitsgrad-Pendel, seine Trägheit wirkt über die Kinematik des Clips."
+        },
+        {
+          "en": "The occupant is rigid and seated; the two chains coincide in this side elevation, the second is kinematically coupled to the first; no member bending is checked.",
+          "de": "Der Insasse ist starr und sitzend; die beiden Ketten fallen in dieser Seitenansicht zusammen, die zweite ist kinematisch an die erste gekoppelt; keine Biegenachweise der Glieder."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "rest",
+      "defaultClip": "pendulum-swing",
+      "viewpoints": [
+        "elevation"
+      ],
+      "defaultScale": 50
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

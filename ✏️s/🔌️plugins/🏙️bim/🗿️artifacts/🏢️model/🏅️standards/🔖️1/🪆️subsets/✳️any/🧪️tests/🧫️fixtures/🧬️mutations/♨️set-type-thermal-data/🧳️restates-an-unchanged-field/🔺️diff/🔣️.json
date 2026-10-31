@@ -2,8 +2,10 @@
   "window_types": {
     "win-1": {
       "entry": "Patched",
-      "g_value": {
-        "value": 0.6
+      "value": {
+        "g_value": {
+          "value": 0.6
+        }
       }
     }
   }

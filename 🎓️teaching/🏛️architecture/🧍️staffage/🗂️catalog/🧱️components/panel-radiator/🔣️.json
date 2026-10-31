@@ -1,0 +1,2125 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "panel-radiator",
+  "category": "components",
+  "title": {
+   "en": "Panel Radiator Type 22",
+   "de": "Plattenheizkörper Typ 22"
+  },
+  "summary": {
+   "en": "A compact type 22 steel panel radiator (two water panels, two convectors; 600 mm high, 1000 mm long, 100 mm deep, rated 1.2 kW at 75/65/20 degC) shown in vertical section on two wall brackets 35 mm off a plastered wall, with its thermostatic valve; output scales with the EN 442 exponent n = 1.3 and rises as a convection plume.",
+   "de": "Ein kompakter Stahl-Plattenheizkörper Typ 22 (zwei Wasserplatten, zwei Konvektoren; 600 mm hoch, 1000 mm lang, 100 mm tief, 1,2 kW bei 75/65/20 °C) im Vertikalschnitt an zwei Wandkonsolen 35 mm vor einer verputzten Wand, mit Thermostatventil; die Leistung folgt dem EN-442-Exponenten n = 1,3 und steigt als Konvektionsfahne auf."
+  },
+  "tags": [
+   "component",
+   "heating",
+   "radiator",
+   "operating",
+   "convection",
+   "thermal"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors (NW-C)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-442-2",
+     "citation": "EN 442-2:2014 Radiators and convectors, test methods and rating: heat output Phi = K_m * dT^n, standard rating at 75/65/20 degC (dT = 50 K) with exponent n typically 1.2 to 1.4 for panel radiators."
+    },
+    {
+     "id": "en-442-1",
+     "citation": "EN 442-1:2014 Radiators and convectors, technical specifications and requirements (panel and convector designation: type 22 = two panels and two convectors)."
+    },
+    {
+     "id": "radiator-catalogues",
+     "citation": "Manufacturer catalogues for compact panel radiators type 22, height 600 mm, length 1000 mm, depth 100 mm (rated output about 1.1 to 1.3 kW at 75/65/20 degC, mass about 25 kg with water). Typical values consulted, not a table look-up."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials and products, hygrothermal properties (clay masonry rho 1800, lambda 0.8 W/mK; steel 50 W/mK, 450 J/kgK; emissivity of paint 0.9)."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and cuts (hatching)."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, types of drawings and basic principles of presentation."
+    },
+    {
+     "id": "en-iso-6946",
+     "citation": "EN ISO 6946:2017 Building components, thermal resistance and transmittance (surface resistances)."
+    },
+    {
+     "id": "din-4701",
+     "citation": "Kuchling, Taschenbuch der Physik, and common heating practice: a panel radiator gives about 25 to 35 % of its output by radiation, the rest by convection (convector channels deliver most of the convective share)."
+    }
+   ],
+   "notes": {
+    "en": "Output per level uses Phi = Phi_50 (dT/50)^n with n = 1.3; the 1.2 kW rating and the convective share are catalogue-typical authored estimates.",
+    "de": "Die Leistung je Stufe folgt Phi = Phi_50 (dT/50)^n mit n = 1,3; die Nennleistung 1,2 kW und der Konvektionsanteil sind katalogtypische Schätzwerte."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.85,
+   "widthM": 0.285,
+   "depthM": 1.0,
+   "massKg": 255.68
+  },
+  "materials": [
+   {
+    "id": "masonry",
+    "title": {
+     "en": "Plastered clay masonry",
+     "de": "Verputztes Ziegelmauerwerk"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 1800,
+    "conductivityWmK": 0.8,
+    "specificHeatJKgK": 1000,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "painted-steel",
+    "title": {
+     "en": "White powder-coated sheet steel 1.2 mm",
+     "de": "Weiß pulverbeschichtetes Stahlblech 1,2 mm"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.3,
+    "densityKgM3": 7800,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000.0,
+    "strengthPa": 235000000.0,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "brass",
+    "title": {
+     "en": "Nickel-plated brass valve",
+     "de": "Vernickeltes Messingventil"
+    },
+    "emissivity": 0.25,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 8400,
+    "conductivityWmK": 120,
+    "specificHeatJKgK": 380,
+    "source": "authored-estimate"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "wall",
+   "bones": [
+    {
+     "id": "wall",
+     "parent": null,
+     "title": {
+      "en": "Partition wall stub (fixed root)",
+      "de": "Wandscheibe (feste Wurzel)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 90,
+     "lengthM": 0.85,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 229.5,
+      "comX": 0.425,
+      "comY": -0.075,
+      "distribution": "uniform",
+      "source": "literature",
+      "reference": "en-iso-10456"
+     }
+    },
+    {
+     "id": "radiator",
+     "parent": "wall",
+     "title": {
+      "en": "Type 22 radiator body on its wall brackets",
+      "de": "Kompaktheizkörper Typ 22 an den Wandkonsolen"
+     },
+     "x": 0.11,
+     "y": -0.035,
+     "angleDeg": 0.0,
+     "lengthM": 0.6,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 26.0,
+      "comX": 0.3,
+      "comY": -0.05,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "radiator-catalogues"
+     }
+    },
+    {
+     "id": "valve-head",
+     "parent": "wall",
+     "title": {
+      "en": "Thermostatic valve head (dial)",
+      "de": "Thermostatkopf (Einstellrad)"
+     },
+     "x": 0.085,
+     "y": -0.09,
+     "angleDeg": -90,
+     "lengthM": 0.025,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 270
+     },
+     "mass": {
+      "kg": 0.18,
+      "comX": 0.0,
+      "comY": 0.0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "radiator-catalogues"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "wall-foot",
+    "bone": "wall",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Wall foot, fixed in the floor slab",
+     "de": "Wandfuß, im Boden eingespannt"
+    },
+    "support": "fixed"
+   },
+   {
+    "id": "bracket-top",
+    "bone": "wall",
+    "x": 0.58,
+    "y": 0.0,
+    "kind": "attachment",
+    "title": {
+     "en": "Upper bracket",
+     "de": "Obere Konsole"
+    }
+   },
+   {
+    "id": "front-top-edge",
+    "bone": "radiator",
+    "x": 0.6,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Front top edge of the radiator",
+     "de": "Vorderkante oben am Heizkörper"
+    }
+   },
+   {
+    "id": "grille-centre",
+    "bone": "radiator",
+    "x": 0.6,
+    "y": 0.05,
+    "kind": "emitter",
+    "title": {
+     "en": "Centre of the top grille",
+     "de": "Mitte des Abdeckgitters"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "The radiator is a slim 0.10 m deep panel hung 0.035 m off its wall: at 1:500 that is 0.2 mm of panel and a 0.07 mm gap, below every print profile, and the heating level cannot be read.",
+     "de": "Der Heizkörper ist ein schlankes, 0,10 m tiefes Paneel mit 0,035 m Wandabstand: bei 1:500 sind das 0,2 mm Paneel und 0,07 mm Spalt, unter jedem Druckprofil, und die Heizstufe ist nicht ablesbar."
+    },
+    "limitingFeature": {
+     "en": "Panel depth 0.10 m (0.2 mm at 1:500) and wall clearance 0.035 m (0.07 mm).",
+     "de": "Paneeltiefe 0,10 m (0,2 mm bei 1:500) und Wandabstand 0,035 m (0,07 mm)."
+    },
+    "limitingSizeM": 0.1,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "scale",
+      "denominator": 100
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "floor",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         -0.135
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "wall-stub",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "wall-stub",
+       "material": "masonry",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.85,
+         0.0
+        ],
+        [
+         0.85,
+         0.15
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "radiator-body",
+       "bone": "radiator",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "panel-rear",
+        "panel-front",
+        "convector",
+        "top-grille",
+        "bracket"
+       ],
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.6,
+         -0.1
+        ],
+        [
+         0.6,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "valve-head",
+       "bone": "valve-head",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "valve",
+       "material": "brass",
+       "penMm": 0.1,
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.03,
+       "ry": 0.03
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A wall stub and the radiator as one filled panel mass beside it, with the valve head as a dot below.",
+      "de": "Ein Wandstück und der Heizkörper als eine gefüllte Paneelmasse daneben, darunter der Ventilkopf als Punkt."
+     },
+     "retained": {
+      "en": "Wall stub 0.15 m, radiator 0.10 m deep and 0.60 m high at 0.11 m above the floor, valve head (0.06 m).",
+      "de": "Wandstück 0,15 m, Heizkörper 0,10 m tief und 0,60 m hoch, 0,11 m über dem Boden, Ventilkopf (0,06 m)."
+     },
+     "merged": {
+      "en": "Rear panel, both convectors, front panel, top grille and the two brackets are one filled mass listing all their regions; the 0.035 m wall clearance closes up because its ink gap is below the minimum.",
+      "de": "Rückseitiges Paneel, beide Konvektoren, vorderes Paneel, Abdeckgitter und die beiden Konsolen sind eine gefüllte Masse mit allen Regionen; der Wandabstand von 0,035 m schließt sich, weil seine Tintenlücke unter dem Minimum liegt."
+     },
+     "omitted": {
+      "en": "Fin corrugation, grille slots, supply pipe, valve index line, wall break line.",
+      "de": "Lamellenwellung, Gitterschlitze, Zuleitung, Ventilmarke, Bruchlinie."
+     },
+     "thinElements": {
+      "en": "None kept; the valve head is drawn at its real 0.06 m diameter.",
+      "de": "Keine beibehalten; der Ventilkopf ist mit seinem echten Durchmesser 0,06 m gezeichnet."
+     },
+     "hatching": {
+      "en": "No hatch: the wall stub is a tone fill.",
+      "de": "Keine Schraffur: das Wandstück ist Tonfüllung."
+     },
+     "styles": {
+      "en": "Dark filled masses, 0.18 mm outlines.",
+      "de": "Dunkle gefüllte Massen, 0,18-mm-Konturen."
+     },
+     "overlays": {
+      "en": "Thermal cells: wall stub, radiator mass (area-weighted merge of its five regions), valve.",
+      "de": "Thermische Zellen: Wandstück, Heizkörpermasse (flächengewichtete Zusammenfassung seiner fünf Regionen), Ventil."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "cut-masonry",
+      "title": {
+       "en": "Cut masonry",
+       "de": "Geschnittenes Mauerwerk"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.5,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "floor",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         -0.135
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "wall-stub",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "wall-stub",
+       "material": "masonry",
+       "hatch": "cut-masonry",
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.85,
+         0.0
+        ],
+        [
+         0.85,
+         0.15
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "radiator-body",
+       "bone": "radiator",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.65,
+       "regions": [
+        "panel-rear",
+        "panel-front",
+        "convector"
+       ],
+       "material": "painted-steel",
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.57,
+         -0.1
+        ],
+        [
+         0.57,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "panel-split",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "region": "convector",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.05
+        ],
+        [
+         0.57,
+         -0.05
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "top-grille",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-grille",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.57,
+         0.0
+        ],
+        [
+         0.57,
+         -0.1
+        ],
+        [
+         0.6,
+         -0.1
+        ],
+        [
+         0.6,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bracket-upper",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bracket",
+       "kind": "poly",
+       "points": [
+        [
+         0.586,
+         0.0
+        ],
+        [
+         0.586,
+         -0.035
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bracket-lower",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.4,
+       "region": "bracket",
+       "kind": "poly",
+       "points": [
+        [
+         0.166,
+         0.0
+        ],
+        [
+         0.166,
+         -0.035
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "valve-head",
+       "bone": "valve-head",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "valve",
+       "material": "brass",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.03,
+       "ry": 0.03
+      },
+      {
+       "id": "supply-pipe",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "valve",
+       "penMm": 0.13,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.09
+        ],
+        [
+         0.055,
+         -0.09
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The cut wall stub, the radiator as one panel body with a split line between panel and convector, grille bar, brackets and valve.",
+      "de": "Das geschnittene Wandstück, der Heizkörper als ein Paneelkörper mit Teilungslinie zwischen Platte und Konvektor, Gitterleiste, Konsolen und Ventil."
+     },
+     "retained": {
+      "en": "Wall stub, panel body, centre split, grille, two bracket lines, valve head and supply pipe.",
+      "de": "Wandstück, Paneelkörper, Mittelteilung, Gitter, zwei Konsollinien, Ventilkopf und Zuleitung."
+     },
+     "merged": {
+      "en": "Rear panel, convectors and front panel are one body; the two 0.022 m water panels are too thin (0.22 mm) to print as separate fills.",
+      "de": "Rückplatte, Konvektoren und Frontplatte sind ein Körper; die beiden 0,022 m dicken Wasserplatten sind zu dünn (0,22 mm) für eigene Füllungen."
+     },
+     "omitted": {
+      "en": "Fin corrugation and grille slots.",
+      "de": "Lamellenwellung und Gitterschlitze."
+     },
+     "thinElements": {
+      "en": "Bracket plates (4 mm) are drawn as 0.13 mm lines, about 0.09 mm wider than real; the supply pipe (18 mm) as 0.13 mm line.",
+      "de": "Konsolplatten (4 mm) sind als 0,13-mm-Linien gezeichnet, etwa 0,09 mm breiter als real; die Zuleitung (18 mm) als 0,13-mm-Linie."
+     },
+     "hatching": {
+      "en": "Cut masonry as 45 degree lines at 0.5 mm.",
+      "de": "Geschnittenes Mauerwerk als 45-Grad-Linien mit 0,5 mm."
+     },
+     "styles": {
+      "en": "Outline 0.25 mm, detail 0.13 mm.",
+      "de": "Kontur 0,25 mm, Detail 0,13 mm."
+     },
+     "overlays": {
+      "en": "Wall stub, radiator body (merged panels and convector), split line for the convector, grille, bracket lines, valve.",
+      "de": "Wandstück, Heizkörperkörper (zusammengefasste Platten und Konvektor), Teilungslinie für den Konvektor, Gitter, Konsollinien, Ventil."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "cut-masonry",
+      "title": {
+       "en": "Cut masonry",
+       "de": "Geschnittenes Mauerwerk"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.6,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "floor",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         -0.135
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "wall-stub",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.5,
+       "region": "wall-stub",
+       "material": "masonry",
+       "hatch": "cut-masonry",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.85,
+         0.0
+        ],
+        [
+         0.85,
+         0.15
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "wall-break",
+       "bone": "wall",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.4,
+       "region": "wall-stub",
+       "kind": "poly",
+       "points": [
+        [
+         0.85,
+         0.15
+        ],
+        [
+         0.83,
+         0.1
+        ],
+        [
+         0.85,
+         0.05
+        ],
+        [
+         0.83,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "panel-rear",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "panel-rear",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.022
+        ],
+        [
+         0.585,
+         -0.022
+        ],
+        [
+         0.585,
+         0.0
+        ]
+       ],
+       "closed": true
+      ,
+       "penMm": 0.234
+      },
+      {
+       "id": "panel-front",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.7,
+       "region": "panel-front",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.078
+        ],
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.585,
+         -0.1
+        ],
+        [
+         0.585,
+         -0.078
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "convector-rear",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.5,
+       "region": "convector",
+       "kind": "poly",
+       "points": [
+        [
+         0.03,
+         -0.022
+        ],
+        [
+         0.08045,
+         -0.05
+        ],
+        [
+         0.13091,
+         -0.022
+        ],
+        [
+         0.18136,
+         -0.05
+        ],
+        [
+         0.23182,
+         -0.022
+        ],
+        [
+         0.28227,
+         -0.05
+        ],
+        [
+         0.33273,
+         -0.022
+        ],
+        [
+         0.38318,
+         -0.05
+        ],
+        [
+         0.43364,
+         -0.022
+        ],
+        [
+         0.48409,
+         -0.05
+        ],
+        [
+         0.53455,
+         -0.022
+        ],
+        [
+         0.585,
+         -0.05
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "convector-front",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 3,
+       "filled": false,
+       "tone": 0.5,
+       "region": "convector",
+       "kind": "poly",
+       "points": [
+        [
+         0.03,
+         -0.05
+        ],
+        [
+         0.08045,
+         -0.078
+        ],
+        [
+         0.13091,
+         -0.05
+        ],
+        [
+         0.18136,
+         -0.078
+        ],
+        [
+         0.23182,
+         -0.05
+        ],
+        [
+         0.28227,
+         -0.078
+        ],
+        [
+         0.33273,
+         -0.05
+        ],
+        [
+         0.38318,
+         -0.078
+        ],
+        [
+         0.43364,
+         -0.05
+        ],
+        [
+         0.48409,
+         -0.078
+        ],
+        [
+         0.53455,
+         -0.05
+        ],
+        [
+         0.585,
+         -0.078
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bottom-cap",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.5,
+       "region": "panel-rear",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         -0.1
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "top-grille",
+       "bone": "radiator",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.35,
+       "region": "top-grille",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.585,
+         0.0
+        ],
+        [
+         0.585,
+         -0.1
+        ],
+        [
+         0.6,
+         -0.1
+        ],
+        [
+         0.6,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "grille-slot-0",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 5,
+       "filled": false,
+       "tone": 0.2,
+       "region": "top-grille",
+       "kind": "poly",
+       "points": [
+        [
+         0.5875,
+         -0.015
+        ],
+        [
+         0.5975,
+         -0.015
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "grille-slot-1",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 5,
+       "filled": false,
+       "tone": 0.2,
+       "region": "top-grille",
+       "kind": "poly",
+       "points": [
+        [
+         0.5875,
+         -0.04
+        ],
+        [
+         0.5975,
+         -0.04
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "grille-slot-2",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 5,
+       "filled": false,
+       "tone": 0.2,
+       "region": "top-grille",
+       "kind": "poly",
+       "points": [
+        [
+         0.5875,
+         -0.06
+        ],
+        [
+         0.5975,
+         -0.06
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "grille-slot-3",
+       "bone": "radiator",
+       "role": "texture",
+       "z": 5,
+       "filled": false,
+       "tone": 0.2,
+       "region": "top-grille",
+       "kind": "poly",
+       "points": [
+        [
+         0.5875,
+         -0.085
+        ],
+        [
+         0.5975,
+         -0.085
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bracket-upper",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "bracket",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.58,
+         0.0
+        ],
+        [
+         0.58,
+         -0.035
+        ],
+        [
+         0.592,
+         -0.035
+        ],
+        [
+         0.592,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bracket-lower",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "region": "bracket",
+       "material": "painted-steel",
+       "kind": "poly",
+       "points": [
+        [
+         0.16,
+         0.0
+        ],
+        [
+         0.16,
+         -0.035
+        ],
+        [
+         0.172,
+         -0.035
+        ],
+        [
+         0.172,
+         0.0
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "valve-head",
+       "bone": "valve-head",
+       "role": "detail",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "region": "valve",
+       "material": "brass",
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.03,
+       "ry": 0.03
+      ,
+       "penMm": 0.235
+      },
+      {
+       "id": "valve-index",
+       "bone": "valve-head",
+       "role": "texture",
+       "z": 5,
+       "filled": false,
+       "tone": 0.1,
+       "region": "valve",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         0.0,
+         0.027
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "supply-pipe",
+       "bone": "wall",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.3,
+       "region": "valve",
+       "penMm": 0.18,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.09
+        ],
+        [
+         0.055,
+         -0.09
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The vertical section of a type 22 radiator (panel, convector, convector, panel) hung on two brackets 0.035 m off a cut wall, valve head on the bottom connection.",
+      "de": "Der Vertikalschnitt eines Heizkörpers Typ 22 (Platte, Konvektor, Konvektor, Platte) an zwei Konsolen 0,035 m vor einer geschnittenen Wand, Ventilkopf am unteren Anschluss."
+     },
+     "retained": {
+      "en": "Both water panels (22 mm), both convector fin packs, top grille with four slots, brackets, valve head with index mark, supply pipe, wall break line.",
+      "de": "Beide Wasserplatten (22 mm), beide Konvektorlamellenpakete, Abdeckgitter mit vier Schlitzen, Konsolen, Ventilkopf mit Marke, Zuleitung, Wandbruchlinie."
+     },
+     "merged": {
+      "en": "Both convectors share the zigzag vertices at the centre plane.",
+      "de": "Beide Konvektoren teilen die Zickzack-Knoten in der Mittelebene."
+     },
+     "omitted": {
+      "en": "Side covers and end caps (not in the section plane).",
+      "de": "Seitenabdeckungen und Endkappen (nicht in der Schnittebene)."
+     },
+     "thinElements": {
+      "en": "The fin corrugation is symbolic: pitch 0.05 m (real fins about 0.01 m, 0.2 mm on paper cannot print).",
+      "de": "Die Lamellenwellung ist symbolisch: Teilung 0,05 m (echte Lamellen etwa 0,01 m, 0,2 mm auf Papier sind nicht druckbar)."
+     },
+     "hatching": {
+      "en": "Cut masonry as 45 degree lines at 0.6 mm.",
+      "de": "Geschnittenes Mauerwerk als 45-Grad-Linien mit 0,6 mm."
+     },
+     "styles": {
+      "en": "Outline 0.35 mm for the wall, 0.18 mm for the radiator, 0.1 mm for fins.",
+      "de": "Kontur 0,35 mm für die Wand, 0,18 mm für den Heizkörper, 0,1 mm für Lamellen."
+     },
+     "overlays": {
+      "en": "One overlay cell per region: both panels, the convector (two zigzags), grille, brackets, valve, wall stub.",
+      "de": "Eine Überlagerungszelle je Region: beide Platten, Konvektor (zwei Zickzacklinien), Gitter, Konsolen, Ventil, Wandstück."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "off",
+    "title": {
+     "en": "Valve closed",
+     "de": "Ventil geschlossen"
+    },
+    "description": {
+     "en": "Dial at the frost mark, no hot water, radiator at room temperature.",
+     "de": "Einstellrad auf Frostschutzmarke, kein Heizwasser, Heizkörper auf Raumtemperatur."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "wall-stub": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-rear": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-front": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "convector": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "top-grille": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "bracket": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "valve": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "convection-outlet": 0,
+      "front-plume": 0
+     },
+     "operating": {
+      "heating": 0.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "night",
+    "title": {
+     "en": "Night setting",
+     "de": "Nachtabsenkung"
+    },
+    "description": {
+     "en": "Dial 2, flow 55/45 degC, dT 30 K: 51.5 % of the rated output by the EN 442 exponent n = 1.3.",
+     "de": "Stufe 2, Vorlauf 55/45 °C, dT 30 K: 51,5 % der Nennleistung nach EN-442-Exponent n = 1,3."
+    },
+    "bones": {
+     "valve-head": {
+      "angleDeg": 108
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "wall-stub": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-rear": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-front": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "convector": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "top-grille": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "bracket": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "valve": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "convection-outlet": 1,
+      "front-plume": 1
+     },
+     "operating": {
+      "heating": 0.515
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "comfort",
+    "title": {
+     "en": "Comfort setting",
+     "de": "Komforteinstellung"
+    },
+    "description": {
+     "en": "Dial 3, flow 65/55 degC, dT 40 K: 74.8 % of the rated output.",
+     "de": "Stufe 3, Vorlauf 65/55 °C, dT 40 K: 74,8 % der Nennleistung."
+    },
+    "bones": {
+     "valve-head": {
+      "angleDeg": 162
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "wall-stub": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-rear": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-front": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "convector": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "top-grille": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "bracket": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "valve": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "convection-outlet": 1,
+      "front-plume": 1
+     },
+     "operating": {
+      "heating": 0.748
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "rated",
+    "title": {
+     "en": "Rated output 75/65/20",
+     "de": "Nennleistung 75/65/20"
+    },
+    "description": {
+     "en": "Dial 5, flow 75/65 degC, dT 50 K: the catalogue rating of 1.2 kW.",
+     "de": "Stufe 5, Vorlauf 75/65 °C, dT 50 K: die Katalognennleistung von 1,2 kW."
+    },
+    "bones": {
+     "valve-head": {
+      "angleDeg": 270
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "wall-stub": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-rear": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-front": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "convector": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "top-grille": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "bracket": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "valve": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "convection-outlet": 1,
+      "front-plume": 1
+     },
+     "operating": {
+      "heating": 1.0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "leaned-on",
+    "title": {
+     "en": "Leaned on at comfort",
+     "de": "Angelehnt bei Komfort"
+    },
+    "description": {
+     "en": "Comfort setting with a person leaning on the front edge (0.4 kN).",
+     "de": "Komforteinstellung, eine Person lehnt an der Vorderkante (0,4 kN)."
+    },
+    "bones": {
+     "valve-head": {
+      "angleDeg": 162
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "wall-stub": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-rear": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "panel-front": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "convector": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "top-grille": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "bracket": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "valve": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "convection-outlet": 1,
+      "front-plume": 1
+     },
+     "operating": {
+      "heating": 0.748
+     }
+    },
+    "loads": [
+     {
+      "id": "leaned-on",
+      "kind": "imposed",
+      "title": {
+       "en": "Person leaning on the radiator, 0.4 kN down at the front edge",
+       "de": "Person lehnt am Heizkörper, 0,4 kN nach unten an der Vorderkante"
+      },
+      "anchor": "front-top-edge",
+      "fxN": 0.0,
+      "fyN": -400,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "heat-up",
+    "title": {
+     "en": "Heat-up from cold",
+     "de": "Aufheizen aus dem kalten Zustand"
+    },
+    "description": {
+     "en": "The valve is opened from closed to rated; heat output, convection outlet and plume follow the dial.",
+     "de": "Das Ventil wird von geschlossen auf Nennleistung geöffnet; Heizleistung, Konvektionsauslass und Fahne folgen dem Einstellrad."
+    },
+    "durationS": 60,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "rated",
+      "ease": "smooth"
+     },
+     {
+      "t": 60,
+      "pose": "rated",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "open",
+      "fromS": 0,
+      "toS": 6,
+      "title": {
+       "en": "Turning the dial",
+       "de": "Rad drehen"
+      }
+     },
+     {
+      "id": "warm",
+      "fromS": 6,
+      "toS": 60,
+      "title": {
+       "en": "Warming up",
+       "de": "Aufwärmen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6,
+      "kind": "operating",
+      "title": {
+       "en": "Rated flow reached",
+       "de": "Nennvolumenstrom erreicht"
+      },
+      "target": "heating"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:heating",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:convection-outlet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 6,
+        "v": 1
+       },
+       {
+        "t": 60,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "thermostat-cycle",
+    "title": {
+     "en": "Thermostat cycling",
+     "de": "Thermostatregelung"
+    },
+    "description": {
+     "en": "The thermostat head modulates between comfort and closed; the radiator cools and heats in a loop.",
+     "de": "Der Thermostatkopf regelt zwischen Komfort und geschlossen; der Heizkörper kühlt ab und heizt in einer Schleife."
+    },
+    "durationS": 40,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "comfort",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 25,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 40,
+      "pose": "comfort",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "hot",
+      "fromS": 0,
+      "toS": 10,
+      "title": {
+       "en": "Closing",
+       "de": "Schließen"
+      }
+     },
+     {
+      "id": "cool",
+      "fromS": 10,
+      "toS": 25,
+      "title": {
+       "en": "Cooling",
+       "de": "Abkühlen"
+      }
+     },
+     {
+      "id": "reopen",
+      "fromS": 25,
+      "toS": 40,
+      "title": {
+       "en": "Reopening",
+       "de": "Wiederöffnen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 10,
+      "kind": "operating",
+      "title": {
+       "en": "Valve closed",
+       "de": "Ventil geschlossen"
+      },
+      "target": "heating"
+     },
+     {
+      "t": 25,
+      "kind": "operating",
+      "title": {
+       "en": "Valve reopens",
+       "de": "Ventil öffnet"
+      },
+      "target": "heating"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:heating",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.748
+       },
+       {
+        "t": 10,
+        "v": 0
+       },
+       {
+        "t": 25,
+        "v": 0
+       },
+       {
+        "t": 40,
+        "v": 0.748
+       }
+      ]
+     },
+     {
+      "target": "emitter:convection-outlet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 10,
+        "v": 0
+       },
+       {
+        "t": 25,
+        "v": 0
+       },
+       {
+        "t": 40,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 19,
+    "relativeHumidity": 0.4,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 1.0,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "heating",
+     "title": {
+      "en": "Heating water through the valve",
+      "de": "Heizwasser durch das Ventil"
+     },
+     "levels": [
+      {
+       "v": 0.0,
+       "title": {
+        "en": "Off, valve closed (*)",
+        "de": "Aus, Ventil geschlossen (*)"
+       }
+      },
+      {
+       "v": 0.515,
+       "title": {
+        "en": "Night, dT 30 K (55/45/20 degC, dial 2)",
+        "de": "Nacht, dT 30 K (55/45/20 °C, Stufe 2)"
+       }
+      },
+      {
+       "v": 0.748,
+       "title": {
+        "en": "Comfort, dT 40 K (65/55/20 degC, dial 3)",
+        "de": "Komfort, dT 40 K (65/55/20 °C, Stufe 3)"
+       }
+      },
+      {
+       "v": 1.0,
+       "title": {
+        "en": "Rated, dT 50 K (75/65/20 degC, dial 5)",
+        "de": "Nennleistung, dT 50 K (75/65/20 °C, Stufe 5)"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "wall-stub",
+     "title": {
+      "en": "Plastered wall stub (visible face)",
+      "de": "Verputztes Wandstück (Sichtfläche)"
+     },
+     "kind": "wall",
+     "model": "passive",
+     "material": "masonry",
+     "areaM2": 0.85,
+     "characteristicLengthM": 0.85,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "plaster",
+       "title": {
+        "en": "Gypsum plaster 15 mm",
+        "de": "Gipsputz 15 mm"
+       },
+       "kind": "masonry",
+       "material": "masonry",
+       "resistanceM2KW": 0.026,
+       "source": "literature",
+       "thicknessM": 0.015,
+       "heatCapacityJM2K": 19500,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 60000,
+     "source": "literature",
+     "reference": "en-iso-10456"
+    },
+    {
+     "id": "panel-rear",
+     "title": {
+      "en": "Rear water panel",
+      "de": "Rückseitige Wasserplatte"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "painted-steel",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.6,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 22000,
+     "operating": {
+      "key": "heating",
+      "heatW": 336.00000000000006
+     },
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "panel-front",
+     "title": {
+      "en": "Front water panel",
+      "de": "Vordere Wasserplatte"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "painted-steel",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.6,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 22000,
+     "operating": {
+      "key": "heating",
+      "heatW": 444.0
+     },
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "convector",
+     "title": {
+      "en": "Convector fins between the panels",
+      "de": "Konvektorlamellen zwischen den Platten"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "painted-steel",
+     "areaM2": 1.4,
+     "characteristicLengthM": 0.6,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 3500,
+     "operating": {
+      "key": "heating",
+      "heatW": 420.0
+     },
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "top-grille",
+     "title": {
+      "en": "Top grille",
+      "de": "Abdeckgitter oben"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "painted-steel",
+     "areaM2": 0.1,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 1.0,
+     "layers": [],
+     "heatCapacityJM2K": 2500,
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "bracket",
+     "title": {
+      "en": "Wall brackets",
+      "de": "Wandkonsolen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "painted-steel",
+     "areaM2": 0.004,
+     "characteristicLengthM": 0.05,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 4000,
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "valve",
+     "title": {
+      "en": "Thermostatic valve and supply pipe",
+      "de": "Thermostatventil und Zuleitung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "brass",
+     "areaM2": 0.012,
+     "characteristicLengthM": 0.05,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 15000,
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "convection-outlet",
+     "kind": "vent",
+     "title": {
+      "en": "Warm air leaving the convector channels at the top grille",
+      "de": "Warme Luft aus den Konvektorkanälen am Abdeckgitter"
+     },
+     "anchor": "grille-centre",
+     "directionDeg": 90,
+     "diameterM": 0.19,
+     "operatingKey": "heating",
+     "volumeFlowM3S": 0.018,
+     "temperatureRiseK": 28,
+     "vapourKgPerKg": 0.0,
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    },
+    {
+     "id": "front-plume",
+     "kind": "plume",
+     "title": {
+      "en": "Free-convection plume rising along the front panel",
+      "de": "Freie Konvektionsfahne an der Frontplatte"
+     },
+     "anchor": "grille-centre",
+     "directionDeg": 90,
+     "diameterM": 0.1,
+     "region": "panel-front",
+     "source": "authored-estimate",
+     "reference": "radiator-catalogues"
+    }
+   ],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Reference case: heated room at 20 degC (the EN 442 reference air temperature), no sun; dT is the mean water temperature minus 20 degC.",
+     "de": "Referenzfall: beheizter Raum mit 20 °C (EN-442-Bezugslufttemperatur), keine Sonne; dT ist die mittlere Wassertemperatur minus 20 °C."
+    },
+    {
+     "en": "Heat per level is Phi_50 (dT/50)^1.3 with Phi_50 = 1200 W, split over the front panel (37 %), rear panel (28 %) and convector fins (35 %) as an authored estimate; the passive grille warms by convection only.",
+     "de": "Die Wärme je Stufe ist Phi_50 (dT/50)^1,3 mit Phi_50 = 1200 W, aufgeteilt auf Frontplatte (37 %), Rückplatte (28 %) und Konvektorlamellen (35 %) als Schätzung; das passive Gitter erwärmt sich nur konvektiv."
+    },
+    {
+     "en": "The vent emitter is the air stream of the convector channels (0.018 m3/s, 28 K warmer than the room, about 0.6 kW); the plume is the boundary-layer convection along the front panel.",
+     "de": "Der Auslass ist der Luftstrom der Konvektorkanäle (0,018 m3/s, 28 K wärmer als der Raum, etwa 0,6 kW); die Fahne ist die Grenzschichtkonvektion an der Frontplatte."
+    },
+    {
+     "en": "The wall stub is the plastered partition behind; it receives radiation from the rear panel through the 35 mm gap and is not conditioned.",
+     "de": "Das Wandstück ist die verputzte Trennwand dahinter; sie erhält Strahlung der Rückplatte durch den 35-mm-Spalt und ist nicht konditioniert."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [
+    "wall-foot"
+   ],
+   "assumptions": [
+    {
+     "en": "The wall stub is a rigid cantilever fixed at the slab; the radiator hangs on two brackets and is carried as a rigid part of it.",
+     "de": "Das Wandstück ist ein starrer Kragarm, am Boden eingespannt; der Heizkörper hängt an zwei Konsolen und wird als starrer Teil getragen."
+    },
+    {
+     "en": "Wall and radiator are a 1 m strip; the leaning load is an authored estimate, not a normative load.",
+     "de": "Wand und Heizkörper sind ein 1-m-Streifen; die Anlehnlast ist ein Schätzwert, keine Normlast."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "rated",
+   "defaultClip": "heat-up",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

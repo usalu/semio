@@ -3,7 +3,6 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🔨️modules/🚪️io/⏱️control/🧪️testing/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust",
@@ -327,6 +326,7 @@ members = [
     "🔨️modules/🗺️surface/🧩️component/📦️packages/🦀️rust",
     "🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust",
+    "🔨️modules/🚪️io/⏱️control/🧪️testing/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust",
@@ -345,6 +345,7 @@ members = [
     "🔨️modules/🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust",
     "🔨️modules/🛂️manifest/🧱️app-surface/📦️packages/🦀️rust",
     "🔨️modules/🛂️manifest/🧾️plugin-manifest/📦️packages/🦀️rust",
+    "🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust",
     "🔨️modules/🛠️tool-machine/📦️packages/🦀️rust",
     "🔨️modules/🛠️tool-machine/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🌀️rigid/📦️packages/🦀️rust",
@@ -732,7 +733,6 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⏪️time-travel/🪟️panel/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📦️packages/🦀️rust",
-    "🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🫧️host/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/📦️packages/🦀️rust",
@@ -793,6 +793,8 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🫧️host/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧪️tests/🔬️laws/📦️packages/🦀️rust",

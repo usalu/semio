@@ -2,9 +2,11 @@
   "curtain_wall_types": {
     "cwt-1": {
       "entry": "Patched",
-      "panel": {
-        "Solid": {
-          "material": "m-wood"
+      "value": {
+        "panel": {
+          "Solid": {
+            "material": "m-wood"
+          }
         }
       }
     }

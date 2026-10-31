@@ -1,7 +1,7 @@
 /** 🧪️ SQLite independently records the actual original retained across yielded authority refresh. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
-import Ajv2020 from"ajv/dist/2020.js";
+import Ajv2020 from"ajv";
 import{transferWindowRefresh,windowRefreshDemand,type WindowRefreshGrant,type WindowRefreshQueue,type WindowRefreshProgress}from"../🟦️.ts";
 import law from"./🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";

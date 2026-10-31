@@ -1,9 +1,10 @@
+import AjvDraft07 from "ajv";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import Ajv from "ajv/dist/2020";
 /** 🔀️ Independent JSON Schema discriminators admit exact FEM record and tuple variant shapes. */
 export function nativePayloadEnumOracle():void{
- const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"))as{cases:{name:string;family:string;input:unknown;accepted:boolean}[]};const ajv=new Ajv({strict:true});const admitted=ajv.compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));assert(admitted(law),JSON.stringify(admitted.errors));
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"))as{cases:{name:string;family:string;input:unknown;accepted:boolean}[]};const ajv=new Ajv({strict:true});const admitted=new AjvDraft07({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));assert(admitted(law),JSON.stringify(admitted.errors));
  const node={type:"object",additionalProperties:false,required:["id","x","y"],properties:{id:{type:"string"},x:{type:"number"},y:{type:"number"}}};const tuple={type:"array",prefixItems:[{type:"string"},{type:"number"}],items:false,minItems:2,maxItems:2};const member=(kind:string,frame:boolean)=>({type:"object",additionalProperties:false,required:["kind","id","start","end","materialId","sectionId",...(frame?["roll"]:[])],properties:{kind:{const:kind},id:{type:"string"},start:{type:"string"},end:{type:"string"},materialId:{type:"string"},sectionId:{type:"string"},...(frame?{roll:{type:"number"}}:{})}});
  const schemas={element:{oneOf:[member("bar",false),member("frame",true)]},mutation:{...node,required:["mutation",...node.required],properties:{mutation:{const:"createNode"},...node.properties}},external:{oneOf:[{type:"object",additionalProperties:false,required:["pair"],properties:{pair:tuple}},{type:"object",additionalProperties:false,required:["node"],properties:{node}}]},adjacent:{type:"object",additionalProperties:false,required:["kind","payload"],properties:{kind:{const:"pair"},payload:tuple}}};const validators=new Map(Object.entries(schemas).map(([key,schema])=>[key,ajv.compile(schema)]));for(const row of law.cases){assert.equal(Boolean(validators.get(row.family)!(row.input)),row.accepted,row.name);}
 }

@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {createHash} from "node:crypto";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 

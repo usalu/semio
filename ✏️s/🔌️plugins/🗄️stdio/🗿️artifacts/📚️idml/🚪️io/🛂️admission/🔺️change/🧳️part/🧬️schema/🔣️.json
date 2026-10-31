@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Retained IDML Sparse Member Field",
   "type": "object",
   "description": "Genuine path and optional byte sources become one native serializable IdmlPartPatch. Field cloning uses the framework retained field owners, transfer quotes fixed headers, cancellation retires partial fields and original aliases. No mutable post or business admission authority.",

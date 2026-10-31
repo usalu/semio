@@ -3,7 +3,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import "../../../🧪️tests/🏛️ownership/🟦️.ts";
 
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {sum} from "d3-array";
 import corpus from "../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json";
 

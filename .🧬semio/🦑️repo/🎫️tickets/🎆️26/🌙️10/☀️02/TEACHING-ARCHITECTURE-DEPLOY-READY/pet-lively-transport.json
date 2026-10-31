@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "body": {
+    "id": "fixture-pet",
+    "left": 10,
+    "right": 30,
+    "top": 20,
+    "bottom": 40
+  },
+  "target": {
+    "x": 420,
+    "y": 230
+  },
+  "cases": [
+    {
+      "mode": "default",
+      "moves": 35,
+      "frameCalls": 34,
+      "frames": 34
+    },
+    {
+      "mode": "paced",
+      "moves": 35,
+      "frameCalls": 34,
+      "frames": 34
+    },
+    {
+      "mode": "continuous",
+      "moves": 3,
+      "frameCalls": 1,
+      "frames": 10
+    }
+  ]
+}

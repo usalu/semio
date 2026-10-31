@@ -41,5 +41,14 @@
         "forwardAllArgs": true
       }
     }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
+      }
+    }
   }
 }

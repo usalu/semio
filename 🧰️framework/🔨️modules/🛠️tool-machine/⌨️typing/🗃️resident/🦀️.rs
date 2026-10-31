@@ -3,12 +3,14 @@ use super::*;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,SharedUtf8};
 use std::mem::size_of;
 #[derive(Debug,PartialEq)]
-pub(super) struct TypingWindow<M>{pub(super) key:SharedUtf8,pub(super) state:RetainedOriginalSlot<TypingState<M>>}
+pub(crate) struct TypingWindow<M>{pub(super) key:SharedUtf8,pub(super) state:RetainedOriginalSlot<TypingState<M>>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing resident address changed")}
 fn movement(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 fn admits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items!=0&&semio_framework_value::retained_clone::retained_clone_grant_admits(g,d)}
 impl<M> TypingLedger<M>{
+ pub fn retained_read_pending(&self,window:&str)->bool{self.original_slot(window).is_some_and(RetainedOriginalSlot::has_read)}
+
  pub(super) fn position(&self,window:&str)->Result<usize,usize>{self.windows.binary_search_by(|row|row.key.as_str().cmp(window))}
  pub(crate) fn original_slot(&self,window:&str)->Option<&RetainedOriginalSlot<TypingState<M>>>{self.position(window).ok().map(|i|&self.windows[i].state)}
  pub(crate) fn original_slot_mut(&mut self,window:&str)->Option<&mut RetainedOriginalSlot<TypingState<M>>>{let i=self.position(window).ok()?;Some(&mut self.windows[i].state)}

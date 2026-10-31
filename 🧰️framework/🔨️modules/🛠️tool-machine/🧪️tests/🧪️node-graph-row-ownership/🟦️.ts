@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 
 type RowCase = Readonly<{ id: string; row: Readonly<Record<string, unknown>> }>;
 type Cases = Readonly<{ accepted: readonly RowCase[]; refused: readonly RowCase[] }>;

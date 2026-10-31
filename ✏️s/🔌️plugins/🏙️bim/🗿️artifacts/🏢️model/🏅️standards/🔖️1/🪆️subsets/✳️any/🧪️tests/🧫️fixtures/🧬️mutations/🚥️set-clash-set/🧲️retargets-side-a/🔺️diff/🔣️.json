@@ -1,16 +1,18 @@
 {
   "clash_sets": {
     "cs-1": {
-      "a": {
-        "classes": [
-          "Beam",
-          "Column"
-        ],
-        "ids": [],
-        "phases": [],
-        "storeys": []
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "a": {
+          "classes": [
+            "Beam",
+            "Column"
+          ],
+          "ids": [],
+          "phases": [],
+          "storeys": []
+        }
+      }
     }
   }
 }

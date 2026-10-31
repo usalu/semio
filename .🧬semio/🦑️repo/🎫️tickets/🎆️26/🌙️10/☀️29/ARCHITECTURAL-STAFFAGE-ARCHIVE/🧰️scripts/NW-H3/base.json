@@ -1,0 +1,808 @@
+{
+ "rig": {
+  "kind": "anatomical",
+  "root": "pelvis",
+  "bones": [
+   {
+    "id": "pelvis",
+    "parent": null,
+    "title": {
+     "en": "Pelvis",
+     "de": "Becken"
+    },
+    "x": 0,
+    "y": 0.935,
+    "angleDeg": 90,
+    "lengthM": 0.1,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -15,
+     "maxDeg": 15
+    },
+    "mass": {
+     "kg": 8.24,
+     "comX": 0.06,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "torso",
+    "parent": "pelvis",
+    "title": {
+     "en": "Torso with coat",
+     "de": "Rumpf mit Mantel"
+    },
+    "x": 0.1,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.465,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -40,
+     "maxDeg": 25
+    },
+    "mass": {
+     "kg": 24.45,
+     "comX": 0.215,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "neck",
+    "parent": "torso",
+    "title": {
+     "en": "Neck",
+     "de": "Hals"
+    },
+    "x": 0.465,
+    "y": 0,
+    "angleDeg": -8,
+    "lengthM": 0.1,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -35,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 0.7,
+     "comX": 0.05,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "head",
+    "parent": "neck",
+    "title": {
+     "en": "Head",
+     "de": "Kopf"
+    },
+    "x": 0.1,
+    "y": 0,
+    "angleDeg": 8,
+    "lengthM": 0.18,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 25
+    },
+    "mass": {
+     "kg": 4.3,
+     "comX": 0.075,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "arm-l",
+    "parent": "torso",
+    "title": {
+     "en": "Left upper arm",
+     "de": "Linker Oberarm"
+    },
+    "x": 0.42,
+    "y": 0,
+    "angleDeg": 180,
+    "lengthM": 0.33,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 170
+    },
+    "mass": {
+     "kg": 2.05,
+     "comX": 0.19,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "forearm-l",
+    "parent": "arm-l",
+    "title": {
+     "en": "Left forearm",
+     "de": "Linker Unterarm"
+    },
+    "x": 0.33,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.26,
+    "joint": {
+     "type": "revolute",
+     "minDeg": 0,
+     "maxDeg": 150
+    },
+    "mass": {
+     "kg": 1.27,
+     "comX": 0.119,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "hand-l",
+    "parent": "forearm-l",
+    "title": {
+     "en": "Left hand",
+     "de": "Linker Hand"
+    },
+    "x": 0.26,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.19,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 60
+    },
+    "mass": {
+     "kg": 0.44,
+     "comX": 0.096,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "winter-2009"
+    }
+   },
+   {
+    "id": "thigh-l",
+    "parent": "pelvis",
+    "title": {
+     "en": "Left thigh",
+     "de": "Linker Oberschenkel"
+    },
+    "x": 0,
+    "y": 0,
+    "angleDeg": 180,
+    "lengthM": 0.435,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 110
+    },
+    "mass": {
+     "kg": 10.2,
+     "comX": 0.178,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "shank-l",
+    "parent": "thigh-l",
+    "title": {
+     "en": "Left shank",
+     "de": "Linker Unterschenkel"
+    },
+    "x": 0.435,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.425,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -150,
+     "maxDeg": 0
+    },
+    "mass": {
+     "kg": 3.12,
+     "comX": 0.1895,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "foot-l",
+    "parent": "shank-l",
+    "title": {
+     "en": "Left foot and shoe",
+     "de": "Linker Fuß mit Schuh"
+    },
+    "x": 0.425,
+    "y": 0,
+    "angleDeg": 66.2,
+    "lengthM": 0.1858,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 1.32,
+     "comX": 0.0791,
+     "comY": -0.0034,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "toe-l",
+    "parent": "foot-l",
+    "title": {
+     "en": "Left forefoot",
+     "de": "Linker Vorfuß"
+    },
+    "x": 0.1858,
+    "y": 0,
+    "angleDeg": 23.8,
+    "lengthM": 0.065,
+    "joint": {
+     "type": "revolute",
+     "minDeg": 0,
+     "maxDeg": 65
+    },
+    "mass": {
+     "kg": 0.12,
+     "comX": 0.03,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "arm-r",
+    "parent": "torso",
+    "title": {
+     "en": "Right upper arm",
+     "de": "Rechter Oberarm"
+    },
+    "x": 0.42,
+    "y": 0,
+    "angleDeg": 180,
+    "lengthM": 0.33,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 170
+    },
+    "mass": {
+     "kg": 2.05,
+     "comX": 0.19,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "forearm-r",
+    "parent": "arm-r",
+    "title": {
+     "en": "Right forearm",
+     "de": "Rechter Unterarm"
+    },
+    "x": 0.33,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.26,
+    "joint": {
+     "type": "revolute",
+     "minDeg": 0,
+     "maxDeg": 150
+    },
+    "mass": {
+     "kg": 1.27,
+     "comX": 0.119,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "hand-r",
+    "parent": "forearm-r",
+    "title": {
+     "en": "Right hand",
+     "de": "Rechter Hand"
+    },
+    "x": 0.26,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.19,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 60
+    },
+    "mass": {
+     "kg": 0.44,
+     "comX": 0.096,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "winter-2009"
+    }
+   },
+   {
+    "id": "thigh-r",
+    "parent": "pelvis",
+    "title": {
+     "en": "Right thigh",
+     "de": "Rechter Oberschenkel"
+    },
+    "x": 0,
+    "y": 0,
+    "angleDeg": 180,
+    "lengthM": 0.435,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -30,
+     "maxDeg": 110
+    },
+    "mass": {
+     "kg": 10.2,
+     "comX": 0.178,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "shank-r",
+    "parent": "thigh-r",
+    "title": {
+     "en": "Right shank",
+     "de": "Rechter Unterschenkel"
+    },
+    "x": 0.435,
+    "y": 0,
+    "angleDeg": 0,
+    "lengthM": 0.425,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -150,
+     "maxDeg": 0
+    },
+    "mass": {
+     "kg": 3.12,
+     "comX": 0.1895,
+     "comY": 0,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "foot-r",
+    "parent": "shank-r",
+    "title": {
+     "en": "Right foot and shoe",
+     "de": "Rechter Fuß mit Schuh"
+    },
+    "x": 0.425,
+    "y": 0,
+    "angleDeg": 66.2,
+    "lengthM": 0.1858,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -60,
+     "maxDeg": 30
+    },
+    "mass": {
+     "kg": 1.32,
+     "comX": 0.0791,
+     "comY": -0.0034,
+     "distribution": "point",
+     "source": "literature",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "toe-r",
+    "parent": "foot-r",
+    "title": {
+     "en": "Right forefoot",
+     "de": "Rechter Vorfuß"
+    },
+    "x": 0.1858,
+    "y": 0,
+    "angleDeg": 23.8,
+    "lengthM": 0.065,
+    "joint": {
+     "type": "revolute",
+     "minDeg": 0,
+     "maxDeg": 65
+    },
+    "mass": {
+     "kg": 0.12,
+     "comX": 0.03,
+     "comY": 0,
+     "distribution": "point",
+     "source": "authored-estimate",
+     "reference": "de-leva-1996"
+    }
+   },
+   {
+    "id": "bag",
+    "parent": "torso",
+    "title": {
+     "en": "Shoulder bag on strap",
+     "de": "Umhängetasche am Riemen"
+    },
+    "x": 0.42,
+    "y": 0,
+    "angleDeg": 180,
+    "lengthM": 0.55,
+    "joint": {
+     "type": "revolute",
+     "minDeg": -40,
+     "maxDeg": 40
+    }
+   }
+  ]
+ },
+ "anchors": [
+  {
+   "id": "heel-l",
+   "bone": "foot-l",
+   "x": -0.0109,
+   "y": -0.0868,
+   "kind": "contact",
+   "title": {
+    "en": "Left heel",
+    "de": "Linker Ferse"
+   },
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.07,
+   "footprintWidthM": 0.065,
+   "frictionCoefficient": 0.9
+  },
+  {
+   "id": "ball-l",
+   "bone": "foot-l",
+   "x": 0.1858,
+   "y": 0,
+   "kind": "contact",
+   "title": {
+    "en": "Left ball of foot",
+    "de": "Linker Fußballen"
+   },
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.1,
+   "footprintWidthM": 0.1,
+   "frictionCoefficient": 0.9
+  },
+  {
+   "id": "heel-r",
+   "bone": "foot-r",
+   "x": -0.0109,
+   "y": -0.0868,
+   "kind": "contact",
+   "title": {
+    "en": "Right heel",
+    "de": "Rechter Ferse"
+   },
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.07,
+   "footprintWidthM": 0.065,
+   "frictionCoefficient": 0.9
+  },
+  {
+   "id": "ball-r",
+   "bone": "foot-r",
+   "x": 0.1858,
+   "y": 0,
+   "kind": "contact",
+   "title": {
+    "en": "Right ball of foot",
+    "de": "Rechter Fußballen"
+   },
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.1,
+   "footprintWidthM": 0.1,
+   "frictionCoefficient": 0.9
+  },
+  {
+   "id": "mouth",
+   "bone": "head",
+   "x": -0.005,
+   "y": -0.0801,
+   "kind": "emitter",
+   "title": {
+    "en": "Mouth opening",
+    "de": "Mundöffnung"
+   }
+  },
+  {
+   "id": "bag-cog",
+   "bone": "bag",
+   "x": 0.535,
+   "y": 0,
+   "kind": "load",
+   "title": {
+    "en": "Bag centre of gravity",
+    "de": "Schwerpunkt der Tasche"
+   }
+  },
+  {
+   "id": "strap-grip",
+   "bone": "hand-r",
+   "x": 0.085,
+   "y": 0.01,
+   "kind": "attachment",
+   "title": {
+    "en": "Grip on the bag strap",
+    "de": "Griff am Taschenriemen"
+   }
+  },
+  {
+   "id": "nostrils",
+   "bone": "head",
+   "x": 0.03,
+   "y": -0.104,
+   "kind": "emitter",
+   "title": {
+    "en": "Nostrils",
+    "de": "Nasenöffnungen"
+   }
+  },
+  {
+   "id": "crown",
+   "bone": "head",
+   "x": 0.175,
+   "y": 0.0,
+   "kind": "emitter",
+   "title": {
+    "en": "Crown of the head",
+    "de": "Scheitel"
+   }
+  }
+ ],
+ "materials": [
+  {
+   "id": "skin",
+   "title": {
+    "en": "Skin",
+    "de": "Haut"
+   },
+   "emissivity": 0.98,
+   "solarAbsorptivity": 0.6,
+   "source": "literature",
+   "reference": "ashrae-2021"
+  },
+  {
+   "id": "hair",
+   "title": {
+    "en": "Hair",
+    "de": "Haar"
+   },
+   "emissivity": 0.98,
+   "solarAbsorptivity": 0.85,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "wool-coat",
+   "title": {
+    "en": "Wool overcoat",
+    "de": "Wollmantel"
+   },
+   "emissivity": 0.92,
+   "solarAbsorptivity": 0.8,
+   "source": "literature",
+   "reference": "ashrae-2021"
+  },
+  {
+   "id": "wool-scarf",
+   "title": {
+    "en": "Wool scarf",
+    "de": "Wollschal"
+   },
+   "emissivity": 0.92,
+   "solarAbsorptivity": 0.65,
+   "source": "literature",
+   "reference": "ashrae-2021"
+  },
+  {
+   "id": "wool-trouser",
+   "title": {
+    "en": "Wool trousers",
+    "de": "Wollhose"
+   },
+   "emissivity": 0.92,
+   "solarAbsorptivity": 0.7,
+   "source": "literature",
+   "reference": "ashrae-2021"
+  },
+  {
+   "id": "leather-shoe",
+   "title": {
+    "en": "Leather shoe",
+    "de": "Lederschuh"
+   },
+   "emissivity": 0.9,
+   "solarAbsorptivity": 0.75,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "leather-bag",
+   "title": {
+    "en": "Leather bag",
+    "de": "Ledertasche"
+   },
+   "emissivity": 0.9,
+   "solarAbsorptivity": 0.6,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "cotton-underwear",
+   "title": {
+    "en": "Cotton undershirt and briefs",
+    "de": "Baumwollunterwäsche"
+   },
+   "emissivity": 0.93,
+   "solarAbsorptivity": 0.5,
+   "specificHeatJKgK": 1300,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "cotton-shirt",
+   "title": {
+    "en": "Cotton dress shirt",
+    "de": "Baumwollhemd"
+   },
+   "emissivity": 0.93,
+   "solarAbsorptivity": 0.5,
+   "specificHeatJKgK": 1300,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "wool-suit",
+   "title": {
+    "en": "Wool suit jacket",
+    "de": "Wollsakko"
+   },
+   "emissivity": 0.92,
+   "solarAbsorptivity": 0.8,
+   "specificHeatJKgK": 1360,
+   "source": "authored-estimate"
+  },
+  {
+   "id": "cotton-sock",
+   "title": {
+    "en": "Cotton socks",
+    "de": "Baumwollsocken"
+   },
+   "emissivity": 0.93,
+   "solarAbsorptivity": 0.6,
+   "specificHeatJKgK": 1300,
+   "source": "authored-estimate"
+  }
+ ],
+ "structure": {
+  "gravityMS2": 9.80665,
+  "dynamics": "inertial",
+  "supports": [],
+  "assumptions": [
+   {
+    "en": "Segments are point masses at the de Leva centres; the 3.5 kg bag is an applied load at its centre of gravity.",
+    "de": "Segmente sind Punktmassen in den Schwerpunkten nach de Leva; die 3,5 kg schwere Tasche ist eine Last in ihrem Schwerpunkt."
+   },
+   {
+    "en": "Contacts are the heel and the ball of each foot; supports follow the clip contact spans.",
+    "de": "Kontakte sind Ferse und Fußballen jedes Fußes; Auflager folgen den Kontaktspannen des Clips."
+   }
+  ],
+  "clinical": false
+ },
+ "provenance": {
+  "author": "Semio staffage content worker CV-H1",
+  "method": "handcrafted",
+  "created": "2026-10-29",
+  "references": [
+   {
+    "id": "de-leva-1996",
+    "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230. Tables 4 (male) and 5 (female), segment mass fractions and centre-of-mass positions."
+   },
+   {
+    "id": "winter-2009",
+    "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, anthropometric segment data."
+   },
+   {
+    "id": "drillis-contini-1966",
+    "citation": "Drillis, R., Contini, R. and Bluestein, M. (1964/1966). Body segment parameters: a survey of measurement techniques. Artificial Limbs 8(1), 44-66; segment lengths as fractions of stature."
+   },
+   {
+    "id": "perry-burnfield-2010",
+    "citation": "Perry, J. and Burnfield, J. M. (2010). Gait Analysis: Normal and Pathological Function, 2nd ed., SLACK. Gait cycle phases and joint angle ranges."
+   },
+   {
+    "id": "dubois-1916",
+    "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+   },
+   {
+    "id": "iso-9920-2007",
+    "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+   },
+   {
+    "id": "iso-8996-2021",
+    "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate."
+   },
+   {
+    "id": "iso-7730-2005",
+    "citation": "ISO 7730:2005 Ergonomics of the thermal environment, analytical determination of thermal comfort; Annex A metabolic rates."
+   },
+   {
+    "id": "ashrae-2021",
+    "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort; Chapter 18 Nonresidential cooling and heating load calculations for emissivities and metabolic data."
+   },
+   {
+    "id": "gupta-2010",
+    "citation": "Gupta, J. K., Lin, C.-H. and Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39."
+   },
+   {
+    "id": "gagge-1971",
+    "citation": "Gagge, A. P., Stolwijk, J. A. J. and Nishi, Y. (1971). An effective temperature scale based on a simple model of human physiological regulatory response. ASHRAE Transactions 77(1), 247-262."
+   },
+   {
+    "id": "mifflin-1990",
+    "citation": "Mifflin, M. D., St Jeor, S. T. et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition 51(2), 241-247."
+   },
+   {
+    "id": "icrp-66-1994",
+    "citation": "ICRP (1994). Human respiratory tract model for radiological protection. ICRP Publication 66, Annals of the ICRP 24(1-3); reference ventilation rates by activity and age (used as guidance, values authored)."
+   },
+   {
+    "id": "tartarini-2020",
+    "citation": "Tartarini, F. and Schiavon, S. (2020). pythermalcomfort: a Python package for thermal comfort research. SoftwareX 12, 100578; two-node model defaults and clothing conventions (1 clo = 0.155 m2K/W, i_m about 0.38)."
+   }
+  ],
+  "notes": {
+   "en": "Silhouette, clothing and rig are handcrafted for a 1.78 m, 72 kg man (7.5 heads); segment masses follow de Leva (1996) male fractions of 72 kg plus 2.7 kg of clothing and shoes, segment lengths follow Drillis and Contini. Gait key frames come from two-link inverse kinematics of smooth foot paths with phase timing after Perry and Burnfield. The 3.5 kg bag is an applied carried load, not a bone mass. Version 2: four individually drawn scale representations (1:500, 1:200, 1:100, 1:50), layered clothing regions, DuBois skin area, two-node physiology and derived breathing.",
+   "de": "Silhouette, Kleidung und Skelett sind von Hand für einen 1,78 m großen, 72 kg schweren Mann (7,5 Kopfhöhen) gezeichnet; Segmentmassen folgen den männlichen Anteilen nach de Leva (1996) für 72 kg plus 2,7 kg Kleidung und Schuhe, Segmentlängen Drillis und Contini. Die Ganghaltungen stammen aus zweigliedriger inverser Kinematik glatter Fußbahnen mit Phasenzeiten nach Perry und Burnfield. Die 3,5 kg schwere Tasche ist eine aufgebrachte Last, keine Knochenmasse. Version 2: vier einzeln gezeichnete Maßstabsdarstellungen (1:500, 1:200, 1:100, 1:50), geschichtete Kleidungsregionen, DuBois-Hautfläche, Zweiknotenphysiologie und abgeleitete Atmung."
+  }
+ },
+ "tags": [
+  "human",
+  "adult",
+  "walker",
+  "commuter",
+  "overcoat",
+  "bag",
+  "gait"
+ ]
+}

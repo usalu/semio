@@ -308,7 +308,7 @@
         "selectionExitHighlightIds": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/String"
+            "type": "string"
           }
         }
       },

@@ -1,10 +1,12 @@
 {
   "issues": {
     "i-2": {
-      "clash": {
-        "value": null
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "clash": {
+          "value": null
+        }
+      }
     }
   }
 }

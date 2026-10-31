@@ -5,7 +5,7 @@ import "../🎮️management/🪪️namespace/🧪️tests/🟦️.ts";
 import "../🎮️management/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 import {Workspace,WorkspaceError,validateRelative,validateText,type Revision,type WorkspacePort} from "../🟦️.ts";

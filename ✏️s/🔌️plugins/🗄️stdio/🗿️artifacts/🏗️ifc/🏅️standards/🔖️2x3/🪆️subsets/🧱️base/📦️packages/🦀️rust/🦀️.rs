@@ -19,8 +19,7 @@ pub mod standards {
                     #[path = "../../🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path="../../🚪️io/🪟️details/🦀️.rs"]
-                    pub mod details;
+                    pub use semio_s_artifact_stdio_ifc_2x3_base_details as details;
                     #[path="../../🚪️io/🔎️inspector/🦀️.rs"]
                     pub mod inspector;
                     #[path = "."]

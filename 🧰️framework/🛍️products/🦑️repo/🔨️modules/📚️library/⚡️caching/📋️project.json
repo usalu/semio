@@ -132,8 +132,10 @@
         "test-bootstrap",
         "test-bootstrap-dependencies",
         "test-bootstrap-dependencies-processes",
+        "test-bootstrap-installation-processes",
         "test-bootstrap-original-invocation-source",
         "test-bootstrap-processes",
+        "test-browser-dependencies",
         "test-build-bazel-contracts",
         "test-build-bazel-evidence",
         "test-build-bazel-execution",
@@ -143,6 +145,7 @@
         "test-build-cache-gc",
         "test-build-caller-birth",
         "test-build-command-line",
+        "test-build-cpu-profile",
         "test-build-doctor-preflight",
         "test-build-execution",
         "test-build-fleet-status",
@@ -170,6 +173,7 @@
         "test-build-leases-command",
         "test-build-memory",
         "test-build-mode",
+        "test-build-native-storage",
         "test-build-nx-tool",
         "test-build-observation",
         "test-build-parsers",
@@ -194,6 +198,7 @@
         "test-cache-scope",
         "test-caller-environment",
         "test-cargo-build-lease",
+        "test-cargo-code-publication-processes",
         "test-cargo-ingress",
         "test-cargo-launcher",
         "test-cargo-provenance",
@@ -234,6 +239,9 @@
         "test-law-coverage-tests",
         "test-laws-builder-admission",
         "test-laws-dashboard-control-plane",
+        "test-laws-ifc-geometry-ownership",
+        "test-laws-ifc-geometry-units",
+        "test-laws-ifc-native-components",
         "test-laws-library-commit-hooks",
         "test-laws-library-direction-observation",
         "test-laws-library-process",
@@ -247,11 +255,13 @@
         "test-native-dependencies",
         "test-native-input-vocabulary",
         "test-next-runtime",
+        "test-node-native-authorizer",
         "test-nx-bounded",
         "test-nx-bounded-image",
         "test-nx-output-observation",
         "test-package-manager-seam",
         "test-playground-preparation-source",
+        "test-process-watchdog-linux",
         "test-pruning",
         "test-pruning-laws",
         "test-pruning-laws-processes",
@@ -277,7 +287,9 @@
         "test-storage-compiler-processes",
         "test-storage-graph",
         "test-storage-graph-processes",
+        "test-storage-ledger-oracle-processes",
         "test-storage-nx",
+        "test-storage-nx-oracle-processes",
         "test-storage-nx-processes",
         "test-storage-opening",
         "test-storage-opening-processes",
@@ -346,11 +358,201 @@
         "{projectRoot}/🦀️cargo/🗃️unit-cache/🔏️key/**/*",
         "{projectRoot}/🧹️pruning/**/*",
         "{projectRoot}/🧹️pruning/⏱️recency/**/*",
-        "{projectRoot}/🧹️pruning/🌐️workspace/**/*"
+        "{projectRoot}/🧹️pruning/🌐️workspace/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️schema-authoring/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧬️schema-authoring/**/*",
+        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🧪️tests/📥️.json",
+        "{workspaceRoot}/📋️project.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🔗️reference/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧩️module-compile/📥️inputs.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/🧪️tests/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🧪️tests/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/**/*.ts",
+        "{workspaceRoot}/✏️s/tsconfig*.json",
+        "{workspaceRoot}/tsconfig*.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🧪️tests/🪆️members/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🧪️tests/🪆️members/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚠️diagnostics/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎨️finishes/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏘️zones/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏠️spaces/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏢️storey-levels/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/💰️costs/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧮️quantities/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️wall-layout/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪜️stair-runs/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️curtain-layout/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪟️opening-frames/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💰️costs/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️element-operations/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️spatial-structure/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏯️building-elements/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💎️types-and-materials/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️annotation-and-sheets/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️components-and-coordination/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧪️tests/🧰️owner-harness/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json",
+        "{workspaceRoot}/✏️s/tsconfig.json",
+        "{workspaceRoot}/tsconfig.json"
       ],
       "outputs": [],
       "options": {
         "command": "repo ./📜️script.ts test law-coverage"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/💾️storage/🔒️enforcement/🧵️session/🏊️pool/🧪️tests/🧮️lifecycle/🟦️.ts",
+            "{projectRoot}/📦️artifacts/🟦️typescript/🔗️binding/🧪️tests/🟦️.ts",
+            "{projectRoot}/📦️bundle/🟦️bun/📤️stream/🧪️tests/🟦️.ts",
+            "{projectRoot}/🕸️graph/🏁️startup/🚦️service/🧪️tests/🧮️handoff/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/⚙️operations/🧪️tests/🧮️arguments/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/🌡️host-capacity/🧪️tests/🧮️settings/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/👷️workers/🧪️tests/🧮️mapping/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📐️projection/🧪️tests/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/📋️plan/🧪️tests/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/📦️sdk/🪪️identity/🧪️tests/🧮️keys/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🧪️tests/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/🟦️bun/🧪️tests/🟦️.ts",
+            "{projectRoot}/🚀️bootstrap/🛠️tools/🩹️patch/🧪️tests/🟦️.ts",
+            "{projectRoot}/🚦️ci/🧭️baseline/🏃️resolve/🧪️tests/🧮️matrix/🟦️.ts",
+            "{projectRoot}/🦀️cargo/📦️units/🏗️compiler/📍️workspace/🧪️tests/🟦️.ts",
+            "{projectRoot}/🦀️cargo/🗃️unit-cache/🔏️key/🧪️tests/🟦️.ts",
+            "{projectRoot}/🧹️pruning/⏱️recency/🧪️tests/🟦️.ts",
+            "{projectRoot}/🧹️pruning/🌐️workspace/🧪️tests/🧮️projection/🟦️.ts",
+            "{projectRoot}/🧹️pruning/🧪️tests/🧮️plan/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧬️schema-authoring/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/🧪️tests/🔗️reference/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🏗️program-structure/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🏗️program-structure/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📋️requirements/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📋️requirements/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧾️program-diff/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗃️decision-records/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗃️decision-records/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🗂️catalog/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪪️entity-foundation/🚪️parsers/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪪️entity-foundation/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🧪️tests/🪆️members/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🌳️intrinsic/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️create-mesh/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🧪️tests/📥️.json",
+              "{workspaceRoot}/📋️project.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🧩️module-compile/📥️inputs.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/📖️declared-types/🧪️tests/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🚪️guard-helpers/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+              "{workspaceRoot}/✏️s/tsconfig.json",
+              "{workspaceRoot}/tsconfig.json",
+              "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️adjacency/🧲️connect/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️trace/🧵️connect/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🌱️create/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/♻️replace/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🏷️rename/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️register-row/🗑️delete/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🧪️tests/🪆️members/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🚪️parsers/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔣️.json"
+            ],
+            "modules": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/**/*.ts",
+              "!{workspaceRoot}/✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/**/🧪️tests/**"
+            ]
+          }
+        }
       }
     },
     "test-law-coverage-fixes": {
@@ -3914,7 +4116,11 @@
       "cache": false,
       "dependsOn": [],
       "inputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🎲️fuzz/🐍️.py",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🐍️.py",
+        "{workspaceRoot}/rust-toolchain.toml"
       ],
       "outputs": [],
       "options": {
@@ -3932,6 +4138,16 @@
             "version": 1,
             "class": "live",
             "reason": "exercises-host-resources"
+          },
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🦀️.rs",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🦀️rust/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📜️journal/🧪️tests/🎲️fuzz/🐍️.py",
+              "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🐍️.py",
+              "{workspaceRoot}/rust-toolchain.toml"
+            ]
           }
         }
       }
@@ -4940,7 +5156,8 @@
       "cache": false,
       "dependsOn": [],
       "inputs": [
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧬️schema/🔣️.json"
       ],
       "outputs": [],
       "options": {
@@ -4958,6 +5175,11 @@
             "version": 1,
             "class": "live",
             "reason": "exercises-host-resources"
+          },
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧬️schema/🔣️.json"
+            ]
           }
         }
       }
@@ -5186,7 +5408,8 @@
         "default",
         "reads",
         "testEnv",
-        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📂️paths/🪟️windows/**/*"
+        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📂️paths/🪟️windows/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/**/*"
       ],
       "outputs": [],
       "options": {
@@ -5207,7 +5430,9 @@
             "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/📂️paths/🪟️windows/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🧊️provider/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/👁️workspace/🧪️tests/🟦️.ts"
           ],
           "cache": {
             "version": 1,
@@ -5311,6 +5536,659 @@
         "testEnv",
         "reads"
       ]
+    },
+    "test-storage-nx-oracle-processes": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test storage-nx-oracle-processes",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-storage-ledger-oracle-processes": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test storage-ledger-oracle-processes",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-bootstrap-installation-processes": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test bootstrap-installation-processes",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-cargo-code-publication-processes": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test cargo-code-publication-processes",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-build-cpu-profile": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/📥️execution/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-cpu-profile",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🍞️bun/📜️script.mjs"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🌱️genuine-birth/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧪️tests/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⏱️profile/📊️cpu/🟨️.d.mts"
+            ]
+          }
+        }
+      }
+    },
+    "test-process-watchdog-linux": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test process-watchdog-linux",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🐧️linux/🧪️tests/🟦️.ts"
+          ],
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-node-native-authorizer": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test node-native-authorizer",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{projectRoot}/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🧲️node-native/🟦️.ts"
+          ],
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-browser-dependencies": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/🚀️bootstrap/📦️dependencies/🏗️native/🌐️system/**/*",
+        "{projectRoot}/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test browser-dependencies",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/🚀️bootstrap/📦️dependencies/🏗️native/🌐️system/🧪️tests/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{projectRoot}/🚀️bootstrap/📦️dependencies/🏗️native/🟦️.ts",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+            ]
+          }
+        }
+      }
+    },
+    "test-laws-ifc-native-components": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️components/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️components/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/⚖️boundary/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🔎️inspector/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/domain_edit.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/domain_work.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/field_edit.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/normalize.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/scalar_edit.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/template.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/type_change.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/wire.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/work.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🚪️io/📐️geometry/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/core.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/cursor.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/membership.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/part21.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🪪️identity/🦀️.rs"
+      ],
+      "options": {
+        "command": "repo ./📜️script.ts test laws-ifc-native-components"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️components/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧱️components/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📚️examples/🎬️demo/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/⚖️boundary/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🔎️inspector/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/domain_edit.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/domain_work.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/field_edit.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/normalize.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/scalar_edit.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/template.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/type_change.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/wire.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/work.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🚪️io/📐️geometry/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/core.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/cursor.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/membership.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/part21.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🪪️identity/🦀️.rs"
+            ]
+          }
+        }
+      }
+    },
+    "test-laws-ifc-geometry-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧬️mvd/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/📖️reader/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/📡️.protocol.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/📖️.grammar.semio",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🔎️mvd/💰️diagnostics/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🔎️census/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🪆️binding/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️reconstruction/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📏️units/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️product/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧮️matrix/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧱️primitive/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🌐️model/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🧰️owner.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts"
+      ],
+      "options": {
+        "command": "repo ./📜️script.ts test laws-ifc-geometry-ownership"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🟦️.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🧰️owner.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🧬️mvd/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📐️geometry/📖️reader/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/📡️.protocol.semio",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/📖️.grammar.semio",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🔺️diff/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/📝️text/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📏️encoding/💰️backing/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🔎️mvd/💰️diagnostics/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧮️semantic/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🔎️census/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🪆️binding/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛬️reconstruction/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📏️units/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️product/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧮️matrix/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧱️primitive/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🌐️model/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🦀️.rs"
+            ]
+          }
+        }
+      }
+    },
+    "test-laws-ifc-geometry-units": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🧪️tests/radius-cases.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📏️units/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📜️limits.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️product/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🧪️tests/cases.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/halfspaces.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/operators.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧮️matrix/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧱️primitive/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🌐️model/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/📜️oblique.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🦀️unit.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🧰️owner.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts"
+      ],
+      "options": {
+        "command": "repo ./📜️script.ts test laws-ifc-geometry-units"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🦀️unit.ts",
+            "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🧰️owner.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🧱️components/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/📦️packages/🦀️rust/Cargo.toml",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/⭕️circle/🧪️tests/radius-cases.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📏️units/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📖️graph/🪧️part21/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📜️limits.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/📦️product/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🧪️tests/cases.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/halfspaces.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/operators.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧪️tests/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧮️matrix/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧱️primitive/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🌐️model/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/📇️vertex/🧪️tests/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🕸️mesh/🧪️tests/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🧪️tests/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🦀️.rs",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/📜️oblique.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🔣️.json",
+              "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🕳️rings/🧪️tests/🦀️.rs"
+            ]
+          }
+        }
+      }
+    },
+    "test-build-native-storage": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites",
+        "command": "repo ./📜️script.ts test build-native-storage",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
     }
   },
   "namedInputs": {

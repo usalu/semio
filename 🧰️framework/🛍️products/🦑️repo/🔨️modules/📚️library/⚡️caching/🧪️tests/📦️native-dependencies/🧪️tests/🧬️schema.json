@@ -8,7 +8,8 @@
     "systemModules",
     "systemCases",
     "receipts",
-    "failures"
+    "failures",
+    "tooling"
   ],
   "properties": {
     "version": {
@@ -122,6 +123,47 @@
             ]
           },
           "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "tooling": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fault",
+          "opened",
+          "prepared",
+          "closed",
+          "accepted"
+        ],
+        "properties": {
+          "fault": {
+            "enum": [
+              "none",
+              "store",
+              "provider"
+            ]
+          },
+          "opened": {
+            "const": 1
+          },
+          "prepared": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "closed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "accepted": {
             "type": "boolean"
           }
         }

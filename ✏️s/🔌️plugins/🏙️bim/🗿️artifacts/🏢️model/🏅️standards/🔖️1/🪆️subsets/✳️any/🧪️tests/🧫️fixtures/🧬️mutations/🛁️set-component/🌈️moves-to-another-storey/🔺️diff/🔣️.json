@@ -2,7 +2,9 @@
   "components": {
     "cmp-table": {
       "entry": "Patched",
-      "storey": "st-first"
+      "value": {
+        "storey": "st-first"
+      }
     }
   }
 }

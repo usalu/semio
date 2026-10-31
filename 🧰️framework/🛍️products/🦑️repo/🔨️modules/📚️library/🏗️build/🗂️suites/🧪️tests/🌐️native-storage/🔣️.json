@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "suite": "build-native-storage",
+  "files": [
+    "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👁️existing/🟦️.ts",
+    "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🎚️capacity/🟦️.ts",
+    "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/✅️conformance/🟦️.ts",
+    "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🧹️whole/🟦️.ts",
+    "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📁️directory/🟦️.ts"
+  ],
+  "platforms": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "scratch": "checkout",
+  "budgetMs": 300000
+}

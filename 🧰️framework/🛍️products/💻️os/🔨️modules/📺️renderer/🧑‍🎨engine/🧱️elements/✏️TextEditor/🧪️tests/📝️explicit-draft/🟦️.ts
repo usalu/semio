@@ -1,4 +1,4 @@
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { describe, expect, test } from "vitest";
 import fixture from "../🧫️fixtures/📝️explicit-draft/🔣️.json";
 import lifecycle from "../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";

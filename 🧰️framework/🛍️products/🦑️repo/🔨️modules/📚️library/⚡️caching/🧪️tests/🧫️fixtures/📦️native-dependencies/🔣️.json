@@ -33,7 +33,10 @@
         "UV_PYTHON": "3.14",
         "UV_PYTHON_DOWNLOADS": "manual",
         "UV_PYTHON_PREFERENCE": "only-managed"
-      }
+      },
+      "providers": [
+        "uv"
+      ]
     },
     {
       "kind": "cargo",
@@ -52,7 +55,8 @@
           "--manifest-path",
           "Cargo.toml"
         ]
-      ]
+      ],
+      "providers": []
     },
     {
       "kind": "go",
@@ -66,19 +70,30 @@
       "environment": {
         "GOTOOLCHAIN": "local",
         "GOWORK": "{workspace}/go.work"
-      }
+      },
+      "providers": [
+        "go"
+      ]
     },
     {
       "kind": "dotnet",
-      "commands": []
+      "commands": [],
+      "providers": []
     },
     {
       "kind": "cpp",
-      "commands": []
+      "commands": [],
+      "providers": []
     },
     {
       "kind": "browsers",
       "commands": [
+        [
+          "bun",
+          "{workspace}/node_modules/playwright/cli.js",
+          "install-deps",
+          "chromium"
+        ],
         [
           "bun",
           "{workspace}/node_modules/playwright/cli.js",
@@ -88,7 +103,8 @@
       ],
       "environment": {
         "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
-      }
+      },
+      "providers": []
     },
     {
       "kind": "wasm",
@@ -115,7 +131,8 @@
           "add",
           "wasm32-wasip2"
         ]
-      ]
+      ],
+      "providers": []
     },
     {
       "kind": "trunk",
@@ -142,27 +159,14 @@
           "add",
           "wasm32-unknown-unknown"
         ]
-      ]
+      ],
+      "providers": []
     },
     {
       "kind": "tools",
-      "commands": [
-        [
-          "cargo",
-          "install",
-          "cargo-nextest",
-          "--version",
-          "0.9.140",
-          "--locked"
-        ],
-        [
-          "cargo",
-          "install",
-          "cargo-llvm-cov",
-          "--version",
-          "0.8.7",
-          "--locked"
-        ]
+      "commands": [],
+      "providers": [
+        "cargo-tools"
       ]
     },
     {
@@ -175,7 +179,8 @@
           "--manifest-path",
           "Cargo.toml"
         ]
-      ]
+      ],
+      "providers": []
     }
   ],
   "forbiddenImports": [
@@ -460,5 +465,16 @@
   "systemModules": [
     "bun:ffi",
     "bun:sqlite"
-  ]
+  ],
+  "browserSystem": {
+    "platform": "linux",
+    "root": true,
+    "tools": {
+      "apt-get": "/usr/bin/apt-get"
+    },
+    "operations": [
+      "install-deps",
+      "install"
+    ]
+  }
 }

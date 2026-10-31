@@ -2,7 +2,9 @@
   "schedules": {
     "sch-walls": {
       "entry": "Patched",
-      "itemize": false
+      "value": {
+        "itemize": false
+      }
     }
   }
 }

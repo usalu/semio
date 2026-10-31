@@ -1,0 +1,1 @@
+const fs=require('fs');const p='🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/🧵️shard/🐹️.go';let s=fs.readFileSync(p,'utf8');const a='lineStart += int64(len(line)) + 1';if(!s.includes(a))throw Error('offset changed');fs.writeFileSync(p,s.replace(a,'lineStart += int64(len(line) + 1 - reader.Len())'));

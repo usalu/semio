@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 /** 🧪️ Schema-first chart replay checks with independent AJV and D3 output oracles. */
 import { scaleLinear } from "d3-scale";
 import { color as d3Color } from "d3-color";
@@ -58,10 +59,10 @@ async function browserInference(): Promise<readonly unknown[]> {
 }
 
 export function chartMutationInferenceChecks(): readonly Check[] {
-  const ajv = new Ajv2020({ strict: false });
+  const ajv = new AjvDraft07({ strict: false });
   ajv.addSchema(schema);
   const validate = ajv.compile({ $ref: `${schema.$id}#/$defs/ChartSpecification` });
-  const validateResult=ajv.compile(resultSchema);
+  const validateResult=new Ajv2020({strict:false}).compile(resultSchema);
   const inputs = [base.chart,nativeGrammar.chart,fixture.collision.snapshot.chart, { ...base.chart, language: undefined }, { ...base.chart, width: -1 }, { ...base.chart, extra: true }, { ...base.chart, layers: [{ mark: "unknown" }] }, { ...base.chart, margin: { top: 0, left: 0, right: 0, bottom: -2 } }];
   return [
     {module:"mutation",name:"native-paint-vectors-d3",subject:()=>paintFixture.cases.map(value=>[value.hex,value.alpha]),oracle:()=>paintFixture.cases.map(value=>{const paint=d3Color(value.input)!.rgb();const hex=paint.opacity===0?"000000":paint.formatHex().slice(1).toUpperCase();return [hex,paint.opacity];}),tolerance:1e-12},

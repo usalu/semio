@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv, { type AnySchema } from "ajv/dist/2020.js";
+import Ajv, { type AnySchema } from "ajv";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyArchitectRegisterWindowConfigMutation, type ArchitectRegisterWindowConfig, type ArchitectRegisterWindowConfigMutation } from "../../🧬️schema/🟦️.ts";
 import { applyArchitectAdjacencyWindowConfigMutation, type ArchitectAdjacencyWindowConfig, type ArchitectAdjacencyWindowConfigMutation } from "../../../../↔️adjacency/🎚️config/🧬️schema/🟦️.ts";

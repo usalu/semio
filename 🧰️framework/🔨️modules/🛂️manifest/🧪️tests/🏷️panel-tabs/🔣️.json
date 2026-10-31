@@ -1,0 +1,75 @@
+{
+  "cases": [
+    {
+      "panel": {
+        "kind": "workbenchCategory"
+      },
+      "native": "WorkbenchCategory",
+      "expected": "framework.category.workbench"
+    },
+    {
+      "panel": {
+        "kind": "displayCategory"
+      },
+      "native": "DisplayCategory",
+      "expected": "framework.category.display"
+    },
+    {
+      "panel": {
+        "kind": "detailsCategory"
+      },
+      "native": "DetailsCategory",
+      "expected": "framework.category.details"
+    },
+    {
+      "panel": {
+        "kind": "settingsCategory"
+      },
+      "native": "SettingsCategory",
+      "expected": "framework.category.settings"
+    },
+    {
+      "panel": {
+        "kind": "displayWindows"
+      },
+      "native": "DisplayWindows",
+      "expected": "framework.display.windows"
+    },
+    {
+      "panel": {
+        "kind": "displayLayout"
+      },
+      "native": "DisplayLayout",
+      "expected": "framework.display.layout"
+    },
+    {
+      "panel": {
+        "kind": "settingsGeneral"
+      },
+      "native": "SettingsGeneral",
+      "expected": "framework.settings.general"
+    },
+    {
+      "panel": {
+        "kind": "settingsTheme"
+      },
+      "native": "SettingsTheme",
+      "expected": "framework.settings.theme"
+    },
+    {
+      "panel": {
+        "kind": "settingsDefaultApps"
+      },
+      "native": "SettingsDefaultApps",
+      "expected": "framework.settings.default-apps"
+    },
+    {
+      "panel": {
+        "kind": "app",
+        "id": "puzzle.catalogue"
+      },
+      "native": "App",
+      "expected": "puzzle.catalogue"
+    }
+  ]
+}

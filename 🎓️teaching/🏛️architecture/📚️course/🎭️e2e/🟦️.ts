@@ -1,3 +1,4 @@
+import { withCourseAssignmentPdfsV1 } from "../🏗️builder/🌐️vite/📦️assignments/🟦️.ts";
 /** 🎭️ The end-to-end gate of the architecture course: it boots throw-away stacks and drives the real site in a real browser
  * (Playwright, Chromium) through everything a learner does.
  *
@@ -301,7 +302,7 @@ async function withStack(slot: Slot, run: Run, consume: (stack: Stack) => Promis
     } else {
       courseOriginalBuildModeV1(run.invocation, "release");
       say(`${label}: building the release site for ${proctor}`);
-      await buildViteArtifact({ ...rehearsalBuildPlan(run.bundleRoot, proctor), workspace: run.repoRoot, invocation: run.invocation, control: scriptCompilerAdmissionControlV1(run.invocation, "vite:rehearsal-build", 0), signal: run.signal });
+      await withCourseAssignmentPdfsV1(run.repoRoot, run.invocation, (runtimeChannels, control) => buildViteArtifact({ ...rehearsalBuildPlan(run.bundleRoot, proctor), workspace: run.repoRoot, invocation: run.invocation, runtimeChannels, control, signal: run.signal }));
       const held = await holdSiteArtifact(run);
       closing.push(() => held.release());
       const artifact = held.path;

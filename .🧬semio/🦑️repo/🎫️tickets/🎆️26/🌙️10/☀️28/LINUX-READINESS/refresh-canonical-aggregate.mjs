@@ -1,0 +1,3 @@
+import fs from "node:fs";
+import {deriveCanonicalTestAggregateV1,requireCanonicalTestAggregateV1,canonicalTestAggregatePolicyV1} from "./../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
+const policy=canonicalTestAggregatePolicyV1,project=JSON.parse(fs.readFileSync(policy.manifest,"utf8"));project.targets[policy.target]=deriveCanonicalTestAggregateV1({...project,root:policy.root});requireCanonicalTestAggregateV1(project,policy.root);fs.writeFileSync(policy.manifest,JSON.stringify(project,null,2)+"\n");console.log(JSON.stringify({dependencies:project.targets[policy.target].dependsOn.length,targets:Object.keys(project.targets).length}));

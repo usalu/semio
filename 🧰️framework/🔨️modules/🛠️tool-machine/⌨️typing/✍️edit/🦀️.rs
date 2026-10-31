@@ -2,10 +2,11 @@
 use std::mem::size_of;
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure};
 use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,SharedUtf8};
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{TypingLedger,TypingState,ToolStep,TYPING_IDLE_MS};
-use semio_framework_replication::{ActorId,HybridLogicalTimestamp,TransactionRef};
+use protocol::{ActorId,HybridLogicalTimestamp,TransactionRef};
 #[derive(RetireOwned)]
 pub struct OriginalTypingEditRequest<M>{pub window:String,pub tool:String,pub actor:ActorId,pub buffer:String,pub leaves:Vec<M>,pub clock:HybridLogicalTimestamp}
 #[derive(RetireOwned)]
@@ -32,19 +33,21 @@ fn text(cx:&mut StepContext<'_>,output:&mut Vec<u8>,source:&[u8])->Result<bool,O
 impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
  pub fn admission_demands(_ledger:&TypingLedger<M>,_request:&OriginalTypingEditRequest<M>)->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<Self>(),..movement(2*size_of::<Self>()+2*size_of::<OriginalTypingEditRequest<M>>()+size_of::<bool>())}}
  pub fn admit(ledger:&mut TypingLedger<M>,request:&mut Option<OriginalTypingEditRequest<M>>,output:&mut Option<Box<Self>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let _=cx.original_source_parent()?;let decoder=cx.native_receiving_identity().ok_or_else(invalid)?;
+  let _=cx.original_source_parent()?;
   if output.is_some()||request.is_none(){return Err(invalid().into())}
   let input=request.as_ref().unwrap();if ledger.original_write_pending()||ledger.retained_read_pending(&input.window){return Ok(false)}
   if !Owners::<M>::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original typing edit has no controlled retirement").into())}
   let d=Self::admission_demands(ledger,input);if !funds(cx,d){return Ok(false)}
   let previous=ledger.open(&input.window);if previous.is_some_and(|row|row.states.as_slice()!=["root","typing"]||row.transaction.tool!=row.tool){return Err(invalid().into())}
   let needs_fold=previous.is_some_and(|row|row.tool==input.tool&&row.buffer==input.buffer&&row.deadline_ms>input.clock.physical_ms);
-  let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"original typing edit allocation refused"))?;
-  let owner=Self{binding:Some(OriginalSourceBinding::borrow(cx)),decoder,ledger:ledger as*mut _ as usize,revision:ledger.source_revision(),key:None,phase:0,length:0,reuse:false,needs_fold,closing:false,received:false,owners:ControlledRetirement::retain(Owners{request:request.take(),decision:None,key:None,slot_key:None,net:None,input_residue:None,states:Vec::new(),buffers:std::array::from_fn(|_|Vec::new()),transaction:None,old_net:None,metadata:None,previous_metadata:None,empty_net:None})};
-  *output=Some(unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())});ledger.begin_original_write();paid(cx,progress(d))?;Ok(true)
+  let binding=OriginalSourceBinding::borrow(cx);
+  semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|native|{
+   let decoder=(native.ledger_identity(),native.retirement_recipient_identity().ok_or_else(invalid)?);
+   let owner=Box::new(Self{binding:Some(binding),decoder,ledger:ledger as*mut _ as usize,revision:ledger.source_revision(),key:None,phase:0,length:0,reuse:false,needs_fold,closing:false,received:false,owners:ControlledRetirement::retain(Owners{request:request.take(),decision:None,key:None,slot_key:None,net:None,input_residue:None,states:Vec::new(),buffers:std::array::from_fn(|_|Vec::new()),transaction:None,old_net:None,metadata:None,previous_metadata:None,empty_net:None})});ledger.begin_original_write();Ok((owner,progress(d)))
+  })
  }
- fn validate(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->Result<(),ValueError>{if self.ledger!=ledger as*const _ as usize||!self.binding.is_some_and(|b|b.matches(cx))||cx.native_receiving_identity()!=Some(self.decoder){return Err(invalid())}Ok(())}
- fn validate_source(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->Result<(),ValueError>{self.validate(ledger,cx)?;if self.revision!=ledger.source_revision(){return Err(invalid())}Ok(())}
+ fn validate(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->Result<(),ValueError>{if self.ledger!=ledger as*const _ as usize{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing edit changed its ledger"))}if !self.binding.is_some_and(|b|b.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing edit changed its original caller"))}if cx.native_receiving_identity()!=Some(self.decoder){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing edit changed its decoder recipient"))}Ok(())}
+ fn validate_source(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->Result<(),ValueError>{self.validate(ledger,cx)?;if self.revision!=ledger.source_revision(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing edit changed its source revision"))}Ok(())}
  pub fn ready(&self)->bool{self.phase==4&&!self.received&&!self.closing}
  pub fn matches_context(&self,ledger:&TypingLedger<M>,cx:&StepContext<'_>)->bool{self.validate_source(ledger,cx).is_ok()}
  pub fn fold_inputs<'a>(&'a self,ledger:&'a TypingLedger<M>,cx:&StepContext<'_>)->Result<Option<(&'a [M],&'a [M])>,OriginalTurnFailure>{self.validate_source(ledger,cx)?;if !self.needs_fold||self.phase!=0{return Ok(None)}let owners=self.owners.original().ok_or_else(invalid)?;let request=owners.request.as_ref().ok_or_else(invalid)?;let previous=ledger.open(&request.window).ok_or_else(invalid)?;Ok(Some((&previous.net,&request.leaves)))}
@@ -58,7 +61,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
   let owners=self.owners.original().ok_or_else(invalid)?;
   Ok(match self.phase{
    0=>movement(2*size_of::<Vec<M>>()+2*size_of::<OriginalTypingFold<M>>()+3*size_of::<usize>()),
-   1=>if owners.key.is_none(){let mut d=SharedUtf8::admission_demand();d.copy_bytes+=2*size_of::<String>()+size_of::<Option<SharedUtf8>>();d}else if owners.slot_key.is_none(){let mut d=SharedUtf8::lease_demand()?;d.copy_bytes+=size_of::<Option<SharedUtf8>>();d}else{let mut d=ledger.original_window_demands(owners.key.as_ref().unwrap().as_str())?;d.copy_bytes+=size_of::<Option<RetainedOriginalSlotKey>>()+size_of::<u64>()+size_of::<u8>();d},
+   1=>if owners.key.is_none(){let mut d=SharedUtf8::admission_demand();d.copy_bytes+=2*size_of::<String>()+size_of::<Option<SharedUtf8>>();d}else if owners.slot_key.is_none(){let mut d=SharedUtf8::lease_demand();d.copy_bytes+=size_of::<Option<SharedUtf8>>();d}else{let mut d=ledger.original_window_demands(owners.key.as_ref().unwrap().as_str())?;d.copy_bytes+=size_of::<Option<RetainedOriginalSlotKey>>()+size_of::<u64>()+size_of::<u8>();d},
    2=>if !self.reuse&&self.length!=0{if owners.states.capacity()<2{RetirementDemand{capacity_bytes:2*size_of::<String>(),..movement(2*size_of::<Vec<String>>())}}else if owners.states.len()<2{let word=if owners.states.is_empty(){b"root".as_slice()}else{b"typing".as_slice()};let d=text_demand(&owners.buffers[0],word.len());if d!=RetirementDemand::default(){d}else{movement(size_of::<String>())}}else{movement(size_of::<u8>())}}else{movement(size_of::<u8>())},
    3=>if !self.reuse&&self.length!=0&&owners.transaction.is_none(){let request=owners.request.as_ref().unwrap();let d=text_demand(&owners.buffers[1],request.tool.len());if d!=RetirementDemand::default(){d}else{TransactionRef::original_mint_demands(&request.actor,&request.clock,&request.tool)?}}else{movement(size_of::<u8>())},
    4=>Default::default(),

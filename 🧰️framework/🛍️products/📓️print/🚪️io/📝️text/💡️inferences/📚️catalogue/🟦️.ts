@@ -65,7 +65,7 @@ function nativeOption(value:OptionValue,descriptor:VizOptionSyntaxDescriptor,pai
  }
 }
 function options(owner:string,value:Readonly<Record<string,OptionValue>>={},family=false,paintResult=false):string{
- const descriptors=family?METADATA["x-semio-family-options"][owner]?.options:METADATA["x-semio-option-syntax"][owner];
+ const descriptors=family?METADATA["x-semio-family-options"][owner]?.options:METADATA.definitions.OptionSyntaxCatalog.const[owner];
  if(!descriptors)throw Error(`Missing native syntax owner ${owner}`);
  return Object.keys(value).sort().map(key=>{const descriptor=descriptors[key];if(!descriptor)throw Error(`Undeclared native option ${owner}/${key}`);return `${token(key)}={${nativeOption(value[key]!,descriptor,paintResult)}}`;}).join(",");
 }

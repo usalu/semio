@@ -2,14 +2,16 @@
   "area_schemes": {
     "as-nsa": {
       "entry": "Patched",
-      "usages": [
-        "Kitchen",
-        "Sleeping"
-      ],
-      "zones": [
-        "z-day",
-        "z-night"
-      ]
+      "value": {
+        "usages": [
+          "Kitchen",
+          "Sleeping"
+        ],
+        "zones": [
+          "z-day",
+          "z-night"
+        ]
+      }
     }
   }
 }

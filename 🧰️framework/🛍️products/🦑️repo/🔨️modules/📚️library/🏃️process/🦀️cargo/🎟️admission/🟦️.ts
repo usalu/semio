@@ -5,7 +5,7 @@ import {resolve,relative,basename} from "node:path";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 import {cargoPackageSelectionsNearV1,cargoWorkspaceForManifest,prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import {repositoryCargoTestPolicyV1} from "../🔣️policy/🟦️.ts";
+import {cargoNextestAvailableV1,repositoryCargoTestPolicyV1} from "../🔣️policy/🟦️.ts";
 import {packageTestBudgetMs} from "../⏱️budget/🟦️.ts";
 import {TEST_LEVELS,type TestLevel} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {scriptInvocationEnvironment,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,createRenewableIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -26,7 +26,8 @@ async function execute(request:CargoTestRequestV1,policy:CargoTestPolicyV1,works
  const control=createRequestedIssuedResourceControlV1(phaseControl,policy.buildBudgetMs),network=repositoryCargoNetworkV1(invocation,workspace);
  await withRepositoryCompilerLaneV1(workspace,policy.mode,control,request.environment??process.env,{crates:request.packages,unitCache:!lint&&!policy.coveragePath},async (store,actualPhase)=>{
   requireIssuedResourceControlInvocationV1(actualPhase,invocation);requireIssuedResourceControlRefinementV1(control,actualPhase);checkResourceLeaseControl(actualPhase);
-  const bounded={...policy,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,artifactDirectory:store.captureDirectory,...(policy.coveragePath?{coveragePath:join(store.captureDirectory,basename(policy.coveragePath))}: {})};
+  const nextest=lint?policy.nextest:cargoNextestAvailableV1(store.environment);if(!lint&&!nextest)throw Error("Prepared pinned Cargo test runner required");
+  const bounded={...policy,nextest,targetDirectory:store.environment.CARGO_TARGET_DIR!,buildDirectory:store.buildDirectory,artifactDirectory:store.captureDirectory,...(policy.coveragePath?{coveragePath:join(store.captureDirectory,basename(policy.coveragePath))}: {})};
   await(lint?runCargoLintV1:runCargoTestsV1)({...request,environment:store.environment},bounded,{workspaceRoot:workspace,control:actualPhase,storage:store.storage,sourceBoundary:store.sourceBoundary,planningPort:repositoryCargoPlanningPortV1(store),sourceMemo:repositoryCargoSourceMemoV1(store),...(lint?{}:{assertion:run=>withPlannedTestWorkersV1("cargo-test",request.environment??process.env,relative(workspace,policy.manifestPath),()=>run(),policy.assertionThreads,()=>{})}),withCargoInputs:(compiler,body)=>withRepositoryCargoInputsV1({invocation,consumption:{kind:"compiler",producer:"artifact",operation:lint?"clippy":"test"},workspace,cwd:compiler.cwd,manifest:compiler.manifest,args:compiler.arguments,network,control:compiler.control,storage:store.storage,environment:compiler.environment},input=>body({arguments:input.selections[0]!.arguments,environment:input.environment,control:input.control,writer:(control,run)=>withCompilerWorkspaceSharedWriteV1(store.storage,join(workspace,".cache/b/l/m/data"),control,run),admit:args=>repositoryCargoConfigurationStepArgumentsV1(input.selections[0]!.configuration,args)}))});
   checkResourceLeaseControl(actualPhase);
  });checkResourceLeaseControl(control);

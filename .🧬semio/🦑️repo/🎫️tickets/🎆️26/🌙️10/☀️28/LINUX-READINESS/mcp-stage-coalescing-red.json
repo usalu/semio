@@ -1,0 +1,17 @@
+{
+  "requests": [
+    {
+      "root": "root-a",
+      "capture": "capture-a",
+      "product": "mcp-debug",
+      "profile": "debug"
+    },
+    {
+      "root": "root-a",
+      "capture": "capture-a",
+      "product": "mcp-debug",
+      "profile": "debug"
+    }
+  ],
+  "expectedBuilds": 1
+}

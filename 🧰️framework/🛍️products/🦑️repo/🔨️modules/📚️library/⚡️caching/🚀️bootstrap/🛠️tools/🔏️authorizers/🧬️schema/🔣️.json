@@ -279,6 +279,12 @@
           "paths": [
             "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json"
           ]
+        },
+        {
+          "owner": "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🏗️addon/🟦️.ts",
+          "paths": [
+            "🧰️framework/🔨️modules/⚙️runtime/🟢️node/🧲️native/🦀️.rs"
+          ]
         }
       ],
       "description": "Data files the capture cannot derive from literal relative paths or sibling schema folders: owner-relative reads assembled at run time. The closure law fails on a row the capture would derive anyway."

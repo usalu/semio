@@ -2,8 +2,10 @@
   "components": {
     "cmp-lamp": {
       "entry": "Patched",
-      "system": {
-        "value": null
+      "value": {
+        "system": {
+          "value": null
+        }
       }
     }
   }

@@ -60,8 +60,28 @@
           "properties": {
             "BUN_RUNTIME_TRANSPILER_CACHE_PATH": {
               "const": "0"
+            },
+            "SEMIO_RUNTIME_NATIVE_ADDON": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "SEMIO_RUNTIME_NATIVE_PROVIDER": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
             }
-          }
+          },
+          "allOf": [
+            {
+              "not": {
+                "required": [
+                  "SEMIO_RUNTIME_NATIVE_ADDON",
+                  "SEMIO_RUNTIME_NATIVE_PROVIDER"
+                ]
+              }
+            }
+          ]
         }
       }
     },

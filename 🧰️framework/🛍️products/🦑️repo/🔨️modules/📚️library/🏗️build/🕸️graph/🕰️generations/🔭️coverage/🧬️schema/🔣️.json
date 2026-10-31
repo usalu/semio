@@ -1,5 +1,5 @@
 {
- "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Verified stamp of a graph generation pointer",
  "description": "Whether a sealed generation already answers a request that began earlier. A build that publishes a generation stamps the pointer with the time its observation started (`atMs`, epoch milliseconds read before any fact, membership or file of the build was read) and the owners it verified: `owners` is the base64 (standard alphabet, padding) of a bitmap over the owner names of the published manifest in code point order, owner i at byte floor(i / 8), bit i mod 8 counted from the least significant bit, `count` is the number of owners, bits at or beyond `count` are zero. A request that began at `requestedAtMs` is covered for exactly the owners of the stamp when the stamp is not older than the request and the manifest carries the implementation digest of the request; the environment facts are covered with them. A build that reused part of the stamp of its parent stamps the union of the owners with the older of the two times. A metadata refresh keeps the stamp of its parent, an invalidation drops it.",
  "definitions": {

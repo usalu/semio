@@ -36,11 +36,10 @@ export interface HomeLayout {
 }
 
 /** 🔎️ The layout the matched media queries of {@link homeLayoutQueries} give: the tablet grid between the breakpoints, the desktop grid
- * on either side of them, swiping below the mobile breakpoint and wherever the grid's cards
- * would not fit their cells. */
+ * on either side of them, and swiping only below the mobile breakpoint. A short window keeps the card grid; the overlay scrolls. */
 export function homeLayout(matched: { readonly narrow: boolean; readonly medium: boolean; readonly short: { readonly [G in HomeGrid]: boolean } }): HomeLayout {
   const grid: HomeGrid = matched.medium ? "tablet" : "desktop";
-  return { grid, mode: matched.narrow || matched.short[grid] ? "swipe" : "strip" };
+  return { grid, mode: matched.narrow ? "swipe" : "strip" };
 }
 
 
@@ -66,9 +65,9 @@ export function homeCells(pages: readonly string[], grid: HomeGrid): Readonly<Re
 export const HOME_GRID_TRACKS = { columns: [1, 1, 1], rows: [1, 1] } as const;
 
 /** 🔳️ The CSS track list of `count` tracks of the card grid (`minmax(0, 1fr) …`); a track without a
- * weight weighs 1. */
-export function homeTrackTemplate(weights: readonly number[] | undefined, count: number): string {
-  return Array.from({ length: count }, (_, index) => `minmax(0, ${weights?.[index] ?? 1}fr)`).join(" ");
+ * weight weighs 1. `floor` is the min of each track (`0`, or a row minimum so extra rows scroll). */
+export function homeTrackTemplate(weights: readonly number[] | undefined, count: number, floor = "0"): string {
+  return Array.from({ length: count }, (_, index) => `minmax(${floor}, ${weights?.[index] ?? 1}fr)`).join(" ");
 }
 
 /** 🧱️ The height (px at the normal text size) a row of the grid needs so that the tallest card — in either language, in
@@ -79,8 +78,8 @@ export const HOME_GRID_ROW_HEIGHT_PX = 160;
 export const HOME_CHROME_HEIGHT_PX = 56;
 
 /** 🪜️ The least viewport height (px at the normal text size) at which every card of `pages` fits its cell in `grid`:
- * the navigation bar and a grid whose lowest row is {@link HOME_GRID_ROW_HEIGHT_PX} high. Below it the learner swipes
- * through the grid, as on a phone — a phone held sideways, a small window, a strongly zoomed page, large text. */
+ * the navigation bar and a grid whose lowest row is {@link HOME_GRID_ROW_HEIGHT_PX} high. Below it the card grid scrolls;
+ * only a narrow viewport swipes one page at a time. */
 export function homeGridMinHeight(grid: HomeGrid, pages: readonly string[]): number {
   const rows = Math.max(0, ...Object.values(homeCells(pages, grid)).map((cell) => cell.row + 1));
   return HOME_CHROME_HEIGHT_PX + HOME_GRID_ROW_HEIGHT_PX * rows;
@@ -301,9 +300,8 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     const contained = new Set(collection ? pagesWithin(pane.id, course).flatMap((page) => isHomeGrid(page, course) ? [page, ...pagesWithin(page, course)] : [page]) : []);
     const activity = <CardPresence anchor={PRESENCE_ANCHORS.home(key)} text={text} accepts={(place, presentation) => quiz ? place.quiz === pane.id : collection ? (place.quiz !== undefined && contained.has(place.quiz)) || (place.screen === "home" && presentation?.home !== undefined && (presentation.home === pane.id || contained.has(presentation.home))) : place.screen === (pane.id === HOME_PAGES.leaderboard ? "leaderboard" : pane.id === HOME_PAGES.preferences ? "preferences" : pane.id)} />;
     const alias = container === undefined ? `course.home.${pane.id}` : undefined;
-    return card.mode === "strip" && cell !== undefined ? (
-      <div data-element-alias={alias} className="course-home-cell" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}><div className="course-home-card">{gatedCard}{activity}</div></div>
-    ) : <div data-element-alias={alias} className="course-home-entry course-home-card">{gatedCard}{activity}</div>;
+    const gridCell = card.mode === "strip" && cell !== undefined;
+    return <div data-element-alias={alias} className={gridCell ? "course-home-cell" : "course-home-entry"} style={gridCell ? { gridColumn: cell.column + 1, gridRow: cell.row + 1 } : undefined}><div className="course-home-card">{gatedCard}{activity}</div></div>;
   };
   return (
     <div ref={root} data-page={container} data-course-grid={container ?? "root"} data-grid-active={activeGrid ? "" : undefined} className="relative h-full min-h-0 w-full">
@@ -312,7 +310,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         cells={cells}
         renderCard={renderCard}
         overlayClassName="course-home-grid"
-        overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows) } as CSSProperties}
+        overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows, `min(${HOME_GRID_ROW_HEIGHT_PX}px, 100%)`) } as CSSProperties}
         mode={layout.mode}
         routing="none"
         interactive={interactive}
@@ -379,7 +377,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
           <BodyButton onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
         </div>
       )}
-      <div className="relative min-h-0 flex-1">
+      <div data-course-scrollport="" className="relative min-h-0 flex-1">
         <PreviewPointerContext.Provider value={previewPointer.current}>
           <HomeOverview {...props} at={at} enabled busy={pending !== undefined} act={act} />
         </PreviewPointerContext.Provider>

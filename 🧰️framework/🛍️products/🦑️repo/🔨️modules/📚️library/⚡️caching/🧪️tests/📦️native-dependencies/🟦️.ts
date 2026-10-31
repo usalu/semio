@@ -53,8 +53,9 @@ export async function testNativeDependencies(workspace: string, output: string,i
     writeFileSync(join(root, "Cargo.lock"), fixture.bindgenLock);
     for (const path of WASM_BINDGEN_LOCKS_V1) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), fixture.bindgenLock); }
     const interpolate = (value: string): string => value.replace("{workspace}", root).replaceAll("/", process.platform === "win32" && value.startsWith("{workspace}") ? "\\" : "/");
+    const browserPort=()=>({platform:fixture.browserSystem.platform,root:fixture.browserSystem.root,resolve:(name:string)=>fixture.browserSystem.tools[name]??null,isFile:(path:string)=>path===join(root,"node_modules/playwright/cli.js")});
     for (const row of fixture.environments) {
-      const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [];
+      const target = projects.targets[`deps-${row.kind}`], calls: string[][] = [],providers:string[]=[];
       assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
       assert.equal(target.options.command, `repo "${fixture.entry}" sync ${row.kind}`);
       await prepareDependencies(row.kind, root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
@@ -63,7 +64,8 @@ export async function testNativeDependencies(workspace: string, output: string,i
         calls.push([command, ...args]);
         for (const [key, value] of Object.entries(row.environment ?? {})) assert.equal(env[key], interpolate(value as string));
         return "";
-      }, process.env, async (base: NodeJS.ProcessEnv) => ({ ...base, ...toolchainPolicy.go.variables }));
+      }, process.env, async (base: NodeJS.ProcessEnv) => {providers.push("go");return{ ...base, ...toolchainPolicy.go.variables };},async base=>{providers.push("uv");return base;},async base=>{providers.push("cargo-tools");return base;},browserPort);
+      assert.deepEqual(providers,row.providers,row.kind);
       assert.deepEqual(calls.map(call => call[0] === process.execPath ? ["bun", ...call.slice(1)] : call), row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
     }
     for (const row of fixture.browserPaths) {
@@ -72,12 +74,12 @@ export async function testNativeDependencies(workspace: string, output: string,i
       let acquisitions = 0;
       await prepareDependencies("browsers", root, invocation,storage,phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
         assert.equal(command, process.execPath);
-        assert.deepEqual(args, [join(root, "node_modules/playwright/cli.js"), "install", "chromium"]);
+        assert.deepEqual(args, [join(root, "node_modules/playwright/cli.js"), fixture.browserSystem.operations[acquisitions], "chromium"]);
         assert.equal(env.PLAYWRIGHT_BROWSERS_PATH, interpolate(row.expected));
         acquisitions += 1;
         return "";
-      });
-      assert.equal(acquisitions, 1);
+      },process.env,undefined,undefined,undefined,browserPort);
+      assert.equal(acquisitions, fixture.browserSystem.operations.length);
     }
     writeFileSync(join(root, "Cargo.lock"), "version = 4\n");
     await assert.rejects(prepareDependencies("trunk", root, invocation,storage,phaseFor(controller.signal), async () => { assert.fail("Invalid lock must fail before acquisition"); }), /exactly one wasm-bindgen/);

@@ -1,0 +1,6 @@
+const fs=require("node:fs"),path=require("node:path"),assert=require("node:assert/strict");
+const {visit,convert}=require("./schema-definitions-proof.cjs"),Ajv07=require("ajv").default,Ajv2020=require("ajv/dist/2020").default,{compileJsonSchemaSubset}=require(path.resolve("🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));
+const input=JSON.parse(fs.readFileSync(path.join(__dirname,"schema-definitions-vectors.json"),"utf8")),options={strict:false,validateFormats:false,logger:false},results=[];
+for(const row of input.cases){const after=convert(row.schema),a=new Ajv2020(options).compile(row.schema),b=new Ajv07(options).compile(after),own=compileJsonSchemaSubset(after);for(const sample of row.instances){assert.equal(a(sample.value),sample.valid,row.name+" original");assert.equal(b(sample.value),sample.valid,row.name+" draft07");assert.equal(own.validate(sample.value).length===0,sample.valid,row.name+" owned");}results.push({name:row.name,samples:row.instances.length});}
+for(const row of input.refusals)assert.throws(()=>visit(row.schema),undefined,row.name);
+fs.writeFileSync(path.join(__dirname,"🗑️generated/schema-definitions-neutral.json"),JSON.stringify({version:1,results,refusals:input.refusals.length},null,2)+"\n");console.log(JSON.stringify({cases:results.length,samples:results.reduce((n,r)=>n+r.samples,0),refusals:input.refusals.length}));

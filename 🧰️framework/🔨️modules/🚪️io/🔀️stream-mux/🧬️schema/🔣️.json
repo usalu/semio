@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio.io.stream-mux/v1",
   "title": "🔀️ Stream multiplexing channel — one WebSocket per page and origin carrying every long-lived stream",
   "description": "Frame contract of the ONE channel a page holds to its serve origin (WebSocket subprotocol `semio.stream-mux.v1`, one JSON text message per frame). Every long-lived stream (watch streams, folder change notices, job progress) is a numbered stream on it, so none of them occupies one of the six HTTP/1.1 connections a browser allows per origin. Per-stream credit bounds what the server may send (backpressure); queued data coalesces by the route's key and a queue that still overflows is replaced by a fresh snapshot; every data frame carries a sequence number of the server epoch, so a reconnect resumes where the last frame left off or starts fresh. Kanal-Vertrag: ein WebSocket pro Seite und Ursprung trägt alle langlebigen Ströme.",

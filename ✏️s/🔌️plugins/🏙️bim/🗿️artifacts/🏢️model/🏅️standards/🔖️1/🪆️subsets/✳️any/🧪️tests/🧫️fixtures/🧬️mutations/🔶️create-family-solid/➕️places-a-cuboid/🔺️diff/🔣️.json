@@ -2,25 +2,27 @@
   "family_solids": {
     "s-leg": {
       "entry": "Created",
-      "family": "fam-table",
-      "material": "\"m-brick\"",
-      "name": "Leg",
-      "offset": {
-        "x": "0.05 m",
-        "y": "0.05 m",
-        "z": "0 m"
-      },
-      "shape": {
-        "Cuboid": {
-          "depth": "60 mm",
-          "height": "0.7 m",
-          "width": "60 mm",
-          "x": "0 m",
-          "y": "0 m",
+      "value": {
+        "family": "fam-table",
+        "material": "\"m-brick\"",
+        "name": "Leg",
+        "offset": {
+          "x": "0.05 m",
+          "y": "0.05 m",
           "z": "0 m"
-        }
-      },
-      "visible": "true"
+        },
+        "shape": {
+          "Cuboid": {
+            "depth": "60 mm",
+            "height": "0.7 m",
+            "width": "60 mm",
+            "x": "0 m",
+            "y": "0 m",
+            "z": "0 m"
+          }
+        },
+        "visible": "true"
+      }
     }
   }
 }

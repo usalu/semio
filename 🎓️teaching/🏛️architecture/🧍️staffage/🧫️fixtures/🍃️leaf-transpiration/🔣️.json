@@ -1,175 +1,341 @@
 {
  "id": "leaf-transpiration",
- "oracle": "scipy.optimize.brentq on the leaf / passive-surface energy balance with CoolProp saturation pressure and air properties",
+ "oracle": "scipy brentq energy balance with CoolProp (IAPWS-95 saturation pressure, air properties); closed-form Penman-Monteith of the linearised balance",
  "tolerances": {
-  "latentRelative": 0.01,
-  "surfaceTempK": 0.1,
-  "fluxRelative": 0.02
+  "surfaceTempK": 0.2,
+  "fluxRelative": 0.03,
+  "fluxAbsoluteWM2": 2.0,
+  "pmRelative": 0.15,
+  "pmAbsoluteWM2": 3.0
  },
  "asset": {
   "dimensions": {
-   "heightM": 5,
+   "heightM": 1,
    "massKg": 0
   },
   "materials": [
    {
-    "id": "leaf",
+    "id": "leaf-c3-leaf",
     "title": {
-     "en": "Leaf",
-     "de": "Blatt"
+     "en": "c3-leaf",
+     "de": "c3-leaf"
     },
     "emissivity": 0.97,
     "solarAbsorptivity": 0.5,
-    "source": "literature"
+    "source": "illustrative"
    },
    {
-    "id": "dark-panel",
+    "id": "leaf-c4-leaf",
     "title": {
-     "en": "Dark panel",
-     "de": "Dunkle Platte"
+     "en": "c4-leaf",
+     "de": "c4-leaf"
     },
-    "emissivity": 0.9,
-    "solarAbsorptivity": 0.8,
+    "emissivity": 0.97,
+    "solarAbsorptivity": 0.5,
+    "source": "illustrative"
+   },
+   {
+    "id": "leaf-cam-leaf",
+    "title": {
+     "en": "cam-leaf",
+     "de": "cam-leaf"
+    },
+    "emissivity": 0.97,
+    "solarAbsorptivity": 0.6,
     "source": "illustrative"
    }
   ],
   "thermal": {
    "environment": {
-    "airTempC": 25,
-    "meanRadiantTempC": 25,
-    "relativeHumidity": 0.5,
-    "windMS": 1,
+    "airTempC": 32,
+    "meanRadiantTempC": 32,
+    "skyTempC": 21,
+    "groundTempC": 40,
+    "relativeHumidity": 0.35,
+    "windMS": 1.5,
     "windDirectionDeg": 0,
-    "solarWM2": 600,
+    "solarWM2": 850,
+    "diffuseFraction": 0.12,
     "pressurePa": 101325
    },
+   "passengers": [],
+   "operating": [],
+   "emitters": [],
+   "assumptions": [],
    "regions": [
     {
-     "id": "leaf",
+     "id": "c3-leaf",
      "title": {
-      "en": "Leaf surface",
-      "de": "Blattfläche"
+      "en": "c3-leaf",
+      "de": "c3-leaf"
      },
      "kind": "foliage",
-     "material": "leaf",
      "model": "leaf",
-     "areaM2": 1,
-     "characteristicLengthM": 0.07,
-     "stomatalConductanceMS": 0.005,
-     "source": "literature"
+     "material": "leaf-c3-leaf",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.08,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.7,
+     "layers": [],
+     "heatCapacityJM2K": 800,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.008,
+      "leafAreaIndex": 3.0,
+      "photosynthesis": "c3"
+     },
+     "source": "illustrative"
     },
     {
-     "id": "panel",
+     "id": "c4-leaf",
      "title": {
-      "en": "Dark panel",
-      "de": "Dunkle Platte"
+      "en": "c4-leaf",
+      "de": "c4-leaf"
      },
-     "kind": "surface",
-     "material": "dark-panel",
-     "model": "passive",
-     "areaM2": 1,
-     "characteristicLengthM": 0.5,
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "leaf-c4-leaf",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.25,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.7,
+     "layers": [],
+     "heatCapacityJM2K": 800,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.01,
+      "leafAreaIndex": 3.0,
+      "photosynthesis": "c4"
+     },
+     "source": "illustrative"
+    },
+    {
+     "id": "cam-leaf",
+     "title": {
+      "en": "cam-leaf",
+      "de": "cam-leaf"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "leaf-cam-leaf",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.7,
+     "layers": [],
+     "heatCapacityJM2K": 800,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.004,
+      "leafAreaIndex": 2.0,
+      "photosynthesis": "cam"
+     },
      "source": "illustrative"
     }
-   ],
-   "emitters": [],
-   "assumptions": []
+   ]
   }
  },
- "state": {
-  "timeS": 0,
-  "thermal": {
-   "activityMet": 1,
-   "operating": {},
-   "regions": {},
-   "emitters": {}
+ "cases": [
+  {
+   "id": "hot-sunny-dry",
+   "environment": {
+    "airTempC": 32,
+    "meanRadiantTempC": 32,
+    "skyTempC": 21,
+    "groundTempC": 40,
+    "relativeHumidity": 0.35,
+    "windMS": 1.5,
+    "windDirectionDeg": 0,
+    "solarWM2": 850,
+    "diffuseFraction": 0.12,
+    "pressurePa": 101325
+   },
+   "sunlit": 1.0,
+   "expected": {
+    "c3-leaf": {
+     "surfaceTempC": 31.490110453257493,
+     "netRadiativeWM2": 69.22813087376434,
+     "sensibleWM2": -17.360029017675227,
+     "latentWM2": 160.63189814391026,
+     "absorbedSolarWM2": 212.5,
+     "stomatalMS": 0.0038142182280293028,
+     "convectionCoefficientWM2K": 34.04664623658585,
+     "moistureGM2H": 238.30152376575393,
+     "pmLinearised": 148.86834358732355
+    },
+    "c4-leaf": {
+     "surfaceTempC": 30.900587120436395,
+     "netRadiativeWM2": 61.915479471127874,
+     "sensibleWM2": -21.22124509867276,
+     "latentWM2": 171.80576562754464,
+     "absorbedSolarWM2": 212.5,
+     "stomatalMS": 0.005579511825774643,
+     "convectionCoefficientWM2K": 19.30234354458009,
+     "moistureGM2H": 254.732133833363,
+     "pmLinearised": 155.67140023002162
+    },
+    "cam-leaf": {
+     "surfaceTempC": 37.072406603035795,
+     "netRadiativeWM2": 140.6064301158055,
+     "sensibleWM2": 90.12944660022714,
+     "latentWM2": 24.264123283967113,
+     "absorbedSolarWM2": 255.0,
+     "stomatalMS": 0.0003085714285714286,
+     "convectionCoefficientWM2K": 17.76857686177709,
+     "moistureGM2H": 36.19302071233736,
+     "pmLinearised": 22.623033385446018
+    }
+   }
   },
-  "anchors": {},
-  "bones": {}
- },
- "environments": {
-  "windy-sun": {
-   "airTempC": 25,
-   "meanRadiantTempC": 25,
-   "relativeHumidity": 0.5,
-   "windMS": 1,
-   "windDirectionDeg": 0,
-   "solarWM2": 600,
-   "pressurePa": 101325
+  {
+   "id": "shaded-humid",
+   "environment": {
+    "airTempC": 22,
+    "meanRadiantTempC": 22,
+    "skyTempC": 12,
+    "groundTempC": 22,
+    "relativeHumidity": 0.85,
+    "windMS": 0.5,
+    "windDirectionDeg": 0,
+    "solarWM2": 500,
+    "diffuseFraction": 0.3,
+    "pressurePa": 101325
+   },
+   "sunlit": 0.0,
+   "expected": {
+    "c3-leaf": {
+     "surfaceTempC": 20.50849313079584,
+     "netRadiativeWM2": 58.51381320762088,
+     "sensibleWM2": -29.59085555899726,
+     "latentWM2": 8.577042351376765,
+     "absorbedSolarWM2": 37.5,
+     "stomatalMS": 0.0041142857142857136,
+     "convectionCoefficientWM2K": 19.83957041698803,
+     "moistureGM2H": 12.589746070686415,
+     "pmLinearised": 7.4551817354587335
+    },
+    "c4-leaf": {
+     "surfaceTempC": 20.10579603169575,
+     "netRadiativeWM2": 54.035791178482825,
+     "sensibleWM2": -21.591458604085037,
+     "latentWM2": 5.055667425602188,
+     "absorbedSolarWM2": 37.5,
+     "stomatalMS": 0.005142857142857143,
+     "convectionCoefficientWM2K": 11.398697798851291,
+     "moistureGM2H": 7.418047112961995,
+     "pmLinearised": 4.0864979421143
+    },
+    "cam-leaf": {
+     "surfaceTempC": 20.41737003259845,
+     "netRadiativeWM2": 57.49890332000367,
+     "sensibleWM2": -16.479020353626584,
+     "latentWM2": 3.980117033622512,
+     "absorbedSolarWM2": 45.0,
+     "stomatalMS": 0.0020457142857142857,
+     "convectionCoefficientWM2K": 10.412427853039294,
+     "moistureGM2H": 5.841671937485967,
+     "pmLinearised": 3.4818671810942927
+    }
+   }
   },
-  "still-sun": {
-   "airTempC": 30,
-   "meanRadiantTempC": 32,
-   "relativeHumidity": 0.4,
-   "windMS": 0,
-   "windDirectionDeg": 0,
-   "solarWM2": 800,
-   "pressurePa": 101325
+  {
+   "id": "clear-night",
+   "environment": {
+    "airTempC": 15,
+    "meanRadiantTempC": 15,
+    "skyTempC": -6,
+    "groundTempC": 14,
+    "relativeHumidity": 0.7,
+    "windMS": 0.3,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "diffuseFraction": 1,
+    "pressurePa": 101325
+   },
+   "sunlit": 0.0,
+   "expected": {
+    "c3-leaf": {
+     "surfaceTempC": 9.640555744858498,
+     "netRadiativeWM2": 85.34865331075348,
+     "sensibleWM2": -85.36293548688927,
+     "latentWM2": 0.014282176135950363,
+     "absorbedSolarWM2": 0.0,
+     "stomatalMS": 0.00016,
+     "convectionCoefficientWM2K": 15.927572230086659,
+     "moistureGM2H": 0.02074692610143589,
+     "pmLinearised": -0.2000648295975546
+    },
+    "c4-leaf": {
+     "surfaceTempC": 8.374207949525234,
+     "netRadiativeWM2": 72.83157717065768,
+     "sensibleWM2": -65.00320851708092,
+     "latentWM2": -7.828368653576957,
+     "absorbedSolarWM2": 0.0,
+     "stomatalMS": 0.0002,
+     "convectionCoefficientWM2K": 9.810632151128734,
+     "moistureGM2H": -11.358134572980148,
+     "pmLinearised": null
+    },
+    "cam-leaf": {
+     "surfaceTempC": 8.187197570956055,
+     "netRadiativeWM2": 70.99734781110932,
+     "sensibleWM2": -62.57675201689854,
+     "latentWM2": -8.420595794210554,
+     "absorbedSolarWM2": 0.0,
+     "stomatalMS": 0.004,
+     "convectionCoefficientWM2K": 9.185170518100591,
+     "moistureGM2H": -12.215219805625836,
+     "pmLinearised": null
+    }
+   }
   },
-  "breezy-shade": {
-   "airTempC": 15,
-   "meanRadiantTempC": 14,
-   "relativeHumidity": 0.7,
-   "windMS": 3,
-   "windDirectionDeg": 90,
-   "solarWM2": 0,
-   "pressurePa": 95000
+  {
+   "id": "windy-cool-sun",
+   "environment": {
+    "airTempC": 12,
+    "meanRadiantTempC": 12,
+    "skyTempC": -5,
+    "groundTempC": 14,
+    "relativeHumidity": 0.6,
+    "windMS": 6,
+    "windDirectionDeg": 0,
+    "solarWM2": 700,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "sunlit": 1.0,
+   "expected": {
+    "c3-leaf": {
+     "surfaceTempC": 12.052390608418051,
+     "netRadiativeWM2": 108.41588923802082,
+     "sensibleWM2": 3.5803470577875096,
+     "latentWM2": 63.00376370416981,
+     "absorbedSolarWM2": 175.0,
+     "stomatalMS": 0.007288423137674884,
+     "convectionCoefficientWM2K": 68.3394823212993,
+     "moistureGM2H": 91.73285542563966,
+     "pmLinearised": 57.776319364517235
+    },
+    "c4-leaf": {
+     "surfaceTempC": 12.057803494783231,
+     "netRadiativeWM2": 108.47114457299553,
+     "sensibleWM2": 2.2346448417752462,
+     "latentWM2": 64.29421058522968,
+     "absorbedSolarWM2": 175.0,
+     "stomatalMS": 0.009173094408797645,
+     "convectionCoefficientWM2K": 38.65933798908506,
+     "moistureGM2H": 93.61221714574741,
+     "pmLinearised": 56.715040715110504
+    },
+    "cam-leaf": {
+     "surfaceTempC": 14.098360144163674,
+     "netRadiativeWM2": 129.52658607893648,
+     "sensibleWM2": 74.09136900177283,
+     "latentWM2": 6.382044919290553,
+     "absorbedSolarWM2": 210.0,
+     "stomatalMS": 0.00045333333333333326,
+     "convectionCoefficientWM2K": 35.30917664817867,
+     "moistureGM2H": 9.310383551339418,
+     "pmLinearised": 6.16888881990399
+    }
+   }
   }
- },
- "expected": {
-  "windy-sun": {
-   "leaf": {
-    "surfaceTempC": 26.38904744618588,
-    "radiantFluxWM2": 8.156405218725334,
-    "convectiveFluxWM2": 20.67977465861186,
-    "latentFluxWM2": 121.16382012266246,
-    "netFluxWM2": -3.410605131648481e-13,
-    "convectionCoefficientWM2K": 14.887738151346426
-   },
-   "panel": {
-    "surfaceTempC": 64.5428238949233,
-    "radiantFluxWM2": 260.386023376662,
-    "convectiveFluxWM2": 219.61397662333505,
-    "latentFluxWM2": 0.0,
-    "netFluxWM2": -2.9558577807620168e-12,
-    "convectionCoefficientWM2K": 5.553826332861628
-   }
-  },
-  "still-sun": {
-   "leaf": {
-    "surfaceTempC": 35.416695764287724,
-    "radiantFluxWM2": 21.72086214227847,
-    "convectiveFluxWM2": 22.812973123741415,
-    "latentFluxWM2": 155.46616473398063,
-    "netFluxWM2": 5.115907697472721e-13,
-    "convectionCoefficientWM2K": 4.211603183281467
-   },
-   "panel": {
-    "surfaceTempC": 84.3297145314501,
-    "radiantFluxWM2": 390.9178405903306,
-    "convectiveFluxWM2": 249.08215940966832,
-    "latentFluxWM2": 0.0,
-    "netFluxWM2": -1.0231815394945443e-12,
-    "convectionCoefficientWM2K": 4.584639576294497
-   }
-  },
-  "breezy-shade": {
-   "leaf": {
-    "surfaceTempC": 13.841243105920615,
-    "radiantFluxWM2": -0.8263087241882622,
-    "convectiveFluxWM2": -28.98096614020276,
-    "latentFluxWM2": 29.80727486439083,
-    "netFluxWM2": -1.9184653865522705e-13,
-    "convectionCoefficientWM2K": 25.01039371440176
-   },
-   "panel": {
-    "surfaceTempC": 14.65863342725249,
-    "radiantFluxWM2": 3.19431975676029,
-    "convectiveFluxWM2": -3.194319756760248,
-    "latentFluxWM2": 0.0,
-    "netFluxWM2": 4.218847493575595e-14,
-    "convectionCoefficientWM2K": 9.357447423895556
-   }
-  }
- }
+ ]
 }

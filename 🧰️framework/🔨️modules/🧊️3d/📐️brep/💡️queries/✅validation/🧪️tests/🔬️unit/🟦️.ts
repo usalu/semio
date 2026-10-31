@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BufferGeometry, Float32BufferAttribute, Triangle, Vector3 } from "three";

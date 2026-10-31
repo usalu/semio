@@ -119,7 +119,7 @@ fn option_schema()->Result<&'static DslValue,String>{
 }
 fn option_descriptor(owner:&str,key:&str,family:bool)->Result<ChartOptionDescriptor,String>{
  let schema=option_schema()?;
- let descriptors=if family{schema.get("x-semio-family-options").and_then(|value|value.get(owner)).and_then(|value|value.get("options"))}else{schema.get("x-semio-option-syntax").and_then(|value|value.get(owner))};
+ let descriptors=if family{schema.get("x-semio-family-options").and_then(|value|value.get(owner)).and_then(|value|value.get("options"))}else{schema.get("definitions").and_then(|value|value.get("OptionSyntaxCatalog")).and_then(|value|value.get("const")).and_then(|value|value.get(owner))};
  let descriptor=descriptors.and_then(|value|value.get(key)).ok_or_else(||format!("undeclared native option {owner}/{key}"))?;
  let syntax=match descriptor.get("syntax").and_then(DslValue::as_str){Some("text")=>ChartOptionSyntax::Text,Some("identifier")=>ChartOptionSyntax::Identifier,Some("expression")=>ChartOptionSyntax::Expression,Some("records")=>ChartOptionSyntax::Records,Some("key-list")=>ChartOptionSyntax::KeyList,Some("style")=>ChartOptionSyntax::Style,Some("paint")=>ChartOptionSyntax::Paint,Some("number-list")=>ChartOptionSyntax::NumberList,Some("scalar")=>ChartOptionSyntax::Scalar,Some("value")=>ChartOptionSyntax::Value,_=>return Err(format!("invalid source-owned option syntax {owner}/{key}"))};
  let items=match descriptor.get("items"){None=>None,Some(value)=>match value.as_str(){Some("text")=>Some(ChartOptionItems::Text),Some("identifier")=>Some(ChartOptionItems::Identifier),_=>return Err(format!("invalid record item syntax {owner}/{key}"))}};
@@ -320,7 +320,7 @@ pub fn render_chart_controlled(snapshot: &ChartSnapshot, checkpoint: &mut dyn Fn
         let mut columns = list(table,"columns")?.iter().map(|column| token(column.as_str().ok_or_else(|| "column must be a string".to_string())?)).collect::<Result<Vec<_>, _>>()?;
         let mut constants = layer.get("encodings").and_then(DslValue::as_object).unwrap_or(&[]).iter().filter_map(|(channel, encoding)| encoding.get("value").map(|value| (channel, value))).collect::<Vec<_>>();
         let mut implicit_paints=std::collections::BTreeSet::new();
-        for (channel,_) in option_schema()?.get("x-semio-option-syntax").and_then(|value|value.get("layer")).and_then(DslValue::as_object).ok_or_else(||"layer option descriptors missing".to_string())? {
+        for (channel,_) in option_schema()?.get("definitions").and_then(|value|value.get("OptionSyntaxCatalog")).and_then(|value|value.get("const")).and_then(|value|value.get("layer")).and_then(DslValue::as_object).ok_or_else(||"layer option descriptors missing".to_string())? {
             if columns.contains(channel)&&layer.get("encodings").and_then(|encodings|encodings.get(channel)).is_none()&&option_descriptor("layer",channel,false)?.syntax==ChartOptionSyntax::Paint {implicit_paints.insert(channel.clone());}
         }
         let mut option_paints=std::collections::BTreeMap::new();

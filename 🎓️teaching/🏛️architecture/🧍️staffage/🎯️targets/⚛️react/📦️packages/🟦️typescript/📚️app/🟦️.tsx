@@ -57,6 +57,7 @@ const THEMES: readonly Theme[] = ["system", "light", "dark"];
 function SettingsMenu(): ReactElement {
   const { t, store } = useArchive();
   const { preferences } = useLocal();
+  const { route } = useAddress();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -95,8 +96,8 @@ function SettingsMenu(): ReactElement {
       {open ? createPortal(
         <div id="staffage-settings" ref={panel} role="group" aria-label={t("settings.title")} className="staffage-app fixed right-double top-[calc(var(--size-workbench)+0.5rem)] z-50 flex max-h-[85vh] w-72 max-w-[90vw] flex-col gap-double overflow-auto border border-border bg-panel p-double text-foreground">
           <nav aria-label={t("nav.label")} className="flex flex-col gap-single md:hidden">
-            {[{ href: "#/all", label: t("all.title") }, { href: "#/collections", label: t("collections.title") }, { href: "#/compare", label: t("compare.title") }, { href: "#/playground", label: t("playground.title") }].map((link) => (
-              <ButtonLink key={link.href} href={link.href} variant="quiet" className="justify-start">{link.label}</ButtonLink>
+            {([{ page: "all", label: t("all.title") }, { page: "collections", label: t("collections.title") }, { page: "compare", label: t("compare.title") }, { page: "playground", label: t("playground.title") }] as const).map((link) => (
+              <ButtonLink key={link.page} href={formatAddress(link.page === "collections" ? { page: "collections", collection: null } : { page: link.page })} variant="quiet" aria-current={route.page === link.page ? "page" : undefined} className={cn("justify-start", route.page === link.page && "text-primary")}>{link.label}</ButtonLink>
             ))}
           </nav>
           <Segmented className="sm:hidden" label={t("settings.theme")} value={preferences.theme} onChange={(theme) => patch({ theme })} options={THEMES.map((theme) => ({ value: theme, label: t(`settings.theme.${theme}`) }))} />
@@ -148,14 +149,14 @@ function Navigation(): ReactElement {
     {
       key: "brand",
       content: (
-        <a href="#/" aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className="inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold text-foreground no-underline">
+        <a href="#/" aria-label={t("nav.home")} aria-current={route.page === "overview" ? "page" : undefined} className={cn("inline-flex min-h-6 items-center gap-single px-single text-sm font-semibold no-underline", route.page === "overview" ? "text-primary" : "text-foreground")}>
           <span aria-hidden="true" className="font-serif text-lg leading-none">⌂</span>
           <span className="hidden sm:inline">{t("brand.short")}</span>
         </a>
       ),
     },
     { key: "up", content: up === null ? <span /> : <Button variant="quiet" icon="arrow-left" aria-label={t("nav.up")} title={t("nav.up")} onClick={() => navigate(up, recallParams(up))}><span className="hidden md:inline">{t("nav.up")}</span></Button> },
-    ...links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} className={cn(link.active && "underline underline-offset-4")}>{link.label}</ButtonLink> })),
+    ...links.map((link): NavbarItem => ({ key: link.href, className: "hidden md:flex", content: <ButtonLink href={link.href} icon={link.icon} variant="quiet" aria-label={link.label} aria-current={link.active ? "page" : undefined} className={cn(link.active && "text-primary")}>{link.label}</ButtonLink> })),
     navbarFillItem("fill"),
     {
       key: "search",

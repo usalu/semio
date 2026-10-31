@@ -1,0 +1,7 @@
+# Native OS MCP Startup Ownership
+
+Read-only ancestry identifies six known OS MCP build requests as children of separate actual repo ./📜️script.ts dev mcp stdio os launchers using the same catalog, space folder and scopes. Their common ancestor is managed Codex app-server daemon1617079/startTicks20530242, not a ticket logger or an identified task request. Output descriptors are sockets/pipes, not Root ticket logs. Some queued build wrappers have multiple same-command ancestors; this is observed ancestry, not proof of deadlock, stale process or authority to cancel.
+
+Earlier OS build PIDs1479765/1487022/1493176 are absent. Current known requests1618222/1618361/1618934/1619171/1642500/1642518 were sampled separately; live/absent state can change. The sampled8MiB tail of this Root's own54MiB transcript contains no direct repoMCP run/run_many call for them; this limited negative does not establish a different chat owner. No other conversation contents or process environments were read.
+
+No process, configured MCP server, app daemon, lease, grant or resource policy was modified. Managed startup launchers cannot be treated as superseded Root-owned tests solely because target names match. Exact provenance is in generated/native-build-current-owner-evidence.json; resident/swap counters in generated/native-startup-memory.json. First-party startup coalescing may warrant investigation after input identity evidence, but no optimization or singleton result is claimed.

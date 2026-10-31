@@ -1,22 +1,24 @@
 {
   "sheets": {
     "sh-2": {
-      "checked_by": "",
-      "date": "",
-      "drawn_by": "",
       "entry": "Created",
-      "name": "Long section",
-      "number": "A-103",
-      "orientation": "Landscape",
-      "paper": {
-        "Custom": {
-          "height": 420.0,
-          "width": 1500.0
-        }
-      },
-      "project": "",
-      "revision": "",
-      "scale_label": ""
+      "value": {
+        "checked_by": "",
+        "date": "",
+        "drawn_by": "",
+        "name": "Long section",
+        "number": "A-103",
+        "orientation": "Landscape",
+        "paper": {
+          "Custom": {
+            "height": 420,
+            "width": 1500
+          }
+        },
+        "project": "",
+        "revision": "",
+        "scale_label": ""
+      }
     }
   }
 }

@@ -177,7 +177,7 @@ async fn the_diff_wire_form_is_sparse_and_round_trips() {
     let diff = ModelDiff::storeys("st", Entry::Patched(heightened(3.4)));
     let text = to_json_string(&diff);
     let parsed: serde_json::Value = serde_json::from_str(&text).expect("JSON");
-    assert_eq!(parsed, serde_json::json!({"storeys": {"st": {"entry": "Patched", "height": 3.4}}}));
+    assert_eq!(parsed, serde_json::json!({"storeys": {"st": {"entry": "Patched", "value": {"height": 3.4}}}}));
     assert_eq!(from_json_str::<ModelDiff>(&text, JsonMemberPolicy::Reject).expect("decodes"), diff);
     let deleted = to_json_string(&ModelDiff::storeys("st", Entry::Deleted));
     assert_eq!(serde_json::from_str::<serde_json::Value>(&deleted).expect("JSON"), serde_json::json!({"storeys": {"st": {"entry": "Deleted"}}}));
@@ -205,4 +205,31 @@ async fn a_minimal_property_patch_drops_restated_and_absent_values() {
     let minimal = patch.minimal(&base);
     assert_eq!(minimal.assigned["Pset"].keys().collect::<Vec<_>>(), ["Acoustic"]);
     assert!(PropertySetPatch { assigned: [("Pset".to_string(), [("Fire".to_string(), Some(value("EI60")))].into())].into() }.minimal(&base).is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn adjacent_entry_matches_the_shared_neutral_wire_cases() {
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🚪️parsers/🔣️.json")).expect("corpus JSON");
+    for row in corpus["entryCases"].as_array().expect("entry cases") {
+        let text = serde_json::to_string(&row["value"]).expect("wire JSON");
+        let decoded = from_json_str::<Entry<PropertySet, PropertySetPatch>>(&text, JsonMemberPolicy::Reject);
+        assert_eq!(decoded.is_ok(), row["valid"].as_bool().expect("valid"), "{}", row["id"]);
+        if let Ok(entry) = decoded {
+            let actual: serde_json::Value = serde_json::from_str(&to_json_string(&entry)).expect("encoded JSON");
+            assert_eq!(actual, row["value"], "{}", row["id"]);
+        }
+    }
+}
+#[semio_framework_async_macros::async_test]
+async fn option_collections_match_the_shared_neutral_wire_cases() {
+    let corpus: serde_json::Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🚪️parsers/🔣️.json")).expect("corpus JSON");
+    for row in corpus["collectionCases"].as_array().expect("collection cases") {
+        let text = serde_json::to_string(&row["value"]).expect("wire JSON");
+        let decoded = from_json_str::<ModelDiff>(&text, JsonMemberPolicy::Reject);
+        assert_eq!(decoded.is_ok(), row["valid"].as_bool().expect("valid"), "{}", row["id"]);
+        if let Ok(diff) = decoded {
+            let actual: serde_json::Value = serde_json::from_str(&to_json_string(&diff)).expect("encoded JSON");
+            assert_eq!(actual, row["value"], "{}", row["id"]);
+        }
+    }
 }

@@ -1,0 +1,10 @@
+[
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "callback", "reason": "wanted" }], "accepted": true },
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "callback", "reason": "wanted" }, { "phase": "fixture", "reason": "wanted" }], "accepted": true },
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "callback", "reason": "wanted" }, { "phase": "cleanup", "reason": "independent" }], "accepted": false },
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "callback", "reason": "wanted" }, { "phase": "cleanup", "reason": "wanted" }], "accepted": false },
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "cleanup", "reason": "wanted" }], "accepted": true },
+  { "test": "owned", "overflow": true, "failures": [{ "phase": "callback", "reason": "wanted" }], "accepted": false },
+  { "test": "foreign", "overflow": false, "failures": [{ "phase": "callback", "reason": "wanted" }], "accepted": false },
+  { "test": "owned", "overflow": false, "failures": [{ "phase": "callback", "reason": "other" }], "accepted": false }
+]

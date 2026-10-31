@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync} from "node:fs";
 test("retained publication root agrees with independent transactional visibility",()=>{const law=JSON.parse(readFileSync(new URL("🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv2020({strict:true}).compile(schema)(law)).toBe(true);for(const decision of law.decisions){const db=new Database(":memory:");try{db.exec("CREATE TABLE visible(position INTEGER PRIMARY KEY,value INTEGER)");law.source.forEach((value:number,position:number)=>db.query("INSERT INTO visible VALUES(?,?)").run(position,value));for(const axis of law.deniedAxes)expect(db.query("SELECT value FROM visible ORDER BY position").all().map((row:any)=>row.value)).toEqual(law.source);db.exec("BEGIN TRANSACTION");law.candidate.forEach((value:number,position:number)=>db.query("UPDATE visible SET value=? WHERE position=?").run(value,position));db.exec(decision==="commit"?"COMMIT":"ROLLBACK");expect(db.query("SELECT value FROM visible ORDER BY position").all().map((row:any)=>row.value)).toEqual(decision==="commit"?law.candidate:law.source);}finally{db.close();}}});

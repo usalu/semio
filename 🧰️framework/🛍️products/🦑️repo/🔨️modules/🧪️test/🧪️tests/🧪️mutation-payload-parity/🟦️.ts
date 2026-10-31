@@ -25,7 +25,7 @@ type Case = {
   readonly findings: readonly string[];
 };
 
-const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧫️mutation-payload-parity/🔣️.json"), "utf8")) as { readonly cases: readonly Case[]; readonly features: readonly { readonly id: string; readonly source: string; readonly rows: readonly MutationFeatureRow[] }[] };
+const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧫️mutation-payload-parity/🔣️.json"), "utf8")) as { readonly scopeCases: readonly {readonly id:string;readonly placement:string;readonly fixture:Json;readonly outcome?:Json;readonly otherFixture?:Json;readonly findings:readonly string[];readonly witnessed:number;readonly valid:boolean}[]; readonly cases: readonly Case[]; readonly features: readonly { readonly id: string; readonly source: string; readonly rows: readonly MutationFeatureRow[] }[] };
 const isObject = (value: unknown): value is Record<string, Json> => value !== null && typeof value === "object" && !Array.isArray(value);
 
 /** 🔒️ The leaf schema with `unevaluatedProperties: false` on every object node that declares no `additionalProperties` — the Ajv 2019 reading of "every payload member is described". */
@@ -111,4 +111,31 @@ describe("third-party oracle (Ajv draft-07 and Ajv 2019 unevaluatedProperties)",
       const undescribed = (ajv.errors ?? []).filter((error) => error.keyword === "unevaluatedProperties").map((error) => `undescribed@${error.instancePath}/${(error.params as { unevaluatedProperty: string }).unevaluatedProperty}`);
       expect(undescribed.sort()).toEqual(entry.findings.filter((finding) => finding.startsWith("undescribed@")).sort());
     });
+});
+
+describe("selected schema owns its sibling wire witnesses",()=>{
+ for(const entry of corpus.scopeCases)test(entry.id,()=>{
+  const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"payload-selected-"));
+  try{
+   const write=(path:string,value:string):void=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),value);};
+   const owner="✏️s/🔌️plugins/owner/🗿️artifacts/owner",module=owner+"/🧬️schema",mutations=module+"/🧬️mutations",leaf=mutations+"/move-block",id="https://json.schemas.assets.semio-tech.com/test/selected/move-block/schema.json";
+   const document={$schema:"http://json-schema.org/draft-07/schema#",$id:id,type:"object",additionalProperties:false,required:["mutation","id"],properties:{mutation:{const:"moveBlock"},id:{type:"string"}}};
+   write("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json","{}");
+   write(mutations+"/🦀️.rs","#[derive(dsl::Mutations)]\n#[value(tag = \"mutation\", rename_all = \"camelCase\")]\n#[mutations(snapshot=S,diff=D,schema=\"test.selected\")]\npub enum SelectedMutation { MoveBlock(super::move_block::MoveBlock) }\n");
+   write(mutations+"/🔣️.json",JSON.stringify({$id:"https://json.schemas.assets.semio-tech.com/test/selected/mutations.json",oneOf:[{$ref:id}]}));
+   write(leaf+"/🔣️.json",JSON.stringify({aggregateVariant:"MoveBlock",payloadSchema:"🧬️schema/🔣️.json",semanticKind:"move-block"}));
+   write(leaf+"/🧬️schema/🔣️.json",JSON.stringify(document));
+   if(entry.placement!=="absent"){const fixtureOwner=entry.placement.startsWith("foreign")?"✏️s/🔌️plugins/foreign/🗿️artifacts/foreign":entry.placement==="direct"?leaf:owner;if(entry.placement.endsWith("feature"))write(fixtureOwner+"/🧪️tests/move/🥒️.feature","Feature: Scoped wire witness\n  @id-move\n  @level-quick\n  @mode-conformance\n  Scenario: Move block\n    When the move-block mutation is applied with its parameters\n      \"\"\"\n      "+JSON.stringify({kind:"move-block",params:entry.fixture})+"\n      \"\"\"\n");else write(fixtureOwner+"/🧪️tests/🧫️fixtures/move-block/case/🦠️mutation/🔣️.json",JSON.stringify(entry.fixture));}
+   if(entry.placement.endsWith("feature")){const featureOwner=entry.placement.startsWith("foreign")?"✏️s/🔌️plugins/foreign/🗿️artifacts/foreign":owner;expect(mutationFeatureRows(readFileSync(join(root,featureOwner+"/🧪️tests/move/🥒️.feature"),"utf8"))).toHaveLength(1);}
+   if(entry.outcome)write(owner+"/🧪️tests/🧫️fixtures/move-block/case/🎯️outcome/🔣️.json",JSON.stringify(entry.outcome));
+   if(entry.otherFixture){const otherId=id.replace("move-block","remove-block"),other=mutations+"/remove-block";write(other+"/🔣️.json",JSON.stringify({aggregateVariant:"RemoveBlock",payloadSchema:"🧬️schema/🔣️.json",semanticKind:"remove-block"}));write(other+"/🧬️schema/🔣️.json",JSON.stringify({...document,$id:otherId,properties:{...document.properties,mutation:{const:"removeBlock"}}}));write(mutations+"/🦀️.rs",readFileSync(join(root,mutations+"/🦀️.rs"),"utf8").replace("MoveBlock(super::move_block::MoveBlock)","MoveBlock(super::move_block::MoveBlock), RemoveBlock(super::remove_block::RemoveBlock)"));write(mutations+"/🔣️.json",JSON.stringify({$id:"https://json.schemas.assets.semio-tech.com/test/selected/mutations.json",oneOf:[{$ref:id},{$ref:otherId}]}));write(owner+"/🧪️tests/🧫️fixtures/remove-block/case/🦠️mutation/🔣️.json",JSON.stringify(entry.otherFixture));}
+   const report=mutationPayloadParityReport(root,entry.otherFixture?leaf:module);
+
+   expect([...new Set(report.diagnostics.map(row=>row.detail.split(" at ")[0]))].sort()).toEqual([...entry.findings].sort());
+   expect(report.census.reduce((sum,row)=>sum+row.witnessed,0)).toBe(entry.witnessed);
+   expect(new Ajv({strict:false}).validate(document,entry.fixture)).toBe(entry.valid);
+   if(entry.outcome)expect(report.census.reduce((sum,row)=>sum+row.negatives,0)).toBe(1);
+   if(entry.otherFixture)expect(mutationPayloadParityReport(root).diagnostics.some(row=>row.detail.startsWith("invalid at "))).toBe(true);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
 });

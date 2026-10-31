@@ -1,6 +1,6 @@
 /** 🪟️ The docking command wire contract and its independent Ajv oracle. @see ./🥒️.feature */
 import { expect, test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import maxBy from "lodash/maxBy.js";
 import { readFileSync } from "node:fs";
 

@@ -12,13 +12,15 @@
     "node_modules/npm-lib/package.json": "{\"name\":\"npm-lib\",\"version\":\"1.0.0\",\"main\":\"index.js\"}\n",
     "node_modules/npm-lib/index.js": "exports.upper = (value) => value.toUpperCase();\n",
     "tools/runner.ts": "import { fileURLToPath } from 'node:url';\nexport const test = fileURLToPath(new URL('./check.test.ts', import.meta.url));\nexport const data = new URL('./data.json', import.meta.url);\nexport const directory = new URL('./', import.meta.url);\nexport const missing = new URL('./not-there.ts', import.meta.url);\nexport const remote = new URL('https://example.invalid/remote.ts');\n",
-    "tools/data.json": "{\"data\":1}\n"
+    "tools/data.json": "{\"data\":1}\n",
+    "pkg/src/alternate.ts": "export const value = 30;\n"
   },
   "links": {
     "node_modules/@fixture/pkg": "../../pkg"
   },
   "entry": "tools/📜️script.ts",
   "closure": [
+    "pkg/package.json",
     "pkg/src/deep.ts",
     "pkg/src/sub.ts",
     "tools/📜️script.ts"
@@ -35,6 +37,7 @@
     "command": "repo ./tools/📜️script.ts check",
     "projectRoot": ".",
     "closure": [
+      "pkg/package.json",
       "pkg/src/deep.ts",
       "pkg/src/sub.ts",
       "tools/check.test.ts",
@@ -70,21 +73,187 @@
       "content": "import { unused } from './unused.ts';\nexport const deep = unused;\n",
       "digest": "changes",
       "closure": [
+        "pkg/package.json",
         "pkg/src/deep.ts",
         "pkg/src/sub.ts",
         "pkg/src/unused.ts",
         "tools/📜️script.ts"
       ]
+    },
+    {
+      "name": "package metadata bytes change",
+      "file": "pkg/package.json",
+      "content": "{\"name\":\"@fixture/pkg\",\"version\":\"0.0.1\",\"exports\":{\"./sub\":\"./src/sub.ts\",\"./deep\":\"./src/deep.ts\",\"./erased\":\"./src/erased.ts\"}}\n",
+      "digest": "changes",
+      "closure": "same"
+    },
+    {
+      "name": "package export redirects the real resolver",
+      "file": "pkg/package.json",
+      "content": "{\"name\":\"@fixture/pkg\",\"version\":\"0.0.0\",\"exports\":{\"./sub\":\"./src/alternate.ts\",\"./deep\":\"./src/deep.ts\",\"./erased\":\"./src/erased.ts\"}}\n",
+      "digest": "changes",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTarget": "pkg/src/alternate.ts"
+    },
+    {
+      "name": "removed workspace export refuses the stale cached answer",
+      "file": "pkg/package.json",
+      "content": "{\"name\":\"@fixture/pkg\",\"version\":\"0.0.0\",\"exports\":{\"./deep\":\"./src/deep.ts\",\"./erased\":\"./src/erased.ts\"}}\n",
+      "digest": "unavailable",
+      "closure": "refused",
+      "refused": true,
+      "resolverTarget": "!ERR_PACKAGE_PATH_NOT_EXPORTED"
+    },
+    {
+      "name": "conditional export follows import instead of require or erased types",
+      "file": "pkg/package.json",
+      "content": "{\"name\":\"@fixture/pkg\",\"version\":\"0.0.0\",\"exports\":{\"./sub\":{\"types\":\"./src/erased.ts\",\"import\":\"./src/alternate.ts\",\"require\":\"./src/sub.ts\"},\"./deep\":\"./src/deep.ts\",\"./erased\":\"./src/erased.ts\"}}\n",
+      "digest": "changes",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTarget": "pkg/src/alternate.ts"
     }
   ],
   "url": {
     "entry": "tools/runner.ts",
     "closure": [
+      "pkg/package.json",
       "pkg/src/deep.ts",
       "tools/check.test.ts",
       "tools/data.json",
       "tools/helper.ts",
       "tools/runner.ts"
     ]
-  }
+  },
+  "packageResolution": {
+    "specifier": "@fixture/pkg/sub",
+    "manifest": "pkg/package.json",
+    "target": "pkg/src/sub.ts"
+  },
+  "resolutionCases": [
+    {
+      "name": "static ESM import",
+      "source": "import {value} from '@fixture/pkg/sub'; export {value};\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "import": "pkg/src/alternate.ts"
+      }
+    },
+    {
+      "name": "literal dynamic ESM import",
+      "source": "const {value}=await import('@fixture/pkg/sub'); export {value};\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "import": "pkg/src/alternate.ts"
+      }
+    },
+    {
+      "name": "literal CommonJS require",
+      "source": "const {value}=require('@fixture/pkg/sub'); export {value};\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/deep.ts",
+        "pkg/src/sub.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "require": "pkg/src/sub.ts"
+      }
+    },
+    {
+      "name": "TypeScript import equals",
+      "source": "import sub=require('@fixture/pkg/sub'); export const value=sub.value;\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/deep.ts",
+        "pkg/src/sub.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "require": "pkg/src/sub.ts"
+      }
+    },
+    {
+      "name": "one specifier used by import and require",
+      "source": "import {value as esm} from '@fixture/pkg/sub'; const {value:cjs}=require('@fixture/pkg/sub'); export {esm,cjs};\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "pkg/src/deep.ts",
+        "pkg/src/sub.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "import": "pkg/src/alternate.ts",
+        "require": "pkg/src/sub.ts"
+      }
+    },
+    {
+      "name": "erased declaration import",
+      "source": "import type {Erased} from '@fixture/pkg/sub'; export const value=1;\n",
+      "closure": [
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {}
+    },
+    {
+      "name": "erased inline import",
+      "source": "import {type Erased} from '@fixture/pkg/sub'; export const value=1;\n",
+      "closure": [
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {}
+    },
+    {
+      "name": "inline type export preserves the esbuild provider read",
+      "source": "export {type Erased} from '@fixture/pkg/sub';\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/alternate.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "import": "pkg/src/alternate.ts"
+      },
+      "bunClosure": [
+        "tools/📜️script.ts"
+      ],
+      "oracleReason": "esbuild reads this provider; Bun erases the export before reading it. The graph retains the union of actual compiler inputs."
+    },
+    {
+      "name": "immediate createRequire factory",
+      "source": "import {createRequire} from 'node:module'; const {value}=createRequire(import.meta.url)('@fixture/pkg/sub'); export {value};\n",
+      "closure": [
+        "pkg/package.json",
+        "pkg/src/deep.ts",
+        "pkg/src/sub.ts",
+        "tools/📜️script.ts"
+      ],
+      "resolverTargets": {
+        "require": "pkg/src/sub.ts"
+      },
+      "esbuildClosure": [
+        "tools/📜️script.ts"
+      ],
+      "bunClosure": [
+        "tools/📜️script.ts"
+      ],
+      "executionValue": 3
+    }
+  ]
 }

@@ -6,7 +6,7 @@ import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/
 import { NO_FILTERS, filterAndSort, hasRootMotion, matches, needsAssets, normalize, rowCompletion, type Row } from "../../🔨️modules/🔎️search/🟦️.ts";
 
 const walker = walkerDocument as unknown as Asset;
-const entry = (id: string, category: ManifestEntry["category"], en: string, de: string, heightM: number, analytics: ManifestEntry["analytics"] = ["thermal", "structural"]): ManifestEntry => ({ id, category, title: { en, de }, heightM, widthM: 1, poses: [], clips: [], analytics, viewpoints: ["elevation"], exports: ["svg"], distinction: { en: `${en} distinction`, de: `${de} Unterschied` }, completion: "planned" });
+const entry = (id: string, category: ManifestEntry["category"], en: string, de: string, heightM: number, analytics: ManifestEntry["analytics"] = ["thermal", "structural"]): ManifestEntry => ({ id, category, title: { en, de }, heightM, widthM: 1, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics, viewpoints: ["elevation"], exports: ["svg"], distinction: { en: `${en} distinction`, de: `${de} Unterschied` }, completion: "planned" });
 const rows: readonly Row[] = [
   { entry: entry("english-oak", "vegetation", "English Oak", "Stieleiche", 18), status: "pending" },
   { entry: entry("park-bench", "objects", "Park Bench", "Parkbank", 0.85, ["structural"]), status: "pending" },

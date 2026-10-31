@@ -1,0 +1,9330 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "agave",
+  "category": "vegetation",
+  "rig": {
+   "kind": "botanical",
+   "root": "root-plate",
+   "bones": [
+    {
+     "id": "root-plate",
+     "parent": null,
+     "title": {
+      "en": "Root plate in the planting bed",
+      "de": "Wurzelplatte im Pflanzbeet"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 1.0,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 10.0,
+      "comX": 0.5,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "caudex",
+     "parent": "root-plate",
+     "title": {
+      "en": "Caudex (short trunk) with leaf bases",
+      "de": "Caudex (kurzer Stamm) mit Blattbasen"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 90.0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 14.0,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R1-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf R1, base",
+      "de": "Blatt R1, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -80.0,
+     "lengthM": 0.85,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.64,
+      "comX": 0.425,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R1-b",
+     "parent": "leaf-R1-a",
+     "title": {
+      "en": "Leaf R1, arching tip",
+      "de": "Blatt R1, bogige Spitze"
+     },
+     "x": 0.85,
+     "y": 0.0,
+     "angleDeg": -44.0,
+     "lengthM": 0.55,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.76,
+      "comX": 0.275,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R2-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf R2, base",
+      "de": "Blatt R2, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -59.0,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.4,
+      "comX": 0.4,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R2-b",
+     "parent": "leaf-R2-a",
+     "title": {
+      "en": "Leaf R2, arching tip",
+      "de": "Blatt R2, bogige Spitze"
+     },
+     "x": 0.8,
+     "y": 0.0,
+     "angleDeg": -27.0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.6,
+      "comX": 0.26,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R3-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf R3, base",
+      "de": "Blatt R3, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -40.0,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.16,
+      "comX": 0.4,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R3-b",
+     "parent": "leaf-R3-a",
+     "title": {
+      "en": "Leaf R3, arching tip",
+      "de": "Blatt R3, bogige Spitze"
+     },
+     "x": 0.8,
+     "y": 0.0,
+     "angleDeg": -26.0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.44,
+      "comX": 0.25,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R4-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf R4, base",
+      "de": "Blatt R4, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -24.0,
+     "lengthM": 0.78,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 1.92,
+      "comX": 0.39,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R4-b",
+     "parent": "leaf-R4-a",
+     "title": {
+      "en": "Leaf R4, arching tip",
+      "de": "Blatt R4, bogige Spitze"
+     },
+     "x": 0.78,
+     "y": 0.0,
+     "angleDeg": -20.0,
+     "lengthM": 0.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.28,
+      "comX": 0.225,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-R5",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf R5",
+      "de": "Blatt R5"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": -12.0,
+     "lengthM": 1.0,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.6,
+      "comX": 0.5,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L1-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf L1, base",
+      "de": "Blatt L1, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 80.0,
+     "lengthM": 0.82,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.58,
+      "comX": 0.41,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L1-b",
+     "parent": "leaf-L1-a",
+     "title": {
+      "en": "Leaf L1, arching tip",
+      "de": "Blatt L1, bogige Spitze"
+     },
+     "x": 0.82,
+     "y": 0.0,
+     "angleDeg": 44.0,
+     "lengthM": 0.53,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.72,
+      "comX": 0.265,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L2-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf L2, base",
+      "de": "Blatt L2, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 59.0,
+     "lengthM": 0.78,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.4,
+      "comX": 0.39,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L2-b",
+     "parent": "leaf-L2-a",
+     "title": {
+      "en": "Leaf L2, arching tip",
+      "de": "Blatt L2, bogige Spitze"
+     },
+     "x": 0.78,
+     "y": 0.0,
+     "angleDeg": 29.0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.6,
+      "comX": 0.25,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L3-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf L3, base",
+      "de": "Blatt L3, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 40.0,
+     "lengthM": 0.82,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.22,
+      "comX": 0.41,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L3-b",
+     "parent": "leaf-L3-a",
+     "title": {
+      "en": "Leaf L3, arching tip",
+      "de": "Blatt L3, bogige Spitze"
+     },
+     "x": 0.82,
+     "y": 0.0,
+     "angleDeg": 26.0,
+     "lengthM": 0.52,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.48,
+      "comX": 0.26,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L4-a",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf L4, base",
+      "de": "Blatt L4, Basis"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 24.0,
+     "lengthM": 0.74,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 1.86,
+      "comX": 0.37,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L4-b",
+     "parent": "leaf-L4-a",
+     "title": {
+      "en": "Leaf L4, arching tip",
+      "de": "Blatt L4, bogige Spitze"
+     },
+     "x": 0.74,
+     "y": 0.0,
+     "angleDeg": 20.0,
+     "lengthM": 0.45,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -8,
+      "maxDeg": 8
+     },
+     "mass": {
+      "kg": 1.24,
+      "comX": 0.225,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-L5",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf L5",
+      "de": "Blatt L5"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 12.0,
+     "lengthM": 0.95,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.5,
+      "comX": 0.475,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    },
+    {
+     "id": "leaf-S",
+     "parent": "caudex",
+     "title": {
+      "en": "Leaf S",
+      "de": "Blatt S"
+     },
+     "x": 0.3,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 1.15,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -10,
+      "maxDeg": 10
+     },
+     "mass": {
+      "kg": 2.6,
+      "comX": 0.575,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "nobel-1988"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "base-support",
+    "bone": "root-plate",
+    "x": 0,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Root plate in the planting bed",
+     "de": "Wurzelplatte im Pflanzbeet"
+    },
+    "support": "fixed",
+    "normalDeg": 90,
+    "footprintLengthM": 1.0,
+    "footprintWidthM": 1.0,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "tp-spreading-1",
+    "bone": "leaf-R1-b",
+    "x": 0.3,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R1, anchor 1",
+     "de": "Transpiration von Blatt R1, Anker 1"
+    }
+   },
+   {
+    "id": "tp-spreading-2",
+    "bone": "leaf-R2-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R2, anchor 2",
+     "de": "Transpiration von Blatt R2, Anker 2"
+    }
+   },
+   {
+    "id": "tp-spreading-3",
+    "bone": "leaf-L1-b",
+    "x": 0.3,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L1, anchor 3",
+     "de": "Transpiration von Blatt L1, Anker 3"
+    }
+   },
+   {
+    "id": "tp-spreading-4",
+    "bone": "leaf-L2-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L2, anchor 4",
+     "de": "Transpiration von Blatt L2, Anker 4"
+    }
+   },
+   {
+    "id": "tp-spreading-5",
+    "bone": "leaf-R1-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R1, anchor 5",
+     "de": "Transpiration von Blatt R1, Anker 5"
+    }
+   },
+   {
+    "id": "tp-spreading-6",
+    "bone": "leaf-L1-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L1, anchor 6",
+     "de": "Transpiration von Blatt L1, Anker 6"
+    }
+   },
+   {
+    "id": "tp-erect-1",
+    "bone": "leaf-R3-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R3, anchor 1",
+     "de": "Transpiration von Blatt R3, Anker 1"
+    }
+   },
+   {
+    "id": "tp-erect-2",
+    "bone": "leaf-R4-b",
+    "x": 0.2,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R4, anchor 2",
+     "de": "Transpiration von Blatt R4, Anker 2"
+    }
+   },
+   {
+    "id": "tp-erect-3",
+    "bone": "leaf-R5",
+    "x": 0.6,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf R5, anchor 3",
+     "de": "Transpiration von Blatt R5, Anker 3"
+    }
+   },
+   {
+    "id": "tp-erect-4",
+    "bone": "leaf-L3-b",
+    "x": 0.2,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L3, anchor 4",
+     "de": "Transpiration von Blatt L3, Anker 4"
+    }
+   },
+   {
+    "id": "tp-erect-5",
+    "bone": "leaf-L4-a",
+    "x": 0.5,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L4, anchor 5",
+     "de": "Transpiration von Blatt L4, Anker 5"
+    }
+   },
+   {
+    "id": "tp-erect-6",
+    "bone": "leaf-L5",
+    "x": 0.6,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf L5, anchor 6",
+     "de": "Transpiration von Blatt L5, Anker 6"
+    }
+   },
+   {
+    "id": "tp-erect-7",
+    "bone": "leaf-S",
+    "x": 0.8,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Transpiration of leaf S, anchor 7",
+     "de": "Transpiration von Blatt S, Anker 7"
+    }
+   }
+  ],
+  "title": {
+   "en": "Agave",
+   "de": "Agave"
+  },
+  "summary": {
+   "en": "A mature century plant (Agave americana) of 1.45 m height and 2.55 m width: a rosette of stiff, succulent, glaucous leaves with marginal teeth around a short trunk, the lowest leaves arching to the ground and a spear of young leaves in the heart. A CAM plant: its stomata open at night.",
+   "de": "Eine ausgewachsene Amerikanische Agave (Agave americana) von 1,45 m Höhe und 2,55 m Breite: eine Rosette aus steifen, sukkulenten, blaugrauen Blättern mit Randzähnen um einen kurzen Stamm, die untersten Blätter bogig zum Boden, ein Speer junger Blätter im Herzen. Eine CAM-Pflanze: Ihre Spaltöffnungen öffnen sich nachts."
+  },
+  "tags": [
+   "agave",
+   "succulent",
+   "cam",
+   "rosette",
+   "drought",
+   "transpiration"
+  ],
+  "provenance": {
+   "author": "Semio staffage vegetation content worker NW-V2",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "nobel-1988",
+     "citation": "Nobel, P. S. (1988). Environmental Biology of Agaves and Cacti. Cambridge University Press. Crassulacean acid metabolism, nocturnal stomatal opening, rosette geometry of Agave species."
+    },
+    {
+     "id": "nobel-hartsock-1979",
+     "citation": "Nobel, P. S. and Hartsock, T. L. (1979). Environmental influences on open stomates of a crassulacean acid metabolism plant, Agave deserti. Plant Physiology 63, 63-66."
+    },
+    {
+     "id": "jones-2014",
+     "citation": "Jones, H. G. (2014). Plants and Microclimate, 3rd ed., Cambridge University Press. Leaf energy balance, leaf area index, boundary-layer and stomatal conductance."
+    },
+    {
+     "id": "monteith-unsworth-2013",
+     "citation": "Monteith, J. L. and Unsworth, M. H. (2013). Principles of Environmental Physics, 4th ed., Academic Press. Penman-Monteith leaf transpiration."
+    },
+    {
+     "id": "en-1991-1-4",
+     "citation": "EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Dynamic pressure q = 0.5 rho v^2 with air density 1.25 kg/m3, force F = cf q A."
+    }
+   ],
+   "notes": {
+    "en": "Eleven leaf groups (20 bones), each standing for two to three of the 28 real leaves, are authored by hand; the geometry of every scale is composed separately. Leaf thickness, heat capacity and conductance are authored estimates guided by Nobel (1988); the CAM behaviour (night opening) is qualitative after Nobel and Hartsock (1979), the numbers are not claimed as measured.",
+    "de": "Elf Blattgruppen (20 Knochen), die je für zwei bis drei der 28 wirklichen Blätter stehen, sind von Hand entworfen; die Geometrie jedes Maßstabs ist eigens komponiert. Blattdicke, Wärmekapazität und Leitfähigkeit sind Autorenschätzungen angelehnt an Nobel (1988); das CAM-Verhalten (nächtliche Öffnung) ist qualitativ nach Nobel und Hartsock (1979), die Zahlen werden nicht als gemessen ausgegeben."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.43,
+   "widthM": 2.52,
+   "depthM": 2.4,
+   "massKg": 62.0
+  },
+  "materials": [
+   {
+    "id": "agave-leaf",
+    "title": {
+     "en": "Succulent glaucous agave leaf (about 25 mm thick, water-rich)",
+     "de": "Sukkulentes blaugraues Agavenblatt (etwa 25 mm dick, wasserreich)"
+    },
+    "emissivity": 0.96,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 950,
+    "specificHeatJKgK": 3800,
+    "source": "authored-estimate",
+    "reference": "nobel-1988"
+   },
+   {
+    "id": "agave-caudex",
+    "title": {
+     "en": "Fibrous caudex with dry leaf bases",
+     "de": "Faseriger Caudex mit trockenen Blattbasen"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 600,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 2500,
+    "elasticModulusPa": 500000000,
+    "strengthPa": 5000000,
+    "source": "authored-estimate",
+    "reference": "nobel-1988"
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 351,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "rosette-left-0",
+       "bone": "leaf-L2-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.9631,
+         0.7606
+        ],
+        [
+         0.7533,
+         0.6205
+        ],
+        [
+         0.6443,
+         0.429
+        ],
+        [
+         0.5929,
+         0.3981
+        ],
+        [
+         0.5743,
+         0.429
+        ],
+        [
+         0.5373,
+         0.4207
+        ],
+        [
+         0.276,
+         0.3197
+        ],
+        [
+         -0.0408,
+         0.1014
+        ],
+        [
+         -0.0222,
+         0.0005
+        ],
+        [
+         -0.0716,
+         -0.0571
+        ],
+        [
+         -0.0777,
+         -0.1168
+        ],
+        [
+         0.0418,
+         -0.339
+        ],
+        [
+         0.223,
+         -0.5241
+        ],
+        [
+         0.4454,
+         -0.6845
+        ],
+        [
+         0.5812,
+         -0.7008
+        ],
+        [
+         0.7088,
+         -0.6102
+        ],
+        [
+         0.8446,
+         -0.6266
+        ],
+        [
+         0.9495,
+         -0.5915
+        ],
+        [
+         1.0318,
+         -0.5421
+        ],
+        [
+         0.9577,
+         -0.4187
+        ],
+        [
+         1.0091,
+         -0.3878
+        ],
+        [
+         1.0626,
+         -0.3836
+        ],
+        [
+         1.1963,
+         -0.3033
+        ],
+        [
+         1.2662,
+         -0.2333
+        ],
+        [
+         1.2168,
+         -0.151
+        ],
+        [
+         1.19,
+         -0.153
+        ],
+        [
+         1.0995,
+         -0.0955
+        ],
+        [
+         1.0459,
+         -0.0996
+        ],
+        [
+         1.015,
+         -0.0482
+        ],
+        [
+         1.1364,
+         0.0527
+        ],
+        [
+         1.196,
+         0.1865
+        ],
+        [
+         1.1527,
+         0.2585
+        ],
+        [
+         1.0066,
+         0.2687
+        ],
+        [
+         0.9757,
+         0.3202
+        ],
+        [
+         1.0311,
+         0.5774
+        ],
+        [
+         1.0105,
+         0.6351
+        ],
+        [
+         1.0187,
+         0.668
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "leaves-spreading",
+        "leaves-erect"
+       ]
+      },
+      {
+       "id": "rosette-right-0",
+       "bone": "leaf-R2-a",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.4,
+       "kind": "poly",
+       "points": [
+        [
+         0.8304,
+         -0.6883
+        ],
+        [
+         1.0053,
+         -0.7933
+        ],
+        [
+         1.0485,
+         -0.7213
+        ],
+        [
+         1.0651,
+         -0.5773
+        ],
+        [
+         0.9994,
+         -0.3138
+        ],
+        [
+         1.0303,
+         -0.2624
+        ],
+        [
+         1.0941,
+         -0.2727
+        ],
+        [
+         1.1497,
+         -0.2501
+        ],
+        [
+         1.2032,
+         -0.2543
+        ],
+        [
+         1.2464,
+         -0.1823
+        ],
+        [
+         1.156,
+         -0.0299
+        ],
+        [
+         1.0387,
+         0.0545
+        ],
+        [
+         1.0696,
+         0.106
+        ],
+        [
+         1.0964,
+         0.1039
+        ],
+        [
+         1.1808,
+         0.1512
+        ],
+        [
+         1.224,
+         0.2232
+        ],
+        [
+         1.15,
+         0.3096
+        ],
+        [
+         0.969,
+         0.4044
+        ],
+        [
+         1.0617,
+         0.5587
+        ],
+        [
+         0.9485,
+         0.6267
+        ],
+        [
+         0.8107,
+         0.6535
+        ],
+        [
+         0.7448,
+         0.6371
+        ],
+        [
+         0.607,
+         0.7339
+        ],
+        [
+         0.5411,
+         0.7175
+        ],
+        [
+         0.5205,
+         0.7299
+        ],
+        [
+         0.2714,
+         0.5716
+        ],
+        [
+         0.0614,
+         0.3618
+        ],
+        [
+         -0.0829,
+         0.0985
+        ],
+        [
+         -0.0561,
+         0.0264
+        ],
+        [
+         -0.015,
+         0.0017
+        ],
+        [
+         -0.0439,
+         -0.093
+        ],
+        [
+         -0.0048,
+         -0.1444
+        ],
+        [
+         0.3141,
+         -0.336
+        ],
+        [
+         0.5651,
+         -0.4309
+        ],
+        [
+         0.6083,
+         -0.4288
+        ],
+        [
+         0.6207,
+         -0.4083
+        ],
+        [
+         0.6721,
+         -0.4392
+        ],
+        [
+         0.6988,
+         -0.5112
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "leaves-spreading",
+        "leaves-erect"
+       ]
+      },
+      {
+       "id": "heart-0",
+       "bone": "leaf-S",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.018,
+         0.0713
+        ],
+        [
+         -0.018,
+         -0.0727
+        ],
+        [
+         0.018,
+         -0.1447
+        ],
+        [
+         0.318,
+         -0.2287
+        ],
+        [
+         0.558,
+         -0.2287
+        ],
+        [
+         0.846,
+         -0.1927
+        ],
+        [
+         1.002,
+         -0.1447
+        ],
+        [
+         1.11,
+         -0.0487
+        ],
+        [
+         1.11,
+         0.0473
+        ],
+        [
+         1.026,
+         0.1313
+        ],
+        [
+         0.954,
+         0.1673
+        ],
+        [
+         0.714,
+         0.2153
+        ],
+        [
+         0.306,
+         0.2273
+        ],
+        [
+         0.138,
+         0.1673
+        ],
+        [
+         0.042,
+         0.1553
+        ],
+        [
+         -0.006,
+         0.1193
+        ]
+       ],
+       "closed": true,
+       "regions": [
+        "leaves-erect"
+       ]
+      },
+      {
+       "id": "caudex",
+       "bone": "caudex",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.14
+        ],
+        [
+         0.0,
+         -0.14
+        ],
+        [
+         0.42,
+         -0.12
+        ],
+        [
+         0.42,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "region": "caudex"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:500 (1 m is 2 mm) the rosette is two spiky half-rosettes of merged leaves and the erect heart leaf on a short trunk: 5.1 mm wide and 2.9 mm high.",
+      "de": "Bei 1:500 (1 m sind 2 mm) ist die Rosette zwei spitze Rosettenhälften aus verschmolzenen Blättern und das aufrechte Herzblatt auf einem kurzen Stamm: 5,1 mm breit und 2,9 mm hoch."
+     },
+     "retained": {
+      "en": "Retained: the fan of leaf tips, the drooping lowest leaves reaching the bed, the erect spear and the exact width and height.",
+      "de": "Beibehalten: der Fächer der Blattspitzen, die hängenden untersten Blätter bis zum Beet, das aufrechte Herzblatt und die genaue Breite und Höhe."
+     },
+     "merged": {
+      "en": "Merged: the five leaves of each side are merged, leaves widened to 0.34 m so that gaps narrower than the profile gap close; spreading and erect leaves share one outline.",
+      "de": "Zusammengefasst: Die fünf Blätter jeder Seite sind verschmolzen, die Blätter auf 0,34 m verbreitert, damit Lücken unter dem Profilabstand schließen; ausgebreitete und aufrechte Blätter teilen eine Kontur."
+     },
+     "omitted": {
+      "en": "Omitted: leaf joints, marginal teeth, midribs and leaf scars on the caudex.",
+      "de": "Weggelassen: Blattgelenke, Randzähne, Mittelrippen und Blattnarben am Caudex."
+     },
+     "thinElements": {
+      "en": "The terminal spines (4 cm) are below the pen and fall into the pointed leaf tips.",
+      "de": "Die Endstacheln (4 cm) liegen unter der Stiftbreite und gehen in den spitzen Blattspitzen auf."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Mid grey filled silhouette in one 0.15 mm outline; the trunk is lighter.",
+      "de": "Mittelgraue gefüllte Silhouette in einer Kontur von 0,15 mm; der Stamm ist heller."
+     },
+     "overlays": {
+      "en": "The thermal view paints each half-rosette with the area-weighted value of spreading and erect leaves; the trunk has its own value.",
+      "de": "Die Thermalansicht färbt jede Rosettenhälfte mit dem flächengewichteten Wert der ausgebreiteten und aufrechten Blätter; der Stamm hat seinen eigenen Wert."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 151,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "caudex",
+       "bone": "caudex",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.15
+        ],
+        [
+         0.0,
+         -0.15
+        ],
+        [
+         0.42,
+         -0.135
+        ],
+        [
+         0.42,
+         0.135
+        ]
+       ],
+       "closed": true,
+       "region": "caudex"
+      },
+      {
+       "id": "leaf-R1-a",
+       "bone": "leaf-R1-a",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1533,
+         0.092
+        ],
+        [
+         0.3067,
+         0.1144
+        ],
+        [
+         0.46,
+         0.1238
+        ],
+        [
+         0.6133,
+         0.1222
+        ],
+        [
+         0.7667,
+         0.1181
+        ],
+        [
+         0.9771,
+         0.0308
+        ],
+        [
+         0.8236,
+         -0.1281
+        ],
+        [
+         0.7667,
+         -0.1181
+        ],
+        [
+         0.6133,
+         -0.1222
+        ],
+        [
+         0.46,
+         -0.1238
+        ],
+        [
+         0.3067,
+         -0.1144
+        ],
+        [
+         0.1533,
+         -0.092
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.25
+      },
+      {
+       "id": "leaf-R1-b",
+       "bone": "leaf-R1-b",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1321,
+         0.036
+        ],
+        [
+         0.0333,
+         0.1127
+        ],
+        [
+         0.1367,
+         0.1055
+        ],
+        [
+         0.24,
+         0.095
+        ],
+        [
+         0.3433,
+         0.0797
+        ],
+        [
+         0.4467,
+         0.0562
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.4467,
+         -0.0562
+        ],
+        [
+         0.3433,
+         -0.0797
+        ],
+        [
+         0.24,
+         -0.095
+        ],
+        [
+         0.1367,
+         -0.1055
+        ],
+        [
+         0.0333,
+         -0.1127
+        ],
+        [
+         0.0314,
+         -0.1332
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.293
+      },
+      {
+       "id": "leaf-L1-a",
+       "bone": "leaf-L1-a",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1479,
+         0.092
+        ],
+        [
+         0.2958,
+         0.1144
+        ],
+        [
+         0.4437,
+         0.1238
+        ],
+        [
+         0.5917,
+         0.1222
+        ],
+        [
+         0.7396,
+         0.1181
+        ],
+        [
+         0.7919,
+         0.1263
+        ],
+        [
+         0.9453,
+         -0.0325
+        ],
+        [
+         0.7396,
+         -0.1181
+        ],
+        [
+         0.5917,
+         -0.1222
+        ],
+        [
+         0.4437,
+         -0.1238
+        ],
+        [
+         0.2958,
+         -0.1144
+        ],
+        [
+         0.1479,
+         -0.092
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L1-b",
+       "bone": "leaf-L1-b",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0331,
+         0.1315
+        ],
+        [
+         0.0321,
+         0.1127
+        ],
+        [
+         0.1317,
+         0.1054
+        ],
+        [
+         0.2312,
+         0.0949
+        ],
+        [
+         0.3308,
+         0.0797
+        ],
+        [
+         0.4304,
+         0.0562
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.4304,
+         -0.0562
+        ],
+        [
+         0.3308,
+         -0.0797
+        ],
+        [
+         0.2312,
+         -0.0949
+        ],
+        [
+         0.1317,
+         -0.1054
+        ],
+        [
+         0.0321,
+         -0.1127
+        ],
+        [
+         -0.1303,
+         -0.0377
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.265
+      },
+      {
+       "id": "leaf-R2-a",
+       "bone": "leaf-R2-a",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1443,
+         0.0919
+        ],
+        [
+         0.2887,
+         0.1143
+        ],
+        [
+         0.433,
+         0.1238
+        ],
+        [
+         0.5773,
+         0.1222
+        ],
+        [
+         0.7217,
+         0.1182
+        ],
+        [
+         0.909,
+         0.0685
+        ],
+        [
+         0.8086,
+         -0.1285
+        ],
+        [
+         0.7217,
+         -0.1182
+        ],
+        [
+         0.5773,
+         -0.1222
+        ],
+        [
+         0.433,
+         -0.1238
+        ],
+        [
+         0.2887,
+         -0.1143
+        ],
+        [
+         0.1443,
+         -0.0919
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.215
+      },
+      {
+       "id": "leaf-R2-b",
+       "bone": "leaf-R2-b",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1122,
+         0.0749
+        ],
+        [
+         0.0317,
+         0.1128
+        ],
+        [
+         0.1293,
+         0.1055
+        ],
+        [
+         0.227,
+         0.0951
+        ],
+        [
+         0.3247,
+         0.0798
+        ],
+        [
+         0.4223,
+         0.0563
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4223,
+         -0.0563
+        ],
+        [
+         0.3247,
+         -0.0798
+        ],
+        [
+         0.227,
+         -0.0951
+        ],
+        [
+         0.1293,
+         -0.1055
+        ],
+        [
+         0.0317,
+         -0.1128
+        ],
+        [
+         -0.0054,
+         -0.1348
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.33
+      },
+      {
+       "id": "leaf-L2-a",
+       "bone": "leaf-L2-a",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1407,
+         0.0921
+        ],
+        [
+         0.2813,
+         0.1145
+        ],
+        [
+         0.422,
+         0.1239
+        ],
+        [
+         0.5627,
+         0.1222
+        ],
+        [
+         0.7033,
+         0.118
+        ],
+        [
+         0.7825,
+         0.1274
+        ],
+        [
+         0.8894,
+         -0.0654
+        ],
+        [
+         0.7033,
+         -0.118
+        ],
+        [
+         0.5627,
+         -0.1222
+        ],
+        [
+         0.422,
+         -0.1239
+        ],
+        [
+         0.2813,
+         -0.1145
+        ],
+        [
+         0.1407,
+         -0.0921
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.19
+      },
+      {
+       "id": "leaf-L2-b",
+       "bone": "leaf-L2-b",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.1338
+        ],
+        [
+         0.03,
+         0.1126
+        ],
+        [
+         0.124,
+         0.1053
+        ],
+        [
+         0.218,
+         0.0948
+        ],
+        [
+         0.312,
+         0.0795
+        ],
+        [
+         0.406,
+         0.0561
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.406,
+         -0.0561
+        ],
+        [
+         0.312,
+         -0.0795
+        ],
+        [
+         0.218,
+         -0.0948
+        ],
+        [
+         0.124,
+         -0.1053
+        ],
+        [
+         0.03,
+         -0.1126
+        ],
+        [
+         -0.1129,
+         -0.0717
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.256
+      },
+      {
+       "id": "leaf-R3-a",
+       "bone": "leaf-R3-a",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1442,
+         0.0923
+        ],
+        [
+         0.2883,
+         0.1148
+        ],
+        [
+         0.4325,
+         0.1239
+        ],
+        [
+         0.5767,
+         0.1221
+        ],
+        [
+         0.7208,
+         0.1178
+        ],
+        [
+         0.9065,
+         0.0701
+        ],
+        [
+         0.8103,
+         -0.1271
+        ],
+        [
+         0.7208,
+         -0.1178
+        ],
+        [
+         0.5767,
+         -0.1221
+        ],
+        [
+         0.4325,
+         -0.1239
+        ],
+        [
+         0.2883,
+         -0.1148
+        ],
+        [
+         0.1442,
+         -0.0923
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R3-b",
+       "bone": "leaf-R3-b",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1098,
+         0.0768
+        ],
+        [
+         0.0292,
+         0.1121
+        ],
+        [
+         0.1233,
+         0.1048
+        ],
+        [
+         0.2175,
+         0.0943
+        ],
+        [
+         0.3117,
+         0.079
+        ],
+        [
+         0.4058,
+         0.0557
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.4058,
+         -0.0557
+        ],
+        [
+         0.3117,
+         -0.079
+        ],
+        [
+         0.2175,
+         -0.0943
+        ],
+        [
+         0.1233,
+         -0.1048
+        ],
+        [
+         0.0292,
+         -0.1121
+        ],
+        [
+         -0.0071,
+         -0.1338
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L3-a",
+       "bone": "leaf-L3-a",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1478,
+         0.0922
+        ],
+        [
+         0.2957,
+         0.1146
+        ],
+        [
+         0.4435,
+         0.1239
+        ],
+        [
+         0.5913,
+         0.1221
+        ],
+        [
+         0.7392,
+         0.1179
+        ],
+        [
+         0.832,
+         0.1282
+        ],
+        [
+         0.9284,
+         -0.0695
+        ],
+        [
+         0.7392,
+         -0.1179
+        ],
+        [
+         0.5913,
+         -0.1221
+        ],
+        [
+         0.4435,
+         -0.1239
+        ],
+        [
+         0.2957,
+         -0.1146
+        ],
+        [
+         0.1478,
+         -0.0922
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L3-b",
+       "bone": "leaf-L3-b",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0088,
+         0.1349
+        ],
+        [
+         0.0308,
+         0.1124
+        ],
+        [
+         0.1287,
+         0.1051
+        ],
+        [
+         0.2265,
+         0.0946
+        ],
+        [
+         0.3243,
+         0.0793
+        ],
+        [
+         0.4222,
+         0.0559
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4222,
+         -0.0559
+        ],
+        [
+         0.3243,
+         -0.0793
+        ],
+        [
+         0.2265,
+         -0.0946
+        ],
+        [
+         0.1287,
+         -0.1051
+        ],
+        [
+         0.0308,
+         -0.1124
+        ],
+        [
+         -0.1117,
+         -0.0761
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R4-a",
+       "bone": "leaf-R4-a",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1403,
+         0.0931
+        ],
+        [
+         0.2805,
+         0.1157
+        ],
+        [
+         0.4208,
+         0.1239
+        ],
+        [
+         0.561,
+         0.1217
+        ],
+        [
+         0.7013,
+         0.1169
+        ],
+        [
+         0.8746,
+         0.0802
+        ],
+        [
+         0.8009,
+         -0.1223
+        ],
+        [
+         0.7013,
+         -0.1169
+        ],
+        [
+         0.561,
+         -0.1217
+        ],
+        [
+         0.4208,
+         -0.1239
+        ],
+        [
+         0.2805,
+         -0.1157
+        ],
+        [
+         0.1403,
+         -0.0931
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R4-b",
+       "bone": "leaf-R4-b",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0975,
+         0.088
+        ],
+        [
+         0.0237,
+         0.1108
+        ],
+        [
+         0.109,
+         0.1032
+        ],
+        [
+         0.1942,
+         0.0926
+        ],
+        [
+         0.2795,
+         0.0774
+        ],
+        [
+         0.3648,
+         0.0544
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.3647,
+         -0.0544
+        ],
+        [
+         0.2795,
+         -0.0774
+        ],
+        [
+         0.1942,
+         -0.0926
+        ],
+        [
+         0.109,
+         -0.1032
+        ],
+        [
+         0.0237,
+         -0.1108
+        ],
+        [
+         -0.0181,
+         -0.1301
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-a",
+       "bone": "leaf-L4-a",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1332,
+         0.0926
+        ],
+        [
+         0.2665,
+         0.1151
+        ],
+        [
+         0.3997,
+         0.1239
+        ],
+        [
+         0.533,
+         0.122
+        ],
+        [
+         0.6662,
+         0.1175
+        ],
+        [
+         0.7586,
+         0.1228
+        ],
+        [
+         0.8332,
+         -0.0821
+        ],
+        [
+         0.6662,
+         -0.1175
+        ],
+        [
+         0.533,
+         -0.122
+        ],
+        [
+         0.3997,
+         -0.1239
+        ],
+        [
+         0.2665,
+         -0.1151
+        ],
+        [
+         0.1332,
+         -0.0926
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-b",
+       "bone": "leaf-L4-b",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.016,
+         0.1301
+        ],
+        [
+         0.0254,
+         0.1117
+        ],
+        [
+         0.1103,
+         0.1043
+        ],
+        [
+         0.1952,
+         0.0937
+        ],
+        [
+         0.2802,
+         0.0784
+        ],
+        [
+         0.3651,
+         0.0552
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.3651,
+         -0.0552
+        ],
+        [
+         0.2802,
+         -0.0784
+        ],
+        [
+         0.1952,
+         -0.0937
+        ],
+        [
+         0.1103,
+         -0.1043
+        ],
+        [
+         0.0254,
+         -0.1117
+        ],
+        [
+         -0.0959,
+         -0.0894
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R5",
+       "bone": "leaf-R5",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1667,
+         0.105
+        ],
+        [
+         0.3333,
+         0.1239
+        ],
+        [
+         0.5,
+         0.1203
+        ],
+        [
+         0.6667,
+         0.1095
+        ],
+        [
+         0.8333,
+         0.0842
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         0.8333,
+         -0.0842
+        ],
+        [
+         0.6667,
+         -0.1095
+        ],
+        [
+         0.5,
+         -0.1203
+        ],
+        [
+         0.3333,
+         -0.1239
+        ],
+        [
+         0.1667,
+         -0.105
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L5",
+       "bone": "leaf-L5",
+       "role": "body",
+       "z": 2.09,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0625
+        ],
+        [
+         0.1583,
+         0.105
+        ],
+        [
+         0.3167,
+         0.1239
+        ],
+        [
+         0.475,
+         0.1203
+        ],
+        [
+         0.6333,
+         0.1095
+        ],
+        [
+         0.7917,
+         0.0842
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.7917,
+         -0.0842
+        ],
+        [
+         0.6333,
+         -0.1095
+        ],
+        [
+         0.475,
+         -0.1203
+        ],
+        [
+         0.3167,
+         -0.1239
+        ],
+        [
+         0.1583,
+         -0.105
+        ],
+        [
+         0.0,
+         -0.0625
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-S",
+       "bone": "leaf-S",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.05
+        ],
+        [
+         0.1917,
+         0.084
+        ],
+        [
+         0.3833,
+         0.0991
+        ],
+        [
+         0.575,
+         0.0962
+        ],
+        [
+         0.7667,
+         0.0876
+        ],
+        [
+         0.9583,
+         0.0674
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         0.9583,
+         -0.0674
+        ],
+        [
+         0.7667,
+         -0.0876
+        ],
+        [
+         0.575,
+         -0.0962
+        ],
+        [
+         0.3833,
+         -0.0991
+        ],
+        [
+         0.1917,
+         -0.084
+        ],
+        [
+         0.0,
+         -0.05
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) eleven leaves fan from the heart as tapered blades, the lowest ones bent by their arching tips; the trunk is a short block.",
+      "de": "Bei 1:200 (1 m sind 5 mm) fächern elf Blätter als verjüngte Klingen aus dem Herzen, die untersten durch ihre bogigen Spitzen geknickt; der Stamm ist ein kurzer Block."
+     },
+     "retained": {
+      "en": "Retained: every leaf group with its real length and angle, separated by the overlap at the heart.",
+      "de": "Beibehalten: jede Blattgruppe mit wahrer Länge und Winkel, getrennt durch die Überlagerung im Herzen."
+     },
+     "merged": {
+      "en": "Merged: 2 to 3 real leaves behind each drawn leaf.",
+      "de": "Zusammengefasst: 2 bis 3 wirkliche Blätter hinter jedem gezeichneten Blatt."
+     },
+     "omitted": {
+      "en": "Omitted: marginal teeth, midribs, scars and terminal spines.",
+      "de": "Weggelassen: Randzähne, Mittelrippen, Narben und Endstacheln."
+     },
+     "thinElements": {
+      "en": "The terminal spine (4 cm) is lost in the leaf tip.",
+      "de": "Der Endstachel (4 cm) geht in der Blattspitze verloren."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Spreading leaves mid grey, erect leaves darker; one body pen.",
+      "de": "Ausgebreitete Blätter mittelgrau, aufrechte dunkler; ein Körperstift."
+     },
+     "overlays": {
+      "en": "One leaf group is one thermal region (spreading or erect).",
+      "de": "Eine Blattgruppe ist eine thermische Region (ausgebreitet oder aufrecht)."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 76,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.2,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.3
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "caudex",
+       "bone": "caudex",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.11
+        ],
+        [
+         0.0,
+         -0.11
+        ],
+        [
+         0.42,
+         -0.099
+        ],
+        [
+         0.42,
+         0.099
+        ]
+       ],
+       "closed": true,
+       "region": "caudex"
+      },
+      {
+       "id": "leaf-R1-a",
+       "bone": "leaf-R1-a",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.115,
+         0.0748
+        ],
+        [
+         0.23,
+         0.0919
+        ],
+        [
+         0.345,
+         0.1039
+        ],
+        [
+         0.46,
+         0.109
+        ],
+        [
+         0.575,
+         0.1081
+        ],
+        [
+         0.69,
+         0.1061
+        ],
+        [
+         0.805,
+         0.1026
+        ],
+        [
+         0.9679,
+         0.0213
+        ],
+        [
+         0.8328,
+         -0.1185
+        ],
+        [
+         0.805,
+         -0.1026
+        ],
+        [
+         0.69,
+         -0.1061
+        ],
+        [
+         0.575,
+         -0.1081
+        ],
+        [
+         0.46,
+         -0.109
+        ],
+        [
+         0.345,
+         -0.1039
+        ],
+        [
+         0.23,
+         -0.0919
+        ],
+        [
+         0.115,
+         -0.0748
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-R1-b",
+       "bone": "leaf-R1-b",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1223,
+         0.0258
+        ],
+        [
+         0.0075,
+         0.1004
+        ],
+        [
+         0.085,
+         0.0963
+        ],
+        [
+         0.1625,
+         0.0908
+        ],
+        [
+         0.24,
+         0.0836
+        ],
+        [
+         0.3175,
+         0.074
+        ],
+        [
+         0.395,
+         0.061
+        ],
+        [
+         0.4725,
+         0.0423
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.4725,
+         -0.0423
+        ],
+        [
+         0.395,
+         -0.061
+        ],
+        [
+         0.3175,
+         -0.074
+        ],
+        [
+         0.24,
+         -0.0836
+        ],
+        [
+         0.1625,
+         -0.0908
+        ],
+        [
+         0.085,
+         -0.0963
+        ],
+        [
+         0.0075,
+         -0.1004
+        ],
+        [
+         0.0216,
+         -0.1231
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L1-a",
+       "bone": "leaf-L1-a",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1109,
+         0.0748
+        ],
+        [
+         0.2219,
+         0.0919
+        ],
+        [
+         0.3328,
+         0.1039
+        ],
+        [
+         0.4437,
+         0.109
+        ],
+        [
+         0.5547,
+         0.1081
+        ],
+        [
+         0.6656,
+         0.1061
+        ],
+        [
+         0.7766,
+         0.1026
+        ],
+        [
+         0.8011,
+         0.1168
+        ],
+        [
+         0.9361,
+         -0.023
+        ],
+        [
+         0.7766,
+         -0.1026
+        ],
+        [
+         0.6656,
+         -0.1061
+        ],
+        [
+         0.5547,
+         -0.1081
+        ],
+        [
+         0.4437,
+         -0.109
+        ],
+        [
+         0.3328,
+         -0.1039
+        ],
+        [
+         0.2219,
+         -0.0919
+        ],
+        [
+         0.1109,
+         -0.0748
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L1-b",
+       "bone": "leaf-L1-b",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0233,
+         0.1213
+        ],
+        [
+         0.0072,
+         0.1004
+        ],
+        [
+         0.0819,
+         0.0963
+        ],
+        [
+         0.1566,
+         0.0908
+        ],
+        [
+         0.2312,
+         0.0836
+        ],
+        [
+         0.3059,
+         0.074
+        ],
+        [
+         0.3806,
+         0.061
+        ],
+        [
+         0.4553,
+         0.0423
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.4553,
+         -0.0423
+        ],
+        [
+         0.3806,
+         -0.061
+        ],
+        [
+         0.3059,
+         -0.074
+        ],
+        [
+         0.2312,
+         -0.0836
+        ],
+        [
+         0.1566,
+         -0.0908
+        ],
+        [
+         0.0819,
+         -0.0963
+        ],
+        [
+         0.0072,
+         -0.1004
+        ],
+        [
+         -0.1205,
+         -0.0276
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-R2-a",
+       "bone": "leaf-R2-a",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1083,
+         0.0748
+        ],
+        [
+         0.2165,
+         0.0919
+        ],
+        [
+         0.3248,
+         0.1039
+        ],
+        [
+         0.433,
+         0.109
+        ],
+        [
+         0.5413,
+         0.1081
+        ],
+        [
+         0.6495,
+         0.1061
+        ],
+        [
+         0.7578,
+         0.1027
+        ],
+        [
+         0.903,
+         0.0567
+        ],
+        [
+         0.8146,
+         -0.1166
+        ],
+        [
+         0.7578,
+         -0.1027
+        ],
+        [
+         0.6495,
+         -0.1061
+        ],
+        [
+         0.5413,
+         -0.1081
+        ],
+        [
+         0.433,
+         -0.109
+        ],
+        [
+         0.3248,
+         -0.1039
+        ],
+        [
+         0.2165,
+         -0.0919
+        ],
+        [
+         0.1083,
+         -0.0748
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-R2-b",
+       "bone": "leaf-R2-b",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1058,
+         0.0623
+        ],
+        [
+         0.0072,
+         0.1005
+        ],
+        [
+         0.0805,
+         0.0964
+        ],
+        [
+         0.1538,
+         0.0909
+        ],
+        [
+         0.227,
+         0.0837
+        ],
+        [
+         0.3002,
+         0.0741
+        ],
+        [
+         0.3735,
+         0.0611
+        ],
+        [
+         0.4467,
+         0.0424
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4468,
+         -0.0424
+        ],
+        [
+         0.3735,
+         -0.0611
+        ],
+        [
+         0.3002,
+         -0.0741
+        ],
+        [
+         0.227,
+         -0.0837
+        ],
+        [
+         0.1538,
+         -0.0909
+        ],
+        [
+         0.0805,
+         -0.0964
+        ],
+        [
+         0.0072,
+         -0.1005
+        ],
+        [
+         -0.0118,
+         -0.1222
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L2-a",
+       "bone": "leaf-L2-a",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1055,
+         0.0749
+        ],
+        [
+         0.211,
+         0.092
+        ],
+        [
+         0.3165,
+         0.104
+        ],
+        [
+         0.422,
+         0.109
+        ],
+        [
+         0.5275,
+         0.1081
+        ],
+        [
+         0.633,
+         0.106
+        ],
+        [
+         0.7385,
+         0.1025
+        ],
+        [
+         0.7889,
+         0.1159
+        ],
+        [
+         0.883,
+         -0.0538
+        ],
+        [
+         0.7385,
+         -0.1025
+        ],
+        [
+         0.633,
+         -0.106
+        ],
+        [
+         0.5275,
+         -0.1081
+        ],
+        [
+         0.422,
+         -0.109
+        ],
+        [
+         0.3165,
+         -0.104
+        ],
+        [
+         0.211,
+         -0.092
+        ],
+        [
+         0.1055,
+         -0.0749
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L2-b",
+       "bone": "leaf-L2-b",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0058,
+         0.1215
+        ],
+        [
+         0.0065,
+         0.1003
+        ],
+        [
+         0.077,
+         0.0961
+        ],
+        [
+         0.1475,
+         0.0906
+        ],
+        [
+         0.218,
+         0.0834
+        ],
+        [
+         0.2885,
+         0.0738
+        ],
+        [
+         0.359,
+         0.0609
+        ],
+        [
+         0.4295,
+         0.0422
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.4295,
+         -0.0422
+        ],
+        [
+         0.359,
+         -0.0609
+        ],
+        [
+         0.2885,
+         -0.0738
+        ],
+        [
+         0.218,
+         -0.0834
+        ],
+        [
+         0.1475,
+         -0.0906
+        ],
+        [
+         0.077,
+         -0.0961
+        ],
+        [
+         0.0065,
+         -0.1003
+        ],
+        [
+         -0.1061,
+         -0.0594
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.294
+      },
+      {
+       "id": "leaf-R3-a",
+       "bone": "leaf-R3-a",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1081,
+         0.0751
+        ],
+        [
+         0.2163,
+         0.0923
+        ],
+        [
+         0.3244,
+         0.1043
+        ],
+        [
+         0.4325,
+         0.109
+        ],
+        [
+         0.5406,
+         0.108
+        ],
+        [
+         0.6488,
+         0.1059
+        ],
+        [
+         0.7569,
+         0.1022
+        ],
+        [
+         0.9007,
+         0.0582
+        ],
+        [
+         0.8161,
+         -0.1152
+        ],
+        [
+         0.7569,
+         -0.1022
+        ],
+        [
+         0.6487,
+         -0.1059
+        ],
+        [
+         0.5406,
+         -0.108
+        ],
+        [
+         0.4325,
+         -0.109
+        ],
+        [
+         0.3244,
+         -0.1043
+        ],
+        [
+         0.2163,
+         -0.0923
+        ],
+        [
+         0.1081,
+         -0.0751
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R3-b",
+       "bone": "leaf-R3-b",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1036,
+         0.0642
+        ],
+        [
+         0.0056,
+         0.1
+        ],
+        [
+         0.0762,
+         0.0958
+        ],
+        [
+         0.1469,
+         0.0902
+        ],
+        [
+         0.2175,
+         0.0829
+        ],
+        [
+         0.2881,
+         0.0734
+        ],
+        [
+         0.3587,
+         0.0605
+        ],
+        [
+         0.4294,
+         0.0419
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.4294,
+         -0.0419
+        ],
+        [
+         0.3587,
+         -0.0605
+        ],
+        [
+         0.2881,
+         -0.0734
+        ],
+        [
+         0.2175,
+         -0.0829
+        ],
+        [
+         0.1469,
+         -0.0902
+        ],
+        [
+         0.0762,
+         -0.0958
+        ],
+        [
+         0.0056,
+         -0.1
+        ],
+        [
+         -0.0132,
+         -0.1212
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L3-a",
+       "bone": "leaf-L3-a",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1109,
+         0.075
+        ],
+        [
+         0.2217,
+         0.0922
+        ],
+        [
+         0.3326,
+         0.1041
+        ],
+        [
+         0.4435,
+         0.109
+        ],
+        [
+         0.5544,
+         0.1081
+        ],
+        [
+         0.6653,
+         0.1059
+        ],
+        [
+         0.7761,
+         0.1024
+        ],
+        [
+         0.8378,
+         0.1164
+        ],
+        [
+         0.9227,
+         -0.0576
+        ],
+        [
+         0.7761,
+         -0.1024
+        ],
+        [
+         0.6652,
+         -0.1059
+        ],
+        [
+         0.5544,
+         -0.1081
+        ],
+        [
+         0.4435,
+         -0.109
+        ],
+        [
+         0.3326,
+         -0.1041
+        ],
+        [
+         0.2218,
+         -0.0922
+        ],
+        [
+         0.1109,
+         -0.075
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      ,
+       "penMm": 0.294
+      },
+      {
+       "id": "leaf-L3-b",
+       "bone": "leaf-L3-b",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0149,
+         0.1222
+        ],
+        [
+         0.0064,
+         0.1002
+        ],
+        [
+         0.0797,
+         0.096
+        ],
+        [
+         0.1531,
+         0.0905
+        ],
+        [
+         0.2265,
+         0.0832
+        ],
+        [
+         0.2999,
+         0.0736
+        ],
+        [
+         0.3732,
+         0.0607
+        ],
+        [
+         0.4466,
+         0.0421
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4466,
+         -0.0421
+        ],
+        [
+         0.3733,
+         -0.0607
+        ],
+        [
+         0.2999,
+         -0.0736
+        ],
+        [
+         0.2265,
+         -0.0832
+        ],
+        [
+         0.1531,
+         -0.0905
+        ],
+        [
+         0.0797,
+         -0.096
+        ],
+        [
+         0.0064,
+         -0.1002
+        ],
+        [
+         -0.1055,
+         -0.0635
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R4-a",
+       "bone": "leaf-R4-a",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1052,
+         0.0756
+        ],
+        [
+         0.2104,
+         0.0931
+        ],
+        [
+         0.3156,
+         0.105
+        ],
+        [
+         0.4208,
+         0.1091
+        ],
+        [
+         0.5259,
+         0.1078
+        ],
+        [
+         0.6311,
+         0.1054
+        ],
+        [
+         0.7363,
+         0.1013
+        ],
+        [
+         0.8702,
+         0.0681
+        ],
+        [
+         0.8054,
+         -0.1101
+        ],
+        [
+         0.7363,
+         -0.1013
+        ],
+        [
+         0.6311,
+         -0.1054
+        ],
+        [
+         0.5259,
+         -0.1078
+        ],
+        [
+         0.4208,
+         -0.1091
+        ],
+        [
+         0.3156,
+         -0.105
+        ],
+        [
+         0.2104,
+         -0.0931
+        ],
+        [
+         0.1052,
+         -0.0756
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R4-b",
+       "bone": "leaf-R4-b",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0927,
+         0.0749
+        ],
+        [
+         0.0024,
+         0.0988
+        ],
+        [
+         0.0664,
+         0.0945
+        ],
+        [
+         0.1303,
+         0.0888
+        ],
+        [
+         0.1942,
+         0.0815
+        ],
+        [
+         0.2582,
+         0.0719
+        ],
+        [
+         0.3221,
+         0.0591
+        ],
+        [
+         0.3861,
+         0.0409
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.3861,
+         -0.0409
+        ],
+        [
+         0.3221,
+         -0.0591
+        ],
+        [
+         0.2582,
+         -0.0719
+        ],
+        [
+         0.1942,
+         -0.0815
+        ],
+        [
+         0.1303,
+         -0.0888
+        ],
+        [
+         0.0664,
+         -0.0945
+        ],
+        [
+         0.0024,
+         -0.0988
+        ],
+        [
+         -0.0229,
+         -0.117
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-a",
+       "bone": "leaf-L4-a",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.0999,
+         0.0752
+        ],
+        [
+         0.1999,
+         0.0926
+        ],
+        [
+         0.2998,
+         0.1045
+        ],
+        [
+         0.3997,
+         0.109
+        ],
+        [
+         0.4997,
+         0.1079
+        ],
+        [
+         0.5996,
+         0.1057
+        ],
+        [
+         0.6996,
+         0.1019
+        ],
+        [
+         0.7631,
+         0.1105
+        ],
+        [
+         0.8287,
+         -0.0698
+        ],
+        [
+         0.6996,
+         -0.1019
+        ],
+        [
+         0.5996,
+         -0.1057
+        ],
+        [
+         0.4997,
+         -0.1079
+        ],
+        [
+         0.3997,
+         -0.109
+        ],
+        [
+         0.2998,
+         -0.1045
+        ],
+        [
+         0.1999,
+         -0.0926
+        ],
+        [
+         0.0999,
+         -0.0752
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-b",
+       "bone": "leaf-L4-b",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0208,
+         0.1169
+        ],
+        [
+         0.0042,
+         0.0996
+        ],
+        [
+         0.0679,
+         0.0953
+        ],
+        [
+         0.1316,
+         0.0897
+        ],
+        [
+         0.1952,
+         0.0824
+        ],
+        [
+         0.2589,
+         0.0729
+        ],
+        [
+         0.3226,
+         0.06
+        ],
+        [
+         0.3863,
+         0.0416
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.3863,
+         -0.0416
+        ],
+        [
+         0.3226,
+         -0.06
+        ],
+        [
+         0.2589,
+         -0.0729
+        ],
+        [
+         0.1953,
+         -0.0824
+        ],
+        [
+         0.1316,
+         -0.0897
+        ],
+        [
+         0.0679,
+         -0.0953
+        ],
+        [
+         0.0042,
+         -0.0996
+        ],
+        [
+         -0.0911,
+         -0.0762
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R5",
+       "bone": "leaf-R5",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.125,
+         0.0842
+        ],
+        [
+         0.25,
+         0.1043
+        ],
+        [
+         0.375,
+         0.1087
+        ],
+        [
+         0.5,
+         0.1058
+        ],
+        [
+         0.625,
+         0.0996
+        ],
+        [
+         0.75,
+         0.0876
+        ],
+        [
+         0.875,
+         0.0648
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         0.875,
+         -0.0648
+        ],
+        [
+         0.75,
+         -0.0876
+        ],
+        [
+         0.625,
+         -0.0996
+        ],
+        [
+         0.5,
+         -0.1058
+        ],
+        [
+         0.375,
+         -0.1087
+        ],
+        [
+         0.25,
+         -0.1043
+        ],
+        [
+         0.125,
+         -0.0842
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L5",
+       "bone": "leaf-L5",
+       "role": "body",
+       "z": 2.09,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.055
+        ],
+        [
+         0.1188,
+         0.0842
+        ],
+        [
+         0.2375,
+         0.1043
+        ],
+        [
+         0.3562,
+         0.1087
+        ],
+        [
+         0.475,
+         0.1058
+        ],
+        [
+         0.5938,
+         0.0996
+        ],
+        [
+         0.7125,
+         0.0876
+        ],
+        [
+         0.8313,
+         0.0648
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.8312,
+         -0.0648
+        ],
+        [
+         0.7125,
+         -0.0876
+        ],
+        [
+         0.5938,
+         -0.0996
+        ],
+        [
+         0.475,
+         -0.1058
+        ],
+        [
+         0.3563,
+         -0.1087
+        ],
+        [
+         0.2375,
+         -0.1043
+        ],
+        [
+         0.1188,
+         -0.0842
+        ],
+        [
+         0.0,
+         -0.055
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-S",
+       "bone": "leaf-S",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.045
+        ],
+        [
+         0.1437,
+         0.0689
+        ],
+        [
+         0.2875,
+         0.0853
+        ],
+        [
+         0.4312,
+         0.0889
+        ],
+        [
+         0.575,
+         0.0866
+        ],
+        [
+         0.7188,
+         0.0815
+        ],
+        [
+         0.8625,
+         0.0716
+        ],
+        [
+         1.0062,
+         0.053
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         1.0062,
+         -0.053
+        ],
+        [
+         0.8625,
+         -0.0716
+        ],
+        [
+         0.7188,
+         -0.0815
+        ],
+        [
+         0.575,
+         -0.0866
+        ],
+        [
+         0.4312,
+         -0.0889
+        ],
+        [
+         0.2875,
+         -0.0853
+        ],
+        [
+         0.1437,
+         -0.0689
+        ],
+        [
+         0.0,
+         -0.045
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) the eleven leaf groups are drawn as full blades with the knee between base and arching tip and the trunk with its width; the blades are 2 mm wide.",
+      "de": "Bei 1:100 (1 m sind 10 mm) sind die elf Blattgruppen als volle Klingen mit dem Knick zwischen Basis und bogiger Spitze gezeichnet, dazu der Stamm in seiner Breite; die Klingen sind 2 mm breit."
+     },
+     "retained": {
+      "en": "Retained: leaf knee (articulation), blade taper and overlap order from the outer leaves to the spear.",
+      "de": "Beibehalten: Blattknick (Gelenk), Klingenverjüngung und Überlagerungsfolge von den äußeren Blättern zum Herzblatt."
+     },
+     "merged": {
+      "en": "Merged: neighbouring real leaves into one blade.",
+      "de": "Zusammengefasst: benachbarte wirkliche Blätter zu einer Klinge."
+     },
+     "omitted": {
+      "en": "Omitted: teeth, midribs and the leaf scars.",
+      "de": "Weggelassen: Zähne, Mittelrippen und Blattnarben."
+     },
+     "thinElements": {
+      "en": "Terminal spines and teeth are below 0.1 mm and omitted.",
+      "de": "Endstacheln und Zähne liegen unter 0,1 mm und entfallen."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Blades filled, two greys for spreading and erect leaves.",
+      "de": "Klingen gefüllt, zwei Grautöne für ausgebreitete und aufrechte Blätter."
+     },
+     "overlays": {
+      "en": "Each blade maps to its region; the knee seam marks the bone joint.",
+      "de": "Jede Klinge entspricht ihrer Region; die Knicknaht markiert das Knochengelenk."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "caudex",
+       "bone": "caudex",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.11
+        ],
+        [
+         0.0,
+         -0.11
+        ],
+        [
+         0.42,
+         -0.099
+        ],
+        [
+         0.42,
+         0.099
+        ]
+       ],
+       "closed": true,
+       "region": "caudex"
+      },
+      {
+       "id": "leaf-R1-a",
+       "bone": "leaf-R1-a",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0657,
+         0.059
+        ],
+        [
+         0.1314,
+         0.0791
+        ],
+        [
+         0.1971,
+         0.0776
+        ],
+        [
+         0.2629,
+         0.098
+        ],
+        [
+         0.3286,
+         0.0911
+        ],
+        [
+         0.3943,
+         0.1093
+        ],
+        [
+         0.46,
+         0.0967
+        ],
+        [
+         0.5257,
+         0.111
+        ],
+        [
+         0.5914,
+         0.0958
+        ],
+        [
+         0.6571,
+         0.109
+        ],
+        [
+         0.7229,
+         0.0934
+        ],
+        [
+         0.7886,
+         0.1054
+        ],
+        [
+         0.9151,
+         0.0612
+        ],
+        [
+         0.9648,
+         0.0181
+        ],
+        [
+         0.8359,
+         -0.1154
+        ],
+        [
+         0.7911,
+         -0.0672
+        ],
+        [
+         0.7886,
+         -0.1054
+        ],
+        [
+         0.7229,
+         -0.0934
+        ],
+        [
+         0.6571,
+         -0.109
+        ],
+        [
+         0.5914,
+         -0.0958
+        ],
+        [
+         0.5257,
+         -0.111
+        ],
+        [
+         0.46,
+         -0.0967
+        ],
+        [
+         0.3943,
+         -0.1093
+        ],
+        [
+         0.3286,
+         -0.0911
+        ],
+        [
+         0.2629,
+         -0.098
+        ],
+        [
+         0.1971,
+         -0.0776
+        ],
+        [
+         0.1314,
+         -0.0791
+        ],
+        [
+         0.0657,
+         -0.059
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.4
+      },
+      {
+       "id": "leaf-R1-b",
+       "bone": "leaf-R1-b",
+       "role": "body",
+       "z": 2.0,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.119,
+         0.0224
+        ],
+        [
+         -0.0813,
+         0.0472
+        ],
+        [
+         0.0186,
+         0.102
+        ],
+        [
+         0.0629,
+         0.0866
+        ],
+        [
+         0.1071,
+         0.0969
+        ],
+        [
+         0.1514,
+         0.0814
+        ],
+        [
+         0.1957,
+         0.0898
+        ],
+        [
+         0.24,
+         0.0742
+        ],
+        [
+         0.2843,
+         0.0801
+        ],
+        [
+         0.3286,
+         0.0643
+        ],
+        [
+         0.3729,
+         0.0666
+        ],
+        [
+         0.4171,
+         0.0501
+        ],
+        [
+         0.4614,
+         0.0465
+        ],
+        [
+         0.5057,
+         0.0275
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.55,
+         0.0
+        ],
+        [
+         0.5057,
+         -0.0275
+        ],
+        [
+         0.4614,
+         -0.0465
+        ],
+        [
+         0.4171,
+         -0.0501
+        ],
+        [
+         0.3729,
+         -0.0666
+        ],
+        [
+         0.3286,
+         -0.0643
+        ],
+        [
+         0.2843,
+         -0.0801
+        ],
+        [
+         0.24,
+         -0.0742
+        ],
+        [
+         0.1957,
+         -0.0898
+        ],
+        [
+         0.1514,
+         -0.0814
+        ],
+        [
+         0.1071,
+         -0.0969
+        ],
+        [
+         0.0629,
+         -0.0866
+        ],
+        [
+         0.0186,
+         -0.102
+        ],
+        [
+         0.0443,
+         -0.0829
+        ],
+        [
+         0.0183,
+         -0.1197
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L1-a",
+       "bone": "leaf-L1-a",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0634,
+         0.059
+        ],
+        [
+         0.1268,
+         0.0792
+        ],
+        [
+         0.1902,
+         0.0777
+        ],
+        [
+         0.2536,
+         0.098
+        ],
+        [
+         0.317,
+         0.0911
+        ],
+        [
+         0.3804,
+         0.1093
+        ],
+        [
+         0.4437,
+         0.0967
+        ],
+        [
+         0.5071,
+         0.111
+        ],
+        [
+         0.5705,
+         0.0958
+        ],
+        [
+         0.6339,
+         0.109
+        ],
+        [
+         0.6973,
+         0.0934
+        ],
+        [
+         0.7607,
+         0.1054
+        ],
+        [
+         0.7609,
+         0.0671
+        ],
+        [
+         0.8041,
+         0.1136
+        ],
+        [
+         0.933,
+         -0.0198
+        ],
+        [
+         0.885,
+         -0.0614
+        ],
+        [
+         0.7607,
+         -0.1054
+        ],
+        [
+         0.6973,
+         -0.0934
+        ],
+        [
+         0.6339,
+         -0.109
+        ],
+        [
+         0.5705,
+         -0.0958
+        ],
+        [
+         0.5071,
+         -0.111
+        ],
+        [
+         0.4437,
+         -0.0967
+        ],
+        [
+         0.3804,
+         -0.1093
+        ],
+        [
+         0.317,
+         -0.0911
+        ],
+        [
+         0.2536,
+         -0.098
+        ],
+        [
+         0.1902,
+         -0.0777
+        ],
+        [
+         0.1268,
+         -0.0792
+        ],
+        [
+         0.0634,
+         -0.059
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L1-b",
+       "bone": "leaf-L1-b",
+       "role": "body",
+       "z": 2.01,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0201,
+         0.118
+        ],
+        [
+         0.045,
+         0.0823
+        ],
+        [
+         0.0179,
+         0.102
+        ],
+        [
+         0.0605,
+         0.0866
+        ],
+        [
+         0.1032,
+         0.0969
+        ],
+        [
+         0.1459,
+         0.0814
+        ],
+        [
+         0.1886,
+         0.0898
+        ],
+        [
+         0.2312,
+         0.0742
+        ],
+        [
+         0.2739,
+         0.0801
+        ],
+        [
+         0.3166,
+         0.0642
+        ],
+        [
+         0.3593,
+         0.0665
+        ],
+        [
+         0.402,
+         0.0501
+        ],
+        [
+         0.4446,
+         0.0465
+        ],
+        [
+         0.4873,
+         0.0274
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.53,
+         0.0
+        ],
+        [
+         0.4873,
+         -0.0274
+        ],
+        [
+         0.4446,
+         -0.0465
+        ],
+        [
+         0.402,
+         -0.0501
+        ],
+        [
+         0.3593,
+         -0.0665
+        ],
+        [
+         0.3166,
+         -0.0642
+        ],
+        [
+         0.2739,
+         -0.0801
+        ],
+        [
+         0.2312,
+         -0.0742
+        ],
+        [
+         0.1886,
+         -0.0898
+        ],
+        [
+         0.1459,
+         -0.0814
+        ],
+        [
+         0.1032,
+         -0.0969
+        ],
+        [
+         0.0605,
+         -0.0866
+        ],
+        [
+         0.0179,
+         -0.102
+        ],
+        [
+         -0.0807,
+         -0.0478
+        ],
+        [
+         -0.1172,
+         -0.0242
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-R2-a",
+       "bone": "leaf-R2-a",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0619,
+         0.059
+        ],
+        [
+         0.1237,
+         0.0791
+        ],
+        [
+         0.1856,
+         0.0776
+        ],
+        [
+         0.2474,
+         0.098
+        ],
+        [
+         0.3093,
+         0.091
+        ],
+        [
+         0.3711,
+         0.1093
+        ],
+        [
+         0.433,
+         0.0967
+        ],
+        [
+         0.4949,
+         0.111
+        ],
+        [
+         0.5567,
+         0.0958
+        ],
+        [
+         0.6186,
+         0.1091
+        ],
+        [
+         0.6804,
+         0.0935
+        ],
+        [
+         0.7423,
+         0.1055
+        ],
+        [
+         0.8443,
+         0.0777
+        ],
+        [
+         0.901,
+         0.0528
+        ],
+        [
+         0.8167,
+         -0.1127
+        ],
+        [
+         0.7631,
+         -0.0815
+        ],
+        [
+         0.7423,
+         -0.1055
+        ],
+        [
+         0.6804,
+         -0.0935
+        ],
+        [
+         0.6186,
+         -0.1091
+        ],
+        [
+         0.5567,
+         -0.0958
+        ],
+        [
+         0.4949,
+         -0.111
+        ],
+        [
+         0.433,
+         -0.0967
+        ],
+        [
+         0.3711,
+         -0.1093
+        ],
+        [
+         0.3093,
+         -0.091
+        ],
+        [
+         0.2474,
+         -0.098
+        ],
+        [
+         0.1856,
+         -0.0776
+        ],
+        [
+         0.1237,
+         -0.0791
+        ],
+        [
+         0.0619,
+         -0.059
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      ,
+       "penMm": 0.4
+      },
+      {
+       "id": "leaf-R2-b",
+       "bone": "leaf-R2-b",
+       "role": "body",
+       "z": 2.02,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1037,
+         0.0581
+        ],
+        [
+         -0.0626,
+         0.0697
+        ],
+        [
+         0.0177,
+         0.1021
+        ],
+        [
+         0.0596,
+         0.0867
+        ],
+        [
+         0.1014,
+         0.097
+        ],
+        [
+         0.1433,
+         0.0815
+        ],
+        [
+         0.1851,
+         0.0899
+        ],
+        [
+         0.227,
+         0.0743
+        ],
+        [
+         0.2689,
+         0.0802
+        ],
+        [
+         0.3107,
+         0.0643
+        ],
+        [
+         0.3526,
+         0.0666
+        ],
+        [
+         0.3944,
+         0.0502
+        ],
+        [
+         0.4363,
+         0.0466
+        ],
+        [
+         0.4781,
+         0.0275
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4781,
+         -0.0275
+        ],
+        [
+         0.4363,
+         -0.0466
+        ],
+        [
+         0.3944,
+         -0.0502
+        ],
+        [
+         0.3526,
+         -0.0666
+        ],
+        [
+         0.3107,
+         -0.0643
+        ],
+        [
+         0.2689,
+         -0.0802
+        ],
+        [
+         0.227,
+         -0.0743
+        ],
+        [
+         0.1851,
+         -0.0899
+        ],
+        [
+         0.1433,
+         -0.0815
+        ],
+        [
+         0.1014,
+         -0.097
+        ],
+        [
+         0.0596,
+         -0.0867
+        ],
+        [
+         0.0177,
+         -0.1021
+        ],
+        [
+         0.0196,
+         -0.0916
+        ],
+        [
+         -0.0139,
+         -0.118
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L2-a",
+       "bone": "leaf-L2-a",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0603,
+         0.0591
+        ],
+        [
+         0.1206,
+         0.0792
+        ],
+        [
+         0.1809,
+         0.0777
+        ],
+        [
+         0.2411,
+         0.0981
+        ],
+        [
+         0.3014,
+         0.0912
+        ],
+        [
+         0.3617,
+         0.1094
+        ],
+        [
+         0.422,
+         0.0968
+        ],
+        [
+         0.4823,
+         0.111
+        ],
+        [
+         0.5426,
+         0.0957
+        ],
+        [
+         0.6029,
+         0.109
+        ],
+        [
+         0.6631,
+         0.0934
+        ],
+        [
+         0.7234,
+         0.1053
+        ],
+        [
+         0.74,
+         0.0798
+        ],
+        [
+         0.7911,
+         0.112
+        ],
+        [
+         0.8809,
+         -0.05
+        ],
+        [
+         0.8265,
+         -0.0762
+        ],
+        [
+         0.7234,
+         -0.1053
+        ],
+        [
+         0.6631,
+         -0.0934
+        ],
+        [
+         0.6029,
+         -0.109
+        ],
+        [
+         0.5426,
+         -0.0957
+        ],
+        [
+         0.4823,
+         -0.111
+        ],
+        [
+         0.422,
+         -0.0968
+        ],
+        [
+         0.3617,
+         -0.1094
+        ],
+        [
+         0.3014,
+         -0.0912
+        ],
+        [
+         0.2411,
+         -0.0981
+        ],
+        [
+         0.1809,
+         -0.0777
+        ],
+        [
+         0.1206,
+         -0.0792
+        ],
+        [
+         0.0603,
+         -0.0591
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-L2-b",
+       "bone": "leaf-L2-b",
+       "role": "body",
+       "z": 2.03,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0081,
+         0.1174
+        ],
+        [
+         0.023,
+         0.0905
+        ],
+        [
+         0.0166,
+         0.1019
+        ],
+        [
+         0.0569,
+         0.0865
+        ],
+        [
+         0.0971,
+         0.0968
+        ],
+        [
+         0.1374,
+         0.0813
+        ],
+        [
+         0.1777,
+         0.0897
+        ],
+        [
+         0.218,
+         0.074
+        ],
+        [
+         0.2583,
+         0.0799
+        ],
+        [
+         0.2986,
+         0.0641
+        ],
+        [
+         0.3389,
+         0.0664
+        ],
+        [
+         0.3791,
+         0.05
+        ],
+        [
+         0.4194,
+         0.0464
+        ],
+        [
+         0.4597,
+         0.0274
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.4597,
+         -0.0274
+        ],
+        [
+         0.4194,
+         -0.0464
+        ],
+        [
+         0.3791,
+         -0.05
+        ],
+        [
+         0.3389,
+         -0.0664
+        ],
+        [
+         0.2986,
+         -0.0641
+        ],
+        [
+         0.2583,
+         -0.0799
+        ],
+        [
+         0.218,
+         -0.074
+        ],
+        [
+         0.1777,
+         -0.0897
+        ],
+        [
+         0.1374,
+         -0.0813
+        ],
+        [
+         0.0971,
+         -0.0968
+        ],
+        [
+         0.0569,
+         -0.0865
+        ],
+        [
+         0.0166,
+         -0.1019
+        ],
+        [
+         -0.0645,
+         -0.0675
+        ],
+        [
+         -0.1038,
+         -0.0553
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-spreading"
+      },
+      {
+       "id": "leaf-R3-a",
+       "bone": "leaf-R3-a",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0618,
+         0.0592
+        ],
+        [
+         0.1236,
+         0.0794
+        ],
+        [
+         0.1854,
+         0.078
+        ],
+        [
+         0.2471,
+         0.0984
+        ],
+        [
+         0.3089,
+         0.0914
+        ],
+        [
+         0.3707,
+         0.1096
+        ],
+        [
+         0.4325,
+         0.0968
+        ],
+        [
+         0.4943,
+         0.1109
+        ],
+        [
+         0.5561,
+         0.0957
+        ],
+        [
+         0.6179,
+         0.1089
+        ],
+        [
+         0.6796,
+         0.0932
+        ],
+        [
+         0.7414,
+         0.1051
+        ],
+        [
+         0.8418,
+         0.0784
+        ],
+        [
+         0.8988,
+         0.0543
+        ],
+        [
+         0.818,
+         -0.1113
+        ],
+        [
+         0.7639,
+         -0.0813
+        ],
+        [
+         0.7414,
+         -0.1051
+        ],
+        [
+         0.6796,
+         -0.0932
+        ],
+        [
+         0.6179,
+         -0.1089
+        ],
+        [
+         0.5561,
+         -0.0957
+        ],
+        [
+         0.4943,
+         -0.1109
+        ],
+        [
+         0.4325,
+         -0.0968
+        ],
+        [
+         0.3707,
+         -0.1096
+        ],
+        [
+         0.3089,
+         -0.0914
+        ],
+        [
+         0.2471,
+         -0.0984
+        ],
+        [
+         0.1854,
+         -0.078
+        ],
+        [
+         0.1236,
+         -0.0794
+        ],
+        [
+         0.0618,
+         -0.0592
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R3-b",
+       "bone": "leaf-R3-b",
+       "role": "body",
+       "z": 2.04,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1016,
+         0.06
+        ],
+        [
+         -0.0616,
+         0.0701
+        ],
+        [
+         0.0157,
+         0.1016
+        ],
+        [
+         0.0561,
+         0.0862
+        ],
+        [
+         0.0964,
+         0.0963
+        ],
+        [
+         0.1368,
+         0.0809
+        ],
+        [
+         0.1771,
+         0.0892
+        ],
+        [
+         0.2175,
+         0.0736
+        ],
+        [
+         0.2579,
+         0.0795
+        ],
+        [
+         0.2982,
+         0.0637
+        ],
+        [
+         0.3386,
+         0.066
+        ],
+        [
+         0.3789,
+         0.0496
+        ],
+        [
+         0.4193,
+         0.046
+        ],
+        [
+         0.4596,
+         0.0272
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.5,
+         0.0
+        ],
+        [
+         0.4596,
+         -0.0272
+        ],
+        [
+         0.4193,
+         -0.046
+        ],
+        [
+         0.3789,
+         -0.0496
+        ],
+        [
+         0.3386,
+         -0.066
+        ],
+        [
+         0.2982,
+         -0.0637
+        ],
+        [
+         0.2579,
+         -0.0795
+        ],
+        [
+         0.2175,
+         -0.0736
+        ],
+        [
+         0.1771,
+         -0.0892
+        ],
+        [
+         0.1368,
+         -0.0809
+        ],
+        [
+         0.0964,
+         -0.0963
+        ],
+        [
+         0.0561,
+         -0.0862
+        ],
+        [
+         0.0157,
+         -0.1016
+        ],
+        [
+         0.0173,
+         -0.0917
+        ],
+        [
+         -0.0153,
+         -0.117
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      ,
+       "penMm": 0.332
+      },
+      {
+       "id": "leaf-L3-a",
+       "bone": "leaf-L3-a",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0634,
+         0.0591
+        ],
+        [
+         0.1267,
+         0.0793
+        ],
+        [
+         0.1901,
+         0.0778
+        ],
+        [
+         0.2534,
+         0.0983
+        ],
+        [
+         0.3168,
+         0.0913
+        ],
+        [
+         0.3801,
+         0.1095
+        ],
+        [
+         0.4435,
+         0.0968
+        ],
+        [
+         0.5069,
+         0.111
+        ],
+        [
+         0.5702,
+         0.0957
+        ],
+        [
+         0.6336,
+         0.1089
+        ],
+        [
+         0.6969,
+         0.0933
+        ],
+        [
+         0.7603,
+         0.1052
+        ],
+        [
+         0.7842,
+         0.0816
+        ],
+        [
+         0.8397,
+         0.1124
+        ],
+        [
+         0.9207,
+         -0.0537
+        ],
+        [
+         0.8623,
+         -0.0784
+        ],
+        [
+         0.7603,
+         -0.1052
+        ],
+        [
+         0.6969,
+         -0.0933
+        ],
+        [
+         0.6336,
+         -0.1089
+        ],
+        [
+         0.5702,
+         -0.0957
+        ],
+        [
+         0.5069,
+         -0.111
+        ],
+        [
+         0.4435,
+         -0.0968
+        ],
+        [
+         0.3801,
+         -0.1095
+        ],
+        [
+         0.3168,
+         -0.0913
+        ],
+        [
+         0.2534,
+         -0.0983
+        ],
+        [
+         0.1901,
+         -0.0778
+        ],
+        [
+         0.1267,
+         -0.0793
+        ],
+        [
+         0.0634,
+         -0.0591
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L3-b",
+       "bone": "leaf-L3-b",
+       "role": "body",
+       "z": 2.05,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.017,
+         0.118
+        ],
+        [
+         0.017,
+         0.0921
+        ],
+        [
+         0.0169,
+         0.1018
+        ],
+        [
+         0.0588,
+         0.0864
+        ],
+        [
+         0.1007,
+         0.0966
+        ],
+        [
+         0.1426,
+         0.0811
+        ],
+        [
+         0.1846,
+         0.0895
+        ],
+        [
+         0.2265,
+         0.0739
+        ],
+        [
+         0.2684,
+         0.0797
+        ],
+        [
+         0.3104,
+         0.0639
+        ],
+        [
+         0.3523,
+         0.0662
+        ],
+        [
+         0.3942,
+         0.0498
+        ],
+        [
+         0.4361,
+         0.0462
+        ],
+        [
+         0.4781,
+         0.0273
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.52,
+         0.0
+        ],
+        [
+         0.4781,
+         -0.0273
+        ],
+        [
+         0.4361,
+         -0.0462
+        ],
+        [
+         0.3942,
+         -0.0498
+        ],
+        [
+         0.3523,
+         -0.0662
+        ],
+        [
+         0.3104,
+         -0.0639
+        ],
+        [
+         0.2684,
+         -0.0797
+        ],
+        [
+         0.2265,
+         -0.0739
+        ],
+        [
+         0.1846,
+         -0.0895
+        ],
+        [
+         0.1426,
+         -0.0811
+        ],
+        [
+         0.1007,
+         -0.0966
+        ],
+        [
+         0.0588,
+         -0.0864
+        ],
+        [
+         0.0169,
+         -0.1018
+        ],
+        [
+         -0.0621,
+         -0.0701
+        ],
+        [
+         -0.1034,
+         -0.0592
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R4-a",
+       "bone": "leaf-R4-a",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0601,
+         0.0594
+        ],
+        [
+         0.1202,
+         0.08
+        ],
+        [
+         0.1803,
+         0.0787
+        ],
+        [
+         0.2404,
+         0.0993
+        ],
+        [
+         0.3005,
+         0.0921
+        ],
+        [
+         0.3606,
+         0.11
+        ],
+        [
+         0.4208,
+         0.0968
+        ],
+        [
+         0.4809,
+         0.1108
+        ],
+        [
+         0.541,
+         0.0954
+        ],
+        [
+         0.6011,
+         0.1085
+        ],
+        [
+         0.6612,
+         0.0927
+        ],
+        [
+         0.7213,
+         0.1042
+        ],
+        [
+         0.8113,
+         0.082
+        ],
+        [
+         0.8688,
+         0.064
+        ],
+        [
+         0.8068,
+         -0.1061
+        ],
+        [
+         0.7513,
+         -0.083
+        ],
+        [
+         0.7213,
+         -0.1042
+        ],
+        [
+         0.6612,
+         -0.0927
+        ],
+        [
+         0.6011,
+         -0.1085
+        ],
+        [
+         0.541,
+         -0.0954
+        ],
+        [
+         0.4809,
+         -0.1108
+        ],
+        [
+         0.4207,
+         -0.0968
+        ],
+        [
+         0.3606,
+         -0.11
+        ],
+        [
+         0.3005,
+         -0.0921
+        ],
+        [
+         0.2404,
+         -0.0993
+        ],
+        [
+         0.1803,
+         -0.0787
+        ],
+        [
+         0.1202,
+         -0.08
+        ],
+        [
+         0.0601,
+         -0.0594
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      ,
+       "penMm": 0.332
+      },
+      {
+       "id": "leaf-R4-b",
+       "bone": "leaf-R4-b",
+       "role": "body",
+       "z": 2.06,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0911,
+         0.0706
+        ],
+        [
+         -0.0539,
+         0.0752
+        ],
+        [
+         0.0116,
+         0.1004
+        ],
+        [
+         0.0481,
+         0.0851
+        ],
+        [
+         0.0846,
+         0.095
+        ],
+        [
+         0.1212,
+         0.0796
+        ],
+        [
+         0.1577,
+         0.0877
+        ],
+        [
+         0.1942,
+         0.0723
+        ],
+        [
+         0.2308,
+         0.078
+        ],
+        [
+         0.2673,
+         0.0624
+        ],
+        [
+         0.3039,
+         0.0645
+        ],
+        [
+         0.3404,
+         0.0485
+        ],
+        [
+         0.3769,
+         0.045
+        ],
+        [
+         0.4135,
+         0.0265
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.4135,
+         -0.0265
+        ],
+        [
+         0.3769,
+         -0.045
+        ],
+        [
+         0.3404,
+         -0.0485
+        ],
+        [
+         0.3039,
+         -0.0645
+        ],
+        [
+         0.2673,
+         -0.0624
+        ],
+        [
+         0.2308,
+         -0.078
+        ],
+        [
+         0.1942,
+         -0.0723
+        ],
+        [
+         0.1577,
+         -0.0877
+        ],
+        [
+         0.1212,
+         -0.0796
+        ],
+        [
+         0.0846,
+         -0.095
+        ],
+        [
+         0.0481,
+         -0.0851
+        ],
+        [
+         0.0116,
+         -0.1004
+        ],
+        [
+         0.007,
+         -0.0922
+        ],
+        [
+         -0.0244,
+         -0.1126
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-a",
+       "bone": "leaf-L4-a",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0571,
+         0.0593
+        ],
+        [
+         0.1142,
+         0.0796
+        ],
+        [
+         0.1713,
+         0.0782
+        ],
+        [
+         0.2284,
+         0.0987
+        ],
+        [
+         0.2855,
+         0.0916
+        ],
+        [
+         0.3426,
+         0.1097
+        ],
+        [
+         0.3997,
+         0.0968
+        ],
+        [
+         0.4569,
+         0.1109
+        ],
+        [
+         0.514,
+         0.0956
+        ],
+        [
+         0.5711,
+         0.1087
+        ],
+        [
+         0.6282,
+         0.093
+        ],
+        [
+         0.6853,
+         0.1048
+        ],
+        [
+         0.712,
+         0.084
+        ],
+        [
+         0.7646,
+         0.1064
+        ],
+        [
+         0.8272,
+         -0.0657
+        ],
+        [
+         0.7725,
+         -0.0823
+        ],
+        [
+         0.6853,
+         -0.1048
+        ],
+        [
+         0.6282,
+         -0.093
+        ],
+        [
+         0.5711,
+         -0.1087
+        ],
+        [
+         0.514,
+         -0.0956
+        ],
+        [
+         0.4569,
+         -0.1109
+        ],
+        [
+         0.3997,
+         -0.0968
+        ],
+        [
+         0.3426,
+         -0.1097
+        ],
+        [
+         0.2855,
+         -0.0916
+        ],
+        [
+         0.2284,
+         -0.0987
+        ],
+        [
+         0.1713,
+         -0.0782
+        ],
+        [
+         0.1142,
+         -0.0796
+        ],
+        [
+         0.0571,
+         -0.0593
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L4-b",
+       "bone": "leaf-L4-b",
+       "role": "body",
+       "z": 2.07,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         -0.0224,
+         0.1125
+        ],
+        [
+         0.009,
+         0.0922
+        ],
+        [
+         0.0133,
+         0.1011
+        ],
+        [
+         0.0497,
+         0.0858
+        ],
+        [
+         0.0861,
+         0.0959
+        ],
+        [
+         0.1225,
+         0.0805
+        ],
+        [
+         0.1589,
+         0.0887
+        ],
+        [
+         0.1952,
+         0.0732
+        ],
+        [
+         0.2316,
+         0.079
+        ],
+        [
+         0.268,
+         0.0633
+        ],
+        [
+         0.3044,
+         0.0655
+        ],
+        [
+         0.3408,
+         0.0492
+        ],
+        [
+         0.3772,
+         0.0457
+        ],
+        [
+         0.4136,
+         0.0269
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.45,
+         0.0
+        ],
+        [
+         0.4136,
+         -0.0269
+        ],
+        [
+         0.3772,
+         -0.0457
+        ],
+        [
+         0.3408,
+         -0.0492
+        ],
+        [
+         0.3044,
+         -0.0655
+        ],
+        [
+         0.268,
+         -0.0633
+        ],
+        [
+         0.2316,
+         -0.079
+        ],
+        [
+         0.1953,
+         -0.0732
+        ],
+        [
+         0.1589,
+         -0.0887
+        ],
+        [
+         0.1225,
+         -0.0805
+        ],
+        [
+         0.0861,
+         -0.0959
+        ],
+        [
+         0.0497,
+         -0.0858
+        ],
+        [
+         0.0133,
+         -0.1011
+        ],
+        [
+         -0.0524,
+         -0.0764
+        ],
+        [
+         -0.0895,
+         -0.0718
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-R5",
+       "bone": "leaf-R5",
+       "role": "body",
+       "z": 2.08,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0714,
+         0.0642
+        ],
+        [
+         0.1429,
+         0.0898
+        ],
+        [
+         0.2143,
+         0.0888
+        ],
+        [
+         0.2857,
+         0.1096
+        ],
+        [
+         0.3571,
+         0.0967
+        ],
+        [
+         0.4286,
+         0.1101
+        ],
+        [
+         0.5,
+         0.0939
+        ],
+        [
+         0.5714,
+         0.105
+        ],
+        [
+         0.6429,
+         0.0873
+        ],
+        [
+         0.7143,
+         0.0938
+        ],
+        [
+         0.7857,
+         0.0732
+        ],
+        [
+         0.8571,
+         0.0705
+        ],
+        [
+         0.9286,
+         0.0432
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         1.0,
+         0.0
+        ],
+        [
+         0.9286,
+         -0.0432
+        ],
+        [
+         0.8571,
+         -0.0705
+        ],
+        [
+         0.7857,
+         -0.0732
+        ],
+        [
+         0.7143,
+         -0.0938
+        ],
+        [
+         0.6429,
+         -0.0873
+        ],
+        [
+         0.5714,
+         -0.105
+        ],
+        [
+         0.5,
+         -0.0939
+        ],
+        [
+         0.4286,
+         -0.1101
+        ],
+        [
+         0.3571,
+         -0.0967
+        ],
+        [
+         0.2857,
+         -0.1096
+        ],
+        [
+         0.2143,
+         -0.0888
+        ],
+        [
+         0.1429,
+         -0.0898
+        ],
+        [
+         0.0714,
+         -0.0642
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-L5",
+       "bone": "leaf-L5",
+       "role": "body",
+       "z": 2.09,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0525
+        ],
+        [
+         0.0679,
+         0.0642
+        ],
+        [
+         0.1357,
+         0.0898
+        ],
+        [
+         0.2036,
+         0.0888
+        ],
+        [
+         0.2714,
+         0.1096
+        ],
+        [
+         0.3393,
+         0.0967
+        ],
+        [
+         0.4071,
+         0.1101
+        ],
+        [
+         0.475,
+         0.0939
+        ],
+        [
+         0.5429,
+         0.105
+        ],
+        [
+         0.6107,
+         0.0873
+        ],
+        [
+         0.6786,
+         0.0938
+        ],
+        [
+         0.7464,
+         0.0732
+        ],
+        [
+         0.8143,
+         0.0705
+        ],
+        [
+         0.8821,
+         0.0432
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.95,
+         0.0
+        ],
+        [
+         0.8821,
+         -0.0432
+        ],
+        [
+         0.8143,
+         -0.0705
+        ],
+        [
+         0.7464,
+         -0.0732
+        ],
+        [
+         0.6786,
+         -0.0938
+        ],
+        [
+         0.6107,
+         -0.0873
+        ],
+        [
+         0.5429,
+         -0.105
+        ],
+        [
+         0.475,
+         -0.0939
+        ],
+        [
+         0.4071,
+         -0.1101
+        ],
+        [
+         0.3393,
+         -0.0967
+        ],
+        [
+         0.2714,
+         -0.1096
+        ],
+        [
+         0.2036,
+         -0.0888
+        ],
+        [
+         0.1357,
+         -0.0898
+        ],
+        [
+         0.0679,
+         -0.0642
+        ],
+        [
+         0.0,
+         -0.0525
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      },
+      {
+       "id": "leaf-S",
+       "bone": "leaf-S",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0425
+        ],
+        [
+         0.0821,
+         0.052
+        ],
+        [
+         0.1643,
+         0.0727
+        ],
+        [
+         0.2464,
+         0.0719
+        ],
+        [
+         0.3286,
+         0.0887
+        ],
+        [
+         0.4107,
+         0.0783
+        ],
+        [
+         0.4929,
+         0.0891
+        ],
+        [
+         0.575,
+         0.076
+        ],
+        [
+         0.6571,
+         0.085
+        ],
+        [
+         0.7393,
+         0.0706
+        ],
+        [
+         0.8214,
+         0.0759
+        ],
+        [
+         0.9036,
+         0.0593
+        ],
+        [
+         0.9857,
+         0.0571
+        ],
+        [
+         1.0679,
+         0.0349
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         1.15,
+         0.0
+        ],
+        [
+         1.0679,
+         -0.0349
+        ],
+        [
+         0.9857,
+         -0.0571
+        ],
+        [
+         0.9036,
+         -0.0593
+        ],
+        [
+         0.8214,
+         -0.0759
+        ],
+        [
+         0.7393,
+         -0.0706
+        ],
+        [
+         0.6571,
+         -0.085
+        ],
+        [
+         0.575,
+         -0.076
+        ],
+        [
+         0.4929,
+         -0.0891
+        ],
+        [
+         0.4107,
+         -0.0783
+        ],
+        [
+         0.3286,
+         -0.0887
+        ],
+        [
+         0.2464,
+         -0.0719
+        ],
+        [
+         0.1643,
+         -0.0727
+        ],
+        [
+         0.0821,
+         -0.052
+        ],
+        [
+         0.0,
+         -0.0425
+        ]
+       ],
+       "closed": true,
+       "region": "leaves-erect"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every leaf group has its marginal teeth, its midrib and the joint seam; the trunk shows the leaf scars as rings.",
+      "de": "Bei 1:50 (1 m sind 20 mm) hat jede Blattgruppe ihre Randzähne, ihre Mittelrippe und die Gelenknaht; der Stamm zeigt die Blattnarben als Ringe."
+     },
+     "retained": {
+      "en": "Retained: blade outline with teeth, midrib, knee seam, trunk scars.",
+      "de": "Beibehalten: Klingenkontur mit Zähnen, Mittelrippe, Knicknaht, Stammnarben."
+     },
+     "merged": {
+      "en": "Merged: 2 to 3 real leaves per drawn blade.",
+      "de": "Zusammengefasst: 2 bis 3 wirkliche Blätter je gezeichneter Klinge."
+     },
+     "omitted": {
+      "en": "Omitted: the terminal spine as a separate shape (it is the sharp tip).",
+      "de": "Weggelassen: der Endstachel als eigene Form (er ist die scharfe Spitze)."
+     },
+     "thinElements": {
+      "en": "Teeth of 5 mm are drawn as outline waviness of 0.13 mm; the midrib is a 0.18 mm detail stroke.",
+      "de": "Zähne von 5 mm sind als Konturwelligkeit von 0,13 mm gezeichnet; die Mittelrippe ist ein Detailstrich von 0,18 mm."
+     },
+     "hatching": {
+      "en": "None; seams and scars are strokes.",
+      "de": "Keine; Nähte und Narben sind Striche."
+     },
+     "styles": {
+      "en": "Blades filled mid and dark grey, midribs as strokes.",
+      "de": "Klingen mittel- und dunkelgrau gefüllt, Mittelrippen als Striche."
+     },
+     "overlays": {
+      "en": "Blades carry their region; strokes stay neutral.",
+      "de": "Klingen tragen ihre Region; Striche bleiben neutral."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "plan-extent",
+    "title": {
+     "en": "Plan symbol with true rosette extent",
+     "de": "Grundrisssymbol mit wahrer Rosettenausdehnung"
+    },
+    "description": {
+     "en": "A conventional plan sign for planting plans: the star outline of the true rosette (about 2.6 m across) with the heart; a separate symbol, never used silently for a pictorial scale.",
+     "de": "Ein konventionelles Grundrisszeichen für Pflanzpläne: der Sternumriss der wahren Rosette (etwa 2,6 m im Durchmesser) mit dem Herzen; ein eigenes Symbol, nie stillschweigend für einen Bildmaßstab verwendet."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200,
+     100
+    ],
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "rosette-extent",
+       "bone": "root-plate",
+       "role": "body",
+       "z": 1,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M1.28 0.0C1.28 0.0 0.9595 0.2676 0.9595 0.2676C0.9595 0.2676 1.0768 0.6574 1.0768 0.6574C1.0768 0.6574 0.6549 0.718 0.6549 0.718C0.6549 0.718 0.5317 1.1061 0.5317 1.1061C0.5317 1.1061 0.1423 0.9403 0.1423 0.9403C0.1423 0.9403 -0.1822 1.2036 -0.1822 1.2036C-0.1822 1.2036 -0.4154 0.8642 -0.4154 0.8642C-0.4154 0.8642 -0.8382 0.919 -0.8382 0.919C-0.8382 0.919 -0.8413 0.5136 -0.8413 0.5136C-0.8413 0.5136 -1.2282 0.3426 -1.2282 0.3426C-1.2282 0.3426 -1.0 0.0 -1.0 0.0C-1.0 0.0 -1.2282 -0.3426 -1.2282 -0.3426C-1.2282 -0.3426 -0.8413 -0.5136 -0.8413 -0.5136C-0.8413 -0.5136 -0.8382 -0.919 -0.8382 -0.919C-0.8382 -0.919 -0.4154 -0.8642 -0.4154 -0.8642C-0.4154 -0.8642 -0.1822 -1.2036 -0.1822 -1.2036C-0.1822 -1.2036 0.1423 -0.9403 0.1423 -0.9403C0.1423 -0.9403 0.5317 -1.1061 0.5317 -1.1061C0.5317 -1.1061 0.6549 -0.718 0.6549 -0.718C0.6549 -0.718 1.0768 -0.6574 1.0768 -0.6574C1.0768 -0.6574 0.9595 -0.2676 0.9595 -0.2676C0.9595 -0.2676 1.28 0.0 1.28 0.0Z"
+      },
+      {
+       "id": "heart",
+       "bone": "root-plate",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.12,
+       "ry": 0.12
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "The star tips mark the leaf tips at their true radius of 1.28 m.",
+     "de": "Die Sternspitzen markieren die Blattspitzen im wahren Radius von 1,28 m."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "summer-turgid",
+    "title": {
+     "en": "Summer, turgid",
+     "de": "Sommer, prall"
+    },
+    "description": {
+     "en": "Full water balance: the leaves are rigid and fully spread, the lowest leaves arch down towards the bed. Stomata open at night (CAM), so transpiration is bound by the night rate.",
+     "de": "Voller Wasserhaushalt: Die Blätter sind steif und weit gespreizt, die untersten Blätter biegen sich zum Beet hinunter. Die Spaltöffnungen öffnen sich nachts (CAM), die Transpiration folgt daher der Nachtrate."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "leaves-spreading": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "leaves-erect": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.8
+      },
+      "caudex": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      }
+     },
+     "emitters": {
+      "transpiration-spreading": 1.0,
+      "transpiration-erect": 1.0
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-R1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R1",
+       "de": "Winddruck auf Blattgruppe R1"
+      },
+      "bone": "leaf-R1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R2",
+       "de": "Winddruck auf Blattgruppe R2"
+      },
+      "bone": "leaf-R2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R3",
+       "de": "Winddruck auf Blattgruppe R3"
+      },
+      "bone": "leaf-R3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R4",
+       "de": "Winddruck auf Blattgruppe R4"
+      },
+      "bone": "leaf-R4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R5",
+       "de": "Winddruck auf Blattgruppe R5"
+      },
+      "bone": "leaf-R5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L1",
+       "de": "Winddruck auf Blattgruppe L1"
+      },
+      "bone": "leaf-L1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L2",
+       "de": "Winddruck auf Blattgruppe L2"
+      },
+      "bone": "leaf-L2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L3",
+       "de": "Winddruck auf Blattgruppe L3"
+      },
+      "bone": "leaf-L3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L4",
+       "de": "Winddruck auf Blattgruppe L4"
+      },
+      "bone": "leaf-L4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L5",
+       "de": "Winddruck auf Blattgruppe L5"
+      },
+      "bone": "leaf-L5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-S",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group S",
+       "de": "Winddruck auf Blattgruppe S"
+      },
+      "bone": "leaf-S",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.492,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "night-stomata-open",
+    "title": {
+     "en": "Summer night, stomata open",
+     "de": "Sommernacht, Spaltöffnungen offen"
+    },
+    "description": {
+     "en": "The same turgid rosette on a clear night: no sun, a cold sky and open stomata taking up CO2 by the CAM pathway; the plant transpires at the maximum rate of its day.",
+     "de": "Dieselbe pralle Rosette in einer klaren Nacht: keine Sonne, kalter Himmel und offene Spaltöffnungen, die CO2 über den CAM-Weg aufnehmen; die Pflanze transpiriert mit der größten Rate ihres Tages."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "leaves-spreading": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "leaves-erect": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "caudex": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {
+      "transpiration-spreading": 1.0,
+      "transpiration-erect": 1.0
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-R1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R1",
+       "de": "Winddruck auf Blattgruppe R1"
+      },
+      "bone": "leaf-R1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R2",
+       "de": "Winddruck auf Blattgruppe R2"
+      },
+      "bone": "leaf-R2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R3",
+       "de": "Winddruck auf Blattgruppe R3"
+      },
+      "bone": "leaf-R3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R4",
+       "de": "Winddruck auf Blattgruppe R4"
+      },
+      "bone": "leaf-R4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R5",
+       "de": "Winddruck auf Blattgruppe R5"
+      },
+      "bone": "leaf-R5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L1",
+       "de": "Winddruck auf Blattgruppe L1"
+      },
+      "bone": "leaf-L1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L2",
+       "de": "Winddruck auf Blattgruppe L2"
+      },
+      "bone": "leaf-L2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L3",
+       "de": "Winddruck auf Blattgruppe L3"
+      },
+      "bone": "leaf-L3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L4",
+       "de": "Winddruck auf Blattgruppe L4"
+      },
+      "bone": "leaf-L4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L5",
+       "de": "Winddruck auf Blattgruppe L5"
+      },
+      "bone": "leaf-L5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-S",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group S",
+       "de": "Winddruck auf Blattgruppe S"
+      },
+      "bone": "leaf-S",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 0.219,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   },
+   {
+    "id": "drought-infolded",
+    "title": {
+     "en": "Drought, leaves infolded",
+     "de": "Trockenheit, Blätter eingefaltet"
+    },
+    "description": {
+     "en": "After weeks without rain the leaves lose turgor and lift and close around the heart to shade it; the plant keeps its stomata nearly shut.",
+     "de": "Nach Wochen ohne Regen verlieren die Blätter Turgor und heben sich, um das Herz zu beschatten; die Pflanze hält die Spaltöffnungen fast geschlossen."
+    },
+    "bones": {
+     "leaf-R1-a": {
+      "angleDeg": 8.0
+     },
+     "leaf-R1-b": {
+      "angleDeg": 7.0
+     },
+     "leaf-R2-a": {
+      "angleDeg": 8.0
+     },
+     "leaf-R2-b": {
+      "angleDeg": 7.0
+     },
+     "leaf-R3-a": {
+      "angleDeg": 8.0
+     },
+     "leaf-R3-b": {
+      "angleDeg": 7.0
+     },
+     "leaf-R4-a": {
+      "angleDeg": 8.0
+     },
+     "leaf-R4-b": {
+      "angleDeg": 7.0
+     },
+     "leaf-R5": {
+      "angleDeg": 8.0
+     },
+     "leaf-L1-a": {
+      "angleDeg": -8.0
+     },
+     "leaf-L1-b": {
+      "angleDeg": -7.0
+     },
+     "leaf-L2-a": {
+      "angleDeg": -8.0
+     },
+     "leaf-L2-b": {
+      "angleDeg": -7.0
+     },
+     "leaf-L3-a": {
+      "angleDeg": -8.0
+     },
+     "leaf-L3-b": {
+      "angleDeg": -7.0
+     },
+     "leaf-L4-a": {
+      "angleDeg": -8.0
+     },
+     "leaf-L4-b": {
+      "angleDeg": -7.0
+     },
+     "leaf-L5": {
+      "angleDeg": -8.0
+     },
+     "leaf-S": {
+      "angleDeg": 0.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "leaves-spreading": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.7
+      },
+      "leaves-erect": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.5
+      },
+      "caudex": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      }
+     },
+     "emitters": {
+      "transpiration-spreading": 0.15,
+      "transpiration-erect": 0.15
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "frost-sag",
+    "title": {
+     "en": "Winter, frost-sagged",
+     "de": "Winter, frostschlaff"
+    },
+    "description": {
+     "en": "After a hard frost the water-rich leaves sag: the spreading leaves droop to the ground, the erect leaves lean outward; metabolism is almost stopped.",
+     "de": "Nach starkem Frost erschlaffen die wasserreichen Blätter: Die ausgebreiteten Blätter hängen zum Boden, die aufrechten neigen sich nach außen; der Stoffwechsel ruht fast."
+    },
+    "bones": {
+     "leaf-R1-a": {
+      "angleDeg": -6.0
+     },
+     "leaf-R1-b": {
+      "angleDeg": -8.0
+     },
+     "leaf-R2-a": {
+      "angleDeg": -6.0
+     },
+     "leaf-R2-b": {
+      "angleDeg": -8.0
+     },
+     "leaf-R3-a": {
+      "angleDeg": -6.0
+     },
+     "leaf-R3-b": {
+      "angleDeg": -8.0
+     },
+     "leaf-R4-a": {
+      "angleDeg": -6.0
+     },
+     "leaf-R4-b": {
+      "angleDeg": -8.0
+     },
+     "leaf-R5": {
+      "angleDeg": -6.0
+     },
+     "leaf-L1-a": {
+      "angleDeg": 6.0
+     },
+     "leaf-L1-b": {
+      "angleDeg": 8.0
+     },
+     "leaf-L2-a": {
+      "angleDeg": 6.0
+     },
+     "leaf-L2-b": {
+      "angleDeg": 8.0
+     },
+     "leaf-L3-a": {
+      "angleDeg": 6.0
+     },
+     "leaf-L3-b": {
+      "angleDeg": 8.0
+     },
+     "leaf-L4-a": {
+      "angleDeg": 6.0
+     },
+     "leaf-L4-b": {
+      "angleDeg": 8.0
+     },
+     "leaf-L5": {
+      "angleDeg": 6.0
+     },
+     "leaf-S": {
+      "angleDeg": 0.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "leaves-spreading": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.4,
+       "wettedness": 0.1
+      },
+      "leaves-erect": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.4,
+       "wettedness": 0.1
+      },
+      "caudex": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2,
+       "wettedness": 0.1
+      }
+     },
+     "emitters": {
+      "transpiration-spreading": 0.05,
+      "transpiration-erect": 0.05
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "fresh-breeze",
+    "title": {
+     "en": "Fresh breeze",
+     "de": "Frische Brise"
+    },
+    "description": {
+     "en": "A fresh breeze of 10 m/s from the left: the stiff leaves lean about 2 degrees downwind; the rosette hardly moves.",
+     "de": "Eine frische Brise von 10 m/s von links: Die steifen Blätter neigen sich etwa 2 Grad in Windrichtung; die Rosette bewegt sich kaum."
+    },
+    "bones": {
+     "leaf-R1-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-R1-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-R2-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-R2-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-R3-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-R3-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-R4-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-R4-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-R5": {
+      "angleDeg": -2.0
+     },
+     "leaf-L1-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-L1-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-L2-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-L2-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-L3-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-L3-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-L4-a": {
+      "angleDeg": -2.0
+     },
+     "leaf-L4-b": {
+      "angleDeg": -2.0
+     },
+     "leaf-L5": {
+      "angleDeg": -2.0
+     },
+     "leaf-S": {
+      "angleDeg": -2.0
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "leaves-spreading": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "leaves-erect": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.8
+      },
+      "caudex": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      }
+     },
+     "emitters": {
+      "transpiration-spreading": 1.0,
+      "transpiration-erect": 1.0
+     }
+    },
+    "loads": [
+     {
+      "id": "wind-R1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R1",
+       "de": "Winddruck auf Blattgruppe R1"
+      },
+      "bone": "leaf-R1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R2",
+       "de": "Winddruck auf Blattgruppe R2"
+      },
+      "bone": "leaf-R2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R3",
+       "de": "Winddruck auf Blattgruppe R3"
+      },
+      "bone": "leaf-R3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R4",
+       "de": "Winddruck auf Blattgruppe R4"
+      },
+      "bone": "leaf-R4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-R5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group R5",
+       "de": "Winddruck auf Blattgruppe R5"
+      },
+      "bone": "leaf-R5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L1",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L1",
+       "de": "Winddruck auf Blattgruppe L1"
+      },
+      "bone": "leaf-L1-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L2",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L2",
+       "de": "Winddruck auf Blattgruppe L2"
+      },
+      "bone": "leaf-L2-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L3",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L3",
+       "de": "Winddruck auf Blattgruppe L3"
+      },
+      "bone": "leaf-L3-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L4",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L4",
+       "de": "Winddruck auf Blattgruppe L4"
+      },
+      "bone": "leaf-L4-a",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-L5",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group L5",
+       "de": "Winddruck auf Blattgruppe L5"
+      },
+      "bone": "leaf-L5",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     },
+     {
+      "id": "wind-S",
+      "kind": "wind",
+      "title": {
+       "en": "Wind drag on leaf group S",
+       "de": "Winddruck auf Blattgruppe S"
+      },
+      "bone": "leaf-S",
+      "x": 0.45,
+      "y": 0.0,
+      "fxN": 19.688,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "reference": "en-1991-1-4"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "wind-sway",
+    "title": {
+     "en": "Wind sway",
+     "de": "Windschwingung"
+    },
+    "description": {
+     "en": "A deterministic 0.95 s cycle (about 1.05 Hz, first bending mode of a stiff succulent leaf of 1.2 m with E I about 9 N m2, estimated): each leaf nods a degree or two about the breeze lean, the phase running around the rosette. The amplitude stays small because the leaves are stiff.",
+     "de": "Ein deterministischer Zyklus von 0,95 s (etwa 1,05 Hz, erste Biegeeigenform eines steifen sukkulenten Blattes von 1,2 m mit E I etwa 9 N m2, geschätzt): Jedes Blatt nickt ein bis zwei Grad um die Neigung der Brise, die Phase läuft um die Rosette. Die Amplitude bleibt klein, weil die Blätter steif sind."
+    },
+    "durationS": 0.95,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0.0,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R1-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R2-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R3-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-R4-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-R5": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L1-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L3-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L4-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-L5": {
+        "angleDeg": -2.7
+       },
+       "leaf-S": {
+        "angleDeg": -2.6062
+       }
+      }
+     },
+     {
+      "t": 0.0792,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R1-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R2-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-R3-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R4-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-R5": {
+        "angleDeg": -1.65
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L1-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L2-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L3-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-L4-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-L5": {
+        "angleDeg": -2.6062
+       },
+       "leaf-S": {
+        "angleDeg": -2.35
+       }
+      }
+     },
+     {
+      "t": 0.1583,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R1-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-R2-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R3-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R4-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-R5": {
+        "angleDeg": -2.0
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L1-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L2-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-L3-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L4-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-L5": {
+        "angleDeg": -2.35
+       },
+       "leaf-S": {
+        "angleDeg": -2.0
+       }
+      }
+     },
+     {
+      "t": 0.2375,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-R1-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R2-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R3-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R4-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-R5": {
+        "angleDeg": -2.35
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L1-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-L2-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L3-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L4-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-L5": {
+        "angleDeg": -2.0
+       },
+       "leaf-S": {
+        "angleDeg": -1.65
+       }
+      }
+     },
+     {
+      "t": 0.3167,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R1-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R2-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R3-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R4-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-R5": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-L1-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L3-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L4-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-L5": {
+        "angleDeg": -1.65
+       },
+       "leaf-S": {
+        "angleDeg": -1.3938
+       }
+      }
+     },
+     {
+      "t": 0.3958,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R1-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R2-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R3-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R4-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-R5": {
+        "angleDeg": -2.7
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L1-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L3-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-L4-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L4-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-L5": {
+        "angleDeg": -1.3938
+       },
+       "leaf-S": {
+        "angleDeg": -1.3
+       }
+      }
+     },
+     {
+      "t": 0.475,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R1-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R2-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R3-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-R4-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-R5": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L1-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L2-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-L3-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L3-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-L4-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L4-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-L5": {
+        "angleDeg": -1.3
+       },
+       "leaf-S": {
+        "angleDeg": -1.3938
+       }
+      }
+     },
+     {
+      "t": 0.5542,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R1-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R2-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-R3-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R4-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-R5": {
+        "angleDeg": -2.35
+       },
+       "leaf-L1-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L1-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-L2-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L2-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-L3-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L3-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-L4-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-L4-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-L5": {
+        "angleDeg": -1.3938
+       },
+       "leaf-S": {
+        "angleDeg": -1.65
+       }
+      }
+     },
+     {
+      "t": 0.6333,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R1-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-R2-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R3-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R4-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-R5": {
+        "angleDeg": -2.0
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L1-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-L2-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L2-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-L3-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-L3-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-L4-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L4-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-L5": {
+        "angleDeg": -1.65
+       },
+       "leaf-S": {
+        "angleDeg": -2.0
+       }
+      }
+     },
+     {
+      "t": 0.7125,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.7
+       },
+       "leaf-R1-b": {
+        "angleDeg": -3.4095
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R2-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R3-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R4-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-R5": {
+        "angleDeg": -1.65
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L1-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-L2-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-L2-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-L3-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L3-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-L4-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L4-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-L5": {
+        "angleDeg": -2.0
+       },
+       "leaf-S": {
+        "angleDeg": -2.35
+       }
+      }
+     },
+     {
+      "t": 0.7917,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-R1-b": {
+        "angleDeg": -2.9642
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R2-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R3-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R4-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-R5": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-L1-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-L2-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L2-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-L3-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L3-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L4-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-L5": {
+        "angleDeg": -2.35
+       },
+       "leaf-S": {
+        "angleDeg": -2.6062
+       }
+      }
+     },
+     {
+      "t": 0.8708,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-R1-b": {
+        "angleDeg": -2.2605
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R2-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R3-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R4-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-R5": {
+        "angleDeg": -1.3
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L1-b": {
+        "angleDeg": -1.0358
+       },
+       "leaf-L2-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L2-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L3-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L4-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-L5": {
+        "angleDeg": -2.6062
+       },
+       "leaf-S": {
+        "angleDeg": -2.7
+       }
+      }
+     },
+     {
+      "t": 0.95,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R1-b": {
+        "angleDeg": -1.487
+       },
+       "leaf-R2-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-R2-b": {
+        "angleDeg": -0.8509
+       },
+       "leaf-R3-a": {
+        "angleDeg": -1.3938
+       },
+       "leaf-R3-b": {
+        "angleDeg": -0.5228
+       },
+       "leaf-R4-a": {
+        "angleDeg": -1.3
+       },
+       "leaf-R4-b": {
+        "angleDeg": -0.5905
+       },
+       "leaf-R5": {
+        "angleDeg": -1.3938
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.65
+       },
+       "leaf-L1-b": {
+        "angleDeg": -1.7395
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.513
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.35
+       },
+       "leaf-L3-b": {
+        "angleDeg": -3.1491
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.6062
+       },
+       "leaf-L4-b": {
+        "angleDeg": -3.4772
+       },
+       "leaf-L5": {
+        "angleDeg": -2.7
+       },
+       "leaf-S": {
+        "angleDeg": -2.6062
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [],
+    "events": [],
+    "tracks": []
+   },
+   {
+    "id": "gust",
+    "title": {
+     "en": "Gust of wind",
+     "de": "Windböe"
+    },
+    "description": {
+     "en": "A 5 s gust: the rosette leans 2 degrees and the stiff leaves ring at about 1 Hz with growing amplitude before settling.",
+     "de": "Eine Böe von 5 s: Die Rosette neigt sich 2 Grad und die steifen Blätter schwingen mit etwa 1 Hz bei wachsender Amplitude, bevor sie sich beruhigen."
+    },
+    "durationS": 5.0,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "summer-turgid",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": 0.0
+       },
+       "leaf-R1-b": {
+        "angleDeg": 0.1286
+       },
+       "leaf-R2-a": {
+        "angleDeg": 0.197
+       },
+       "leaf-R2-b": {
+        "angleDeg": 0.1732
+       },
+       "leaf-R3-a": {
+        "angleDeg": 0.0684
+       },
+       "leaf-R3-b": {
+        "angleDeg": -0.0684
+       },
+       "leaf-R4-a": {
+        "angleDeg": -0.1732
+       },
+       "leaf-R4-b": {
+        "angleDeg": -0.197
+       },
+       "leaf-R5": {
+        "angleDeg": -0.1286
+       },
+       "leaf-L1-a": {
+        "angleDeg": 0.0
+       },
+       "leaf-L1-b": {
+        "angleDeg": 0.1286
+       },
+       "leaf-L2-a": {
+        "angleDeg": 0.197
+       },
+       "leaf-L2-b": {
+        "angleDeg": 0.1732
+       },
+       "leaf-L3-a": {
+        "angleDeg": 0.0684
+       },
+       "leaf-L3-b": {
+        "angleDeg": -0.0684
+       },
+       "leaf-L4-a": {
+        "angleDeg": -0.1732
+       },
+       "leaf-L4-b": {
+        "angleDeg": -0.197
+       },
+       "leaf-L5": {
+        "angleDeg": -0.1286
+       },
+       "leaf-S": {
+        "angleDeg": 0.0
+       }
+      }
+     },
+     {
+      "t": 1.0,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.134
+       },
+       "leaf-R1-b": {
+        "angleDeg": -1.658
+       },
+       "leaf-R2-a": {
+        "angleDeg": -2.342
+       },
+       "leaf-R2-b": {
+        "angleDeg": -2.866
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.9848
+       },
+       "leaf-R3-b": {
+        "angleDeg": -2.6428
+       },
+       "leaf-R4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-R4-b": {
+        "angleDeg": -1.3572
+       },
+       "leaf-R5": {
+        "angleDeg": -1.0152
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.134
+       },
+       "leaf-L1-b": {
+        "angleDeg": -1.658
+       },
+       "leaf-L2-a": {
+        "angleDeg": -2.342
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.866
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.9848
+       },
+       "leaf-L3-b": {
+        "angleDeg": -2.6428
+       },
+       "leaf-L4-a": {
+        "angleDeg": -2.0
+       },
+       "leaf-L4-b": {
+        "angleDeg": -1.3572
+       },
+       "leaf-L5": {
+        "angleDeg": -1.0152
+       },
+       "leaf-S": {
+        "angleDeg": -1.134
+       }
+      }
+     },
+     {
+      "t": 2.0,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -4.1651
+       },
+       "leaf-R1-b": {
+        "angleDeg": -4.462
+       },
+       "leaf-R2-a": {
+        "angleDeg": -3.607
+       },
+       "leaf-R2-b": {
+        "angleDeg": -2.0
+       },
+       "leaf-R3-a": {
+        "angleDeg": -0.393
+       },
+       "leaf-R3-b": {
+        "angleDeg": 0.462
+       },
+       "leaf-R4-a": {
+        "angleDeg": 0.1651
+       },
+       "leaf-R4-b": {
+        "angleDeg": -1.1449
+       },
+       "leaf-R5": {
+        "angleDeg": -2.8551
+       },
+       "leaf-L1-a": {
+        "angleDeg": -4.1651
+       },
+       "leaf-L1-b": {
+        "angleDeg": -4.462
+       },
+       "leaf-L2-a": {
+        "angleDeg": -3.607
+       },
+       "leaf-L2-b": {
+        "angleDeg": -2.0
+       },
+       "leaf-L3-a": {
+        "angleDeg": -0.393
+       },
+       "leaf-L3-b": {
+        "angleDeg": 0.462
+       },
+       "leaf-L4-a": {
+        "angleDeg": 0.1651
+       },
+       "leaf-L4-b": {
+        "angleDeg": -1.1449
+       },
+       "leaf-L5": {
+        "angleDeg": -2.8551
+       },
+       "leaf-S": {
+        "angleDeg": -4.1651
+       }
+      }
+     },
+     {
+      "t": 3.2,
+      "pose": "fresh-breeze",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -1.5119
+       },
+       "leaf-R1-b": {
+        "angleDeg": -0.9214
+       },
+       "leaf-R2-a": {
+        "angleDeg": -0.8356
+       },
+       "leaf-R2-b": {
+        "angleDeg": -1.2947
+       },
+       "leaf-R3-a": {
+        "angleDeg": -2.0837
+       },
+       "leaf-R3-b": {
+        "angleDeg": -2.8336
+       },
+       "leaf-R4-a": {
+        "angleDeg": -3.1934
+       },
+       "leaf-R4-b": {
+        "angleDeg": -2.9948
+       },
+       "leaf-R5": {
+        "angleDeg": -2.3308
+       },
+       "leaf-L1-a": {
+        "angleDeg": -1.5119
+       },
+       "leaf-L1-b": {
+        "angleDeg": -0.9214
+       },
+       "leaf-L2-a": {
+        "angleDeg": -0.8356
+       },
+       "leaf-L2-b": {
+        "angleDeg": -1.2947
+       },
+       "leaf-L3-a": {
+        "angleDeg": -2.0837
+       },
+       "leaf-L3-b": {
+        "angleDeg": -2.8336
+       },
+       "leaf-L4-a": {
+        "angleDeg": -3.1934
+       },
+       "leaf-L4-b": {
+        "angleDeg": -2.9948
+       },
+       "leaf-L5": {
+        "angleDeg": -2.3308
+       },
+       "leaf-S": {
+        "angleDeg": -1.5119
+       }
+      }
+     },
+     {
+      "t": 5.0,
+      "pose": "summer-turgid",
+      "ease": "smooth",
+      "bones": {
+       "leaf-R1-a": {
+        "angleDeg": -0.2598
+       },
+       "leaf-R1-b": {
+        "angleDeg": -0.2954
+       },
+       "leaf-R2-a": {
+        "angleDeg": -0.1928
+       },
+       "leaf-R2-b": {
+        "angleDeg": 0.0
+       },
+       "leaf-R3-a": {
+        "angleDeg": 0.1928
+       },
+       "leaf-R3-b": {
+        "angleDeg": 0.2954
+       },
+       "leaf-R4-a": {
+        "angleDeg": 0.2598
+       },
+       "leaf-R4-b": {
+        "angleDeg": 0.1026
+       },
+       "leaf-R5": {
+        "angleDeg": -0.1026
+       },
+       "leaf-L1-a": {
+        "angleDeg": -0.2598
+       },
+       "leaf-L1-b": {
+        "angleDeg": -0.2954
+       },
+       "leaf-L2-a": {
+        "angleDeg": -0.1928
+       },
+       "leaf-L2-b": {
+        "angleDeg": 0.0
+       },
+       "leaf-L3-a": {
+        "angleDeg": 0.1928
+       },
+       "leaf-L3-b": {
+        "angleDeg": 0.2954
+       },
+       "leaf-L4-a": {
+        "angleDeg": 0.2598
+       },
+       "leaf-L4-b": {
+        "angleDeg": 0.1026
+       },
+       "leaf-L5": {
+        "angleDeg": -0.1026
+       },
+       "leaf-S": {
+        "angleDeg": -0.2598
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "gust",
+      "fromS": 0,
+      "toS": 3.2,
+      "title": {
+       "en": "Gust",
+       "de": "Böe"
+      }
+     },
+     {
+      "id": "settle",
+      "fromS": 3.2,
+      "toS": 5.0,
+      "title": {
+       "en": "Settling",
+       "de": "Abklingen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.0,
+      "kind": "motion",
+      "title": {
+       "en": "Peak lean",
+       "de": "Größte Neigung"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "emitter:transpiration-erect",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1.0
+       },
+       {
+        "t": 2.0,
+        "v": 1.0
+       },
+       {
+        "t": 5.0,
+        "v": 1.0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 28,
+    "meanRadiantTempC": 33,
+    "relativeHumidity": 0.35,
+    "windMS": 1.5,
+    "windDirectionDeg": 0,
+    "solarWM2": 900,
+    "diffuseFraction": 0.12,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "leaves-spreading",
+     "title": {
+      "en": "Spreading lower leaves",
+      "de": "Ausgebreitete untere Blätter"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "agave-leaf",
+     "areaM2": 2.0,
+     "characteristicLengthM": 0.15,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.85,
+     "layers": [],
+     "heatCapacityJM2K": 90000,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.0012,
+      "leafAreaIndex": 0.4,
+      "photosynthesis": "cam"
+     },
+     "source": "authored-estimate",
+     "reference": "nobel-1988"
+    },
+    {
+     "id": "leaves-erect",
+     "title": {
+      "en": "Erect inner leaves and spear",
+      "de": "Aufrechte innere Blätter und Herzblatt"
+     },
+     "kind": "foliage",
+     "model": "leaf",
+     "material": "agave-leaf",
+     "areaM2": 3.0,
+     "characteristicLengthM": 0.15,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [],
+     "heatCapacityJM2K": 90000,
+     "leaf": {
+      "stomatalConductanceMaxMS": 0.0012,
+      "leafAreaIndex": 0.6,
+      "photosynthesis": "cam"
+     },
+     "source": "authored-estimate",
+     "reference": "nobel-1988"
+    },
+    {
+     "id": "caudex",
+     "title": {
+      "en": "Caudex",
+      "de": "Caudex"
+     },
+     "kind": "stem",
+     "model": "passive",
+     "material": "agave-caudex",
+     "areaM2": 0.21,
+     "characteristicLengthM": 0.22,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 60000,
+     "source": "authored-estimate",
+     "reference": "nobel-1988"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "transpiration-spreading",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the spreading lower leaves (distributed over six anchors)",
+      "de": "Transpiration der ausgebreiteten unteren Blätter (über sechs Anker verteilt)"
+     },
+     "anchor": "tp-spreading-1",
+     "anchors": [
+      "tp-spreading-1",
+      "tp-spreading-2",
+      "tp-spreading-3",
+      "tp-spreading-4",
+      "tp-spreading-5",
+      "tp-spreading-6"
+     ],
+     "directionDeg": 124.0,
+     "diameterM": 1.4,
+     "region": "leaves-spreading",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    },
+    {
+     "id": "transpiration-erect",
+     "kind": "transpiration",
+     "title": {
+      "en": "Transpiration of the erect inner leaves (distributed over seven anchors)",
+      "de": "Transpiration der aufrechten inneren Blätter (über sieben Anker verteilt)"
+     },
+     "anchor": "tp-erect-1",
+     "anchors": [
+      "tp-erect-1",
+      "tp-erect-2",
+      "tp-erect-3",
+      "tp-erect-4",
+      "tp-erect-5",
+      "tp-erect-6",
+      "tp-erect-7"
+     ],
+     "directionDeg": 40.0,
+     "diameterM": 0.8,
+     "region": "leaves-erect",
+     "source": "authored-estimate",
+     "reference": "monteith-unsworth-2013"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Leaf regions use one-sided leaf area of the 28 real leaves (5 m2, ground projection 4.9 m2). CAM: stomata open at night (Nobel 1988; Nobel and Hartsock 1979); the maximum conductance 0.0012 m/s (about 0.05 mol/(m2 s)) is an authored estimate. The areal heat capacity of 90 kJ/(m2 K) is a 25 mm water-rich leaf (about 3.6 MJ/(m3 K)); the engine's time constant is therefore many minutes.",
+     "de": "Blattregionen verwenden die einseitige Blattfläche der 28 wirklichen Blätter (5 m2, Bodenprojektion 4,9 m2). CAM: Die Spaltöffnungen öffnen sich nachts (Nobel 1988; Nobel und Hartsock 1979); die maximale Leitfähigkeit 0,0012 m/s (etwa 0,05 mol/(m2 s)) ist eine Autorenschätzung. Die flächenbezogene Wärmekapazität von 90 kJ/(m2 K) entspricht einem 25 mm dicken wasserreichen Blatt (etwa 3,6 MJ/(m3 K)); die Zeitkonstante der Engine beträgt daher viele Minuten."
+    },
+    {
+     "en": "The caudex is passive. Transpiration emitters release the latent flux of their leaf region over six and seven anchors spread across the rosette; the direction is the vertical in the frame of the first anchor's bone.",
+     "de": "Der Caudex ist passiv. Transpirationsemitter geben den latenten Strom ihrer Blattregion über sechs und sieben Anker ab, die über die Rosette verteilt sind; die Richtung ist die Senkrechte im Bezugssystem des Knochens des ersten Ankers."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "base-support"
+   ],
+   "assumptions": [
+    {
+     "en": "One rigid body per evaluated pose, fixed at the root plate; wind drag acts on each leaf group (0.35 m2, cf 1.0 in calm air, 0.9 in the breeze). Leaves are stiff succulent beams; the sections are not authored and no failure is predicted.",
+     "de": "Ein starrer Körper je ausgewerteter Pose, an der Wurzelplatte eingespannt; Winddruck wirkt auf jede Blattgruppe (0,35 m2, cf 1,0 in ruhiger Luft, 0,9 in der Brise). Blätter sind steife sukkulente Balken; die Querschnitte sind nicht angegeben und es wird kein Versagen vorhergesagt."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "summer-turgid",
+   "defaultClip": "wind-sway",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation",
+    "plan"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

@@ -5,11 +5,24 @@
   "description": "The index published (by rename, after its pack) next to one immutable record pack: every record's 64-hex key, its contiguous byte range in the pack and the first 32 hex digits of the value's SHA-256.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["format", "pack", "packBytes", "records"],
+  "required": [
+    "format",
+    "pack",
+    "packBytes",
+    "records"
+  ],
   "properties": {
-    "format": { "const": 1 },
-    "pack": { "type": "string", "pattern": "^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$" },
-    "packBytes": { "type": "integer", "minimum": 0 },
+    "format": {
+      "const": 1
+    },
+    "pack": {
+      "type": "string",
+      "pattern": "^[0-9a-z]+-[0-9]+-[0-9a-f]{16}$"
+    },
+    "packBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
     "records": {
       "type": "array",
       "items": {
@@ -17,10 +30,22 @@
         "minItems": 4,
         "maxItems": 4,
         "items": [
-          { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-          { "type": "integer", "minimum": 0 },
-          { "type": "integer", "minimum": 0 },
-          { "type": "string", "pattern": "^[0-9a-f]{32}$" }
+          {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          }
         ]
       }
     }
@@ -31,7 +56,8 @@
       "const": {
         "orphanMilliseconds": 3600000,
         "pendingFlushBytes": 67108864,
-        "descriptorLimit": 32
+        "descriptorLimit": 32,
+        "retirementAttempts": 3
       }
     },
     "LimitsDescriptions": {
@@ -39,12 +65,14 @@
         "en": {
           "orphanMilliseconds": "How old an unreferenced pack or temporary file must be before the store may remove it (1 hour).",
           "pendingFlushBytes": "The pending bytes at which the store writes a pack (64 MiB).",
-          "descriptorLimit": "How many read descriptors packs keep open across every store of the process."
+          "descriptorLimit": "How many read descriptors packs keep open across every store of the process.",
+          "retirementAttempts": "How many bounded attempts reconcile a pack retirement before refusing continuous changes."
         },
         "de": {
           "orphanMilliseconds": "Wie alt ein unreferenziertes Pack oder eine temporäre Datei sein muss, bevor der Store sie entfernen darf (1 Stunde).",
           "pendingFlushBytes": "Die ausstehenden Bytes, ab denen der Store ein Pack schreibt (64 MiB).",
-          "descriptorLimit": "Wie viele Lesedeskriptoren Packs über alle Stores des Prozesses offen halten."
+          "descriptorLimit": "Wie viele Lesedeskriptoren Packs über alle Stores des Prozesses offen halten.",
+          "retirementAttempts": "Wie viele begrenzte Versuche eine Packbereinigung abgleichen, bevor fortlaufende Änderungen abgelehnt werden."
         }
       }
     }

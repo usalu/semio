@@ -2,7 +2,9 @@
   "wall_sweeps": {
     "ws-base": {
       "entry": "Patched",
-      "side": "Right"
+      "value": {
+        "side": "Right"
+      }
     }
   }
 }

@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readdir, readFile, lstat, writeFile } from "node:fs/pro
 import { join, resolve, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import ResourceAjv from "ajv";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { JSONRPCMessageSchema, ListRootsRequestSchema, type JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";

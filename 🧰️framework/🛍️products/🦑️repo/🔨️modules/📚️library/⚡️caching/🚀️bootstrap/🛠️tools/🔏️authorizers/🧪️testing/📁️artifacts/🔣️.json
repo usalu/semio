@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "actual-absolute",
+      "kind": "absolute",
+      "accepted": true
+    },
+    {
+      "id": "relative",
+      "kind": "relative",
+      "accepted": false
+    },
+    {
+      "id": "missing",
+      "kind": "missing",
+      "accepted": false
+    },
+    {
+      "id": "normalized-alias",
+      "kind": "alias",
+      "accepted": false
+    },
+    {
+      "id": "control-byte",
+      "kind": "control",
+      "accepted": false
+    },
+    {
+      "id": "overlong",
+      "kind": "long",
+      "accepted": false
+    }
+  ]
+}

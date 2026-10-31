@@ -1,0 +1,4035 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "seated-guitarist",
+    "category": "humans",
+    "title": {
+      "en": "Seated guitarist",
+      "de": "Sitzender Gitarrist"
+    },
+    "summary": {
+      "en": "A 42-year-old man of 1.76 m in flannel shirt, jeans and leather boots on a wooden bar stool with one foot on the rung, playing an acoustic guitar: strumming, fretting high on the neck while singing, resting and tuning, with a strum loop, a chord-change phrase and a tuning sequence; four individually drawn scales from 1:500 to 1:50.",
+      "de": "Ein 42-jähriger, 1,76 m großer Mann in Flanellhemd, Jeans und Lederstiefeln sitzt auf einem hölzernen Barhocker mit einem Fuß auf der Fußraste und spielt Akustikgitarre: Anschlagen, hohes Greifen am Hals beim Singen, Ablegen und Stimmen, mit einer Anschlagschleife, einer Akkordwechsel-Phrase und einer Stimmfolge; vier einzeln gezeichnete Maßstäbe von 1:500 bis 1:50."
+    },
+    "tags": [
+      "human",
+      "musician",
+      "guitar",
+      "seated",
+      "stool",
+      "instrument",
+      "adult"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker NW-H2",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (segment mass fractions and centre-of-mass positions, male and female)."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble (1 clo = 0.155 m2K/W; garment clo values here are authored estimates guided by its tables)."
+        },
+        {
+          "id": "ainsworth-2011",
+          "citation": "Ainsworth, B. E. et al. (2011). 2011 Compendium of Physical Activities: a second update of codes and MET values. Medicine and Science in Sports and Exercise 43(8), 1575-1581 (activity classes; MET values are mapped to thermal met as an estimate)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiratory heat loss, skin wettedness)."
+        },
+        {
+          "id": "gagge-1971",
+          "citation": "Gagge, A. P., Stolwijk, J. A. J., Nishi, Y. (1971). An effective temperature scale based on a simple model of human physiological regulatory response. ASHRAE Transactions 77(1), 247-262 (two-node model; set points 36.8 and 34.1 degrees Celsius, skin blood flow limits 6.3 and 90 L/(m2 h) after the common implementation)."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39 (sinusoidal breathing flow; opening areas and jet angles used here are authored estimates guided by it)."
+        },
+        {
+          "id": "hoeppe-1981",
+          "citation": "Hoeppe, P. (1981). Temperatures of expired air under varying climatic conditions. International Journal of Biometeorology 25, 127-132 (expired air temperature; the 34 degrees Celsius and 95 % used here are authored estimates)."
+        },
+        {
+          "id": "mifflin-1990",
+          "citation": "Mifflin, M. D. et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition 51, 241-247."
+        },
+        {
+          "id": "incropera-2011",
+          "citation": "Incropera, F. P., DeWitt, D. P. et al. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley (convection correlations, material properties)."
+        },
+        {
+          "id": "guitar-spec",
+          "citation": "Typical dreadnought acoustic guitar: body about 0.5 m long and 0.38 m wide at the lower bout, scale length 0.645 m, mass about 2.1 kg; wooden bar stool with 0.56 m seat height and a foot rung at 0.25 m, mass about 3.4 kg. Dimensions are authored from catalogue ranges."
+        }
+      ],
+      "notes": {
+        "en": "Newly authored for semio.staffage/v2: a seated figure drawn in three-quarter projection, so the guitar neck is foreshortened to 0.78 m along its axis; poses are solved by inverse kinematics with the hands on anchors of the guitar.",
+        "de": "Neu erstellt für semio.staffage/v2: eine sitzende Figur in Dreiviertel-Projektion, daher ist der Gitarrenhals entlang seiner Achse auf 0,78 m verkürzt; die Posen sind per inverser Kinematik mit den Händen an Ankern der Gitarre gelöst."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.495,
+      "widthM": 1.107,
+      "depthM": 0.55,
+      "massKg": 79.5
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Short hair and beard",
+          "de": "Kurzes Haar und Bart"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "flannel",
+        "title": {
+          "en": "Cotton flannel shirt",
+          "de": "Baumwoll-Flanellhemd"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.6,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "denim",
+        "title": {
+          "en": "Denim jeans",
+          "de": "Jeansstoff"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leather",
+        "title": {
+          "en": "Leather work boot",
+          "de": "Lederstiefel"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "spruce",
+        "title": {
+          "en": "Spruce top with satin lacquer",
+          "de": "Fichtendecke mit Seidenlack"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 420,
+        "specificHeatJKgK": 1600,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "mahogany",
+        "title": {
+          "en": "Mahogany neck and headstock",
+          "de": "Hals und Kopfplatte aus Mahagoni"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.65,
+        "densityKgM3": 550,
+        "specificHeatJKgK": 1600,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "rosewood",
+        "title": {
+          "en": "Rosewood bridge",
+          "de": "Steg aus Palisander"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 850,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "pine",
+        "title": {
+          "en": "Pine bar stool",
+          "de": "Barhocker aus Kiefer"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 500,
+        "specificHeatJKgK": 1600,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "denim-sock",
+        "title": {
+          "en": "Cotton sock",
+          "de": "Baumwollsocke"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.5,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "stool",
+      "bones": [
+        {
+          "id": "stool",
+          "parent": null,
+          "title": {
+            "en": "Wooden bar stool with foot rung",
+            "de": "Barhocker aus Holz mit Fußraste"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.56,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.4,
+            "comX": 0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "guitar-spec"
+          }
+        },
+        {
+          "id": "hip-lift",
+          "parent": "stool",
+          "title": {
+            "en": "Hip height above the stool",
+            "de": "Hüfthöhe über dem Hocker"
+          },
+          "x": 0,
+          "y": 0.65,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.1,
+            "maxM": 0.45
+          }
+        },
+        {
+          "id": "hip-shift",
+          "parent": "hip-lift",
+          "title": {
+            "en": "Hip shift on the seat",
+            "de": "Hüftverschiebung auf dem Sitz"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.2,
+            "maxM": 0.4
+          }
+        },
+        {
+          "id": "pelvis",
+          "parent": "hip-shift",
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 8.266,
+            "comX": 0.05,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.1,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4601,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 23.895,
+            "comX": 0.2101,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4601,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.27,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 5.136,
+            "comX": 0.135,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4302,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3101,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 2.005,
+            "comX": 0.179,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3101,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.27,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.199,
+            "comX": 0.1235,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linke Hand"
+          },
+          "x": 0.27,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.18,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.451,
+            "comX": 0.09,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4302,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.3101,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 2.005,
+            "comX": 0.179,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3101,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.27,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.199,
+            "comX": 0.1235,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechte Hand"
+          },
+          "x": 0.27,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.18,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.451,
+            "comX": 0.09,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.43,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 10.478,
+            "comX": 0.1761,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.43,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4199,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.204,
+            "comX": 0.1872,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.4199,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.22,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 1.014,
+            "comX": 0.11,
+            "comY": -0.0435,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1299,
+          "y": -0.0799,
+          "angleDeg": 0,
+          "lengthM": 0.092,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.43,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 10.478,
+            "comX": 0.1761,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.43,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4199,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.204,
+            "comX": 0.1872,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.4199,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.22,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 1.014,
+            "comX": 0.11,
+            "comY": -0.0435,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1299,
+          "y": -0.0799,
+          "angleDeg": 0,
+          "lengthM": 0.092,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "guitar",
+          "parent": "torso",
+          "title": {
+            "en": "Acoustic guitar (dreadnought)",
+            "de": "Akustikgitarre (Dreadnought)"
+          },
+          "x": 0.12,
+          "y": -0.17,
+          "angleDeg": -58,
+          "lengthM": 0.78,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -25,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 2.1,
+            "comX": 0.2,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "guitar-spec"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.1299,
+        "y": -0.0799,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linke Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.097,
+        "footprintWidthM": 0.087,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.03,
+        "y": -0.0799,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.068,
+        "footprintWidthM": 0.068,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.1299,
+        "y": -0.0799,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechte Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.097,
+        "footprintWidthM": 0.087,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.03,
+        "y": -0.0799,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.068,
+        "footprintWidthM": 0.068,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.075,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.075,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1131,
+        "y": -0.089,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth",
+          "de": "Mund"
+        }
+      },
+      {
+        "id": "nostrils",
+        "bone": "head",
+        "x": 0.1402,
+        "y": -0.0986,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils",
+          "de": "Nasenlöcher"
+        }
+      },
+      {
+        "id": "crown",
+        "bone": "head",
+        "x": 0.2781,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Crown of the head (plume source)",
+          "de": "Scheitel (Fahnenquelle)"
+        }
+      },
+      {
+        "id": "stool-ground",
+        "bone": "stool",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Stool legs on the floor",
+          "de": "Hockerbeine auf dem Boden"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.32,
+        "footprintWidthM": 0.32,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "seat",
+        "bone": "pelvis",
+        "x": -0.09,
+        "y": 0,
+        "kind": "support",
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.5,
+        "title": {
+          "en": "Seat bones on the stool",
+          "de": "Sitzbeinhöcker auf dem Hocker"
+        }
+      },
+      {
+        "id": "rung-support",
+        "bone": "foot-l",
+        "x": 0.08,
+        "y": -0.0775,
+        "kind": "support",
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.12,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.6,
+        "title": {
+          "en": "Near foot on the rung",
+          "de": "Naher Fuß auf der Fußraste"
+        }
+      },
+      {
+        "id": "fret-hand",
+        "bone": "guitar",
+        "x": 0.5,
+        "y": -0.06,
+        "kind": "attachment",
+        "title": {
+          "en": "Fretting hand position",
+          "de": "Position der Griffhand"
+        }
+      },
+      {
+        "id": "strum-hand",
+        "bone": "guitar",
+        "x": 0.14,
+        "y": 0.04,
+        "kind": "attachment",
+        "title": {
+          "en": "Strumming hand position",
+          "de": "Position der Schlaghand"
+        }
+      },
+      {
+        "id": "guitar-rest",
+        "bone": "guitar",
+        "x": 0,
+        "y": -0.1,
+        "kind": "support",
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.5,
+        "title": {
+          "en": "Guitar resting on the thigh",
+          "de": "Gitarre auf dem Oberschenkel"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.03 0.092 C 0.0667 0.0927 0.1 0.0953 0.14 0.094 C 0.18 0.0927 0.2217 0.0882 0.27 0.084 C 0.3183 0.0798 0.4013 0.0828 0.43 0.069 C 0.4586 0.0552 0.442 0.0237 0.442 0.001 C 0.442 -0.0217 0.4586 -0.0532 0.43 -0.067 C 0.4013 -0.0808 0.3183 -0.0778 0.27 -0.082 C 0.2217 -0.0862 0.18 -0.0907 0.14 -0.092 C 0.1 -0.0933 0.0667 -0.0907 0.03 -0.09 C 0.03 -0.0293 0.03 0.0313 0.03 0.092 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0233 0.079 0.0767 0.0673 0.12 0.066 C 0.1633 0.0647 0.2117 0.0617 0.26 0.06 C 0.3083 0.0583 0.3836 0.066 0.4099 0.056 C 0.4363 0.046 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4363 -0.0458 0.4099 -0.056 C 0.3836 -0.0662 0.3083 -0.0583 0.26 -0.061 C 0.2117 -0.0637 0.1633 -0.0708 0.12 -0.072 C 0.0767 -0.0732 0.0233 -0.08 0.0 -0.068 C -0.0233 -0.056 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0233 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "boot-sole-r",
+              "bone": "foot-r",
+              "role": "detail",
+              "z": 1.06,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.054,
+                  -0.06
+                ],
+                [
+                  0.226,
+                  -0.06
+                ]
+              ],
+              "closed": false,
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.03 0.054 C 0.07 0.0533 0.1033 0.0535 0.15 0.052 C 0.1967 0.0505 0.2818 0.0537 0.3101 0.045 C 0.3385 0.0363 0.3201 0.015 0.3201 0.0 C 0.3201 -0.015 0.3385 -0.0363 0.3101 -0.045 C 0.2818 -0.0537 0.1967 -0.0505 0.15 -0.052 C 0.1033 -0.0535 0.07 -0.0533 0.03 -0.054 C 0.03 -0.018 0.03 0.018 0.03 0.054 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0767 0.043 0.12 0.041 C 0.1633 0.039 0.2353 0.0398 0.26 0.033 C 0.2846 0.0262 0.268 0.011 0.268 0.0 C 0.268 -0.011 0.2846 -0.0262 0.26 -0.033 C 0.2353 -0.0398 0.1633 -0.039 0.12 -0.041 C 0.0767 -0.043 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.64,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.036 C 0.0133 0.0483 0.055 0.0417 0.08 0.04 C 0.105 0.0383 0.1363 0.0323 0.15 0.026 C 0.1637 0.0197 0.162 0.0103 0.162 0.0025 C 0.162 -0.0053 0.1637 -0.0149 0.15 -0.021 C 0.1363 -0.0271 0.105 -0.0318 0.08 -0.034 C 0.055 -0.0362 0.0133 -0.0457 0.0 -0.034 C -0.0133 -0.0223 -0.0133 0.0237 0.0 0.036 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "thumb-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.65,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "capsule",
+              "x0": 0.0387,
+              "y0": 0.0387,
+              "x1": 0.1015,
+              "y1": 0.0503,
+              "r0": 0.0116,
+              "r1": 0.0087,
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "cuff-r",
+              "bone": "forearm-r",
+              "role": "detail",
+              "z": 3.63,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.24,
+                  0.032
+                ],
+                [
+                  0.24,
+                  -0.032
+                ]
+              ],
+              "closed": false,
+              "region": "shirt-sleeves"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.098 C 0.0383 0.1135 0.095 0.0963 0.14 0.094 C 0.185 0.0917 0.2217 0.0882 0.27 0.084 C 0.3183 0.0798 0.4013 0.0828 0.43 0.069 C 0.4586 0.0552 0.442 0.0237 0.442 0.001 C 0.442 -0.0217 0.4586 -0.0532 0.43 -0.067 C 0.4013 -0.0808 0.3183 -0.0778 0.27 -0.082 C 0.2217 -0.0862 0.185 -0.0897 0.14 -0.092 C 0.095 -0.0943 0.0383 -0.1115 0.0 -0.096 C -0.0383 -0.0805 -0.09 -0.0313 -0.09 0.001 C -0.09 0.0333 -0.0383 0.0825 0.0 0.098 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0233 0.079 0.0767 0.0673 0.12 0.066 C 0.1633 0.0647 0.2117 0.0617 0.26 0.06 C 0.3083 0.0583 0.3836 0.066 0.4099 0.056 C 0.4363 0.046 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4363 -0.0458 0.4099 -0.056 C 0.3836 -0.0662 0.3083 -0.0583 0.26 -0.061 C 0.2117 -0.0637 0.1633 -0.0708 0.12 -0.072 C 0.0767 -0.0732 0.0233 -0.08 0.0 -0.068 C -0.0233 -0.056 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0233 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "boot-sole-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 4.06,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.054,
+                  -0.06
+                ],
+                [
+                  0.226,
+                  -0.06
+                ]
+              ],
+              "closed": false,
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.05 0.054 C 0.0833 0.0533 0.1066 0.0535 0.15 0.052 C 0.1934 0.0505 0.2818 0.0537 0.3101 0.045 C 0.3385 0.0363 0.3201 0.015 0.3201 0.0 C 0.3201 -0.015 0.3385 -0.0363 0.3101 -0.045 C 0.2818 -0.0537 0.1934 -0.0505 0.15 -0.052 C 0.1066 -0.0535 0.0833 -0.0533 0.05 -0.054 C 0.05 -0.018 0.05 0.018 0.05 0.054 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.62,
+              "region": "shirt-sleeves",
+              "material": "flannel",
+              "kind": "path",
+              "d": "M-0.00000 0.04500 L0.02194 0.04752 L0.12000 0.04100 L0.24921 0.03782 L0.26741 0.03008 L0.27334 0.02247 L0.26800 0.00000 L0.27334 -0.02247 L0.26741 -0.03008 L0.26000 -0.03300 L0.23379 -0.03684 L0.02194 -0.04753 L-0.00000 -0.04500 L-0.00683 -0.04173 L-0.01346 -0.03173 L-0.01425 0.02558 L-0.01116 0.03721 Z"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.54,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.036 C 0.0133 0.0483 0.055 0.0417 0.08 0.04 C 0.105 0.0383 0.1363 0.0323 0.15 0.026 C 0.1637 0.0197 0.162 0.0103 0.162 0.0025 C 0.162 -0.0053 0.1637 -0.0149 0.15 -0.021 C 0.1363 -0.0271 0.105 -0.0318 0.08 -0.034 C 0.055 -0.0362 0.0133 -0.0457 0.0 -0.034 C -0.0133 -0.0223 -0.0133 0.0237 0.0 0.036 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "thumb-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.55,
+              "filled": true,
+              "tone": 0.85,
+              "region": "hands",
+              "material": "skin",
+              "kind": "path",
+              "d": "M0.10347 0.04183 L0.10878 0.04553 L0.11006 0.05188 L0.10659 0.05735 L0.10031 0.05892 L0.03711 0.05019 L0.02452 0.04015 L0.02999 0.03104 L0.03822 0.02711 Z"
+            },
+            {
+              "id": "cuff-l",
+              "bone": "forearm-l",
+              "role": "detail",
+              "z": 4.53,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.24,
+                  0.032
+                ],
+                [
+                  0.24,
+                  -0.032
+                ]
+              ],
+              "closed": false,
+              "region": "shirt-sleeves"
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.128 C 0.0367 0.128 0.07 0.1277 0.11 0.128 C 0.15 0.1283 0.2017 0.1305 0.24 0.13 C 0.2783 0.1295 0.3117 0.1292 0.34 0.125 C 0.3683 0.1208 0.39 0.1142 0.41 0.105 C 0.43 0.0958 0.4517 0.0985 0.4601 0.07 C 0.4684 0.0415 0.4684 -0.0347 0.4601 -0.066 C 0.4517 -0.0973 0.43 -0.1073 0.41 -0.118 C 0.39 -0.1287 0.3683 -0.1293 0.34 -0.13 C 0.3117 -0.1307 0.2783 -0.1228 0.24 -0.122 C 0.2017 -0.1212 0.15 -0.125 0.11 -0.125 C 0.07 -0.125 0.0367 -0.123 0.0 -0.122 C 0.0 -0.0387 0.0 0.0447 0.0 0.128 Z",
+              "region": "shirt-torso",
+              "material": "flannel"
+            },
+            {
+              "id": "shirt-open",
+              "bone": "torso",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  -0.112
+                ],
+                [
+                  0.2,
+                  -0.108
+                ],
+                [
+                  0.38,
+                  -0.09
+                ]
+              ],
+              "closed": false,
+              "region": "shirt-torso"
+            },
+            {
+              "id": "pocket-flap",
+              "bone": "torso",
+              "role": "detail",
+              "z": 3.1,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.26,
+                  -0.126
+                ],
+                [
+                  0.26,
+                  -0.07
+                ],
+                [
+                  0.3,
+                  -0.07
+                ]
+              ],
+              "closed": false,
+              "region": "shirt-torso"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.0503 C 0.0073 0.0664 0.0282 0.0461 0.0435 0.0484 C 0.0588 0.0506 0.0749 0.0571 0.0919 0.0638 C 0.1088 0.0706 0.1257 0.0851 0.1451 0.089 C 0.1644 0.0928 0.1905 0.0922 0.2079 0.087 C 0.2253 0.0819 0.2392 0.0709 0.2495 0.058 C 0.2598 0.0451 0.2682 0.0266 0.2698 0.0097 C 0.2714 -0.0073 0.2655 -0.029 0.2592 -0.0435 C 0.2529 -0.058 0.2414 -0.0706 0.2321 -0.0774 C 0.2227 -0.0841 0.2118 -0.0825 0.2031 -0.0841 C 0.1944 -0.0857 0.1866 -0.0853 0.1799 -0.087 C 0.1731 -0.0888 0.1679 -0.0917 0.1625 -0.0948 C 0.157 -0.0978 0.1517 -0.1057 0.147 -0.1054 C 0.1423 -0.1051 0.1383 -0.0956 0.1344 -0.0928 C 0.1305 -0.0901 0.1272 -0.0899 0.1238 -0.089 C 0.1204 -0.088 0.1173 -0.0877 0.1141 -0.087 C 0.1109 -0.0864 0.1099 -0.0851 0.1044 -0.0851 C 0.099 -0.0851 0.0877 -0.0893 0.0812 -0.087 C 0.0748 -0.0848 0.0696 -0.079 0.0658 -0.0716 C 0.0619 -0.0641 0.0632 -0.0464 0.058 -0.0425 C 0.0529 -0.0387 0.0445 -0.0474 0.0348 -0.0484 C 0.0251 -0.0493 0.0058 -0.0648 0.0 -0.0484 C -0.0058 -0.0319 -0.0073 0.0342 0.0 0.0503 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M 0.205 -0.092 C 0.22 -0.0887 0.2375 -0.0907 0.25 -0.082 C 0.2625 -0.0733 0.2727 -0.0557 0.28 -0.04 C 0.2873 -0.0243 0.2953 -0.0077 0.294 0.012 C 0.2927 0.0317 0.284 0.0627 0.272 0.078 C 0.26 0.0933 0.2398 0.0993 0.222 0.104 C 0.2042 0.1087 0.1823 0.1083 0.165 0.106 C 0.1477 0.1037 0.1337 0.0953 0.118 0.09 C 0.1287 0.0733 0.14 0.0583 0.15 0.04 C 0.16 0.0217 0.1688 0.002 0.178 -0.02 C 0.1872 -0.042 0.196 -0.068 0.205 -0.092 Z",
+              "region": "hair",
+              "material": "hair"
+            },
+            {
+              "id": "ear",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.1431,
+              "cy": 0.016,
+              "rx": 0.0251,
+              "ry": 0.013,
+              "region": "face"
+            },
+            {
+              "id": "guitar-body",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "path",
+              "d": "M -0.215 0.0 C -0.2117 0.0317 -0.2175 0.0658 -0.205 0.095 C -0.1925 0.1242 -0.1675 0.1588 -0.14 0.175 C -0.1125 0.1912 -0.0733 0.1932 -0.04 0.192 C -0.0067 0.1908 0.0317 0.1787 0.06 0.168 C 0.0883 0.1573 0.1067 0.1327 0.13 0.128 C 0.1533 0.1233 0.1758 0.139 0.2 0.14 C 0.2242 0.141 0.2547 0.1448 0.275 0.134 C 0.2953 0.1232 0.312 0.093 0.322 0.075 C 0.332 0.057 0.3307 0.0423 0.335 0.026 C 0.3307 -0.0077 0.332 -0.0483 0.322 -0.075 C 0.312 -0.1017 0.2953 -0.1232 0.275 -0.134 C 0.2547 -0.1448 0.2242 -0.141 0.2 -0.14 C 0.1758 -0.139 0.1533 -0.1233 0.13 -0.128 C 0.1067 -0.1327 0.0883 -0.1573 0.06 -0.168 C 0.0317 -0.1787 -0.0067 -0.1908 -0.04 -0.192 C -0.0733 -0.1932 -0.1125 -0.1912 -0.14 -0.175 C -0.1675 -0.1588 -0.1925 -0.1242 -0.205 -0.095 C -0.2175 -0.0658 -0.2117 -0.0317 -0.215 0.0 Z",
+              "region": "guitar",
+              "material": "spruce"
+            },
+            {
+              "id": "guitar-neck",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.85,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.31 0.024 L 0.64 0.0216 L 0.64 -0.0216 L 0.31 -0.024 Z",
+              "region": "guitar",
+              "material": "mahogany"
+            },
+            {
+              "id": "guitar-head",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.86,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.64 0.028 C 0.6867 0.0333 0.7333 0.0387 0.78 0.044 C 0.78 0.0147 0.78 -0.0147 0.78 -0.044 C 0.7333 -0.0387 0.6867 -0.0333 0.64 -0.028 C 0.64 -0.0093 0.64 0.0093 0.64 0.028 Z",
+              "region": "guitar",
+              "material": "mahogany"
+            },
+            {
+              "id": "soundhole",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": 0,
+              "rx": 0.052,
+              "ry": 0.062,
+              "region": "guitar"
+            },
+            {
+              "id": "bridge",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.115,
+              "y": -0.07,
+              "w": 0.03,
+              "h": 0.14,
+              "r": 0.005,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-0",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.36,
+                  0.02
+                ],
+                [
+                  0.36,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-1",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.41,
+                  0.02
+                ],
+                [
+                  0.41,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-2",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.46,
+                  0.02
+                ],
+                [
+                  0.46,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-3",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.505,
+                  0.02
+                ],
+                [
+                  0.505,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-4",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.55,
+                  0.02
+                ],
+                [
+                  0.55,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "fret-5",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.96,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  0.59,
+                  0.02
+                ],
+                [
+                  0.59,
+                  -0.02
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "string",
+              "bone": "guitar",
+              "role": "texture",
+              "z": 3.97,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.008
+                ],
+                [
+                  0.62,
+                  0.012
+                ]
+              ],
+              "closed": false,
+              "region": "guitar"
+            },
+            {
+              "id": "tuner-0",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.72,
+              "cy": 0.02,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "guitar"
+            },
+            {
+              "id": "tuner-1",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.74,
+              "cy": 0,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "guitar"
+            },
+            {
+              "id": "tuner-2",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.76,
+              "cy": -0.018,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "guitar"
+            },
+            {
+              "id": "stool",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.19 0.56 L 0.19 0.56 L 0.19 0.52 L 0.14 0.52 L 0.205 0.0 L 0.165 0.0 L 0.1355 0.236 L -0.1355 0.236 L -0.165 0.0 L -0.205 0.0 L -0.14 0.52 L -0.19 0.52 Z M 0.132 0.264 L 0.1 0.52 L -0.1 0.52 L -0.132 0.264 Z",
+              "region": "stool",
+              "material": "pine"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Full articulation: face profile with ear, eye and beard under the hair, flannel shirt with opening and pocket flap, mittens with thumbs and cuffs, boots with sole lines, guitar with frets, string, tuners, soundhole and bridge, stool with rung.",
+            "de": "Volle Gliederung: Gesichtsprofil mit Ohr, Auge und Bart unter dem Haar, Flanellhemd mit Öffnung und Taschenklappe, Fäustlinge mit Daumen und Bündchen, Stiefel mit Sohlenlinien, Gitarre mit Bünden, Saite, Wirbeln, Schallloch und Steg, Hocker mit Fußraste."
+          },
+          "retained": {
+            "en": "Every construction element of the instrument and the clothing.",
+            "de": "Jedes Konstruktionselement von Instrument und Kleidung."
+          },
+          "merged": {
+            "en": "Strings reduced to one line; fingers into the mitten.",
+            "de": "Saiten auf eine Linie reduziert; Finger im Fäustling."
+          },
+          "omitted": {
+            "en": "Five of six strings, rosette, fret markers, stool joinery, fabric checks (below 0.1 mm paper).",
+            "de": "Fünf von sechs Saiten, Rosette, Bundmarkierungen, Hocker-Verbindungen, Stoffkaros (unter 0,1 mm Papier)."
+          },
+          "thinElements": {
+            "en": "Frets are 0.13 mm lines at 0.8 mm spacing; no feature is thickened.",
+            "de": "Bünde sind 0,13-mm-Linien im Abstand von 0,8 mm; nichts wird verdickt."
+          },
+          "hatching": {
+            "en": "None; frets and the string carry the wood detail.",
+            "de": "Keine; Bünde und Saite tragen das Holzdetail."
+          },
+          "styles": {
+            "en": "0.25 mm silhouettes, 0.18 mm detail, 0.13 mm texture.",
+            "de": "0,25-mm-Silhouetten, 0,18-mm-Detail, 0,13-mm-Textur."
+          },
+          "overlays": {
+            "en": "Every region is its own form; detail lines lie inside their region forms.",
+            "de": "Jede Region ist eine eigene Form; Detaillinien liegen innerhalb ihrer Regionsformen."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.2,
+          "detail": 0.13,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.3
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.03 0.092 C 0.0667 0.0927 0.1 0.0953 0.14 0.094 C 0.18 0.0927 0.2217 0.0882 0.27 0.084 C 0.3183 0.0798 0.4013 0.0828 0.43 0.069 C 0.4586 0.0552 0.442 0.0237 0.442 0.001 C 0.442 -0.0217 0.4586 -0.0532 0.43 -0.067 C 0.4013 -0.0808 0.3183 -0.0778 0.27 -0.082 C 0.2217 -0.0862 0.18 -0.0907 0.14 -0.092 C 0.1 -0.0933 0.0667 -0.0907 0.03 -0.09 C 0.03 -0.0293 0.03 0.0313 0.03 0.092 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0233 0.079 0.0767 0.0673 0.12 0.066 C 0.1633 0.0647 0.2117 0.0617 0.26 0.06 C 0.3083 0.0583 0.3836 0.066 0.4099 0.056 C 0.4363 0.046 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4363 -0.0458 0.4099 -0.056 C 0.3836 -0.0662 0.3083 -0.0583 0.26 -0.061 C 0.2117 -0.0637 0.1633 -0.0708 0.12 -0.072 C 0.0767 -0.0732 0.0233 -0.08 0.0 -0.068 C -0.0233 -0.056 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0233 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "boot-sole-r",
+              "bone": "foot-r",
+              "role": "detail",
+              "z": 1.06,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.054,
+                  -0.06
+                ],
+                [
+                  0.226,
+                  -0.06
+                ]
+              ],
+              "closed": false,
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.03 0.054 C 0.07 0.0533 0.1033 0.0535 0.15 0.052 C 0.1967 0.0505 0.2818 0.0537 0.3101 0.045 C 0.3385 0.0363 0.3201 0.015 0.3201 0.0 C 0.3201 -0.015 0.3385 -0.0363 0.3101 -0.045 C 0.2818 -0.0537 0.1967 -0.0505 0.15 -0.052 C 0.1033 -0.0535 0.07 -0.0533 0.03 -0.054 C 0.03 -0.018 0.03 0.018 0.03 0.054 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0767 0.043 0.12 0.041 C 0.1633 0.039 0.2353 0.0398 0.26 0.033 C 0.2846 0.0262 0.268 0.011 0.268 0.0 C 0.268 -0.011 0.2846 -0.0262 0.26 -0.033 C 0.2353 -0.0398 0.1633 -0.039 0.12 -0.041 C 0.0767 -0.043 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.64,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.029 C 0.0056 0.0393 0.0201 0.0335 0.0338 0.0348 C 0.0475 0.0361 0.0669 0.0372 0.0822 0.0367 C 0.0975 0.0363 0.1117 0.0347 0.1257 0.0319 C 0.1397 0.0292 0.1576 0.0253 0.1663 0.0203 C 0.1751 0.0153 0.1783 0.0081 0.1783 0.0019 C 0.1783 -0.0042 0.1751 -0.0119 0.1663 -0.0164 C 0.1576 -0.021 0.1397 -0.0229 0.1257 -0.0251 C 0.1117 -0.0274 0.0975 -0.0288 0.0822 -0.03 C 0.0669 -0.0311 0.0475 -0.0324 0.0338 -0.0319 C 0.0201 -0.0314 0.0056 -0.0372 0.0 -0.0271 C -0.0056 -0.0169 -0.0056 0.0187 0.0 0.029 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.098 C 0.0383 0.1135 0.095 0.0963 0.14 0.094 C 0.185 0.0917 0.2217 0.0882 0.27 0.084 C 0.3183 0.0798 0.4013 0.0828 0.43 0.069 C 0.4586 0.0552 0.442 0.0237 0.442 0.001 C 0.442 -0.0217 0.4586 -0.0532 0.43 -0.067 C 0.4013 -0.0808 0.3183 -0.0778 0.27 -0.082 C 0.2217 -0.0862 0.185 -0.0897 0.14 -0.092 C 0.095 -0.0943 0.0383 -0.1115 0.0 -0.096 C -0.0383 -0.0805 -0.09 -0.0313 -0.09 0.001 C -0.09 0.0333 -0.0383 0.0825 0.0 0.098 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0233 0.079 0.0767 0.0673 0.12 0.066 C 0.1633 0.0647 0.2117 0.0617 0.26 0.06 C 0.3083 0.0583 0.3836 0.066 0.4099 0.056 C 0.4363 0.046 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4363 -0.0458 0.4099 -0.056 C 0.3836 -0.0662 0.3083 -0.0583 0.26 -0.061 C 0.2117 -0.0637 0.1633 -0.0708 0.12 -0.072 C 0.0767 -0.0732 0.0233 -0.08 0.0 -0.068 C -0.0233 -0.056 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0233 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "boot-sole-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 4.06,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.054,
+                  -0.06
+                ],
+                [
+                  0.226,
+                  -0.06
+                ]
+              ],
+              "closed": false,
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.05 0.054 C 0.0833 0.0533 0.1066 0.0535 0.15 0.052 C 0.1934 0.0505 0.2818 0.0537 0.3101 0.045 C 0.3385 0.0363 0.3201 0.015 0.3201 0.0 C 0.3201 -0.015 0.3385 -0.0363 0.3101 -0.045 C 0.2818 -0.0537 0.1934 -0.0505 0.15 -0.052 C 0.1066 -0.0535 0.0833 -0.0533 0.05 -0.054 C 0.05 -0.018 0.05 0.018 0.05 0.054 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.62,
+              "region": "shirt-sleeves",
+              "material": "flannel",
+              "kind": "path",
+              "d": "M0.00000 0.04500 L0.05201 0.04630 L0.23379 0.03684 L0.26000 0.03300 L0.26741 0.03008 L0.27334 0.02247 L0.26800 -0.00000 L0.27334 -0.02247 L0.26741 -0.03008 L0.26000 -0.03300 L0.23379 -0.03684 L0.02194 -0.04753 L-0.01718 -0.04563 L-0.01206 -0.03613 L-0.01346 0.03173 L-0.00683 0.04173 Z"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.54,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.029 C 0.0056 0.0393 0.0201 0.0335 0.0338 0.0348 C 0.0475 0.0361 0.0669 0.0372 0.0822 0.0367 C 0.0975 0.0363 0.1117 0.0347 0.1257 0.0319 C 0.1397 0.0292 0.1576 0.0253 0.1663 0.0203 C 0.1751 0.0153 0.1783 0.0081 0.1783 0.0019 C 0.1783 -0.0042 0.1751 -0.0119 0.1663 -0.0164 C 0.1576 -0.021 0.1397 -0.0229 0.1257 -0.0251 C 0.1117 -0.0274 0.0975 -0.0288 0.0822 -0.03 C 0.0669 -0.0311 0.0475 -0.0324 0.0338 -0.0319 C 0.0201 -0.0314 0.0056 -0.0372 0.0 -0.0271 C -0.0056 -0.0169 -0.0056 0.0187 0.0 0.029 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.128 C 0.0367 0.128 0.07 0.1277 0.11 0.128 C 0.15 0.1283 0.2017 0.1305 0.24 0.13 C 0.2783 0.1295 0.3117 0.1292 0.34 0.125 C 0.3683 0.1208 0.39 0.1142 0.41 0.105 C 0.43 0.0958 0.4517 0.0985 0.4601 0.07 C 0.4684 0.0415 0.4684 -0.0347 0.4601 -0.066 C 0.4517 -0.0973 0.43 -0.1073 0.41 -0.118 C 0.39 -0.1287 0.3683 -0.1293 0.34 -0.13 C 0.3117 -0.1307 0.2783 -0.1228 0.24 -0.122 C 0.2017 -0.1212 0.15 -0.125 0.11 -0.125 C 0.07 -0.125 0.0367 -0.123 0.0 -0.122 C 0.0 -0.0387 0.0 0.0447 0.0 0.128 Z",
+              "region": "shirt-torso",
+              "material": "flannel"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.0503 C 0.0073 0.0664 0.0282 0.0461 0.0435 0.0484 C 0.0588 0.0506 0.0749 0.0571 0.0919 0.0638 C 0.1088 0.0706 0.1257 0.0851 0.1451 0.089 C 0.1644 0.0928 0.1905 0.0922 0.2079 0.087 C 0.2253 0.0819 0.2392 0.0709 0.2495 0.058 C 0.2598 0.0451 0.2682 0.0266 0.2698 0.0097 C 0.2714 -0.0073 0.2655 -0.029 0.2592 -0.0435 C 0.2529 -0.058 0.2414 -0.0706 0.2321 -0.0774 C 0.2227 -0.0841 0.2118 -0.0825 0.2031 -0.0841 C 0.1944 -0.0857 0.1866 -0.0853 0.1799 -0.087 C 0.1731 -0.0888 0.1679 -0.0917 0.1625 -0.0948 C 0.157 -0.0978 0.1517 -0.1057 0.147 -0.1054 C 0.1423 -0.1051 0.1383 -0.0956 0.1344 -0.0928 C 0.1305 -0.0901 0.1272 -0.0899 0.1238 -0.089 C 0.1204 -0.088 0.1173 -0.0877 0.1141 -0.087 C 0.1109 -0.0864 0.1099 -0.0851 0.1044 -0.0851 C 0.099 -0.0851 0.0877 -0.0893 0.0812 -0.087 C 0.0748 -0.0848 0.0696 -0.079 0.0658 -0.0716 C 0.0619 -0.0641 0.0632 -0.0464 0.058 -0.0425 C 0.0529 -0.0387 0.0445 -0.0474 0.0348 -0.0484 C 0.0251 -0.0493 0.0058 -0.0648 0.0 -0.0484 C -0.0058 -0.0319 -0.0073 0.0342 0.0 0.0503 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M 0.205 -0.092 C 0.22 -0.0887 0.2375 -0.0907 0.25 -0.082 C 0.2625 -0.0733 0.2727 -0.0557 0.28 -0.04 C 0.2873 -0.0243 0.2953 -0.0077 0.294 0.012 C 0.2927 0.0317 0.284 0.0627 0.272 0.078 C 0.26 0.0933 0.2398 0.0993 0.222 0.104 C 0.2042 0.1087 0.1823 0.1083 0.165 0.106 C 0.1477 0.1037 0.1337 0.0953 0.118 0.09 C 0.1287 0.0733 0.14 0.0583 0.15 0.04 C 0.16 0.0217 0.1688 0.002 0.178 -0.02 C 0.1872 -0.042 0.196 -0.068 0.205 -0.092 Z",
+              "region": "hair",
+              "material": "hair"
+            },
+            {
+              "id": "guitar-body",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.72,
+              "region": "guitar",
+              "material": "spruce",
+              "kind": "path",
+              "d": "M-0.21500 0.00000 L-0.20888 0.08383 L-0.19344 0.11754 L-0.17812 0.13988 L-0.15018 0.16811 L-0.12917 0.18043 L-0.10505 0.18781 L-0.06581 0.19213 L-0.01431 0.18925 L0.03712 0.17610 L0.07018 0.16340 L0.11321 0.13473 L0.13000 0.12800 L0.14736 0.12775 L0.20000 0.14000 L0.21907 0.14100 L0.23365 0.13346 L0.23233 0.14128 L0.26694 0.13740 L0.28950 0.12276 L0.31329 0.09029 L0.32765 0.06204 L0.33500 0.02600 L0.32765 -0.05269 L0.32200 -0.07500 L0.30236 -0.11046 L0.27500 -0.13400 L0.25812 -0.13963 L0.21907 -0.14100 L0.19100 -0.13900 L0.14736 -0.12775 L0.13000 -0.12800 L0.11321 -0.13473 L0.06000 -0.16800 L0.01187 -0.18356 L-0.04000 -0.19200 L-0.09218 -0.19002 L-0.11746 -0.18466 L-0.14000 -0.17500 L-0.16936 -0.15027 L-0.19344 -0.11754 L-0.20888 -0.08383 Z"
+            },
+            {
+              "id": "guitar-neck",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.85,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "path",
+              "d": "M 0.31 0.024 L 0.64 0.0216 L 0.64 -0.0216 L 0.31 -0.024 Z",
+              "region": "guitar",
+              "material": "mahogany"
+            },
+            {
+              "id": "guitar-head",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.86,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.64 0.028 C 0.6867 0.0333 0.7333 0.0387 0.78 0.044 C 0.78 0.0147 0.78 -0.0147 0.78 -0.044 C 0.7333 -0.0387 0.6867 -0.0333 0.64 -0.028 C 0.64 -0.0093 0.64 0.0093 0.64 0.028 Z",
+              "region": "guitar",
+              "material": "mahogany"
+            },
+            {
+              "id": "soundhole",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.075,
+              "cy": 0,
+              "rx": 0.052,
+              "ry": 0.062,
+              "region": "guitar"
+            },
+            {
+              "id": "bridge",
+              "bone": "guitar",
+              "role": "detail",
+              "z": 3.95,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.115,
+              "y": -0.07,
+              "w": 0.03,
+              "h": 0.14,
+              "r": 0.005,
+              "region": "guitar"
+            },
+            {
+              "id": "stool",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.19 0.56 L 0.19 0.56 L 0.19 0.52 L 0.14 0.52 L 0.206 0.0 L 0.164 0.0 L 0.134 0.236 L -0.134 0.236 L -0.164 0.0 L -0.206 0.0 L -0.14 0.52 L -0.19 0.52 Z M 0.1305 0.264 L 0.098 0.52 L -0.098 0.52 L -0.1305 0.264 Z",
+              "region": "stool",
+              "material": "pine"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Clothing outlines of shirt, jeans and boots with a sole line, mitten hands, face profile with eye under a hair cap, guitar with soundhole and bridge, stool with seat, legs and rung.",
+            "de": "Kleidungsumrisse von Hemd, Jeans und Stiefeln mit Sohlenlinie, Fäustlingshände, Gesichtsprofil mit Auge unter einer Haarkappe, Gitarre mit Schallloch und Steg, Hocker mit Sitz, Beinen und Fußraste."
+          },
+          "retained": {
+            "en": "Soundhole, bridge, boot sole line and eye; neck 0.048 m wide.",
+            "de": "Schallloch, Steg, Stiefelsohlenlinie und Auge; Hals 0,048 m breit."
+          },
+          "merged": {
+            "en": "Fingers into the mitten; sock into the boot; hair and beard into one cap.",
+            "de": "Finger im Fäustling; Socke im Stiefel; Haar und Bart in einer Kappe."
+          },
+          "omitted": {
+            "en": "Frets, strings, tuners, ear, cuffs, shirt placket, thumb.",
+            "de": "Bünde, Saiten, Wirbel, Ohr, Bündchen, Hemdleiste, Daumen."
+          },
+          "thinElements": {
+            "en": "Soundhole ring is a filled form 0.10 m wide; the neck 0.048 m (0.48 mm); lines at 0.13 mm.",
+            "de": "Der Schalllochring ist eine Vollform von 0,10 m; der Hals 0,048 m (0,48 mm); Linien mit 0,13 mm."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "0.20 mm outlines and 0.13 mm detail lines.",
+            "de": "0,20-mm-Konturen und 0,13-mm-Detaillinien."
+          },
+          "overlays": {
+            "en": "Regions map one to one onto forms; soundhole and bridge lie inside the guitar region.",
+            "de": "Regionen entsprechen den Formen eins zu eins; Schallloch und Steg liegen innerhalb der Gitarrenregion."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.03 0.092 C 0.0867 0.0907 0.1333 0.0917 0.2 0.088 C 0.2667 0.0843 0.3896 0.0845 0.43 0.07 C 0.4703 0.0555 0.442 0.024 0.442 0.001 C 0.442 -0.022 0.4703 -0.0535 0.43 -0.068 C 0.3896 -0.0825 0.2667 -0.0823 0.2 -0.086 C 0.1333 -0.0897 0.0867 -0.0887 0.03 -0.09 C 0.03 -0.0293 0.03 0.0313 0.03 0.092 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0283 0.079 0.0817 0.068 0.15 0.066 C 0.2183 0.064 0.3653 0.067 0.4099 0.056 C 0.4546 0.045 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4546 -0.0443 0.4099 -0.056 C 0.3653 -0.0677 0.2183 -0.068 0.15 -0.07 C 0.0817 -0.072 0.0283 -0.0797 0.0 -0.068 C -0.0283 -0.0563 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0283 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.03 0.054 C 0.07 0.0533 0.1033 0.0535 0.15 0.052 C 0.1967 0.0505 0.2818 0.0537 0.3101 0.045 C 0.3385 0.0363 0.3201 0.015 0.3201 0.0 C 0.3201 -0.015 0.3385 -0.0363 0.3101 -0.045 C 0.2818 -0.0537 0.1967 -0.0505 0.15 -0.052 C 0.1033 -0.0535 0.07 -0.0533 0.03 -0.054 C 0.03 -0.018 0.03 0.018 0.03 0.054 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0767 0.043 0.12 0.041 C 0.1633 0.039 0.2353 0.0398 0.26 0.033 C 0.2846 0.0262 0.268 0.011 0.268 0.0 C 0.268 -0.011 0.2846 -0.0262 0.26 -0.033 C 0.2353 -0.0398 0.1633 -0.039 0.12 -0.041 C 0.0767 -0.043 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.64,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.029 C 0.0056 0.0393 0.0201 0.0335 0.0338 0.0348 C 0.0475 0.0361 0.0669 0.0372 0.0822 0.0367 C 0.0975 0.0363 0.1117 0.0347 0.1257 0.0319 C 0.1397 0.0292 0.1576 0.0253 0.1663 0.0203 C 0.1751 0.0153 0.1783 0.0081 0.1783 0.0019 C 0.1783 -0.0042 0.1751 -0.0119 0.1663 -0.0164 C 0.1576 -0.021 0.1397 -0.0229 0.1257 -0.0251 C 0.1117 -0.0274 0.0975 -0.0288 0.0822 -0.03 C 0.0669 -0.0311 0.0475 -0.0324 0.0338 -0.0319 C 0.0201 -0.0314 0.0056 -0.0372 0.0 -0.0271 C -0.0056 -0.0169 -0.0056 0.0187 0.0 0.029 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.098 C 0.0483 0.1125 0.1283 0.0927 0.2 0.088 C 0.2717 0.0833 0.3896 0.0845 0.43 0.07 C 0.4703 0.0555 0.442 0.024 0.442 0.001 C 0.442 -0.022 0.4703 -0.0535 0.43 -0.068 C 0.3896 -0.0825 0.2717 -0.0813 0.2 -0.086 C 0.1283 -0.0907 0.0483 -0.1105 0.0 -0.096 C -0.0483 -0.0815 -0.09 -0.0313 -0.09 0.001 C -0.09 0.0333 -0.0483 0.0835 0.0 0.098 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.0 0.068 C 0.0283 0.079 0.0817 0.068 0.15 0.066 C 0.2183 0.064 0.3653 0.067 0.4099 0.056 C 0.4546 0.045 0.4179 0.0187 0.4179 0.0 C 0.4179 -0.0187 0.4546 -0.0443 0.4099 -0.056 C 0.3653 -0.0677 0.2183 -0.068 0.15 -0.07 C 0.0817 -0.072 0.0283 -0.0797 0.0 -0.068 C -0.0283 -0.0563 -0.02 -0.0227 -0.02 0.0 C -0.02 0.0227 -0.0283 0.057 0.0 0.068 Z",
+              "region": "jeans",
+              "material": "denim"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M -0.058 -0.0775 C -0.0587 -0.0533 -0.0622 -0.0263 -0.06 -0.005 C -0.0578 0.0163 -0.06 0.0392 -0.045 0.05 C -0.03 0.0608 0.0058 0.0633 0.03 0.06 C 0.0542 0.0567 0.0775 0.0417 0.1 0.03 C 0.1225 0.0183 0.1458 0.0017 0.165 -0.01 C 0.1842 -0.0217 0.2038 -0.0287 0.215 -0.04 C 0.2262 -0.0513 0.2263 -0.065 0.232 -0.0775 C 0.1353 -0.0775 0.0387 -0.0775 -0.058 -0.0775 Z",
+              "region": "boots",
+              "material": "leather"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.62,
+              "region": "shirt-sleeves",
+              "material": "flannel",
+              "kind": "path",
+              "d": "M0.05000 0.05400 L0.23571 0.05120 L0.31010 0.04500 L0.31868 0.04118 L0.32574 0.03089 L0.32010 -0.00000 L0.32574 -0.03089 L0.31868 -0.04118 L0.31010 -0.04500 L0.27925 -0.04955 L0.05000 -0.05400 Z"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.045 C 0.022 0.0518 0.0767 0.043 0.12 0.041 C 0.1633 0.039 0.2353 0.0398 0.26 0.033 C 0.2846 0.0262 0.268 0.011 0.268 0.0 C 0.268 -0.011 0.2846 -0.0262 0.26 -0.033 C 0.2353 -0.0398 0.1633 -0.039 0.12 -0.041 C 0.0767 -0.043 0.022 -0.0518 0.0 -0.045 C -0.022 -0.0382 -0.012 -0.015 -0.012 0.0 C -0.012 0.015 -0.022 0.0382 0.0 0.045 Z",
+              "region": "shirt-sleeves",
+              "material": "flannel"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.54,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.029 C 0.0056 0.0393 0.0201 0.0335 0.0338 0.0348 C 0.0475 0.0361 0.0669 0.0372 0.0822 0.0367 C 0.0975 0.0363 0.1117 0.0347 0.1257 0.0319 C 0.1397 0.0292 0.1576 0.0253 0.1663 0.0203 C 0.1751 0.0153 0.1783 0.0081 0.1783 0.0019 C 0.1783 -0.0042 0.1751 -0.0119 0.1663 -0.0164 C 0.1576 -0.021 0.1397 -0.0229 0.1257 -0.0251 C 0.1117 -0.0274 0.0975 -0.0288 0.0822 -0.03 C 0.0669 -0.0311 0.0475 -0.0324 0.0338 -0.0319 C 0.0201 -0.0314 0.0056 -0.0372 0.0 -0.0271 C -0.0056 -0.0169 -0.0056 0.0187 0.0 0.029 Z",
+              "region": "hands",
+              "material": "skin"
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M 0.0 0.128 C 0.0533 0.1287 0.1033 0.1305 0.16 0.13 C 0.2167 0.1295 0.2983 0.1292 0.34 0.125 C 0.3817 0.1208 0.39 0.1142 0.41 0.105 C 0.43 0.0958 0.4517 0.0985 0.4601 0.07 C 0.4684 0.0415 0.4684 -0.0347 0.4601 -0.066 C 0.4517 -0.0973 0.43 -0.1073 0.41 -0.118 C 0.39 -0.1287 0.3817 -0.129 0.34 -0.13 C 0.2983 -0.131 0.2167 -0.1253 0.16 -0.124 C 0.1033 -0.1227 0.0533 -0.1227 0.0 -0.122 C 0.0 -0.0387 0.0 0.0447 0.0 0.128 Z",
+              "region": "shirt-torso",
+              "material": "flannel"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.0 0.0503 C 0.0073 0.0664 0.0282 0.0461 0.0435 0.0484 C 0.0588 0.0506 0.0749 0.0571 0.0919 0.0638 C 0.1088 0.0706 0.1257 0.0851 0.1451 0.089 C 0.1644 0.0928 0.1905 0.0922 0.2079 0.087 C 0.2253 0.0819 0.2392 0.0709 0.2495 0.058 C 0.2598 0.0451 0.2682 0.0266 0.2698 0.0097 C 0.2714 -0.0073 0.2655 -0.029 0.2592 -0.0435 C 0.2529 -0.058 0.2414 -0.0706 0.2321 -0.0774 C 0.2227 -0.0841 0.2118 -0.0825 0.2031 -0.0841 C 0.1944 -0.0857 0.1866 -0.0853 0.1799 -0.087 C 0.1731 -0.0888 0.1679 -0.0917 0.1625 -0.0948 C 0.157 -0.0978 0.1517 -0.1057 0.147 -0.1054 C 0.1423 -0.1051 0.1383 -0.0956 0.1344 -0.0928 C 0.1305 -0.0901 0.1272 -0.0899 0.1238 -0.089 C 0.1204 -0.088 0.1173 -0.0877 0.1141 -0.087 C 0.1109 -0.0864 0.1099 -0.0851 0.1044 -0.0851 C 0.099 -0.0851 0.0877 -0.0893 0.0812 -0.087 C 0.0748 -0.0848 0.0696 -0.079 0.0658 -0.0716 C 0.0619 -0.0641 0.0632 -0.0464 0.058 -0.0425 C 0.0529 -0.0387 0.0445 -0.0474 0.0348 -0.0484 C 0.0251 -0.0493 0.0058 -0.0648 0.0 -0.0484 C -0.0058 -0.0319 -0.0073 0.0342 0.0 0.0503 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.18,
+              "kind": "path",
+              "d": "M 0.205 -0.092 C 0.22 -0.0887 0.2375 -0.0907 0.25 -0.082 C 0.2625 -0.0733 0.2727 -0.0557 0.28 -0.04 C 0.2873 -0.0243 0.2953 -0.0077 0.294 0.012 C 0.2927 0.0317 0.284 0.0627 0.272 0.078 C 0.26 0.0933 0.2398 0.0993 0.222 0.104 C 0.2042 0.1087 0.1823 0.1083 0.165 0.106 C 0.1477 0.1037 0.1337 0.0953 0.118 0.09 C 0.1287 0.0733 0.14 0.0583 0.15 0.04 C 0.16 0.0217 0.1688 0.002 0.178 -0.02 C 0.1872 -0.042 0.196 -0.068 0.205 -0.092 Z",
+              "region": "hair",
+              "material": "hair"
+            },
+            {
+              "id": "guitar-body",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.72,
+              "region": "guitar",
+              "material": "spruce",
+              "kind": "path",
+              "d": "M-0.21500 0.00000 L-0.20888 0.08383 L-0.19344 0.11754 L-0.17812 0.13988 L-0.15018 0.16811 L-0.12917 0.18043 L-0.10505 0.18781 L-0.06581 0.19213 L-0.01431 0.18925 L0.03712 0.17610 L0.07018 0.16340 L0.11321 0.13473 L0.13000 0.12800 L0.14736 0.12775 L0.20000 0.14000 L0.23896 0.14143 L0.26694 0.13740 L0.28950 0.12276 L0.31329 0.09029 L0.32765 0.06204 L0.33500 0.02600 L0.33462 -0.01959 L0.33330 -0.00194 L0.32200 -0.07500 L0.30236 -0.11046 L0.27500 -0.13400 L0.25812 -0.13963 L0.21907 -0.14100 L0.19100 -0.13900 L0.14736 -0.12775 L0.13000 -0.12800 L0.11321 -0.13473 L0.06000 -0.16800 L0.01187 -0.18356 L-0.04000 -0.19200 L-0.09218 -0.19002 L-0.11746 -0.18466 L-0.14000 -0.17500 L-0.16936 -0.15027 L-0.19344 -0.11754 L-0.20888 -0.08383 Z"
+            },
+            {
+              "id": "guitar-neck",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.85,
+              "filled": true,
+              "tone": 0.35,
+              "region": "guitar",
+              "material": "mahogany",
+              "kind": "path",
+              "d": "M0.31000 0.03000 L0.64000 0.02700 L0.64000 -0.02700 L0.44000 -0.02685 L0.44427 -0.02484 L0.42000 -0.02900 L0.31000 -0.03000 Z"
+            },
+            {
+              "id": "guitar-head",
+              "bone": "guitar",
+              "role": "body",
+              "z": 3.86,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0.64 0.028 C 0.6867 0.0333 0.7333 0.0387 0.78 0.044 C 0.78 0.0147 0.78 -0.0147 0.78 -0.044 C 0.7333 -0.0387 0.6867 -0.0333 0.64 -0.028 C 0.64 -0.0093 0.64 0.0093 0.64 0.028 Z",
+              "region": "guitar",
+              "material": "mahogany"
+            },
+            {
+              "id": "stool",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.6,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.19 0.56 L 0.19 0.56 L 0.19 0.52 L 0.14 0.52 L 0.208 0.0 L 0.162 0.0 L 0.1311 0.236 L -0.1311 0.236 L -0.162 0.0 L -0.208 0.0 L -0.14 0.52 L -0.19 0.52 Z M 0.1275 0.264 L 0.094 0.52 L -0.094 0.52 L -0.1275 0.264 Z",
+              "region": "stool",
+              "material": "pine"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Head with separate hair cap, flannel shirt, pelvis, jeans in thigh and shank per leg, boots, sleeve and tapered hand per arm; guitar as body, neck and headstock; stool as seat, two legs and a rung.",
+            "de": "Kopf mit getrennter Haarkappe, Flanellhemd, Becken, Jeans je Bein in Ober- und Unterschenkel, Stiefel, je Arm Ärmel und spitz zulaufende Hand; Gitarre als Korpus, Hals und Kopfplatte; Hocker als Sitz, zwei Beine und Fußraste."
+          },
+          "retained": {
+            "en": "Tones for shirt, jeans, skin, hair, boots, spruce top, neck and pine stool; neck drawn 0.06 m wide.",
+            "de": "Töne für Hemd, Jeans, Haut, Haar, Stiefel, Fichtendecke, Hals und Kiefernhocker; Hals 0,06 m breit gezeichnet."
+          },
+          "merged": {
+            "en": "Fingers into the hand tip; forearm cuff into the sleeve; boot and sock.",
+            "de": "Finger in der Handspitze; Ärmelbündchen im Ärmel; Stiefel und Socke."
+          },
+          "omitted": {
+            "en": "Soundhole, bridge, frets, strings, tuners, beard, ear, eye, cuffs, boot sole line.",
+            "de": "Schallloch, Steg, Bünde, Saiten, Wirbel, Bart, Ohr, Auge, Bündchen, Sohlenlinie."
+          },
+          "thinElements": {
+            "en": "The neck is drawn 0.06 m instead of 0.045 m wide and the stool legs 0.05 m instead of 0.04 m (feature limit 0.04 m); the rung stays 0.028 m and is joined to both legs.",
+            "de": "Der Hals wird 0,06 m statt 0,045 m breit und die Hockerbeine 0,05 m statt 0,04 m gezeichnet (Mindestbreite 0,04 m); die Fußraste bleibt 0,028 m und ist mit beiden Beinen verbunden."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "0.18 mm outlines; light skin, mid-grey shirt and jeans, dark boots and hair, light wood.",
+            "de": "0,18-mm-Konturen; helle Haut, mittelgraues Hemd und Jeans, dunkle Stiefel und Haar, helles Holz."
+          },
+          "overlays": {
+            "en": "Every region is its own form: face, hair, shirt trunk, sleeve, hand, jeans, boot, guitar and stool.",
+            "de": "Jede Region ist eine eigene Form: Gesicht, Haar, Hemdrumpf, Ärmel, Hand, Jeans, Stiefel, Gitarre und Hocker."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.15,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.2
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.15,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M0.00000 0.09800 L0.08900 0.10168 L0.21564 0.09665 L0.34196 0.08630 L0.44258 0.07078 L0.45970 0.06333 L0.46929 0.05019 L0.46813 0.04054 L0.45000 0.00100 L0.46813 -0.03854 L0.46787 -0.05278 L0.45239 -0.06521 L0.43000 -0.07200 L0.45982 -0.06817 L0.42934 -0.07399 L0.45982 -0.07061 L0.42946 -0.07658 L0.46008 -0.07323 L0.37681 -0.08963 L0.40669 -0.08107 L0.37633 -0.08704 L0.40647 -0.07836 L0.37599 -0.08418 L0.40651 -0.07483 L0.28121 -0.08993 L0.08900 -0.09967 L0.01664 -0.09792 L-0.01298 -0.09326 L-0.03125 -0.08529 L-0.04320 -0.06846 L-0.04376 -0.05504 L-0.03000 0.00100 L-0.04517 0.07019 L-0.04402 0.05189 L-0.04803 0.06643 L-0.04225 0.04985 L-0.04320 0.07046 L-0.03705 0.08224 L-0.02331 0.09165 Z"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.15,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M0.00000 0.07200 L0.08469 0.07696 L0.20622 0.07677 L0.32712 0.07071 L0.37562 0.06523 L0.40990 0.05800 L0.44116 0.04110 L0.45799 0.01748 L0.46040 -0.00882 L0.44837 -0.03377 L0.43234 -0.04768 L0.40990 -0.05800 L0.37562 -0.06523 L0.32712 -0.07071 L0.20622 -0.07678 L0.03540 -0.07507 L0.00000 -0.07200 L-0.02847 -0.06381 L-0.03784 -0.05128 L-0.03473 -0.03607 L-0.02905 -0.07222 L-0.02876 0.01802 L-0.02602 0.02014 L-0.02452 -0.01480 L-0.02000 0.00000 L-0.03689 0.04136 L-0.03784 0.05128 L-0.02847 0.06381 Z"
+            },
+            {
+              "id": "boot-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 1.05,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M -0.062 -0.0775 C -0.062 -0.0417 -0.0807 0.0071 -0.062 0.03 C -0.0433 0.0529 0.0147 0.065 0.05 0.06 C 0.0853 0.055 0.1192 0.0167 0.15 0.0 C 0.1808 -0.0167 0.2208 -0.0271 0.235 -0.04 C 0.2492 -0.0529 0.235 -0.065 0.235 -0.0775 C 0.136 -0.0775 0.037 -0.0775 -0.062 -0.0775 Z",
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.0 0.056 C 0.0567 0.0643 0.2568 0.0593 0.3101 0.05 C 0.3635 0.0407 0.3201 0.0167 0.3201 0.0 C 0.3201 -0.0167 0.3635 -0.0407 0.3101 -0.05 C 0.2568 -0.0593 0.0567 -0.0643 0.0 -0.056 C -0.0567 -0.0477 -0.03 -0.0187 -0.03 0.0 C -0.03 0.0187 -0.0567 0.0477 0.0 0.056 Z",
+              "region": "shirt-sleeves"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 1.52,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.0 0.052 C 0.0717 0.0603 0.345 0.0587 0.42 0.05 C 0.495 0.0413 0.45 0.0167 0.45 0.0 C 0.45 -0.0167 0.495 -0.0413 0.42 -0.05 C 0.345 -0.0587 0.0717 -0.0603 0.0 -0.052 C -0.0717 -0.0437 -0.01 -0.0173 -0.01 0.0 C -0.01 0.0173 -0.0717 0.0437 0.0 0.052 Z",
+              "regions": [
+                "shirt-sleeves",
+                "hands"
+              ]
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M 0.0 0.098 C 0.0767 0.1102 0.355 0.0902 0.43 0.074 C 0.505 0.0578 0.45 0.0253 0.45 0.001 C 0.45 -0.0233 0.505 -0.0558 0.43 -0.072 C 0.355 -0.0882 0.0767 -0.1082 0.0 -0.096 C -0.0767 -0.0838 -0.03 -0.0313 -0.03 0.001 C -0.03 0.0333 -0.0767 0.0858 0.0 0.098 Z",
+              "region": "jeans"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.15,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M0.00000 0.07200 L0.08469 0.07696 L0.20622 0.07677 L0.32712 0.07071 L0.37562 0.06523 L0.40990 0.05800 L0.44116 0.04110 L0.45799 0.01748 L0.46040 -0.00882 L0.44838 -0.03377 L0.43234 -0.04768 L0.40990 -0.05800 L0.37562 -0.06523 L0.26910 -0.07452 L0.08469 -0.07696 L-0.01204 -0.06986 L-0.02847 -0.06381 L-0.03784 -0.05128 L-0.04361 -0.07713 L-0.03258 -0.03077 L-0.02000 0.00000 L-0.03689 0.04136 L-0.03784 0.05128 L-0.02847 0.06381 Z"
+            },
+            {
+              "id": "boot-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M -0.062 -0.0775 C -0.062 -0.0417 -0.0807 0.0071 -0.062 0.03 C -0.0433 0.0529 0.0147 0.065 0.05 0.06 C 0.0853 0.055 0.1192 0.0167 0.15 0.0 C 0.1808 -0.0167 0.2208 -0.0271 0.235 -0.04 C 0.2492 -0.0529 0.235 -0.065 0.235 -0.0775 C 0.136 -0.0775 0.037 -0.0775 -0.062 -0.0775 Z",
+              "region": "boots"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.2,
+              "region": "shirt-sleeves",
+              "kind": "path",
+              "d": "M0.03658 0.05903 L-0.04031 0.05321 L0.06488 0.05987 L0.15632 0.05960 L0.28380 0.05327 L0.32586 0.04587 L0.33419 0.04061 L0.33673 0.03450 L0.32010 0.00000 L0.33512 -0.02777 L0.33608 -0.03765 L0.32586 -0.04587 L0.28380 -0.05327 L0.15633 -0.05960 L0.02742 -0.05851 L-0.00000 -0.05600 L-0.02382 -0.04935 L-0.03208 -0.04310 L-0.03626 -0.03190 L-0.03000 0.00000 L-0.03626 0.03190 L-0.03208 0.04310 L-0.01757 0.05198 L-0.04744 0.04827 L-0.00925 0.05316 L-0.03981 0.05259 L-0.00925 0.05517 L-0.03981 0.05326 Z"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M 0.0 0.052 C 0.0717 0.0603 0.345 0.0587 0.42 0.05 C 0.495 0.0413 0.45 0.0167 0.45 0.0 C 0.45 -0.0167 0.495 -0.0413 0.42 -0.05 C 0.345 -0.0587 0.0717 -0.0603 0.0 -0.052 C -0.0717 -0.0437 -0.01 -0.0173 -0.01 0.0 C -0.01 0.0173 -0.0717 0.0437 0.0 0.052 Z",
+              "regions": [
+                "shirt-sleeves",
+                "hands"
+              ]
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M 0.0 0.128 C 0.0667 0.1287 0.1433 0.1305 0.2 0.13 C 0.2567 0.1295 0.2933 0.1342 0.34 0.125 C 0.3867 0.1158 0.4567 0.1083 0.4801 0.075 C 0.5034 0.0417 0.5034 -0.0408 0.4801 -0.075 C 0.4567 -0.1092 0.3867 -0.1218 0.34 -0.13 C 0.2933 -0.1382 0.2567 -0.1253 0.2 -0.124 C 0.1433 -0.1227 0.0667 -0.1227 0.0 -0.122 C 0.0 -0.0387 0.0 0.0447 0.0 0.128 Z",
+              "region": "shirt-torso",
+              "material": "flannel"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0.0 0.062 C 0.02 0.0863 0.0833 0.0817 0.12 0.088 C 0.1567 0.0943 0.1925 0.1147 0.22 0.1 C 0.2475 0.0853 0.2833 0.0308 0.285 0.0 C 0.2867 -0.0308 0.2508 -0.067 0.23 -0.085 C 0.2092 -0.103 0.1833 -0.1068 0.16 -0.108 C 0.1367 -0.1092 0.1067 -0.1 0.09 -0.092 C 0.0733 -0.084 0.075 -0.0657 0.06 -0.06 C 0.045 -0.0543 0.01 -0.0783 0.0 -0.058 C -0.01 -0.0377 -0.02 0.0377 0.0 0.062 Z",
+              "regions": [
+                "face",
+                "hair"
+              ]
+            },
+            {
+              "id": "guitar",
+              "bone": "guitar",
+              "role": "body",
+              "z": 4.2,
+              "filled": true,
+              "tone": 0.35,
+              "region": "guitar",
+              "kind": "path",
+              "d": "M-0.21500 0.00000 L-0.20888 0.07961 L-0.19344 0.11165 L-0.17812 0.13289 L-0.15018 0.15968 L-0.12917 0.17136 L-0.10505 0.17838 L-0.06581 0.18250 L-0.01431 0.17979 L0.06089 0.16003 L0.03712 0.16727 L0.07018 0.15525 L0.11321 0.12797 L0.13000 0.12160 L0.14736 0.12140 L0.20000 0.13300 L0.23896 0.13439 L0.26694 0.13054 L0.28950 0.11659 L0.31329 0.08573 L0.32765 0.05890 L0.33500 0.02470 L0.64000 0.05000 L0.78000 0.05000 L0.78000 -0.05000 L0.68750 -0.04852 L0.47519 -0.05711 L0.38661 -0.06298 L0.32200 -0.07120 L0.30336 -0.07689 L0.28825 -0.08785 L0.28331 -0.10022 L0.28035 -0.12246 L0.26694 -0.13054 L0.23896 -0.13439 L0.20000 -0.13300 L0.14736 -0.12140 L0.13000 -0.12160 L0.11321 -0.12797 L0.06000 -0.15960 L0.01188 -0.17437 L-0.04000 -0.18240 L-0.09217 -0.18049 L-0.11746 -0.17538 L-0.14000 -0.16620 L-0.16936 -0.14276 L-0.19344 -0.11165 L-0.20888 -0.07961 Z"
+            },
+            {
+              "id": "stool-seat",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.6,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.2,
+              "y": 0.46,
+              "w": 0.4,
+              "h": 0.1,
+              "r": 0.02,
+              "region": "stool"
+            },
+            {
+              "id": "stool-leg-f",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.08 0.47 L 0.19 0.47 L 0.22 0.0 L 0.12 0.0 Z",
+              "region": "stool"
+            },
+            {
+              "id": "stool-leg-r",
+              "bone": "stool",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.19 0.47 L -0.08 0.47 L -0.12 0.0 L -0.22 0.0 Z",
+              "region": "stool"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Seated figure of eleven overlapping dark forms (head with hair, shirt, pelvis, two thighs, two shanks, two boots, two arms), the guitar as one body-and-neck form on the thigh, and the stool as a seat slab with two splayed legs.",
+            "de": "Sitzende Figur aus elf überlappenden dunklen Formen (Kopf mit Haar, Hemd, Becken, zwei Oberschenkel, zwei Unterschenkel, zwei Stiefel, zwei Arme), die Gitarre als eine Korpus-Hals-Form auf dem Oberschenkel und der Hocker als Sitzplatte mit zwei gespreizten Beinen."
+          },
+          "retained": {
+            "en": "Seated posture with the raised near foot on the rung, the guitar neck rising forward, the 0.56 m seat height; real height 1.48 m and width of the default pose.",
+            "de": "Sitzhaltung mit dem erhöhten nahen Fuß auf der Fußraste, der nach vorn ansteigende Gitarrenhals, die Sitzhöhe von 0,56 m; reale Höhe 1,48 m und Breite der Standardpose."
+          },
+          "merged": {
+            "en": "Guitar body, neck and headstock into one form; face and hair into one head; forearm and hand into one arm form; the stool rung is left out and the stool legs carry the stool region.",
+            "de": "Gitarrenkorpus, Hals und Kopfplatte zu einer Form; Gesicht und Haar zu einem Kopf; Unterarm und Hand zu einer Armform; die Hocker-Fußraste entfällt, die Hockerbeine tragen die Hockerregion."
+          },
+          "omitted": {
+            "en": "Face details, beard, soundhole, bridge, frets, strings, tuners, fingers, rung, cuffs and boot soles.",
+            "de": "Gesichtsdetails, Bart, Schallloch, Steg, Bünde, Saiten, Wirbel, Finger, Fußraste, Bündchen und Stiefelsohlen."
+          },
+          "thinElements": {
+            "en": "The guitar neck (0.045 m) is drawn 0.10 m wide and the stool legs 0.10 m wide, the seat 0.10 m thick (feature limit 0.2 mm = 0.1 m); the foot rung (0.028 m) is dropped.",
+            "de": "Der Gitarrenhals (0,045 m) wird 0,10 m breit und die Hockerbeine 0,10 m breit, der Sitz 0,10 m dick gezeichnet (Mindestbreite 0,2 mm = 0,1 m); die Fußraste (0,028 m) entfällt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Solid dark fills with a 0.15 mm outline; guitar and stool mid-grey.",
+            "de": "Flächig dunkle Füllungen mit 0,15-mm-Kontur; Gitarre und Hocker mittelgrau."
+          },
+          "overlays": {
+            "en": "Merged forms list their regions: head (face, hair), forearms (sleeves, hands); the guitar form carries the guitar region, the stool forms the stool region.",
+            "de": "Zusammengefasste Formen nennen ihre Regionen: Kopf (Gesicht, Haar), Unterarme (Ärmel, Hände); die Gitarrenform trägt die Gitarrenregion, die Hockerformen die Hockerregion."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "strumming",
+        "title": {
+          "en": "Strumming",
+          "de": "Anschlagen"
+        },
+        "description": {
+          "en": "Seated on the stool, the near foot on the rung, the guitar on the far thigh, the right forearm over the lower bout and the left hand around the neck at the fifth fret.",
+          "de": "Auf dem Hocker sitzend, der nahe Fuß auf der Fußraste, die Gitarre auf dem fernen Oberschenkel, der rechte Unterarm über dem unteren Korpus und die linke Hand am Hals im fünften Bund."
+        },
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -12
+          },
+          "upper-arm-l": {
+            "angleDeg": 81.169
+          },
+          "forearm-l": {
+            "angleDeg": 0.195
+          },
+          "hand-l": {
+            "angleDeg": 54.637
+          },
+          "upper-arm-r": {
+            "angleDeg": 3.661
+          },
+          "forearm-r": {
+            "angleDeg": 109.773
+          },
+          "hand-r": {
+            "angleDeg": -20
+          },
+          "thigh-l": {
+            "angleDeg": 102.369
+          },
+          "shank-l": {
+            "angleDeg": -113.355
+          },
+          "foot-l": {
+            "angleDeg": 10.986
+          },
+          "thigh-r": {
+            "angleDeg": 67.885
+          },
+          "shank-r": {
+            "angleDeg": -81.433
+          },
+          "foot-r": {
+            "angleDeg": 13.548
+          },
+          "guitar": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "stool-ground",
+          "seat",
+          "rung-support"
+        ],
+        "thermal": {
+          "activityMet": 1.7,
+          "breathing": "play",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hands": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "jeans": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 23
+              }
+            },
+            "boots": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 20
+              }
+            },
+            "guitar": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 31
+              }
+            },
+            "stool": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 31
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "fretting-high",
+        "title": {
+          "en": "Fretting high on the neck",
+          "de": "Greifen weit oben am Hals"
+        },
+        "description": {
+          "en": "The left hand slides towards the body for a high chord, the head bends over the fretboard and the player sings.",
+          "de": "Die linke Hand rutscht zum Korpus für einen hohen Griff, der Kopf neigt sich über das Griffbrett und der Spieler singt."
+        },
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -12
+          },
+          "head": {
+            "angleDeg": -18
+          },
+          "upper-arm-l": {
+            "angleDeg": 84.47
+          },
+          "forearm-l": {
+            "angleDeg": 0.183
+          },
+          "hand-l": {
+            "angleDeg": 57.347
+          },
+          "upper-arm-r": {
+            "angleDeg": -0.574
+          },
+          "forearm-r": {
+            "angleDeg": 113.661
+          },
+          "hand-r": {
+            "angleDeg": -20
+          },
+          "thigh-l": {
+            "angleDeg": 102.369
+          },
+          "shank-l": {
+            "angleDeg": -113.355
+          },
+          "foot-l": {
+            "angleDeg": 10.986
+          },
+          "thigh-r": {
+            "angleDeg": 67.885
+          },
+          "shank-r": {
+            "angleDeg": -81.433
+          },
+          "foot-r": {
+            "angleDeg": 13.548
+          },
+          "guitar": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "stool-ground",
+          "seat",
+          "rung-support"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "breathing": "sing",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hands": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "jeans": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 23
+              }
+            },
+            "boots": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 20
+              }
+            },
+            "guitar": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 31
+              }
+            },
+            "stool": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 31
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "resting",
+        "title": {
+          "en": "Resting the guitar",
+          "de": "Gitarre ablegen"
+        },
+        "description": {
+          "en": "Both hands rest on the guitar, back straight, looking up.",
+          "de": "Beide Hände ruhen auf der Gitarre, Rücken gerade, Blick nach oben."
+        },
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -2
+          },
+          "head": {
+            "angleDeg": -3
+          },
+          "upper-arm-l": {
+            "angleDeg": 24.913
+          },
+          "forearm-l": {
+            "angleDeg": 105.418
+          },
+          "hand-l": {
+            "angleDeg": 1.669
+          },
+          "upper-arm-r": {
+            "angleDeg": 2.452
+          },
+          "forearm-r": {
+            "angleDeg": 111.163
+          },
+          "hand-r": {
+            "angleDeg": -11.615
+          },
+          "thigh-l": {
+            "angleDeg": 102.369
+          },
+          "shank-l": {
+            "angleDeg": -113.355
+          },
+          "foot-l": {
+            "angleDeg": 10.986
+          },
+          "thigh-r": {
+            "angleDeg": 67.885
+          },
+          "shank-r": {
+            "angleDeg": -81.433
+          },
+          "foot-r": {
+            "angleDeg": 13.548
+          },
+          "guitar": {
+            "angleDeg": 10
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "stool-ground",
+          "seat",
+          "rung-support"
+        ],
+        "thermal": {
+          "activityMet": 1.2,
+          "breathing": "rest",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hands": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "jeans": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 23
+              }
+            },
+            "boots": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 20
+              }
+            },
+            "guitar": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 31
+              }
+            },
+            "stool": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 31
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "tuning",
+        "title": {
+          "en": "Tuning",
+          "de": "Stimmen"
+        },
+        "description": {
+          "en": "Leaning towards the headstock to turn a tuning peg with the right hand.",
+          "de": "Zur Kopfplatte vorgebeugt, um mit der rechten Hand einen Wirbel zu drehen."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -16
+          },
+          "head": {
+            "angleDeg": -22
+          },
+          "upper-arm-l": {
+            "angleDeg": 91.23
+          },
+          "forearm-l": {
+            "angleDeg": 0.163
+          },
+          "hand-l": {
+            "angleDeg": 54.606
+          },
+          "upper-arm-r": {
+            "angleDeg": 91.411
+          },
+          "forearm-r": {
+            "angleDeg": 0.179
+          },
+          "hand-r": {
+            "angleDeg": -20
+          },
+          "thigh-l": {
+            "angleDeg": 102.369
+          },
+          "shank-l": {
+            "angleDeg": -113.355
+          },
+          "foot-l": {
+            "angleDeg": 10.986
+          },
+          "thigh-r": {
+            "angleDeg": 67.885
+          },
+          "shank-r": {
+            "angleDeg": -81.433
+          },
+          "foot-r": {
+            "angleDeg": 13.548
+          },
+          "guitar": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "stool-ground",
+          "seat",
+          "rung-support"
+        ],
+        "thermal": {
+          "activityMet": 1.5,
+          "breathing": "play",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hands": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "jeans": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 23
+              }
+            },
+            "boots": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 20
+              }
+            },
+            "guitar": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 31
+              }
+            },
+            "stool": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 31
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "strum-up",
+        "title": {
+          "en": "Up-stroke",
+          "de": "Aufschlag"
+        },
+        "description": {
+          "en": "Key pose of the strumming loop: forearm lifted for the up-stroke.",
+          "de": "Schlüsselpose der Anschlagschleife: Unterarm für den Aufschlag gehoben."
+        },
+        "key": true,
+        "bones": {
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -12
+          },
+          "upper-arm-l": {
+            "angleDeg": 81.169
+          },
+          "forearm-l": {
+            "angleDeg": 0.195
+          },
+          "hand-l": {
+            "angleDeg": 54.637
+          },
+          "upper-arm-r": {
+            "angleDeg": -1.339
+          },
+          "forearm-r": {
+            "angleDeg": 123.773
+          },
+          "hand-r": {
+            "angleDeg": -12
+          },
+          "thigh-l": {
+            "angleDeg": 102.369
+          },
+          "shank-l": {
+            "angleDeg": -113.355
+          },
+          "foot-l": {
+            "angleDeg": 10.986
+          },
+          "thigh-r": {
+            "angleDeg": 67.885
+          },
+          "shank-r": {
+            "angleDeg": -81.433
+          },
+          "foot-r": {
+            "angleDeg": 13.548
+          },
+          "guitar": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "stool-ground",
+          "seat",
+          "rung-support"
+        ],
+        "thermal": {
+          "activityMet": 1.7,
+          "breathing": "play",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hands": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "jeans": {
+              "exposedFraction": 0.65,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.35,
+                "tempC": 23
+              }
+            },
+            "boots": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 20
+              }
+            },
+            "guitar": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 31
+              }
+            },
+            "stool": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 31
+              }
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "strum-loop",
+        "title": {
+          "en": "Strumming a folk rhythm",
+          "de": "Folk-Rhythmus schlagen"
+        },
+        "description": {
+          "en": "Loop of 1.0 s (120 beats per minute, down-up): the right forearm swings over the strings while the left hand holds the chord; breathing follows the playing pattern.",
+          "de": "Schleife von 1,0 s (120 Schläge pro Minute, ab-auf): Der rechte Unterarm schwingt über die Saiten, während die linke Hand den Akkord hält; die Atmung folgt dem Spielmuster."
+        },
+        "durationS": 1,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "strumming",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.25,
+            "pose": "strum-up",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.5,
+            "pose": "strumming",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.75,
+            "pose": "strum-up",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stool-ground",
+            "fromS": 0,
+            "toS": 1
+          },
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 1
+          },
+          {
+            "anchor": "rung-support",
+            "fromS": 0,
+            "toS": 1
+          }
+        ],
+        "phases": [
+          {
+            "id": "down",
+            "fromS": 0,
+            "toS": 0.25,
+            "title": {
+              "en": "Down-stroke",
+              "de": "Abschlag"
+            }
+          },
+          {
+            "id": "up",
+            "fromS": 0.25,
+            "toS": 0.5,
+            "title": {
+              "en": "Up-stroke",
+              "de": "Aufschlag"
+            }
+          },
+          {
+            "id": "down2",
+            "fromS": 0.5,
+            "toS": 0.75,
+            "title": {
+              "en": "Down-stroke",
+              "de": "Abschlag"
+            }
+          },
+          {
+            "id": "up2",
+            "fromS": 0.75,
+            "toS": 1,
+            "title": {
+              "en": "Up-stroke",
+              "de": "Aufschlag"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Down-stroke on the beat",
+              "de": "Abschlag auf dem Schlag"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "chord-change",
+        "title": {
+          "en": "Chord change and verse",
+          "de": "Akkordwechsel und Strophe"
+        },
+        "description": {
+          "en": "Non-looping 4 s phrase: strumming, a slide of the left hand to the high chord while singing, and back to the first chord.",
+          "de": "Nicht wiederholte Phrase von 4 s: Anschlagen, Gleiten der linken Hand zum hohen Akkord beim Singen und zurück zum ersten Akkord."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "strumming",
+            "ease": "smooth"
+          },
+          {
+            "t": 1,
+            "pose": "strumming",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.8,
+            "pose": "fretting-high",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "fretting-high",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.8,
+            "pose": "strumming",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stool-ground",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "rung-support",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "play",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Playing",
+              "de": "Spielen"
+            }
+          },
+          {
+            "id": "sing",
+            "fromS": 1,
+            "toS": 3,
+            "title": {
+              "en": "Singing the verse",
+              "de": "Strophe singen"
+            }
+          },
+          {
+            "id": "back",
+            "fromS": 3,
+            "toS": 4,
+            "title": {
+              "en": "Back to the first chord",
+              "de": "Zurück zum ersten Akkord"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.8,
+            "kind": "motion",
+            "title": {
+              "en": "Left hand arrives at the high chord",
+              "de": "Linke Hand erreicht den hohen Akkord"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1,
+                "v": 2
+              },
+              {
+                "t": 3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tune-up",
+        "title": {
+          "en": "Tuning a string",
+          "de": "Eine Saite stimmen"
+        },
+        "description": {
+          "en": "Non-looping 3.5 s: the player resting the guitar leans to the headstock, turns a peg and sits back.",
+          "de": "Nicht wiederholte Folge von 3,5 s: Der Spieler mit abgelegter Gitarre beugt sich zur Kopfplatte, dreht an einem Wirbel und lehnt sich zurück."
+        },
+        "durationS": 3.5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "resting",
+            "ease": "smooth"
+          },
+          {
+            "t": 1,
+            "pose": "tuning",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.4,
+            "pose": "tuning",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.4,
+            "pose": "resting",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "stool-ground",
+            "fromS": 0,
+            "toS": 3.5
+          },
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 3.5
+          },
+          {
+            "anchor": "rung-support",
+            "fromS": 0,
+            "toS": 3.5
+          }
+        ],
+        "phases": [
+          {
+            "id": "lean",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "Leaning to the headstock",
+              "de": "Zur Kopfplatte beugen"
+            }
+          },
+          {
+            "id": "turn",
+            "fromS": 1,
+            "toS": 2.4,
+            "title": {
+              "en": "Turning the peg",
+              "de": "Wirbel drehen"
+            }
+          },
+          {
+            "id": "sit",
+            "fromS": 2.4,
+            "toS": 3.5,
+            "title": {
+              "en": "Sitting back",
+              "de": "Zurücklehnen"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 1
+              },
+              {
+                "t": 3,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 21,
+        "relativeHumidity": 0.45,
+        "windMS": 0.1,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325,
+        "groundTempC": 20
+      },
+      "baseMet": 1.4,
+      "body": {
+        "species": "human",
+        "massKg": 74,
+        "skinAreaM2": 1.9,
+        "basalMetabolismW": 79.2,
+        "metWM2": 58.15,
+        "coreSetPointC": 36.8,
+        "skinSetPointC": 34.1,
+        "sweating": true,
+        "panting": false,
+        "maxSkinBloodFlowLM2H": 90,
+        "minSkinBloodFlowLM2H": 6.3,
+        "source": "authored-estimate",
+        "reference": "gagge-1971"
+      },
+      "respiration": {
+        "noseEmitter": "nose-breath",
+        "mouthEmitter": "mouth-breath",
+        "exhaledTempC": 34,
+        "exhaledRelativeHumidity": 0.95,
+        "patterns": [
+          {
+            "id": "rest",
+            "title": {
+              "en": "Resting breathing",
+              "de": "Ruheatmung"
+            },
+            "rateBpm": 14,
+            "tidalVolumeL": 0.5,
+            "inhaleFraction": 0.38,
+            "pauseAfterInhaleFraction": 0.04,
+            "exhaleFraction": 0.45,
+            "pauseAfterExhaleFraction": 0.13,
+            "route": "nose",
+            "source": "authored-estimate",
+            "reference": "gupta-2010"
+          },
+          {
+            "id": "play",
+            "title": {
+              "en": "Playing, light activity",
+              "de": "Spielen, leichte Aktivität"
+            },
+            "rateBpm": 15,
+            "tidalVolumeL": 0.7,
+            "inhaleFraction": 0.36,
+            "pauseAfterInhaleFraction": 0.03,
+            "exhaleFraction": 0.5,
+            "pauseAfterExhaleFraction": 0.11,
+            "route": "nose-and-mouth",
+            "source": "authored-estimate",
+            "reference": "ainsworth-2011"
+          },
+          {
+            "id": "sing",
+            "title": {
+              "en": "Singing a long phrase",
+              "de": "Lange Gesangsphrase"
+            },
+            "rateBpm": 12,
+            "tidalVolumeL": 1.1,
+            "inhaleFraction": 0.2,
+            "pauseAfterInhaleFraction": 0.03,
+            "exhaleFraction": 0.67,
+            "pauseAfterExhaleFraction": 0.1,
+            "route": "mouth",
+            "source": "authored-estimate",
+            "reference": "ainsworth-2011"
+          }
+        ],
+        "motion": [
+          {
+            "bone": "torso",
+            "angleDeg": 1.2,
+            "dy": 0.004
+          },
+          {
+            "bone": "pelvis",
+            "angleDeg": 0.5,
+            "dy": 0.003
+          }
+        ],
+        "source": "authored-estimate",
+        "reference": "hoeppe-1981"
+      },
+      "passengers": [],
+      "operating": [],
+      "regions": [
+        {
+          "id": "face",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.076,
+          "characteristicLengthM": 0.15,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 15000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.06,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Short hair and beard",
+            "de": "Kurzes Haar und Bart"
+          },
+          "kind": "hair",
+          "model": "body",
+          "material": "hair",
+          "areaM2": 0.0912,
+          "characteristicLengthM": 0.16,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "hair-pack",
+              "title": {
+                "en": "Hair and trapped air",
+                "de": "Haar und eingeschlossene Luft"
+              },
+              "kind": "hair",
+              "material": "hair",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.05,
+              "vapourResistanceM2PaW": 7.97,
+              "heatCapacityJM2K": 250,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shirt-torso",
+          "title": {
+            "en": "Flannel shirt over T-shirt, trunk",
+            "de": "Flanellhemd über T-Shirt, Rumpf"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "flannel",
+          "areaM2": 0.8577,
+          "characteristicLengthM": 0.32,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "torso-air",
+              "title": {
+                "en": "Air between skin and T-shirt",
+                "de": "Luft zwischen Haut und T-Shirt"
+              },
+              "kind": "air-gap",
+              "material": "flannel",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.025,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "tshirt",
+              "title": {
+                "en": "Cotton T-shirt (0.09 clo)",
+                "de": "Baumwoll-T-Shirt (0,09 clo)"
+              },
+              "kind": "clothing",
+              "material": "flannel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.017,
+              "vapourResistanceM2PaW": 2.71,
+              "heatCapacityJM2K": 250,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "flannel",
+              "title": {
+                "en": "Flannel shirt (0.30 clo)",
+                "de": "Flanellhemd (0,30 clo)"
+              },
+              "kind": "clothing",
+              "material": "flannel",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0567,
+              "vapourResistanceM2PaW": 9.04,
+              "heatCapacityJM2K": 500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 19000,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.4,
+            "skinFraction": 0.37
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shirt-sleeves",
+          "title": {
+            "en": "Flannel sleeves",
+            "de": "Flanellärmel"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "flannel",
+          "areaM2": 0.3245,
+          "characteristicLengthM": 0.09,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "sleeve-air",
+              "title": {
+                "en": "Air in the sleeve",
+                "de": "Luft im Ärmel"
+              },
+              "kind": "air-gap",
+              "material": "flannel",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sleeve",
+              "title": {
+                "en": "Flannel sleeve (0.30 clo)",
+                "de": "Flanellärmel (0,30 clo)"
+              },
+              "kind": "clothing",
+              "material": "flannel",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0567,
+              "vapourResistanceM2PaW": 9.04,
+              "heatCapacityJM2K": 450,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 15000,
+          "body": {
+            "segment": "arm",
+            "metabolicShare": 0.08,
+            "skinFraction": 0.14
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "hands",
+          "title": {
+            "en": "Bare hands and fingers",
+            "de": "Nackte Hände und Finger"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.095,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.45,
+          "layers": [],
+          "heatCapacityJM2K": 12000,
+          "body": {
+            "segment": "hand",
+            "metabolicShare": 0.02,
+            "skinFraction": 0.05
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "jeans",
+          "title": {
+            "en": "Denim jeans",
+            "de": "Jeans"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "denim",
+          "areaM2": 0.6774,
+          "characteristicLengthM": 0.12,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.35,
+          "layers": [
+            {
+              "id": "leg-air",
+              "title": {
+                "en": "Air between skin and jeans",
+                "de": "Luft zwischen Haut und Jeans"
+              },
+              "kind": "air-gap",
+              "material": "denim",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "denim",
+              "title": {
+                "en": "Denim (0.26 clo)",
+                "de": "Jeansstoff (0,26 clo)"
+              },
+              "kind": "clothing",
+              "material": "denim",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.0463,
+              "vapourResistanceM2PaW": 7.38,
+              "heatCapacityJM2K": 550,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 18000,
+          "body": {
+            "segment": "leg",
+            "metabolicShare": 0.35,
+            "skinFraction": 0.31
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "boots",
+          "title": {
+            "en": "Leather boots with socks",
+            "de": "Lederstiefel mit Socken"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "leather",
+          "areaM2": 0.095,
+          "characteristicLengthM": 0.12,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.25,
+          "layers": [
+            {
+              "id": "sock",
+              "title": {
+                "en": "Cotton sock (0.04 clo)",
+                "de": "Baumwollsocke (0,04 clo)"
+              },
+              "kind": "clothing",
+              "material": "denim-sock",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0062,
+              "vapourResistanceM2PaW": 0.99,
+              "heatCapacityJM2K": 300,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot-air",
+              "title": {
+                "en": "Air in the boot",
+                "de": "Luft im Stiefel"
+              },
+              "kind": "air-gap",
+              "material": "leather",
+              "thicknessM": 0.008,
+              "resistanceM2KW": 0.035,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "boot",
+              "title": {
+                "en": "Leather upper (0.08 clo)",
+                "de": "Lederschaft (0,08 clo)"
+              },
+              "kind": "shell",
+              "material": "leather",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.03,
+              "vapourResistanceM2PaW": 4.78,
+              "heatCapacityJM2K": 1100,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 8000,
+          "body": {
+            "segment": "foot",
+            "metabolicShare": 0.05,
+            "skinFraction": 0.05
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "guitar",
+          "title": {
+            "en": "Acoustic guitar",
+            "de": "Akustikgitarre"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "spruce",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.45,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 5000,
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        },
+        {
+          "id": "stool",
+          "title": {
+            "en": "Pine bar stool",
+            "de": "Barhocker aus Kiefer"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pine",
+          "areaM2": 0.55,
+          "characteristicLengthM": 0.4,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.4,
+          "layers": [],
+          "heatCapacityJM2K": 9000,
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "nose-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Nostril jet",
+            "de": "Nasenstrahl"
+          },
+          "anchor": "nostrils",
+          "directionDeg": -150,
+          "diameterM": 0.0095,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "mouth-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Mouth jet",
+            "de": "Mundstrahl"
+          },
+          "anchor": "mouth",
+          "directionDeg": -100,
+          "diameterM": 0.0124,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "plume",
+          "kind": "plume",
+          "title": {
+            "en": "Rising warm air above the body",
+            "de": "Aufsteigende Warmluft über dem Körper"
+          },
+          "anchor": "crown",
+          "directionDeg": 0,
+          "diameterM": 0.35,
+          "region": "shirt-torso",
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "DuBois skin area for 1.76 m and 74 kg; a flannel shirt over a T-shirt (0.39 clo trunk, 0.30 clo sleeves), denim jeans (0.26 clo), leather boots with socks, short hair and beard. Garment values are authored estimates guided by ISO 9920 (1 clo = 0.155 m2K/W); layer resistances include the enclosed air.",
+          "de": "DuBois-Hautfläche für 1,76 m und 74 kg; Flanellhemd über T-Shirt (0,39 clo Rumpf, 0,30 clo Ärmel), Jeans (0,26 clo), Lederstiefel mit Socken, kurzes Haar und Bart. Die Kleidungswerte sind Autorenschätzungen nach ISO 9920 (1 clo = 0,155 m2K/W); die Schichtwiderstände enthalten die eingeschlossene Luft."
+        },
+        {
+          "en": "Metabolic rate 1.2 met resting, 1.7 met playing, 1.8 met singing while playing (Compendium of Physical Activities: playing guitar about 2 METs; mapped to thermal met as an estimate). Basal metabolism by Mifflin-St Jeor for a 42-year-old man.",
+          "de": "Stoffwechsel 1,2 met in Ruhe, 1,7 met beim Spielen, 1,8 met beim Singen und Spielen (Compendium of Physical Activities: Gitarre spielen etwa 2 MET; als Schätzung auf thermisches met übertragen). Grundumsatz nach Mifflin-St Jeor für einen 42-jährigen Mann."
+        },
+        {
+          "en": "Indoor reference room at 21 degrees Celsius without sun; the seat conducts through 35 % of the jeans area, the guitar and stool surfaces warm by contact at about 31 degrees Celsius. Singing uses long mouth exhalations (12 per minute, 1.1 L); all respiration numbers are authored estimates and the first pattern (rest) is the reference of the chest motion.",
+          "de": "Innenraum als Referenz mit 21 Grad Celsius ohne Sonne; der Sitz leitet über 35 % der Jeansfläche, Gitarre und Hocker erwärmen sich durch Kontakt auf etwa 31 Grad Celsius. Singen nutzt lange Mundausatmungen (12 pro Minute, 1,1 L); alle Atemwerte sind Autorenschätzungen und das erste Muster (Ruhe) ist die Referenz der Brustbewegung."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Inertial model: segment masses as point masses at de Leva centres, guitar 2.1 kg on the trunk and stool 3.4 kg; the stool legs on the floor are the permanent unilateral support, the seat and the rung foot rest on the stool.",
+          "de": "Trägheitsmodell: Segmentmassen als Punktmassen in den Schwerpunkten nach de Leva, Gitarre 2,1 kg am Rumpf und Hocker 3,4 kg; die Hockerbeine auf dem Boden sind das einseitige Auflager, Sitz und Fuß auf der Fußraste ruhen auf dem Hocker."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "strumming",
+      "defaultClip": "strum-loop",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

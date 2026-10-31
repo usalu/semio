@@ -5,7 +5,7 @@ import { deserialize } from "node:v8";
 const MEGABYTE = 1048576;
 let service;
 
-const fail = (id, error) => ({ type: "failure", id, name: String(error?.name ?? "Error"), message: String(error?.message ?? error), code: typeof error?.code === "string" ? error.code : null });
+const fail = (id, error) => ({ type: "failure", id, name: String(error?.name ?? "Error"), message: String(error?.message ?? error), code: typeof error?.code === "string" ? error.code : null, rssMegabytes: process.memoryUsage().rss / MEGABYTE });
 
 process.on("disconnect", () => process.exit(0));
 process.on("message", async message => {

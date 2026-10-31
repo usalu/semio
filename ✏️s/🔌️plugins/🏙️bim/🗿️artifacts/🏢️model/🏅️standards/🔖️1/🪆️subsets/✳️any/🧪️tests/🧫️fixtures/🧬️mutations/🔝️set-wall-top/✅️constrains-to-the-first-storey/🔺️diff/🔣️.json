@@ -2,10 +2,12 @@
   "walls": {
     "w-east": {
       "entry": "Patched",
-      "top": {
-        "Storey": {
-          "offset": 0.0,
-          "storey": "st-first"
+      "value": {
+        "top": {
+          "Storey": {
+            "offset": 0,
+            "storey": "st-first"
+          }
         }
       }
     }

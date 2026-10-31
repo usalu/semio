@@ -1,0 +1,265 @@
+{
+  "cases": [
+    {
+      "id": "slug-valid",
+      "exported": "Slug",
+      "value": "one-cat",
+      "valid": true
+    },
+    {
+      "id": "slug-case",
+      "exported": "Slug",
+      "value": "One",
+      "valid": false
+    },
+    {
+      "id": "slug-empty",
+      "exported": "Slug",
+      "value": "",
+      "valid": false
+    },
+    {
+      "id": "text-bilingual",
+      "exported": "Text",
+      "value": {
+        "en": "Cat",
+        "de": "Katze"
+      },
+      "valid": true
+    },
+    {
+      "id": "text-no-default",
+      "exported": "Text",
+      "value": {
+        "en": "Cat"
+      },
+      "valid": false
+    },
+    {
+      "id": "text-empty-locale",
+      "exported": "Text",
+      "value": {
+        "en": "Cat",
+        "de": ""
+      },
+      "valid": false
+    },
+    {
+      "id": "text-unknown-locale",
+      "exported": "Text",
+      "value": {
+        "en": "Cat",
+        "de": "Katze",
+        "fr": "Chat"
+      },
+      "valid": false
+    },
+    {
+      "id": "degrees-negative",
+      "exported": "Degrees",
+      "value": -22.5,
+      "valid": true
+    },
+    {
+      "id": "degrees-string",
+      "exported": "Degrees",
+      "value": "22",
+      "valid": false
+    },
+    {
+      "id": "ticks",
+      "exported": "Ticks",
+      "value": 64,
+      "valid": true
+    },
+    {
+      "id": "ticks-fraction",
+      "exported": "Ticks",
+      "value": 0.5,
+      "valid": false
+    },
+    {
+      "id": "color",
+      "exported": "Color",
+      "value": "#ff00ab",
+      "valid": true
+    },
+    {
+      "id": "color-uppercase",
+      "exported": "Color",
+      "value": "#FF00AB",
+      "valid": false
+    },
+    {
+      "id": "color-word",
+      "exported": "Color",
+      "value": "red",
+      "valid": false
+    },
+    {
+      "id": "mode",
+      "exported": "PetMode",
+      "value": "calm",
+      "valid": true
+    },
+    {
+      "id": "mode-unknown",
+      "exported": "PetMode",
+      "value": "excited",
+      "valid": false
+    },
+    {
+      "id": "paint",
+      "exported": "Paint",
+      "value": "none",
+      "valid": true
+    },
+    {
+      "id": "paint-unknown",
+      "exported": "Paint",
+      "value": "red",
+      "valid": false
+    },
+    {
+      "id": "tier",
+      "exported": "Tier",
+      "value": "purr",
+      "valid": true
+    },
+    {
+      "id": "tier-number",
+      "exported": "Tier",
+      "value": 3,
+      "valid": false
+    },
+    {
+      "id": "point",
+      "exported": "Point",
+      "value": {
+        "x": 1,
+        "y": -2
+      },
+      "valid": true
+    },
+    {
+      "id": "point-missing",
+      "exported": "Point",
+      "value": {
+        "x": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "point-closed",
+      "exported": "Point",
+      "value": {
+        "x": 1,
+        "y": 2,
+        "z": 3
+      },
+      "valid": false
+    },
+    {
+      "id": "ellipse",
+      "exported": "EllipseShape",
+      "value": {
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 3,
+        "ry": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "ellipse-positive-radius",
+      "exported": "EllipseShape",
+      "value": {
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0,
+        "ry": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "shape-union",
+      "exported": "Shape",
+      "value": {
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 3,
+        "ry": 2
+      },
+      "valid": true
+    },
+    {
+      "id": "shape-tag",
+      "exported": "Shape",
+      "value": {
+        "kind": "circle",
+        "cx": 0,
+        "cy": 0,
+        "rx": 3,
+        "ry": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "part-nested",
+      "exported": "Part",
+      "value": {
+        "id": "body",
+        "bone": "root",
+        "shape": {
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 3,
+          "ry": 2
+        },
+        "fill": "body",
+        "stroke": "ink"
+      },
+      "valid": true
+    },
+    {
+      "id": "part-invalid-bone",
+      "exported": "Part",
+      "value": {
+        "id": "body",
+        "bone": "Bad Bone",
+        "shape": {
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 3,
+          "ry": 2
+        },
+        "fill": "body",
+        "stroke": "ink"
+      },
+      "valid": false
+    },
+    {
+      "id": "face-array",
+      "exported": "Face",
+      "value": {
+        "eyes": []
+      },
+      "valid": true
+    },
+    {
+      "id": "face-invalid-eye",
+      "exported": "Face",
+      "value": {
+        "eyes": [
+          {}
+        ]
+      },
+      "valid": false
+    }
+  ]
+}

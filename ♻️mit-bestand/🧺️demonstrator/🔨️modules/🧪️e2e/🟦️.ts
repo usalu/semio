@@ -10,23 +10,18 @@ import { startToolV1, toolExitV1 } from "../../../../🧰️framework/🔨️mod
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if (args.length) throw new Error("Demonstrator E2E accepts no compiler or server arguments");
-  const root = resolve(context.root, "../.."), sessionRoot = demonstratorE2eSessionRoot(context.repoRoot), controller = new AbortController();
+  const root = resolve(context.root, "../.."), sessionRoot = demonstratorE2eSessionRoot(context.repoRoot), controller = new AbortController(), signal = AbortSignal.any([context.invocation.control.signal, controller.signal]);
   const session = readServiceSession(sessionRoot, DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid(process.env));
   const interrupt = (): void => { process.exitCode = 130; controller.abort(); }, terminate = (): void => { process.exitCode = 143; controller.abort(); };
   process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
   try {
     console.log(`Waiting for Demonstrator E2E service ${session.id}`);
     const budget = parseServiceReadinessBudgetV1(readinessBudget), language = serviceReadyProgressLanguage(process.env);
-    const baseURL = await waitForServiceReady(sessionRoot, session, controller.signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
+    const baseURL = await waitForServiceReady(sessionRoot, session, signal, budget.readyTimeoutMs, { intervalMs: budget.progressIntervalMs, report: progress => console.log(serviceReadyProgressLine(DEMONSTRATOR_E2E_OWNER, progress, language)) });
     const output = demonstratorE2eOutputDirectory(root, process.env.SEMIO_TICKET_DIR, session.id);
     console.log(`Testing Demonstrator at ${baseURL}`);
-    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
-    const cancel = (): void => { child.kill("SIGTERM"); };
-    controller.signal.addEventListener("abort", cancel, { once: true });
-    if (controller.signal.aborted) cancel();
-    let status: number;
-    try { status = await toolExitV1(child); }
-    finally { controller.signal.removeEventListener("abort", cancel); }
-    if (status !== 0 && !controller.signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
+    const child = startToolV1("playwright", ["test", "--config", join(root, "🔨️modules/🧪️e2e/🎚️config/🟦️.ts"), "--output", output], { signal, cwd: context.repoRoot, env: { ...process.env, PLAYWRIGHT_BASE_URL: baseURL, PLAYWRIGHT_BROWSERS_PATH: repoCacheDirectory(context.repoRoot, "tools", "ms-playwright") }, stdio: ["ignore", "inherit", "inherit"] });
+    const status = await toolExitV1(child);
+    if (status !== 0 && !signal.aborted) throw new Error(`Demonstrator acceptance tests failed (${status})`);
   } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
 }

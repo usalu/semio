@@ -1,3 +1,4 @@
+import {readTypeScriptPackageProducerV1,typeScriptPackagePublicDirectoryV1} from "./../../../../⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🏭️producer/🟦️.ts";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
 import {createRequire} from "node:module";
@@ -104,12 +105,31 @@ export function buildImportResourceV1(containing,specifier){
 }
 
 /** 📦️ Resolves a package specifier to the workspace module it names, so imports through `@scope/package` subpaths join a command closure like relative ones; installed registry packages stay covered by their locked external dependency. */
-function workspacePackageModuleV1(containing, specifier, workspaceRoot) {
+export function workspacePackageModuleV1(containing, specifier, workspaceRoot, compiler=parserTypescriptV1(), host=observedTypeScriptHost(compiler.sys), mode=compiler.ModuleKind.ESNext, declarations=false) {
   if (specifier.startsWith(".") || isAbsolute(specifier) || isBuiltin(specifier) || /^[a-z][a-z0-9+.-]*:/u.test(specifier)) return undefined;
-  let resolved;
-  try { resolved = observedRequireResolve(containing, specifier); }
-  catch (error) { if (error?.code === "MODULE_NOT_FOUND" || error?.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") return undefined; throw error; }
-  if (!isAbsolute(resolved)) return undefined;
+  const options={moduleResolution:compiler.ModuleResolutionKind.NodeNext,module:compiler.ModuleKind.NodeNext,allowJs:true,resolveJsonModule:true,noDtsResolution:!declarations};
+  let resolution=compiler.resolveModuleName(specifier,containing,options,host,undefined,undefined,mode);
+  const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0],future=new Map(),packages=[];
+  for(const manifest of resolution.affectingLocations??[]){
+   const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
+   const text=host.readFile(physical);if(text===undefined||JSON.parse(text).name!==packageName)continue;
+   const producer=readTypeScriptPackageProducerV1(dirname(physical),workspaceRoot,path=>host.readFile(path));packages.push({root:dirname(physical),producer});if(!producer)continue;
+   for(const output of producer.outputs){future.set(output,output);future.set(resolve(dirname(manifest),relative(dirname(physical),output)),output);}
+  }
+  if(future.size){const view={...host,fileExists:path=>future.has(path)||host.fileExists(path),directoryExists:path=>[...future.keys()].some(file=>dirname(file)===path)||host.directoryExists?.(path)===true,realpath:path=>future.get(path)??(host.realpath?host.realpath(path):path)};resolution=compiler.resolveModuleName(specifier,containing,options,view,undefined,undefined,mode);}
+  const resolved=resolution.resolvedModule?.resolvedFileName;
+  if (!resolved) {
+    const packageName=specifier.startsWith("@")?specifier.split("/").slice(0,2).join("/"):specifier.split("/")[0];
+    for(const manifest of resolution.affectingLocations??[]){
+      const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);
+      if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
+      const text=host.readFile(physical);
+      if(text!==undefined&&JSON.parse(text).name===packageName){const error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing);error.code="MODULE_NOT_FOUND";throw error;}
+    }
+    return undefined;
+  }
+  if(!isAbsolute(resolved))return undefined;
+  for(const {root,producer} of packages)if(resolved.startsWith(join(root,typeScriptPackagePublicDirectoryV1)+sep)&&!producer?.outputs.includes(resolved))throw Object.assign(Error("Workspace compiled output requires its authored artifact producer: "+specifier),{code:"MODULE_NOT_FOUND"});
   const local = relative(workspaceRoot, resolved);
   return local === "" || local.startsWith("..") || isAbsolute(local) || local.split(sep).includes("node_modules") ? undefined : resolved;
 }
@@ -365,39 +385,44 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
     if(!source||!DECLARED_MODULE_SUFFIX_V1.test(path)){cache.resources.add(path);if(!seen)requirePhysicalSourceV1(path);return;}
     if(compiled.has(path))return;
     compiled.add(path);cache.modules.add(path);
-    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,cache.providerDesignation??null,resourceKey,selectors.get(path)??null]),async()=>{
+    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([resolve(workspaceRoot),path,requiredSources,cache.providerDesignation??null,selectors.get(path)??null]),async()=>{
       requirePhysicalSourceV1(path);
       const ports = observedSourceAnalysisV1(PROVIDER_PORTS, path), imports = ports.length ? designatedPortsV1(cache, ports).map(port => ({ port })) : [], words = selectors.get(path), kept = words?.length ? routerKeptFromSourceV1(compiler, path, words) : undefined;
-      const generated=specifier=>{const produced=cache.generatedOutput?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);return true;};
+      const generated=specifier=>{const produced=cache.generatedOutput?.(specifier);if(!produced)return false;const rows=cache.generatedImports.get(path)??[];if(!rows.some(row=>row.target===produced.target&&row.output===produced.output))rows.push(produced);cache.generatedImports.set(path,rows);for(const file of produced.sources??[])imports.push({path:resolve(workspaceRoot,file),source:true});return true;};
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
         if(generated(resource.specifier))continue;
-        let resolved;
-        try { resolved = observedRequireResolve(path, resource.specifier); }
+        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host);
+        try { resolved ??= observedRequireResolve(path, resource.specifier); }
         catch (error) {
           if (error.code !== "MODULE_NOT_FOUND") throw error;
           resolved = compiler.resolveModuleName(resource.specifier, path, { moduleResolution: compiler.ModuleResolutionKind.Bundler, allowJs: true, resolveJsonModule: true }, host).resolvedModule?.resolvedFileName;
           if (!resolved) {if(requiredSources||resource.suffix||!DECLARED_MODULE_SUFFIX_V1.test(resource.specifier))throw unresolvedSourceImportV1(error,path);continue;}
           if (/\.d\.[cm]?ts$/.test(resolved)) throw error;
         }
-        imports.push({path:resolved,source:resource.source});
+        if(!generated(resolved))imports.push({path:resolved,source:resource.source});
       }
       const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
-      for (const specifier of references.runtime) {
+      for (const [specifiers, mode] of [[references.runtime.imports, compiler.ModuleKind.ESNext], [references.runtime.requires, compiler.ModuleKind.CommonJS]]) for (const specifier of specifiers) {
         await checkpoint();
-        const member = workspacePackageModuleV1(path, specifier, workspaceRoot);
-        if (member) imports.push({path:member,source:true});
+        const member = workspacePackageModuleV1(path, specifier, workspaceRoot, compiler, host, mode);
+        if (member&&!generated(member)) imports.push({path:member,source:true});
       }
       for (const literal of references.urls) {
         await checkpoint();
-        const target = workspaceUrlTargetV1(path, literal, workspaceRoot,false);if(!target||generated(target.path))continue;const resource=resources.has(resolve(target.path));if(!resource&&(!existsSync(target.path)||!statSync(target.path).isFile()))continue;
-        imports.push({...target,source:target.source&&!resource});
+        const target = workspaceUrlTargetV1(path, literal, workspaceRoot,false);if(!target||generated(target.path))continue;
+        imports.push({...target,url:true});
       }
       return imports;
     },checkpoint);
-    for (const imported of imports) if (imported.port === undefined) await visit(imported.path,imported.source); else defined.add(imported.port);
+    for (const imported of imports) {
+      if(imported.port!==undefined){defined.add(imported.port);continue;}
+      const resource=imported.url&&resources.has(resolve(imported.path));
+      if(imported.url&&!resource&&(!existsSync(imported.path)||!statSync(imported.path).isFile()))continue;
+      await visit(imported.path,imported.source&&!resource);
+    }
   };
   for (const entry of roots) await visit(entry);
   for (const config of resolutionConfigsV1(compiler, host, workspaceRoot, compiled)) await visit(config, false);
@@ -411,7 +436,7 @@ async function boundedScriptInputsV1(entries, workspaceRoot, cache = createScrip
   if(stored){
    const question=walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors);
    if(!walkFactsV1.has(stored.observations))walkFactsV1.set(stored.observations,{row:{kind:"derived",path:question,fact:walkAnswerV1(cache,workspaceRoot,walked)},views:Object.fromEntries(Object.keys(WALK_VIEW_POLICY_V1.views).map(view=>[view,{kind:"derived",path:walkQuestionV1(cache,workspaceRoot,roots,requiredSources,resources,selectors,view),fact:walkAnswerV1(cache,workspaceRoot,walked,view)}]))});
-   for(const path of compiledPaths??[]){const inner=cache.files.get(JSON.stringify([path,requiredSources,cache.providerDesignation??null,resourceKey,selectors.get(path)??null]));if(inner){let walks=walkMembersV1.get(inner.observations);if(!walks)walkMembersV1.set(inner.observations,walks=new Set());walks.add(question);}}
+   for(const path of compiledPaths??[]){const inner=cache.files.get(JSON.stringify([resolve(workspaceRoot),path,requiredSources,cache.providerDesignation??null,selectors.get(path)??null]));if(inner){let walks=walkMembersV1.get(inner.observations);if(!walks)walkMembersV1.set(inner.observations,walks=new Set());walks.add(question);}}
   }
   return walked;
 }

@@ -1,6 +1,6 @@
 /** ♻️ Contract: the declared data files of the graph implementation are facts named by the digest of their canonical JSON without the sections nothing of the graph reads. The digest equals the independent Python model, a row carries the sections it ignores, an edit of an ignored section keeps the row valid while an edit of any other section, a new section or a broken document stales it, and the declaration names files the revision covers. */
 import{expect,test}from"bun:test";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{existsSync,readFileSync}from"node:fs";
 import{dirname,join,resolve}from"node:path";
 import{fileURLToPath}from"node:url";

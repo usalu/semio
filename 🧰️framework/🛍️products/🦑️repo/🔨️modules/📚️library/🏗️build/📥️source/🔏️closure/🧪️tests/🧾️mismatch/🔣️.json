@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "before": "export const value = 1;\n",
+  "after": "export const value = 2;\n",
+  "expected": {
+    "code": "stale",
+    "key": "build.closure.source-differs"
+  }
+}

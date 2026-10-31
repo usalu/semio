@@ -2,8 +2,10 @@
   "spaces": {
     "sp-1": {
       "entry": "Patched",
-      "wall_finish": {
-        "value": null
+      "value": {
+        "wall_finish": {
+          "value": null
+        }
       }
     }
   }

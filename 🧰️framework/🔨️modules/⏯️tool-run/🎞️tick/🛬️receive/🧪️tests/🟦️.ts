@@ -1,5 +1,5 @@
 /** 🧪️ Independent Buffer decoding checks native Tick field grammar and borrowed page framing. */
-import{test,expect}from"bun:test";import Ajv from"ajv/dist/2020";import assert from"node:assert/strict";import{readFileSync}from"node:fs";import{decodeToolRunTick}from"../../../🔤️codec/🟦️.ts";import{toolRunTickToJson}from"../../../🧾️json/🟦️.ts";
+import{test,expect}from"bun:test";import Ajv from"ajv";import assert from"node:assert/strict";import{readFileSync}from"node:fs";import{decodeToolRunTick}from"../../../🔤️codec/🟦️.ts";import{toolRunTickToJson}from"../../../🧾️json/🟦️.ts";
 type Node=bigint|number|Buffer|Node[]|Map<number,Node>;
 test("original typed Tick receive grammar matches independent Buffer and neutral source custody",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);

@@ -1,0 +1,90 @@
+[
+  {
+    "name": "successful-pinned-build",
+    "fail": false,
+    "invalidCompiler": false,
+    "invalidNative": false,
+    "order": [
+      "open",
+      "check",
+      "publish",
+      "build",
+      "check",
+      "close"
+    ],
+    "environment": {
+      "CARGO_HOME": "/funded/cargo",
+      "CARGO_TARGET_DIR": "/funded/target",
+      "CARGO_BUILD_BUILD_DIR": "/funded/build",
+      "TMPDIR": "/funded/tmp",
+      "RUSTC": "/funded/compiler/rustc",
+      "RUSTC_WRAPPER": "",
+      "RUSTFLAGS": "-C debuginfo=1",
+      "CC": "/qualified/cc"
+    }
+  },
+  {
+    "name": "failed-pinned-build",
+    "fail": true,
+    "invalidCompiler": false,
+    "invalidNative": false,
+    "order": [
+      "open",
+      "check",
+      "publish",
+      "build",
+      "close"
+    ],
+    "environment": {
+      "CARGO_HOME": "/funded/cargo",
+      "CARGO_TARGET_DIR": "/funded/target",
+      "CARGO_BUILD_BUILD_DIR": "/funded/build",
+      "TMPDIR": "/funded/tmp",
+      "RUSTC": "/funded/compiler/rustc",
+      "RUSTC_WRAPPER": "",
+      "CARGO_ENCODED_RUSTFLAGS": "-C\u001fdebuginfo=1",
+      "CARGO_TARGET_HOST_V1_LINKER": "/qualified/linker"
+    }
+  },
+  {
+    "name": "foreign-compiler-store",
+    "fail": false,
+    "invalidCompiler": true,
+    "invalidNative": false,
+    "order": [
+      "open",
+      "close"
+    ],
+    "environment": {
+      "CARGO_HOME": "/funded/cargo",
+      "CARGO_TARGET_DIR": "/funded/target",
+      "CARGO_BUILD_BUILD_DIR": "/funded/build",
+      "TMPDIR": "/funded/tmp",
+      "RUSTC": "/funded/compiler/rustc",
+      "RUSTC_WRAPPER": "",
+      "RUSTFLAGS": "-C debuginfo=1",
+      "CC": "/qualified/cc"
+    }
+  },
+  {
+    "name": "lost-native-custody",
+    "fail": false,
+    "invalidCompiler": false,
+    "invalidNative": true,
+    "order": [
+      "open",
+      "check",
+      "close"
+    ],
+    "environment": {
+      "CARGO_HOME": "/funded/cargo",
+      "CARGO_TARGET_DIR": "/funded/target",
+      "CARGO_BUILD_BUILD_DIR": "/funded/build",
+      "TMPDIR": "/funded/tmp",
+      "RUSTC": "/funded/compiler/rustc",
+      "RUSTC_WRAPPER": "",
+      "CARGO_ENCODED_RUSTFLAGS": "-C\u001fdebuginfo=1",
+      "CARGO_TARGET_HOST_V1_LINKER": "/qualified/linker"
+    }
+  }
+]

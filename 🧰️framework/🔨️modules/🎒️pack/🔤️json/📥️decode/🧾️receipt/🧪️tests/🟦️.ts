@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import { jobWorkGrantSchema as grantSchema } from "@semio-tech/framework/job/testing/fixtures";

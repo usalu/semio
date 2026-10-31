@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {testPythonV1} from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import corpus from "./🔣️.json";
 import policy from "../../🔣️policy.json";

@@ -1,8 +1,10 @@
 {
   "issue_comments": {
     "c-1": {
-      "author": "MK",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "author": "MK"
+      }
     }
   }
 }

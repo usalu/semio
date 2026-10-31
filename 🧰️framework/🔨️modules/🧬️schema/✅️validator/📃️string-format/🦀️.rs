@@ -11,7 +11,7 @@ use super::PatternMatcher;
 /// rejects an instance.
 ///
 /// `regex` is asserted against the owned [`PatternMatcher`] subset, which is deliberately narrower
-/// than ECMA-262: backreferences, lookbehind and `\b` are rejected instead of accepted.
+/// than ECMA-262: backreferences and lookbehind are rejected instead of accepted.
 /// @see <https://datatracker.ietf.org/doc/html/rfc3339>
 /// @see <https://ajv.js.org/guide/formats.html>
 pub const ASSERTED_STRING_FORMATS: [&str; 7] = ["date", "date-time", "email", "regex", "time", "uri", "uuid"];

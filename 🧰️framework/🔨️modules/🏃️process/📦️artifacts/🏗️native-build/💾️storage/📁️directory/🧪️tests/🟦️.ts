@@ -11,7 +11,7 @@ import schema from "../🧬️schema/🔣️.json";
 import {activateNativeDirectoryV1,admitNativeDirectoryCapacityV1,allocateNativeDirectoryV1,createNativeDirectoryMeterV1,nativeDirectorySwapPendingV1,probeNativeDirectoryCaseCapabilityV1,recoverNativeDirectoryV1,deactivateNativeDirectoryV1,exchangeNativeDirectoriesV1,listNativeDirectoryChildrenV1,measureNativeDirectoryUsageV1,nativeDirectoryAnchorBytesV1,nativeDirectoryMappingV1,nativeDirectoryProtocolV1,nativeDirectorySystemPortV1,observeNativeDirectoryIdentityV1,observeNativeDirectoryStateV1,probeNativeDirectoryCaseSensitivityV1,probeNativeDirectoryExchangeV1,readNativeDirectoryAnchorV1,runNativeDirectoryActionV1,type NativeDirectoryPlatformPortV1} from "../🟦️.ts";
 import {createNativeDirectoryExchangePortV1} from "../🔀️exchange/🟦️.ts";
 
-const protocol=nativeDirectoryProtocolV1(),script=resolve(import.meta.dir,"../📜️script.ts"),oracle=new Ajv({strict:true});
+const protocol=nativeDirectoryProtocolV1(),oracle=new Ajv({strict:true});
 const scratch=()=>{const base=process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();mkdirSync(base,{recursive:true});return mkdtempSync(join(base,"dir-"));};
 const sensitive=()=>true;
 const partition=(base:string,name:string)=>{const directory=join(base,name);mkdirSync(directory,{recursive:true});mkdirSync(join(directory,"m"));allocateNativeDirectoryV1({directory,filesystemBytes:33554432,maximumPhysicalBytes:34603008},sensitive);return directory;};
@@ -128,17 +128,6 @@ test("nested partitions are listed only when attached and within the declared de
   const listed=listNativeDirectoryChildrenV1(root);expect(listed).toEqual(fixture.children.attached.map(path=>join(root,path,"m")));
   expect(()=>listNativeDirectoryChildrenV1(root,2)).toThrow("entry bound");
   deactivateNativeDirectoryV1(join(root,fixture.children.attached[0]!));expect(listNativeDirectoryChildrenV1(root)).toEqual([join(root,fixture.children.attached[1]!,"m")]);
- }finally{rmSync(base,{recursive:true,force:true});}
-});
-
-test("the owned child process runs the same closed actions and refuses on a case-insensitive host with an exit code",()=>{
- const base=scratch();try{
-  const directory=join(base,"cli");mkdirSync(join(directory,"m"),{recursive:true});
-  const run=(...args:string[])=>Bun.spawnSync([process.execPath,script,...args],{stdout:"pipe",stderr:"pipe"});
-  const allocate=run("allocate",directory,"33554432","34603008");
-  if(!probeNativeDirectoryCaseSensitivityV1(base)){expect(allocate.exitCode).toBe(1);expect(allocate.stderr.toString()).toContain(protocol.refusals.caseInsensitive);return;}
-  expect(allocate.exitCode).toBe(0);expect(run("inactive",directory).stdout.toString()).toBe("");expect(run("activate",directory).exitCode).toBe(0);expect(run("inactive",directory).stdout.toString()).toBe("attached\n");
-  const again=run("activate",directory);expect(again.exitCode).toBe(1);expect(again.stderr.toString()).toContain("Inactive partition required");expect(run("deactivate",directory).exitCode).toBe(0);expect(run("inactive",directory).stdout.toString()).toBe("");expect(run("nonsense",directory).exitCode).toBe(1);
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 

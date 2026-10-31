@@ -1,0 +1,9 @@
+# Course Suite Discovery Audit
+
+Current Source review for parent-owned full normal React73624 and teaching28199. No test execution was started by this audit. Parent reports both actual argv contain no filters.
+
+Both package TestScript implementations call resolveTestLevel(segments, quick) and pass only the remaining arguments into the ordinary runVitest fixed native config. An inherited fundamental level is raised to quick; higher levels remain higher. The level owner affects wall-clock budgets and exhaustive coverage, not test-file selection. Generic vitestArgumentsV1 adds run/config/native-loader, deadlines, optional workers and coverage, with no implicit grep/name/file filter. Scoped TS/TSX test-tree search found no atTestLevel/testLevelAtLeast/activeTestLevel/skip/only/runIf/skipIf gates.
+
+The course React config explicitly includes43 files under the product test tree plus course-shell, including access, adaptive-layout and challenge-views. It uses jsdom, the existing React environment and preloaded locales; passWithNoTests is false. The teaching course node config explicitly includes19 files covering assignment PDFs, curriculum/course/deployment, local stack, proctor build/product, image, presence, host document, pet cast, dashboard/parameters, sessions/resolution/tags/mode and continuous contracts/manifests; passWithNoTests is false. Browser specs are intentionally owned by the separate full E2E target and are not implied by these unit configs.
+
+The registered three-file GREEN93164 actual43/43 is a focused regression result, distinct from these complete normal owner selections. Actual full-owner file/test counts and skips must still be checked in their eventual retained outputs. Restart4262 admission/readiness, post-restart42-read persistence and full unfiltered BOTH remain independent evidence.

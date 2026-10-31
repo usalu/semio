@@ -1,0 +1,9 @@
+# Provider Fixture Artifact Ownership
+
+The authored path audit at01:44:46Z encountered fifteen paths under provider-inputs-vPdaEK in the checkout root, which disappeared before metadata inspection. Exact Source inspection located the actual provider input law: it fell back to workspace whenever SEMIO_TEST_SCRATCH_DIR was absent or outside the workspace. This was an observed runtime fixture placement defect, not an indexed Source deletion.
+
+The law now requires the actual owned test artifact directory to be a workspace descendant, creates its fixture there, and asserts the real parent directory. The build-inference suite declares its existing checkout scratch capability so standalone canonical runs receive the supported checkout sandbox. Future ticket logger runs supply unique short artifact/scratch directories under ticket generated output; a real child smoke test PID175728 passed status0/null. Existing live jobs were not restarted or rewritten.
+
+The law previously copied the actual provider schema Source into its fixture. Its generated schema leaf now references the exact existing production domain URI. Strict Ajv validates both neutral designation examples through that actual authority. The unnecessary authored test-corpus schema and its self-shape assertion were replaced by this domain validation; all edit sensitivity, provider closure, TypeScript compiler and esbuild behavior oracles remain. The actual domain schema is explicitly declared as target Source data and freshness input. No new domain DTO, alias or schema exemption was introduced.
+
+Current validation: two real domain examples pass strict Ajv, modified test syntax has zero TypeScript parse diagnostics, the complete caching project passes strict Ajv and the first-party validator, and the existing canonical aggregate matches. Full provider behavior acceptance remains required under the next coherent canonical build-inference gate; these bounded checks do not replace it.

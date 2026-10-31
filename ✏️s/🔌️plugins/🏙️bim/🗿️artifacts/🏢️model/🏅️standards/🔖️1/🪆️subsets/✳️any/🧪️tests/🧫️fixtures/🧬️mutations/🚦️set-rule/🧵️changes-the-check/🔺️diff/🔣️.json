@@ -2,8 +2,10 @@
   "rules": {
     "r-1": {
       "entry": "Patched",
-      "kind": "MinTread",
-      "limit": 0.26
+      "value": {
+        "kind": "MinTread",
+        "limit": 0.26
+      }
     }
   }
 }

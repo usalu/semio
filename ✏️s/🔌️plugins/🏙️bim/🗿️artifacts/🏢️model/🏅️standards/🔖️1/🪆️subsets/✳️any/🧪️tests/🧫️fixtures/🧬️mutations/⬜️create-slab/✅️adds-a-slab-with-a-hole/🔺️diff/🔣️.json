@@ -1,74 +1,76 @@
 {
   "slabs": {
     "sl-ground": {
-      "boundary": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 6.0
-          }
-        }
-      ],
       "entry": "Created",
-      "holes": [
-        [
+      "value": {
+        "boundary": [
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 3.0,
-              "y": 2.0
+              "x": 0,
+              "y": 0
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 4.0,
-              "y": 2.0
+              "x": 8,
+              "y": 0
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 4.0,
-              "y": 3.0
+              "x": 8,
+              "y": 6
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 3.0,
-              "y": 3.0
+              "x": 0,
+              "y": 6
             }
           }
-        ]
-      ],
-      "name": "Ground slab",
-      "offset": 0.0,
-      "phase": "New",
-      "slab_type": "stt-22",
-      "storey": "st-ground"
+        ],
+        "holes": [
+          [
+            {
+              "bulge": 0,
+              "point": {
+                "x": 3,
+                "y": 2
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 4,
+                "y": 2
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 4,
+                "y": 3
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 3,
+                "y": 3
+              }
+            }
+          ]
+        ],
+        "name": "Ground slab",
+        "offset": 0,
+        "phase": "New",
+        "slab_type": "stt-22",
+        "storey": "st-ground"
+      }
     }
   }
 }

@@ -2,7 +2,7 @@ import{createHash}from"node:crypto";
 import {gunzipSync} from "node:zlib";
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧵️shards/🔣️.json", import.meta.url), "utf8"));
@@ -81,4 +81,36 @@ test("fresh domain projection oracle selects the latest record while codebase re
 
 test("canonical indexed fields agree with SQLite JSON ordering across shuffled maps",()=>{
  const snapshot=JSON.parse(readFileSync(new URL("../🧫️fixtures/🌲️snapshot/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:false}).compile(schema.$defs.SnapshotFixture)(snapshot)).toBe(true);const database=new Database(":memory:");try{const query=database.query(`SELECT group_concat(term,' ') text FROM (SELECT COALESCE(CAST(member.value AS TEXT),'') term FROM json_each(?1) field JOIN json_each(CASE WHEN field.type='array' THEN field.value ELSE json_array(field.value) END) member ORDER BY field.key COLLATE BINARY,member.key)`);for(const data of [snapshot.projectionText.data,Object.fromEntries(Object.entries(snapshot.projectionText.data).reverse())])expect((query.get(JSON.stringify(data)) as {text:string}).text).toBe(snapshot.projectionText.expected);}finally{database.close();}
+});
+
+test("streaming fingerprint allocation vectors retain exact Node SHA256 bytes",()=>{
+ const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",import.meta.url),"utf8"));
+ for(const row of vectors.cases){const digest=createHash("sha256"),body=Buffer.from(row.unit.repeat(row.repeat));for(let index=0;index<row.files;index++){const name=row.prefix+String(index).padStart(4,"0")+".txt";digest.update(Buffer.byteLength(name)+":"+name+":file\n"+body.length+":");digest.update(body);}expect(digest.digest("hex")).toBe(row.sha256);}
+});
+
+test("neutral shard framing agrees with JSON.parse, strict Ajv and Node SHA256",()=>{
+ const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",import.meta.url),"utf8"));
+ const validate=new Ajv({strict:false}).compile(schema.$defs.IndexEvent);
+ for(const row of vectors.framing){
+  let accepted=true,sequence=0;const lines=row.body.split("\n");if(lines.at(-1)==="")lines.pop();
+  try{for(const line of lines){const event=JSON.parse(line);if(!validate(event)||event.seq!==++sequence)accepted=false;}}catch{accepted=false;}
+  expect(accepted).toBe(row.accepted);if(accepted)expect(sequence).toBe(row.events);
+  expect(createHash("sha256").update(row.body).digest("hex")).toBe(row.sha256);
+ }
+});
+
+test("fuzzy allocation vectors agree with SQLite byte-alignment distance",()=>{
+ const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",import.meta.url),"utf8"));
+ const db=new Database(":memory:");
+ try{
+  const distance=db.query(`WITH RECURSIVE input(a,b,budget) AS (VALUES(hex(CAST(?1 AS BLOB)),hex(CAST(?2 AS BLOB)),?3)),moves(di,dj) AS (VALUES(1,0),(0,1),(1,1)),paths(i,j,cost) AS (VALUES(0,0,0) UNION SELECT i+di,j+dj,cost+CASE WHEN di=1 AND dj=1 THEN substr(a,2*i+1,2)<>substr(b,2*j+1,2) ELSE 1 END FROM paths,input,moves WHERE i+di<=length(a)/2 AND j+dj<=length(b)/2 AND cost<=budget) SELECT min(cost) distance FROM paths,input WHERE i=length(a)/2 AND j=length(b)/2`);
+  for(const row of vectors.matching){const words=row.unit.toLowerCase().match(/[a-z0-9\u0080-\u{10ffff}]+/gu)??[],best=Math.min(...words.map((word:string)=>{const actual=distance.get(row.term.toLowerCase(),word,row.fuzziness) as {distance:number|null};return actual.distance??row.fuzziness+1;}));expect(row.fuzziness-best+1).toBe(row.score);}
+ }finally{db.close();}
+});
+
+test("query capture protocol keeps independent Source and domain revisions against SQLite",()=>{
+ const vectors=JSON.parse(readFileSync(new URL("../🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",import.meta.url),"utf8")).queryCapture;
+ const treeSchema=JSON.parse(readFileSync(new URL("../../../🌳️tree/🧬️schema/🔣️.json",import.meta.url),"utf8")),protocol=treeSchema.$defs.QueryCaptureProtocol.const;
+ expect(vectors.sourceCaptures).toBe(protocol.sourceCaptures);expect(protocol.freshAcrossOperations&&protocol.freshDomainProjection).toBe(true);
+ const db=new Database(":memory:");try{db.exec("create table events(sequence integer primary key,title text,source text)");for(const[index,row]of vectors.cases.entries()){db.query("insert into events values(?,?,?)").run(index,row.title,row.source);const actual=db.query("select title, source is lag(source) over(order by sequence) reused from events order by sequence desc limit 1").get()as{title:string,reused:number};expect(actual.title).toBe(row.title);expect(Boolean(actual.reused)).toBe(row.reuse);}}finally{db.close();}
 });

@@ -1,0 +1,63 @@
+{
+ "id": "respiration",
+ "oracle": "scipy.integrate.quad of the half-sine flow; CoolProp HAPropsSI/PropsSI for the respiratory heat; ASHRAE Fundamentals ch. 9 respiratory loss regression (the numbers the thermal solver uses)",
+ "tolerances": {
+  "volumeRel": 1e-09,
+  "heatRel": 0.02,
+  "ashraeSensibleRel": 0.35,
+  "ashraeLatentRel": 0.25
+ },
+ "heat": {
+  "environment": {
+   "airTempC": 20,
+   "relativeHumidity": 0.5,
+   "pressurePa": 101325
+  },
+  "metWM2": 58.15,
+  "areaM2": 1.8
+ },
+ "expected": {
+  "rest": {
+   "inhaleL": 0.49999999999999994,
+   "exhaleL": 0.5,
+   "coolprop": {
+    "dryAirKgS": 0.00010921072920196726,
+    "sensibleW": 1.9542524259850271,
+    "latentW": 6.752035550481551,
+    "vapourPa": 1169.6590917028377
+   },
+   "ashrae": {
+    "sensibleW": 2.051532,
+    "latentW": 8.511335013676327
+   }
+  },
+  "active": {
+   "inhaleL": 1.5,
+   "exhaleL": 1.5,
+   "coolprop": {
+    "dryAirKgS": 0.0008190804690147545,
+    "sensibleW": 14.656893194887708,
+    "latentW": 50.640266628611634,
+    "vapourPa": 1169.6590917028377
+   },
+   "ashrae": {
+    "sensibleW": 2.051532,
+    "latentW": 8.511335013676327
+   }
+  },
+  "mixed": {
+   "inhaleL": 0.6000000000000001,
+   "exhaleL": 0.6000000000000001,
+   "coolprop": {
+    "dryAirKgS": 0.00016381609380295087,
+    "sensibleW": 2.9313786389775416,
+    "latentW": 10.128053325722325,
+    "vapourPa": 1169.6590917028377
+   },
+   "ashrae": {
+    "sensibleW": 2.051532,
+    "latentW": 8.511335013676327
+   }
+  }
+ }
+}

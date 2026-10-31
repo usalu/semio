@@ -12,3 +12,5 @@ pub use component::*;
 mod schema_facet;
 pub use schema_facet::*;
 pub use semio_framework_schema_validator::*;
+
+pub use semio_framework_schema_validator::resolve_schema_document_reference;

@@ -1,3 +1,4 @@
+import {schemaReferenceClosure,type SchemaReferenceRequest,type SchemaReferenceControl} from "../📄️source/🔗️closure/🟦️.ts";
 /** 🧩️ Describes a non-null, non-array object whose member values are unknown. */
 export type UnknownRecord = Record<string, unknown>;
 
@@ -104,32 +105,57 @@ function jsonSchemaSubsetStringLength(value: string): number {
 
 
 /** 🧭️ Resolution context: the document a local `#/…` pointer walks, plus every sibling document a cross-document `$ref` names by `$id`. */
-interface JsonSchemaSubsetScope { readonly root: unknown; readonly documents: ReadonlyMap<string, unknown> }
+interface JsonSchemaSubsetScope { readonly root: unknown; readonly originalRoot: unknown; readonly documents: ReadonlyMap<string, unknown>; readonly references?: ReadonlyMap<unknown,unknown> }
 
-/** 🔗️ Resolves `$ref` to its document and node: `#/…` or the root's own `$id` inside the root, `<$id>`/`<$id>#/…` into a sibling document. */
+interface SchemaUriReference { readonly scheme?:string; readonly authority?:string; readonly path:string; readonly query?:string }
+function schemaUriReference(value:string):SchemaUriReference {
+ const source=value.split('#',1)[0]!,question=source.indexOf('?'),hierarchy=question<0?source:source.slice(0,question),query=question<0?undefined:source.slice(question+1),colon=hierarchy.indexOf(':');
+ const scheme=colon>0&&/^[A-Za-z][A-Za-z0-9+.-]*$/.test(hierarchy.slice(0,colon))?hierarchy.slice(0,colon):undefined,rest=scheme===undefined?hierarchy:hierarchy.slice(colon+1);
+ if(!rest.startsWith('//'))return{scheme,path:rest,query};
+ const slash=rest.indexOf('/',2);return{scheme,authority:slash<0?rest.slice(2):rest.slice(2,slash),path:slash<0?'':rest.slice(slash),query};
+}
+function schemaUriPathWithoutDots(path:string):string {
+ let output='';
+ while(path.length){
+  if(path.startsWith('../'))path=path.slice(3);
+  else if(path.startsWith('./'))path=path.slice(2);
+  else if(path.startsWith('/./'))path=path.slice(2);
+  else if(path==='/.')path='/';
+  else if(path.startsWith('/../')||path==='/..'){path=path==='/..'?'/':path.slice(3);output=output.slice(0,Math.max(0,output.lastIndexOf('/')));}
+  else if(path==='.'||path==='..')path='';
+  else{const slash=path.indexOf('/',path.startsWith('/')?1:0),end=slash<0?path.length:slash;output+=path.slice(0,end);path=path.slice(end);}
+ }
+ return output;
+}
+/** 🧭️ Resolves a document URI against its declared base using the same generic contract as Rust.
+ * @see https://www.rfc-editor.org/rfc/rfc3986#section-5.2 */
+export function resolveSchemaDocumentReference(value:string,base?:string):string {
+ const reference=schemaUriReference(value),parent=schemaUriReference(base??''),scheme=reference.scheme??parent.scheme,authority=reference.scheme!==undefined?reference.authority:reference.authority??parent.authority;
+ let path:string,query:string|undefined;
+ if(reference.scheme!==undefined||reference.authority!==undefined){path=schemaUriPathWithoutDots(reference.path);query=reference.query;}
+ else if(reference.path===''){path=schemaUriPathWithoutDots(parent.path);query=reference.query??parent.query;}
+ else if(reference.path.startsWith('/')){path=schemaUriPathWithoutDots(reference.path);query=reference.query;}
+ else{const prefix=parent.authority!==undefined&&parent.path===''?'/':parent.path.slice(0,parent.path.lastIndexOf('/')+1);path=schemaUriPathWithoutDots(prefix+reference.path);query=reference.query;}
+ return(scheme===undefined?'':scheme+':')+(authority===undefined?'':'//'+authority)+path+(query===undefined?'':'?'+query);
+}
+
+/** 🔗️ Resolves registered documents and UTF8 JSON Pointer fragments while retaining the original root. */
 function jsonSchemaSubsetResolve(scope: JsonSchemaSubsetScope, reference: string): JsonSchemaSubsetScope & { readonly target: unknown } | undefined {
-  const hash = reference.indexOf("#"), id = hash < 0 ? reference : reference.slice(0, hash), fragment = hash < 0 ? "" : reference.slice(hash + 1);
-  const root = id === "" || jsonSchemaSubsetObject(scope.root)?.$id === id ? scope.root : scope.documents.get(id);
-  if (root === undefined || (fragment !== "" && !fragment.startsWith("/"))) return undefined;
-  const target = fragment.split("/").filter((segment) => segment.length > 0).reduce<unknown>((node, segment) => {
-    const key = decodeURIComponent(segment.replace(/~1/g, "/").replace(/~0/g, "~"));
-    return Array.isArray(node) ? (/^\d+$/.test(key) ? node[Number(key)] : undefined) : jsonSchemaSubsetObject(node)?.[key];
-  }, root);
-  return target === undefined ? undefined : { root, documents: scope.documents, target };
+ const hash=reference.indexOf('#'),document=hash<0?reference:reference.slice(0,hash),fragment=decodeURIComponent(hash<0?'':reference.slice(hash+1)),id=resolveSchemaDocumentReference(document,typeof jsonSchemaSubsetObject(scope.root)?.$id==='string'?jsonSchemaSubsetObject(scope.root)!.$id as string:undefined);
+ const currentId=jsonSchemaSubsetObject(scope.root)?.$id,originalId=jsonSchemaSubsetObject(scope.originalRoot)?.$id;
+ const root=document===''||(typeof currentId==='string'&&resolveSchemaDocumentReference(currentId)===id)?scope.root:typeof originalId==='string'&&resolveSchemaDocumentReference(originalId)===id?scope.originalRoot:scope.documents.get(id);
+ if(root===undefined||(fragment!==''&&!fragment.startsWith('/')))return undefined;
+ let target:unknown=root;
+ if(fragment!=='')for(const segment of fragment.slice(1).split('/')){const key=segment.replace(/~1/g,'/').replace(/~0/g,'~');target=Array.isArray(target)?(/^(?:0|[1-9][0-9]*)$/.test(key)?target[Number(key)]:undefined):jsonSchemaSubsetObject(target)?.[key];}
+ return target===undefined?undefined:{...scope,root,target};
 }
 
-/** 📚️ Indexes sibling schema documents by their required, unique `$id`. */
-function jsonSchemaSubsetDocuments(documents: readonly unknown[]): ReadonlyMap<string, unknown> {
-  const indexed = new Map<string, unknown>();
-  for (const document of documents) {
-    const id = jsonSchemaSubsetObject(document)?.$id;
-    if (typeof id !== "string") throw new Error("sibling schema document requires an `$id`");
-    if (indexed.has(id)) throw new Error(`duplicate sibling schema \`$id\` ${id}`);
-    indexed.set(id, document);
-  }
-  return indexed;
+/** 📚️ Indexes required unique document identifiers through the shared URI policy. */
+function jsonSchemaSubsetDocuments(documents:readonly unknown[]):ReadonlyMap<string,unknown>{
+ const indexed=new Map<string,unknown>();
+ for(const document of documents){const declared=jsonSchemaSubsetObject(document)?.$id;if(typeof declared!=='string')throw Error('sibling schema document requires an id');const id=resolveSchemaDocumentReference(declared);if(indexed.has(id))throw Error('duplicate sibling schema id '+id);indexed.set(id,document);}
+ return indexed;
 }
-
 
 function jsonSchemaSubsetSnapshot(value: unknown, copies = new Map<object, unknown>()): unknown {
   if (typeof value !== "object" || value === null) return value;
@@ -154,12 +180,29 @@ export interface CompiledJsonSchemaSubset { validate(value: unknown): string[] }
 
 /** ⚡️ Compiles references, regexes and property tables once without retaining mutable caller schema aliases. */
 export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema, documents: readonly unknown[] = []): CompiledJsonSchemaSubset {
-  const snapshot = jsonSchemaSubsetSnapshot({ schema, root, documents }) as { schema: unknown; root: unknown; documents: readonly unknown[] };
-  const scope: JsonSchemaSubsetScope = { root: snapshot.root, documents: jsonSchemaSubsetDocuments(snapshot.documents) };
+ const snapshot=jsonSchemaSubsetSnapshot({schema,root,documents}) as {schema:unknown;root:unknown;documents:readonly unknown[]};
+ return compileJsonSchemaSubsetSnapshot(snapshot.schema,{root:snapshot.root,originalRoot:snapshot.root,documents:jsonSchemaSubsetDocuments(snapshot.documents)});
+}
+
+/** 📍️ Compiles captured documents through the normative Source closure, retaining physical retrieval and declared resource identities. */
+export async function compileJsonSchemaSourceSubset(request:SchemaReferenceRequest,control:SchemaReferenceControl):Promise<CompiledJsonSchemaSubset>{
+ const dialect=Object.getOwnPropertyDescriptor(request,"dialect")?.value,closure=await schemaReferenceClosure(request,control);if(dialect!=="draft-07")throw Error("The owned schema subset requires draft-07");
+ const documents=new Map([closure.root,...closure.documents].map(input=>[input.id,JSON.parse(input.source) as unknown])),references=new Map<unknown,unknown>();
+ const at=(id:string,pointer:string):unknown=>{let node=documents.get(id);if(pointer!=="")for(const part of pointer.slice(1).split("/"))node=(node as Record<string,unknown>)[part.replace(/~1/g,"/").replace(/~0/g,"~")];return node;};
+ for(const edge of closure.edges){if(!documents.has(edge.origin.id))continue;references.set(at(edge.origin.id,edge.origin.pointer.slice(0,-"/$ref".length)),at(edge.target.id,edge.target.pointer));}
+ const root=documents.get(closure.root.id);return compileJsonSchemaSubsetSnapshot(root,{root,originalRoot:root,documents:new Map(),references});
+}
+
+/** 🧱️ Builds the shared immutable validation plans from one owned schema graph. */
+function compileJsonSchemaSubsetSnapshot(schema:unknown,scope:JsonSchemaSubsetScope):CompiledJsonSchemaSubset{
   const plans = new Map<unknown, Map<unknown, JsonSchemaSubsetCheck>>();
   const prepare = (schema: unknown, scope: JsonSchemaSubsetScope): JsonSchemaSubsetCheck => {
     const contract = jsonSchemaSubsetObject(schema);
-    if (!contract) return schema === true ? () => [] : (_value, path) => [`${path} schema must be an object`];
+    if (!contract) {
+      if (schema === true) return () => [];
+      if (schema === false) return (_value, path) => [`${path} is refused by its false schema`];
+      throw new Error("Schema object or boolean required");
+    }
     let scoped = plans.get(scope.root);
     if (!scoped) { scoped = new Map(); plans.set(scope.root, scoped); }
     const prior = scoped.get(contract);
@@ -167,11 +210,16 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
     let ready: JsonSchemaSubsetCheck;
     const check: JsonSchemaSubsetCheck = (value, path) => ready(value, path);
     scoped.set(contract, check);
-    const resolved = typeof contract.$ref === "string" ? jsonSchemaSubsetResolve(scope, contract.$ref) : undefined;
+    const resolved = typeof contract.$ref === "string" ? (scope.references?(scope.references.has(contract)?{...scope,target:scope.references.get(contract)}:undefined):jsonSchemaSubsetResolve(scope,contract.$ref)) : undefined;
+    if (typeof contract.$ref === "string" && !resolved) throw new Error("Unresolvable schema reference " + contract.$ref);
     const reference = resolved ? prepare(resolved.target, resolved) : undefined;
     const all = Array.isArray(contract.allOf) ? contract.allOf.map(member => prepare(member, scope)) : [];
     const any = Array.isArray(contract.anyOf) ? contract.anyOf.map(member => prepare(member, scope)) : undefined;
     const one = Array.isArray(contract.oneOf) ? contract.oneOf.map(member => prepare(member, scope)) : undefined;
+    const excluded = "not" in contract ? prepare(contract.not, scope) : undefined;
+    const condition = "if" in contract ? prepare(contract.if, scope) : undefined;
+    const consequent = "then" in contract ? prepare(contract.then, scope) : undefined;
+    const alternative = "else" in contract ? prepare(contract.else, scope) : undefined;
     const enums = Array.isArray(contract.enum) ? contract.enum : undefined;
     const pattern = typeof contract.pattern === "string" ? jsonSchemaSubsetPattern(contract.pattern) : undefined;
     const minimumLength = typeof contract.minLength === "number" ? contract.minLength : undefined;
@@ -188,15 +236,17 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
     const additional = jsonSchemaSubsetObject(contract.additionalProperties) ? prepare(contract.additionalProperties, scope) : undefined;
     ready = (value, path) => {
       const errors: string[] = [];
-      if (typeof contract.$ref === "string") {
-        if (reference) errors.push(...reference(value, path));
-        else errors.push(`${path} references unresolvable ${contract.$ref}`);
-      }
+      if (reference) errors.push(...reference(value, path));
       if ("const" in contract && !jsonSchemaSubsetValueEquals(value, contract.const)) errors.push(`${path} must equal its const`);
       if (enums && !enums.some(candidate => jsonSchemaSubsetValueEquals(value, candidate))) errors.push(`${path} must be an allowed enum value`);
       for (const member of all) errors.push(...member(value, path));
       if (any && !any.some(member => member(value, path).length === 0)) errors.push(`${path} must match one anyOf branch`);
       if (one && one.filter(member => member(value, path).length === 0).length !== 1) errors.push(`${path} must match exactly one oneOf branch`);
+      if (excluded && excluded(value, path).length === 0) errors.push(`${path} must not match its not schema`);
+      if (condition) {
+        const branch = condition(value, path).length === 0 ? consequent : alternative;
+        if (branch) errors.push(...branch(value, path));
+      }
       if (!jsonSchemaSubsetTypeMatches(contract.type, value)) { errors.push(`${path} must be ${String(contract.type)}`); return errors; }
       if (typeof value === "string") {
         if (minimumLength !== undefined || maximumLength !== undefined) {
@@ -241,7 +291,7 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
     };
     return check;
   };
-  const check = prepare(snapshot.schema, scope);
+  const check = prepare(schema, scope);
   return Object.freeze({ validate: (value: unknown) => check(value, "") });
 }
 

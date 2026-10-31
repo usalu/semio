@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import type fixtureData from "./🧫️cases.json";
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { cross, shuffler, rollup } from "d3-array";
@@ -7,7 +8,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { evaluate } from "mathjs";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./🧫️cases.json", import.meta.url)), "utf8"));
+const fixture: typeof fixtureData = JSON.parse(readFileSync(fileURLToPath(new URL("./🧫️cases.json", import.meta.url)), "utf8"));
 const workspaceRoot = new URL("../../../../../", import.meta.url);
 const sourceRoot = new URL("../", import.meta.url);
 const read = (name: string): string => readFileSync(fileURLToPath(new URL(name, sourceRoot)), "utf8");
@@ -17,7 +18,7 @@ type Vector = number[];
 function sharedDimensions(values: number[][], forms: string[], useOracle: boolean): boolean {
   const groups = (items: unknown[]): number[] => useOracle
     ? [...rollup(items, entries => entries.length, value => JSON.stringify(value)).values()].sort()
-    : [...items.reduce((counts, value) => { const key = JSON.stringify(value); counts.set(key, (counts.get(key) ?? 0) + 1); return counts; }, new Map<string, number>()).values()].sort();
+    : [...items.reduce<Map<string, number>>((counts, value) => { const key = JSON.stringify(value); counts.set(key, (counts.get(key) ?? 0) + 1); return counts; }, new Map<string, number>()).values()].sort();
   if (!values.every(row => row.length === 3 && JSON.stringify(groups(row)) === JSON.stringify([1, 2]))) return false;
   const dimensions = [0, 1, 2].map(column => values.map(row => row[column]));
   if (JSON.stringify(groups(dimensions)) !== JSON.stringify([1, 2])) return false;
@@ -201,7 +202,7 @@ function exercises(): unknown {
   assert.equal(new Set(all.map(row => JSON.stringify(row))).size, 16);
   for (const set of types) assert.deepEqual(set.map((row: any, index: number) => row.family === (index % 2 ? "ellipsoid-capsule" : "capsule")), Array(8).fill(true));
   const plan = JSON.parse(read("icons.json"));
-  assert.deepEqual(plan.resources, fixture.exercise.tables.flatMap((entry: any) => entry.types.map(({icon, image, sha256}: any) => ({source: icon, output: image, sha256, width: 2048}))));
+  assert.deepEqual(plan.resources, fixture.exercise.tables.flatMap((entry: any) => entry.types.map(({icon, image, sha256}: any) => ({source: icon, output: image, sha256, width: (() => { const svg = readFileSync(new URL(icon, workspaceRoot), "utf8"), match = /viewBox="([^"]+)"/u.exec(svg); assert.ok(match); const box = match[1]!.trim().split(/[ ,]+/u).map(Number); assert.equal(box.length, 4); return Math.ceil(Math.min(22, 11 * box[2]! / box[3]!) * 600 / 25.4 / 16) * 16; })()}))));
   for (const row of fixture.exercise.tables.flatMap((entry: any) => entry.types)) {
     const raw = readFileSync(new URL(row.icon, workspaceRoot));
     assert.equal(createHash("sha256").update(raw).digest("hex"), row.sha256);

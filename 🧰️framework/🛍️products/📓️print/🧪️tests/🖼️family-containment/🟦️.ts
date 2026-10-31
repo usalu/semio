@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import{PRINT_PDF_OPS_V1 as OPS,printPdfPageV1,printPdfTransformV1,printPdfApplyV1,printPdfInverseV1,printPdfArrayV1,printPdfNumberV1,printPdfVectorV1,printPdfNameV1,printPdfRecordV1,printPdfGlyphsV1,type PrintPdfPageV1}from"../../📦️artifacts/📖️pdf/🟦️.ts";
 import{basename}from"node:path";
 import printProbeLimits from"../../🔨️modules/🖨️tectonic-template-compilation/📋️intent/🧬️schema/🔣️.json";
@@ -429,13 +430,13 @@ export async function compileNativeOrbitalContainment(execution:PrintExecutionV1
 
 /** 🧷️ Checks every closed syntax descriptor against owned validation and independent AJV. */
 function verifyCanonicalOptionSyntaxContract():void{
- const document=schemaDocument as unknown as {$id:string,$defs:Record<string,unknown>,"x-semio-family-options":Record<string,unknown>,"x-semio-option-syntax":Record<string,Record<string,unknown>>},contract=document.$defs.OptionSyntax;
+ const document=schemaDocument as unknown as {$id:string,$defs:Record<string,unknown>,"x-semio-family-options":Record<string,unknown>,definitions:{OptionSyntaxCatalog:{const:Record<string,Record<string,unknown>>}}},contract=document.$defs.OptionSyntax;
  if(!contract)throw Error("Canonical option syntax contract is missing");
- const ajv=new Ajv2020({strict:false,allErrors:true});ajv.addSchema(document);const external=ajv.compile({$ref:`${document.$id}#/$defs/OptionSyntax`});
+ const ajv=new AjvDraft07({strict:false,allErrors:true});ajv.addSchema(document);const external=ajv.compile({$ref:`${document.$id}#/$defs/OptionSyntax`});
  for(const entry of optionFixture.optionSyntax.descriptors){const owned=validateJsonSchemaSubset(contract,entry.input,document).length===0,reference=external(entry.input);if(owned!==entry.valid||reference!==entry.valid)throw Error(`Syntax ${entry.id}: owned ${owned}, AJV ${reference}`);}
  const family=ajv.compile({$ref:`${document.$id}#/$defs/FamilyOptions`});
  const failures:string[]=[];for(const[name,options]of Object.entries(document["x-semio-family-options"])){const owned=validateJsonSchemaSubset(document.$defs.FamilyOptions,options,document),accepted=family(options);if(owned.length||!accepted)failures.push(`Family syntax metadata ${name}: owned ${JSON.stringify(owned)}, AJV ${JSON.stringify(family.errors)}`);}if(failures.length)throw Error(failures.join("\n"));
- let count=0;for(const[owner,options]of Object.entries(document["x-semio-option-syntax"])){for(const[key,value]of Object.entries(options)){if(validateJsonSchemaSubset(contract,value,document).length||!external(value))throw Error(`Generic syntax metadata ${owner}/${key}`);count++;}}
+ let count=0;for(const[owner,options]of Object.entries(document.definitions.OptionSyntaxCatalog.const)){for(const[key,value]of Object.entries(options)){if(validateJsonSchemaSubset(contract,value,document).length||!external(value))throw Error(`Generic syntax metadata ${owner}/${key}`);count++;}}
 }
 
 /** 🪄️ Compiles actual canonical mutation output and compares its numerical paths with independent D3. */
@@ -506,9 +507,9 @@ function canonicalPaintShapes(operators:PrintPdfPageV1["operators"]):CanonicalPa
 }
 /** 🛂️ Adjudicates declared option values through canonical replay, independent AJV and actual native grammar. */
 async function compileNativeCanonicalAdmission(execution:PrintExecutionV1):Promise<void>{return withPrintScratchV1(execution,"native/canonical-admission",async({directory:workDir,execution})=>{
- const metadata=schemaDocument as unknown as {"x-semio-family-options":Record<string,{options:Record<string,Record<string,unknown>>}>,"x-semio-option-syntax":Record<string,Record<string,Record<string,unknown>>>},ajv=new Ajv2020({strict:false,allErrors:true}),failures:string[]=[],sources=new Map<string,string>(),implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript";
+ const metadata=schemaDocument as unknown as {"x-semio-family-options":Record<string,{options:Record<string,Record<string,unknown>>}>,definitions:{OptionSyntaxCatalog:{const:Record<string,Record<string,Record<string,unknown>>>}}},ajv=new Ajv2020({strict:false,allErrors:true}),failures:string[]=[],sources=new Map<string,string>(),implementation=process.env.PRINT_NATIVE_OPTION_SOURCE??"typescript";
  for(const entry of optionFixture.optionSyntax.admission){
-  const descriptor=entry.family?metadata["x-semio-family-options"][entry.owner]?.options[entry.key]:metadata["x-semio-option-syntax"][entry.owner]?.[entry.key];if(!descriptor)throw Error(`Missing admission owner ${entry.owner}/${entry.key}`);
+  const descriptor=entry.family?metadata["x-semio-family-options"][entry.owner]?.options[entry.key]:metadata.definitions.OptionSyntaxCatalog.const[entry.owner]?.[entry.key];if(!descriptor)throw Error(`Missing admission owner ${entry.owner}/${entry.key}`);
   for(const[key,value]of Object.entries(entry.contract))if(JSON.stringify(descriptor[key])!==JSON.stringify(value))failures.push(`${entry.id}: authored ${key} differs from independent contract`);
   const contract=entry.grammar?{anyOf:[entry.contract,{type:"string",minLength:1}]}:entry.contract,oracle=ajv.compile(contract)(entry.oracleValue);if(oracle!==entry.valid)throw Error(`Independent AJV admission differs ${entry.id}`);
   if(entry.grammar&&descriptor.syntax!=="expression")failures.push(`${entry.id}: native arithmetic setter requires Expression syntax`);

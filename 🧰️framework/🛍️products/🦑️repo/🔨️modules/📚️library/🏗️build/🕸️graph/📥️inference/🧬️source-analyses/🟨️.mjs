@@ -184,11 +184,11 @@ function compilerRevisionV1(stamp){return memoizedObservedComputationV1(compiler
 export function prepareSourceAnalysesV1(){
   const stamp=inferrerStampV1("source-analyses"),revision=compilerRevisionV1(stamp);
   if(!sourceAnalysesV1){
-    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,stampRevision=createHash("sha256").update(stamp).digest("hex");
+    const commandParser=loaded.commandSourceImports,urlParser=loaded.commandUrlReferences,runtimeParser=loaded.runtimeModuleSourceImports,runtimeReferenceParser=loaded.runtimeModuleSourceReferences,moduleParser=loaded.moduleSourceImports,productionParser=loaded.productionModuleSourceImports,stampRevision=createHash("sha256").update(stamp).digest("hex");
     const owner=sourceAnalysisOwnerIdentityV1(revisionIdentity.url,stamp),identity=role=>`build:${role}:v1:${owner}`;
     sourceAnalysesV1={
       command:register({id:identity("command-imports"),revision,analyze:(path,bytes)=>commandParser(path,bytes.toString("utf8"))}),
-      references:register({id:identity("command-references"),revision,analyze:(path,bytes)=>{const text=bytes.toString("utf8");return {runtime:runtimeParser(path,text),urls:urlParser(path,text)};}}),
+      references:register({id:identity("command-references"),revision,analyze:(path,bytes)=>{const text=bytes.toString("utf8");return {runtime:runtimeReferenceParser(path,text),urls:urlParser(path,text)};}}),
       module:register({id:identity("module-imports"),revision,analyze:(path,bytes)=>({imports:moduleParser(path,bytes.toString("utf8")),runtimeImports:runtimeParser(path,bytes.toString("utf8")),productionImports:productionParser(path,bytes.toString("utf8"))})}),
       script:register({id:identity("script-requirements"),revision:stampRevision,analyze:(_path,bytes)=>{const text=bytes.toString("utf8");return {go:/["']go["']\s*,|\brunGo\w*\(/.test(text),wasm:/\b(?:buildWasmWebV1|buildRepositoryWasmWebV1)\s*\(/.test(text)};}}),
       nativeScript:register({id:identity("native-script-admission"),revision:stampRevision,analyze:(_path,bytes)=>loaded.nativeHostScriptAdmissionV1(bytes.toString("utf8"))}),

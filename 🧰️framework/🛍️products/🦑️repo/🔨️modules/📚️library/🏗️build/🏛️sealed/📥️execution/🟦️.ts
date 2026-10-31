@@ -1,3 +1,4 @@
+import{prepareRepoCpuProfileArgumentsV1}from"../../⏱️profile/📊️cpu/🟨️.mjs";
 import{withDependencyReadmissionV1}from"../../📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
 import{executeCapturedBuildSourceV1}from"../../📥️source/🔏️closure/🚪️command/🟦️.ts";
 import closureSchema from"../../📥️source/🔏️closure/🧬️schema/🔣️.json"with{type:"json"};
@@ -17,7 +18,7 @@ async function executeImplementationOnceV1(workspace:string,entry:string,args:re
  const store=sealedEntryOfV1(workspace,relative(workspace,fileURLToPath(new URL("../🚪️entry/🟦️.ts",import.meta.url))).split("\\").join("/")),pointer=readSealedPointerV1(store),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
  if(!pointer||text===undefined||loader===undefined){void writeOwnedCommandOutputV1(process.stderr,sealedTextV1(sealedLanguagesV1(environment),"fallback",{reason:"no readable sealed snapshot"})+"\n",control);return executeCapturedBuildSourceV1(workspace,entry,args,original,control,environment);}
  profileMarkV1("source.served","sealed:"+pointer.digest.slice(0,12));
- const argv=["--eval",loader,"--",pointer.digest,...args],quote=(value:string)=>'"'+value.replace(/(\\*)"/gu,'$1$1\\"').replace(/(\\+)$/u,'$1$1')+'"';
+ const argv=[...prepareRepoCpuProfileArgumentsV1(environment),"--eval",loader,"--",pointer.digest,...args],quote=(value:string)=>'"'+value.replace(/(\\*)"/gu,'$1$1\\"').replace(/(\\+)$/u,'$1$1')+'"';
  if(Buffer.byteLength(text)>closureSchema.definitions.Policy.const.maximumSnapshotBytes||[process.execPath,...argv].map(quote).join(" ").length+1>sealedPolicyV1.maximumCommandLineCharacters)throw Error(sealedTextV1(sealedLanguagesV1(environment),"commandPublicationBounded"));
  requireIssuedResourceControlInvocationV1(control,original);
  await withIssuedResourceOperationV1(control,()=>runOwnedCommand(process.execPath,argv,process.cwd(),"repository:command",scriptInvocationBudget(original,0),{control,signal:control.signal,env:{...scriptResourceProcessEnvironmentV1(control,environment),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},outputStyle:"stream-without-prefixes",onProgress:line=>writeOwnedCommandOutputV1(process.stderr,line+"\n",control)}));

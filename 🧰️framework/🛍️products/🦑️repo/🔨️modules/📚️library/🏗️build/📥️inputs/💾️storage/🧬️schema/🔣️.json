@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "string",
   "enum": [
     "build-input-closures",
@@ -115,13 +115,6 @@
           "maximum": 9007199254740991
         }
       },
-      "policy": {
-        "maximumBytes": 1073741824,
-        "lowWaterBytes": 536870912,
-        "minimumAvailableBytes": 1073741824,
-        "retirementWindowMilliseconds": 15000
-      },
-      "optionalPath": "^(?:(?:selections|contexts)/[a-f0-9]{64}/)?(?:(?:(?:np|ip|rr)/[a-f0-9]{24}\\.json|inference/emoji-project-json\\.json|(?:inference/)?test-cases\\.json)(?:\\.[0-9]+\\.[0-9]+\\.tmp|\\.records/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?)?|mr/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?|(?:(?:np|ip|rr|inference)/)?ob/[a-f0-9]{64}\\.br(?:\\.[0-9]+\\.[0-9]+\\.tmp)?)$",
       "definitions": {
         "Headroom": {
           "type": "object",
@@ -276,10 +269,23 @@
               "type": "boolean"
             }
           }
+        },
+        "DefaultPolicy": {
+          "const": {
+            "maximumBytes": 1073741824,
+            "lowWaterBytes": 536870912,
+            "minimumAvailableBytes": 1073741824,
+            "retirementWindowMilliseconds": 15000
+          }
+        },
+        "OptionalPath": {
+          "const": "^(?:(?:selections|contexts)/[a-f0-9]{64}/)?(?:(?:(?:np|ip|rr)/[a-f0-9]{24}\\.json|inference/emoji-project-json\\.json|(?:inference/)?test-cases\\.json)(?:\\.[0-9]+\\.[0-9]+\\.tmp|\\.records/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?)?|mr/[0-9a-z]+-[0-9]+-[a-f0-9]{16}\\.(?:pack|idx)(?:\\.[a-f0-9]{8}\\.tmp)?|(?:(?:np|ip|rr|inference)/)?ob/[a-f0-9]{64}\\.br(?:\\.[0-9]+\\.[0-9]+\\.tmp)?)$"
+        },
+        "Protocol": {
+          "const": {
+            "retirementBatchEntries": 64
+          }
         }
-      },
-      "protocol": {
-        "retirementBatchEntries": 64
       }
     },
     "OptionalLedger": {
@@ -315,22 +321,6 @@
         "dirty": {
           "type": "boolean"
         }
-      },
-      "protocol": {
-        "applicationId": 1397573457,
-        "filename": "optional.sqlite",
-        "maximumDatabaseBytes": 32768,
-        "gateFilename": "optional-gate.sqlite",
-        "gateApplicationId": 1397573458,
-        "maximumGateDatabaseBytes": 16384,
-        "maximumJournalHeaderBytes": 65536,
-        "journalPageOverheadBytes": 8,
-        "journalMode": "delete",
-        "synchronous": 2,
-        "cacheSpill": 0,
-        "pageBytes": 4096,
-        "inventoryEntryLimit": 131072,
-        "writerShards": 64
       },
       "definitions": {
         "Publication": {
@@ -420,6 +410,24 @@
               "minimum": 0,
               "maximum": 9007199254740991
             }
+          }
+        },
+        "Protocol": {
+          "const": {
+            "applicationId": 1397573457,
+            "filename": "optional.sqlite",
+            "maximumDatabaseBytes": 32768,
+            "gateFilename": "optional-gate.sqlite",
+            "gateApplicationId": 1397573458,
+            "maximumGateDatabaseBytes": 16384,
+            "maximumJournalHeaderBytes": 65536,
+            "journalPageOverheadBytes": 8,
+            "journalMode": "delete",
+            "synchronous": 2,
+            "cacheSpill": 0,
+            "pageBytes": 4096,
+            "inventoryEntryLimit": 131072,
+            "writerShards": 64
           }
         }
       }

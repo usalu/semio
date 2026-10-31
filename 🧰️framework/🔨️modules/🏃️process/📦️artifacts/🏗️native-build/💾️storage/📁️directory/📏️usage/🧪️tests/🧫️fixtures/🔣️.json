@@ -59,4 +59,186 @@
       "results": {"A": "aborted"}
     }
   ]
+,
+ "drain": [{"id":"primary-error","reason":"error","accepted":2},{"id":"undefined-error","reason":"undefined","accepted":2}]
+,
+ "entryNames": [
+  {
+    "platform": "linux",
+    "parent": "/",
+    "name": "leaf",
+    "valid": true
+  },
+  {
+    "platform": "linux",
+    "parent": "/data/",
+    "name": "a\\b",
+    "valid": true
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "é",
+    "valid": true
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "é",
+    "valid": true
+  },
+  {
+    "platform": "darwin",
+    "parent": "/volume/工具",
+    "name": "space & ^ %",
+    "valid": true
+  },
+  {
+    "platform": "win32",
+    "parent": "C:\\",
+    "name": "leaf",
+    "valid": true
+  },
+  {
+    "platform": "win32",
+    "parent": "C:\\data\\",
+    "name": "Straße",
+    "valid": true
+  },
+  {
+    "platform": "win32",
+    "parent": "\\\\server\\share\\root",
+    "name": "file",
+    "valid": true
+  },
+  {
+    "platform": "win32",
+    "parent": "\\\\server\\share\\",
+    "name": "long name",
+    "valid": true
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "valid": true
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "",
+    "valid": false
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": ".",
+    "valid": false
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "..",
+    "valid": false
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "bad/name",
+    "valid": false
+  },
+  {
+    "platform": "linux",
+    "parent": "/data",
+    "name": "bad\u0000name",
+    "valid": false
+  },
+  {
+    "platform": "win32",
+    "parent": "C:\\data",
+    "name": "bad\\name",
+    "valid": false
+  },
+  {
+    "platform": "win32",
+    "parent": "C:\\data",
+    "name": "bad/name",
+    "valid": false
+  }
+]
+,
+ "metadata": [
+  {
+    "id": "zero",
+    "kind": "safe",
+    "field": "ino",
+    "value": 0
+  },
+  {
+    "id": "largest-safe",
+    "kind": "safe",
+    "field": "ino",
+    "value": 9007199254740991
+  },
+  {
+    "id": "negative-exact",
+    "kind": "safe",
+    "field": "dev",
+    "value": -1
+  },
+  {
+    "id": "unsafe-dev",
+    "kind": "unsafe",
+    "field": "dev",
+    "value": 9007199254740992
+  },
+  {
+    "id": "unsafe-ino",
+    "kind": "unsafe",
+    "field": "ino",
+    "value": 9007199254740992
+  },
+  {
+    "id": "unsafe-nlink",
+    "kind": "unsafe",
+    "field": "nlink",
+    "value": 9007199254740992
+  },
+  {
+    "id": "unsafe-blocks",
+    "kind": "unsafe",
+    "field": "blocks",
+    "value": 9007199254740992
+  },
+  {
+    "id": "unsafe-size",
+    "kind": "unsafe",
+    "field": "size",
+    "value": 9007199254740992
+  },
+  {
+    "id": "fraction",
+    "kind": "unsafe",
+    "field": "blocks",
+    "value": 0.5
+  },
+  {
+    "id": "initial-error",
+    "kind": "initial-error",
+    "field": "ino",
+    "value": 0
+  },
+  {
+    "id": "exact-error",
+    "kind": "exact-error",
+    "field": "ino",
+    "value": 9007199254740992
+  },
+  {
+    "id": "cancel-before-exact",
+    "kind": "cancel",
+    "field": "ino",
+    "value": 9007199254740992
+  }
+]
 }

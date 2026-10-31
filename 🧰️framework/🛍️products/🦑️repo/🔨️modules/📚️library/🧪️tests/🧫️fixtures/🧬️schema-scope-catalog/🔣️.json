@@ -6803,7 +6803,7 @@
                 "viewport": {
                   "const": {
                     "x": -12.5,
-                    "y": 8.0,
+                    "y": 8,
                     "zoom": 1.25
                   }
                 }
@@ -9542,11 +9542,11 @@
             "CanonicalPolicy": {
               "const": {
                 "authority": {
-                  "maximumItems": 1152921504606846976,
-                  "maximumCopyBytes": 1152921504606846976,
-                  "maximumCapacityBytes": 1152921504606846976,
-                  "maximumReleaseBytes": 1152921504606846976,
-                  "maximumDepth": 1152921504606846976
+                  "maximumItems": 1152921504606847000,
+                  "maximumCopyBytes": 1152921504606847000,
+                  "maximumCapacityBytes": 1152921504606847000,
+                  "maximumReleaseBytes": 1152921504606847000,
+                  "maximumDepth": 1152921504606847000
                 },
                 "attempts": [
                   {
@@ -9600,11 +9600,11 @@
       "grantExamples": [
         {
           "input": {
-            "maximumItems": 1152921504606846976,
-            "maximumCopyBytes": 1152921504606846976,
-            "maximumCapacityBytes": 1152921504606846976,
-            "maximumReleaseBytes": 1152921504606846976,
-            "maximumDepth": 1152921504606846976
+            "maximumItems": 1152921504606847000,
+            "maximumCopyBytes": 1152921504606847000,
+            "maximumCapacityBytes": 1152921504606847000,
+            "maximumReleaseBytes": 1152921504606847000,
+            "maximumDepth": 1152921504606847000
           },
           "expected": true
         }
@@ -9638,21 +9638,21 @@
             "CanonicalPolicy": {
               "const": {
                 "authority": {
-                  "maximumItems": 1152921504606846976,
-                  "maximumCopyBytes": 1152921504606846976,
-                  "maximumCapacityBytes": 1152921504606846976,
-                  "maximumReleaseBytes": 1152921504606846976,
-                  "maximumDepth": 1152921504606846976
+                  "maximumItems": 1152921504606847000,
+                  "maximumCopyBytes": 1152921504606847000,
+                  "maximumCapacityBytes": 1152921504606847000,
+                  "maximumReleaseBytes": 1152921504606847000,
+                  "maximumDepth": 1152921504606847000
                 },
                 "refusals": [
                   {
                     "axis": "copy",
-                    "value": 576460752303423488,
+                    "value": 576460752303423500,
                     "kind": "ownershipLimit"
                   },
                   {
                     "axis": "depth",
-                    "value": 576460752303423488,
+                    "value": 576460752303423500,
                     "kind": "depthLimit"
                   }
                 ],
@@ -9699,11 +9699,11 @@
       "grantExamples": [
         {
           "input": {
-            "maximumItems": 1152921504606846976,
-            "maximumCopyBytes": 1152921504606846976,
-            "maximumCapacityBytes": 1152921504606846976,
-            "maximumReleaseBytes": 1152921504606846976,
-            "maximumDepth": 1152921504606846976
+            "maximumItems": 1152921504606847000,
+            "maximumCopyBytes": 1152921504606847000,
+            "maximumCapacityBytes": 1152921504606847000,
+            "maximumReleaseBytes": 1152921504606847000,
+            "maximumDepth": 1152921504606847000
           },
           "expected": true
         }
@@ -9738,11 +9738,11 @@
               "const": {
                 "version": 1,
                 "authority": {
-                  "maximumItems": 1152921504606846976,
-                  "maximumCopyBytes": 1152921504606846976,
-                  "maximumCapacityBytes": 1152921504606846976,
-                  "maximumReleaseBytes": 1152921504606846976,
-                  "maximumDepth": 1152921504606846976
+                  "maximumItems": 1152921504606847000,
+                  "maximumCopyBytes": 1152921504606847000,
+                  "maximumCapacityBytes": 1152921504606847000,
+                  "maximumReleaseBytes": 1152921504606847000,
+                  "maximumDepth": 1152921504606847000
                 },
                 "publication": "moveOriginal"
               }
@@ -9785,15 +9785,322 @@
       "grantExamples": [
         {
           "input": {
-            "maximumItems": 1152921504606846976,
-            "maximumCopyBytes": 1152921504606846976,
-            "maximumCapacityBytes": 1152921504606846976,
-            "maximumReleaseBytes": 1152921504606846976,
-            "maximumDepth": 1152921504606846976
+            "maximumItems": 1152921504606847000,
+            "maximumCopyBytes": 1152921504606847000,
+            "maximumCapacityBytes": 1152921504606847000,
+            "maximumReleaseBytes": 1152921504606847000,
+            "maximumDepth": 1152921504606847000
           },
           "expected": true
         }
       ]
+    },
+    {
+      "id": "facet-sibling-present",
+      "reason": "Each format implements an export at the sibling of its declared normative facet; root declarations cannot substitute for an absent facet.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": "export interface ThingArtifact {}\nexport interface Corner {}\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/diff.json",
+          "title": "ThingDiff",
+          "type": "object"
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": "pub struct ThingDiff;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts": "export interface ThingDiff {}\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingDiff": {
+                "file": "🔺️diff/🔣️.json",
+                "facet": "diff"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "diagnosticPaths": []
+      },
+      "typescriptExports": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts": {
+          "ThingDiff": true
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": {
+          "ThingDiff": false,
+          "ThingArtifact": true,
+          "Corner": true
+        }
+      }
+    },
+    {
+      "id": "facet-sibling-absent-root-decoy",
+      "reason": "Each format implements an export at the sibling of its declared normative facet; root declarations cannot substitute for an absent facet.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct ThingDiff;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": "export interface ThingArtifact {}\nexport interface Corner {}\nexport interface ThingDiff {}\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/diff.json",
+          "title": "ThingDiff",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingDiff": {
+                "file": "🔺️diff/🔣️.json",
+                "facet": "diff"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-export-incomplete",
+          "schema-export-incomplete"
+        ],
+        "placementPaths": [],
+        "diagnosticPaths": [
+          "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+          "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+        ]
+      },
+      "typescriptExports": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts": {
+          "ThingDiff": false
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": {
+          "ThingDiff": true,
+          "ThingArtifact": true,
+          "Corner": true
+        }
+      }
+    },
+    {
+      "id": "facet-sibling-one-absent",
+      "reason": "Each format implements an export at the sibling of its declared normative facet; root declarations cannot substitute for an absent facet.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": "export interface ThingArtifact {}\nexport interface Corner {}\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/diff.json",
+          "title": "ThingDiff",
+          "type": "object"
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs": "pub struct ThingDiff;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingDiff": {
+                "file": "🔺️diff/🔣️.json",
+                "facet": "diff"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-export-incomplete"
+        ],
+        "placementPaths": [],
+        "diagnosticPaths": [
+          "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+        ]
+      },
+      "typescriptExports": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts": {
+          "ThingDiff": false
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": {
+          "ThingDiff": false,
+          "ThingArtifact": true,
+          "Corner": true
+        }
+      }
+    },
+    {
+      "id": "facet-sibling-nested-present",
+      "reason": "Each format implements an export at the sibling of its declared normative facet; root declarations cannot substitute for an absent facet.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": "export interface ThingArtifact {}\nexport interface Corner {}\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔺️diff/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/snapshot/diff.json",
+          "title": "ThingDiff",
+          "type": "object"
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔺️diff/🦀️.rs": "pub struct ThingDiff;\n",
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔺️diff/🟦️.ts": "export interface ThingDiff {}\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingDiff": {
+                "file": "📸️snapshot/🔺️diff/🔣️.json",
+                "facet": "snapshot/diff"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "diagnosticPaths": []
+      },
+      "typescriptExports": {
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔺️diff/🟦️.ts": {
+          "ThingDiff": true
+        },
+        "✏️s/🔌️plugins/🔷️p/🗿️artifacts/🔶️x/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts": {
+          "ThingDiff": false,
+          "ThingArtifact": true,
+          "Corner": true
+        }
+      }
     }
   ]
 }

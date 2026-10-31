@@ -1,0 +1,5 @@
+import{expect,test}from"bun:test";import Ajv from"ajv";import ts from"typescript";import corpus from"./🔣️.json";import{helpersBlock}from"../🟦️.ts";
+const module={exports:{}}as{exports:Record<string,(...args:unknown[])=>unknown>};new Function("exports","module",ts.transpileModule(helpersBlock("probe"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText)(module.exports,module);
+const validate=new Ajv({strict:true}).compile(corpus.schema);
+for(const row of corpus.cases)test("canonical exact object helper agrees with Ajv: "+row.id,()=>{expect(validate(row.value)).toBe(row.valid);expect(typeof module.exports.probeExactObject).toBe("function");let valid=true;try{module.exports.probeExactObject!(row.value,"$",Object.keys(corpus.schema.properties),corpus.schema.required)}catch{valid=false}expect(valid).toBe(row.valid)});
+test("default exact object requirement covers every declared field",()=>{const read=module.exports.probeExactObject!;expect(read({title:"x"},"$",["title"])).toEqual({title:"x"});expect(()=>read({},"$",["title"])).toThrow()});

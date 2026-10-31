@@ -785,31 +785,28 @@ fn first_executable(candidate: &Path) -> Option<PathBuf> {
 
 /// ▶️ A [`std::process::Command`] for a program name, resolved the way Go resolves it.
 ///
-/// A Windows shim that ships as `.cmd` or `.bat` — `npx`, `npm`, `bun`, `uv` — cannot be handed to
-/// `CreateProcess` by this runtime, so it is run through `cmd /c` exactly as the shell would; every
-/// other program is spawned by the path `PATH` resolved it to, or by its bare name so an
-/// unresolvable program fails where the caller expects it to.
+/// 🪟️ Windows batch execution remains with the supported standard library encoder and its InvalidInput refusals.
 pub fn spawn_command(program: &str) -> std::process::Command {
     let routed = route_registered_tool(program);
-    let Some(target) = routed.as_ref().map(|(path, _)| path.clone()).or_else(|| look_path(program)) else { return std::process::Command::new(program) };
-    let batch = target.extension().and_then(|value| value.to_str()).is_some_and(|value| value.eq_ignore_ascii_case("cmd") || value.eq_ignore_ascii_case("bat"));
-    let mut command = if batch {
-        let mut shell = std::process::Command::new(std::env::var_os("COMSPEC").unwrap_or_else(|| "cmd.exe".into()));
-        shell.arg("/c").arg(target);
-        shell
-    } else {
-        std::process::Command::new(target)
-    };
-    if let Some((_, environment)) = routed {
-        command.env_clear().envs(environment);
+    let Some(target) = routed.as_ref().map(|(path, _, _)| path.clone()).or_else(|| look_path(program)) else { return std::process::Command::new(program) };
+    let mut command = std::process::Command::new(target);
+    if let Some((_, prefix, environment)) = routed {
+        command.args(prefix).env_clear().envs(environment);
     }
     command
 }
 
-/// 🪪️ One tool of the registry as the Rust side reads it: the id, the executable names it owns, the extra directories to look in and the environment it gets.
+/// 📣️ One same-owner secondary name and the arguments preceding its caller.
+struct RegisteredInvocation {
+    command: String,
+    prefix: Vec<String>,
+}
+
+/// 📣️ One owned tool and its declared primary invocations.
 struct RegisteredTool {
     id: String,
     commands: Vec<String>,
+    invocations: Vec<RegisteredInvocation>,
     directories: Vec<String>,
     deny: Vec<String>,
     set: Vec<(String, String)>,
@@ -826,15 +823,49 @@ fn json_strings(value: Option<&serde_json::Value>) -> Vec<String> {
     value.and_then(serde_json::Value::as_array).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
+/// 🔒️ Reads only closed same-owner secondary invocation rows.
+fn parse_tool_invocations(row: &serde_json::Value) -> Option<Vec<RegisteredInvocation>> {
+    let Some(value) = row.get("invocations") else { return Some(Vec::new()) };
+    let rows = value.as_array()?;
+    if rows.len() > 16 { return None; }
+    let commands = json_strings(row.get("commands"));
+    let mut seen = std::collections::HashSet::new();
+    rows.iter().map(|row| {
+        let object = row.as_object()?;
+        if object.len() != 2 { return None; }
+        let command = object.get("command")?.as_str()?;
+        if commands.first().is_none_or(|primary| primary == command) || !commands.iter().any(|name| name == command) || !seen.insert(command.to_string()) { return None; }
+        let prefix = object.get("prefix")?.as_array()?.iter().map(|value| value.as_str().map(str::to_string)).collect::<Option<Vec<_>>>()?;
+        if prefix.is_empty() || prefix.len() > 16 || prefix.iter().any(|value| value.chars().count() > 256 || value.is_empty() || value.chars().any(|value| value < ' ' || value == '\u{7f}')) { return None; }
+        Some(RegisteredInvocation { command: command.to_string(), prefix })
+    }).collect()
+}
+
+/// 🪟️ Normalizes only the existing bare executable suffixes for registry ownership.
+fn registered_command_name(command: &str) -> &str {
+    match command.rsplit_once('.') { Some((name, extension)) if ["exe", "cmd", "bat"].iter().any(|suffix| extension.eq_ignore_ascii_case(suffix)) => name, _ => command }
+}
+
+/// 🧭️ Maps only declared names to the primary and leaves genuine siblings unchanged.
+fn registered_tool_invocation<'a>(tool: &'a RegisteredTool, command: &'a str) -> (&'a str, &'a [String]) {
+    let command = registered_command_name(command);
+    match tool.invocations.iter().find(|row| row.command == command) {
+        Some(invocation) => (tool.commands[0].as_str(), &invocation.prefix),
+        None => (command, &[]),
+    }
+}
+
 /// 🪢️ Reads the registry rows the adapter needs from the registry document.
 fn parse_tool_registry(text: &str) -> Option<ToolRegistry> {
     let document: serde_json::Value = serde_json::from_str(text).ok()?;
-    let tools = document.get("tools")?.as_array()?.iter().filter_map(|row| {
+    let rows = document.get("tools")?.as_array()?;
+    let invocations = rows.iter().map(parse_tool_invocations).collect::<Option<Vec<_>>>()?;
+    let tools = rows.iter().zip(invocations).filter_map(|(row, invocations)| {
         let locate = row.get("locate").and_then(serde_json::Value::as_array);
         let directories = locate.map(|locators| locators.iter().flat_map(|locator| json_strings(locator.get("directories"))).collect()).unwrap_or_default();
         let environment = row.get("environment");
         let set = environment.and_then(|value| value.get("set")).and_then(serde_json::Value::as_object).map(|values| values.iter().filter_map(|(name, value)| value.as_str().map(|text| (name.clone(), text.to_string()))).collect()).unwrap_or_default();
-        Some(RegisteredTool { id: row.get("id")?.as_str()?.to_string(), commands: json_strings(row.get("commands")), directories, deny: json_strings(environment.and_then(|value| value.get("deny"))), set })
+        Some(RegisteredTool { id: row.get("id")?.as_str()?.to_string(), commands: json_strings(row.get("commands")), invocations, directories, deny: json_strings(environment.and_then(|value| value.get("deny"))), set })
     });
     Some(ToolRegistry { deny: json_strings(document.get("environment").and_then(|value| value.get("deny"))), tools: tools.collect() })
 }
@@ -875,8 +906,8 @@ fn tool_name_matches(pattern: &str, name: &str) -> bool {
 /// 🪛️ The executable of a registered tool: the `SEMIO_TOOL_<ID>` override, then `PATH`, then the directories of the tool's path locator; `None` when the host does not have it.
 fn resolve_registered_tool(tool: &RegisteredTool, command: &str) -> Option<PathBuf> {
     let variable = format!("SEMIO_TOOL_{}", tool.id.to_uppercase().replace('-', "_"));
-    if let Some(path) = std::env::var_os(variable).map(PathBuf::from).filter(|path| path.exists()) {
-        return Some(path);
+    if tool.commands.first().is_some_and(|primary| primary == command) {
+        if let Some(path) = std::env::var_os(variable).map(PathBuf::from).filter(|path| path.exists()) { return Some(path); }
     }
     if let Some(found) = look_path(command) {
         return Some(found);
@@ -903,13 +934,15 @@ fn registered_environment(registry: &ToolRegistry, tool: &RegisteredTool) -> Vec
 }
 
 /// 🧱️ Resolves a bare command name that belongs to a registered tool to its executable and the registry's sanitized environment. Explicit paths, unknown commands, a host without the tool, an unreadable registry and `SEMIO_TOOL_GUARD=off` answer `None`, so the caller spawns the command as written.
-fn route_registered_tool(command: &str) -> Option<(PathBuf, Vec<(String, String)>)> {
+fn route_registered_tool(command: &str) -> Option<(PathBuf, Vec<String>, Vec<(String, String)>)> {
     if command.contains('/') || command.contains('\\') || std::env::var("SEMIO_TOOL_GUARD").is_ok_and(|value| value == "off") {
         return None;
     }
     let registry = tool_registry()?;
-    let tool = registry.tools.iter().find(|tool| tool.commands.iter().any(|name| name == command))?;
-    Some((resolve_registered_tool(tool, command)?, registered_environment(registry, tool)))
+    let normalized = registered_command_name(command);
+    let tool = registry.tools.iter().find(|tool| tool.commands.iter().any(|name| name == normalized))?;
+    let (selected, prefix) = registered_tool_invocation(tool, normalized);
+    Some((resolve_registered_tool(tool, selected)?, prefix.to_vec(), registered_environment(registry, tool)))
 }
 
 /// 🛑️ Why a registered tool could not be run at all; a tool that ran and failed answers its status in the result instead.

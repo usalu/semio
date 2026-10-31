@@ -1,0 +1,3447 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "kneeling-gardener",
+    "category": "humans",
+    "title": {
+      "en": "Kneeling gardener",
+      "de": "Kniende Gärtnerin"
+    },
+    "summary": {
+      "en": "A 58-year-old, 1.66 m gardener kneeling on a foam pad in a straw hat, rolled linen sleeves, canvas trousers and clogs, weeding with a hand trowel beside a trug: weeding, upright kneeling and reaching to the trug, a digging loop and a trug round; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
+      "de": "Eine 58-jährige, 1,66 m große Gärtnerin kniet in Strohhut, hochgekrempeltem Leinenhemd, Canvas-Hose und Clogs auf einem Schaumkissen und jätet mit der Handschaufel neben einem Trog: Jäten, aufrechtes Knien und Greifen zum Trog, eine Grabschleife und eine Troglauf-Runde; zwei einzeln gezeichnete Maßstäbe (1:100 und 1:50); 1:500 und 1:200 sind als nicht verfügbar erklärt."
+    },
+    "tags": [
+      "human",
+      "gardener",
+      "kneeling",
+      "garden",
+      "tool",
+      "low-posture",
+      "adult"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker NW-H2",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230 (segment mass fractions and centre-of-mass positions, male and female)."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble (1 clo = 0.155 m2K/W; garment clo values here are authored estimates guided by its tables)."
+        },
+        {
+          "id": "ainsworth-2011",
+          "citation": "Ainsworth, B. E. et al. (2011). 2011 Compendium of Physical Activities: a second update of codes and MET values. Medicine and Science in Sports and Exercise 43(8), 1575-1581 (activity classes; MET values are mapped to thermal met as an estimate)."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort (met unit 58.15 W/m2, respiratory heat loss, skin wettedness)."
+        },
+        {
+          "id": "gagge-1971",
+          "citation": "Gagge, A. P., Stolwijk, J. A. J., Nishi, Y. (1971). An effective temperature scale based on a simple model of human physiological regulatory response. ASHRAE Transactions 77(1), 247-262 (two-node model; set points 36.8 and 34.1 degrees Celsius, skin blood flow limits 6.3 and 90 L/(m2 h) after the common implementation)."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39 (sinusoidal breathing flow; opening areas and jet angles used here are authored estimates guided by it)."
+        },
+        {
+          "id": "hoeppe-1981",
+          "citation": "Hoeppe, P. (1981). Temperatures of expired air under varying climatic conditions. International Journal of Biometeorology 25, 127-132 (expired air temperature; the 34 degrees Celsius and 95 % used here are authored estimates)."
+        },
+        {
+          "id": "mifflin-1990",
+          "citation": "Mifflin, M. D. et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition 51, 241-247."
+        },
+        {
+          "id": "incropera-2011",
+          "citation": "Incropera, F. P., DeWitt, D. P. et al. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley (convection correlations, material properties)."
+        },
+        {
+          "id": "garden-spec",
+          "citation": "Typical garden equipment: 0.6 x 0.3 x 0.04 m EVA kneeling pad, steel hand trowel about 0.3 m long and 0.25 kg, flexible 0.5 m polyethylene trug. Dimensions and masses are authored estimates from catalogue ranges."
+        }
+      ],
+      "notes": {
+        "en": "Newly authored for semio.staffage/v2: a low posture solved by inverse kinematics with the shins lying on the pad; the pad is the rig root, so every pose keeps the ground contact of the pad.",
+        "de": "Neu erstellt für semio.staffage/v2: eine niedrige Haltung, per inverser Kinematik gelöst, mit den Schienbeinen auf dem Kissen; das Kissen ist die Rig-Wurzel, daher behält jede Pose den Bodenkontakt des Kissens."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.145,
+      "widthM": 1.835,
+      "depthM": 0.5,
+      "massKg": 66.45
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "straw",
+        "title": {
+          "en": "Woven straw hat over hair",
+          "de": "Strohhut über Haar"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.45,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "linen",
+        "title": {
+          "en": "Linen shirt",
+          "de": "Leinenhemd"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.35,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "canvas",
+        "title": {
+          "en": "Cotton canvas trousers",
+          "de": "Baumwoll-Canvas-Hose"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.65,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "glove",
+        "title": {
+          "en": "Cotton and leather gardening glove",
+          "de": "Garten-Handschuh aus Baumwolle und Leder"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "rubber-clog",
+        "title": {
+          "en": "Rubber garden clog with sock",
+          "de": "Gummi-Gartenclog mit Socke"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "eva-foam",
+        "title": {
+          "en": "Closed-cell EVA foam kneeling pad",
+          "de": "Kniekissen aus geschlossenzelligem EVA-Schaum"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 60,
+        "conductivityWmK": 0.04,
+        "specificHeatJKgK": 2000,
+        "source": "authored-estimate",
+        "reference": "incropera-2011"
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Hand trowel (steel blade, plastic handle)",
+          "de": "Handschaufel (Stahlblatt, Kunststoffgriff)"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 490,
+        "source": "literature",
+        "reference": "incropera-2011"
+      },
+      {
+        "id": "polyethylene",
+        "title": {
+          "en": "Flexible polyethylene trug with weeds",
+          "de": "Flexibler Polyethylen-Trog mit Unkraut"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 950,
+        "specificHeatJKgK": 2300,
+        "source": "authored-estimate",
+        "reference": "incropera-2011"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pad",
+      "bones": [
+        {
+          "id": "pad",
+          "parent": null,
+          "title": {
+            "en": "Kneeling pad on the soil",
+            "de": "Kniekissen auf dem Boden"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.6,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.6,
+            "comX": 0,
+            "comY": 0.02,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "garden-spec"
+          }
+        },
+        {
+          "id": "trug",
+          "parent": "pad",
+          "title": {
+            "en": "Flexible garden trug with weeds",
+            "de": "Flexibler Gartentrog mit Unkraut"
+          },
+          "x": 1.02,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.6,
+            "comX": 0,
+            "comY": 0.1,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "garden-spec"
+          }
+        },
+        {
+          "id": "hip-lift",
+          "parent": "pad",
+          "title": {
+            "en": "Hip height above the pad",
+            "de": "Hüfthöhe über dem Kissen"
+          },
+          "x": 0,
+          "y": 0.5,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": -0.2,
+            "maxM": 0.5
+          }
+        },
+        {
+          "id": "hip-shift",
+          "parent": "hip-lift",
+          "title": {
+            "en": "Hip shift along the pad",
+            "de": "Hüftverschiebung entlang des Kissens"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.6,
+            "maxM": 0.9
+          }
+        },
+        {
+          "id": "pelvis",
+          "parent": "hip-shift",
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.0943,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 7.981,
+            "comX": 0.0471,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Trunk",
+            "de": "Rumpf"
+          },
+          "x": 0.0943,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4339,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -95,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 19.264,
+            "comX": 0.1981,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "torso",
+          "title": {
+            "en": "Head and neck",
+            "de": "Kopf und Hals"
+          },
+          "x": 0.4339,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2546,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 4.275,
+            "comX": 0.1273,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.4057,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.2925,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.632,
+            "comX": 0.1688,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "upper-arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.2925,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2546,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.883,
+            "comX": 0.1165,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linke Hand"
+          },
+          "x": 0.2546,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1698,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.358,
+            "comX": 0.0849,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "upper-arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.4057,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.2925,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 1.632,
+            "comX": 0.1688,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "upper-arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.2925,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2546,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.883,
+            "comX": 0.1165,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechte Hand"
+          },
+          "x": 0.2546,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1698,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 75
+          },
+          "mass": {
+            "kg": 0.358,
+            "comX": 0.0849,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4055,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.459,
+            "comX": 0.1661,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4055,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.3961,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.078,
+            "comX": 0.1766,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot",
+            "de": "Linker Fuß"
+          },
+          "x": 0.3961,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2075,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.826,
+            "comX": 0.1037,
+            "comY": -0.041,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1225,
+          "y": -0.0754,
+          "angleDeg": 0,
+          "lengthM": 0.0868,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -180,
+          "lengthM": 0.4055,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 125
+          },
+          "mass": {
+            "kg": 9.459,
+            "comX": 0.1661,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4055,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.3961,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.078,
+            "comX": 0.1766,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot",
+            "de": "Rechter Fuß"
+          },
+          "x": 0.3961,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.2075,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.826,
+            "comX": 0.1037,
+            "comY": -0.041,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1225,
+          "y": -0.0754,
+          "angleDeg": 0,
+          "lengthM": 0.0868,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 70
+          }
+        },
+        {
+          "id": "trowel",
+          "parent": "hand-r",
+          "title": {
+            "en": "Hand trowel",
+            "de": "Handschaufel"
+          },
+          "x": 0.07,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -45,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 0.25,
+            "comX": 0.15,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "garden-spec"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "contact-l",
+        "bone": "foot-l",
+        "x": 0.1225,
+        "y": -0.0754,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linke Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.091,
+        "footprintWidthM": 0.082,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0283,
+        "y": -0.0754,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linke Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.064,
+        "footprintWidthM": 0.064,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "contact-r",
+        "bone": "foot-r",
+        "x": 0.1225,
+        "y": -0.0754,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechte Ballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.091,
+        "footprintWidthM": 0.082,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0283,
+        "y": -0.0754,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechte Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.064,
+        "footprintWidthM": 0.064,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.0708,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left grip",
+          "de": "Linke Griffstelle"
+        }
+      },
+      {
+        "id": "grip-r",
+        "bone": "hand-r",
+        "x": 0.0708,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Right grip",
+          "de": "Rechte Griffstelle"
+        }
+      },
+      {
+        "id": "lumbar",
+        "bone": "torso",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Lumbar joint L5/S1",
+          "de": "Lendengelenk L5/S1"
+        }
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": 0.1067,
+        "y": -0.0839,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth",
+          "de": "Mund"
+        }
+      },
+      {
+        "id": "nostrils",
+        "bone": "head",
+        "x": 0.1323,
+        "y": -0.093,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils",
+          "de": "Nasenlöcher"
+        }
+      },
+      {
+        "id": "crown",
+        "bone": "head",
+        "x": 0.2623,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Crown of the head (plume source)",
+          "de": "Scheitel (Fahnenquelle)"
+        }
+      },
+      {
+        "id": "shin-l",
+        "bone": "shank-l",
+        "x": 0.2,
+        "y": 0.065,
+        "kind": "contact",
+        "title": {
+          "en": "Left shin on the pad",
+          "de": "Linke Schienbein auf dem Kissen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.28,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "instep-l",
+        "bone": "foot-l",
+        "x": 0.06,
+        "y": 0.04,
+        "kind": "contact",
+        "title": {
+          "en": "Left instep on the pad",
+          "de": "Linke Fußrücken auf dem Kissen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.12,
+        "footprintWidthM": 0.08,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "shin-r",
+        "bone": "shank-r",
+        "x": 0.2,
+        "y": 0.065,
+        "kind": "contact",
+        "title": {
+          "en": "Right shin on the pad",
+          "de": "Rechte Schienbein auf dem Kissen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.28,
+        "footprintWidthM": 0.1,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "instep-r",
+        "bone": "foot-r",
+        "x": 0.06,
+        "y": 0.04,
+        "kind": "contact",
+        "title": {
+          "en": "Right instep on the pad",
+          "de": "Rechte Fußrücken auf dem Kissen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.12,
+        "footprintWidthM": 0.08,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "pad-ground",
+        "bone": "pad",
+        "x": 0,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Pad on the soil",
+          "de": "Kissen auf dem Boden"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.5,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "palm-l",
+        "bone": "hand-l",
+        "x": 0.09,
+        "y": -0.03,
+        "kind": "contact",
+        "title": {
+          "en": "Left palm",
+          "de": "Linke Handfläche"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.09,
+        "footprintWidthM": 0.08,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "trowel-tip",
+        "bone": "trowel",
+        "x": 0.3,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Trowel tip",
+          "de": "Schaufelspitze"
+        }
+      },
+      {
+        "id": "trug-grip",
+        "bone": "trug",
+        "x": 0,
+        "y": 0.2,
+        "kind": "load",
+        "title": {
+          "en": "Trug handle",
+          "de": "Trog-Griff"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "straw-weave",
+            "title": {
+              "en": "Straw weave",
+              "de": "Strohgeflecht"
+            },
+            "pattern": "lines",
+            "angleDeg": 35,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.56,
+              "y": 0,
+              "w": 0.76,
+              "h": 0.04,
+              "r": 0.012,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "path",
+              "d": "M -0.22 0.0 L 0.22 0.0 L 0.255 0.21 L -0.255 0.21 Z",
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.55,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.2 0.205 C -0.1733 0.2267 -0.1533 0.2525 -0.12 0.27 C -0.0867 0.2875 -0.04 0.3083 0.0 0.31 C 0.04 0.3117 0.0867 0.2975 0.12 0.28 C 0.1533 0.2625 0.1733 0.23 0.2 0.205 C 0.0667 0.205 -0.0667 0.205 -0.2 0.205 Z",
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.56,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.21
+                ],
+                [
+                  0.2,
+                  0.21
+                ]
+              ],
+              "closed": false,
+              "region": "trug"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "path",
+              "d": "M 0.0 0.105 C 0.0383 0.1207 0.095 0.099 0.14 0.095 C 0.185 0.091 0.2257 0.0858 0.27 0.081 C 0.3143 0.0762 0.3809 0.0793 0.4055 0.066 C 0.4301 0.0527 0.4175 0.0227 0.4175 0.001 C 0.4175 -0.0207 0.4301 -0.0507 0.4055 -0.064 C 0.3809 -0.0773 0.3143 -0.0742 0.27 -0.079 C 0.2257 -0.0838 0.185 -0.089 0.14 -0.093 C 0.095 -0.097 0.0383 -0.1187 0.0 -0.103 C -0.0383 -0.0873 -0.09 -0.0337 -0.09 0.001 C -0.09 0.0357 -0.0383 0.0893 0.0 0.105 Z",
+              "region": "trousers"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "path",
+              "d": "M 0.0 0.065 C 0.0233 0.0755 0.0767 0.0643 0.12 0.063 C 0.1633 0.0617 0.2157 0.0588 0.26 0.057 C 0.3043 0.0552 0.3637 0.0615 0.3861 0.052 C 0.4084 0.0425 0.3941 0.0173 0.3941 0.0 C 0.3941 -0.0173 0.4084 -0.0423 0.3861 -0.052 C 0.3637 -0.0617 0.3043 -0.0553 0.26 -0.058 C 0.2157 -0.0607 0.1633 -0.0668 0.12 -0.068 C 0.0767 -0.0692 0.0233 -0.0763 0.0 -0.065 C -0.0233 -0.0537 -0.02 -0.0217 -0.02 0.0 C -0.02 0.0217 -0.0233 0.0545 0.0 0.065 Z",
+              "region": "trousers"
+            },
+            {
+              "id": "knee-patch-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 4.03,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0.05,
+              "cy": 0,
+              "rx": 0.034,
+              "ry": 0.04,
+              "region": "trousers"
+            },
+            {
+              "id": "clog-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.058 -0.0754 C -0.0587 -0.0536 -0.062 -0.0282 -0.06 -0.01 C -0.058 0.0082 -0.061 0.0247 -0.046 0.034 C -0.031 0.0433 0.0057 0.0467 0.03 0.046 C 0.0543 0.0453 0.0783 0.0393 0.1 0.03 C 0.1217 0.0207 0.1433 0.0027 0.16 -0.01 C 0.1767 -0.0227 0.191 -0.0351 0.2 -0.046 C 0.209 -0.0569 0.2093 -0.0656 0.214 -0.0754 C 0.1233 -0.0754 0.0327 -0.0754 -0.058 -0.0754 Z",
+              "region": "clogs",
+              "material": "rubber-clog"
+            },
+            {
+              "id": "clog-strap-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 4.06,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.04
+                ],
+                [
+                  0,
+                  -0.04
+                ]
+              ],
+              "closed": false,
+              "region": "clogs"
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0.04 0.046 C 0.0767 0.0463 0.1079 0.0477 0.15 0.047 C 0.1921 0.0463 0.2671 0.0498 0.2925 0.042 C 0.3179 0.0342 0.3025 0.014 0.3025 0.0 C 0.3025 -0.014 0.3179 -0.0342 0.2925 -0.042 C 0.2671 -0.0498 0.1921 -0.0463 0.15 -0.047 C 0.1079 -0.0477 0.0767 -0.0463 0.04 -0.046 C 0.04 -0.0153 0.04 0.0153 0.04 0.046 Z",
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.04 C 0.022 0.0462 0.0792 0.039 0.12 0.037 C 0.1608 0.035 0.2189 0.0342 0.2446 0.028 C 0.2704 0.0218 0.2746 0.0093 0.2746 0.0 C 0.2746 -0.0093 0.2704 -0.0218 0.2446 -0.028 C 0.2189 -0.0342 0.1608 -0.035 0.12 -0.037 C 0.0792 -0.039 0.022 -0.0462 0.0 -0.04 C -0.022 -0.0338 -0.012 -0.0133 -0.012 0.0 C -0.012 0.0133 -0.022 0.0338 0.0 0.04 Z",
+              "region": "forearms",
+              "material": "skin"
+            },
+            {
+              "id": "glove-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 3.64,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.045 0.034 C -0.0233 0.036 0.0025 0.0378 0.02 0.04 C 0.0375 0.0422 0.0475 0.044 0.06 0.047 C 0.0725 0.05 0.0853 0.0575 0.095 0.058 C 0.1047 0.0585 0.1135 0.053 0.118 0.05 C 0.1225 0.047 0.1167 0.0427 0.122 0.04 C 0.1273 0.0373 0.1407 0.0377 0.15 0.034 C 0.1593 0.0303 0.1722 0.0237 0.178 0.018 C 0.1838 0.0123 0.1853 0.0063 0.185 0.0 C 0.1847 -0.0063 0.1835 -0.0145 0.176 -0.02 C 0.1685 -0.0255 0.156 -0.0303 0.14 -0.033 C 0.124 -0.0357 0.1 -0.0355 0.08 -0.036 C 0.06 -0.0365 0.0408 -0.0363 0.02 -0.036 C -0.0008 -0.0357 -0.0233 -0.0347 -0.045 -0.034 C -0.045 -0.0113 -0.045 0.0113 -0.045 0.034 Z",
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0.05 0.05 C 0.0833 0.049 0.1096 0.0483 0.15 0.047 C 0.1904 0.0457 0.2671 0.0498 0.2925 0.042 C 0.3179 0.0342 0.3025 0.014 0.3025 0.0 C 0.3025 -0.014 0.3179 -0.0342 0.2925 -0.042 C 0.2671 -0.0498 0.1904 -0.0457 0.15 -0.047 C 0.1096 -0.0483 0.0833 -0.049 0.05 -0.05 C 0.05 -0.0167 0.05 0.0167 0.05 0.05 Z",
+              "region": "shirt-sleeves",
+              "material": "linen"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.04 C 0.022 0.0462 0.0792 0.039 0.12 0.037 C 0.1608 0.035 0.2189 0.0342 0.2446 0.028 C 0.2704 0.0218 0.2746 0.0093 0.2746 0.0 C 0.2746 -0.0093 0.2704 -0.0218 0.2446 -0.028 C 0.2189 -0.0342 0.1608 -0.035 0.12 -0.037 C 0.0792 -0.039 0.022 -0.0462 0.0 -0.04 C -0.022 -0.0338 -0.012 -0.0133 -0.012 0.0 C -0.012 0.0133 -0.022 0.0338 0.0 0.04 Z",
+              "region": "forearms",
+              "material": "skin"
+            },
+            {
+              "id": "glove-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 4.54,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.045 0.034 C -0.0233 0.036 0.0025 0.0378 0.02 0.04 C 0.0375 0.0422 0.0475 0.044 0.06 0.047 C 0.0725 0.05 0.0853 0.0575 0.095 0.058 C 0.1047 0.0585 0.1135 0.053 0.118 0.05 C 0.1225 0.047 0.1167 0.0427 0.122 0.04 C 0.1273 0.0373 0.1407 0.0377 0.15 0.034 C 0.1593 0.0303 0.1722 0.0237 0.178 0.018 C 0.1838 0.0123 0.1853 0.0063 0.185 0.0 C 0.1847 -0.0063 0.1835 -0.0145 0.176 -0.02 C 0.1685 -0.0255 0.156 -0.0303 0.14 -0.033 C 0.124 -0.0357 0.1 -0.0355 0.08 -0.036 C 0.06 -0.0365 0.0408 -0.0363 0.02 -0.036 C -0.0008 -0.0357 -0.0233 -0.0347 -0.045 -0.034 C -0.045 -0.0113 -0.045 0.0113 -0.045 0.034 Z",
+              "region": "gloves",
+              "material": "glove"
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M -0.07 0.112 C -0.0467 0.113 -0.0283 0.114 0.0 0.115 C 0.0283 0.116 0.0633 0.1163 0.1 0.118 C 0.1367 0.1197 0.1833 0.123 0.22 0.125 C 0.2567 0.127 0.29 0.1328 0.32 0.13 C 0.35 0.1272 0.381 0.12 0.4 0.108 C 0.419 0.096 0.4283 0.0863 0.4339 0.058 C 0.4396 0.0297 0.4396 -0.0382 0.4339 -0.062 C 0.4283 -0.0858 0.419 -0.0795 0.4 -0.085 C 0.381 -0.0905 0.35 -0.0925 0.32 -0.095 C 0.29 -0.0975 0.2567 -0.0983 0.22 -0.1 C 0.1833 -0.1017 0.1367 -0.1042 0.1 -0.105 C 0.0633 -0.1058 0.0283 -0.1058 0.0 -0.105 C -0.0283 -0.1042 -0.0467 -0.1017 -0.07 -0.1 C -0.07 -0.0293 -0.07 0.0413 -0.07 0.112 Z",
+              "region": "shirt-torso",
+              "material": "linen"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0474 C 0.0068 0.0626 0.0266 0.0435 0.041 0.0456 C 0.0555 0.0477 0.0707 0.0538 0.0866 0.0602 C 0.1026 0.0666 0.1186 0.0803 0.1368 0.0839 C 0.1551 0.0876 0.1797 0.087 0.1961 0.0821 C 0.2125 0.0772 0.2256 0.0669 0.2353 0.0547 C 0.245 0.0426 0.253 0.0251 0.2545 0.0091 C 0.256 -0.0068 0.2504 -0.0274 0.2444 -0.041 C 0.2385 -0.0547 0.2277 -0.0666 0.2189 -0.073 C 0.2101 -0.0794 0.1997 -0.0778 0.1915 -0.0794 C 0.1833 -0.0809 0.176 -0.0804 0.1696 -0.0821 C 0.1633 -0.0838 0.1584 -0.0865 0.1532 -0.0894 C 0.1481 -0.0923 0.143 -0.0997 0.1386 -0.0994 C 0.1342 -0.0991 0.1304 -0.0901 0.1268 -0.0876 C 0.1231 -0.085 0.1199 -0.0848 0.1167 -0.0839 C 0.1136 -0.083 0.1107 -0.0827 0.1076 -0.0821 C 0.1046 -0.0815 0.1037 -0.0803 0.0985 -0.0803 C 0.0933 -0.0803 0.0827 -0.0842 0.0766 -0.0821 C 0.0705 -0.08 0.0657 -0.0745 0.062 -0.0675 C 0.0584 -0.0605 0.0596 -0.0438 0.0547 -0.0401 C 0.0499 -0.0365 0.042 -0.0447 0.0328 -0.0456 C 0.0237 -0.0465 0.0055 -0.0611 0.0 -0.0456 C -0.0055 -0.0301 -0.0068 0.0322 0.0 0.0474 Z",
+              "region": "face",
+              "material": "skin"
+            },
+            {
+              "id": "eye",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.1696,
+              "cy": -0.0739,
+              "rx": 0.012,
+              "ry": 0.014,
+              "region": "face"
+            },
+            {
+              "id": "hat-crown",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.205 -0.092 C 0.2183 -0.093 0.2305 -0.1003 0.245 -0.095 C 0.2595 -0.0897 0.2808 -0.0758 0.292 -0.06 C 0.3032 -0.0442 0.312 -0.0203 0.312 0.0 C 0.312 0.0203 0.3032 0.0457 0.292 0.062 C 0.2808 0.0783 0.2595 0.0917 0.245 0.098 C 0.2305 0.1043 0.2183 0.0993 0.205 0.1 C 0.205 0.036 0.205 -0.028 0.205 -0.092 Z",
+              "region": "hat",
+              "material": "straw",
+              "hatch": "straw-weave"
+            },
+            {
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.215 -0.22 C 0.2187 -0.2033 0.2242 -0.235 0.226 -0.17 C 0.2278 -0.105 0.2278 0.105 0.226 0.17 C 0.2242 0.235 0.2187 0.2033 0.215 0.22 C 0.2053 0.2033 0.1908 0.235 0.186 0.17 C 0.1812 0.105 0.1812 -0.105 0.186 -0.17 C 0.1908 -0.235 0.2053 -0.2033 0.215 -0.22 Z",
+              "region": "hat",
+              "material": "straw"
+            },
+            {
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M 0.03 0.0 C 0.0433 0.01 0.0433 0.0233 0.07 0.03 C 0.0967 0.0367 0.1583 0.0403 0.19 0.04 C 0.2217 0.0397 0.2417 0.0347 0.26 0.028 C 0.2783 0.0213 0.2867 0.0093 0.3 0.0 C 0.2867 -0.0067 0.2783 -0.015 0.26 -0.02 C 0.2417 -0.025 0.2175 -0.0297 0.19 -0.03 C 0.1625 -0.0303 0.1217 -0.027 0.095 -0.022 C 0.0683 -0.017 0.0517 -0.0073 0.03 0.0 Z",
+              "region": "trowel",
+              "material": "steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Full articulation of the near leg, both arms in sleeve, bare forearm and glove with an integrated thumb, linen shirt, face profile with eye under a woven hat with crown, brim and straw hatching, trowel blade, pad and trug with weeds and rim.",
+            "de": "Volle Gliederung des nahen Beins, beider Arme in Ärmel, nacktem Unterarm und Handschuh mit integriertem Daumen, Leinenhemd, Gesichtsprofil mit Auge unter einem Strohhut mit Kopf, Krempe und Strohschraffur, Schaufelblatt, Kissen und Trog mit Unkraut und Rand."
+          },
+          "retained": {
+            "en": "Knee patch, clog strap, the glove as its own form over the bare forearm, the straw weave hatching and the trug rim.",
+            "de": "Kniepolster, Clog-Riemen, der Handschuh als eigene Form über dem nackten Unterarm, die Strohgeflecht-Schraffur und der Trogrand."
+          },
+          "merged": {
+            "en": "The sock is part of the clog form; fingers and thumb are one glove outline; the pelvis is covered by shirt hem and thigh; the far leg is hidden behind the near one.",
+            "de": "Die Socke ist Teil der Clog-Form; Finger und Daumen sind eine Handschuhkontur; das Becken ist von Hemdsaum und Oberschenkel verdeckt; das ferne Bein ist hinter dem nahen verdeckt."
+          },
+          "omitted": {
+            "en": "Ear, mouth, placket, finger lines, trowel handle and ferrule, eyelashes, stitching (below 0.1 mm paper).",
+            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelgriff und -zwinge, Wimpern, Nähte (unter 0,1 mm Papier)."
+          },
+          "thinElements": {
+            "en": "The hat brim is 0.04 m thick (0.8 mm); the trowel blade 0.06 m wide; no feature is thickened.",
+            "de": "Die Hutkrempe ist 0,04 m dick (0,8 mm); das Schaufelblatt 0,06 m breit; nichts wird verdickt."
+          },
+          "hatching": {
+            "en": "Straw weave hatch on the hat crown (0.5 mm spacing, 0.13 mm pen).",
+            "de": "Strohgeflecht-Schraffur auf dem Hutkopf (0,5 mm Abstand, 0,13 mm Stift)."
+          },
+          "styles": {
+            "en": "0.25 mm silhouettes, 0.18 mm detail, 0.13 mm texture.",
+            "de": "0,25-mm-Silhouetten, 0,18-mm-Detail, 0,13-mm-Textur."
+          },
+          "overlays": {
+            "en": "Every region is its own form; detail lines lie inside the form of their region.",
+            "de": "Jede Region ist eine eigene Form; Detaillinien liegen innerhalb der Form ihrer Region."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.2,
+          "detail": 0.13,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.3
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pad",
+              "bone": "pad",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "rect",
+              "x": -0.56,
+              "y": 0,
+              "w": 0.76,
+              "h": 0.04,
+              "r": 0.012,
+              "region": "pad",
+              "material": "eva-foam"
+            },
+            {
+              "id": "trug",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.72,
+              "kind": "path",
+              "d": "M -0.22 0.0 L 0.22 0.0 L 0.255 0.21 L -0.255 0.21 Z",
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "id": "trug-weeds",
+              "bone": "trug",
+              "role": "body",
+              "z": 0.55,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.2 0.205 C -0.1733 0.2267 -0.1533 0.2525 -0.12 0.27 C -0.0867 0.2875 -0.04 0.3083 0.0 0.31 C 0.04 0.3117 0.0867 0.2975 0.12 0.28 C 0.1533 0.2625 0.1733 0.23 0.2 0.205 C 0.0667 0.205 -0.0667 0.205 -0.2 0.205 Z",
+              "region": "trug",
+              "material": "polyethylene"
+            },
+            {
+              "id": "trug-rim",
+              "bone": "trug",
+              "role": "detail",
+              "z": 0.56,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.21
+                ],
+                [
+                  0.2,
+                  0.21
+                ]
+              ],
+              "closed": false,
+              "region": "trug"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "path",
+              "d": "M 0.0 0.105 C 0.0383 0.1207 0.095 0.099 0.14 0.095 C 0.185 0.091 0.2257 0.0858 0.27 0.081 C 0.3143 0.0762 0.3809 0.0793 0.4055 0.066 C 0.4301 0.0527 0.4175 0.0227 0.4175 0.001 C 0.4175 -0.0207 0.4301 -0.0507 0.4055 -0.064 C 0.3809 -0.0773 0.3143 -0.0742 0.27 -0.079 C 0.2257 -0.0838 0.185 -0.089 0.14 -0.093 C 0.095 -0.097 0.0383 -0.1187 0.0 -0.103 C -0.0383 -0.0873 -0.09 -0.0337 -0.09 0.001 C -0.09 0.0357 -0.0383 0.0893 0.0 0.105 Z",
+              "region": "trousers"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 4.02,
+              "filled": true,
+              "tone": 0.42,
+              "kind": "path",
+              "d": "M 0.0 0.065 C 0.0233 0.0755 0.0767 0.0643 0.12 0.063 C 0.1633 0.0617 0.2157 0.0588 0.26 0.057 C 0.3043 0.0552 0.3651 0.0702 0.3861 0.052 C 0.4071 0.0338 0.4071 -0.0337 0.3861 -0.052 C 0.3651 -0.0703 0.3043 -0.0553 0.26 -0.058 C 0.2157 -0.0607 0.1633 -0.0668 0.12 -0.068 C 0.0767 -0.0692 0.0233 -0.0763 0.0 -0.065 C -0.0233 -0.0537 -0.02 -0.0217 -0.02 0.0 C -0.02 0.0217 -0.0233 0.0545 0.0 0.065 Z",
+              "region": "trousers"
+            },
+            {
+              "id": "patch-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 4.03,
+              "filled": false,
+              "tone": 0.35,
+              "kind": "ellipse",
+              "cx": 0.045,
+              "cy": 0,
+              "rx": 0.04,
+              "ry": 0.044,
+              "region": "trousers"
+            },
+            {
+              "id": "clog-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 4.05,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.058 -0.0754 C -0.0587 -0.0536 -0.062 -0.0282 -0.06 -0.01 C -0.058 0.0082 -0.061 0.0247 -0.046 0.034 C -0.031 0.0433 0.0057 0.0467 0.03 0.046 C 0.0543 0.0453 0.0783 0.0393 0.1 0.03 C 0.1217 0.0207 0.1433 0.0027 0.16 -0.01 C 0.1767 -0.0227 0.191 -0.0351 0.2 -0.046 C 0.209 -0.0569 0.2093 -0.0656 0.214 -0.0754 C 0.1233 -0.0754 0.0327 -0.0754 -0.058 -0.0754 Z",
+              "region": "clogs"
+            },
+            {
+              "id": "clog-strap-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 4.06,
+              "filled": false,
+              "tone": 0.2,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.02,
+                  0.04
+                ],
+                [
+                  0,
+                  -0.04
+                ]
+              ],
+              "closed": false,
+              "region": "clogs"
+            },
+            {
+              "id": "shirt",
+              "bone": "torso",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M -0.07 0.112 C -0.0467 0.113 -0.0283 0.114 0.0 0.115 C 0.0283 0.116 0.0633 0.1163 0.1 0.118 C 0.1367 0.1197 0.1833 0.123 0.22 0.125 C 0.2567 0.127 0.29 0.1328 0.32 0.13 C 0.35 0.1272 0.381 0.12 0.4 0.108 C 0.419 0.096 0.4283 0.0863 0.4339 0.058 C 0.4396 0.0297 0.4396 -0.0382 0.4339 -0.062 C 0.4283 -0.0858 0.419 -0.0795 0.4 -0.085 C 0.381 -0.0905 0.35 -0.0925 0.32 -0.095 C 0.29 -0.0975 0.2567 -0.0983 0.22 -0.1 C 0.1833 -0.1017 0.1367 -0.1042 0.1 -0.105 C 0.0633 -0.1058 0.0283 -0.1058 0.0 -0.105 C -0.0283 -0.1042 -0.0467 -0.1017 -0.07 -0.1 C -0.07 -0.0293 -0.07 0.0413 -0.07 0.112 Z",
+              "region": "shirt-torso"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.0474 C 0.0068 0.0626 0.0266 0.0435 0.041 0.0456 C 0.0555 0.0477 0.0707 0.0538 0.0866 0.0602 C 0.1026 0.0666 0.1186 0.0803 0.1368 0.0839 C 0.1551 0.0876 0.1797 0.087 0.1961 0.0821 C 0.2125 0.0772 0.2256 0.0669 0.2353 0.0547 C 0.245 0.0426 0.253 0.0251 0.2545 0.0091 C 0.256 -0.0068 0.2504 -0.0274 0.2444 -0.041 C 0.2385 -0.0547 0.2277 -0.0666 0.2189 -0.073 C 0.2101 -0.0794 0.1997 -0.0778 0.1915 -0.0794 C 0.1833 -0.0809 0.176 -0.0804 0.1696 -0.0821 C 0.1633 -0.0838 0.1584 -0.0865 0.1532 -0.0894 C 0.1481 -0.0923 0.143 -0.0997 0.1386 -0.0994 C 0.1342 -0.0991 0.1304 -0.0901 0.1268 -0.0876 C 0.1231 -0.085 0.1199 -0.0848 0.1167 -0.0839 C 0.1136 -0.083 0.1107 -0.0827 0.1076 -0.0821 C 0.1046 -0.0815 0.1037 -0.0803 0.0985 -0.0803 C 0.0933 -0.0803 0.0827 -0.0842 0.0766 -0.0821 C 0.0705 -0.08 0.0657 -0.0745 0.062 -0.0675 C 0.0584 -0.0605 0.0596 -0.0438 0.0547 -0.0401 C 0.0499 -0.0365 0.042 -0.0447 0.0328 -0.0456 C 0.0237 -0.0465 0.0055 -0.0611 0.0 -0.0456 C -0.0055 -0.0301 -0.0068 0.0322 0.0 0.0474 Z",
+              "region": "face"
+            },
+            {
+              "id": "eye",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.1696,
+              "cy": -0.0739,
+              "rx": 0.012,
+              "ry": 0.014,
+              "region": "face"
+            },
+            {
+              "id": "hat-crown",
+              "bone": "head",
+              "role": "body",
+              "z": 6.4,
+              "filled": true,
+              "tone": 0.78,
+              "kind": "path",
+              "d": "M 0.205 -0.092 C 0.2183 -0.093 0.2305 -0.1003 0.245 -0.095 C 0.2595 -0.0897 0.2808 -0.0758 0.292 -0.06 C 0.3032 -0.0442 0.312 -0.0203 0.312 0.0 C 0.312 0.0203 0.3032 0.0457 0.292 0.062 C 0.2808 0.0783 0.2595 0.0917 0.245 0.098 C 0.2305 0.1043 0.2183 0.0993 0.205 0.1 C 0.205 0.036 0.205 -0.028 0.205 -0.092 Z",
+              "region": "hat"
+            },
+            {
+              "id": "hat-brim",
+              "bone": "head",
+              "role": "body",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M 0.215 -0.26 C 0.2187 -0.24 0.2242 -0.2767 0.226 -0.2 C 0.2278 -0.1233 0.2278 0.1233 0.226 0.2 C 0.2242 0.2767 0.2187 0.24 0.215 0.26 C 0.2053 0.24 0.1908 0.2767 0.186 0.2 C 0.1812 0.1233 0.1812 -0.1233 0.186 -0.2 C 0.1908 -0.2767 0.2053 -0.24 0.215 -0.26 Z",
+              "region": "hat"
+            },
+            {
+              "id": "hat-band",
+              "bone": "head",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.25,
+              "kind": "poly",
+              "points": [
+                [
+                  0.23,
+                  -0.094
+                ],
+                [
+                  0.23,
+                  0.102
+                ]
+              ],
+              "closed": false,
+              "region": "hat"
+            },
+            {
+              "id": "upper-arm-l",
+              "bone": "upper-arm-l",
+              "role": "body",
+              "z": 4.5,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.05 C 0.035 0.0578 0.1013 0.0485 0.15 0.047 C 0.1987 0.0455 0.2671 0.0488 0.2925 0.041 C 0.3179 0.0332 0.3025 0.0137 0.3025 0.0 C 0.3025 -0.0137 0.3179 -0.0332 0.2925 -0.041 C 0.2671 -0.0488 0.1987 -0.0455 0.15 -0.047 C 0.1013 -0.0485 0.035 -0.0578 0.0 -0.05 C -0.035 -0.0422 -0.06 -0.0167 -0.06 0.0 C -0.06 0.0167 -0.035 0.0422 0.0 0.05 Z",
+              "region": "shirt-sleeves"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 4.52,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.04 C 0.022 0.0462 0.0792 0.0388 0.12 0.037 C 0.1608 0.0352 0.2139 0.0283 0.2446 0.029 C 0.2754 0.0297 0.2863 0.0395 0.3046 0.041 C 0.323 0.0425 0.3363 0.0408 0.3546 0.038 C 0.373 0.0352 0.4013 0.03 0.4146 0.024 C 0.428 0.018 0.4346 0.0093 0.4346 0.002 C 0.4346 -0.0053 0.428 -0.0145 0.4146 -0.02 C 0.4013 -0.0255 0.373 -0.0282 0.3546 -0.031 C 0.3363 -0.0338 0.323 -0.0373 0.3046 -0.037 C 0.2863 -0.0367 0.2754 -0.029 0.2446 -0.029 C 0.2139 -0.029 0.1608 -0.0352 0.12 -0.037 C 0.0792 -0.0388 0.022 -0.0462 0.0 -0.04 C -0.022 -0.0338 -0.012 -0.0133 -0.012 0.0 C -0.012 0.0133 -0.022 0.0338 0.0 0.04 Z",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "id": "upper-arm-r",
+              "bone": "upper-arm-r",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.046 C 0.05 0.0463 0.1013 0.0478 0.15 0.047 C 0.1987 0.0462 0.2671 0.0488 0.2925 0.041 C 0.3179 0.0332 0.3025 0.0137 0.3025 0.0 C 0.3025 -0.0137 0.3179 -0.0332 0.2925 -0.041 C 0.2671 -0.0488 0.1987 -0.0462 0.15 -0.047 C 0.1013 -0.0478 0.05 -0.0463 0.0 -0.046 C 0.0 -0.0153 0.0 0.0153 0.0 0.046 Z",
+              "region": "shirt-sleeves"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 3.62,
+              "filled": true,
+              "tone": 0.86,
+              "kind": "path",
+              "d": "M 0.0 0.04 C 0.022 0.0462 0.0792 0.0388 0.12 0.037 C 0.1608 0.0352 0.2139 0.0283 0.2446 0.029 C 0.2754 0.0297 0.2863 0.0395 0.3046 0.041 C 0.323 0.0425 0.3363 0.0408 0.3546 0.038 C 0.373 0.0352 0.4013 0.03 0.4146 0.024 C 0.428 0.018 0.4346 0.0093 0.4346 0.002 C 0.4346 -0.0053 0.428 -0.0145 0.4146 -0.02 C 0.4013 -0.0255 0.373 -0.0282 0.3546 -0.031 C 0.3363 -0.0338 0.323 -0.0373 0.3046 -0.037 C 0.2863 -0.0367 0.2754 -0.029 0.2446 -0.029 C 0.2139 -0.029 0.1608 -0.0352 0.12 -0.037 C 0.0792 -0.0388 0.022 -0.0462 0.0 -0.04 C -0.022 -0.0338 -0.012 -0.0133 -0.012 0.0 C -0.012 0.0133 -0.022 0.0338 0.0 0.04 Z",
+              "regions": [
+                "forearms",
+                "gloves"
+              ]
+            },
+            {
+              "id": "trowel-blade",
+              "bone": "trowel",
+              "role": "body",
+              "z": 4.8,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M 0.0 -0.022 C 0.0 -0.0073 0.0 0.0073 0.0 0.022 C 0.0133 0.0247 0.0083 0.027 0.04 0.03 C 0.0717 0.033 0.1533 0.0403 0.19 0.04 C 0.2267 0.0397 0.2417 0.0347 0.26 0.028 C 0.2783 0.0213 0.2867 0.0093 0.3 0.0 C 0.2867 -0.0067 0.2783 -0.015 0.26 -0.02 C 0.2417 -0.025 0.2167 -0.0297 0.19 -0.03 C 0.1633 -0.0303 0.1317 -0.0233 0.1 -0.022 C 0.0683 -0.0207 0.0333 -0.022 0.0 -0.022 Z",
+              "region": "trowel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Clothing outlines: shirt with leaning back, trousers of the near leg with a knee patch ellipse, clog with strap, a forearm form per arm that runs on into the glove, hat with crown, brim and band, face profile with eye, trowel blade, pad, trug with rim and weeds.",
+            "de": "Kleidungsumrisse: Hemd mit geneigtem Rücken, Hose des nahen Beins mit Kniepolster-Ellipse, Clog mit Riemen, je Arm eine Unterarmform, die in den Handschuh übergeht, Hut mit Kopf, Krempe und Band, Gesichtsprofil mit Auge, Schaufelblatt, Kissen, Trog mit Rand und Unkraut."
+          },
+          "retained": {
+            "en": "Knee patch, clog strap, hat band, trug rim, eye and the rolled sleeve edge where the upper arm ends; real height 1.16 m and width 1.84 m of the weeding pose.",
+            "de": "Kniepolster, Clog-Riemen, Hutband, Trogrand, Auge und die hochgekrempelte Ärmelkante am Ende des Oberarms; reale Höhe 1,16 m und Breite 1,84 m der Jätepose."
+          },
+          "merged": {
+            "en": "Bare forearm and glove into one forearm form; fingers and thumb into the glove end; the trowel handle is hidden in the glove; the pelvis is covered by shirt hem and thigh. The far leg is hidden behind the near leg and not drawn.",
+            "de": "Nackter Unterarm und Handschuh zu einer Unterarmform; Finger und Daumen im Handschuhende; der Schaufelgriff steckt im Handschuh; das Becken ist von Hemdsaum und Oberschenkel verdeckt. Das ferne Bein ist hinter dem nahen verdeckt und wird nicht gezeichnet."
+          },
+          "omitted": {
+            "en": "Ear, mouth, placket, finger lines, trowel ferrule and handle, far clog.",
+            "de": "Ohr, Mund, Knopfleiste, Fingerlinien, Schaufelzwinge und -griff, ferner Clog."
+          },
+          "thinElements": {
+            "en": "The trowel blade is drawn 0.06 m wide (0.6 mm) with a blunt start inside the glove; the hat band is a 0.13 mm line; nothing is thickened.",
+            "de": "Das Schaufelblatt ist 0,06 m breit (0,6 mm) mit stumpfem Anfang im Handschuh gezeichnet; das Hutband ist eine 0,13-mm-Linie; nichts wird verdickt."
+          },
+          "hatching": {
+            "en": "None; tones carry the materials.",
+            "de": "Keine; Töne tragen die Materialien."
+          },
+          "styles": {
+            "en": "0.20 mm outlines, 0.13 mm detail lines; light shirt and hat, mid-grey trousers, dark clog.",
+            "de": "0,20-mm-Konturen, 0,13-mm-Detaillinien; helles Hemd und heller Hut, mittelgraue Hose, dunkler Clog."
+          },
+          "overlays": {
+            "en": "The forearm form lists forearm skin and glove regions; every other region is its own form; the knee patch and strap lines lie inside their regions.",
+            "de": "Die Unterarmform nennt die Regionen Unterarmhaut und Handschuh; jede andere Region ist eine eigene Form; Kniepolster- und Riemenlinien liegen innerhalb ihrer Regionen."
+          }
+        }
+      },
+      "200": {
+        "status": "unavailable",
+        "denominator": 200,
+        "reason": {
+          "en": "At 1:200 the 0.04 m trowel, the 0.04 m thick hat brim and the pad are 0.2 mm wide or less, and the limbs of the leaning figure lie 0.03 to 0.10 m apart (0.15 to 0.5 mm): the gaps between arms, thigh and torso fall below the 0.15 mm minimum white gap plus line width and the hat brim falls below the feature limit, so no drawing keeps them apart without merging the working arm into the body.",
+          "de": "Bei 1:200 sind die 0,04 m breite Schaufel, die 0,04 m dicke Hutkrempe und das Kissen höchstens 0,2 mm breit, und die Gliedmaßen der vorgebeugten Figur liegen 0,03 bis 0,10 m (0,15 bis 0,5 mm) auseinander: Die Abstände zwischen Armen, Oberschenkel und Rumpf liegen unter der Mindestlücke von 0,15 mm zuzüglich Linienbreite und die Hutkrempe unter der Mindestbreite, sodass keine Zeichnung sie getrennt hält, ohne den arbeitenden Arm mit dem Körper zu verschmelzen."
+        },
+        "limitingFeature": {
+          "en": "Hat brim thickness and arm gaps",
+          "de": "Hutkrempendicke und Armabstände"
+        },
+        "limitingSizeM": 0.04,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      },
+      "500": {
+        "status": "unavailable",
+        "denominator": 500,
+        "reason": {
+          "en": "At 1:500 the 1.16 m high kneeling figure is 2.3 mm tall: the folded limbs, the gloved hand holding a 0.04 m wide trowel and the 0.04 m kneeling pad are below the 0.2 mm feature limit, and arms, thigh and torso lie 0.03 to 0.12 m apart, closer than the minimum white gap of 0.15 mm plus line width, so they print as one blot.",
+          "de": "Bei 1:500 ist die 1,16 m hohe kniende Figur 2,3 mm groß: die gefalteten Gliedmaßen, die behandschuhte Hand mit der 0,04 m breiten Schaufel und das 0,04 m dicke Kniekissen liegen unter der Mindestbreite von 0,2 mm, und Arme, Oberschenkel und Rumpf liegen 0,03 bis 0,12 m auseinander, enger als die Mindestlücke von 0,15 mm zuzüglich Linienbreite, sodass sie als ein Fleck drucken."
+        },
+        "limitingFeature": {
+          "en": "Trowel width and arm-to-thigh gap",
+          "de": "Schaufelbreite und Abstand zwischen Arm und Oberschenkel"
+        },
+        "limitingSizeM": 0.04,
+        "alternatives": [
+          {
+            "kind": "scale",
+            "denominator": 100
+          }
+        ]
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "kneeling-weeding",
+        "title": {
+          "en": "Kneeling and weeding",
+          "de": "Kniend jäten"
+        },
+        "description": {
+          "en": "Kneeling on the pad, torso inclined 32 degrees, the left hand presses on the thigh and the right hand holds the trowel in the soil.",
+          "de": "Kniend auf dem Kissen, Rumpf um 32 Grad geneigt, die linke Hand stützt sich auf den Oberschenkel, die rechte hält die Schaufel im Boden."
+        },
+        "bones": {
+          "hip-shift": {
+            "dx": 0.05
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -58
+          },
+          "head": {
+            "angleDeg": 16
+          },
+          "upper-arm-l": {
+            "angleDeg": -1.554
+          },
+          "forearm-l": {
+            "angleDeg": 40.793
+          },
+          "hand-l": {
+            "angleDeg": 28.761
+          },
+          "upper-arm-r": {
+            "angleDeg": 52.098
+          },
+          "forearm-r": {
+            "angleDeg": 28.588
+          },
+          "hand-r": {
+            "angleDeg": 17.314
+          },
+          "thigh-l": {
+            "angleDeg": 10
+          },
+          "shank-l": {
+            "angleDeg": -100
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 11
+          },
+          "shank-r": {
+            "angleDeg": -100.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 3.5,
+          "breathing": "work",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "kneeling-upright",
+        "title": {
+          "en": "Kneeling upright",
+          "de": "Aufrecht knien"
+        },
+        "description": {
+          "en": "Sitting upright on the knees with the trowel resting in front of the chest, looking along the bed.",
+          "de": "Aufrecht auf den Knien mit der Schaufel vor der Brust, der Blick folgt dem Beet."
+        },
+        "bones": {
+          "hip-shift": {
+            "dx": -0.02
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": 10
+          },
+          "upper-arm-l": {
+            "angleDeg": 24.287
+          },
+          "forearm-l": {
+            "angleDeg": 0.206
+          },
+          "hand-l": {
+            "angleDeg": 3.507
+          },
+          "upper-arm-r": {
+            "angleDeg": 10.496
+          },
+          "forearm-r": {
+            "angleDeg": 77.591
+          },
+          "hand-r": {
+            "angleDeg": -10.087
+          },
+          "thigh-l": {
+            "angleDeg": 10
+          },
+          "shank-l": {
+            "angleDeg": -100
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 11
+          },
+          "shank-r": {
+            "angleDeg": -100.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": -15
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 1.8,
+          "breathing": "rest",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "reaching-trug",
+        "title": {
+          "en": "Reaching to the trug",
+          "de": "Zum Trog greifen"
+        },
+        "description": {
+          "en": "Leaning far forward to drop weeds into the trug, the left hand steadies on the knee.",
+          "de": "Weit nach vorn gebeugt, um Unkraut in den Trog zu legen, die linke Hand stützt sich am Knie."
+        },
+        "bones": {
+          "hip-shift": {
+            "dx": 0.12
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -76
+          },
+          "head": {
+            "angleDeg": 12
+          },
+          "upper-arm-l": {
+            "angleDeg": 14.724
+          },
+          "forearm-l": {
+            "angleDeg": 52.888
+          },
+          "hand-l": {
+            "angleDeg": 18.388
+          },
+          "upper-arm-r": {
+            "angleDeg": 83.931
+          },
+          "forearm-r": {
+            "angleDeg": 109.491
+          },
+          "hand-r": {
+            "angleDeg": -52.422
+          },
+          "thigh-l": {
+            "angleDeg": 14
+          },
+          "shank-l": {
+            "angleDeg": -104
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 15
+          },
+          "shank-r": {
+            "angleDeg": -104.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": 20
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 3.8,
+          "breathing": "work",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "dig-up",
+        "title": {
+          "en": "Trowel raised",
+          "de": "Schaufel angehoben"
+        },
+        "description": {
+          "en": "Key pose of the digging stroke: trowel raised above the soil.",
+          "de": "Schlüsselpose des Grabens: Schaufel über dem Boden."
+        },
+        "key": true,
+        "bones": {
+          "hip-shift": {
+            "dx": 0.05
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -60
+          },
+          "head": {
+            "angleDeg": 16
+          },
+          "upper-arm-l": {
+            "angleDeg": -2.226
+          },
+          "forearm-l": {
+            "angleDeg": 43.307
+          },
+          "hand-l": {
+            "angleDeg": 28.918
+          },
+          "upper-arm-r": {
+            "angleDeg": 10.036
+          },
+          "forearm-r": {
+            "angleDeg": 82.228
+          },
+          "hand-r": {
+            "angleDeg": 29.736
+          },
+          "thigh-l": {
+            "angleDeg": 10
+          },
+          "shank-l": {
+            "angleDeg": -100
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 11
+          },
+          "shank-r": {
+            "angleDeg": -100.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 4,
+          "breathing": "work",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "dig-in",
+        "title": {
+          "en": "Trowel in the soil",
+          "de": "Schaufel im Boden"
+        },
+        "description": {
+          "en": "Key pose of the digging stroke: blade thrust into the soil.",
+          "de": "Schlüsselpose des Grabens: Blatt in den Boden gestoßen."
+        },
+        "key": true,
+        "bones": {
+          "hip-shift": {
+            "dx": 0.05
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -58
+          },
+          "head": {
+            "angleDeg": 16
+          },
+          "upper-arm-l": {
+            "angleDeg": -1.554
+          },
+          "forearm-l": {
+            "angleDeg": 40.793
+          },
+          "hand-l": {
+            "angleDeg": 28.761
+          },
+          "upper-arm-r": {
+            "angleDeg": 50.087
+          },
+          "forearm-r": {
+            "angleDeg": 39.669
+          },
+          "hand-r": {
+            "angleDeg": 3.245
+          },
+          "thigh-l": {
+            "angleDeg": 10
+          },
+          "shank-l": {
+            "angleDeg": -100
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 11
+          },
+          "shank-r": {
+            "angleDeg": -100.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 4.2,
+          "breathing": "effort",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "dig-pull",
+        "title": {
+          "en": "Trowel pulled back",
+          "de": "Schaufel zurückgezogen"
+        },
+        "description": {
+          "en": "Key pose of the digging stroke: soil pulled towards the knees.",
+          "de": "Schlüsselpose des Grabens: Erde zu den Knien gezogen."
+        },
+        "key": true,
+        "bones": {
+          "hip-shift": {
+            "dx": 0.05
+          },
+          "pelvis": {
+            "angleDeg": 0
+          },
+          "torso": {
+            "angleDeg": -54
+          },
+          "head": {
+            "angleDeg": 16
+          },
+          "upper-arm-l": {
+            "angleDeg": -0.108
+          },
+          "forearm-l": {
+            "angleDeg": 35.497
+          },
+          "hand-l": {
+            "angleDeg": 28.612
+          },
+          "upper-arm-r": {
+            "angleDeg": 32.262
+          },
+          "forearm-r": {
+            "angleDeg": 52.837
+          },
+          "hand-r": {
+            "angleDeg": -9.1
+          },
+          "thigh-l": {
+            "angleDeg": 10
+          },
+          "shank-l": {
+            "angleDeg": -100
+          },
+          "foot-l": {
+            "angleDeg": -60
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 11
+          },
+          "shank-r": {
+            "angleDeg": -100.5
+          },
+          "foot-r": {
+            "angleDeg": -60.5
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "trowel": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "pad-ground",
+          "shin-l",
+          "shin-r",
+          "instep-l",
+          "instep-r"
+        ],
+        "thermal": {
+          "activityMet": 4.2,
+          "breathing": "effort",
+          "regions": {
+            "face": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.15
+            },
+            "hat": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.85
+            },
+            "shirt-torso": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "shirt-sleeves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "forearms": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "gloves": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.35
+            },
+            "trousers": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.27999999999999997,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 22
+              }
+            },
+            "clogs": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.21,
+              "contact": {
+                "fraction": 0.2,
+                "tempC": 22
+              }
+            },
+            "pad": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.85,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 19
+              }
+            },
+            "trowel": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.7,
+              "contact": {
+                "fraction": 0.1,
+                "tempC": 17
+              }
+            },
+            "trug": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0.8
+            }
+          },
+          "emitters": {
+            "plume": 1
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "dig-cycle",
+        "title": {
+          "en": "Digging stroke",
+          "de": "Grabbewegung"
+        },
+        "description": {
+          "en": "Loop of 1.6 s: the trowel is raised, thrust into the soil, pulled back and raised again while the knees, the pad and the pressing left hand stay still.",
+          "de": "Schleife von 1,6 s: Die Schaufel wird gehoben, in den Boden gestoßen, zurückgezogen und wieder gehoben, während Knie, Kissen und die stützende linke Hand ruhen."
+        },
+        "durationS": 1.6,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "dig-up",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.4,
+            "pose": "dig-in",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.9,
+            "pose": "dig-pull",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.3,
+            "pose": "kneeling-weeding",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pad-ground",
+            "fromS": 0,
+            "toS": 1.6
+          },
+          {
+            "anchor": "shin-l",
+            "fromS": 0,
+            "toS": 1.6
+          },
+          {
+            "anchor": "shin-r",
+            "fromS": 0,
+            "toS": 1.6
+          },
+          {
+            "anchor": "instep-l",
+            "fromS": 0,
+            "toS": 1.6
+          },
+          {
+            "anchor": "instep-r",
+            "fromS": 0,
+            "toS": 1.6
+          }
+        ],
+        "phases": [
+          {
+            "id": "raise",
+            "fromS": 0,
+            "toS": 0.4,
+            "title": {
+              "en": "Raise and thrust",
+              "de": "Heben und Stoßen"
+            }
+          },
+          {
+            "id": "pull",
+            "fromS": 0.4,
+            "toS": 1,
+            "title": {
+              "en": "Pull",
+              "de": "Ziehen"
+            }
+          },
+          {
+            "id": "reset",
+            "fromS": 1,
+            "toS": 1.6,
+            "title": {
+              "en": "Return",
+              "de": "Rückführung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.4,
+            "kind": "motion",
+            "title": {
+              "en": "Blade enters the soil",
+              "de": "Blatt dringt in den Boden ein"
+            }
+          },
+          {
+            "t": 0.9,
+            "kind": "thermal",
+            "title": {
+              "en": "Exhalation at the end of the pull",
+              "de": "Ausatmen am Ende des Zugs"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 0.4,
+                "v": 2
+              },
+              {
+                "t": 1.3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "reach-to-trug",
+        "title": {
+          "en": "Dropping weeds into the trug",
+          "de": "Unkraut in den Trog legen"
+        },
+        "description": {
+          "en": "Weeds are pulled, the gardener leans forward to the trug, lets them fall and returns to weeding; one slow round of 4 s.",
+          "de": "Unkraut wird gezupft, die Gärtnerin beugt sich zum Trog, lässt es fallen und kehrt zum Jäten zurück; eine langsame Runde von 4 s."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "kneeling-weeding",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.2,
+            "pose": "kneeling-weeding",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "reaching-trug",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.6,
+            "pose": "reaching-trug",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.6,
+            "pose": "kneeling-weeding",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "pad-ground",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "shin-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "shin-r",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "instep-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "instep-r",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "pull",
+            "fromS": 0,
+            "toS": 1.2,
+            "title": {
+              "en": "Pulling weeds",
+              "de": "Unkraut zupfen"
+            }
+          },
+          {
+            "id": "reach",
+            "fromS": 1.2,
+            "toS": 2.6,
+            "title": {
+              "en": "Reaching the trug",
+              "de": "Zum Trog greifen"
+            }
+          },
+          {
+            "id": "return",
+            "fromS": 2.6,
+            "toS": 4,
+            "title": {
+              "en": "Back to weeding",
+              "de": "Zurück zum Jäten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2.3,
+            "kind": "load-off",
+            "title": {
+              "en": "Weeds are released into the trug",
+              "de": "Unkraut fällt in den Trog"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1.2,
+                "v": 2
+              },
+              {
+                "t": 2.6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 21,
+        "meanRadiantTempC": 26,
+        "skyTempC": 10,
+        "groundTempC": 20,
+        "relativeHumidity": 0.55,
+        "windMS": 0.5,
+        "windDirectionDeg": 180,
+        "solarWM2": 700,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.8,
+      "body": {
+        "species": "human",
+        "massKg": 64,
+        "skinAreaM2": 1.712,
+        "basalMetabolismW": 59.4,
+        "metWM2": 58.15,
+        "coreSetPointC": 36.8,
+        "skinSetPointC": 34.1,
+        "sweating": true,
+        "panting": false,
+        "maxSkinBloodFlowLM2H": 90,
+        "minSkinBloodFlowLM2H": 6.3,
+        "source": "authored-estimate",
+        "reference": "gagge-1971"
+      },
+      "respiration": {
+        "noseEmitter": "nose-breath",
+        "mouthEmitter": "mouth-breath",
+        "exhaledTempC": 34,
+        "exhaledRelativeHumidity": 0.95,
+        "patterns": [
+          {
+            "id": "rest",
+            "title": {
+              "en": "Resting breathing",
+              "de": "Ruheatmung"
+            },
+            "rateBpm": 14,
+            "tidalVolumeL": 0.5,
+            "inhaleFraction": 0.38,
+            "pauseAfterInhaleFraction": 0.04,
+            "exhaleFraction": 0.45,
+            "pauseAfterExhaleFraction": 0.13,
+            "route": "nose",
+            "source": "authored-estimate",
+            "reference": "gupta-2010"
+          },
+          {
+            "id": "work",
+            "title": {
+              "en": "Light garden work",
+              "de": "Leichte Gartenarbeit"
+            },
+            "rateBpm": 18,
+            "tidalVolumeL": 0.9,
+            "inhaleFraction": 0.42,
+            "pauseAfterInhaleFraction": 0.02,
+            "exhaleFraction": 0.5,
+            "pauseAfterExhaleFraction": 0.06,
+            "route": "nose-and-mouth",
+            "source": "authored-estimate",
+            "reference": "ainsworth-2011"
+          },
+          {
+            "id": "effort",
+            "title": {
+              "en": "Digging effort",
+              "de": "Anstrengung beim Graben"
+            },
+            "rateBpm": 24,
+            "tidalVolumeL": 1.3,
+            "inhaleFraction": 0.44,
+            "pauseAfterInhaleFraction": 0.02,
+            "exhaleFraction": 0.52,
+            "pauseAfterExhaleFraction": 0.02,
+            "route": "mouth",
+            "source": "authored-estimate",
+            "reference": "ainsworth-2011"
+          }
+        ],
+        "motion": [
+          {
+            "bone": "torso",
+            "angleDeg": 1,
+            "dy": 0.004
+          },
+          {
+            "bone": "pelvis",
+            "angleDeg": 0.4,
+            "dy": 0.003
+          }
+        ],
+        "source": "authored-estimate",
+        "reference": "hoeppe-1981"
+      },
+      "passengers": [],
+      "operating": [],
+      "regions": [
+        {
+          "id": "face",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.0685,
+          "characteristicLengthM": 0.15,
+          "geometry": "sphere",
+          "skyViewFactor": 0.35,
+          "layers": [],
+          "heatCapacityJM2K": 15000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.06,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hat",
+          "title": {
+            "en": "Straw hat and hair",
+            "de": "Strohhut und Haar"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "straw",
+          "areaM2": 0.226,
+          "characteristicLengthM": 0.3,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "hair-pack",
+              "title": {
+                "en": "Hair and air under the hat",
+                "de": "Haar und Luft unter dem Hut"
+              },
+              "kind": "hair",
+              "material": "straw",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.06,
+              "vapourResistanceM2PaW": 9.57,
+              "heatCapacityJM2K": 300,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "straw",
+              "title": {
+                "en": "Woven straw",
+                "de": "Strohgeflecht"
+              },
+              "kind": "clothing",
+              "material": "straw",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.02,
+              "vapourResistanceM2PaW": 3.19,
+              "heatCapacityJM2K": 500,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.04
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shirt-torso",
+          "title": {
+            "en": "Linen shirt, trunk",
+            "de": "Leinenhemd, Rumpf"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "linen",
+          "areaM2": 0.7397,
+          "characteristicLengthM": 0.3,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "torso-air",
+              "title": {
+                "en": "Air between skin and shirt",
+                "de": "Luft zwischen Haut und Hemd"
+              },
+              "kind": "air-gap",
+              "material": "linen",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "shirt",
+              "title": {
+                "en": "Linen long-sleeve shirt (0.25 clo)",
+                "de": "Leinenhemd mit langen Ärmeln (0,25 clo)"
+              },
+              "kind": "clothing",
+              "material": "linen",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.0465,
+              "vapourResistanceM2PaW": 7.42,
+              "heatCapacityJM2K": 250,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 18000,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.4,
+            "skinFraction": 0.36
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shirt-sleeves",
+          "title": {
+            "en": "Linen sleeves above the elbow",
+            "de": "Leinenärmel oberhalb des Ellenbogens"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "linen",
+          "areaM2": 0.1438,
+          "characteristicLengthM": 0.09,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "sleeve-air",
+              "title": {
+                "en": "Air in the sleeve",
+                "de": "Luft im Ärmel"
+              },
+              "kind": "air-gap",
+              "material": "linen",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sleeve",
+              "title": {
+                "en": "Linen sleeve (0.25 clo)",
+                "de": "Leinenärmel (0,25 clo)"
+              },
+              "kind": "clothing",
+              "material": "linen",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.0465,
+              "vapourResistanceM2PaW": 7.42,
+              "heatCapacityJM2K": 250,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 14000,
+          "body": {
+            "segment": "arm",
+            "metabolicShare": 0.05,
+            "skinFraction": 0.07
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "forearms",
+          "title": {
+            "en": "Bare forearms (sleeves rolled)",
+            "de": "Nackte Unterarme (Ärmel hochgekrempelt)"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.1199,
+          "characteristicLengthM": 0.07,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 14000,
+          "body": {
+            "segment": "arm",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.07
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "gloves",
+          "title": {
+            "en": "Gardening gloves",
+            "de": "Gartenhandschuhe"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "glove",
+          "areaM2": 0.0942,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "glove-air",
+              "title": {
+                "en": "Air in the glove",
+                "de": "Luft im Handschuh"
+              },
+              "kind": "air-gap",
+              "material": "glove",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.02,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "glove",
+              "title": {
+                "en": "Cotton glove with leather palm (0.1 clo)",
+                "de": "Baumwollhandschuh mit Lederhandfläche (0,1 clo)"
+              },
+              "kind": "clothing",
+              "material": "glove",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 0.0171,
+              "vapourResistanceM2PaW": 2.73,
+              "heatCapacityJM2K": 400,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6000,
+          "body": {
+            "segment": "hand",
+            "metabolicShare": 0.02,
+            "skinFraction": 0.05
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "trousers",
+          "title": {
+            "en": "Canvas trousers with knee patches",
+            "de": "Canvas-Hose mit Kniepolstern"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "canvas",
+          "areaM2": 0.6263,
+          "characteristicLengthM": 0.12,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "leg-air",
+              "title": {
+                "en": "Air between skin and trousers",
+                "de": "Luft zwischen Haut und Hose"
+              },
+              "kind": "air-gap",
+              "material": "canvas",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.03,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "canvas",
+              "title": {
+                "en": "Cotton canvas (0.28 clo)",
+                "de": "Baumwoll-Canvas (0,28 clo)"
+              },
+              "kind": "clothing",
+              "material": "canvas",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 0.0512,
+              "vapourResistanceM2PaW": 8.17,
+              "heatCapacityJM2K": 600,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 18000,
+          "body": {
+            "segment": "leg",
+            "metabolicShare": 0.34,
+            "skinFraction": 0.31
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "clogs",
+          "title": {
+            "en": "Garden clogs with socks",
+            "de": "Gartenclogs mit Socken"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "rubber-clog",
+          "areaM2": 0.1027,
+          "characteristicLengthM": 0.12,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "sock",
+              "title": {
+                "en": "Cotton sock (0.04 clo)",
+                "de": "Baumwollsocke (0,04 clo)"
+              },
+              "kind": "clothing",
+              "material": "rubber-clog",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0062,
+              "vapourResistanceM2PaW": 0.99,
+              "heatCapacityJM2K": 300,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "clog-air",
+              "title": {
+                "en": "Air in the clog",
+                "de": "Luft im Clog"
+              },
+              "kind": "air-gap",
+              "material": "rubber-clog",
+              "thicknessM": 0.01,
+              "resistanceM2KW": 0.04,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "clog",
+              "title": {
+                "en": "Rubber clog shell",
+                "de": "Clog-Schale aus Gummi"
+              },
+              "kind": "shell",
+              "material": "rubber-clog",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.02,
+              "vapourResistanceM2PaW": 3.19,
+              "heatCapacityJM2K": 1200,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7000,
+          "body": {
+            "segment": "foot",
+            "metabolicShare": 0.05,
+            "skinFraction": 0.06
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "pad",
+          "title": {
+            "en": "Kneeling pad",
+            "de": "Kniekissen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "eva-foam",
+          "areaM2": 0.28,
+          "characteristicLengthM": 0.5,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.7,
+          "layers": [],
+          "heatCapacityJM2K": 4000,
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        },
+        {
+          "id": "trowel",
+          "title": {
+            "en": "Hand trowel",
+            "de": "Handschaufel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 0.025,
+          "characteristicLengthM": 0.3,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 4000,
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        },
+        {
+          "id": "trug",
+          "title": {
+            "en": "Trug with weeds",
+            "de": "Trog mit Unkraut"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "polyethylene",
+          "areaM2": 0.62,
+          "characteristicLengthM": 0.5,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 3000,
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "nose-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Nostril jet",
+            "de": "Nasenstrahl"
+          },
+          "anchor": "nostrils",
+          "directionDeg": -150,
+          "diameterM": 0.0095,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "mouth-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Mouth jet",
+            "de": "Mundstrahl"
+          },
+          "anchor": "mouth",
+          "directionDeg": -100,
+          "diameterM": 0.0124,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "plume",
+          "kind": "plume",
+          "title": {
+            "en": "Rising warm air above the body",
+            "de": "Aufsteigende Warmluft über dem Körper"
+          },
+          "anchor": "crown",
+          "directionDeg": 0,
+          "diameterM": 0.3,
+          "region": "shirt-torso",
+          "source": "authored-estimate",
+          "reference": "incropera-2011"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "DuBois skin area for 1.66 m and 64 kg; a linen long-sleeve shirt with rolled sleeves (0.25 clo), canvas trousers (0.28 clo), cotton gloves (0.10 clo), a straw hat shading the face and rubber clogs. Garment values are authored estimates guided by ISO 9920 (1 clo = 0.155 m2K/W); layer resistances include the enclosed air.",
+          "de": "DuBois-Hautfläche für 1,66 m und 64 kg; Leinenhemd mit hochgekrempelten Ärmeln (0,25 clo), Canvas-Hose (0,28 clo), Baumwollhandschuhe (0,10 clo), ein Strohhut, der das Gesicht beschattet, und Gummiclogs. Die Kleidungswerte sind Autorenschätzungen nach ISO 9920 (1 clo = 0,155 m2K/W); die Schichtwiderstände enthalten die eingeschlossene Luft."
+        },
+        {
+          "en": "Metabolic rate 3.5 to 4.2 met for weeding and digging, 1.8 met kneeling upright (Compendium of Physical Activities lists garden work between about 3 and 5 METs; mapped to thermal met as an estimate). Basal metabolism by Mifflin-St Jeor for a 58-year-old woman.",
+          "de": "Stoffwechsel 3,5 bis 4,2 met beim Jäten und Graben, 1,8 met beim aufrechten Knien (das Compendium of Physical Activities nennt für Gartenarbeit etwa 3 bis 5 MET; als Schätzung auf thermisches met übertragen). Grundumsatz nach Mifflin-St Jeor für eine 58-jährige Frau."
+        },
+        {
+          "en": "The shins and insteps rest on the foam pad (conduction fraction 0.3 at 22 degrees Celsius); the pad stands on soil at 20 degrees Celsius. The first respiration pattern (rest) is the reference of the chest motion.",
+          "de": "Schienbeine und Fußrücken ruhen auf dem Schaumkissen (Leitungsanteil 0,3 bei 22 Grad Celsius); das Kissen steht auf Boden mit 20 Grad Celsius. Das erste Atemmuster (Ruhe) ist die Referenz der Brustbewegung."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Inertial model: segment masses as point masses at de Leva centres, pad 0.6 kg, trowel 0.25 kg on the right hand and trug 1.6 kg; the pad on the soil is the permanent unilateral support, the shins and insteps rest on the pad.",
+          "de": "Trägheitsmodell: Segmentmassen als Punktmassen in den Schwerpunkten nach de Leva, Kissen 0,6 kg, Schaufel 0,25 kg an der rechten Hand und Trog 1,6 kg; das Kissen auf dem Boden ist das einseitige Auflager, Schienbeine und Fußrücken ruhen auf dem Kissen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "kneeling-weeding",
+      "defaultClip": "dig-cycle",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

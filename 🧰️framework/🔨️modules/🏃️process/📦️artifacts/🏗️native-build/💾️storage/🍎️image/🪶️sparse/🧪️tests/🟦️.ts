@@ -27,7 +27,7 @@ test("the creation size and the grow arguments are closed and unit-aligned",()=>
  expect(nativeImageSparseGrowArgumentsV1(protocol.initialBytes,"/x/fixed.dmg")).toBeNull();
  expect(nativeImageSparseInitialBytesV1(25*GiB)).toBe(protocol.initialBytes);
  expect(nativeImageSparseGrowArgumentsV1(25*GiB,"/x/fixed.dmg")).toEqual(["resize","-size","25600m","/x/fixed.dmg"]);
- expect(()=>nativeImageSparseInitialBytesV1(25*GiB+1)).toThrow("Unit-aligned");expect(()=>nativeImageSparseInitialBytesV1(MiB)).toThrow("minimum filesystem");
+ for(const bytes of[25*GiB+1,MiB]){let failure:unknown;try{nativeImageSparseInitialBytesV1(bytes);}catch(error){failure=error;}expect(failure).toMatchObject({code:"invalid",key:"process.nativeBuild.image-size-invalid",values:{bytes,minimum:imageSchema.definitions.ImageProtocol.const.minimumFilesystemBytes,unit}});}
  expect(nativeImageSparseAdmissionBytesV1(25*GiB)).toBe(protocol.admissionFreeBytes+64*MiB);expect(nativeImageSparseAdmissionBytesV1(8*MiB)).toBe(72*MiB);
  expect(nativeImageBackingAllocatedBytesV1({size:7})).toBe(7);expect(nativeImageBackingAllocatedBytesV1({size:7n})).toBe(7n);
  expect(unit).toBe(MiB);

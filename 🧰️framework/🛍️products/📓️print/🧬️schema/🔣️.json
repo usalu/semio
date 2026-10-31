@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/print/schema.json",
   "$comment": "📊️ Schema-first contract of the print visualization library: the chart-kind catalogue (🖼️assets/🔣️viz-catalog.json), the family option vocabularies, the demo data tables and the numeric probe protocol. Owned by the CATALOG agent; every family owner extends `x-semio-family-options` for its own families only. The `x-` annotations carry the vocabulary that pure JSON Schema cannot express per family; `🔨️modules/📊️visualization-gallery/🟦️.ts` enforces them. A catalogue entry must set an option exactly when its family declares the key here, and this is the authority for `variant` in particular: a family that declares `variant` renders a different geometry per variant, so every one of its kinds names one; a family that does not declare it takes none.",
   "type": "object",
@@ -48085,62 +48085,70 @@
       "required": [
         "kind"
       ],
-      "x-semio-guide-defaults": {
-        "axis": {
-          "tickSize": 1.4,
-          "tickSizeOuter": 1.4,
-          "tickPadding": 0.8,
-          "titleGap": 5,
-          "labelSize": 6.6,
-          "titleSize": 7.2,
-          "scale": "x",
-          "orient": "bottom",
-          "labelFont": "SemioSans",
-          "titleFont": "SemioMono",
-          "strokeRole": "hairline",
-          "strokeColorRole": "border-emphasized",
-          "minorStrokeColorRole": "border-normal",
-          "gridStrokeColorRole": "border-normal",
-          "textColorRole": "foreground",
-          "minorOpacity": 0.6,
-          "gridOpacity": 0.45
+      "definitions": {
+        "Defaults": {
+          "const": {
+            "axis": {
+              "tickSize": 1.4,
+              "tickSizeOuter": 1.4,
+              "tickPadding": 0.8,
+              "titleGap": 5,
+              "labelSize": 6.6,
+              "titleSize": 7.2,
+              "scale": "x",
+              "orient": "bottom",
+              "labelFont": "SemioSans",
+              "titleFont": "SemioMono",
+              "strokeRole": "hairline",
+              "strokeColorRole": "border-emphasized",
+              "minorStrokeColorRole": "border-normal",
+              "gridStrokeColorRole": "border-normal",
+              "textColorRole": "foreground",
+              "minorOpacity": 0.6,
+              "gridOpacity": 0.45
+            },
+            "legend": {
+              "scale": "x",
+              "kind": "swatch",
+              "orient": "vertical",
+              "columns": 1,
+              "ticks": 5,
+              "hatchLines": 3,
+              "itemGap": 1.2,
+              "swatchSize": 2.6,
+              "labelGap": 1.2,
+              "length": 24,
+              "symbol": "circle",
+              "sizeMode": "area",
+              "offset": 0,
+              "inset": 2,
+              "labelSize": 6.6,
+              "titleSize": 7.2,
+              "labelFont": "SemioSans",
+              "titleFont": "SemioMono",
+              "strokeRole": "default",
+              "outlineStrokeRole": "hairline",
+              "textColorRole": "foreground"
+            }
+          }
         },
-        "legend": {
-          "scale": "x",
-          "kind": "swatch",
-          "orient": "vertical",
-          "columns": 1,
-          "ticks": 5,
-          "hatchLines": 3,
-          "itemGap": 1.2,
-          "swatchSize": 2.6,
-          "labelGap": 1.2,
-          "length": 24,
-          "symbol": "circle",
-          "sizeMode": "area",
-          "offset": 0,
-          "inset": 2,
-          "labelSize": 6.6,
-          "titleSize": 7.2,
-          "labelFont": "SemioSans",
-          "titleFont": "SemioMono",
-          "strokeRole": "default",
-          "outlineStrokeRole": "hairline",
-          "textColorRole": "foreground"
-        }
-      },
-      "x-semio-guide-units": {
-        "geometry": "millimetre",
-        "typography": "tex-point",
-        "rotation": "degree",
-        "nativeCoordinates": "cartesian-y-up",
-        "nativeAngle": "counterclockwise-from-positive-x",
-        "nativeLabelRotation": "counterclockwise"
-      },
-      "x-semio-guide-geometry": {
-        "defaultPolarRadius": {
-          "en": "Half the shorter canvas dimension, reduced by the largest authored frame inset, with a minimum of one millimetre.",
-          "de": "Die Hälfte der kürzeren Leinwandseite, vermindert um den größten angegebenen Rahmeneinzug, mindestens ein Millimeter."
+        "Units": {
+          "const": {
+            "geometry": "millimetre",
+            "typography": "tex-point",
+            "rotation": "degree",
+            "nativeCoordinates": "cartesian-y-up",
+            "nativeAngle": "counterclockwise-from-positive-x",
+            "nativeLabelRotation": "counterclockwise"
+          }
+        },
+        "Geometry": {
+          "const": {
+            "defaultPolarRadius": {
+              "en": "Half the shorter canvas dimension, reduced by the largest authored frame inset, with a minimum of one millimetre.",
+              "de": "Die Hälfte der kürzeren Leinwandseite, vermindert um den größten angegebenen Rahmeneinzug, mindestens ein Millimeter."
+            }
+          }
         }
       }
     },
@@ -48584,1623 +48592,1627 @@
       "additionalProperties": false
     }
   },
-  "x-semio-option-syntax": {
-    "scale": {
-      "nice": {
-        "syntax": "scalar"
-      },
-      "clamp": {
-        "syntax": "scalar"
-      },
-      "round": {
-        "syntax": "scalar"
-      },
-      "reverse": {
-        "syntax": "scalar"
-      },
-      "unknown": {
-        "syntax": "value"
-      },
-      "padding": {
-        "syntax": "expression"
-      },
-      "paddingInner": {
-        "syntax": "expression"
-      },
-      "paddingOuter": {
-        "syntax": "expression"
-      },
-      "align": {
-        "syntax": "expression"
-      },
-      "base": {
-        "syntax": "expression"
-      },
-      "exponent": {
-        "syntax": "expression"
-      },
-      "constant": {
-        "syntax": "expression"
-      },
-      "ticks": {
-        "syntax": "expression"
-      },
-      "tickValues": {
-        "syntax": "records"
-      },
-      "tickFormat": {
-        "syntax": "text"
-      },
-      "interpolator": {
-        "syntax": "identifier"
-      },
-      "scheme": {
-        "syntax": "identifier"
-      },
-      "interval": {
-        "syntax": "identifier"
-      }
-    },
-    "coordinate": {
-      "kind": {
-        "syntax": "identifier"
-      },
-      "projection": {
-        "syntax": "identifier"
-      },
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "originX": {
-        "syntax": "expression"
-      },
-      "originY": {
-        "syntax": "expression"
-      },
-      "startAngle": {
-        "syntax": "expression"
-      },
-      "endAngle": {
-        "syntax": "expression"
-      },
-      "innerRadius": {
-        "syntax": "expression"
-      },
-      "outerRadius": {
-        "syntax": "expression"
-      },
-      "base": {
-        "syntax": "expression"
-      },
-      "size": {
-        "syntax": "expression"
-      },
-      "flipY": {
-        "syntax": "scalar"
-      },
-      "clockwise": {
-        "syntax": "scalar"
-      },
-      "transpose": {
-        "syntax": "scalar"
-      },
-      "normalized": {
-        "syntax": "scalar"
-      },
-      "axes": {
-        "syntax": "records"
-      },
-      "domainX": {
-        "syntax": "number-list"
-      },
-      "domainY": {
-        "syntax": "number-list"
-      }
-    },
-    "layer": {
-      "data": {
-        "syntax": "identifier"
-      },
-      "mark": {
-        "syntax": "identifier"
-      },
-      "coordinate": {
-        "syntax": "identifier"
-      },
-      "theme": {
-        "syntax": "identifier"
-      },
-      "curve": {
-        "syntax": "identifier"
-      },
-      "orientation": {
-        "syntax": "identifier"
-      },
-      "anchor": {
-        "syntax": "identifier"
-      },
-      "transform": {
-        "syntax": "key-list"
-      },
-      "layout": {
-        "syntax": "key-list"
-      },
-      "guide": {
-        "syntax": "key-list"
-      },
-      "annotation": {
-        "syntax": "key-list"
-      },
-      "coordinateOptions": {
-        "syntax": "key-list"
-      },
-      "x0": {
-        "syntax": "expression"
-      },
-      "y0": {
-        "syntax": "expression"
-      },
-      "x1": {
-        "syntax": "expression"
-      },
-      "y1": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "colorIndex": {
-        "syntax": "scalar"
-      },
-      "layoutCoordinates": {
-        "syntax": "scalar"
-      },
-      "clip": {
-        "syntax": "scalar"
-      },
-      "cap": {
-        "syntax": "identifier"
-      },
-      "join": {
-        "syntax": "identifier"
-      },
-      "pattern": {
-        "syntax": "identifier"
-      },
-      "route": {
-        "syntax": "identifier"
-      },
-      "symbol": {
-        "syntax": "identifier"
-      },
-      "file": {
-        "syntax": "identifier"
-      },
-      "fill": {
-        "syntax": "paint"
-      },
-      "stroke": {
-        "syntax": "paint"
-      },
-      "size": {
-        "syntax": "key-list"
-      },
-      "opacity": {
-        "syntax": "key-list"
-      },
-      "rotate": {
-        "syntax": "key-list"
-      },
-      "tension": {
-        "syntax": "expression"
-      },
-      "alpha": {
-        "syntax": "expression"
-      },
-      "beta": {
-        "syntax": "expression"
-      },
-      "radius": {
-        "syntax": "expression"
-      },
-      "rx": {
-        "syntax": "expression"
-      },
-      "ry": {
-        "syntax": "expression"
-      },
-      "innerRadius": {
-        "syntax": "expression"
-      },
-      "outerRadius": {
-        "syntax": "expression"
-      },
-      "startAngle": {
-        "syntax": "expression"
-      },
-      "endAngle": {
-        "syntax": "expression"
-      },
-      "padAngle": {
-        "syntax": "expression"
-      },
-      "padRadius": {
-        "syntax": "expression"
-      },
-      "cornerRadius": {
-        "syntax": "expression"
-      },
-      "curvature": {
-        "syntax": "expression"
-      },
-      "concavity": {
-        "syntax": "expression"
-      },
-      "aspect": {
-        "syntax": "expression"
-      },
-      "targetRadius": {
-        "syntax": "expression"
-      },
-      "targetStartAngle": {
-        "syntax": "expression"
-      },
-      "targetEndAngle": {
-        "syntax": "expression"
-      },
-      "points": {
-        "syntax": "records"
-      },
-      "points2": {
-        "syntax": "records"
-      },
-      "via": {
-        "syntax": "records"
-      },
-      "extent": {
-        "syntax": "records"
-      },
-      "dash": {
-        "syntax": "records"
-      },
-      "closed": {
-        "syntax": "scalar"
-      },
-      "arrow": {
-        "syntax": "scalar"
-      },
-      "strokeWidth": {
-        "syntax": "style"
-      },
-      "arrowSize": {
-        "syntax": "style"
-      },
-      "x": {
-        "syntax": "key-list"
-      },
-      "y": {
-        "syntax": "key-list"
-      },
-      "x2": {
-        "syntax": "key-list"
-      },
-      "y2": {
-        "syntax": "key-list"
-      },
-      "shape": {
-        "syntax": "key-list"
-      },
-      "label": {
-        "syntax": "key-list"
-      },
-      "group": {
-        "syntax": "key-list"
-      },
-      "weight": {
-        "syntax": "key-list"
-      }
-    },
-    "layout/pie": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "startAngle": {
-        "syntax": "expression"
-      },
-      "endAngle": {
-        "syntax": "expression"
-      },
-      "padAngle": {
-        "syntax": "expression"
-      },
-      "innerRadius": {
-        "syntax": "expression"
-      },
-      "outerRadius": {
-        "syntax": "expression"
-      },
-      "cx": {
-        "syntax": "expression"
-      },
-      "cy": {
-        "syntax": "expression"
-      }
-    },
-    "layout/tree": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "separation": {
-        "syntax": "expression"
-      },
-      "cousinSeparation": {
-        "syntax": "expression"
-      }
-    },
-    "layout/cluster": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "separation": {
-        "syntax": "expression"
-      },
-      "cousinSeparation": {
-        "syntax": "expression"
-      }
-    },
-    "layout/treemap": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "tile": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "round": {
-        "syntax": "scalar"
-      },
-      "paddingInner": {
-        "syntax": "expression"
-      },
-      "paddingOuter": {
-        "syntax": "expression"
-      },
-      "paddingTop": {
-        "syntax": "expression"
-      },
-      "paddingRight": {
-        "syntax": "expression"
-      },
-      "paddingBottom": {
-        "syntax": "expression"
-      },
-      "paddingLeft": {
-        "syntax": "expression"
-      }
-    },
-    "layout/partition": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "round": {
-        "syntax": "scalar"
-      },
-      "padding": {
-        "syntax": "expression"
-      }
-    },
-    "layout/pack": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "padding": {
-        "syntax": "expression"
-      }
-    },
-    "layout/bundling": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "parent": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "sort": {
-        "syntax": "identifier"
-      },
-      "leaves": {
-        "syntax": "scalar"
-      },
-      "separation": {
-        "syntax": "expression"
-      },
-      "cousinSeparation": {
-        "syntax": "expression"
-      }
-    },
-    "layout/arc": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "source": {
-        "syntax": "identifier"
-      },
-      "target": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "origin": {
-        "syntax": "expression"
-      },
-      "vertical": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/dag": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "source": {
-        "syntax": "identifier"
-      },
-      "target": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "layerGap": {
-        "syntax": "expression"
-      },
-      "nodeGap": {
-        "syntax": "expression"
-      },
-      "sweeps": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/force": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "id": {
-        "syntax": "identifier"
-      },
-      "source": {
-        "syntax": "identifier"
-      },
-      "target": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "alpha": {
-        "syntax": "expression"
-      },
-      "velocityDecay": {
-        "syntax": "expression"
-      },
-      "charge": {
-        "syntax": "expression"
-      },
-      "distance": {
-        "syntax": "expression"
-      },
-      "radius": {
-        "syntax": "expression"
-      },
-      "seed": {
-        "syntax": "scalar"
-      },
-      "iterations": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/chord": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "source": {
-        "syntax": "identifier"
-      },
-      "target": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "padAngle": {
-        "syntax": "expression"
-      },
-      "radius": {
-        "syntax": "expression"
-      },
-      "transpose": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/sankey": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "source": {
-        "syntax": "identifier"
-      },
-      "target": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "align": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "nodeWidth": {
-        "syntax": "expression"
-      },
-      "nodePadding": {
-        "syntax": "expression"
-      },
-      "iterations": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/alluvial": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "stages": {
-        "syntax": "records"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "align": {
-        "syntax": "identifier"
-      },
-      "output": {
-        "syntax": "identifier"
-      },
-      "nodeWidth": {
-        "syntax": "expression"
-      },
-      "nodePadding": {
-        "syntax": "expression"
-      },
-      "iterations": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/projection": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "projection": {
-        "syntax": "identifier"
-      },
-      "scale": {
-        "syntax": "expression"
-      },
-      "translateX": {
-        "syntax": "expression"
-      },
-      "translateY": {
-        "syntax": "expression"
-      },
-      "rotateLongitude": {
-        "syntax": "expression"
-      },
-      "rotateLatitude": {
-        "syntax": "expression"
-      },
-      "rotateGamma": {
-        "syntax": "expression"
-      },
-      "centerLongitude": {
-        "syntax": "expression"
-      },
-      "centerLatitude": {
-        "syntax": "expression"
-      },
-      "reflectX": {
-        "syntax": "scalar"
-      },
-      "reflectY": {
-        "syntax": "scalar"
-      }
-    },
-    "layout/hexbin": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "radius": {
-        "syntax": "expression"
-      }
-    },
-    "layout/jitter": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "seed": {
-        "syntax": "scalar"
-      },
-      "amount": {
-        "syntax": "expression"
-      }
-    },
-    "layout/beeswarm": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "axis": {
-        "syntax": "identifier"
-      },
-      "radius": {
-        "syntax": "expression"
-      }
-    },
-    "layout/voronoi": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "x0": {
-        "syntax": "expression"
-      },
-      "y0": {
-        "syntax": "expression"
-      },
-      "x1": {
-        "syntax": "expression"
-      },
-      "y1": {
-        "syntax": "expression"
-      }
-    },
-    "layout/delaunay": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      }
-    },
-    "layout/hull": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      }
-    },
-    "layout/contour": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "columns": {
-        "syntax": "scalar"
-      },
-      "rows": {
-        "syntax": "scalar"
-      },
-      "thresholds": {
-        "syntax": "expression"
-      }
-    },
-    "layout/density": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "kernel": {
-        "syntax": "identifier"
-      },
-      "x0": {
-        "syntax": "expression"
-      },
-      "y0": {
-        "syntax": "expression"
-      },
-      "x1": {
-        "syntax": "expression"
-      },
-      "y1": {
-        "syntax": "expression"
-      },
-      "cellSize": {
-        "syntax": "expression"
-      },
-      "bandwidth": {
-        "syntax": "expression"
-      },
-      "thresholds": {
-        "syntax": "expression"
-      }
-    },
-    "layout/stack": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "keys": {
-        "syntax": "records"
-      },
-      "order": {
-        "syntax": "identifier"
-      },
-      "offset": {
-        "syntax": "identifier"
-      }
-    },
-    "layout/bin": {
-      "width": {
-        "syntax": "expression"
-      },
-      "height": {
-        "syntax": "expression"
-      },
-      "column": {
-        "syntax": "identifier"
-      },
-      "thresholds": {
-        "syntax": "records"
-      },
-      "min": {
-        "syntax": "expression"
-      },
-      "max": {
-        "syntax": "expression"
-      }
-    },
-    "guide/axis": {
-      "stroke": {
-        "syntax": "paint"
-      },
-      "fill": {
-        "syntax": "paint"
-      },
-      "gridStroke": {
-        "syntax": "paint"
-      },
-      "strokeWidth": {
-        "syntax": "expression"
-      },
-      "labelSize": {
-        "syntax": "expression"
-      },
-      "titleSize": {
-        "syntax": "expression"
-      },
-      "labelRotation": {
-        "syntax": "expression"
-      },
-      "at": {
-        "syntax": "expression"
-      },
-      "offset": {
-        "syntax": "expression"
-      },
-      "innerRadius": {
-        "syntax": "expression"
-      },
-      "outerRadius": {
-        "syntax": "expression"
-      },
-      "startAngle": {
-        "syntax": "expression"
-      },
-      "endAngle": {
-        "syntax": "expression"
-      },
-      "angle": {
-        "syntax": "expression"
-      },
-      "titleGap": {
-        "syntax": "expression"
-      },
-      "tickSize": {
-        "syntax": "expression"
-      },
-      "tickSizeOuter": {
-        "syntax": "expression"
-      },
-      "tickPadding": {
-        "syntax": "expression"
-      },
-      "minorSize": {
-        "syntax": "expression"
-      },
-      "gridLength": {
-        "syntax": "expression"
-      },
-      "labelRotate": {
-        "syntax": "expression"
-      },
-      "breakGap": {
-        "syntax": "expression"
-      },
-      "style": {
-        "syntax": "style"
-      },
-      "from": {
-        "syntax": "records"
-      },
-      "to": {
-        "syntax": "records"
-      },
-      "center": {
-        "syntax": "records"
-      },
-      "broken": {
-        "syntax": "number-list"
-      },
-      "domain": {
-        "syntax": "scalar"
-      },
-      "ticks": {
-        "syntax": "scalar"
-      },
-      "minor": {
-        "syntax": "scalar"
-      },
-      "minorTicks": {
-        "syntax": "scalar"
-      },
-      "grid": {
-        "syntax": "scalar"
-      },
-      "domainLine": {
-        "syntax": "scalar"
-      },
-      "labels": {
-        "syntax": "scalar"
-      },
-      "breakMarks": {
-        "syntax": "scalar"
-      },
-      "scale": {
-        "syntax": "identifier"
-      },
-      "orient": {
-        "syntax": "identifier"
-      },
-      "titleAnchor": {
-        "syntax": "identifier"
-      },
-      "labelAlign": {
-        "syntax": "identifier"
-      },
-      "title": {
-        "syntax": "text"
-      },
-      "tickFormat": {
-        "syntax": "text"
-      },
-      "tickValues": {
-        "syntax": "records"
-      },
-      "gridDash": {
-        "syntax": "records"
-      }
-    },
-    "guide/legend": {
-      "stroke": {
-        "syntax": "paint"
-      },
-      "fill": {
-        "syntax": "paint"
-      },
-      "gridStroke": {
-        "syntax": "paint"
-      },
-      "strokeWidth": {
-        "syntax": "expression"
-      },
-      "labelSize": {
-        "syntax": "expression"
-      },
-      "titleSize": {
-        "syntax": "expression"
-      },
-      "x": {
-        "syntax": "expression"
-      },
-      "y": {
-        "syntax": "expression"
-      },
-      "spacing": {
-        "syntax": "expression"
-      },
-      "offset": {
-        "syntax": "expression"
-      },
-      "itemGap": {
-        "syntax": "expression"
-      },
-      "swatchSize": {
-        "syntax": "expression"
-      },
-      "labelGap": {
-        "syntax": "expression"
-      },
-      "length": {
-        "syntax": "expression"
-      },
-      "style": {
-        "syntax": "style"
-      },
-      "tickValues": {
-        "syntax": "records"
-      },
-      "gridDash": {
-        "syntax": "records"
-      },
-      "at": {
-        "syntax": "records"
-      },
-      "tickFormat": {
-        "syntax": "text"
-      },
-      "format": {
-        "syntax": "text"
-      },
-      "title": {
-        "syntax": "text"
-      },
-      "channel": {
-        "syntax": "identifier"
-      },
-      "sizeMode": {
-        "syntax": "identifier"
-      },
-      "scale": {
-        "syntax": "identifier"
-      },
-      "kind": {
-        "syntax": "identifier"
-      },
-      "orient": {
-        "syntax": "identifier"
-      },
-      "symbol": {
-        "syntax": "identifier"
-      },
-      "columns": {
-        "syntax": "scalar"
-      },
-      "ticks": {
-        "syntax": "scalar"
-      },
-      "hatchLines": {
-        "syntax": "scalar"
-      }
-    },
-    "guide/grid": {
-      "stroke": {
-        "syntax": "paint"
-      },
-      "fill": {
-        "syntax": "paint"
-      },
-      "gridStroke": {
-        "syntax": "paint"
-      },
-      "strokeWidth": {
-        "syntax": "expression"
-      },
-      "labelSize": {
-        "syntax": "expression"
-      },
-      "titleSize": {
-        "syntax": "expression"
-      },
-      "labelRotation": {
-        "syntax": "expression"
-      },
-      "at": {
-        "syntax": "expression"
-      },
-      "offset": {
-        "syntax": "expression"
-      },
-      "innerRadius": {
-        "syntax": "expression"
-      },
-      "outerRadius": {
-        "syntax": "expression"
-      },
-      "startAngle": {
-        "syntax": "expression"
-      },
-      "endAngle": {
-        "syntax": "expression"
-      },
-      "angle": {
-        "syntax": "expression"
-      },
-      "titleGap": {
-        "syntax": "expression"
-      },
-      "tickSize": {
-        "syntax": "expression"
-      },
-      "tickSizeOuter": {
-        "syntax": "expression"
-      },
-      "tickPadding": {
-        "syntax": "expression"
-      },
-      "minorSize": {
-        "syntax": "expression"
-      },
-      "gridLength": {
-        "syntax": "expression"
-      },
-      "labelRotate": {
-        "syntax": "expression"
-      },
-      "breakGap": {
-        "syntax": "expression"
-      },
-      "style": {
-        "syntax": "style"
-      },
-      "from": {
-        "syntax": "records"
-      },
-      "to": {
-        "syntax": "records"
-      },
-      "center": {
-        "syntax": "records"
-      },
-      "broken": {
-        "syntax": "number-list"
-      },
-      "domain": {
-        "syntax": "scalar"
-      },
-      "ticks": {
-        "syntax": "scalar"
-      },
-      "minor": {
-        "syntax": "scalar"
-      },
-      "minorTicks": {
-        "syntax": "scalar"
-      },
-      "grid": {
-        "syntax": "scalar"
-      },
-      "domainLine": {
-        "syntax": "scalar"
-      },
-      "labels": {
-        "syntax": "scalar"
-      },
-      "breakMarks": {
-        "syntax": "scalar"
-      },
-      "scale": {
-        "syntax": "identifier"
-      },
-      "orient": {
-        "syntax": "identifier"
-      },
-      "titleAnchor": {
-        "syntax": "identifier"
-      },
-      "labelAlign": {
-        "syntax": "identifier"
-      },
-      "title": {
-        "syntax": "text"
-      },
-      "tickFormat": {
-        "syntax": "text"
-      },
-      "tickValues": {
-        "syntax": "records"
-      },
-      "gridDash": {
-        "syntax": "records"
-      }
-    },
-    "annotation": {
-      "fill": {
-        "syntax": "paint"
-      },
-      "stroke": {
-        "syntax": "paint"
-      },
-      "strokeWidth": {
-        "syntax": "expression"
-      },
-      "opacity": {
-        "syntax": "expression"
-      },
-      "rotation": {
-        "syntax": "expression"
-      },
-      "size": {
-        "syntax": "expression"
-      },
-      "fontSize": {
-        "syntax": "expression"
-      },
-      "anchor": {
-        "syntax": "identifier"
-      },
-      "cap": {
-        "syntax": "identifier"
-      },
-      "join": {
-        "syntax": "identifier"
-      },
-      "dash": {
-        "syntax": "number-list"
-      }
-    },
-    "transform/filter": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "operator": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "value"
-      }
-    },
-    "transform/sort": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "order": {
-        "syntax": "identifier"
-      },
-      "columns": {
-        "syntax": "records",
-        "items": "identifier"
-      },
-      "descending": {
-        "syntax": "scalar"
-      }
-    },
-    "transform/group": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "columns": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/aggregate": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "group": {
-        "syntax": "identifier"
-      },
-      "operation": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/rollup": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "group": {
-        "syntax": "identifier"
-      },
-      "operation": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/summary": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "group": {
-        "syntax": "identifier"
-      },
-      "operation": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/fold": {
-      "key": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "columns": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/pivot": {
-      "index": {
-        "syntax": "identifier"
-      },
-      "key": {
-        "syntax": "identifier"
-      },
-      "value": {
-        "syntax": "identifier"
-      },
-      "operation": {
-        "syntax": "identifier"
-      }
-    },
-    "transform/join": {
-      "table": {
-        "syntax": "identifier"
-      },
-      "left": {
-        "syntax": "identifier"
-      },
-      "right": {
-        "syntax": "identifier"
-      },
-      "prefix": {
-        "syntax": "identifier"
-      }
-    },
-    "transform/window": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "operation": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      },
-      "size": {
-        "syntax": "scalar"
-      },
-      "centred": {
-        "syntax": "scalar"
-      }
-    },
-    "transform/normalize": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "mode": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/cumulative": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "as": {
-        "syntax": "identifier"
-      },
-      "groupby": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/bin": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "min": {
-        "syntax": "expression"
-      },
-      "max": {
-        "syntax": "expression"
-      },
-      "thresholds": {
-        "syntax": "records"
-      }
-    },
-    "transform/stack": {
-      "order": {
-        "syntax": "identifier"
-      },
-      "offset": {
-        "syntax": "identifier"
-      },
-      "keys": {
-        "syntax": "records",
-        "items": "identifier"
-      }
-    },
-    "transform/quantile": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "probabilities": {
-        "syntax": "number-list"
-      }
-    },
-    "transform/kde": {
-      "column": {
-        "syntax": "identifier"
-      },
-      "kernel": {
-        "syntax": "identifier"
-      },
-      "min": {
-        "syntax": "expression"
-      },
-      "max": {
-        "syntax": "expression"
-      },
-      "bandwidth": {
-        "syntax": "expression"
-      },
-      "samples": {
-        "syntax": "scalar"
-      }
-    },
-    "transform/regression": {
-      "x": {
-        "syntax": "identifier"
-      },
-      "y": {
-        "syntax": "identifier"
-      },
-      "method": {
-        "syntax": "identifier"
-      },
-      "order": {
-        "syntax": "scalar"
+  "definitions": {
+    "OptionSyntaxCatalog": {
+      "const": {
+        "scale": {
+          "nice": {
+            "syntax": "scalar"
+          },
+          "clamp": {
+            "syntax": "scalar"
+          },
+          "round": {
+            "syntax": "scalar"
+          },
+          "reverse": {
+            "syntax": "scalar"
+          },
+          "unknown": {
+            "syntax": "value"
+          },
+          "padding": {
+            "syntax": "expression"
+          },
+          "paddingInner": {
+            "syntax": "expression"
+          },
+          "paddingOuter": {
+            "syntax": "expression"
+          },
+          "align": {
+            "syntax": "expression"
+          },
+          "base": {
+            "syntax": "expression"
+          },
+          "exponent": {
+            "syntax": "expression"
+          },
+          "constant": {
+            "syntax": "expression"
+          },
+          "ticks": {
+            "syntax": "expression"
+          },
+          "tickValues": {
+            "syntax": "records"
+          },
+          "tickFormat": {
+            "syntax": "text"
+          },
+          "interpolator": {
+            "syntax": "identifier"
+          },
+          "scheme": {
+            "syntax": "identifier"
+          },
+          "interval": {
+            "syntax": "identifier"
+          }
+        },
+        "coordinate": {
+          "kind": {
+            "syntax": "identifier"
+          },
+          "projection": {
+            "syntax": "identifier"
+          },
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "originX": {
+            "syntax": "expression"
+          },
+          "originY": {
+            "syntax": "expression"
+          },
+          "startAngle": {
+            "syntax": "expression"
+          },
+          "endAngle": {
+            "syntax": "expression"
+          },
+          "innerRadius": {
+            "syntax": "expression"
+          },
+          "outerRadius": {
+            "syntax": "expression"
+          },
+          "base": {
+            "syntax": "expression"
+          },
+          "size": {
+            "syntax": "expression"
+          },
+          "flipY": {
+            "syntax": "scalar"
+          },
+          "clockwise": {
+            "syntax": "scalar"
+          },
+          "transpose": {
+            "syntax": "scalar"
+          },
+          "normalized": {
+            "syntax": "scalar"
+          },
+          "axes": {
+            "syntax": "records"
+          },
+          "domainX": {
+            "syntax": "number-list"
+          },
+          "domainY": {
+            "syntax": "number-list"
+          }
+        },
+        "layer": {
+          "data": {
+            "syntax": "identifier"
+          },
+          "mark": {
+            "syntax": "identifier"
+          },
+          "coordinate": {
+            "syntax": "identifier"
+          },
+          "theme": {
+            "syntax": "identifier"
+          },
+          "curve": {
+            "syntax": "identifier"
+          },
+          "orientation": {
+            "syntax": "identifier"
+          },
+          "anchor": {
+            "syntax": "identifier"
+          },
+          "transform": {
+            "syntax": "key-list"
+          },
+          "layout": {
+            "syntax": "key-list"
+          },
+          "guide": {
+            "syntax": "key-list"
+          },
+          "annotation": {
+            "syntax": "key-list"
+          },
+          "coordinateOptions": {
+            "syntax": "key-list"
+          },
+          "x0": {
+            "syntax": "expression"
+          },
+          "y0": {
+            "syntax": "expression"
+          },
+          "x1": {
+            "syntax": "expression"
+          },
+          "y1": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "colorIndex": {
+            "syntax": "scalar"
+          },
+          "layoutCoordinates": {
+            "syntax": "scalar"
+          },
+          "clip": {
+            "syntax": "scalar"
+          },
+          "cap": {
+            "syntax": "identifier"
+          },
+          "join": {
+            "syntax": "identifier"
+          },
+          "pattern": {
+            "syntax": "identifier"
+          },
+          "route": {
+            "syntax": "identifier"
+          },
+          "symbol": {
+            "syntax": "identifier"
+          },
+          "file": {
+            "syntax": "identifier"
+          },
+          "fill": {
+            "syntax": "paint"
+          },
+          "stroke": {
+            "syntax": "paint"
+          },
+          "size": {
+            "syntax": "key-list"
+          },
+          "opacity": {
+            "syntax": "key-list"
+          },
+          "rotate": {
+            "syntax": "key-list"
+          },
+          "tension": {
+            "syntax": "expression"
+          },
+          "alpha": {
+            "syntax": "expression"
+          },
+          "beta": {
+            "syntax": "expression"
+          },
+          "radius": {
+            "syntax": "expression"
+          },
+          "rx": {
+            "syntax": "expression"
+          },
+          "ry": {
+            "syntax": "expression"
+          },
+          "innerRadius": {
+            "syntax": "expression"
+          },
+          "outerRadius": {
+            "syntax": "expression"
+          },
+          "startAngle": {
+            "syntax": "expression"
+          },
+          "endAngle": {
+            "syntax": "expression"
+          },
+          "padAngle": {
+            "syntax": "expression"
+          },
+          "padRadius": {
+            "syntax": "expression"
+          },
+          "cornerRadius": {
+            "syntax": "expression"
+          },
+          "curvature": {
+            "syntax": "expression"
+          },
+          "concavity": {
+            "syntax": "expression"
+          },
+          "aspect": {
+            "syntax": "expression"
+          },
+          "targetRadius": {
+            "syntax": "expression"
+          },
+          "targetStartAngle": {
+            "syntax": "expression"
+          },
+          "targetEndAngle": {
+            "syntax": "expression"
+          },
+          "points": {
+            "syntax": "records"
+          },
+          "points2": {
+            "syntax": "records"
+          },
+          "via": {
+            "syntax": "records"
+          },
+          "extent": {
+            "syntax": "records"
+          },
+          "dash": {
+            "syntax": "records"
+          },
+          "closed": {
+            "syntax": "scalar"
+          },
+          "arrow": {
+            "syntax": "scalar"
+          },
+          "strokeWidth": {
+            "syntax": "style"
+          },
+          "arrowSize": {
+            "syntax": "style"
+          },
+          "x": {
+            "syntax": "key-list"
+          },
+          "y": {
+            "syntax": "key-list"
+          },
+          "x2": {
+            "syntax": "key-list"
+          },
+          "y2": {
+            "syntax": "key-list"
+          },
+          "shape": {
+            "syntax": "key-list"
+          },
+          "label": {
+            "syntax": "key-list"
+          },
+          "group": {
+            "syntax": "key-list"
+          },
+          "weight": {
+            "syntax": "key-list"
+          }
+        },
+        "layout/pie": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "startAngle": {
+            "syntax": "expression"
+          },
+          "endAngle": {
+            "syntax": "expression"
+          },
+          "padAngle": {
+            "syntax": "expression"
+          },
+          "innerRadius": {
+            "syntax": "expression"
+          },
+          "outerRadius": {
+            "syntax": "expression"
+          },
+          "cx": {
+            "syntax": "expression"
+          },
+          "cy": {
+            "syntax": "expression"
+          }
+        },
+        "layout/tree": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "separation": {
+            "syntax": "expression"
+          },
+          "cousinSeparation": {
+            "syntax": "expression"
+          }
+        },
+        "layout/cluster": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "separation": {
+            "syntax": "expression"
+          },
+          "cousinSeparation": {
+            "syntax": "expression"
+          }
+        },
+        "layout/treemap": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "tile": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "round": {
+            "syntax": "scalar"
+          },
+          "paddingInner": {
+            "syntax": "expression"
+          },
+          "paddingOuter": {
+            "syntax": "expression"
+          },
+          "paddingTop": {
+            "syntax": "expression"
+          },
+          "paddingRight": {
+            "syntax": "expression"
+          },
+          "paddingBottom": {
+            "syntax": "expression"
+          },
+          "paddingLeft": {
+            "syntax": "expression"
+          }
+        },
+        "layout/partition": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "round": {
+            "syntax": "scalar"
+          },
+          "padding": {
+            "syntax": "expression"
+          }
+        },
+        "layout/pack": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "padding": {
+            "syntax": "expression"
+          }
+        },
+        "layout/bundling": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "parent": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "sort": {
+            "syntax": "identifier"
+          },
+          "leaves": {
+            "syntax": "scalar"
+          },
+          "separation": {
+            "syntax": "expression"
+          },
+          "cousinSeparation": {
+            "syntax": "expression"
+          }
+        },
+        "layout/arc": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "source": {
+            "syntax": "identifier"
+          },
+          "target": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "origin": {
+            "syntax": "expression"
+          },
+          "vertical": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/dag": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "source": {
+            "syntax": "identifier"
+          },
+          "target": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "layerGap": {
+            "syntax": "expression"
+          },
+          "nodeGap": {
+            "syntax": "expression"
+          },
+          "sweeps": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/force": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "id": {
+            "syntax": "identifier"
+          },
+          "source": {
+            "syntax": "identifier"
+          },
+          "target": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "alpha": {
+            "syntax": "expression"
+          },
+          "velocityDecay": {
+            "syntax": "expression"
+          },
+          "charge": {
+            "syntax": "expression"
+          },
+          "distance": {
+            "syntax": "expression"
+          },
+          "radius": {
+            "syntax": "expression"
+          },
+          "seed": {
+            "syntax": "scalar"
+          },
+          "iterations": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/chord": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "source": {
+            "syntax": "identifier"
+          },
+          "target": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "padAngle": {
+            "syntax": "expression"
+          },
+          "radius": {
+            "syntax": "expression"
+          },
+          "transpose": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/sankey": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "source": {
+            "syntax": "identifier"
+          },
+          "target": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "align": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "nodeWidth": {
+            "syntax": "expression"
+          },
+          "nodePadding": {
+            "syntax": "expression"
+          },
+          "iterations": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/alluvial": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "stages": {
+            "syntax": "records"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "align": {
+            "syntax": "identifier"
+          },
+          "output": {
+            "syntax": "identifier"
+          },
+          "nodeWidth": {
+            "syntax": "expression"
+          },
+          "nodePadding": {
+            "syntax": "expression"
+          },
+          "iterations": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/projection": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "projection": {
+            "syntax": "identifier"
+          },
+          "scale": {
+            "syntax": "expression"
+          },
+          "translateX": {
+            "syntax": "expression"
+          },
+          "translateY": {
+            "syntax": "expression"
+          },
+          "rotateLongitude": {
+            "syntax": "expression"
+          },
+          "rotateLatitude": {
+            "syntax": "expression"
+          },
+          "rotateGamma": {
+            "syntax": "expression"
+          },
+          "centerLongitude": {
+            "syntax": "expression"
+          },
+          "centerLatitude": {
+            "syntax": "expression"
+          },
+          "reflectX": {
+            "syntax": "scalar"
+          },
+          "reflectY": {
+            "syntax": "scalar"
+          }
+        },
+        "layout/hexbin": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "radius": {
+            "syntax": "expression"
+          }
+        },
+        "layout/jitter": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "seed": {
+            "syntax": "scalar"
+          },
+          "amount": {
+            "syntax": "expression"
+          }
+        },
+        "layout/beeswarm": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "axis": {
+            "syntax": "identifier"
+          },
+          "radius": {
+            "syntax": "expression"
+          }
+        },
+        "layout/voronoi": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "x0": {
+            "syntax": "expression"
+          },
+          "y0": {
+            "syntax": "expression"
+          },
+          "x1": {
+            "syntax": "expression"
+          },
+          "y1": {
+            "syntax": "expression"
+          }
+        },
+        "layout/delaunay": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          }
+        },
+        "layout/hull": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          }
+        },
+        "layout/contour": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "columns": {
+            "syntax": "scalar"
+          },
+          "rows": {
+            "syntax": "scalar"
+          },
+          "thresholds": {
+            "syntax": "expression"
+          }
+        },
+        "layout/density": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "kernel": {
+            "syntax": "identifier"
+          },
+          "x0": {
+            "syntax": "expression"
+          },
+          "y0": {
+            "syntax": "expression"
+          },
+          "x1": {
+            "syntax": "expression"
+          },
+          "y1": {
+            "syntax": "expression"
+          },
+          "cellSize": {
+            "syntax": "expression"
+          },
+          "bandwidth": {
+            "syntax": "expression"
+          },
+          "thresholds": {
+            "syntax": "expression"
+          }
+        },
+        "layout/stack": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "keys": {
+            "syntax": "records"
+          },
+          "order": {
+            "syntax": "identifier"
+          },
+          "offset": {
+            "syntax": "identifier"
+          }
+        },
+        "layout/bin": {
+          "width": {
+            "syntax": "expression"
+          },
+          "height": {
+            "syntax": "expression"
+          },
+          "column": {
+            "syntax": "identifier"
+          },
+          "thresholds": {
+            "syntax": "records"
+          },
+          "min": {
+            "syntax": "expression"
+          },
+          "max": {
+            "syntax": "expression"
+          }
+        },
+        "guide/axis": {
+          "stroke": {
+            "syntax": "paint"
+          },
+          "fill": {
+            "syntax": "paint"
+          },
+          "gridStroke": {
+            "syntax": "paint"
+          },
+          "strokeWidth": {
+            "syntax": "expression"
+          },
+          "labelSize": {
+            "syntax": "expression"
+          },
+          "titleSize": {
+            "syntax": "expression"
+          },
+          "labelRotation": {
+            "syntax": "expression"
+          },
+          "at": {
+            "syntax": "expression"
+          },
+          "offset": {
+            "syntax": "expression"
+          },
+          "innerRadius": {
+            "syntax": "expression"
+          },
+          "outerRadius": {
+            "syntax": "expression"
+          },
+          "startAngle": {
+            "syntax": "expression"
+          },
+          "endAngle": {
+            "syntax": "expression"
+          },
+          "angle": {
+            "syntax": "expression"
+          },
+          "titleGap": {
+            "syntax": "expression"
+          },
+          "tickSize": {
+            "syntax": "expression"
+          },
+          "tickSizeOuter": {
+            "syntax": "expression"
+          },
+          "tickPadding": {
+            "syntax": "expression"
+          },
+          "minorSize": {
+            "syntax": "expression"
+          },
+          "gridLength": {
+            "syntax": "expression"
+          },
+          "labelRotate": {
+            "syntax": "expression"
+          },
+          "breakGap": {
+            "syntax": "expression"
+          },
+          "style": {
+            "syntax": "style"
+          },
+          "from": {
+            "syntax": "records"
+          },
+          "to": {
+            "syntax": "records"
+          },
+          "center": {
+            "syntax": "records"
+          },
+          "broken": {
+            "syntax": "number-list"
+          },
+          "domain": {
+            "syntax": "scalar"
+          },
+          "ticks": {
+            "syntax": "scalar"
+          },
+          "minor": {
+            "syntax": "scalar"
+          },
+          "minorTicks": {
+            "syntax": "scalar"
+          },
+          "grid": {
+            "syntax": "scalar"
+          },
+          "domainLine": {
+            "syntax": "scalar"
+          },
+          "labels": {
+            "syntax": "scalar"
+          },
+          "breakMarks": {
+            "syntax": "scalar"
+          },
+          "scale": {
+            "syntax": "identifier"
+          },
+          "orient": {
+            "syntax": "identifier"
+          },
+          "titleAnchor": {
+            "syntax": "identifier"
+          },
+          "labelAlign": {
+            "syntax": "identifier"
+          },
+          "title": {
+            "syntax": "text"
+          },
+          "tickFormat": {
+            "syntax": "text"
+          },
+          "tickValues": {
+            "syntax": "records"
+          },
+          "gridDash": {
+            "syntax": "records"
+          }
+        },
+        "guide/legend": {
+          "stroke": {
+            "syntax": "paint"
+          },
+          "fill": {
+            "syntax": "paint"
+          },
+          "gridStroke": {
+            "syntax": "paint"
+          },
+          "strokeWidth": {
+            "syntax": "expression"
+          },
+          "labelSize": {
+            "syntax": "expression"
+          },
+          "titleSize": {
+            "syntax": "expression"
+          },
+          "x": {
+            "syntax": "expression"
+          },
+          "y": {
+            "syntax": "expression"
+          },
+          "spacing": {
+            "syntax": "expression"
+          },
+          "offset": {
+            "syntax": "expression"
+          },
+          "itemGap": {
+            "syntax": "expression"
+          },
+          "swatchSize": {
+            "syntax": "expression"
+          },
+          "labelGap": {
+            "syntax": "expression"
+          },
+          "length": {
+            "syntax": "expression"
+          },
+          "style": {
+            "syntax": "style"
+          },
+          "tickValues": {
+            "syntax": "records"
+          },
+          "gridDash": {
+            "syntax": "records"
+          },
+          "at": {
+            "syntax": "records"
+          },
+          "tickFormat": {
+            "syntax": "text"
+          },
+          "format": {
+            "syntax": "text"
+          },
+          "title": {
+            "syntax": "text"
+          },
+          "channel": {
+            "syntax": "identifier"
+          },
+          "sizeMode": {
+            "syntax": "identifier"
+          },
+          "scale": {
+            "syntax": "identifier"
+          },
+          "kind": {
+            "syntax": "identifier"
+          },
+          "orient": {
+            "syntax": "identifier"
+          },
+          "symbol": {
+            "syntax": "identifier"
+          },
+          "columns": {
+            "syntax": "scalar"
+          },
+          "ticks": {
+            "syntax": "scalar"
+          },
+          "hatchLines": {
+            "syntax": "scalar"
+          }
+        },
+        "guide/grid": {
+          "stroke": {
+            "syntax": "paint"
+          },
+          "fill": {
+            "syntax": "paint"
+          },
+          "gridStroke": {
+            "syntax": "paint"
+          },
+          "strokeWidth": {
+            "syntax": "expression"
+          },
+          "labelSize": {
+            "syntax": "expression"
+          },
+          "titleSize": {
+            "syntax": "expression"
+          },
+          "labelRotation": {
+            "syntax": "expression"
+          },
+          "at": {
+            "syntax": "expression"
+          },
+          "offset": {
+            "syntax": "expression"
+          },
+          "innerRadius": {
+            "syntax": "expression"
+          },
+          "outerRadius": {
+            "syntax": "expression"
+          },
+          "startAngle": {
+            "syntax": "expression"
+          },
+          "endAngle": {
+            "syntax": "expression"
+          },
+          "angle": {
+            "syntax": "expression"
+          },
+          "titleGap": {
+            "syntax": "expression"
+          },
+          "tickSize": {
+            "syntax": "expression"
+          },
+          "tickSizeOuter": {
+            "syntax": "expression"
+          },
+          "tickPadding": {
+            "syntax": "expression"
+          },
+          "minorSize": {
+            "syntax": "expression"
+          },
+          "gridLength": {
+            "syntax": "expression"
+          },
+          "labelRotate": {
+            "syntax": "expression"
+          },
+          "breakGap": {
+            "syntax": "expression"
+          },
+          "style": {
+            "syntax": "style"
+          },
+          "from": {
+            "syntax": "records"
+          },
+          "to": {
+            "syntax": "records"
+          },
+          "center": {
+            "syntax": "records"
+          },
+          "broken": {
+            "syntax": "number-list"
+          },
+          "domain": {
+            "syntax": "scalar"
+          },
+          "ticks": {
+            "syntax": "scalar"
+          },
+          "minor": {
+            "syntax": "scalar"
+          },
+          "minorTicks": {
+            "syntax": "scalar"
+          },
+          "grid": {
+            "syntax": "scalar"
+          },
+          "domainLine": {
+            "syntax": "scalar"
+          },
+          "labels": {
+            "syntax": "scalar"
+          },
+          "breakMarks": {
+            "syntax": "scalar"
+          },
+          "scale": {
+            "syntax": "identifier"
+          },
+          "orient": {
+            "syntax": "identifier"
+          },
+          "titleAnchor": {
+            "syntax": "identifier"
+          },
+          "labelAlign": {
+            "syntax": "identifier"
+          },
+          "title": {
+            "syntax": "text"
+          },
+          "tickFormat": {
+            "syntax": "text"
+          },
+          "tickValues": {
+            "syntax": "records"
+          },
+          "gridDash": {
+            "syntax": "records"
+          }
+        },
+        "annotation": {
+          "fill": {
+            "syntax": "paint"
+          },
+          "stroke": {
+            "syntax": "paint"
+          },
+          "strokeWidth": {
+            "syntax": "expression"
+          },
+          "opacity": {
+            "syntax": "expression"
+          },
+          "rotation": {
+            "syntax": "expression"
+          },
+          "size": {
+            "syntax": "expression"
+          },
+          "fontSize": {
+            "syntax": "expression"
+          },
+          "anchor": {
+            "syntax": "identifier"
+          },
+          "cap": {
+            "syntax": "identifier"
+          },
+          "join": {
+            "syntax": "identifier"
+          },
+          "dash": {
+            "syntax": "number-list"
+          }
+        },
+        "transform/filter": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "operator": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "value"
+          }
+        },
+        "transform/sort": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "order": {
+            "syntax": "identifier"
+          },
+          "columns": {
+            "syntax": "records",
+            "items": "identifier"
+          },
+          "descending": {
+            "syntax": "scalar"
+          }
+        },
+        "transform/group": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "columns": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/aggregate": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "group": {
+            "syntax": "identifier"
+          },
+          "operation": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/rollup": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "group": {
+            "syntax": "identifier"
+          },
+          "operation": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/summary": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "group": {
+            "syntax": "identifier"
+          },
+          "operation": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/fold": {
+          "key": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "columns": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/pivot": {
+          "index": {
+            "syntax": "identifier"
+          },
+          "key": {
+            "syntax": "identifier"
+          },
+          "value": {
+            "syntax": "identifier"
+          },
+          "operation": {
+            "syntax": "identifier"
+          }
+        },
+        "transform/join": {
+          "table": {
+            "syntax": "identifier"
+          },
+          "left": {
+            "syntax": "identifier"
+          },
+          "right": {
+            "syntax": "identifier"
+          },
+          "prefix": {
+            "syntax": "identifier"
+          }
+        },
+        "transform/window": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "operation": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          },
+          "size": {
+            "syntax": "scalar"
+          },
+          "centred": {
+            "syntax": "scalar"
+          }
+        },
+        "transform/normalize": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "mode": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/cumulative": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "as": {
+            "syntax": "identifier"
+          },
+          "groupby": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/bin": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "min": {
+            "syntax": "expression"
+          },
+          "max": {
+            "syntax": "expression"
+          },
+          "thresholds": {
+            "syntax": "records"
+          }
+        },
+        "transform/stack": {
+          "order": {
+            "syntax": "identifier"
+          },
+          "offset": {
+            "syntax": "identifier"
+          },
+          "keys": {
+            "syntax": "records",
+            "items": "identifier"
+          }
+        },
+        "transform/quantile": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "probabilities": {
+            "syntax": "number-list"
+          }
+        },
+        "transform/kde": {
+          "column": {
+            "syntax": "identifier"
+          },
+          "kernel": {
+            "syntax": "identifier"
+          },
+          "min": {
+            "syntax": "expression"
+          },
+          "max": {
+            "syntax": "expression"
+          },
+          "bandwidth": {
+            "syntax": "expression"
+          },
+          "samples": {
+            "syntax": "scalar"
+          }
+        },
+        "transform/regression": {
+          "x": {
+            "syntax": "identifier"
+          },
+          "y": {
+            "syntax": "identifier"
+          },
+          "method": {
+            "syntax": "identifier"
+          },
+          "order": {
+            "syntax": "scalar"
+          }
+        }
       }
     }
   }

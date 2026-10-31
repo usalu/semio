@@ -12,12 +12,12 @@ function remember(key, result) {
   const size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
   if (size > limit) return;
   while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
-  facts.set(key, { imports: result, bytes: size }); bytes += size;
+  facts.set(key, { value: result, bytes: size }); bytes += size;
 }
 
 /** 🌳️ Collects the module specifiers one syntax tree names for a scope. */
 function scopedImports(compiler, tree, scope) {
-  const imports = new Set(), add = node => { if (node && compiler.isStringLiteralLike(node)) imports.add(node.text); };
+  const all = new Set(), imports = new Set(), requires = new Set(), add = (node, mode = "imports") => { if (node && compiler.isStringLiteralLike(node)) { all.add(node.text); (mode === "requires" ? requires : imports).add(node.text); } };
   const visit = node => {
     if (scope !== "all" && compiler.isIfStatement(node) && compiler.isPropertyAccessExpression(node.expression) && node.expression.name.text === "vitest" && compiler.isMetaProperty(node.expression.expression) && node.expression.expression.keywordToken === compiler.SyntaxKind.ImportKeyword) { if (node.elseStatement) visit(node.elseStatement); return; }
     if (compiler.isImportTypeNode(node)) { if(scope !== "command" && compiler.isLiteralTypeNode(node.argument))add(node.argument.literal); return; }
@@ -26,41 +26,48 @@ function scopedImports(compiler, tree, scope) {
       if (scope !== "command" || !clause?.isTypeOnly && !(bindings && compiler.isNamedImports(bindings) && !clause.name && bindings.elements.length && bindings.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier);
       return;
     }
-    if (compiler.isExportDeclaration(node)) { const clause = node.exportClause; if (scope !== "command" || !node.isTypeOnly && !(clause && compiler.isNamedExports(clause) && clause.elements.length && clause.elements.every(element => element.isTypeOnly))) add(node.moduleSpecifier); return; }
-    if (compiler.isImportEqualsDeclaration(node)) { if ((scope !== "command" || !node.isTypeOnly) && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression); return; }
+    if (compiler.isExportDeclaration(node)) { if (scope !== "command" || !node.isTypeOnly) add(node.moduleSpecifier); return; }
+    if (compiler.isImportEqualsDeclaration(node)) { if ((scope !== "command" || !node.isTypeOnly) && compiler.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression, "requires"); return; }
     if (compiler.isCallExpression(node)) {
       const expression = node.expression;
-      if (expression.kind === compiler.SyntaxKind.ImportKeyword || compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0]);
+      if (expression.kind === compiler.SyntaxKind.ImportKeyword) add(node.arguments[0]);
+      else if (compiler.isIdentifier(expression) && expression.text === "require" || compiler.isCallExpression(expression) && compiler.isIdentifier(expression.expression) && expression.expression.text === "createRequire") add(node.arguments[0], "requires");
     }
     compiler.forEachChild(node, visit);
   };
   visit(tree);
-  return Object.freeze([...imports]);
+  return Object.freeze({ all: Object.freeze([...all]), imports: Object.freeze([...imports]), requires: Object.freeze([...requires]) });
 }
 
-const SCOPES = ["all", "command", "production"];
+const SCOPES = ["all", "command", "production"], EMPTY_FACTS = Object.freeze({ all: Object.freeze([]), imports: Object.freeze([]), requires: Object.freeze([]) });
 
 /** 🔗️ Returns immutable content-derived runtime module facts behind an owned string interface; one parse answers every scope of the same content.
  * @param {string} path
  * @param {string} source
- * @returns {string[]}
+ * @returns {{all: readonly string[], imports: readonly string[], requires: readonly string[]}}
  */
-function sourceImports(path, source, scope = "all") {
+function sourceFacts(path, source, scope = "all") {
   const base = createHash("sha256").update(JSON.stringify([path, source])).digest("hex"), key = `${base}:${scope}`, previous = facts.get(key);
-  if (previous) { hits++; facts.delete(key); facts.set(key, previous); return [...previous.imports]; }
+  if (previous) { hits++; facts.delete(key); facts.set(key, previous); return previous.value; }
   misses++;
   const declaration = /\.d\.[cm]?ts$/.test(path);
-  if (/\.json$/.test(path) || scope === "command" && declaration) { const result = Object.freeze([]); remember(key, result); return [...result]; }
+  if (/\.json$/.test(path) || scope === "command" && declaration) { remember(key, EMPTY_FACTS); return EMPTY_FACTS; }
   const compiler = parserTypescriptV1(), tree = compiler.createSourceFile(path, source, compiler.ScriptTarget.Latest, false);
   let answer;
   for (const each of SCOPES) {
-    const result = each === "command" && declaration ? Object.freeze([]) : scopedImports(compiler, tree, each);
+    const result = each === "command" && declaration ? EMPTY_FACTS : scopedImports(compiler, tree, each);
     remember(`${base}:${each}`, result);
     if (each === scope) answer = result;
   }
-  return [...answer];
+  return answer;
 }
 
+
+/** 🧺️ Copies the ordered union without exposing immutable cached facts. */
+function sourceImports(path, source, scope = "all") { return [...sourceFacts(path, source, scope).all]; }
+
+/** 🧭️ Retains the syntax-selected import and require modes behind an owned string interface. */
+export function runtimeModuleSourceReferences(path, source) { const value = sourceFacts(path, source, "command"); return Object.freeze({ version: 1, imports: Object.freeze([...value.imports]), requires: Object.freeze([...value.requires]) }); }
 
 /** 🧭️ Projects canonical runtime module facts onto relative command source imports. */
 export function commandSourceImports(path, source) { return sourceImports(path, source, "command").filter(specifier => specifier.startsWith(".")); }
@@ -81,7 +88,7 @@ export function productionModuleSourceImports(path, source) {
 export function commandUrlReferences(path, source) {
   if (!/new\s+URL\s*\(|\b(?:join|resolve)\s*\(/u.test(source) || !/import\.meta\.(?:url|dir|dirname)\b/u.test(source) || /\.json$|\.d\.[cm]?ts$/u.test(path)) return [];
   const key = createHash("sha256").update(JSON.stringify([path, source, "urls-nested"])).digest("hex"), previous = facts.get(key);
-  if (previous) { hits++; facts.delete(key); facts.set(key, previous); return [...previous.imports]; }
+  if (previous) { hits++; facts.delete(key); facts.set(key, previous); return [...previous.value]; }
   misses++;
   const compiler = parserTypescriptV1(), urls = new Set(), isImportMetaUrl = node => compiler.isPropertyAccessExpression(node) && node.name.text === "url" && compiler.isMetaProperty(node.expression) && node.expression.keywordToken === compiler.SyntaxKind.ImportKeyword, mentionsImportMetaUrl = node => isImportMetaUrl(node) || compiler.forEachChild(node, child => mentionsImportMetaUrl(child) || undefined) === true, calleeName = node => compiler.isIdentifier(node) ? node.text : compiler.isPropertyAccessExpression(node) ? node.name.text : "", isJoin = node => ["join", "resolve"].includes(calleeName(node)), isModuleDirectory = node => compiler.isPropertyAccessExpression(node) && compiler.isMetaProperty(node.expression) && node.expression.keywordToken === compiler.SyntaxKind.ImportKeyword && ["dir", "dirname"].includes(node.name.text) || compiler.isCallExpression(node) && calleeName(node.expression) === "dirname" && node.arguments.length === 1 && compiler.isCallExpression(node.arguments[0]) && calleeName(node.arguments[0].expression) === "fileURLToPath" && node.arguments[0].arguments.length === 1 && isImportMetaUrl(node.arguments[0].arguments[0]), visit = node => {
     if (compiler.isNewExpression(node) && compiler.isIdentifier(node.expression) && node.expression.text === "URL" && node.arguments?.length >= 2 && compiler.isStringLiteralLike(node.arguments[0]) && mentionsImportMetaUrl(node.arguments[1])) urls.add(node.arguments[0].text);
@@ -92,7 +99,7 @@ export function commandUrlReferences(path, source) {
   const result = Object.freeze([...urls]), size = Buffer.byteLength(key) + Buffer.byteLength(JSON.stringify(result)) + 192;
   if (size <= limit) {
     while (bytes + size > limit) { const oldest = facts.keys().next().value; bytes -= facts.get(oldest).bytes; facts.delete(oldest); }
-    facts.set(key, { imports: result, bytes: size }); bytes += size;
+    facts.set(key, { value: result, bytes: size }); bytes += size;
   }
   return [...result];
 }

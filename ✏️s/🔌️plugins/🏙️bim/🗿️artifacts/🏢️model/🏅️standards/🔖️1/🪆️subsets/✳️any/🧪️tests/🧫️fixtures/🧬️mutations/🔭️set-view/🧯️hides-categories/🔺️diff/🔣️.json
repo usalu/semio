@@ -2,10 +2,12 @@
   "views": {
     "v-section": {
       "entry": "Patched",
-      "hidden": [
-        "Beams",
-        "Grids"
-      ]
+      "value": {
+        "hidden": [
+          "Beams",
+          "Grids"
+        ]
+      }
     }
   }
 }

@@ -1,0 +1,2320 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "retractable-bollard",
+  "category": "objects",
+  "title": {
+   "en": "Retractable Bollard (Section)",
+   "de": "Versenkbarer Poller (Schnitt)"
+  },
+  "summary": {
+   "en": "An electro-hydraulic rising bollard of 0.20 m diameter, drawn as a section: 0.65 m raised above the ground, 1.25 m of sleeve below it with the cylinder and a power unit that heats up while the shaft moves; raised, lowered, moving and nudged.",
+   "de": "Ein elektrohydraulischer Hubpoller mit 0,20 m Durchmesser, als Schnitt gezeichnet: 0,65 m ausgefahren über dem Boden, darunter 1,25 m Hülse mit Zylinder und einer Antriebseinheit, die sich bei Schaftbewegung erwärmt; ausgefahren, abgesenkt, fahrend und angestoßen."
+  },
+  "tags": [
+   "retractable-bollard",
+   "rising-bollard",
+   "hydraulic",
+   "traffic-control",
+   "section",
+   "access-control"
+  ],
+  "provenance": {
+   "author": "Semio staffage content (NW-O)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "iwa-14-1",
+     "citation": "IWA 14-1:2013 Vehicle security barriers - Part 1: Performance requirement, vehicle impact test method and performance rating (context: this asset is a traffic-control bollard and carries no impact rating)."
+    },
+    {
+     "id": "en-1991-1-7",
+     "citation": "EN 1991-1-7:2006 Eurocode 1: Actions on structures, Part 1-7: Accidental actions (impact on structures; the 1.5 kN nudge load here is far below any impact design value)."
+    },
+    {
+     "id": "iso-10456-2007",
+     "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel, cast iron, polymers)."
+    },
+    {
+     "id": "incropera-2018",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties, conduction to soil, cylinder convection)."
+    },
+    {
+     "id": "bollard-class",
+     "citation": "Typical automatic rising bollards of 0.20 m diameter, 0.65 m raised height, electro-hydraulic drive with a 0.75 kW pump motor and a lift time of about 5 s from manufacturer datasheets of the product class; authored-estimate summary, no single datasheet."
+    }
+   ],
+   "notes": {
+    "en": "Section elevation: the sleeve is cut so the lowered shaft stays visible, hence the 1.90 m total height (0.65 m above, 1.25 m below ground) and the 0.56 m width including the power unit. Mass 112 kg (shaft 38, sleeve and frame 42, cylinder and power unit 32) and the 0.75 kW pump are class data (authored estimates). Pump heat 560 W = 75 % of the 0.75 kW input in the unit while it runs; lift time 5 s. The bollard carries no impact rating (IWA 14-1 is context only).",
+    "de": "Schnittansicht: die Hülse ist aufgeschnitten, damit der abgesenkte Schaft sichtbar bleibt, daher die Gesamthöhe 1,90 m (0,65 m über, 1,25 m unter dem Boden) und die Breite 0,56 m einschließlich der Antriebseinheit. Masse 112 kg (Schaft 38, Hülse und Rahmen 42, Zylinder und Antriebseinheit 32) und die 0,75-kW-Pumpe sind Klassenwerte (Schätzwerte). Pumpenwärme 560 W = 75 % der 0,75 kW Eingang in der Einheit, solange sie läuft; Hubzeit 5 s. Der Poller hat keine Anprallklasse (IWA 14-1 nur als Kontext)."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.9,
+   "widthM": 0.56,
+   "depthM": 0.4,
+   "massKg": 112
+  },
+  "materials": [
+   {
+    "id": "steel-grey",
+    "title": {
+     "en": "Grey painted steel tube",
+     "de": "Grau lackiertes Stahlrohr"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "retro-film",
+    "title": {
+     "en": "Retro-reflective white film",
+     "de": "Retroreflektierende weiße Folie"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.35,
+    "densityKgM3": 1400,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1200,
+    "source": "authored-estimate",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "pc-amber",
+    "title": {
+     "en": "Amber polycarbonate lens",
+     "de": "Bernsteinfarbene Polycarbonatlinse"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 1200,
+    "conductivityWmK": 0.2,
+    "specificHeatJKgK": 1200,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "cast-iron-frame",
+    "title": {
+     "en": "Painted cast-iron cover frame",
+     "de": "Lackierter Gusseisen-Abdeckrahmen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7200,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 500,
+    "elasticModulusPa": 100000000000,
+    "source": "literature",
+    "reference": "iso-10456-2007"
+   },
+   {
+    "id": "steel-sleeve",
+    "title": {
+     "en": "Galvanised steel sleeve",
+     "de": "Verzinkte Stahlhülse"
+    },
+    "emissivity": 0.28,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "elasticModulusPa": 210000000000,
+    "source": "authored-estimate",
+    "reference": "incropera-2018"
+   },
+   {
+    "id": "steel-hyd",
+    "title": {
+     "en": "Painted steel power unit housing",
+     "de": "Lackiertes Stahlgehäuse der Hydraulikeinheit"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 450,
+    "source": "authored-estimate",
+    "reference": "incropera-2018"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "sleeve",
+   "bones": [
+    {
+     "id": "sleeve",
+     "parent": null,
+     "title": {
+      "en": "Buried sleeve and cover frame (cut)",
+      "de": "Eingegrabene Hülse und Abdeckrahmen (geschnitten)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.25,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 42,
+      "comX": 0,
+      "comY": -0.6,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "bollard-class"
+     }
+    },
+    {
+     "id": "hydraulic",
+     "parent": "sleeve",
+     "title": {
+      "en": "Hydraulic cylinder and power unit",
+      "de": "Hydraulikzylinder und Antriebseinheit"
+     },
+     "x": 0.2,
+     "y": -0.8,
+     "angleDeg": 0,
+     "lengthM": 0.4,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 32,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "bollard-class"
+     }
+    },
+    {
+     "id": "shaft",
+     "parent": "sleeve",
+     "title": {
+      "en": "Rising shaft (rest = lowered)",
+      "de": "Hubrohr (Ruhelage = abgesenkt)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.15,
+     "joint": {
+      "type": "prismatic",
+      "minM": 0,
+      "maxM": 0.65,
+      "axisDeg": 90
+     },
+     "mass": {
+      "kg": 38,
+      "comX": 0,
+      "comY": -0.55,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "bollard-class"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "sleeve-fixed",
+    "bone": "sleeve",
+    "x": 0,
+    "y": 0,
+    "kind": "support",
+    "title": {
+     "en": "Sleeve fixed in the concrete foundation at ground level",
+     "de": "Hülse im Betonfundament in Geländehöhe eingespannt"
+    },
+    "support": "fixed",
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 0.3
+   },
+   {
+    "id": "push-point",
+    "bone": "shaft",
+    "x": 0,
+    "y": -0.1,
+    "kind": "load",
+    "title": {
+     "en": "Contact point 0.55 m above ground (raised)",
+     "de": "Kontaktpunkt 0,55 m über Boden (ausgefahren)"
+    }
+   },
+   {
+    "id": "beacon-glow",
+    "bone": "shaft",
+    "x": 0,
+    "y": -0.07,
+    "kind": "emitter",
+    "title": {
+     "en": "Beacon ring",
+     "de": "Leuchtring"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "chevron",
+      "title": {
+       "en": "Chevron band",
+       "de": "Chevronband"
+      },
+      "pattern": "lines",
+      "angleDeg": 45,
+      "spacingMm": 0.5,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.91,
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      },
+      {
+       "id": "shaft-highlight",
+       "bone": "shaft",
+       "role": "texture",
+       "z": 3.7,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.065,
+         -1.1
+        ],
+        [
+         -0.065,
+         -0.28
+        ]
+       ],
+       "closed": false,
+       "region": "shaft-steel"
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.24,
+       "w": 0.2,
+       "h": 0.11,
+       "region": "reflector-band",
+       "material": "retro-film",
+       "hatch": "chevron"
+      },
+      {
+       "id": "beacon",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.13,
+       "w": 0.2,
+       "h": 0.06,
+       "region": "beacon-led",
+       "material": "pc-amber"
+      },
+      {
+       "id": "led-0",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": -0.06,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01,
+       "region": "beacon-led"
+      },
+      {
+       "id": "led-1",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01,
+       "region": "beacon-led"
+      },
+      {
+       "id": "led-2",
+       "bone": "shaft",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "ellipse",
+       "cx": 0.06,
+       "cy": -0.1,
+       "rx": 0.01,
+       "ry": 0.01,
+       "region": "beacon-led"
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.1 -0.07 C -0.1 -0.02 -0.05 0 0 0 C 0.05 0 0.1 -0.02 0.1 -0.07 Z",
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      },
+      {
+       "id": "cap-seam",
+       "bone": "shaft",
+       "role": "texture",
+       "z": 3.8,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.09,
+         -0.05
+        ],
+        [
+         0.09,
+         -0.05
+        ]
+       ],
+       "closed": false,
+       "region": "shaft-steel"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15,
+         0
+        ],
+        [
+         -0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "sleeve-steel",
+       "penMm": 0.25
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "frame-bolt-0",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": -0.175,
+       "cy": -0.02,
+       "rx": 0.01,
+       "ry": 0.01,
+       "region": "cover-frame"
+      },
+      {
+       "id": "frame-bolt-1",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.2,
+       "kind": "ellipse",
+       "cx": 0.175,
+       "cy": -0.02,
+       "rx": 0.01,
+       "ry": 0.01,
+       "region": "cover-frame"
+      },
+      {
+       "id": "brush-seal",
+       "bone": "sleeve",
+       "role": "texture",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         -0.015
+        ],
+        [
+         -0.145,
+         -0.015
+        ]
+       ],
+       "closed": false,
+       "region": "cover-frame"
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.15,
+       "w": 0.21,
+       "h": 0.4,
+       "r": 0.01,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      },
+      {
+       "id": "hose",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         0.1
+        ],
+        [
+         -0.14,
+         0.1
+        ]
+       ],
+       "closed": false,
+       "region": "hydraulic-unit"
+      },
+      {
+       "id": "motor-seam",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         0
+        ],
+        [
+         0.16,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "hydraulic-unit"
+      },
+      {
+       "id": "motor",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.8,
+       "kind": "ellipse",
+       "cx": 0.055,
+       "cy": 0.16,
+       "rx": 0.035,
+       "ry": 0.035,
+       "region": "hydraulic-unit"
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.26,
+       "y": -0.45,
+       "w": 0.12,
+       "h": 0.55,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      },
+      {
+       "id": "ram-rod",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.2,
+         0.1
+        ],
+        [
+         -0.2,
+         0.35
+        ]
+       ],
+       "closed": false,
+       "region": "hydraulic-unit"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A section 11 mm wide and 38 mm high with technical detail: shaft with highlight, chevron band, three-LED beacon and seamed cap, sleeve outline, bolted frame blocks with brush seal, power unit with motor and seam, hose, ram with rod.",
+      "de": "Ein Schnitt 11 mm breit und 38 mm hoch mit technischem Detail: Schaft mit Lichtkante, Chevronband, Leuchtring mit drei LEDs und genähte Kappe, Hülsenkontur, verschraubte Rahmenblöcke mit Bürstendichtung, Antriebseinheit mit Motor und Naht, Schlauch, Zylinder mit Stange."
+     },
+     "retained": {
+      "en": "All parts at true size and position; the shaft slides on its prismatic bone.",
+      "de": "Alle Teile in wahrer Größe und Lage; der Schaft gleitet an seinem Schubknochen."
+     },
+     "merged": {
+      "en": "The sleeve wall is one outline; the third LED row and the cable gland are not shown.",
+      "de": "Die Hülsenwand ist eine Kontur; die weiteren LED-Reihen und die Kabelverschraubung sind nicht gezeigt."
+     },
+     "omitted": {
+      "en": "Cable, valve block, anchor bolts below the frame.",
+      "de": "Kabel, Ventilblock, Ankerschrauben unter dem Rahmen."
+     },
+     "thinElements": {
+      "en": "LEDs are 0.02 m (0.4 mm) circles, the sleeve wall a 0.25 mm line (real 0.012 m = 0.24 mm).",
+      "de": "LEDs sind Kreise von 0,02 m (0,4 mm), die Hülsenwand eine 0,25-mm-Linie (real 0,012 m = 0,24 mm)."
+     },
+     "hatching": {
+      "en": "Chevron hatch in the reflective band (45 degrees, 0.5 mm).",
+      "de": "Chevronschraffur im Reflexband (45 Grad, 0,5 mm)."
+     },
+     "styles": {
+      "en": "Shaft 0.5, band 0.08, beacon 0.7, frame 0.6; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm.",
+      "de": "Schaft 0,5, Band 0,08, Leuchtring 0,7, Rahmen 0,6; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm."
+     },
+     "overlays": {
+      "en": "LEDs and ring carry beacon-led; the hose, motor and rod carry hydraulic-unit: the thermal view shows pump heat in the buried block.",
+      "de": "LEDs und Ring tragen beacon-led; Schlauch, Motor und Stange tragen hydraulic-unit: die Thermalansicht zeigt die Pumpenwärme im vergrabenen Block."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.91,
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.24,
+       "w": 0.2,
+       "h": 0.11,
+       "region": "reflector-band",
+       "material": "retro-film"
+      },
+      {
+       "id": "beacon",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.13,
+       "w": 0.2,
+       "h": 0.06,
+       "region": "beacon-led",
+       "material": "pc-amber"
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.1 -0.07 C -0.1 -0.02 -0.05 0 0 0 C 0.05 0 0.1 -0.02 0.1 -0.07 Z",
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.15,
+         0
+        ],
+        [
+         -0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         -1.25
+        ],
+        [
+         0.15,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "sleeve-steel",
+       "penMm": 0.13
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.2,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.145,
+       "y": -0.07,
+       "w": 0.055,
+       "h": 0.085,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.05,
+       "y": -0.15,
+       "w": 0.21,
+       "h": 0.4,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      },
+      {
+       "id": "hose",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.1,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         0.1
+        ],
+        [
+         -0.14,
+         0.1
+        ]
+       ],
+       "closed": false,
+       "region": "hydraulic-unit"
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.26,
+       "y": -0.45,
+       "w": 0.12,
+       "h": 0.55,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      },
+      {
+       "id": "motor-seam",
+       "bone": "hydraulic",
+       "role": "detail",
+       "z": 3.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.05,
+         0
+        ],
+        [
+         0.16,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "hydraulic-unit"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A section 5.6 mm wide and 19 mm high: shaft 2 mm wide with white band, amber beacon band and domed cap, the sleeve outline 3 mm wide, two frame blocks, the power unit with a motor seam and a hose to the ram.",
+      "de": "Ein Schnitt 5,6 mm breit und 19 mm hoch: Schaft 2 mm breit mit weißem Band, bernsteinfarbenem Leuchtband und gewölbter Kappe, die Hülsenkontur 3 mm breit, zwei Rahmenblöcke, die Antriebseinheit mit Motornaht und Schlauch zum Zylinder."
+     },
+     "retained": {
+      "en": "All parts at true size except the hairline sleeve wall.",
+      "de": "Alle Teile in wahrer Größe außer der haarfeinen Hülsenwand."
+     },
+     "merged": {
+      "en": "Lens, ring and seal of the beacon merge into one band.",
+      "de": "Linse, Ring und Dichtung des Leuchtrings gehen in einem Band auf."
+     },
+     "omitted": {
+      "en": "Bolts, flange, brush seal, power cable.",
+      "de": "Schrauben, Flansch, Bürstendichtung, Stromkabel."
+     },
+     "thinElements": {
+      "en": "The sleeve wall is a 0.13 mm line (real 0.06 mm); the hose a 0.13 mm line.",
+      "de": "Die Hülsenwand ist eine 0,13-mm-Linie (real 0,06 mm); der Schlauch eine 0,13-mm-Linie."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Shaft 0.5, band 0.08, beacon 0.7, frame 0.6; body pen 0.25 mm, detail 0.13 mm.",
+      "de": "Schaft 0,5, Band 0,08, Leuchtring 0,7, Rahmen 0,6; Körperstift 0,25 mm, Detail 0,13 mm."
+     },
+     "overlays": {
+      "en": "Each part carries its own region; the power unit, ram and hose carry hydraulic-unit.",
+      "de": "Jedes Teil trägt seine eigene Region; Antriebseinheit, Zylinder und Schlauch tragen hydraulic-unit."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 0.9,
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      ,
+       "penMm": 0.256
+      },
+      {
+       "id": "reflector",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.25,
+       "w": 0.2,
+       "h": 0.12,
+       "region": "reflector-band",
+       "material": "retro-film"
+      ,
+       "penMm": 0.332
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.1 -0.13 L -0.1 -0.05 C -0.1 -0.01 -0.05 0 0 0 C 0.05 0 0.1 -0.01 0.1 -0.05 L 0.1 -0.13 Z",
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0
+        ],
+        [
+         -0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "sleeve-steel",
+       "penMm": 0.28
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.21,
+       "y": -0.08,
+       "w": 0.11,
+       "h": 0.095,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      ,
+       "penMm": 0.256
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.08,
+       "w": 0.11,
+       "h": 0.095,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      ,
+       "penMm": 0.256
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.15,
+       "w": 0.26,
+       "h": 0.4,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      ,
+       "penMm": 0.282
+      },
+      {
+       "id": "ram",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 2.4,
+       "filled": true,
+       "tone": 0.7,
+       "kind": "rect",
+       "x": -0.26,
+       "y": -0.45,
+       "w": 0.12,
+       "h": 0.55,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      ,
+       "penMm": 0.356
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A section 2.8 mm wide and 9.5 mm high: shaft 1 mm wide with a white band and a dark cap, the sleeve outline, two frame blocks, the power unit block and the cylinder in the sleeve.",
+      "de": "Ein Schnitt 2,8 mm breit und 9,5 mm hoch: Schaft 1 mm breit mit weißem Band und dunkler Kappe, die Hülsenkontur, zwei Rahmenblöcke, der Antriebsblock und der Zylinder in der Hülse."
+     },
+     "retained": {
+      "en": "Shaft, reflective band, cap with beacon ring, sleeve, frame, power unit, ram at true size and position.",
+      "de": "Schaft, Reflexband, Kappe mit Leuchtring, Hülse, Rahmen, Antriebseinheit, Zylinder in wahrer Größe und Lage."
+     },
+     "merged": {
+      "en": "Beacon ring merges into the cap; the sleeve wall coincides with the shaft edges.",
+      "de": "Der Leuchtring geht in der Kappe auf; die Hülsenwand fällt mit den Schaftkanten zusammen."
+     },
+     "omitted": {
+      "en": "Hose, bolts, flange, lens, brush seal.",
+      "de": "Schlauch, Schrauben, Flansch, Linse, Bürstendichtung."
+     },
+     "thinElements": {
+      "en": "Sleeve wall is a 0.13 mm line (real 0.012 m = 0.06 mm); the frame blocks are 0.11 m (0.55 mm) wide, real 0.055 m, up to the shaft edge.",
+      "de": "Die Hülsenwand ist eine 0,13-mm-Linie (real 0,012 m = 0,06 mm); die Rahmenblöcke sind 0,11 m (0,55 mm) breit, real 0,055 m, bis zur Schaftkante."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Shaft 0.5, band 0.08 (white), frame 0.6, ram 0.7; body pen 0.18 mm, detail 0.13 mm.",
+      "de": "Schaft 0,5, Band 0,08 (weiß), Rahmen 0,6, Zylinder 0,7; Körperstift 0,18 mm, Detail 0,13 mm."
+     },
+     "overlays": {
+      "en": "Cap lists shaft-steel and beacon-led; the ram carries hydraulic-unit like the power block.",
+      "de": "Die Kappe nennt shaft-steel und beacon-led; der Zylinder trägt hydraulic-unit wie der Antriebsblock."
+     }
+    }
+   },
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "shaft",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -1.15,
+       "w": 0.2,
+       "h": 1.06,
+       "regions": [
+        "shaft-steel",
+        "reflector-band"
+       ],
+       "material": "steel-grey"
+      },
+      {
+       "id": "cap",
+       "bone": "shaft",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.1 -0.13 L -0.1 -0.05 C -0.1 -0.01 -0.05 0 0 0 C 0.05 0 0.1 -0.01 0.1 -0.05 L 0.1 -0.13 Z",
+       "regions": [
+        "shaft-steel",
+        "beacon-led"
+       ],
+       "material": "steel-grey"
+      },
+      {
+       "id": "sleeve",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         -0.1,
+         0
+        ],
+        [
+         -0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         -1.25
+        ],
+        [
+         0.1,
+         0
+        ]
+       ],
+       "closed": false,
+       "region": "sleeve-steel",
+       "penMm": 0.13
+      },
+      {
+       "id": "frame-l",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": -0.21,
+       "y": -0.11,
+       "w": 0.11,
+       "h": 0.13,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "frame-r",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.6,
+       "kind": "rect",
+       "x": 0.1,
+       "y": -0.11,
+       "w": 0.11,
+       "h": 0.13,
+       "region": "cover-frame",
+       "material": "cast-iron-frame"
+      },
+      {
+       "id": "power-unit",
+       "bone": "hydraulic",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": -0.1,
+       "y": -0.15,
+       "w": 0.26,
+       "h": 0.4,
+       "region": "hydraulic-unit",
+       "material": "steel-hyd"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A section sign 1.1 mm wide and 3.8 mm high: a solid shaft (0.4 mm wide) rising 1.3 mm above the ground line, a sleeve outline 2.5 mm below it, two frame blocks at ground level and the power unit block at the right.",
+      "de": "Ein Schnittzeichen, 1,1 mm breit und 3,8 mm hoch: ein voller Schaft (0,4 mm breit), der 1,3 mm über die Bodenlinie ragt, eine Hülsenkontur 2,5 mm darunter, zwei Rahmenblöcke in Geländehöhe und der Antriebsblock rechts."
+     },
+     "retained": {
+      "en": "The 0.20 m shaft at true width, the true raised height 0.65 m and buried depth 1.25 m, the power unit at 0.26 x 0.40 m.",
+      "de": "Der 0,20 m dicke Schaft in wahrer Breite, die wahre Ausfahrhöhe 0,65 m und Einbautiefe 1,25 m, die Antriebseinheit mit 0,26 x 0,40 m."
+     },
+     "merged": {
+      "en": "Reflective band, beacon ring and shaft tube are one solid; the cylinder in the sleeve and the hose are omitted from this scale; the sleeve wall coincides with the shaft edges.",
+      "de": "Reflexband, Leuchtring und Schaftrohr sind ein Körper; Zylinder in der Hülse und Schlauch fehlen in diesem Maßstab; die Hülsenwand fällt mit den Schaftkanten zusammen."
+     },
+     "omitted": {
+      "en": "Cylinder, hose, bolts, flange, lens details.",
+      "de": "Zylinder, Schlauch, Schrauben, Flansch, Linsendetails."
+     },
+     "thinElements": {
+      "en": "The 0.012 m sleeve wall is a single 0.13 mm line on the shaft edge; the 0.055 m cover frame is thickened to 0.12 m (0.24 mm) inward to the shaft edge; the 0.03 m shaft-sleeve clearance is omitted.",
+      "de": "Die 0,012 m dicke Hülsenwand ist eine einzelne 0,13-mm-Linie auf der Schaftkante; der 0,055 m breite Abdeckrahmen ist auf 0,12 m (0,24 mm) bis zur Schaftkante verbreitert; das Spiel Schaft-Hülse von 0,03 m entfällt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Shaft 0.5, frame 0.6, power unit 0.5; body pen 0.13 mm, ground 0.18 mm.",
+      "de": "Schaft 0,5, Rahmen 0,6, Antriebseinheit 0,5; Körperstift 0,13 mm, Boden 0,18 mm."
+     },
+     "overlays": {
+      "en": "The shaft solid lists shaft-steel and reflector-band, the cap shaft-steel and beacon-led; the sleeve line carries sleeve-steel.",
+      "de": "Der Schaftkörper nennt shaft-steel und reflector-band, die Kappe shaft-steel und beacon-led; die Hülsenlinie trägt sleeve-steel."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "plan-true",
+    "title": {
+     "en": "Plan, true extent",
+     "de": "Grundriss, wahre Ausdehnung"
+    },
+    "description": {
+     "en": "The bollard seen from above: the 0.20 m shaft disc inside the 0.30 m sleeve and the 0.40 m frame ring.",
+     "de": "Der Poller von oben: die 0,20-m-Schaftscheibe in der 0,30-m-Hülse und dem 0,40-m-Rahmenring."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     200,
+     100,
+     50
+    ],
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "shaft-plan",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.1,
+       "ry": 0.1,
+       "region": "shaft-steel",
+       "material": "steel-grey"
+      },
+      {
+       "id": "sleeve-plan",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 2.5,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.15,
+       "ry": 0.15,
+       "region": "sleeve-steel"
+      },
+      {
+       "id": "frame-plan",
+       "bone": "sleeve",
+       "role": "detail",
+       "z": 2.4,
+       "filled": false,
+       "tone": 0.9,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.2,
+       "ry": 0.2,
+       "region": "cover-frame"
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres at real size: circles of 0.20, 0.30 and 0.40 m diameter; pen widths are paper millimetres.",
+     "de": "Modellmeter in wahrer Größe: Kreise mit 0,20, 0,30 und 0,40 m Durchmesser; Stiftbreiten sind Papiermillimeter."
+    }
+   },
+   {
+    "id": "plan-dot",
+    "title": {
+     "en": "Bollard dot",
+     "de": "Pollerpunkt"
+    },
+    "description": {
+     "en": "A filled 0.9 mm dot marks one bollard on a site plan; at the bollard spacing of 1.2 to 1.5 m a row of dots reads as a line of control.",
+     "de": "Ein gefüllter Punkt von 0,9 mm markiert einen Poller im Lageplan; beim Pollerabstand von 1,2 bis 1,5 m liest sich eine Punktreihe als Sperrlinie."
+    },
+    "semantics": "true-position",
+    "units": "paper-mm",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "id": "dot",
+       "bone": "sleeve",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 1,
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.45,
+       "ry": 0.45,
+       "region": "shaft-steel"
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "The dot marks the real position of the shaft axis (insertion point at the origin); its 0.9 mm diameter is a paper size and carries no dimension (the real shaft is 0.2 m = 0.4 mm at 1:500).",
+     "de": "Der Punkt markiert die reale Lage der Schaftachse (Einfügepunkt im Ursprung); sein Durchmesser von 0,9 mm ist ein Papiermaß und trägt kein Maß (der reale Schaft ist 0,2 m = 0,4 mm bei 1:500)."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "raised",
+    "title": {
+     "en": "Raised",
+     "de": "Ausgefahren"
+    },
+    "description": {
+     "en": "Shaft up 0.65 m, pump stopped, beacon off; the sun on the shaft and the cover frame.",
+     "de": "Schaft 0,65 m oben, Pumpe steht, Leuchtring aus; Sonne auf Schaft und Abdeckrahmen."
+    },
+    "bones": {
+     "shaft": {
+      "dy": 0.65
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "sleeve-fixed"
+    ],
+    "thermal": {
+     "regions": {
+      "shaft-steel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "reflector-band": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "beacon-led": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "cover-frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "sleeve-steel": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 1,
+        "tempC": 11
+       }
+      },
+      "hydraulic-unit": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 11
+       }
+      }
+     },
+     "emitters": {},
+     "operating": {
+      "hydraulics": 0,
+      "beacon": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "lowered",
+    "title": {
+     "en": "Lowered",
+     "de": "Abgesenkt"
+    },
+    "description": {
+     "en": "Shaft sunk flush with the ground inside the sleeve: only the cap and the frame show above the ground line.",
+     "de": "Schaft bündig im Boden in der Hülse versenkt: nur Kappe und Rahmen zeigen sich über der Bodenlinie."
+    },
+    "bones": {
+     "shaft": {
+      "dy": 0
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "sleeve-fixed"
+    ],
+    "thermal": {
+     "regions": {
+      "shaft-steel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "reflector-band": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "beacon-led": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "cover-frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "sleeve-steel": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 1,
+        "tempC": 11
+       }
+      },
+      "hydraulic-unit": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 11
+       }
+      }
+     },
+     "emitters": {},
+     "operating": {
+      "hydraulics": 0,
+      "beacon": 0
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "moving-up",
+    "title": {
+     "en": "Moving up",
+     "de": "Fährt aus"
+    },
+    "description": {
+     "en": "Shaft at 0.33 m, pump running at 560 W of heat and the beacon flashing.",
+     "de": "Schaft auf 0,33 m, Pumpe läuft mit 560 W Wärme und der Leuchtring blinkt."
+    },
+    "bones": {
+     "shaft": {
+      "dy": 0.33
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "sleeve-fixed"
+    ],
+    "thermal": {
+     "regions": {
+      "shaft-steel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "reflector-band": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "beacon-led": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "cover-frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "sleeve-steel": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 1,
+        "tempC": 11
+       }
+      },
+      "hydraulic-unit": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 11
+       }
+      }
+     },
+     "emitters": {},
+     "operating": {
+      "hydraulics": 1,
+      "beacon": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "raised-nudged",
+    "title": {
+     "en": "Raised, nudged",
+     "de": "Ausgefahren, angestoßen"
+    },
+    "description": {
+     "en": "Raised shaft with a 1.5 kN lateral nudge at 0.55 m (a gentle vehicle touch, no impact rating).",
+     "de": "Ausgefahrener Schaft mit einem seitlichen Anstoß von 1,5 kN auf 0,55 m (eine sanfte Fahrzeugberührung, keine Anprallklasse)."
+    },
+    "bones": {
+     "shaft": {
+      "dy": 0.65
+     }
+    },
+    "ground": "auto",
+    "contacts": [
+     "sleeve-fixed"
+    ],
+    "thermal": {
+     "regions": {
+      "shaft-steel": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "reflector-band": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "beacon-led": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "cover-frame": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "sleeve-steel": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 1,
+        "tempC": 11
+       }
+      },
+      "hydraulic-unit": {
+       "exposedFraction": 0,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.7,
+        "tempC": 11
+       }
+      }
+     },
+     "emitters": {},
+     "operating": {
+      "hydraulics": 0,
+      "beacon": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "nudge",
+      "kind": "imposed",
+      "title": {
+       "en": "Lateral nudge at 0.55 m",
+       "de": "Seitlicher Anstoß auf 0,55 m"
+      },
+      "fxN": 1500,
+      "fyN": 0,
+      "source": "authored-estimate",
+      "anchor": "push-point",
+      "reference": "en-1991-1-7"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "raise-and-lower",
+    "title": {
+     "en": "Raise and lower",
+     "de": "Ausfahren und Absenken"
+    },
+    "description": {
+     "en": "From flush the shaft rises in five seconds with the pump running and the beacon flashing, stays up for thirteen seconds and sinks again in five.",
+     "de": "Aus der bündigen Lage fährt der Schaft in fünf Sekunden mit laufender Pumpe und blinkendem Leuchtring aus, bleibt dreizehn Sekunden oben und senkt sich wieder in fünf."
+    },
+    "durationS": 30,
+    "fps": 12,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "lowered",
+      "ease": "linear"
+     },
+     {
+      "t": 2,
+      "pose": "lowered",
+      "ease": "linear"
+     },
+     {
+      "t": 7,
+      "pose": "raised",
+      "ease": "linear"
+     },
+     {
+      "t": 20,
+      "pose": "raised",
+      "ease": "linear"
+     },
+     {
+      "t": 25,
+      "pose": "lowered",
+      "ease": "linear"
+     },
+     {
+      "t": 30,
+      "pose": "lowered",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "sleeve-fixed",
+      "fromS": 0,
+      "toS": 30
+     }
+    ],
+    "phases": [
+     {
+      "id": "flush",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Flush",
+       "de": "Bündig"
+      }
+     },
+     {
+      "id": "rising",
+      "fromS": 2,
+      "toS": 7,
+      "title": {
+       "en": "Rising",
+       "de": "Fährt aus"
+      }
+     },
+     {
+      "id": "up",
+      "fromS": 7,
+      "toS": 20,
+      "title": {
+       "en": "Up",
+       "de": "Oben"
+      }
+     },
+     {
+      "id": "lowering",
+      "fromS": 20,
+      "toS": 25,
+      "title": {
+       "en": "Lowering",
+       "de": "Senkt sich"
+      }
+     },
+     {
+      "id": "flush-again",
+      "fromS": 25,
+      "toS": 30,
+      "title": {
+       "en": "Flush again",
+       "de": "Wieder bündig"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2,
+      "kind": "ignition",
+      "title": {
+       "en": "Pump starts",
+       "de": "Pumpe startet"
+      },
+      "target": "hydraulics"
+     },
+     {
+      "t": 7,
+      "kind": "shutdown",
+      "title": {
+       "en": "Pump stops at the top",
+       "de": "Pumpe stoppt oben"
+      },
+      "target": "hydraulics"
+     },
+     {
+      "t": 20,
+      "kind": "ignition",
+      "title": {
+       "en": "Pump starts to lower",
+       "de": "Pumpe startet zum Absenken"
+      },
+      "target": "hydraulics"
+     },
+     {
+      "t": 25,
+      "kind": "shutdown",
+      "title": {
+       "en": "Pump stops at the bottom",
+       "de": "Pumpe stoppt unten"
+      },
+      "target": "hydraulics"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:hydraulics",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 1
+       },
+       {
+        "t": 7,
+        "v": 0
+       },
+       {
+        "t": 20,
+        "v": 1
+       },
+       {
+        "t": 25,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:beacon",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 20,
+        "v": 1
+       },
+       {
+        "t": 27,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "nudge-test",
+    "title": {
+     "en": "Nudge test",
+     "de": "Anstoßprüfung"
+    },
+    "description": {
+     "en": "The raised bollard is pushed sideways with up to 1.5 kN and released.",
+     "de": "Der ausgefahrene Poller wird seitlich mit bis zu 1,5 kN angestoßen und entlastet."
+    },
+    "durationS": 10,
+    "fps": 12,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "raised-nudged",
+      "ease": "smooth"
+     },
+     {
+      "t": 10,
+      "pose": "raised-nudged",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "sleeve-fixed",
+      "fromS": 0,
+      "toS": 10
+     }
+    ],
+    "phases": [
+     {
+      "id": "push",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Pushing",
+       "de": "Anstoß"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 4,
+      "toS": 7,
+      "title": {
+       "en": "Held",
+       "de": "Gehalten"
+      }
+     },
+     {
+      "id": "release",
+      "fromS": 7,
+      "toS": 10,
+      "title": {
+       "en": "Released",
+       "de": "Entlastet"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "kind": "load-on",
+      "title": {
+       "en": "Contact starts",
+       "de": "Berührung beginnt"
+      },
+      "target": "nudge"
+     },
+     {
+      "t": 7,
+      "kind": "load-off",
+      "title": {
+       "en": "Contact ends",
+       "de": "Berührung endet"
+      },
+      "target": "nudge"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:nudge",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 7,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 10,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 12,
+    "meanRadiantTempC": 14,
+    "relativeHumidity": 0.7,
+    "windMS": 2,
+    "windDirectionDeg": 0,
+    "solarWM2": 300,
+    "diffuseFraction": 0.4,
+    "pressurePa": 101325,
+    "skyTempC": 2,
+    "groundTempC": 11
+   },
+   "operating": [
+    {
+     "id": "hydraulics",
+     "title": {
+      "en": "Hydraulic pump",
+      "de": "Hydraulikpumpe"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Stopped",
+        "de": "Steht"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Running (0.75 kW motor, 560 W of heat)",
+        "de": "Läuft (0,75-kW-Motor, 560 W Wärme)"
+       }
+      }
+     ]
+    },
+    {
+     "id": "beacon",
+     "title": {
+      "en": "Warning beacon",
+      "de": "Warnleuchte"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Flashing amber (10 W, 8 W of heat)",
+        "de": "Gelbes Blinklicht (10 W, 8 W Wärme)"
+       }
+      }
+     ]
+    }
+   ],
+   "passengers": [],
+   "regions": [
+    {
+     "id": "shaft-steel",
+     "title": {
+      "en": "Painted steel shaft",
+      "de": "Lackiertes Stahlschaftrohr"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-grey",
+     "areaM2": 0.41,
+     "characteristicLengthM": 0.2,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "tube",
+       "title": {
+        "en": "Steel tube wall 5 mm",
+        "de": "Stahlrohrwand 5 mm"
+       },
+       "kind": "metal",
+       "material": "steel-grey",
+       "thicknessM": 0.005,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 17662,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 17662,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "reflector-band",
+     "title": {
+      "en": "Retro-reflective band",
+      "de": "Retroreflektierendes Band"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "retro-film",
+     "areaM2": 0.063,
+     "characteristicLengthM": 0.2,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "film",
+       "title": {
+        "en": "Reflective film 0.5 mm",
+        "de": "Reflexfolie 0,5 mm"
+       },
+       "kind": "polymer",
+       "material": "retro-film",
+       "thicknessM": 0.0005,
+       "resistanceM2KW": 0.0025,
+       "heatCapacityJM2K": 840,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 840,
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "beacon-led",
+     "title": {
+      "en": "Amber LED beacon ring",
+      "de": "Bernsteinfarbener LED-Leuchtring"
+     },
+     "kind": "lamp",
+     "model": "operating",
+     "material": "pc-amber",
+     "areaM2": 0.025,
+     "characteristicLengthM": 0.2,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "lens",
+       "title": {
+        "en": "Polycarbonate lens 3 mm",
+        "de": "Polycarbonatlinse 3 mm"
+       },
+       "kind": "polymer",
+       "material": "pc-amber",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.015,
+       "heatCapacityJM2K": 4320,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 4320,
+     "operating": {
+      "key": "beacon",
+      "heatW": 8
+     },
+     "source": "authored-estimate",
+     "reference": "iso-10456-2007"
+    },
+    {
+     "id": "cover-frame",
+     "title": {
+      "en": "Cast-iron cover frame",
+      "de": "Gusseisen-Abdeckrahmen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "cast-iron-frame",
+     "areaM2": 0.12,
+     "characteristicLengthM": 0.4,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "casting",
+       "title": {
+        "en": "Cast iron 25 mm",
+        "de": "Gusseisen 25 mm"
+       },
+       "kind": "metal",
+       "material": "cast-iron-frame",
+       "thicknessM": 0.025,
+       "resistanceM2KW": 0.0005,
+       "heatCapacityJM2K": 90000,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 90000,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "sleeve-steel",
+     "title": {
+      "en": "Buried sleeve (in soil)",
+      "de": "Eingegrabene Hülse (im Erdreich)"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "steel-sleeve",
+     "areaM2": 1.2,
+     "characteristicLengthM": 0.3,
+     "geometry": "cylinder",
+     "skyViewFactor": 0,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Galvanised steel wall 8 mm",
+        "de": "Verzinkte Stahlwand 8 mm"
+       },
+       "kind": "metal",
+       "material": "steel-sleeve",
+       "thicknessM": 0.008,
+       "resistanceM2KW": 0.00016,
+       "heatCapacityJM2K": 28260,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 28260,
+     "source": "authored-estimate",
+     "reference": "incropera-2018"
+    },
+    {
+     "id": "hydraulic-unit",
+     "title": {
+      "en": "Hydraulic power unit and cylinder",
+      "de": "Hydraulik-Antriebseinheit und Zylinder"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "steel-hyd",
+     "areaM2": 0.35,
+     "characteristicLengthM": 0.3,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0,
+     "layers": [
+      {
+       "id": "housing",
+       "title": {
+        "en": "Steel housing 3 mm",
+        "de": "Stahlgehäuse 3 mm"
+       },
+       "kind": "metal",
+       "material": "steel-hyd",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.00006,
+       "heatCapacityJM2K": 10598,
+       "source": "authored-estimate",
+       "reference": "iso-10456-2007"
+      }
+     ],
+     "heatCapacityJM2K": 10598,
+     "operating": {
+      "key": "hydraulics",
+      "heatW": 358.8
+     },
+     "source": "authored-estimate",
+     "reference": "bollard-class"
+    }
+   ],
+   "emitters": [],
+   "assumptions": [
+    {
+     "en": "The buried sleeve and the hydraulic unit are conductively tied to soil at 11 degC (contact fractions 1.0 and 0.7) and not exposed to air; the pump heat of 560 W while running warms the unit above the soil.",
+     "de": "Die eingegrabene Hülse und die Hydraulikeinheit sind leitend mit dem Erdreich von 11 degC verbunden (Kontaktanteile 1,0 und 0,7) und der Luft nicht ausgesetzt; die Pumpenwärme von 560 W bei Lauf erwärmt die Einheit über das Erdreich."
+    },
+    {
+     "en": "The beacon heats only by 8 W; the lowered cap is sun-heated flush with the paving.",
+     "de": "Der Leuchtring erwärmt sich nur mit 8 W; die abgesenkte Kappe wird bündig im Belag besonnt."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [
+    "sleeve-fixed"
+   ],
+   "assumptions": [
+    {
+     "en": "The sleeve is fixed in the foundation at ground level; the shaft is posed on its prismatic joint as one rigid body with the sleeve.",
+     "de": "Die Hülse ist im Fundament in Geländehöhe eingespannt; der Schaft wird an seinem Schubgelenk als ein starrer Körper mit der Hülse gestellt."
+    },
+    {
+     "en": "The 1.5 kN nudge load is an authored estimate and not a crash design value.",
+     "de": "Die Anstoßlast von 1,5 kN ist eine Schätzung und kein Anpralllast-Bemessungswert."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "raised",
+   "defaultClip": "raise-and-lower",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

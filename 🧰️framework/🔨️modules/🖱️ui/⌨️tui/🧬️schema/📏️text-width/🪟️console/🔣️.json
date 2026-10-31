@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.coms/ui/tui/text-width/console.json",
   "title": "📏️ Terminal Text Width Profiles",
   "description": "🪟️ Formal Unicode widths, independent string-width results and separately measured native Windows console cursor advances for exact terminal glyphs.",

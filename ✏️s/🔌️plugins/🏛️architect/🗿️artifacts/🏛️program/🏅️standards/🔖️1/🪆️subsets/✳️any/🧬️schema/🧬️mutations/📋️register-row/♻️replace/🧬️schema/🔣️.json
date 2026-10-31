@@ -15,8 +15,7 @@
     "row": {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/snapshot.json#/$defs/RegisterRow",
       "x-semio-ui": {
-        "widget": "record",
-        "role": "payload",
+        "role": "value",
         "label": {
           "en": "Row",
           "de": "Zeile"

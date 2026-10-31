@@ -1,0 +1,1309 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "street-lamp",
+    "category": "objects",
+    "title": {
+      "en": "Street Lamp",
+      "de": "Straßenleuchte"
+    },
+    "summary": {
+      "en": "A 6 m tapered steel column with a cantilevered LED luminaire arm; ignition, lamp heating and a buoyant warm plume describe the lighting cycle.",
+      "de": "6 m hohe, verjüngte Stahlsäule mit ausladendem LED-Leuchtenarm; Zündung, Leuchtenerwärmung und eine auftriebsbehaftete warme Fahne beschreiben den Leuchtzyklus."
+    },
+    "tags": [
+      "street-lamp",
+      "luminaire",
+      "steel",
+      "led",
+      "street-furniture"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (objects worker)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1: General rules (E = 210 GPa)."
+        },
+        {
+          "id": "en-1999-1-1",
+          "citation": "EN 1999-1-1:2007 Eurocode 9: Design of aluminium structures, Part 1-1: General structural rules (E = 70 GPa)."
+        },
+        {
+          "id": "en-1992-1-1",
+          "citation": "EN 1992-1-1:2004 Eurocode 2: Design of concrete structures, Part 1-1: General rules (E_cm for C30/37)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1: Actions on structures, Part 1-4: General actions, wind actions."
+        },
+        {
+          "id": "ashby-2011",
+          "citation": "Ashby, M. F. (2011). Materials Selection in Mechanical Design, 4th ed., Butterworth-Heinemann."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface emissivity of galvanised steel and concrete)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation. Pole height 6.0 m to the top; the foundation plinth and in-ground part are not counted in the mass. Sway is an equivalent rigid rotation of the pole about its base (authored estimate: about 1.8 degrees, a tip displacement of about 0.19 m under the design gust). Wind loads use q = 0.5 rho v^2 at v = 25 m/s with authored drag coefficients, basis EN 1991-1-4. Lamp heating and plume strength are authored estimates.",
+        "de": "Seitenansicht. Masthöhe 6,0 m bis Oberkante; Sockel und Erdeingeschossener Teil sind nicht in der Masse enthalten. Die Schwingung ist eine äquivalente starre Drehung der Säule um ihren Fuß (Schätzung: etwa 1,8 Grad, Kopfauslenkung etwa 0,19 m unter der Bemessungsböe). Windlasten mit q = 0,5 rho v^2 bei v = 25 m/s und geschätzten Widerstandsbeiwerten, Grundlage EN 1991-1-4. Leuchtenerwärmung und Fahnenstärke sind Schätzungen."
+      }
+    },
+    "dimensions": {
+      "heightM": 6.0,
+      "widthM": 1.2,
+      "depthM": 0.3,
+      "massKg": 88.1
+    },
+    "materials": [
+      {
+        "id": "galv-steel",
+        "title": {
+          "en": "Galvanised steel",
+          "de": "Feuerverzinkter Stahl"
+        },
+        "emissivity": 0.28,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "source": "literature",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "concrete",
+        "title": {
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2400,
+        "elasticModulusPa": 33000000000,
+        "source": "literature",
+        "reference": "en-1992-1-1"
+      },
+      {
+        "id": "aluminium-anodised",
+        "title": {
+          "en": "Anodised aluminium",
+          "de": "Eloxiertes Aluminium"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 2700,
+        "elasticModulusPa": 70000000000,
+        "source": "literature",
+        "reference": "en-1999-1-1"
+      },
+      {
+        "id": "polycarbonate",
+        "title": {
+          "en": "Polycarbonate lens",
+          "de": "Polycarbonat-Abdeckung"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 1200,
+        "source": "literature",
+        "reference": "ashby-2011"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "foundation",
+      "bones": [
+        {
+          "id": "foundation",
+          "parent": null,
+          "title": {
+            "en": "Foundation base plate",
+            "de": "Fundamentplatte"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 14.1,
+            "comX": 0,
+            "comY": 0.11,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1993-1-1"
+          }
+        },
+        {
+          "id": "pole",
+          "parent": "foundation",
+          "title": {
+            "en": "Tapered column",
+            "de": "Verjüngte Säule"
+          },
+          "x": 0,
+          "y": 0.12,
+          "angleDeg": 90,
+          "lengthM": 5.88,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -2,
+            "maxDeg": 2
+          },
+          "mass": {
+            "kg": 70,
+            "comX": 2.94,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "arm",
+          "parent": "pole",
+          "title": {
+            "en": "Luminaire arm",
+            "de": "Leuchtenarm"
+          },
+          "x": 5.68,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 0.95,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.5,
+            "comX": 0.475,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1999-1-1"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "arm",
+          "title": {
+            "en": "Luminaire head",
+            "de": "Leuchtenkopf"
+          },
+          "x": 0.72,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.33,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 2.5,
+            "comX": 0.115,
+            "comY": -0.05,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foundation-support",
+        "bone": "foundation",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Fixed foundation",
+          "de": "Feste Gründung"
+        },
+        "support": "fixed",
+        "footprintLengthM": 0.3,
+        "footprintWidthM": 0.3
+      },
+      {
+        "id": "lamp-plume",
+        "bone": "head",
+        "x": 0.12,
+        "y": -0.1,
+        "kind": "emitter",
+        "title": {
+          "en": "Lamp plume source",
+          "de": "Quelle der Lampenfahne"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "plinth",
+          "bone": "foundation",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.65,
+          "kind": "rect",
+          "x": -0.15,
+          "y": 0,
+          "w": 0.3,
+          "h": 0.1,
+          "region": "plinth-concrete",
+          "material": "concrete"
+        },
+        {
+          "id": "plinth-joint",
+          "bone": "foundation",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.1,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              -0.15,
+              0.05
+            ],
+            [
+              0.15,
+              0.05
+            ]
+          ],
+          "closed": false,
+          "region": "plinth-concrete",
+          "material": "concrete"
+        },
+        {
+          "id": "base-plate",
+          "bone": "foundation",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": -0.15,
+          "y": 0.1,
+          "w": 0.3,
+          "h": 0.02,
+          "r": 0.002,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "base-nut-0",
+          "bone": "foundation",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": -0.132,
+          "y": 0.12,
+          "w": 0.024,
+          "h": 0.014,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "base-nut-1",
+          "bone": "foundation",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": 0.108,
+          "y": 0.12,
+          "w": 0.024,
+          "h": 0.014,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "base-cover",
+          "bone": "foundation",
+          "role": "body",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.33,
+          "kind": "path",
+          "d": "M -0.12 0.13 C -0.11 0.20 -0.085 0.24 -0.082 0.30 L 0.082 0.30 C 0.085 0.24 0.11 0.20 0.12 0.13 Z",
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole",
+          "bone": "pole",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0 -0.085 C 2 -0.08 4 -0.06 5.88 -0.04 L 5.88 0.04 C 4 0.06 2 0.08 0 0.085 Z",
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-collar",
+          "bone": "pole",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 5.6,
+          "y": -0.055,
+          "w": 0.08,
+          "h": 0.11,
+          "r": 0.01,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-cap",
+          "bone": "pole",
+          "role": "body",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 5.86 -0.042 C 5.9 -0.03 5.9 0.03 5.86 0.042 Z",
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-highlight",
+          "bone": "pole",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.4,
+              0.06
+            ],
+            [
+              5.6,
+              0.035
+            ]
+          ],
+          "closed": false,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-hatch",
+          "bone": "pole",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0.55,
+          "y": -0.045,
+          "w": 0.5,
+          "h": 0.09,
+          "r": 0.008,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-hatch-lock",
+          "bone": "pole",
+          "role": "detail",
+          "lod": 3,
+          "z": 3.8,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "ellipse",
+          "cx": 0.62,
+          "cy": 0,
+          "rx": 0.007,
+          "ry": 0.007,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-seam-0",
+          "bone": "pole",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              2.1,
+              -0.06475
+            ],
+            [
+              2.1,
+              0.06475
+            ]
+          ],
+          "closed": false,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "pole-seam-1",
+          "bone": "pole",
+          "role": "texture",
+          "lod": 2,
+          "z": 3.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              3.9,
+              -0.06025
+            ],
+            [
+              3.9,
+              0.06025
+            ]
+          ],
+          "closed": false,
+          "region": "pole-galv",
+          "material": "galv-steel"
+        },
+        {
+          "id": "arm",
+          "bone": "arm",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M 0 -0.034 C 0.35 -0.03 0.8 -0.02 0.95 0.0 C 0.8 0.024 0.35 0.034 0 0.036 Z",
+          "region": "arm-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "arm-brace",
+          "bone": "arm",
+          "role": "body",
+          "lod": 1,
+          "z": 1.9,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "capsule",
+          "x0": 0.02,
+          "y0": -0.46,
+          "x1": 0.62,
+          "y1": -0.012,
+          "r0": 0.012,
+          "r1": 0.012,
+          "region": "arm-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "arm-brace-joint",
+          "bone": "arm",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.1,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0.62,
+          "cy": -0.012,
+          "rx": 0.02,
+          "ry": 0.02,
+          "region": "arm-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "arm-clamp",
+          "bone": "arm",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": -0.05,
+          "y": -0.05,
+          "w": 0.1,
+          "h": 0.1,
+          "r": 0.008,
+          "region": "arm-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "arm-seam",
+          "bone": "arm",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.2,
+              0.012
+            ],
+            [
+              0.8,
+              0.008
+            ]
+          ],
+          "closed": false,
+          "region": "arm-alu",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-housing",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M 0.0 0.03 C 0.01 0.045 0.03 0.05 0.05 0.055 C 0.12 0.082 0.25 0.078 0.30 0.04 C 0.325 0.025 0.335 0.0 0.33 -0.02 L 0.31 -0.05 C 0.20 -0.062 0.10 -0.062 0.02 -0.05 C 0.005 -0.04 -0.005 -0.01 0.0 0.03 Z",
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-spigot",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.05,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": -0.04,
+          "y": -0.02,
+          "w": 0.07,
+          "h": 0.05,
+          "r": 0.006,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-driver",
+          "bone": "head",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.03 0.055 C 0.04 0.095 0.11 0.098 0.13 0.07",
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-0",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.15,
+              0.066
+            ],
+            [
+              0.15,
+              0.082
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-1",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.178,
+              0.0654
+            ],
+            [
+              0.178,
+              0.08
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-2",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.206,
+              0.0648
+            ],
+            [
+              0.206,
+              0.078
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-3",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.234,
+              0.0642
+            ],
+            [
+              0.234,
+              0.076
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-4",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.262,
+              0.0636
+            ],
+            [
+              0.262,
+              0.074
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-fin-5",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.29,
+              0.063
+            ],
+            [
+              0.29,
+              0.072
+            ]
+          ],
+          "closed": false,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-rim",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.02 -0.046 C 0.10 -0.056 0.22 -0.056 0.31 -0.046",
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "head-latch",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.2,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.3,
+          "cy": -0.03,
+          "rx": 0.006,
+          "ry": 0.006,
+          "region": "lamp-housing",
+          "material": "aluminium-anodised"
+        },
+        {
+          "id": "lens",
+          "bone": "head",
+          "role": "glazing",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "path",
+          "d": "M 0.03 -0.050 C 0.10 -0.088 0.24 -0.088 0.30 -0.050 L 0.30 -0.046 C 0.24 -0.076 0.10 -0.076 0.03 -0.046 Z",
+          "region": "lamp-lens",
+          "material": "polycarbonate"
+        },
+        {
+          "id": "lens-reflector",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.1,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0.06 -0.044 C 0.12 -0.020 0.22 -0.020 0.28 -0.044",
+          "region": "lamp-lens",
+          "material": "polycarbonate"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "dusk-off",
+        "title": {
+          "en": "Dusk, lamp off",
+          "de": "Dämmerung, Leuchte aus"
+        },
+        "description": {
+          "en": "Vertical column in still air, luminaire unlit and cold.",
+          "de": "Senkrechte Säule bei Windstille, Leuchte unbeleuchtet und kalt."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foundation-support"
+        ],
+        "thermal": {
+          "operating": {
+            "lamp": 0
+          },
+          "emitters": {
+            "lamp-plume": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lit-night",
+        "title": {
+          "en": "Lit at night",
+          "de": "Nachts beleuchtet"
+        },
+        "description": {
+          "en": "Luminaire at full output with its warm plume, still air.",
+          "de": "Leuchte mit voller Leistung und warmer Fahne, Windstille."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foundation-support"
+        ],
+        "thermal": {
+          "operating": {
+            "lamp": 1
+          },
+          "emitters": {
+            "lamp-plume": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lit-in-wind",
+        "title": {
+          "en": "Lit in wind",
+          "de": "Beleuchtet im Wind"
+        },
+        "description": {
+          "en": "Luminaire at full output while the design gust pushes the pole about 1.8 degrees downwind.",
+          "de": "Leuchte mit voller Leistung, während die Bemessungsböe die Säule etwa 1,8 Grad in Windrichtung drückt."
+        },
+        "bones": {
+          "pole": {
+            "angleDeg": -1.8
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foundation-support"
+        ],
+        "thermal": {
+          "operating": {
+            "lamp": 1
+          },
+          "emitters": {
+            "lamp-plume": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "wind-pole",
+            "kind": "wind",
+            "title": {
+              "en": "Gust on the column",
+              "de": "Böe auf die Säule"
+            },
+            "distributed": {
+              "bone": "pole",
+              "fromM": 0,
+              "toM": 5.88,
+              "wxNPerM": 41,
+              "wyNPerM": 0
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-4"
+          },
+          {
+            "id": "wind-head",
+            "kind": "wind",
+            "title": {
+              "en": "Gust on the luminaire",
+              "de": "Böe auf die Leuchte"
+            },
+            "bone": "head",
+            "x": 0.1,
+            "y": 0,
+            "fxN": 110,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "ignition-at-dusk",
+        "title": {
+          "en": "Ignition at dusk",
+          "de": "Zündung in der Dämmerung"
+        },
+        "description": {
+          "en": "The luminaire switches on at 14 s, its housing warms up and the plume follows.",
+          "de": "Die Leuchte schaltet bei 14 s ein, das Gehäuse erwärmt sich und die Fahne folgt."
+        },
+        "durationS": 30,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "dusk-off",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "dusk-off",
+            "ease": "smooth"
+          },
+          {
+            "t": 30,
+            "pose": "lit-night",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foundation-support",
+            "fromS": 0,
+            "toS": 30
+          }
+        ],
+        "phases": [
+          {
+            "id": "dark",
+            "fromS": 0,
+            "toS": 14,
+            "title": {
+              "en": "Dark",
+              "de": "Dunkel"
+            }
+          },
+          {
+            "id": "lit",
+            "fromS": 14,
+            "toS": 30,
+            "title": {
+              "en": "Lit",
+              "de": "Beleuchtet"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 14,
+            "kind": "ignition",
+            "title": {
+              "en": "Luminaire ignites",
+              "de": "Leuchte zündet"
+            },
+            "target": "lamp-plume"
+          },
+          {
+            "t": 16,
+            "kind": "thermal",
+            "title": {
+              "en": "Housing warms up",
+              "de": "Gehäuse erwärmt sich"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:lamp",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 14,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:lamp-plume",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 14,
+                "v": 0
+              },
+              {
+                "t": 16,
+                "v": 1
+              },
+              {
+                "t": 30,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "pole-sway-in-gust",
+        "title": {
+          "en": "Pole sway in gust",
+          "de": "Säulenschwingung in Böen"
+        },
+        "description": {
+          "en": "A design gust rises, bends the pole downwind by about 1.8 degrees and releases again.",
+          "de": "Eine Bemessungsböe steigt an, biegt die Säule etwa 1,8 Grad in Windrichtung und klingt wieder ab."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "lit-night",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "lit-in-wind",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "lit-night",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foundation-support",
+            "fromS": 0,
+            "toS": 8
+          }
+        ],
+        "phases": [
+          {
+            "id": "gust-rise",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Gust rises",
+              "de": "Böe steigt an"
+            }
+          },
+          {
+            "id": "gust-release",
+            "fromS": 4,
+            "toS": 8,
+            "title": {
+              "en": "Gust releases",
+              "de": "Böe klingt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "load-on",
+            "title": {
+              "en": "Gust reaches the column",
+              "de": "Böe erreicht die Säule"
+            },
+            "target": "wind-pole"
+          },
+          {
+            "t": 6,
+            "kind": "load-off",
+            "title": {
+              "en": "Gust releases",
+              "de": "Böe klingt ab"
+            },
+            "target": "wind-pole"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind-pole",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:wind-head",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 15,
+        "meanRadiantTempC": 15,
+        "relativeHumidity": 0.6,
+        "windMS": 1.0,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "pole-galv",
+          "title": {
+            "en": "Galvanised column and base plate",
+            "de": "Verzinkte Säule und Fußplatte"
+          },
+          "kind": "surface",
+          "material": "galv-steel",
+          "model": "passive",
+          "areaM2": 2.4,
+          "characteristicLengthM": 0.13,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "plinth-concrete",
+          "title": {
+            "en": "Concrete plinth",
+            "de": "Betonsockel"
+          },
+          "kind": "surface",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 0.6,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "arm-alu",
+          "title": {
+            "en": "Aluminium luminaire arm",
+            "de": "Aluminium-Leuchtenarm"
+          },
+          "kind": "surface",
+          "material": "aluminium-anodised",
+          "model": "passive",
+          "areaM2": 0.18,
+          "characteristicLengthM": 0.06,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "lamp-housing",
+          "title": {
+            "en": "Luminaire housing",
+            "de": "Leuchtengehäuse"
+          },
+          "kind": "surface",
+          "material": "aluminium-anodised",
+          "model": "operating",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.2,
+          "operatingKey": "lamp",
+          "riseK": 18,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "lamp-lens",
+          "title": {
+            "en": "Lens",
+            "de": "Abdeckung"
+          },
+          "kind": "glazing",
+          "material": "polycarbonate",
+          "model": "passive",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.2,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "lamp-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Warm luminaire plume",
+            "de": "Warme Leuchtenfahne"
+          },
+          "anchor": "lamp-plume",
+          "directionDeg": 90,
+          "carries": "airflow",
+          "temperatureC": 35,
+          "velocityMS": 0.15,
+          "diameterM": 0.06,
+          "source": "authored-estimate"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Operating lamp: housing temperature is ambient plus 18 K at full output; the plume is a buoyant jet of air.",
+          "de": "Betriebene Leuchte: Gehäusetemperatur ist Umgebung plus 18 K bei voller Leistung; die Fahne ist ein auftriebsbehafteter Luftstrahl."
+        },
+        {
+          "en": "Reference case: night, 15 °C air, light breeze; no solar gain.",
+          "de": "Referenzfall: Nacht, 15 °C Luft, leichte Brise; kein Sonneneintrag."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foundation-support"
+      ],
+      "assumptions": [
+        {
+          "en": "The column is a fixed-base cantilever; the base is a fixed support; sway is the equivalent rigid rotation of the pole about its base.",
+          "de": "Die Säule ist ein Kragarm mit fester Einspannung; die Sohle ist ein fester Auflager; Schwingung ist die äquivalente starre Drehung um den Fuß."
+        },
+        {
+          "en": "Wind on the column and luminaire is a quasi-static design gust.",
+          "de": "Wind auf Säule und Leuchte ist eine quasistatische Bemessungsböe."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "dusk-off",
+      "defaultClip": "ignition-at-dusk",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

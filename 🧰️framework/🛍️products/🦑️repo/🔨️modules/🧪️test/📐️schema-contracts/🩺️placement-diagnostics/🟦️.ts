@@ -1,5 +1,7 @@
 /** 🩺️ The placement diagnostics of the schema contract layer: forbidden placements, module directories on disk, measurement disagreements, owner eligibility and fixture isolation. */
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
+import { ecmaStringValue, ecmaTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/🟦️.ts";
 import { testFilenameForKind, testTaxonomy } from "../../🗂️taxonomy/🟦️.ts";
 import { forbiddenSchemaPlacements, isFixtureOwnedPath, matchesTaxonomyPathPattern, readSchemaCatalog, schemaDiagnostic, type SchemaDiagnostic, schemaJsonDialect, schemaModuleDirName } from "../🟦️.ts";
 import { isDeclaredDialectDefinition, readJson, readSchemaDefinition, schemaScopeEligibility, schemaTreeFiles } from "../🏗️scope-eligibility-and-tree/🟦️.ts";
@@ -94,20 +96,40 @@ export function schemaMeasurementDisagreementDiagnostics(repoRoot: string, files
   return found;
 }
 
+const EXPLICIT_ECMA_REEXPORTS = new RegExp("^(?:export (?:type )?\\{(?: (?:type )?[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*(?: as [$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*)?(?: , (?:type )?[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*(?: as [$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*)?)*(?: ,)?)? \\} from #string(?: with \\{ (?:[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*|#string) : #string(?: , (?:[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*|#string) : #string)*(?: ,)? \\})? ;(?: |$))+$", "u");
+const EXPLICIT_ECMA_DEFAULT_IDENTITY = new RegExp("^import ([$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*) from #string(?: with \\{ (?:[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*|#string) : #string(?: , (?:[$_\\p{ID_Start}][$_\\u200c\\u200d\\p{ID_Continue}]*|#string) : #string)*(?: ,)? \\})? ; export default \\1 ;$", "u");
+
+/** 📫️ Positive proof of an explicit publication, not a declaration: named forwards or an unchanged imported default. Other syntax and every normative carrier retain ownership checks. */
+function isExplicitEcmaPublication(repoRoot: string, file: string): boolean {
+  if (!/\.tsx?$/u.test(file)) return false;
+  try {
+    const tokens = ecmaTokens(readFileSync(join(repoRoot, file), "utf8")).filter((token) => token.kind !== "eof");
+    if (tokens.length === 0) return true;
+    if (tokens.some((token) => token.kind === "invalid" || token.kind === "string" && !ecmaStringValue(token))) return false;
+    const source = tokens.map((token) => token.kind === "string" ? "#string" : token.text).join(" ");
+    return EXPLICIT_ECMA_REEXPORTS.test(source) || EXPLICIT_ECMA_DEFAULT_IDENTITY.test(source);
+  } catch {
+    return false;
+  }
+}
+
 /** 🏛️ Owner eligibility: every `🧬️schema/` module on disk sits on a declared scope owner level. */
 export function schemaOwnerEligibilityDiagnostics(repoRoot: string, files: readonly string[] = schemaTreeFiles(repoRoot)): SchemaDiagnostic[] {
   const found: SchemaDiagnostic[] = [];
   const moduleDirName = schemaModuleDirName(repoRoot);
-  const owners = new Set<string>();
+  const owners = new Map<string, Set<string>>();
   for (const rel of files) {
     const dirSegments = rel.split("/").slice(0, -1);
     const moduleDir = schemaModuleDirOf(dirSegments, moduleDirName);
     if (moduleDir === null) continue;
-    owners.add(moduleDir.slice(0, moduleDir.length - moduleDirName.length - 1));
+    const owner = moduleDir.slice(0, moduleDir.length - moduleDirName.length - 1);
+    const members = owners.get(owner) ?? new Set<string>();
+    members.add(rel);
+    owners.set(owner, members);
   }
-  for (const owner of [...owners].sort()) {
+  for (const owner of [...owners.keys()].sort()) {
     const verdict = schemaScopeEligibility(repoRoot, owner);
-    if (!verdict.eligible) found.push(schemaDiagnostic("schema-owner-ineligible", `${owner} carries a ${moduleDirName}/ module and is not an eligible scope owner — ${verdict.reason}`, { path: owner }));
+    if (!verdict.eligible && ![...owners.get(owner)!].every((file) => isExplicitEcmaPublication(repoRoot, file))) found.push(schemaDiagnostic("schema-owner-ineligible", `${owner} carries a ${moduleDirName}/ module and is not an eligible scope owner — ${verdict.reason}`, { path: owner }));
   }
   return found;
 }

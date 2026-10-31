@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://course/react/scrollport/v1",
+  "title": "Intrinsic Scrollport Geometry",
+  "$ref": "#/$defs/Measurement",
+  "$defs": {
+    "Measurement": {
+      "type": "object",
+      "required": [
+        "viewport",
+        "chrome",
+        "controls",
+        "padding"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "viewport": {
+          "type": "number",
+          "minimum": 0
+        },
+        "chrome": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "padding": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "number",
+              "minimum": 0
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2,
+          "items": false
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "required": [
+        "minimum",
+        "main",
+        "total",
+        "overflow"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "minimum": {
+          "type": "number",
+          "minimum": 0
+        },
+        "main": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total": {
+          "type": "number",
+          "minimum": 0
+        },
+        "overflow": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Bounds": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "FocusVisibility": {
+      "type": "object",
+      "required": [
+        "changed",
+        "eligible",
+        "control",
+        "clips"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "changed": {
+          "type": "boolean"
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "control": {
+          "$ref": "#/$defs/Bounds"
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bounds"
+          }
+        }
+      }
+    },
+    "Margins": {
+      "type": "array",
+      "description": "Top, right, bottom and left CSS pixel scroll margins",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "FocusAlignment": {
+      "type": "object",
+      "required": [
+        "margins",
+        "pixelRatio"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "margins": {
+          "$ref": "#/$defs/Margins"
+        },
+        "pixelRatio": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

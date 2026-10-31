@@ -1,7 +1,7 @@
 import "@semio-tech/process/routing";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {Database} from "bun:sqlite";
 import {randomUUID,createHash} from "node:crypto";
 import fixture from "./🧫️fixtures/🔣️.json";

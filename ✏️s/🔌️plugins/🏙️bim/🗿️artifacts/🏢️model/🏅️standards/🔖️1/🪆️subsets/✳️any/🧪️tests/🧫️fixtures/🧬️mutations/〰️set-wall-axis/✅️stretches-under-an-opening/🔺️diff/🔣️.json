@@ -1,19 +1,21 @@
 {
   "walls": {
     "w-south": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 10.0,
-            "y": 0.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 0.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 10,
+              "y": 0
+            },
+            "start": {
+              "x": 0,
+              "y": 0
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

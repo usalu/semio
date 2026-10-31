@@ -69,7 +69,7 @@ export async function authoredUnknownScaleChecks() {
     return {module:"scale",name:"unknown/"+entry.name,subject:()=>{const scale=buildVizScale(spec);return entry.inputs.map(input=>normalize(scale(value(input) as never)));},oracle:()=>entry.inputs.map(input=>{const v=value(input);return normalize(reference(spec.kind==="temporal"&&v!=null&&!(v instanceof Date)?new Date(typeof v==="string"&&!Number.isFinite(Number(v))?Date.parse(v):Number(v)):v));}),tolerance:1e-9};
   });
   const rejection={module:"scale",name:"unknown/band-point-rejected",subject:()=>unknownVectors.rejections.map(spec=>{try{buildVizScale(spec.spec as unknown as VizScaleSpec);return false;}catch{return true;}}),oracle:()=>unknownVectors.rejections.map(spec=>{const reference=spec.spec.kind==="band"?d3.scaleBand():d3.scalePoint();return typeof (reference as unknown as {unknown?:unknown}).unknown!=="function";})};
-  const {default:Ajv}=await import("ajv/dist/2020.js"), ajv=new Ajv({strict:false});
+  const {default:Ajv}=await import("ajv"), ajv=new Ajv({strict:false});
   const validate=ajv.compile({$ref:"#/$defs/ChartSpecification",$defs:chartSchema.$defs});
   const charts=unknownVectors.rejections.flatMap(spec=>[{width:100,height:60,language:"en",layers:[],scales:[spec.spec]},{width:100,height:60,language:"en",layers:[],scales:[{...spec.spec,options:{}}]}]);
   const admission={module:"scale",name:"unknown/band-point-schema",subject:()=>charts.map(chart=>validateVizChartSpecification(chart).length===0),oracle:()=>charts.map(chart=>validate(chart))};

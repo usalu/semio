@@ -1,6 +1,6 @@
 /** 💎️ Exact AdvancedBrep alternatives retain original labels and independent source schema errors. */
 import {test,expect} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {compare,applyPatch} from 'fast-json-patch';
 import * as api from './🟦️.ts';
 import {validateIfcBodyAdvancedBrep as standardEndpoint,ifcBodyAdvancedBrepDefinition as standardDefinition} from '../../../../🟦️.ts';

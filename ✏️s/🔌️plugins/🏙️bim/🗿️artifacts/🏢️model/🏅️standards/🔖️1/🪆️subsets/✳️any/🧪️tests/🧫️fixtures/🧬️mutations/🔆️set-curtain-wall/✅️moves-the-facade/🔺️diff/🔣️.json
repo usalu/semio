@@ -1,20 +1,22 @@
 {
   "curtain_walls": {
     "cw-1": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 6.0,
-            "y": 1.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 1.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 6,
+              "y": 1
+            },
+            "start": {
+              "x": 0,
+              "y": 1
+            }
           }
-        }
-      },
-      "base_offset": 0.2,
-      "entry": "Patched"
+        },
+        "base_offset": 0.2
+      }
     }
   }
 }

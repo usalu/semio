@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
 const law=JSON.parse(readFileSync(new URL("🔣️.json",import.meta.url),"utf8"));

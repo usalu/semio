@@ -1,8 +1,10 @@
 {
   "tags": {
     "tag-south": {
-      "category": "Number",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "category": "Number"
+      }
     }
   }
 }

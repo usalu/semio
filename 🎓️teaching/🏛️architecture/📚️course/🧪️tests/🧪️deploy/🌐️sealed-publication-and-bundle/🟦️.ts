@@ -11,6 +11,9 @@ import { parse } from "yaml";
 import Ajv from "ajv";
 import { expect, it } from "vitest";
 import deployment from "../../../🚀️deploy/🔣️.json" with { type: "json" };
+import publication from "../../../🧫️fixtures/🌐️publication/🔣️.json" with { type: "json" };
+import publicationSchema from "../../../🧫️fixtures/🌐️publication/🧬️schema/🔣️.json" with { type: "json" };
+import architectureCourse from "../../../🔣️.json" with { type: "json" };
 import bundleCases from "../../../🧫️fixtures/🚛️bundle/🔣️.json" with { type: "json" };
 import bundlePolicySchema from "../../../🧫️fixtures/🚛️bundle/🧬️schema/🔣️.json" with { type: "json" };
 import { saveStackBundleImages, verifyStackBundleArchive, stackBundleImages, stackBundlePlan } from "../../../🚀️deploy/🎁️stack-bundle/🟦️.ts";
@@ -28,6 +31,16 @@ const tarStream=createRequire(join(site,"📦️packages/🟦️typescript/packa
 
 /** 🚛 Registers the sealed document, CDN artifact, stack bundle, readiness gate and response header tests. */
 export function registerSealedPublicationAndBundleTests(): void {
+  it("retains every authored assignment PDF and refuses each missing or invalid document", () => {
+    const validate = new Ajv({ strict: true }).compile(publicationSchema);
+    expect(validate(publication), JSON.stringify(validate.errors)).toBe(true);
+    expect(publication.assignmentFiles).toEqual(architectureCourse.assignments.flatMap(assignment => Object.values(assignment.documents).map(document => "assignments/" + document.file)));
+    for (const path of publication.assignmentFiles) for (const row of publication.assignmentCases) {
+      const files = released(COURSE_PROCTOR_ORIGIN);
+      if (row.replacement === null) delete files[path]; else files[path] = row.replacement;
+      expect(siteArtifactProblems(tree(files), COURSE_PROCTOR_ORIGIN), path + "/" + row.id).toEqual(row.problem === null ? [] : [path + row.problem]);
+    }
+  });
   it("accepts exactly a document sealed for the baked proctor origin", () => {
     expect(siteDocumentProblems(sealed(COURSE_PROCTOR_ORIGIN), COURSE_PROCTOR_ORIGIN)).toEqual([]);
     expect(siteDocumentProblems(sealed("https://localhost:18443"), "https://localhost:18443")).toEqual([]);
@@ -51,7 +64,7 @@ export function registerSealedPublicationAndBundleTests(): void {
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js.map": "{}", "assets/chunk.js": "//# sourceMappingURL=chunk.js.map\nconsole.log('[DEBUG] x')" }), COURSE_PROCTOR_ORIGIN)).toEqual(["assets/app-AbCd1234.js.map carries no content hash, yet /assets/* is served as immutable", "assets/chunk.js carries no content hash, yet /assets/* is served as immutable", "assets/app-AbCd1234.js.map is a source map", "the site carries the development leftover sourceMappingURL=", "the site carries the development leftover [DEBUG]"]);
     const { "assets/app-EfGh5678.css": _stylesheet, "robots.txt": _robots, ...partial } = released(COURSE_PROCTOR_ORIGIN);
     expect(siteArtifactProblems(tree(partial), COURSE_PROCTOR_ORIGIN)).toEqual(["robots.txt is missing", "the document loads assets/app-EfGh5678.css, which the artifact lacks"]);
-    expect(siteArtifactProblems(tree({ "index.html": sealed(COURSE_PROCTOR_ORIGIN), CNAME: `${deployment.site.host}\n` }), COURSE_PROCTOR_ORIGIN)).toEqual(["404.html is missing", ".nojekyll is missing", "robots.txt is missing", "manifest.webmanifest is missing", "favicon.svg is missing", "the document loads assets/app-AbCd1234.js, which the artifact lacks", "the document loads assets/app-EfGh5678.css, which the artifact lacks", `no script bakes the proctor origin ${COURSE_PROCTOR_ORIGIN}`]);
+    expect(siteArtifactProblems(tree({ "index.html": sealed(COURSE_PROCTOR_ORIGIN), CNAME: `${deployment.site.host}\n` }), COURSE_PROCTOR_ORIGIN)).toEqual(["404.html is missing", ".nojekyll is missing", "robots.txt is missing", "manifest.webmanifest is missing", "favicon.svg is missing", ...publication.assignmentFiles.map(path => path + " is missing"), "the document loads assets/app-AbCd1234.js, which the artifact lacks", "the document loads assets/app-EfGh5678.css, which the artifact lacks", `no script bakes the proctor origin ${COURSE_PROCTOR_ORIGIN}`]);
     const heavy = `${released(COURSE_PROCTOR_ORIGIN)["assets/app-AbCd1234.js"] as string}\n/* ${randomBytes(COURSE_SITE_BUDGET.scriptGzipBytes.publish * 2).toString("base64")} */`;
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "assets/app-AbCd1234.js": heavy }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the document's scripts weigh \d+ bytes compressed, over the budget of \d+$/u)]);
     expect(siteArtifactProblems(tree({ ...released(COURSE_PROCTOR_ORIGIN), "🖼️assets/font.woff2": randomBytes(COURSE_SITE_BUDGET.totalBytes) }), COURSE_PROCTOR_ORIGIN)).toEqual([expect.stringMatching(/^the artifact weighs \d+ bytes, over the budget of \d+$/u)]);

@@ -25,20 +25,23 @@ export function watcherManifestV1(){
 const executableName=platform=>platform==="win32"?"semio-repo-watch.exe":"semio-repo-watch";
 
 /** 🛠 Finds or builds the watcher. `locate()` answers an installed path, `compile({directory,signal})` builds `semio-repo-watch` in `directory/target/release` and resolves its path, `outputRoot` is the tools partition directory of the tool, `writable()` answers whether that directory may be written now (an unmounted image is refused before anything is compiled). */
-export async function ensureWatcherV1({sourcePath,pinPath,outputRoot,locate,compile,writable=()=>true,signal,progress=()=>undefined,platform=process.platform,probe=defaultProbe}){
+export async function ensureWatcherV1({sourcePath,pinPath,outputRoot,locate,compile,writable,workRoot=tmpdir(),signal,progress=()=>undefined,platform=process.platform,probe=defaultProbe}){
  const pin=readWatcherPinV1(pinPath,sourcePath),installed=await locate();
  if(installed)return{path:installed,built:false,version:pin.version,sha256:pin.sha256};
- if(!writable())throw refuseBuildV1("missing","watcher.output-root-not-mounted",{path:outputRoot});
- const work=mkdtempSync(join(tmpdir(),"semio-watch-"));
+ const checkWritable=async()=>{signal?.throwIfAborted();if(typeof writable!=="function"||await writable()!==true)throw refuseBuildV1("missing","watcher.output-root-not-mounted",{path:outputRoot});signal?.throwIfAborted();};
+ await checkWritable();
+ const work=mkdtempSync(join(workRoot,"semio-watch-"));
  try{
   progress("compile");
   writeFileSync(join(work,"Cargo.toml"),watcherManifestV1());copyFileSync(sourcePath,join(work,"main.rs"));
   const built=await compile({directory:work,signal});
+  await checkWritable();
   const target=join(outputRoot,pin.sha256.slice(0,16));
   mkdirSync(target,{recursive:true});
   const staged=join(target,executableName(platform)+"."+process.pid+".tmp");
   copyFileSync(built,staged);chmodSync(staged,0o755);
   if(!probe(staged)){rmSync(staged,{force:true});throw new Error("The built watcher does not answer the version frame");}
+  await checkWritable();
   const final=join(target,executableName(platform));
   renameSync(staged,final);
   progress("ready");

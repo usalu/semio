@@ -1,8 +1,10 @@
 {
   "schedules": {
     "sch-walls": {
-      "category": "Slab",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "category": "Slab"
+      }
     }
   }
 }

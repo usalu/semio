@@ -1,6 +1,6 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import fixture from "../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🌱️value/🧬️octets/🛫️cos-output.json";
 import schema from "../../🧬️schema/🛫️cos-output.json";
 test("all ten COS wire tags retain independent JSON and intrinsic octet identities",()=>{

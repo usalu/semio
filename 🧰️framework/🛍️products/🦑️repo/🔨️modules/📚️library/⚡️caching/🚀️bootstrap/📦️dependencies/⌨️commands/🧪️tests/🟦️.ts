@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import * as ts from "typescript";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️cases.json" with {type:"json"};

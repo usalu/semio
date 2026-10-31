@@ -1,8 +1,10 @@
 {
   "classifications": {
     "w-south": {
-      "cs-uni": "Zz_99",
-      "entry": "Created"
+      "entry": "Created",
+      "value": {
+        "cs-uni": "Zz_99"
+      }
     }
   }
 }

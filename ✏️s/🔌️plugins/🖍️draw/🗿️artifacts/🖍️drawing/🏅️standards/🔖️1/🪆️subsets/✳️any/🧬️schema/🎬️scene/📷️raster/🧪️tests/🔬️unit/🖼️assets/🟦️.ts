@@ -1,8 +1,7 @@
 const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Array.isArray(value)?value.map(neutral):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,neutral(item)])):value;
 /** 🖼️ Shared encoded scene fixtures preserve private image composition and independent source/filter/blend output. */
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020.js";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
+import Ajv from "ajv";
 import sharp from "sharp";
 import {PNG} from "pngjs";
 import cases from "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📷️raster/🖼️assets/🔣️.json";
@@ -14,7 +13,7 @@ import {admitted,hostile} from "../../../../../../🧪️tests/🧫️fixtures/�
 import {areaOracle,canvasOracle,delta} from "@semio-tech/framework/pixels/sampling/affine/testing/oracles";
 import { imageDecodeSchema as imageSchema } from "@semio-tech/framework/pixels/image/decode/schema";
 type RasterSceneFixture=Omit<RasterSceneInput,"assets">&{readonly assets:readonly {readonly id:string;readonly image:{readonly width:number;readonly height:number;readonly pixels:readonly number[]}}[]};
-const ajv=new Ajv({strict:true}).addMetaSchema(draft7);ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile<RasterSceneFixture>(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
+const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile<RasterSceneFixture>(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
 const sceneInput=(value:unknown):RasterSceneInput=>{const fixture=admitted(validate,value,"raster scene input");return {...fixture,assets:fixture.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))};};
 const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
 async function reference(value:RasterSceneInput){

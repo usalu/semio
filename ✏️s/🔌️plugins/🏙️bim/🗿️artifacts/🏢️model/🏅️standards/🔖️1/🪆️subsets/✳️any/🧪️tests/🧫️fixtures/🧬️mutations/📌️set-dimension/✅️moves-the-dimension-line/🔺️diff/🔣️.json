@@ -2,7 +2,9 @@
   "dimensions": {
     "dim-south": {
       "entry": "Patched",
-      "offset": -1.5
+      "value": {
+        "offset": -1.5
+      }
     }
   }
 }

@@ -443,8 +443,8 @@
       "de": "Die Implementierungs-Quelle wird vom Elternprozess nicht zugelassen: {path}"
     },
     "closure.source-differs": {
-      "en": "Captured implementation Source differs from admitted parent",
-      "de": "Die erfasste Implementierungs-Quelle weicht vom zugelassenen Elternprozess ab"
+      "en": "Captured implementation Source {path} differs from admitted parent (expected {expectedSha256}, observed {observedSha256})",
+      "de": "Die erfasste Implementierungs-Quelle {path} weicht vom zugelassenen Elternprozess ab (erwartet {expectedSha256}, beobachtet {observedSha256})"
     },
     "closure.capacity-exceeded": {
       "en": "Implementation Source closure capacity exceeded: {path}",

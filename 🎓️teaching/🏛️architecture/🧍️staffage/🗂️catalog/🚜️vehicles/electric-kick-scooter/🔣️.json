@@ -1,0 +1,2709 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "electric-kick-scooter",
+  "category": "vehicles",
+  "title": {
+   "en": "Electric Kick Scooter",
+   "de": "Elektro-Tretroller"
+  },
+  "summary": {
+   "en": "A riderless folding electric kick scooter (8.5 inch wheels, 250 W front hub motor, deck battery, rear disc brake): riding and folded states, rolling wheels, hub motor, battery, brake and charging heat.",
+   "de": "Ein klappbarer Elektro-Tretroller ohne Fahrer (8,5-Zoll-Räder, 250-W-Nabenmotor vorn, Akku im Trittbrett, hintere Scheibenbremse): Fahr- und Klappzustand, rollende Räder, Wärme von Nabenmotor, Akku, Bremse und Laden."
+  },
+  "tags": [
+   "vehicle",
+   "scooter",
+   "electric",
+   "micromobility",
+   "folding",
+   "wheeled"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-VE (vehicles)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "etrto-2023",
+     "citation": "ETRTO Standards Manual (2023): tyre and rim designations (outer diameter from rim diameter plus twice the section height) for bicycle, scooter and car tyres."
+    },
+    {
+     "id": "iec-62133",
+     "citation": "IEC 62133-2:2017 Secondary cells and batteries containing alkaline or other non-acid electrolytes, lithium systems: charging and discharging conditions of portable lithium-ion packs."
+    },
+    {
+     "id": "limpert-1999",
+     "citation": "Limpert, R. (1999). Brake Design and Safety, 2nd ed., SAE International. Ch. 5: brake energy, disc and drum temperature rise."
+    },
+    {
+     "id": "wong-2008",
+     "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Ch. 1 and 3: tyre contact patch, rolling resistance, ground pressure about equal to inflation pressure, longitudinal load transfer."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 26 Heat, Air and Moisture Control: surface convection, radiation properties and U-values of glazing and sheet metal."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    }
+   ],
+   "notes": {
+    "en": "Typical adult folding e-scooter (wheelbase 0.86 m, 8.5 inch tyres, 12.5 kg); dimensions and power data are authored class values (authored-estimate). Wheels roll with theta = -x / r (r 0.108 m). The rider is excluded.",
+    "de": "Typischer klappbarer Erwachsenen-E-Roller (Radstand 0,86 m, 8,5-Zoll-Reifen, 12,5 kg); Abmessungen und Leistungsdaten sind selbst gesetzte Klassenwerte (authored-estimate). Die Räder rollen mit theta = -x / r (r 0,108 m). Der Fahrer ist ausgeschlossen."
+   }
+  },
+  "dimensions": {
+   "heightM": 1.11,
+   "widthM": 1.09,
+   "depthM": 0.43,
+   "massKg": 12.5
+  },
+  "materials": [
+   {
+    "id": "anodised",
+    "title": {
+     "en": "Anodised aluminium deck and stem",
+     "de": "Eloxiertes Aluminium von Trittbrett und Lenker"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.85,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "specificHeatJKgK": 900,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre and grip rubber",
+     "de": "Reifen- und Griffgummi"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1150,
+    "conductivityWmK": 0.2,
+    "source": "literature",
+    "reference": "wong-2008"
+   },
+   {
+    "id": "griptape",
+    "title": {
+     "en": "Abrasive grip tape",
+     "de": "Griptape-Antirutschbelag"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.92,
+    "densityKgM3": 1200,
+    "conductivityWmK": 0.3,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "plastic",
+    "title": {
+     "en": "Fender and housing plastic",
+     "de": "Schutzblech- und Gehäusekunststoff"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.2,
+    "source": "authored-estimate"
+   },
+   {
+    "id": "steel-disc",
+    "title": {
+     "en": "Brake disc steel",
+     "de": "Stahl der Bremsscheibe"
+    },
+    "emissivity": 0.7,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7800,
+    "conductivityWmK": 25,
+    "source": "literature",
+    "reference": "limpert-1999"
+   },
+   {
+    "id": "motor-alloy",
+    "title": {
+     "en": "Hub motor housing aluminium",
+     "de": "Aluminiumgehäuse des Nabenmotors"
+    },
+    "emissivity": 0.6,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 2700,
+    "conductivityWmK": 150,
+    "source": "literature",
+    "reference": "incropera-2011"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "deck",
+   "bones": [
+    {
+     "id": "deck",
+     "parent": null,
+     "title": {
+      "en": "Deck with battery, controller and rear fender",
+      "de": "Trittbrett mit Akku, Steuerung und Hinterradschutzblech"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 6.6,
+      "comX": -0.02,
+      "comY": 0.12,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "fork",
+     "parent": "deck",
+     "title": {
+      "en": "Steering head and fork",
+      "de": "Lenkkopf und Gabel"
+     },
+     "x": 0.4,
+     "y": 0.3,
+     "angleDeg": 0,
+     "lengthM": 0.2,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -12,
+      "maxDeg": 12
+     },
+     "mass": {
+      "kg": 0.9,
+      "comX": 0,
+      "comY": -0.1,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "stem",
+     "parent": "fork",
+     "title": {
+      "en": "Folding stem with handlebar",
+      "de": "Klappbarer Lenker mit Vorbau"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 98,
+     "lengthM": 0.8,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 1.6,
+      "comX": 0.4,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "fork",
+     "title": {
+      "en": "Front wheel with hub motor",
+      "de": "Vorderrad mit Nabenmotor"
+     },
+     "x": 0.02999999999999997,
+     "y": -0.192,
+     "angleDeg": 0,
+     "lengthM": 0.108,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 2.4,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "etrto-2023"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "deck",
+     "title": {
+      "en": "Rear wheel with disc",
+      "de": "Hinterrad mit Scheibe"
+     },
+     "x": -0.43,
+     "y": 0.108,
+     "angleDeg": 0,
+     "lengthM": 0.108,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 1,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "etrto-2023"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-r",
+    "bone": "deck",
+    "x": -0.43,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre patch",
+     "de": "Hinterreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "contact-f",
+    "bone": "fork",
+    "x": 0.02999999999999997,
+    "y": -0.3,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre patch",
+     "de": "Vorderreifenaufstandsfläche"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.03,
+    "footprintWidthM": 0.04,
+    "frictionCoefficient": 0.8
+   },
+   {
+    "id": "deck-stance",
+    "bone": "deck",
+    "x": -0.05,
+    "y": 0.157,
+    "kind": "load",
+    "title": {
+     "en": "Standing point on the deck",
+     "de": "Standpunkt auf dem Trittbrett"
+    }
+   }
+  ],
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": 0.13,
+     "glazing": 0.13,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.075,
+       "ry": 0.075,
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "hub-motor",
+       "material": "motor-alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.035,
+       "ry": 0.035,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.45,
+       "region": "hub-motor",
+       "material": "motor-alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.075,
+       "ry": 0.075,
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.8,
+       "filled": true,
+       "tone": 0.45,
+       "region": "brake-disc",
+       "material": "steel-disc"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4,
+         0.095
+        ],
+        [
+         0.37,
+         0.095
+        ],
+        [
+         0.38,
+         0.12
+        ],
+        [
+         0.37,
+         0.145
+        ],
+        [
+         -0.4,
+         0.145
+        ],
+        [
+         -0.41,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "region": "deck-battery",
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.36,
+         0.135
+        ],
+        [
+         0.3,
+         0.135
+        ],
+        [
+         0.3,
+         0.158
+        ],
+        [
+         -0.36,
+         0.158
+        ]
+       ],
+       "closed": true,
+       "id": "grip-tape",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.12,
+       "region": "deck-grip",
+       "material": "griptape"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.3083,
+         0.1406
+        ],
+        [
+         -0.3127,
+         0.1541
+        ],
+        [
+         -0.3187,
+         0.167
+        ],
+        [
+         -0.326,
+         0.1791
+        ],
+        [
+         -0.3347,
+         0.1904
+        ],
+        [
+         -0.3445,
+         0.2006
+        ],
+        [
+         -0.3555,
+         0.2096
+        ],
+        [
+         -0.3674,
+         0.2173
+        ],
+        [
+         -0.3801,
+         0.2237
+        ],
+        [
+         -0.3934,
+         0.2286
+        ],
+        [
+         -0.4072,
+         0.2319
+        ],
+        [
+         -0.4213,
+         0.2337
+        ],
+        [
+         -0.4355,
+         0.2339
+        ],
+        [
+         -0.4496,
+         0.2325
+        ],
+        [
+         -0.4635,
+         0.2295
+        ],
+        [
+         -0.4769,
+         0.2249
+        ],
+        [
+         -0.4898,
+         0.2189
+        ],
+        [
+         -0.5019,
+         0.2115
+        ],
+        [
+         -0.5131,
+         0.2027
+        ],
+        [
+         -0.5232,
+         0.1928
+        ],
+        [
+         -0.5322,
+         0.1818
+        ],
+        [
+         -0.5398,
+         0.1698
+        ],
+        [
+         -0.5461,
+         0.1571
+        ],
+        [
+         -0.5508,
+         0.1437
+        ],
+        [
+         -0.5541,
+         0.1299
+        ],
+        [
+         -0.5423,
+         0.1278
+        ],
+        [
+         -0.5393,
+         0.1403
+        ],
+        [
+         -0.535,
+         0.1524
+        ],
+        [
+         -0.5293,
+         0.1639
+        ],
+        [
+         -0.5224,
+         0.1747
+        ],
+        [
+         -0.5143,
+         0.1847
+        ],
+        [
+         -0.5052,
+         0.1937
+        ],
+        [
+         -0.495,
+         0.2016
+        ],
+        [
+         -0.4841,
+         0.2083
+        ],
+        [
+         -0.4725,
+         0.2138
+        ],
+        [
+         -0.4603,
+         0.2179
+        ],
+        [
+         -0.4478,
+         0.2206
+        ],
+        [
+         -0.435,
+         0.2219
+        ],
+        [
+         -0.4221,
+         0.2217
+        ],
+        [
+         -0.4094,
+         0.2201
+        ],
+        [
+         -0.3969,
+         0.2171
+        ],
+        [
+         -0.3848,
+         0.2127
+        ],
+        [
+         -0.3734,
+         0.2069
+        ],
+        [
+         -0.3626,
+         0.1999
+        ],
+        [
+         -0.3527,
+         0.1918
+        ],
+        [
+         -0.3437,
+         0.1825
+        ],
+        [
+         -0.3359,
+         0.1724
+        ],
+        [
+         -0.3293,
+         0.1614
+        ],
+        [
+         -0.3239,
+         0.1497
+        ],
+        [
+         -0.3199,
+         0.1375
+        ]
+       ],
+       "closed": true,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.55,
+       "region": "fenders",
+       "material": "plastic"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.03,
+       "y1": -0.192,
+       "r0": 0.014,
+       "r1": 0.014,
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.035,
+         -0.05
+        ],
+        [
+         0.035,
+         -0.05
+        ],
+        [
+         0.035,
+         0.03
+        ],
+        [
+         -0.035,
+         0.03
+        ]
+       ],
+       "closed": true,
+       "id": "head-block",
+       "bone": "fork",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0,
+       "y0": 0,
+       "x1": 0.8,
+       "y1": 0,
+       "r0": 0.019,
+       "r1": 0.015,
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "stem-bars",
+       "material": "anodised"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "id": "grip-end",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "capsule",
+       "x0": 0.8036,
+       "y0": -0.0106,
+       "x1": 0.7762,
+       "y1": -0.0976,
+       "r0": 0.008,
+       "r1": 0.008,
+       "id": "brake-lever",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "stem-bars",
+       "material": "anodised"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full side elevation: tyre and rim rings, hub motor, brake rotor, deck with grip tape, fender, fork, head block, folding stem, grip end, brake lever and front mudguard.",
+      "de": "Vollständige Seitenansicht: Reifen- und Felgenringe, Nabenmotor, Bremsscheibe, Trittbrett mit Griptape, Schutzblech, Gabel, Lenkkopf, Klappvorbau, Griffende, Bremshebel und Vorderradabdeckung."
+     },
+     "retained": {
+      "en": "All printable construction parts.",
+      "de": "Alle druckbaren Konstruktionsteile."
+     },
+     "merged": {
+      "en": "Controller sits inside the deck (hidden region).",
+      "de": "Die Steuerung sitzt im Trittbrett (verdeckte Region)."
+     },
+     "omitted": {
+      "en": "Cables, bolts, lights, tyre profile.",
+      "de": "Kabel, Schrauben, Leuchten, Reifenprofil."
+     },
+     "thinElements": {
+      "en": "Grip tape drawn 0.013 m (real 0.0015 m) so it stays 0.26 mm.",
+      "de": "Griptape 0,013 m gezeichnet (real 0,0015 m), damit es 0,26 mm bleibt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark tyres, light rim and motor, mid-tone deck, near black grip tape.",
+      "de": "Dunkle Reifen, helle Felge und Motor, mitteltoniges Trittbrett, fast schwarzes Griptape."
+     },
+     "overlays": {
+      "en": "Each visible region has its own shape; the controller is hidden.",
+      "de": "Jede sichtbare Region hat eine eigene Form; die Steuerung ist verdeckt."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.066,
+       "ry": 0.066,
+       "id": "rim-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "hub-motor",
+       "material": "motor-alloy"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.066,
+       "ry": 0.066,
+       "id": "rim-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.75,
+       "region": "brake-disc",
+       "material": "motor-alloy"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4,
+         0.095
+        ],
+        [
+         0.37,
+         0.095
+        ],
+        [
+         0.38,
+         0.12
+        ],
+        [
+         0.37,
+         0.145
+        ],
+        [
+         -0.4,
+         0.145
+        ],
+        [
+         -0.41,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.03,
+         -0.192
+        ]
+       ],
+       "closed": false,
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "penMm": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.8,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "penMm": 0.35
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.03,
+       "ry": 0.03,
+       "id": "grip-end",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.3218,
+         0.137
+        ],
+        [
+         -0.3258,
+         0.149
+        ],
+        [
+         -0.331,
+         0.1604
+        ],
+        [
+         -0.3376,
+         0.1712
+        ],
+        [
+         -0.3453,
+         0.1812
+        ],
+        [
+         -0.354,
+         0.1903
+        ],
+        [
+         -0.3638,
+         0.1983
+        ],
+        [
+         -0.3744,
+         0.2052
+        ],
+        [
+         -0.3856,
+         0.2108
+        ],
+        [
+         -0.3975,
+         0.2152
+        ],
+        [
+         -0.4097,
+         0.2182
+        ],
+        [
+         -0.4223,
+         0.2197
+        ],
+        [
+         -0.4349,
+         0.2199
+        ],
+        [
+         -0.4474,
+         0.2186
+        ],
+        [
+         -0.4598,
+         0.216
+        ],
+        [
+         -0.4717,
+         0.2119
+        ],
+        [
+         -0.4832,
+         0.2066
+        ],
+        [
+         -0.4939,
+         0.2
+        ],
+        [
+         -0.5038,
+         0.1922
+        ],
+        [
+         -0.5128,
+         0.1834
+        ],
+        [
+         -0.5208,
+         0.1736
+        ],
+        [
+         -0.5276,
+         0.1629
+        ],
+        [
+         -0.5332,
+         0.1516
+        ],
+        [
+         -0.5374,
+         0.1397
+        ],
+        [
+         -0.5403,
+         0.1274
+        ]
+       ],
+       "closed": false,
+       "id": "fender-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 3.6,
+       "filled": false,
+       "tone": 0.3,
+       "region": "fenders",
+       "penMm": 0.13
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Tyre rings with hub discs, deck block, rear fender arc, fork and stem strokes at real width and the grip end.",
+      "de": "Reifenringe mit Nabenscheiben, Trittbrettblock, Hinterradschutzblech-Bogen, Gabel- und Lenkerstriche in Realbreite und das Griffende."
+     },
+     "retained": {
+      "en": "Wheels, hub motor, brake disc, deck, fender, fork, stem, grip.",
+      "de": "Räder, Nabenmotor, Bremsscheibe, Trittbrett, Schutzblech, Gabel, Lenker, Griff."
+     },
+     "merged": {
+      "en": "Deck, grip tape and controller are one block.",
+      "de": "Trittbrett, Griptape und Steuerung sind ein Block."
+     },
+     "omitted": {
+      "en": "Spokes or rim holes, lever, latch, tread.",
+      "de": "Speichen oder Felgenlöcher, Hebel, Verschluss, Profil."
+     },
+     "thinElements": {
+      "en": "Fender stroke 0.13 mm (real 0.1 mm); stem 0.35 mm (real 0.35 mm).",
+      "de": "Schutzblechstrich 0,13 mm (real 0,1 mm); Lenker 0,35 mm (real 0,35 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark tyres, light hubs, mid-tone deck.",
+      "de": "Dunkle Reifen, helle Naben, mitteltoniges Trittbrett."
+     },
+     "overlays": {
+      "en": "Controller, grip tape and battery share the deck block; fender is its own arc.",
+      "de": "Steuerung, Griptape und Akku teilen den Trittbrettblock; das Schutzblech ist ein eigener Bogen."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "wheel-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "hub-motor"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0,
+       "cy": 0,
+       "rx": 0.108,
+       "ry": 0.108,
+       "id": "wheel-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.1,
+       "regions": [
+        "tyres",
+        "brake-disc"
+       ],
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4,
+         0.095
+        ],
+        [
+         0.37,
+         0.095
+        ],
+        [
+         0.38,
+         0.12
+        ],
+        [
+         0.37,
+         0.145
+        ],
+        [
+         -0.4,
+         0.145
+        ],
+        [
+         -0.41,
+         0.12
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.3,
+       "regions": [
+        "deck-battery",
+        "deck-grip",
+        "bms-controller",
+        "fenders"
+       ],
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.8,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "fork-stem",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "penMm": 0.18
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.03,
+         -0.192
+        ]
+       ],
+       "closed": false,
+       "id": "fork-blade",
+       "bone": "fork",
+       "role": "body",
+       "z": 5,
+       "filled": false,
+       "tone": 0.3,
+       "region": "stem-bars",
+       "penMm": 0.16
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.8,
+       "cy": 0,
+       "rx": 0.034,
+       "ry": 0.034,
+       "id": "grip-end",
+       "bone": "stem",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "stem-bars",
+       "material": "rubber"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Two solid wheel discs, a thin deck bar, a stem stroke leaning back and a grip dot; the folded stem lies along the deck.",
+      "de": "Zwei volle Radscheiben, ein schmaler Trittbrettbalken, ein zurückgeneigter Lenkerstrich und ein Griffpunkt; der geklappte Lenker liegt am Trittbrett."
+     },
+     "retained": {
+      "en": "Wheels, deck, fork, stem and grip.",
+      "de": "Räder, Trittbrett, Gabel, Lenker und Griff."
+     },
+     "merged": {
+      "en": "Grip tape, battery enclosure, controller and fender are one deck bar; tyre and hub motor or brake disc are one disc per wheel.",
+      "de": "Griptape, Akkugehäuse, Steuerung und Schutzblech sind ein Trittbrettbalken; Reifen und Nabenmotor beziehungsweise Bremsscheibe sind eine Scheibe je Rad."
+     },
+     "omitted": {
+      "en": "Brake lever, latch, mudguard, rim, disc detail.",
+      "de": "Bremshebel, Verschluss, Abdeckung, Felge, Scheibendetail."
+     },
+     "thinElements": {
+      "en": "The 0.035 m stem is drawn 0.18 mm wide (real 0.175 mm).",
+      "de": "Der 0,035 m dicke Lenker ist 0,18 mm breit gezeichnet (real 0,175 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Dark wheel discs, mid-tone deck, one stroke weight for stem and fork.",
+      "de": "Dunkle Radscheiben, mitteltoniges Trittbrett, ein Strichstärke für Lenker und Gabel."
+     },
+     "overlays": {
+      "en": "Wheel discs paint tyres with hub motor (front) or brake disc (rear) as area-weighted mean; the deck paints battery, grip and fender merged.",
+      "de": "Radscheiben zeigen Reifen mit Nabenmotor (vorn) beziehungsweise Bremsscheibe (hinten) als flächengewichtetes Mittel; das Trittbrett zeigt Akku, Griptape und Schutzblech vereint."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "At 1:500 the scooter is 2.2 mm long: the 0.216 m wheels are 0.43 mm discs, the 0.035 m stem 0.07 mm and the 0.05 m deck 0.1 mm, all below the printable feature size, and a composed silhouette would be an unreadable blob.",
+     "de": "Bei 1:500 ist der Roller 2,2 mm lang: die 0,216 m großen Räder sind 0,43-mm-Scheiben, der 0,035 m dicke Lenker 0,07 mm und das 0,05 m dicke Trittbrett 0,1 mm, alles unter der druckbaren Einzelheitsgröße; eine zusammengesetzte Silhouette wäre ein unlesbarer Fleck."
+    },
+    "limitingFeature": {
+     "en": "Stem tube diameter and deck thickness",
+     "de": "Lenkerrohrdurchmesser und Trittbretthöhe"
+    },
+    "limitingSizeM": 0.035,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "symbol",
+      "symbol": "kick-scooter-plan"
+     }
+    ]
+   }
+  },
+  "symbols": [
+   {
+    "id": "kick-scooter-plan",
+    "title": {
+     "en": "Kick scooter plan symbol",
+     "de": "Tretroller-Grundrisszeichen"
+    },
+    "description": {
+     "en": "True-extent plan of the e-scooter: deck, both wheels edge-on, stem and handlebar width.",
+     "de": "Grundriss des E-Rollers in wahrer Ausdehnung: Trittbrett, beide Räder von der Kante, Lenker und Lenkerbreite."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4,
+         -0.085
+        ],
+        [
+         0.37,
+         -0.085
+        ],
+        [
+         0.37,
+         0.085
+        ],
+        [
+         -0.4,
+         0.085
+        ]
+       ],
+       "closed": true,
+       "id": "plan-deck",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.4,
+       "material": "anodised"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.322,
+         -0.025
+        ],
+        [
+         0.538,
+         -0.025
+        ],
+        [
+         0.538,
+         0.025
+        ],
+        [
+         0.322,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "id": "plan-wheel-f",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1,
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.538,
+         -0.025
+        ],
+        [
+         -0.322,
+         -0.025
+        ],
+        [
+         -0.322,
+         0.025
+        ],
+        [
+         -0.538,
+         0.025
+        ]
+       ],
+       "closed": true,
+       "id": "plan-wheel-r",
+       "bone": "deck",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.1,
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.4,
+         0
+        ],
+        [
+         0.29,
+         0
+        ]
+       ],
+       "closed": false,
+       "id": "plan-stem",
+       "bone": "deck",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "material": "anodised",
+       "penMm": 0.18
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.29,
+         -0.215
+        ],
+        [
+         0.29,
+         0.215
+        ]
+       ],
+       "closed": false,
+       "id": "plan-bars",
+       "bone": "deck",
+       "role": "body",
+       "z": 4,
+       "filled": false,
+       "tone": 0.4,
+       "material": "anodised",
+       "penMm": 0.18
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "Model metres: length 1.08 m, handlebar width 0.43 m, deck width 0.17 m.",
+     "de": "Modellmeter: Länge 1,08 m, Lenkerbreite 0,43 m, Trittbrettbreite 0,17 m."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "riding-cruise",
+    "title": {
+     "en": "Riding at 20 km/h",
+     "de": "Fahrt mit 20 km/h"
+    },
+    "description": {
+     "en": "Stem upright, both wheels on the ground, motor at cruising power; a rider would stand on the deck (not included).",
+     "de": "Lenker aufrecht, beide Räder am Boden, Motor mit Reiseleistung; ein Fahrer stünde auf dem Trittbrett (nicht enthalten)."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0.4,
+      "rolling": 0.8,
+      "braking": 0,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "braking-stop",
+    "title": {
+     "en": "Braking to a stop",
+     "de": "Bremsen bis zum Stillstand"
+    },
+    "description": {
+     "en": "Disc brake at full effort after 25 km/h, motor off, steering turned 4 degrees.",
+     "de": "Scheibenbremse mit voller Wirkung nach 25 km/h, Motor aus, Lenkung um 4 Grad eingeschlagen."
+    },
+    "bones": {
+     "fork": {
+      "angleDeg": 4
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0,
+      "rolling": 0.2,
+      "braking": 0.05,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "standby-unfolded",
+    "title": {
+     "en": "Unfolded, switched on",
+     "de": "Aufgeklappt, eingeschaltet"
+    },
+    "description": {
+     "en": "Standing upright, switched on in standby.",
+     "de": "Aufrecht stehend, eingeschaltet im Standby."
+    },
+    "bones": {},
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0.05,
+      "rolling": 0,
+      "braking": 0,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "folded-charging",
+    "title": {
+     "en": "Folded and charging",
+     "de": "Zusammengeklappt und ladend"
+    },
+    "description": {
+     "en": "Stem folded back along the deck over the rear fender, charging at 63 W indoors.",
+     "de": "Lenker über das Trittbrett nach hinten auf das Schutzblech geklappt, Laden mit 63 W in Innenräumen."
+    },
+    "bones": {
+     "stem": {
+      "angleDeg": 72
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0,
+      "rolling": 0,
+      "braking": 0,
+      "charging": 1
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-start",
+    "title": {
+     "en": "Ride loop start",
+     "de": "Fahrschleife start"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": 0
+     },
+     "wheel-r": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0.4,
+      "rolling": 0.8,
+      "braking": 0,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-mid",
+    "title": {
+     "en": "Ride loop mid",
+     "de": "Fahrschleife mid"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -1080
+     },
+     "wheel-r": {
+      "angleDeg": -1080
+     }
+    },
+    "root": {
+     "x": 2.0358,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0.4,
+      "rolling": 0.8,
+      "braking": 0,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "loop-end",
+    "title": {
+     "en": "Ride loop end",
+     "de": "Fahrschleife end"
+    },
+    "description": {
+     "en": "Technical key of the ride loop: wheels have turned theta = -x / r.",
+     "de": "Technische Schlüsselstellung der Fahrschleife: die Räder haben theta = -x / r gedreht."
+    },
+    "key": true,
+    "bones": {
+     "wheel-f": {
+      "angleDeg": -2160
+     },
+     "wheel-r": {
+      "angleDeg": -2160
+     }
+    },
+    "root": {
+     "x": 4.0715,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "drive": 0.4,
+      "rolling": 0.8,
+      "braking": 0,
+      "charging": 0
+     },
+     "regions": {
+      "deck-battery": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "deck-grip": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1
+      },
+      "bms-controller": {
+       "exposedFraction": 0.1,
+       "sunlitFraction": 0
+      },
+      "hub-motor": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.2
+      },
+      "stem-bars": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "fenders": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.2,
+       "contact": {
+        "fraction": 0.003,
+        "tempC": 30
+       }
+      },
+      "brake-disc": {
+       "exposedFraction": 0.7,
+       "sunlitFraction": 0.1
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "ride-loop",
+    "title": {
+     "en": "Ride loop at 20 km/h",
+     "de": "Fahrschleife mit 20 km/h"
+    },
+    "description": {
+     "en": "Six wheel turns (4.07 m) per cycle at 5.56 m/s: both wheels roll with theta = -x / r and the root advances one cycle length every loop.",
+     "de": "Sechs Radumdrehungen (4.07 m) pro Zyklus mit 5,56 m/s: beide Räder rollen mit theta = -x / r und die Wurzel rückt je Schleife um eine Zykluslänge vor."
+    },
+    "durationS": 0.7323,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "loop-start",
+      "ease": "linear"
+     },
+     {
+      "t": 0.3661,
+      "pose": "loop-mid",
+      "ease": "linear"
+     },
+     {
+      "t": 0.7323,
+      "pose": "loop-end",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 0.7323
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 0.7323
+     }
+    ],
+    "phases": [
+     {
+      "id": "cruise",
+      "fromS": 0,
+      "toS": 0.7323,
+      "title": {
+       "en": "Steady cruise",
+       "de": "Gleichmäßige Fahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "motion",
+      "title": {
+       "en": "Cycle start",
+       "de": "Zyklusbeginn"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:drive",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.4
+       },
+       {
+        "t": 0.7323,
+        "v": 0.4
+       }
+      ]
+     },
+     {
+      "target": "operating:rolling",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.8
+       },
+       {
+        "t": 0.7323,
+        "v": 0.8
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "fold-and-charge",
+    "title": {
+     "en": "Unfold state change: fold and plug in",
+     "de": "Zustandswechsel: zusammenklappen und anstecken"
+    },
+    "description": {
+     "en": "From switched-on standby the stem folds back over the deck in 1.5 s, the motor switches off and the charger starts.",
+     "de": "Aus dem eingeschalteten Standby klappt der Lenker in 1,5 s über das Trittbrett, der Motor schaltet ab und das Ladegerät startet."
+    },
+    "durationS": 5,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "standby-unfolded",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "standby-unfolded",
+      "ease": "smooth"
+     },
+     {
+      "t": 2.5,
+      "pose": "folded-charging",
+      "ease": "linear"
+     },
+     {
+      "t": 5,
+      "pose": "folded-charging",
+      "ease": "linear"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 5
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 5
+     }
+    ],
+    "phases": [
+     {
+      "id": "fold",
+      "fromS": 1,
+      "toS": 2.5,
+      "title": {
+       "en": "Stem folds",
+       "de": "Lenker klappt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2.5,
+      "kind": "shutdown",
+      "title": {
+       "en": "Drive off, folded",
+       "de": "Antrieb aus, zusammengeklappt"
+      }
+     },
+     {
+      "t": 3,
+      "kind": "thermal",
+      "title": {
+       "en": "Charging starts",
+       "de": "Laden beginnt"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:drive",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.05
+       },
+       {
+        "t": 2.5,
+        "v": 0
+       },
+       {
+        "t": 5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:charging",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0
+       },
+       {
+        "t": 3.6,
+        "v": 1
+       },
+       {
+        "t": 5,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 28,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "operating": [
+    {
+     "id": "drive",
+     "title": {
+      "en": "Drive power",
+      "de": "Antriebsleistung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.05,
+       "title": {
+        "en": "Standby",
+        "de": "Bereitschaft"
+       }
+      },
+      {
+       "v": 0.4,
+       "title": {
+        "en": "Cruising 20 km/h",
+        "de": "Reisefahrt 20 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Rated 250 W",
+        "de": "Nennleistung 250 W"
+       }
+      }
+     ]
+    },
+    {
+     "id": "rolling",
+     "title": {
+      "en": "Rolling speed",
+      "de": "Rollgeschwindigkeit"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Standstill",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.8,
+       "title": {
+        "en": "About 20 km/h",
+        "de": "Etwa 20 km/h"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "About 25 km/h",
+        "de": "Etwa 25 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "braking",
+     "title": {
+      "en": "Disc braking",
+      "de": "Scheibenbremsen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not braking",
+        "de": "Nicht gebremst"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Light braking",
+        "de": "Leichte Bremsung"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full stop from 25 km/h",
+        "de": "Vollbremsung aus 25 km/h"
+       }
+      }
+     ]
+    },
+    {
+     "id": "charging",
+     "title": {
+      "en": "Battery charging",
+      "de": "Akkuladen"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Not charging",
+        "de": "Nicht ladend"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Charging at 63 W",
+        "de": "Laden mit 63 W"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "deck-battery",
+     "title": {
+      "en": "Deck and battery enclosure",
+      "de": "Trittbrett und Akkugehäuse"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "anodised",
+     "areaM2": 0.26,
+     "characteristicLengthM": 0.2,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.8,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Metal wall 2.0 mm",
+        "de": "Metallwand 2.0 mm"
+       },
+       "kind": "metal",
+       "material": "anodised",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.00004,
+       "heatCapacityJM2K": 4500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4500,
+     "operating": {
+      "key": "drive",
+      "heatW": 12
+     },
+     "source": "authored-estimate",
+     "reference": "iec-62133"
+    },
+    {
+     "id": "deck-grip",
+     "title": {
+      "en": "Grip tape on the deck",
+      "de": "Griptape auf dem Trittbrett"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "griptape",
+     "areaM2": 0.08,
+     "characteristicLengthM": 0.15,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 0.95,
+     "layers": [
+      {
+       "id": "tape",
+       "title": {
+        "en": "Abrasive tape 1.5 mm",
+        "de": "Antirutschbelag 1,5 mm"
+       },
+       "kind": "polymer",
+       "material": "griptape",
+       "thicknessM": 0.0015,
+       "resistanceM2KW": 0.005,
+       "heatCapacityJM2K": 1500,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 1500,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "bms-controller",
+     "title": {
+      "en": "Controller and charging circuit inside the deck",
+      "de": "Steuerung und Ladeschaltung im Trittbrett"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "plastic",
+     "areaM2": 0.02,
+     "characteristicLengthM": 0.1,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0.1,
+     "layers": [],
+     "heatCapacityJM2K": 3000,
+     "operating": {
+      "key": "charging",
+      "heatW": 1.8
+     },
+     "source": "authored-estimate",
+     "hidden": {
+      "en": "Enclosed inside the deck, not visible in elevation.",
+      "de": "Im Trittbrett eingeschlossen, in der Ansicht nicht sichtbar."
+     }
+    },
+    {
+     "id": "hub-motor",
+     "title": {
+      "en": "Front hub motor",
+      "de": "Vorderrad-Nabenmotor"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "motor-alloy",
+     "areaM2": 0.04,
+     "characteristicLengthM": 0.1,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.4,
+     "layers": [],
+     "heatCapacityJM2K": 18000,
+     "operating": {
+      "key": "drive",
+      "heatW": 55
+     },
+     "source": "authored-estimate",
+     "reference": "iec-62133"
+    },
+    {
+     "id": "stem-bars",
+     "title": {
+      "en": "Stem, handlebar and fork",
+      "de": "Lenkstange, Lenker und Gabel"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "anodised",
+     "areaM2": 0.14,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "wall",
+       "title": {
+        "en": "Metal wall 2.0 mm",
+        "de": "Metallwand 2.0 mm"
+       },
+       "kind": "metal",
+       "material": "anodised",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.00004,
+       "heatCapacityJM2K": 4500,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4500,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "fenders",
+     "title": {
+      "en": "Rear fender and front mudguard",
+      "de": "Hinterradschutzblech und Vorderradabdeckung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "plastic",
+     "areaM2": 0.05,
+     "characteristicLengthM": 0.1,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "shell",
+       "title": {
+        "en": "Plastic shell 2 mm",
+        "de": "Kunststoffschale 2 mm"
+       },
+       "kind": "polymer",
+       "material": "plastic",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.01,
+       "heatCapacityJM2K": 1800,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 1800,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Tyres 8.5 inch",
+      "de": "Reifen 8,5 Zoll"
+     },
+     "kind": "tyre",
+     "model": "operating",
+     "material": "rubber",
+     "areaM2": 0.14,
+     "characteristicLengthM": 0.05,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.45,
+     "layers": [
+      {
+       "id": "tread",
+       "title": {
+        "en": "Rubber tread and carcass",
+        "de": "Gummilauffläche und Karkasse"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.03,
+       "heatCapacityJM2K": 8000,
+       "source": "authored-estimate"
+      }
+     ],
+     "heatCapacityJM2K": 8000,
+     "operating": {
+      "key": "rolling",
+      "heatW": 40
+     },
+     "source": "authored-estimate",
+     "reference": "wong-2008"
+    },
+    {
+     "id": "brake-disc",
+     "title": {
+      "en": "Rear brake disc",
+      "de": "Hintere Bremsscheibe"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "steel-disc",
+     "areaM2": 0.012,
+     "characteristicLengthM": 0.12,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 5600,
+     "operating": {
+      "key": "braking",
+      "heatW": 890
+     },
+     "source": "authored-estimate",
+     "reference": "limpert-1999"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Heat at level 1: hub motor 55 W (250 W output at 82 % efficiency), battery 12 W (5 % of 250 W discharge, IEC 62133 class lithium pack), brake disc 890 W (2.2 kJ of a 92 kg scooter with rider from 25 km/h in 2.5 s), tyres 40 W (Crr 0.01), charging circuit 6 W (10 % of 63 W).",
+     "de": "Wärme bei Stufe 1: Nabenmotor 55 W (250 W Abgabe bei 82 % Wirkungsgrad), Akku 12 W (5 % von 250 W Entladung, Lithiumpack nach IEC 62133), Bremsscheibe 890 W (2,2 kJ eines 92-kg-Rollers mit Fahrer aus 25 km/h in 2,5 s), Reifen 40 W (Crr 0,01), Ladeschaltung 6 W (10 % von 63 W)."
+    },
+    {
+     "en": "The rider is not part of the asset; the levels describe an 80 kg rider as scenario.",
+     "de": "Der Fahrer gehört nicht zum Asset; die Stufen beschreiben als Szenario einen 80-kg-Fahrer."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Rigid bodies on two unilateral ground contacts; the rider's weight acts at the standing point and is not included in the asset mass.",
+     "de": "Starre Körper auf zwei einseitigen Bodenkontakten; das Gewicht des Fahrers wirkt am Standpunkt und ist nicht in der Asset-Masse enthalten."
+    },
+    {
+     "en": "The stem folds about the head hinge by 82 degrees; steering is a small in-plane rotation of the fork about the head.",
+     "de": "Der Lenker klappt um das Kopfgelenk um 82 Grad; Lenken ist eine kleine ebene Drehung der Gabel um den Kopf."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "riding-cruise",
+   "defaultClip": "ride-loop",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/manifest/panel-tab-parity/schema.json",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "panel",
+          "native",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "panel": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "workbenchCategory",
+                      "displayCategory",
+                      "detailsCategory",
+                      "settingsCategory",
+                      "displayWindows",
+                      "displayLayout",
+                      "settingsGeneral",
+                      "settingsTheme",
+                      "settingsDefaultApps"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "app"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "native": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

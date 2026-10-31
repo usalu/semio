@@ -45,5 +45,38 @@
         ]
       }
     }
+  },
+  "$defs": {
+    "Producer": {
+      "description": "An authored package task that publishes the exact public modules in Protocol from physical Source.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "typescript-artifact-package"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^(?!/)(?![A-Za-z]:)[^\\\\\\u0000]+$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "publicDirectory": "dist",
+        "modeDirectory": "📤️dist"
+      }
+    }
   }
 }

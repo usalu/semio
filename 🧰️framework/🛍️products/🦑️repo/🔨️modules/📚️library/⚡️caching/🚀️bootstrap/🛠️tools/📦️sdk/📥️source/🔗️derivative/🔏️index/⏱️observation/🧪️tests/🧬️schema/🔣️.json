@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "steps",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "duration",
+          "failure"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "context",
+              "recheck",
+              "parent"
+            ]
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "failure": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "context",
+        "recheck",
+        "parent"
+      ],
+      "properties": {
+        "context": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "recheck": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "parent": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import "../../🏗️build/🧰️tool-registry/🧪️tests/🔎️exec-command/🟦️.ts";
 import "../../🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts";
 import "../../🧼️workspace-cleanup/🎮️command/🧪️tests/🟦️.ts";
 import "../../⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🟦️.ts";

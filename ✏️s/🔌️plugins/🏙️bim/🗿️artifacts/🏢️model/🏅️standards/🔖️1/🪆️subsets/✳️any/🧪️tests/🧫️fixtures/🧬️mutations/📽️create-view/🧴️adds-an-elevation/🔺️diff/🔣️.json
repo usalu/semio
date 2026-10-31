@@ -1,24 +1,26 @@
 {
   "views": {
     "v-south": {
-      "building": "bldg-1",
-      "depth": 40.0,
-      "detail": "Medium",
       "entry": "Created",
-      "hidden": [],
-      "kind": "Elevation",
-      "name": "South",
-      "plane": {
-        "end": {
-          "x": 0.0,
-          "y": -3.0
+      "value": {
+        "building": "bldg-1",
+        "depth": 40,
+        "detail": "Medium",
+        "hidden": [],
+        "kind": "Elevation",
+        "name": "South",
+        "plane": {
+          "end": {
+            "x": 0,
+            "y": -3
+          },
+          "start": {
+            "x": 8,
+            "y": -3
+          }
         },
-        "start": {
-          "x": 8.0,
-          "y": -3.0
-        }
-      },
-      "scale": 100
+        "scale": 100
+      }
     }
   }
 }

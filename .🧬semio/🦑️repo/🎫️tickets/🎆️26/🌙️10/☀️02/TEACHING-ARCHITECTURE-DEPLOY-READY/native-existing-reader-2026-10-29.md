@@ -1,0 +1,25 @@
+# Existing Native Journal Shared Observation — 2026-10-29
+
+The new public observeExistingNativeStorageStateV1 accepts an actual registered canonical platform image, declared policy, genuine issued control and optional content-free progress callback. It validates private platform identity and opening lease-directory/geometry binding, holds actual operation/mapping custody, observes the real backing identity and acquires the same native-storage journal resource as writers in SH/shared-cohort mode.
+
+The reader accepts only an initialized existing regular single-link bounded journal. It reads actual bytes freshly, checks metadata stability, decodes fatal UTF8 and complete newline records, and replays the real Native reducer without receipt or projection caches. Missing, empty, partial, foreign, changed or invalid data refuses. A final backing/image and file check precedes detached frozen DATA handoff. Result: version, effectiveCapacityBytes, journal bytes/SHA256/events and deep-frozen Native state. No port, lease, reservation or authority token is returned. No journal append/checkpoint/create/repair/refund, EX observation, raw database or cache fallback is used.
+
+Schema-first protocol declares existingOnly/shared/no journal cache/no mutation and finite replay progress cadence. Pure replay covers reserved, committed and retiring rows and independent SQLite sum45. The actual compiled fixture uses the existing canonical authorizer compiler, Source metadata, inherited Original, production runtime-entry binder and registered public platform opener. Physical test96996 exited0:1passed23assertions in2.67s. It proves two shared readers coexist, a real nonwaiting EX writer refuses while the snapshot reader holds SH, then acquires after release; journal bytes and inode/size/mtime remain unchanged. Three separate genuinely inherited negative children prove missing, partial and foreign-policy refusal without resetting poisoned Original accounting. Snapshot schema, SHA/bytes/events/effective capacity and all active phases are checked; SQLite independently checks45bytes. This is reader proof, not full publisher/daemon/course acceptance.
+
+The first new test version was a raw Bun physical attempt and correctly refused missing captured provider/admitted Source metadata. An8MiB test envelope also correctly refused before image creation; it was corrected to the existing32MiB+1MiB minimum without changing any policy. The invalid raw physical test was removed only after its assertions moved to the actual compiled owner. Pure unit rerun passed; actual canonical public Native storage facade resolves the new function. Logs: generated/native-existing-reader-red.log, native-existing-reader-green.log (historical setup attempts), native-existing-reader-unit.log and native-existing-sh-compiled.log (actual compiled physical result, frontend-owned).
+
+Changed Source:
+- 🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts: explicit public function/type exports.
+- Same storage owner 👁️existing/🟦️.ts and 🔣️schema.json.
+- Same owner 👁️existing/🧪️tests/{🟦️.ts,🔣️.json,📜️script.ts}.
+- Compiled physical owner 👁️existing/🧪️tests/🧵️physical/{🟦️.ts,📋️schema.json}; frontend authored the entry/launcher using the already proven harness.
+
+Repository partition openers return a domain wrapper, so their consumers must use the existing withRepositoryPartitionOperationV1 to pass the privately retained actual canonical image and refined control into this reader. Weakening the platform brand check or treating a wrapper as an image would be wrong. The frontend inventory branch follows that exact private operation and closes the wrapper afterward, bypassing no guard and obtaining no repository owner charge writer.
+
+Reader Source is frozen. Frontend owns one genuine global Nx SH inventory11986; no duplicate Native job was launched here. Actual global used/remaining figures remain unclaimed until that observation returns. Pressure admission remains a separate pending implementation based on actual facts and all charged phases.
+
+## Actual Global Inventory11986
+
+Frontend owner11986 reached the genuine canonical partition operation and requested the nx journal in SH mode. It ended after92.60s on Original process deadline, before a snapshot. Its4s sample showed PID1030681 holding nx image SH and mapping SH, waiting for Native journal SH; it held no repository charge EX. This confirms the new admission route reaches the correct shared lease, but supplies no allocation/used/remaining figures. No writer exclusion or deadline guard was bypassed.
+
+A later supported repo MCP leases_status(all=true) inspected90 registered lease directories with no native-storage holders/waiters matching the then-current snapshot. This post-exit snapshot does not identify or invalidate the earlier blocker, and is not permission to delete claims or infer creator death. No duplicate Native job, EX inventory retry or pressure arithmetic based on guessed values was started. Reader Source remains frozen; physical96996 remains the actual1/23 API proof, while global funding facts are still unavailable.

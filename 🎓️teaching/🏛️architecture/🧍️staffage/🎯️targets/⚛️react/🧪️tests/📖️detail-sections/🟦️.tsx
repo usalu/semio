@@ -21,7 +21,7 @@ import type { ExportCapabilities, ExportResult } from "../../🔨️modules/📤
 const walker = walkerDocument as unknown as Asset;
 
 const catalog = new CatalogStore({ manifest: async () => { throw new Error("unused"); }, category: async () => null });
-const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, poses: [], clips: [], analytics: [], viewpoints: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
+const row = { entry: { id: walker.id, category: "humans", title: walker.title, heightM: 1.73, widthM: 0.37, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [], analytics: [], viewpoints: [], exports: [], distinction: walker.summary, completion: "authored" }, status: "ready", asset: walker } as const;
 
 function wrap(node: ReactElement, language: Language = "en"): ReactElement {
   return <ArchiveProvider language={language} t={translator(language)} catalog={catalog} store={new ArchiveStore(memoryStorage(), ["dark-line"])}>{node}</ArchiveProvider>;
@@ -77,7 +77,7 @@ describe("🏷️ source tags and provenance", () => {
     expect(GERMAN["detail.source.measured"]).not.toBe(ENGLISH["detail.source.measured"]);
   });
   it("counts the citations of every reference", () => {
-    expect(referenceCounts(walker)).toEqual({ "winter-2009": 11, "iso-9920-2007": 4, "ashrae-2021": 2, "dubois-1916": 1 });
+    expect(referenceCounts(walker)).toEqual({ "winter-2009": 11, "ashrae-2021": 2 });
     render(wrap(<ProvenanceSection asset={walker} />));
     expect(screen.getByText("winter-2009").closest("tr")!.querySelectorAll("td")[1]!.textContent).toBe("11");
   });

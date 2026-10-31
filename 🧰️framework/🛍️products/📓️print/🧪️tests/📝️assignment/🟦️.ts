@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 /** 📝️ Neutral assignment vectors are adjudicated by the independent JSON Schema implementation. */
 import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020.js";
@@ -6,7 +7,7 @@ import schema from "../../🧾️template/📝️assignment/🧬️schema/🔣�
 import fixture from "./🔣️.json";
 import { assignmentPreamble, escapeAssignmentText, isAssignment } from "../../🧾️template/📝️assignment/🟦️.ts";
 
-const oracle = new Ajv({ strict: true }).compile(schema);
+const oracle = new AjvDraft07({ strict: true }).compile(schema);
 for (const row of fixture.cases) test(row.name, () => {
   expect(isAssignment(row.value)).toBe(row.valid);
   expect(isAssignment(row.value)).toBe(Boolean(oracle(row.value)));

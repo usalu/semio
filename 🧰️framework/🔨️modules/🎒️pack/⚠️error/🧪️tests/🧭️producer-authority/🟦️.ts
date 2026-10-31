@@ -17,7 +17,7 @@ test("system zlib independently confirms the closed retained DEFLATE grammar cor
  }
 });
 
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import causeKindSchema from "../../🧬️schema/🧭️cause/🪪️kind/🔣️.json";
 import causeKindFixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🪪️kind/🔣️.json";
 import fixture from "../../🧪️tests/🧫️fixtures/🧭️cause/🔣️.json";

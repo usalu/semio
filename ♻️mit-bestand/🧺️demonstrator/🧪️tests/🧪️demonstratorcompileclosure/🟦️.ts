@@ -1,3 +1,4 @@
+import {registerBrowserCancellationTestsV1} from "./🎭️e2e/🛑️cancellation/🟦️.ts";
 import { registerE2eSourceScopeTests } from "./🎭️e2e/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -10,6 +11,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>):
   const { describe, expect, it } = vitest;
   const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
   await registerE2eSourceScopeTests(vitest, repoRoot);
+  registerBrowserCancellationTestsV1((name,body)=>it(name,body), repoRoot);
   const cargoPath = join(repoRoot, "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml");
   const cargo = readFileSync(cargoPath, "utf8");
 

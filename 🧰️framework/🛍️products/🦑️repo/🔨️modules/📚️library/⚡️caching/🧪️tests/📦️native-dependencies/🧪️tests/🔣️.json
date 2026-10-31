@@ -137,5 +137,28 @@
       "fault": "cycle",
       "admit": false
     }
+  ],
+  "tooling": [
+    {
+      "fault": "none",
+      "opened": 1,
+      "prepared": 1,
+      "closed": 1,
+      "accepted": true
+    },
+    {
+      "fault": "store",
+      "opened": 1,
+      "prepared": 0,
+      "closed": 0,
+      "accepted": false
+    },
+    {
+      "fault": "provider",
+      "opened": 1,
+      "prepared": 1,
+      "closed": 1,
+      "accepted": false
+    }
   ]
 }

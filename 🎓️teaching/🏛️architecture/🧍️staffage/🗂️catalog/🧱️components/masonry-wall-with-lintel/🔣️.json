@@ -1,0 +1,2763 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "masonry-wall-with-lintel",
+  "category": "components",
+  "title": {
+   "en": "Masonry Wall with Precast Lintel",
+   "de": "Mauerwerkswand mit Betonfertigsturz"
+  },
+  "summary": {
+   "en": "A 3.0 m wide, 2.75 m high full-fill cavity wall (175 mm calcium silicate, 140 mm mineral wool, 115 mm facing brick, U about 0.22 W/m2K) in elevation with a 1.25 x 1.33 m opening, a precast insulated concrete lintel with 0.25 m bearings (U about 0.39) and a precast sill; brick courses of 0.0833 m drawn where printable; floor slab and beam loads with arching over the opening.",
+   "de": "Eine 3,0 m breite, 2,75 m hohe zweischalige Wand mit Kerndämmung (175 mm Kalksandstein, 140 mm Mineralwolle, 115 mm Verblender, U etwa 0.22 W/m2K) in der Ansicht mit einer Öffnung von 1,25 x 1,33 m, einem gedämmten Betonfertigsturz mit 0,25 m Auflager (U etwa 0.39) und einer Fertigteil-Fensterbank; Ziegelschichten von 0,0833 m dort gezeichnet, wo sie druckbar sind; Decken- und Trägerlasten mit Gewölbewirkung über der Öffnung."
+  },
+  "tags": [
+   "component",
+   "structural",
+   "wall",
+   "masonry",
+   "lintel",
+   "opening",
+   "conditioned"
+  ],
+  "provenance": {
+   "author": "Semio staffage component authors (NW-C)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-1996-1-1",
+     "citation": "EN 1996-1-1:2005 Eurocode 6, design of masonry structures, part 1-1 (masonry density, lintel bearing length at least 0.1 m, arching above openings; the lintel here bears 0.25 m)."
+    },
+    {
+     "id": "din-4172",
+     "citation": "DIN 4172:1955 Dimensional co-ordination in building (octametre system): 0.125 m module, 1 m = 12 courses of normal format brick (NF 240 x 115 x 71 with 12 mm joints)."
+    },
+    {
+     "id": "en-1991-1-1",
+     "citation": "EN 1991-1-1:2002 Eurocode 1, part 1-1: Table A.1 densities (reinforced concrete 25 kN/m3, masonry 18 kN/m3), Table 6.2 imposed load category A 2 kN/m2, floor slab 0.20 m (5 kN/m2) plus finishes (1 kN/m2)."
+    },
+    {
+     "id": "en-iso-6946",
+     "citation": "EN ISO 6946:2017 Building components, thermal resistance and transmittance (R_si 0.13 and R_se 0.04 m2K/W, layer resistance d / lambda)."
+    },
+    {
+     "id": "en-iso-10456",
+     "citation": "EN ISO 10456:2007 Building materials, hygrothermal properties: clay brick (rho 1800) lambda 0.81 W/mK; calcium silicate block 0.79; mineral wool 0.035; gypsum plaster 0.7; reinforced concrete 2.3 W/mK; specific heat 1000 J/kgK."
+    },
+    {
+     "id": "en-iso-10211",
+     "citation": "EN ISO 10211:2017 Thermal bridges in building construction: the lintel and sill are linear bridges approximated here by equivalent layered regions."
+    },
+    {
+     "id": "en-13225",
+     "citation": "EN 13225:2013 Precast concrete products, linear structural elements; precast lintels of 0.24 m height, 1.75 m length."
+    },
+    {
+     "id": "din-iso-128-50",
+     "citation": "DIN ISO 128-50:2002 Technical drawings, conventions for areas on sections and cuts (brick, concrete)."
+    },
+    {
+     "id": "din-1356-1",
+     "citation": "DIN 1356-1:1995 Building drawings, elevations of masonry walls with openings (scales 1:50 to 1:200)."
+    }
+   ],
+   "notes": {
+    "en": "Octametre dimensions: 32 courses of 0.0833 m, opening 11 to 27 courses high, lintel 27 to 30; widths are multiples of 0.125 m. Layer resistances are d / lambda with design values.",
+    "de": "Oktametermaße: 32 Schichten zu 0,0833 m, Öffnung 11 bis 27 Schichten hoch, Sturz 27 bis 30; Breiten sind Vielfache von 0,125 m. Schichtwiderstände sind d / lambda mit Bemessungswerten."
+   }
+  },
+  "dimensions": {
+   "heightM": 2.75,
+   "widthM": 3.0,
+   "depthM": 0.445,
+   "massKg": 3571.733
+  },
+  "materials": [
+   {
+    "id": "brick",
+    "title": {
+     "en": "Clay facing brick NF with 10 mm mortar joints",
+     "de": "Klinker-Verblender NF mit 10-mm-Mörtelfugen"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 1800,
+    "conductivityWmK": 0.81,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 8000000000.0,
+    "strengthPa": 15000000.0,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "block",
+    "title": {
+     "en": "Calcium silicate block 175 mm",
+     "de": "Kalksandstein 175 mm"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 1800,
+    "conductivityWmK": 0.79,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 8000000000.0,
+    "strengthPa": 15000000.0,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "concrete",
+    "title": {
+     "en": "Precast reinforced concrete",
+     "de": "Stahlbetonfertigteil"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.65,
+    "densityKgM3": 2400,
+    "conductivityWmK": 2.3,
+    "specificHeatJKgK": 1000,
+    "elasticModulusPa": 31000000000.0,
+    "strengthPa": 40000000.0,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "wool",
+    "title": {
+     "en": "Mineral wool 035",
+     "de": "Mineralwolle 035"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 40,
+    "conductivityWmK": 0.035,
+    "specificHeatJKgK": 1030,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   },
+   {
+    "id": "plaster",
+    "title": {
+     "en": "Gypsum plaster",
+     "de": "Gipsputz"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 1300,
+    "conductivityWmK": 0.7,
+    "specificHeatJKgK": 1000,
+    "source": "literature",
+    "reference": "en-iso-10456"
+   }
+  ],
+  "rig": {
+   "kind": "structural",
+   "root": "wall",
+   "bones": [
+    {
+     "id": "wall",
+     "parent": null,
+     "title": {
+      "en": "Cavity wall field with the opening (fixed root on the foundation)",
+      "de": "Zweischalige Wandscheibe mit Öffnung (feste Wurzel auf dem Fundament)"
+     },
+     "x": 0.0,
+     "y": 0.0,
+     "angleDeg": 0.0,
+     "lengthM": 3.0,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 3303.98333,
+      "comX": 1.5,
+      "comY": 1.35,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     },
+     "section": {
+      "areaM2": 0.175,
+      "secondMomentM4": 0.0004466145833333332,
+      "extremeFibreM": 0.0875,
+      "material": "block",
+      "title": {
+       "en": "1 m strip of the 175 mm inner leaf",
+       "de": "1-m-Streifen der 175-mm-Innenschale"
+      }
+     }
+    },
+    {
+     "id": "lintel",
+     "parent": "wall",
+     "title": {
+      "en": "Precast concrete lintel (1.75 m, 0.25 m bearing each side)",
+      "de": "Betonfertigsturz (1,75 m, 0,25 m Auflager je Seite)"
+     },
+     "x": 0.625,
+     "y": 2.25,
+     "angleDeg": 0.0,
+     "lengthM": 1.75,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 225.75,
+      "comX": 0.875,
+      "comY": 0.125,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    },
+    {
+     "id": "sill",
+     "parent": "wall",
+     "title": {
+      "en": "Precast concrete sill",
+      "de": "Betonfertigteil-Fensterbank"
+     },
+     "x": 0.8,
+     "y": 0.83333,
+     "angleDeg": 0.0,
+     "lengthM": 1.4,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 42.0,
+      "comX": 0.7,
+      "comY": 0.04167,
+      "distribution": "point",
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    },
+    {
+     "id": "load-carrier",
+     "parent": "wall",
+     "title": {
+      "en": "Beam bearing carrier on the wall head (massless)",
+      "de": "Trägerauflager-Läufer auf dem Wandkopf (masselos)"
+     },
+     "x": 0.0,
+     "y": 2.75,
+     "angleDeg": 0.0,
+     "lengthM": 0.0,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 3.0
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "found-0",
+    "bone": "wall",
+    "x": 0.4,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Foundation bearing 1",
+     "de": "Fundamentauflager 1"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.5,
+    "footprintWidthM": 0.445,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "found-1",
+    "bone": "wall",
+    "x": 1.5,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Foundation bearing 2",
+     "de": "Fundamentauflager 2"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.5,
+    "footprintWidthM": 0.445,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "found-2",
+    "bone": "wall",
+    "x": 2.6,
+    "y": 0.0,
+    "kind": "support",
+    "title": {
+     "en": "Foundation bearing 3",
+     "de": "Fundamentauflager 3"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.5,
+    "footprintWidthM": 0.445,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "beam-bearing",
+    "bone": "load-carrier",
+    "x": 0.0,
+    "y": 0.0,
+    "kind": "load",
+    "title": {
+     "en": "Floor beam bearing on the wall head",
+     "de": "Auflager des Deckenträgers auf dem Wandkopf"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.13,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.18
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         3.0,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "field",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.55,
+       "regions": [
+        "masonry-field",
+        "sill"
+       ],
+       "material": "brick",
+       "kind": "path",
+       "d": "M 0 0 L 3 0 L 3 2.75 L 0 2.75 Z M 0.875 0.91667 L 2.125 0.91667 L 2.125 2.25 L 0.875 2.25 Z"
+      },
+      {
+       "id": "lintel",
+       "bone": "lintel",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "lintel",
+       "material": "concrete",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.75,
+         0.0
+        ],
+        [
+         1.75,
+         0.25
+        ],
+        [
+         0.0,
+         0.25
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "A 3.0 x 2.75 m wall mass with the 1.25 x 1.33 m opening cut out and the 0.25 m precast lintel as a darker band above it.",
+      "de": "Eine 3,0 x 2,75 m große Wandmasse mit ausgeschnittener Öffnung 1,25 x 1,33 m und dem 0,25 m hohen Betonfertigsturz als dunklerem Band darüber."
+     },
+     "retained": {
+      "en": "Wall outline, opening, the lintel with its 0.25 m bearing on both sides (1.75 m long, 0.5 mm tall).",
+      "de": "Wandumriss, Öffnung, der Sturz mit 0,25 m Auflager auf beiden Seiten (1,75 m lang, 0,5 mm hoch)."
+     },
+     "merged": {
+      "en": "The wall field and the 0.083 m sill (0.17 mm) are one mass listing both regions.",
+      "de": "Das Wandfeld und die 0,083 m hohe Fensterbank (0,17 mm) sind eine Masse mit beiden Regionen."
+     },
+     "omitted": {
+      "en": "Coursing, joints, sill projection, hatching.",
+      "de": "Schichtung, Fugen, Fensterbankauskragung, Schraffur."
+     },
+     "thinElements": {
+      "en": "None: the lintel is drawn at its real 0.25 m height.",
+      "de": "Keine: der Sturz ist in seiner realen Höhe von 0,25 m gezeichnet."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Mid-grey wall mass with 0.13 mm outline; lintel darker.",
+      "de": "Mittelgraue Wandmasse mit 0,13-mm-Kontur; Sturz dunkler."
+     },
+     "overlays": {
+      "en": "Cells: wall mass (field and sill merged), lintel.",
+      "de": "Zellen: Wandmasse (Feld und Fensterbank zusammengefasst), Sturz."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.1,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.0
+        ],
+        [
+         3.0005,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "field",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.55,
+       "region": "masonry-field",
+       "material": "brick",
+       "kind": "path",
+       "d": "M 0.0005 0.0 L 3.0005 0.0 L 3.0005 2.75 L 0.0005 2.75 Z M 0.6255 2.5 L 2.3755 2.5 L 2.3755 2.25 L 2.1255 2.25 L 2.1255 0.91667 L 2.2005 0.91667 L 2.2005 0.83333 L 0.8005 0.83333 L 0.8005 0.91667 L 0.8755 0.91667 L 0.8755 2.25 L 0.6255 2.25 Z"
+      },
+      {
+       "id": "lintel",
+       "bone": "lintel",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "lintel",
+       "material": "concrete",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.0
+        ],
+        [
+         1.7505,
+         0.0
+        ],
+        [
+         1.7505,
+         0.25
+        ],
+        [
+         0.0005,
+         0.25
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sill",
+       "bone": "sill",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "sill",
+       "material": "concrete",
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         0.0
+        ],
+        [
+         1.4004999999999999,
+         0.0
+        ],
+        [
+         1.4004999999999999,
+         0.08334
+        ],
+        [
+         0.0005,
+         0.08334
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The wall mass with the opening, the lintel band (0.25 m = 1.25 mm) and the sill band (0.083 m = 0.42 mm) as separate filled shapes.",
+      "de": "Die Wandmasse mit der Öffnung, das Sturzband (0,25 m = 1,25 mm) und das Fensterbankband (0,083 m = 0,42 mm) als eigene gefüllte Formen."
+     },
+     "retained": {
+      "en": "Lintel with bearings, sill with its 0.075 m projection each side, opening.",
+      "de": "Sturz mit Auflagern, Fensterbank mit 0,075 m Überstand je Seite, Öffnung."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Coursing (0.42 mm pitch would be noise), joints, hatches.",
+      "de": "Schichtung (0,42 mm Abstand wäre Rauschen), Fugen, Schraffuren."
+     },
+     "thinElements": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "hatching": {
+      "en": "None: tone only.",
+      "de": "Keine: nur Ton."
+     },
+     "styles": {
+      "en": "Wall mid-grey, lintel and sill darker.",
+      "de": "Wand mittelgrau, Sturz und Fensterbank dunkler."
+     },
+     "overlays": {
+      "en": "Cells: wall field, lintel, sill.",
+      "de": "Zellen: Wandfeld, Sturz, Fensterbank."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.13,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "coursing",
+      "title": {
+       "en": "Brick courses",
+       "de": "Ziegelschichten"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.8333333333333333,
+      "penMm": 0.1
+     },
+     {
+      "id": "concrete-stipple",
+      "title": {
+       "en": "Precast concrete",
+       "de": "Betonfertigteil"
+      },
+      "pattern": "stipple",
+      "angleDeg": 0,
+      "spacingMm": 0.6,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.0
+        ],
+        [
+         3.001,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "field",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.8,
+       "region": "masonry-field",
+       "material": "brick",
+       "hatch": "coursing",
+       "penMm": 0.25,
+       "kind": "path",
+       "d": "M 0.001 0.0 L 3.001 0.0 L 3.001 2.75 L 0.001 2.75 Z M 0.626 2.5 L 2.376 2.5 L 2.376 2.25 L 2.126 2.25 L 2.126 0.91667 L 2.201 0.91667 L 2.201 0.83333 L 0.801 0.83333 L 0.801 0.91667 L 0.876 0.91667 L 0.876 2.25 L 0.626 2.25 Z"
+      },
+      {
+       "id": "lintel",
+       "bone": "lintel",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "lintel",
+       "material": "concrete",
+       "hatch": "concrete-stipple",
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.0
+        ],
+        [
+         1.751,
+         0.0
+        ],
+        [
+         1.751,
+         0.25
+        ],
+        [
+         0.001,
+         0.25
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sill",
+       "bone": "sill",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "sill",
+       "material": "concrete",
+       "hatch": "concrete-stipple",
+       "penMm": 0.25,
+       "kind": "poly",
+       "points": [
+        [
+         0.001,
+         0.0
+        ],
+        [
+         1.4009999999999998,
+         0.0
+        ],
+        [
+         1.4009999999999998,
+         0.08334
+        ],
+        [
+         0.001,
+         0.08334
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The wall elevation with coursing hatch (courses of 0.0833 m = 0.83 mm), a stippled precast lintel and sill.",
+      "de": "Die Wandansicht mit Schichtenschraffur (Schichthöhe 0,0833 m = 0,83 mm), ein punktierter Betonfertigsturz und Fensterbank."
+     },
+     "retained": {
+      "en": "Real course height as hatch spacing, lintel 1.75 x 0.25 m, sill 1.4 x 0.083 m.",
+      "de": "Reale Schichthöhe als Schraffurabstand, Sturz 1,75 x 0,25 m, Fensterbank 1,4 x 0,083 m."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Head joints of the stretcher bond (0.25 m = 2.5 mm).",
+      "de": "Stoßfugen des Läuferverbands (0,25 m = 2,5 mm)."
+     },
+     "thinElements": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "hatching": {
+      "en": "Coursing as lines 0.1 mm at 0.83 mm; the phase is not registered to the lintel and sill levels. Concrete as stipple 0.6 mm.",
+      "de": "Schichtung als 0,1-mm-Linien mit 0,83 mm; die Phase ist nicht auf Sturz- und Fensterbankhöhe abgestimmt. Beton als Punktierung mit 0,6 mm."
+     },
+     "styles": {
+      "en": "Outline 0.25 mm; wall light, concrete darker.",
+      "de": "Kontur 0,25 mm; Wand hell, Beton dunkler."
+     },
+     "overlays": {
+      "en": "Cells: wall field, lintel, sill.",
+      "de": "Zellen: Wandfeld, Sturz, Fensterbank."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.18,
+     "texture": 0.1,
+     "glazing": null,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "concrete-stipple",
+      "title": {
+       "en": "Precast concrete",
+       "de": "Betonfertigteil"
+      },
+      "pattern": "stipple",
+      "angleDeg": 0,
+      "spacingMm": 0.8,
+      "penMm": 0.1
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "ground",
+       "bone": "wall",
+       "role": "ground",
+       "z": 0,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         3.0,
+         0.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "field",
+       "bone": "wall",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.85,
+       "region": "masonry-field",
+       "material": "brick",
+       "penMm": 0.35,
+       "kind": "path",
+       "d": "M 0 0 L 3 0 L 3 2.75 L 0 2.75 Z M 0.625 2.5 L 2.375 2.5 L 2.375 2.25 L 2.125 2.25 L 2.125 0.91667 L 2.2 0.91667 L 2.2 0.83333 L 0.8 0.83333 L 0.8 0.91667 L 0.875 0.91667 L 0.875 2.25 L 0.625 2.25 Z"
+      },
+      {
+       "id": "lintel",
+       "bone": "lintel",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "lintel",
+       "material": "concrete",
+       "hatch": "concrete-stipple",
+       "penMm": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.75,
+         0.0
+        ],
+        [
+         1.75,
+         0.25
+        ],
+        [
+         0.0,
+         0.25
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "sill",
+       "bone": "sill",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "sill",
+       "material": "concrete",
+       "hatch": "concrete-stipple",
+       "penMm": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.0
+        ],
+        [
+         1.4,
+         0.0
+        ],
+        [
+         1.4,
+         0.08334
+        ],
+        [
+         0.0,
+         0.08334
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bed-1-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.08333
+        ],
+        [
+         3.0,
+         0.08333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-2-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.16667
+        ],
+        [
+         3.0,
+         0.16667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-3-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.25
+        ],
+        [
+         3.0,
+         0.25
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-4-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.33333
+        ],
+        [
+         3.0,
+         0.33333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-5-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.41667
+        ],
+        [
+         3.0,
+         0.41667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-6-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.5
+        ],
+        [
+         3.0,
+         0.5
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-7-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.58333
+        ],
+        [
+         3.0,
+         0.58333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-8-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.66667
+        ],
+        [
+         3.0,
+         0.66667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-9-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.75
+        ],
+        [
+         3.0,
+         0.75
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-10-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.83333
+        ],
+        [
+         0.8,
+         0.83333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-10-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         0.83333
+        ],
+        [
+         3.0,
+         0.83333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-11-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         0.91667
+        ],
+        [
+         0.8,
+         0.91667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-11-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.2,
+         0.91667
+        ],
+        [
+         3.0,
+         0.91667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-12-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.0
+        ],
+        [
+         0.875,
+         1.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-12-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.0
+        ],
+        [
+         3.0,
+         1.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-13-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.08333
+        ],
+        [
+         0.875,
+         1.08333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-13-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.08333
+        ],
+        [
+         3.0,
+         1.08333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-14-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.16667
+        ],
+        [
+         0.875,
+         1.16667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-14-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.16667
+        ],
+        [
+         3.0,
+         1.16667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-15-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.25
+        ],
+        [
+         0.875,
+         1.25
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-15-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.25
+        ],
+        [
+         3.0,
+         1.25
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-16-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.33333
+        ],
+        [
+         0.875,
+         1.33333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-16-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.33333
+        ],
+        [
+         3.0,
+         1.33333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-17-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.41667
+        ],
+        [
+         0.875,
+         1.41667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-17-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.41667
+        ],
+        [
+         3.0,
+         1.41667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-18-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.5
+        ],
+        [
+         0.875,
+         1.5
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-18-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.5
+        ],
+        [
+         3.0,
+         1.5
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-19-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.58333
+        ],
+        [
+         0.875,
+         1.58333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-19-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.58333
+        ],
+        [
+         3.0,
+         1.58333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-20-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.66667
+        ],
+        [
+         0.875,
+         1.66667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-20-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.66667
+        ],
+        [
+         3.0,
+         1.66667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-21-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.75
+        ],
+        [
+         0.875,
+         1.75
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-21-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.75
+        ],
+        [
+         3.0,
+         1.75
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-22-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.83333
+        ],
+        [
+         0.875,
+         1.83333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-22-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.83333
+        ],
+        [
+         3.0,
+         1.83333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-23-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.91667
+        ],
+        [
+         0.875,
+         1.91667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-23-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         1.91667
+        ],
+        [
+         3.0,
+         1.91667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-24-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.0
+        ],
+        [
+         0.875,
+         2.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-24-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         2.0
+        ],
+        [
+         3.0,
+         2.0
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-25-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.08333
+        ],
+        [
+         0.875,
+         2.08333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-25-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         2.08333
+        ],
+        [
+         3.0,
+         2.08333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-26-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.16667
+        ],
+        [
+         0.875,
+         2.16667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-26-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.125,
+         2.16667
+        ],
+        [
+         3.0,
+         2.16667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-27-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.25
+        ],
+        [
+         0.625,
+         2.25
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-27-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.375,
+         2.25
+        ],
+        [
+         3.0,
+         2.25
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-28-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.33333
+        ],
+        [
+         0.625,
+         2.33333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-28-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.375,
+         2.33333
+        ],
+        [
+         3.0,
+         2.33333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-29-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.41667
+        ],
+        [
+         0.625,
+         2.41667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-29-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.375,
+         2.41667
+        ],
+        [
+         3.0,
+         2.41667
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-30-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.5
+        ],
+        [
+         0.625,
+         2.5
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-30-1",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         2.375,
+         2.5
+        ],
+        [
+         3.0,
+         2.5
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-31-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.58333
+        ],
+        [
+         3.0,
+         2.58333
+        ]
+       ],
+       "closed": false
+      },
+      {
+       "id": "bed-32-0",
+       "bone": "wall",
+       "role": "texture",
+       "z": 1,
+       "filled": false,
+       "tone": 0.3,
+       "region": "masonry-field",
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.66667
+        ],
+        [
+         3.0,
+         2.66667
+        ]
+       ],
+       "closed": false
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "The wall elevation with every bed joint drawn at its real height (32 courses of 0.0833 m), interrupted by the opening, the lintel and the sill, which register with the courses exactly.",
+      "de": "Die Wandansicht mit jeder Lagerfuge in ihrer realen Höhe (32 Schichten zu 0,0833 m), unterbrochen von Öffnung, Sturz und Fensterbank, die genau auf die Schichten abgestimmt sind."
+     },
+     "retained": {
+      "en": "All bed joints as separate lines, opening 11 to 27 courses above the floor, lintel of three courses, sill one course.",
+      "de": "Alle Lagerfugen als eigene Linien, Öffnung 11 bis 27 Schichten über dem Boden, Sturz aus drei Schichten, Fensterbank eine Schicht."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Head joints (0.25 m = 5 mm, would be 330 short lines) and the cavity layers behind the face.",
+      "de": "Stoßfugen (0,25 m = 5 mm, wären 330 kurze Linien) und die Schichten hinter der Ansichtsfläche."
+     },
+     "thinElements": {
+      "en": "Joints are 0.1 mm lines (real mortar joint 10 mm = 0.2 mm).",
+      "de": "Fugen sind 0,1-mm-Linien (reale Mörtelfuge 10 mm = 0,2 mm)."
+     },
+     "hatching": {
+      "en": "Stipple 0.8 mm for the precast concrete; the brick courses are explicit lines, not a hatch.",
+      "de": "Punktierung mit 0,8 mm für den Beton; die Ziegelschichten sind explizite Linien, keine Schraffur."
+     },
+     "styles": {
+      "en": "Outline 0.35 mm, joints 0.1 mm.",
+      "de": "Kontur 0,35 mm, Fugen 0,1 mm."
+     },
+     "overlays": {
+      "en": "Cells: wall field (the bed joints belong to it), lintel, sill.",
+      "de": "Zellen: Wandfeld (die Lagerfugen gehören dazu), Sturz, Fensterbank."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "dead-load",
+    "title": {
+     "en": "Self-weight, sunlit",
+     "de": "Eigengewicht, besonnt"
+    },
+    "description": {
+     "en": "The wall under its own weight in full south sun.",
+     "de": "Die Wand unter Eigengewicht in voller Südsonne."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "masonry-field": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "lintel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "sill": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   },
+   {
+    "id": "floor-line-load",
+    "title": {
+     "en": "Under the floor slab",
+     "de": "Unter der Geschossdecke"
+    },
+    "description": {
+     "en": "The slab above loads the wall head with 18 kN/m (dead plus category A imposed).",
+     "de": "Die Decke darüber belastet den Wandkopf mit 18 kN/m (ständig plus Nutzlast Kategorie A)."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "masonry-field": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "lintel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "sill": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "floor-line",
+      "kind": "imposed",
+      "title": {
+       "en": "Floor slab reaction 18 kN/m (g 6 + q 2 kN/m2 over half of 4.5 m span)",
+       "de": "Deckenauflager 18 kN/m (g 6 + q 2 kN/m2 über halbe Spannweite von 4,5 m)"
+      },
+      "bone": "wall",
+      "x": 0,
+      "y": 0,
+      "fxN": 0.0,
+      "fyN": 0.0,
+      "distributed": {
+       "bone": "wall",
+       "fromM": 0,
+       "toM": 3.0,
+       "wxNPerM": 0,
+       "wyNPerM": -18000
+      },
+      "source": "literature",
+      "reference": "en-1991-1-1"
+     }
+    ]
+   },
+   {
+    "id": "beam-over-opening",
+    "title": {
+     "en": "Beam bearing above the opening",
+     "de": "Trägerauflager über der Öffnung"
+    },
+    "description": {
+     "en": "A 30 kN steel beam bears on the wall head above the opening centre; the lintel carries it by arching.",
+     "de": "Ein 30-kN-Stahlträger lagert auf dem Wandkopf über der Öffnungsmitte; der Sturz trägt ihn durch Gewölbewirkung."
+    },
+    "bones": {
+     "load-carrier": {
+      "dx": 1.5
+     }
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "masonry-field": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "lintel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      },
+      "sill": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.9
+      }
+     },
+     "emitters": {}
+    },
+    "loads": [
+     {
+      "id": "beam",
+      "kind": "equipment",
+      "title": {
+       "en": "Steel beam reaction 30 kN on the wall head",
+       "de": "Stahlträgerauflager 30 kN auf dem Wandkopf"
+      },
+      "anchor": "beam-bearing",
+      "fxN": 0.0,
+      "fyN": -30000,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "shaded-morning",
+    "title": {
+     "en": "Shaded by the neighbour",
+     "de": "Vom Nachbarn verschattet"
+    },
+    "description": {
+     "en": "No load; the facade is in the shadow of the neighbouring building, only diffuse sky light.",
+     "de": "Keine Last; die Fassade liegt im Schatten des Nachbargebäudes, nur diffuses Himmelslicht."
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "regions": {
+      "masonry-field": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "lintel": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      },
+      "sill": {
+       "exposedFraction": 1.0,
+       "sunlitFraction": 0.0
+      }
+     },
+     "emitters": {}
+    },
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "load-build-up",
+    "title": {
+     "en": "Floor load builds up",
+     "de": "Deckenlast baut sich auf"
+    },
+    "description": {
+     "en": "The floor line load rises from nothing to 18 kN/m on the wall head.",
+     "de": "Die Deckenlinienlast steigt von null auf 18 kN/m am Wandkopf."
+    },
+    "durationS": 6,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "floor-line-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 6,
+      "pose": "floor-line-load",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "ramp",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Ramp",
+       "de": "Aufbau"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 4,
+      "toS": 6,
+      "title": {
+       "en": "Hold",
+       "de": "Halten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "load-on",
+      "title": {
+       "en": "Full line load",
+       "de": "Volle Linienlast"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:floor-line",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 6,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "beam-sweep",
+    "title": {
+     "en": "Beam bearing moves along the head",
+     "de": "Trägerauflager wandert am Wandkopf"
+    },
+    "description": {
+     "en": "A 30 kN beam reaction moves from the left end over the opening to the right end of the wall head.",
+     "de": "Eine Trägerlast von 30 kN wandert vom linken Ende über die Öffnung zum rechten Ende des Wandkopfes."
+    },
+    "durationS": 8,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "beam-over-opening",
+      "ease": "smooth",
+      "bones": {
+       "load-carrier": {
+        "dx": 0.2
+       }
+      }
+     },
+     {
+      "t": 8,
+      "pose": "beam-over-opening",
+      "ease": "smooth",
+      "bones": {
+       "load-carrier": {
+        "dx": 2.8
+       }
+      }
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "sweep",
+      "fromS": 0,
+      "toS": 8,
+      "title": {
+       "en": "Sweep",
+       "de": "Überfahrt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 4,
+      "kind": "motion",
+      "title": {
+       "en": "Beam above the opening",
+       "de": "Träger über der Öffnung"
+      }
+     }
+    ],
+    "tracks": []
+   },
+   {
+    "id": "sun-and-shade",
+    "title": {
+     "en": "Neighbour's shadow crosses the facade",
+     "de": "Schatten des Nachbarn zieht über die Fassade"
+    },
+    "description": {
+     "en": "The shadow of the neighbouring building crosses the wall: the sunlit fractions of field, lintel and sill dip and recover.",
+     "de": "Der Schatten des Nachbargebäudes zieht über die Wand: die Besonnungsanteile von Feld, Sturz und Fensterbank sinken und erholen sich."
+    },
+    "durationS": 12,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "dead-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 12,
+      "pose": "dead-load",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "shadow",
+      "fromS": 0,
+      "toS": 12,
+      "title": {
+       "en": "Shadow",
+       "de": "Schatten"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 6,
+      "kind": "thermal",
+      "title": {
+       "en": "Deepest shade",
+       "de": "Tiefster Schatten"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "region:masonry-field:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.9
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 0.9
+       }
+      ]
+     },
+     {
+      "target": "region:lintel:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.9
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 0.9
+       }
+      ]
+     },
+     {
+      "target": "region:sill:sunlitFraction",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.9
+       },
+       {
+        "t": 6,
+        "v": 0.05
+       },
+       {
+        "t": 12,
+        "v": 0.9
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 0,
+    "meanRadiantTempC": 0,
+    "skyTempC": -12,
+    "groundTempC": 2,
+    "relativeHumidity": 0.8,
+    "windMS": 3,
+    "windDirectionDeg": 0,
+    "solarWM2": 300,
+    "diffuseFraction": 0.25,
+    "pressurePa": 101325
+   },
+   "operating": [],
+   "regions": [
+    {
+     "id": "masonry-field",
+     "title": {
+      "en": "Facing brick wall field",
+      "de": "Verblend-Wandfeld"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "brick",
+     "areaM2": 6.02917,
+     "characteristicLengthM": 2.0,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "plaster",
+       "title": {
+        "en": "Gypsum plaster 15 mm",
+        "de": "Gipsputz 15 mm"
+       },
+       "kind": "masonry",
+       "material": "plaster",
+       "resistanceM2KW": 0.02143,
+       "source": "literature",
+       "thicknessM": 0.015,
+       "heatCapacityJM2K": 19500,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "inner-leaf",
+       "title": {
+        "en": "Calcium silicate 175 mm",
+        "de": "Kalksandstein 175 mm"
+       },
+       "kind": "masonry",
+       "material": "block",
+       "resistanceM2KW": 0.22152,
+       "source": "literature",
+       "thicknessM": 0.175,
+       "heatCapacityJM2K": 315000,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "fill",
+       "title": {
+        "en": "Mineral wool 140 mm (full-fill cavity)",
+        "de": "Mineralwolle 140 mm (Kerndämmung)"
+       },
+       "kind": "insulation",
+       "material": "wool",
+       "resistanceM2KW": 4.0,
+       "source": "literature",
+       "thicknessM": 0.14,
+       "heatCapacityJM2K": 5768,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "facing",
+       "title": {
+        "en": "Clay facing brick 115 mm",
+        "de": "Klinker-Verblender 115 mm"
+       },
+       "kind": "masonry",
+       "material": "brick",
+       "resistanceM2KW": 0.14198,
+       "source": "literature",
+       "thicknessM": 0.115,
+       "heatCapacityJM2K": 207000,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 212768,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-6946"
+    },
+    {
+     "id": "lintel",
+     "title": {
+      "en": "Precast insulated lintel",
+      "de": "Gedämmter Betonfertigsturz"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "concrete",
+     "areaM2": 0.4375,
+     "characteristicLengthM": 0.25,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "plaster",
+       "title": {
+        "en": "Gypsum plaster 15 mm",
+        "de": "Gipsputz 15 mm"
+       },
+       "kind": "masonry",
+       "material": "plaster",
+       "resistanceM2KW": 0.02143,
+       "source": "literature",
+       "thicknessM": 0.015,
+       "heatCapacityJM2K": 19500,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "lintel-inner",
+       "title": {
+        "en": "Precast concrete 175 mm",
+        "de": "Beton-Fertigteil 175 mm"
+       },
+       "kind": "masonry",
+       "material": "concrete",
+       "resistanceM2KW": 0.07609,
+       "source": "literature",
+       "thicknessM": 0.175,
+       "heatCapacityJM2K": 420000,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "lintel-ins",
+       "title": {
+        "en": "Insulation insert 80 mm",
+        "de": "Dämmeinlage 80 mm"
+       },
+       "kind": "insulation",
+       "material": "wool",
+       "resistanceM2KW": 2.28571,
+       "source": "literature",
+       "thicknessM": 0.08,
+       "heatCapacityJM2K": 3296,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "lintel-shell",
+       "title": {
+        "en": "Facing shell 40 mm",
+        "de": "Vorsatzschale 40 mm"
+       },
+       "kind": "masonry",
+       "material": "concrete",
+       "resistanceM2KW": 0.01739,
+       "source": "literature",
+       "thicknessM": 0.04,
+       "heatCapacityJM2K": 96000,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 99296,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-10211"
+    },
+    {
+     "id": "sill",
+     "title": {
+      "en": "Precast sill zone",
+      "de": "Fensterbankzone"
+     },
+     "kind": "wall",
+     "model": "conditioned",
+     "material": "concrete",
+     "areaM2": 0.11667,
+     "characteristicLengthM": 0.083,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "plaster",
+       "title": {
+        "en": "Gypsum plaster 15 mm",
+        "de": "Gipsputz 15 mm"
+       },
+       "kind": "masonry",
+       "material": "plaster",
+       "resistanceM2KW": 0.02143,
+       "source": "literature",
+       "thicknessM": 0.015,
+       "heatCapacityJM2K": 19500,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "sill-block",
+       "title": {
+        "en": "Calcium silicate 175 mm",
+        "de": "Kalksandstein 175 mm"
+       },
+       "kind": "masonry",
+       "material": "block",
+       "resistanceM2KW": 0.22152,
+       "source": "literature",
+       "thicknessM": 0.175,
+       "heatCapacityJM2K": 315000,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "sill-ins",
+       "title": {
+        "en": "Insulation 80 mm",
+        "de": "Dämmung 80 mm"
+       },
+       "kind": "insulation",
+       "material": "wool",
+       "resistanceM2KW": 2.28571,
+       "source": "literature",
+       "thicknessM": 0.08,
+       "heatCapacityJM2K": 3296,
+       "reference": "en-iso-10456"
+      },
+      {
+       "id": "sill-concrete",
+       "title": {
+        "en": "Precast sill 70 mm",
+        "de": "Fertigteil-Fensterbank 70 mm"
+       },
+       "kind": "masonry",
+       "material": "concrete",
+       "resistanceM2KW": 0.03043,
+       "source": "literature",
+       "thicknessM": 0.07,
+       "heatCapacityJM2K": 168000,
+       "reference": "en-iso-10456"
+      }
+     ],
+     "heatCapacityJM2K": 171296,
+     "conditioned": {
+      "interiorTempC": 20,
+      "interiorFilmM2KW": 0.13
+     },
+     "source": "literature",
+     "reference": "en-iso-10211"
+    }
+   ],
+   "emitters": [],
+   "passengers": [],
+   "assumptions": [
+    {
+     "en": "Winter reference case: air 0 degC, sky -12 degC, wind 3 m/s, 300 W/m2; interior 20 degC with R_si 0.13. U of the field 0.22, lintel 0.39, sill zone 0.37 W/m2K.",
+     "de": "Winter-Referenzfall: Luft 0 °C, Himmel -12 °C, Wind 3 m/s, 300 W/m2; Innenraum 20 °C mit R_si 0,13. U des Feldes 0.22, des Sturzes 0.39, der Fensterbankzone 0.37 W/m2K."
+    },
+    {
+     "en": "The lintel and sill are linear thermal bridges; they are modelled as separate layered regions with equivalent resistances (authored estimate after EN ISO 10211), not by a 2D calculation.",
+     "de": "Sturz und Fensterbank sind lineare Wärmebrücken; sie sind als eigene geschichtete Regionen mit äquivalenten Widerständen modelliert (Schätzung nach EN ISO 10211), nicht durch eine 2D-Berechnung."
+    },
+    {
+     "en": "The opening is empty (no window modelled); its reveals are not regions. Sun and shade come from the pose sunlit fractions.",
+     "de": "Die Öffnung ist leer (kein Fenster modelliert); ihre Laibungen sind keine Regionen. Sonne und Schatten kommen aus den Besonnungsanteilen der Posen."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.81,
+   "dynamics": "quasi-static",
+   "supports": [
+    "found-0",
+    "found-1",
+    "found-2"
+   ],
+   "assumptions": [
+    {
+     "en": "The wall field, lintel and sill form one rigid body bearing on three foundation contacts (friction 0.6). Arching action above the opening is not resolved: the body transmits the head load straight to the contacts.",
+     "de": "Wandfeld, Sturz und Fensterbank bilden einen starren Körper auf drei Fundamentkontakten (Reibung 0,6). Die Gewölbewirkung über der Öffnung wird nicht aufgelöst: der Körper leitet die Kopflast direkt in die Kontakte."
+    },
+    {
+     "en": "Floor load: slab 0.20 m (5 kN/m2) plus finishes 1 kN/m2 plus category A 2 kN/m2 on half of a 4.5 m span gives 18 kN/m; the beam reaction of 30 kN is an authored estimate.",
+     "de": "Deckenlast: Platte 0,20 m (5 kN/m2) plus Ausbau 1 kN/m2 plus Kategorie A 2 kN/m2 auf der halben Spannweite von 4,5 m ergibt 18 kN/m; die Trägerlast von 30 kN ist ein Schätzwert."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "dead-load",
+   "defaultClip": "beam-sweep",
+   "defaultScale": 50,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

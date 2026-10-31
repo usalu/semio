@@ -1,0 +1,36 @@
+# Content report CV-H2 (v2 conversion): elderly-with-cane, cyclist, worker-carrying-box, parent-with-stroller
+
+Files: `S/🗂️catalog/👤️humans/<id>/🔣️.json` (S = `🎓️teaching/🏛️architecture/🧍️staffage`). Sources and builders (scratch, rebuildable from the saved v1 files in `T/🧰️scripts/CV-H2/v1/`):
+`lib.py`, `common.py`, `hbuild.py`, `<asset>_geo.py` (hand-entered outlines and width tables), `build_<asset>.py` (physical scenario, decisions), `verify.py`, `bounds.py`.
+Method: every outline is a hand-entered point list (world cm of the default pose or a bone-local width table); scripts only fit splines through them and convert to bone-local coordinates. 1:50 = the v1 drawing (lod removed, pens/hatch/decisions added).
+
+## Status
+- Check CLI not ready (no `core-v2-status.md`, no bun): **`check` was NOT run**. Own structural verifier `verify.py` passes for all four (every pose binds every region and non-breath emitter, breathing ids resolve, every shape bound to an existing bone/region/hatch, every region drawn at every scale, no `lod`, no `geometry`, no inhale/exhale events).
+- Own bounding boxes (`bounds.py`) vs `dimensions` (500/200/100/50): elderly 0.534-0.542 x 1.628-1.641 (1.65 x 0.54); cyclist 1.73-1.742 x 1.788-1.794 (1.79 x 1.74); worker 0.676-0.691 x 1.824-1.828 (1.81 x 0.68); parent 1.798 x 1.738-1.744 (1.75).
+- **Dimension change (coordinator, manifest sync)**: parent-with-stroller `widthM` 1.70 -> 1.80 (v1 bounding box of the default pose, back foot at -0.42 m, was 1.798 at every scale; v1 value was wrong).
+- Previews: own SVG renderer (paper-true, rsvg-convert), not the official preview CLI. Looked at: `T/🗑️generated/CV-H2/{eld,cyc,wrk,par}-sheet.png` (500/200/100/50 side by side), `*-100-poses.png`, `cyclist-500-poses.png`, `parent-with-stroller-500-poses.png`. Not yet looked at: the seven official views, a clip instant (only named poses in other states), print-profile measurements (profile office-laser: stroke 0.1, gap 0.15, feature 0.2, hatch 0.4 mm).
+
+## Representations (all four assets: all of 500/200/100/50 authored, none unavailable, no symbols)
+Ranges 500: 350-1000, 200: 150-350, 100: 75-150, 50: 20-75. Decisions texts (en+de, eight fields each) are in the files.
+- **500**: bone-bound pieces that overlap into one silhouette (more than 4 paths because every bone must stay animatable: head, torso, hips, legs per segment, shoes + toe pieces). Arms are single strokes (0.13 mm) because an arm (70-100 mm) is below the 0.2 mm feature width; ankles widened to 100 mm (from 83) for the same reason (declared). Far arm omitted. No hatching, no detail pens. Thin parts: cane = 0.13 mm line (65 mm real vs 25 mm), bicycle tubes/tyres = 0.13 mm lines on the real axes, stroller tubes lines, stroller front wheel a filled disc, hood a mass.
+- **200**: separated masses, 1-3 detail lines (jacket front, vest bands, zip, tape). Cyclist: tyre = one circle 0.18 mm (36 vs 40 mm), tubes as 0.18/0.13 mm lines, 4 spoke strokes (rotation cue), cranks/chainring/pedals; fenders and chain omitted (gap < 0.15). Hand merged into forearm piece (regions merged).
+- **100**: articulated clothing, mitten hands with thumb, shoes with soles, hair/helmet/cap, restrained hatching (tweed 1.0, softshell 1.2, jacket shell 1.2, fabric 0.8, far limb 0.6 mm; all >= 0.4). Thin parts drawn with pen = real diameter (cane 0.25, bike tubes 0.2-0.44, stroller tubes 0.16-0.34); tyres as filled ring bands (0.4 mm); 12 spokes per bicycle wheel (every third), 4 per stroller rear wheel.
+- **50**: v1 geometry (full articulation) + pens/hatch; bicycle keeps 36 spoke strokes (0.1 mm).
+
+## Physical scenario (all)
+- DuBois (V: dubois-1916) areas: 1.80 / 1.78 / 2.02 / 1.83 m2; clothed regions with area factor 1 + 0.28 clo; layers innermost first: enclosed air 0.161 clo + garments (intrinsic clo x 0.835), 1 clo = 0.155 m2K/W, vapour resistance R/(16.5e-3 x 0.38); skin node 13.6 kJ/(m2K) + layer capacities. **Everything except DuBois area is `authored-estimate`** (clothing values guided by ISO 9920, Gagge physiology guided, respiration guided by Gupta 2010 per `references-physiology.md`).
+- Physiology: basal metabolism Mifflin-St Jeor (authored): 67.7 / 68 / 86 / 70 W; set points 36.8/34.1 (elderly 36.5/33.6, max skin flow 63 for age, authored); metWM2 58.15.
+- Respiration: nose (9.5 mm, -150 deg) and mouth (12.4 mm, -100 deg) emitters on the head, `nose` and `crown` anchors added; patterns derived from the metabolic rate (VE = 25-27 x VO2, VO2 = M / 348 W per L/min); route nose, nose-and-mouth above about 30 L/min (authored estimate). Elderly quiet 16 x 0.55 / slow walking 19 x 0.8; cyclist 17 x 0.78, 18 x 0.9, 24 x 1.25, 32 x 1.75; worker 20 x 1.45, 22 x 1.5, 24 x 1.6, 34 x 1.9, 23 x 1.55; parent 15 x 0.76, 17 x 1.0, 19 x 1.05, 21 x 1.1. Chest motion: torso 0.8-1.0 deg, 4-5 mm per 0.5 L.
+- Plume emitter at the crown (strength low while cycling, relative wind 4.3 m/s).
+- External work: cyclist 62 W riding (rolling 0.008, CdA 0.6, 97 %), 150 W standing climb; worker 150 W during the 2 s lifting burst (box 184 J over 0.94 m + part of body lift, 7 met peak; carrying and holding 0, lowering 0); parent 5 W pushing (rolling resistance 0.02 x 20 kg), 12 W kerb tilt. Worker lift peak raised from 5 to 7 met (v1 5 met was inconsistent with 150 W external work).
+- Environments: elderly 10 C overcast; cyclist 14 C, 4.3 m/s relative wind, 200 W/m2; worker indoor 20 C; parent changed from 20 C to 8 C (jacket 1.0 clo, snowsuit; 150 W/m2 sun).
+- Layered clothing per region: elderly jacket (shirt, waistcoat, tweed), trousers (long underwear, wool), cap (hair, air, tweed), shoes (sock, air, leather); cyclist (base layer, fleece, softshell; tights, stretch; helmet hair/air/EPS/shell; glove lining/leather; sock, canvas); worker (tee, shirt, mesh vest; briefs, work trousers; helmet hair/air/HDPE; glove; sock, air, leather); parent (shirt, sweater, padded jacket; briefs, leggings, jeans; socks, sneaker).
+- Pose bindings: all regions (exposed, sunlit, contact with ground/grip/saddle/box, wettedness for exertion), emitters, activityMet, externalWorkW, breathing; clip tracks `breathing` (step), `externalWorkW`, `emitter:plume`, activityMet (worker squat-lift replaced).
+- **Second body (parent-with-stroller)**: the toddler has no physiology slot. Modelled as `operating` regions (face 3 W, snowsuit 33 W, key `child-heat`) and a continuous-equivalent `vent` emitter (4.2e-5 m3/s, +25 K, 0.0256 kg/kg). Interface question for the coordinator: a second `BodyPhysiology` or a second respiration would be cleaner.
+
+## Remaining doubts
+1. Check/preview CLIs not run (see above); print-profile suitability (min gap 0.15 mm between separate outlines, filled feature 0.2 mm) is only designed for, not measured (e.g. 1:200 frame junctions, 1:100 spoke pitch near the hub 0.157 mm).
+2. 500 uses more than 4 pieces; the arm stroke ends at the hand tip, the hand bone does not move it.
+3. Clip instants not looked at; poses with strong flexion (squat, kerb tilt) looked at for 100 only.
+4. `unavailable` is not used; at 1:500 the cyclist wheel rotation and the stroller wheel rotation are invisible (declared).
+5. Materials `still-air` carry a nominal emissivity 0.9 (only used if a layer is outermost, never is).

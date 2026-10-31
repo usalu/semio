@@ -1,0 +1,17 @@
+# Private Dependency Provisioning
+
+Current private endpoint qualification completed0/null at2026-10-30T05:37:10.946Z but correctly reported ready=false: root node_modules targeted the host cache outside the private namespace. The existing stage-zero launcher is an ordinary0755 file. Host metadata snapshot at05:39:16.681Z records1287endpoint paths from all authored package manifests (a superset of the historical320-scope projection set), with no-follow ancestry, raw link targets and exact file identities; no host package body was read.
+
+One actual canonical dependencies ensure is now scheduled inside the existing private container through registered normal Docker and the retained launcher. No manual relink/removal, NODE_PATH override, archive restore or ownership/Source guard change. Current status is pending, not success. Evidence: generated/native-private-dependencies-current.log and actual terminal outcome on settlement; host before snapshot generated/native-host-endpoints-before.json. Requalify the private endpoint and compare all host identities after the operation. Only then attempt the unchanged installed-receipt verifier.
+
+Actual canonical stage-zero provisioner entered its normal private dependency admission and is waiting for6144MiB under unchanged guards. It reports zero inner grants, while the host outer registered Docker grant reserves2048MiB; these namespace views need qualification before claiming machine-wide reserved funding. No off flag, new limit or handwritten grant was introduced. Existing operation remains observed, no success claimed.
+
+## Actual Owned Progress
+
+At05:51:14.096Z the real canonical producer had passed inner admission, walked64639workspace edges and64626installed paths, and performed1841920store-ownership text operations. It preserved2Source endpoints through the existing publisher and requested normal reclamation of unpinned superseded generations to make room for a2221MiBgeneration (1979MiBfree). No manual cache pruning was requested. This is actual partial producer progress, not successful publication. Bounded host process metadata is generated/private-dependency-host-processes.json; it identifies the real container frontdoor under its container exec parent, separately from the outer host Docker process. The host-before endpoint snapshot remains unchanged as baseline until an after-snapshot comparison.
+
+## Completed Provisioning and Endpoint Qualification
+
+Canonical private ensure PID409493 completed status0/signalnull at2026-10-30T06:02:09.460Z. Stdlib endpoint requalification PID434345 completed0/null at06:02:36.690Z: private root generation9f6670a82b61a71de510, pinned Ajv8.20.0 and dist/2020.js physically under private cache, no node_modules mount, both launchers ordinary0755. Host identities before 2026-10-30T05:39:16.681Z versus after 2026-10-30T06:02:40.176Z: 1287/1287 members; membership equal=true; exact endpoint differences=0. Generated comparison retains differences. Receipt/current native provenance still pending.
+
+Installed Receipt verifier PID434857 completed0/null at2026-10-30T06:02:55.869Z. Closed Ajv validation, bounded stable single-link artifacts, ELF header, executable mode and SHA agreement passed. Observed historical installed binary20361290bytes0755, Receipt0600, SHA2563f61eed0b685ab69a43f5fe9d079806bdd09b865efeaa60d51ef069380fdb268. This closes the actual unresolved-Ajv blocker; it does not prove current Source provenance or native query acceptance.

@@ -1,8 +1,10 @@
 {
   "curtain_walls": {
     "cw-1": {
-      "curtain_wall_type": "cwt-2",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "curtain_wall_type": "cwt-2"
+      }
     }
   }
 }

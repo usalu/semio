@@ -194,7 +194,7 @@ impl Patch<ClassificationSet> for ClassificationSetPatch {
 //#region 🔖️KeyedDelta
 /// 🧩 One keyed change of a collection.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "entry")]
+#[value(tag = "entry", content = "value", deny_unknown_fields)]
 pub enum Entry<T, P> {
     Created(T),
     Deleted,

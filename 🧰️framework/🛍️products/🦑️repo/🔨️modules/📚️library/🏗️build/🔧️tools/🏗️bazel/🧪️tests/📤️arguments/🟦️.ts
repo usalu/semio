@@ -1,7 +1,7 @@
 /** 🧪️ Arguments: 3 tests covering Bazel per-command forwarding executes the same literal argv as Nx and SQLite; Bazel exec materialization preserves literal callback tokens through both backends; Bazel public output styles and defaul… */
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
-import Ajv2020 from"ajv/dist/2020.js";
+import Ajv2020 from"ajv";
 import graphSchema from"../../../../🧬️schema/🔣️.json";
 import{readBuildGraphV1}from"../../../../🕸️graph/🟦️.ts";
 import{selectBuildTasksV1}from"../../../../🧭️selection/🟦️.ts";

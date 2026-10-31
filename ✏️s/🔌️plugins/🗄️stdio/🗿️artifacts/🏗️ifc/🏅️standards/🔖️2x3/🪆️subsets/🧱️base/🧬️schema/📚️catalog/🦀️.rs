@@ -1,7 +1,7 @@
 //! 🏗️ Normative IFC2x3 TC1 declarations without a runtime parser.
-#[path="../../../../../../📚️catalog/🦀️.rs"]mod shared;
+use semio_s_artifact_stdio_ifc_declarations as shared;
 pub use shared::{IfcCatalog,IfcDeclaration,IfcTypeExpression,IfcAttributeDeclaration,IfcDerivedDeclaration,IfcEntityDeclaration,IfcTypeDeclaration};
-include!("data.rs");
+use semio_s_artifact_stdio_ifc2x3_catalog::build_catalog;
 pub fn ifc2x3_catalog()->&'static IfcCatalog{static CATALOG:std::sync::OnceLock<IfcCatalog>=std::sync::OnceLock::new();CATALOG.get_or_init(build_catalog)}
 pub fn ifc2x3_declaration(name:&str)->Option<IfcDeclaration<'static>>{shared::ifc_declaration(ifc2x3_catalog(),name)}
 pub fn ifc2x3_attribute_declarations(name:&str)->Option<&'static[IfcAttributeDeclaration]>{shared::ifc_attributes(ifc2x3_catalog(),name)}

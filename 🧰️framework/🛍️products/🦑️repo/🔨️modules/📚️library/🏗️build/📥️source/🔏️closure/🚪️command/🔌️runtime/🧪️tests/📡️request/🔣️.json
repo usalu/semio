@@ -4,7 +4,8 @@
     "control",
     "publish",
     "fixed",
-    "native"
+    "native",
+    "inventory"
   ],
   "files": [
     {

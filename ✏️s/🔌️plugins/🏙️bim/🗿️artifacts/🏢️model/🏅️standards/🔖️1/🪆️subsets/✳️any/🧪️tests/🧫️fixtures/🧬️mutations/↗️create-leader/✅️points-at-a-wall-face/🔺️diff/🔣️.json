@@ -1,20 +1,22 @@
 {
   "leaders": {
     "lead-1": {
-      "anchor": {
-        "WallFace": {
-          "side": "Right",
-          "wall": "w-south"
-        }
-      },
       "entry": "Created",
-      "offset": {
-        "x": 1.0,
-        "y": 1.0
-      },
-      "storey": "st-ground",
-      "style": "as-plan",
-      "text": "Brick 300"
+      "value": {
+        "anchor": {
+          "WallFace": {
+            "side": "Right",
+            "wall": "w-south"
+          }
+        },
+        "offset": {
+          "x": 1,
+          "y": 1
+        },
+        "storey": "st-ground",
+        "style": "as-plan",
+        "text": "Brick 300"
+      }
     }
   }
 }

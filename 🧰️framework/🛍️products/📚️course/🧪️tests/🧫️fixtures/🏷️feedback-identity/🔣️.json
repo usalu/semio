@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "first-item",
+      "label": {
+        "en": "Repeated label",
+        "de": "Gleiche Bezeichnung"
+      },
+      "explanation": {
+        "en": "The first item keeps its own explanation.",
+        "de": "Das erste Element behält seine eigene Erklärung."
+      }
+    },
+    {
+      "id": "second-item",
+      "label": {
+        "en": "Repeated label",
+        "de": "Gleiche Bezeichnung"
+      },
+      "explanation": {
+        "en": "The second item has a different explanation.",
+        "de": "Das zweite Element hat eine andere Erklärung."
+      }
+    }
+  ],
+  "order": [
+    "second-item",
+    "first-item"
+  ],
+  "dimensions": [
+    "first-quantity",
+    "second-quantity"
+  ]
+}

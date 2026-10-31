@@ -2,7 +2,7 @@
   "version": 1,
   "native": {
     "packageName": "semio-nextest-execution-fixture",
-    "manifest": "[package]\nname = \"semio-nextest-execution-fixture\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[features]\ncomponent-app-assembly = []\n\n[workspace]\n",
+    "manifest": "cargo-features = [\"trim-paths\"]\n[package]\nname = \"semio-nextest-execution-fixture\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[features]\ncomponent-app-assembly = []\n\n[workspace]\n",
     "source": "#[test]\nfn owner() { assert_eq!(2 + 2, 4); println!(\"[TRACE] neutral Nextest execution owner ran\"); }\n",
     "config": "[profile.quick]\nfail-fast = false\n"
   },

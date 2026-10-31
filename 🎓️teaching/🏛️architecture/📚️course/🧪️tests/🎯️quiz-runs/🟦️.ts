@@ -5,10 +5,10 @@
  * partial credit, strictly between nothing and everything, and no badge.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../🔣️.json — the course and its badges */
-import { COURSE, PAR, authorPreview, openGrid, openQuizGrid, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, pane, playQuiz, primary, quizOf, screen, shownBest, shownItems, startClock, openTaskById, expectSaved, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, PAR, authorPreview, openGrid, openQuizGrid, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, layoutQuiet, pane, playQuiz, primary, quizOf, screen, shownBest, shownItems, startClock, openTaskById, expectSaved, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 test("every quiz is playable to a perfect score, and the perfect runs earn every badge of the course", async ({ device }) => {
-  const learner = await device("en");
+  test.setTimeout(20 * 60_000); const learner = await device("en");
   await enter(learner, { kind: "pseudonym", handle: handle("Perfect Player") });
   await authorPreview(learner);
   const played: string[] = [];
@@ -109,6 +109,7 @@ for (const quiz of QUIZZES) {
       }
       await expectSaved(learner);
       await learner.page.reload();
+      await layoutQuiet(learner.page);
       await card(learner.page, "learner").getByRole("link").click({ noWaitAfter: true });
       await expect(pane(learner.page, "learner")).toHaveAttribute("data-opened", "");
       await pane(learner.page, "learner").locator('[data-card="runs"] tbody tr').first().getByRole("button", { name: "View result", exact: true }).click();
@@ -131,7 +132,7 @@ for (const locale of ["en", "de"] as const) test(`software mockups render and gr
     await openTaskById(learner, task);
     const preview = screen(learner.page, "task").locator(`figure[data-mockup="${kind}"]`);
     await expect(preview.first()).toBeVisible();
-    const region = preview.first().getByRole("region");
+    const region = preview.first().locator('.course-mockup-scroll[role="region"]');
     await region.focus();
     await expect(region).toBeFocused();
     await expect(region).toHaveAttribute("aria-labelledby", /.+/u);

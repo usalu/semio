@@ -1,3 +1,4 @@
+import{linuxProcessDescendantsV1,linuxProcessCpuMillisecondsV1}from"./🐧️linux/🟦️.ts";
 import{spawnSync}from"node:child_process";
 import{setTimeout as pause}from"node:timers/promises";
 import schema from"./🧬️schema/🔣️.json" with{type:"json"};
@@ -39,8 +40,9 @@ export function startScriptProcessActivitySamplerV1(options:Readonly<{sample?:()
 }
 /** ⏰️ A timer wait that counts as waiting for the whole stall rule; the drop-in for `timers/promises` `setTimeout` in every queue and capacity poll. */
 export async function waitingDelayV1<T>(milliseconds:number,value?:T,options?:Readonly<{signal?:AbortSignal;ref?:boolean}>):Promise<T|undefined>{const leave=enterScriptProcessWaitV1();try{return await pause(milliseconds,value,options as never);}finally{leave();}}
-/** 📋️ Lists live descendants of this process from one process-table snapshot; an unreadable table answers `undefined` (callers then assume children are alive). */
+/** 📋️ Lists live descendants from bounded kernel metadata on Linux and a system process snapshot on macOS/Windows; an unreadable table answers `undefined` (callers then assume children are alive). */
 export function liveChildPidsV1(pid:number=process.pid):readonly number[]|undefined{
+ if(process.platform==="linux")return linuxProcessDescendantsV1(pid);
  try{
   const windows=process.platform==="win32",snapshot=windows?spawnSync("powershell.exe",["-NoLogo","-NoProfile","-NonInteractive","-Command","Get-CimInstance Win32_Process | ForEach-Object { \"$($_.ProcessId) $($_.ParentProcessId)\" }"],{encoding:"utf8",windowsHide:true,timeout:10000}):spawnSync("ps",["-axo","pid=,ppid="],{encoding:"utf8",windowsHide:true,timeout:10000});
   if(snapshot.status!==0||typeof snapshot.stdout!=="string")return undefined;
@@ -53,6 +55,7 @@ export function liveChildPidsV1(pid:number=process.pid):readonly number[]|undefi
 export function liveChildCountV1(pid:number=process.pid):number{return liveChildPidsV1(pid)?.length??1;}
 /** 🌳️ Sums the CPU time (milliseconds) the given processes have used so far; `undefined` when it cannot be read (Windows, vanished pids). */
 export function treeCpuMillisecondsV1(pids:readonly number[]):number|undefined{
+ if(process.platform==="linux")return linuxProcessCpuMillisecondsV1(pids);
  if(process.platform==="win32"||!pids.length)return undefined;
  try{const snapshot=spawnSync("ps",["-o","cputime=","-p",pids.join(",")],{encoding:"utf8",timeout:10000});if(typeof snapshot.stdout!=="string")return undefined;let total=0;for(const line of snapshot.stdout.split("\n")){const text=line.trim();if(!text)continue;const match=/^(?:(\d+)-)?(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)$/u.exec(text);if(!match)return undefined;total+=((Number(match[1]??0)*24+Number(match[2]??0))*60+Number(match[3]))*60000+Number(match[4])*1000;}return Math.round(total);}catch{return undefined;}
 }

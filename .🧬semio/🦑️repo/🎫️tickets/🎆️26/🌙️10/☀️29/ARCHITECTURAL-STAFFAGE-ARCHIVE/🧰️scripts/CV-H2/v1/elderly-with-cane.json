@@ -1,0 +1,6870 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "elderly-with-cane",
+    "category": "humans",
+    "title": {
+      "en": "Elderly Person with Cane",
+      "de": "Ältere Person mit Gehstock"
+    },
+    "summary": {
+      "en": "A 74-year-old man with a rounded upper back, flat cap and tweed jacket walking with a wooden crook cane in three-point gait: the cane tip is a third ground contact that shares the weight through the weak-side stance.",
+      "de": "Ein 74-jähriger Mann mit rundem Rücken, Schiebermütze und Tweedjacke geht mit einem Krückstock im Dreipunktgang: Die Stockspitze ist ein dritter Bodenkontakt, der in der Standphase der schwachen Seite einen Teil des Gewichts trägt."
+    },
+    "tags": [
+      "human",
+      "elderly",
+      "cane",
+      "three-point-gait",
+      "kyphosis"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker humans-a",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230. Tables 4 (male) and 5 (female), segment mass fractions and centre-of-mass positions."
+        },
+        {
+          "id": "winter-2009",
+          "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, anthropometric segment data."
+        },
+        {
+          "id": "drillis-contini-1966",
+          "citation": "Drillis, R., Contini, R. and Bluestein, M. (1964/1966). Body segment parameters: a survey of measurement techniques. Artificial Limbs 8(1), 44-66; segment lengths as fractions of stature."
+        },
+        {
+          "id": "perry-burnfield-2010",
+          "citation": "Perry, J. and Burnfield, J. M. (2010). Gait Analysis: Normal and Pathological Function, 2nd ed., SLACK. Gait cycle phases and joint angle ranges."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-8996-2021",
+          "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment, analytical determination of thermal comfort; Annex A metabolic rates."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort; Chapter 18 Nonresidential cooling and heating load calculations for emissivities and metabolic data."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H. and Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39."
+        }
+      ],
+      "notes": {
+        "en": "A 70 kg man, stature 1.70 m straight and about 1.62 m with the authored 16 degree forward torso inclination and flexed neck; segment masses from the de Leva male fractions plus 2.3 kg of clothing, lengths scaled by 0.93. Gait key frames from inverse kinematics of smooth foot paths with shortened strides; the cane tip path and the arm that holds it are solved so that the tip stays fixed in the stance.",
+        "de": "Ein 70 kg schwerer Mann, Körpergröße 1,70 m aufrecht und etwa 1,62 m mit der gezeichneten Rumpfneigung von 16 Grad und gebeugtem Hals; Segmentmassen nach den männlichen Anteilen von de Leva plus 2,3 kg Kleidung, Längen mit 0,93 skaliert. Ganghaltungen aus inverser Kinematik glatter Fußbahnen mit verkürzten Schritten; die Bahn der Stockspitze und der haltende Arm sind so gelöst, dass die Spitze in der Standphase fest bleibt."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.65,
+      "widthM": 0.54,
+      "depthM": 0.48,
+      "massKg": 73.8
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Aged skin",
+          "de": "Gealterte Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "White hair",
+          "de": "Weißes Haar"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.5,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "tweed",
+        "title": {
+          "en": "Tweed wool",
+          "de": "Tweedwolle"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "wool-trouser",
+        "title": {
+          "en": "Wool trousers",
+          "de": "Wollhose"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.7,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "leather-shoe",
+        "title": {
+          "en": "Leather walking shoe",
+          "de": "Leder-Wanderschuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.75,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "ash-wood",
+        "title": {
+          "en": "Ash wood",
+          "de": "Eschenholz"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "rubber",
+        "title": {
+          "en": "Rubber",
+          "de": "Gummi"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.9,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0.8696,
+          "angleDeg": 90,
+          "lengthM": 0.09300000000000001,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -15,
+            "maxDeg": 15
+          },
+          "mass": {
+            "kg": 8,
+            "comX": 0.057,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Stooped torso with jacket",
+            "de": "Gebeugter Rumpf mit Jacke"
+          },
+          "x": 0.093,
+          "y": 0,
+          "angleDeg": -16,
+          "lengthM": 0.43245000000000006,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -35,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 23.9,
+            "comX": 0.2,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "neck",
+          "parent": "torso",
+          "title": {
+            "en": "Neck",
+            "de": "Hals"
+          },
+          "x": 0.4325,
+          "y": 0,
+          "angleDeg": -18,
+          "lengthM": 0.09300000000000001,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 40
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0.047,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "neck",
+          "title": {
+            "en": "Head with cap",
+            "de": "Kopf mit Schiebermütze"
+          },
+          "x": 0.093,
+          "y": 0,
+          "angleDeg": 20,
+          "lengthM": 0.1674,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 4.45,
+            "comX": 0.075,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.3906,
+          "y": 0,
+          "angleDeg": -164,
+          "lengthM": 0.3069,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 2,
+            "comX": 0.1767,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3069,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.24180000000000001,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.18,
+            "comX": 0.1107,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.2418,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.17670000000000002,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.43,
+            "comX": 0.0893,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.40455,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 10.06,
+            "comX": 0.1655,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4046,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.39525,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.13,
+            "comX": 0.1762,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot and shoe",
+            "de": "Linker Fuß mit Schuh"
+          },
+          "x": 0.3953,
+          "y": 0,
+          "angleDeg": 66.2,
+          "lengthM": 0.172794,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0.0735,
+            "comY": -0.0031,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1728,
+          "y": 0,
+          "angleDeg": 23.8,
+          "lengthM": 0.060450000000000004,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0.0279,
+            "comY": 0.0279,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.3906,
+          "y": 0,
+          "angleDeg": -164,
+          "lengthM": 0.3069,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 2,
+            "comX": 0.1767,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3069,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.24180000000000001,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 1.18,
+            "comX": 0.1107,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.2418,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.17670000000000002,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.43,
+            "comX": 0.0893,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.40455,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 10.06,
+            "comX": 0.1655,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4046,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.39525,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 3.13,
+            "comX": 0.1762,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot and shoe",
+            "de": "Rechter Fuß mit Schuh"
+          },
+          "x": 0.3953,
+          "y": 0,
+          "angleDeg": 66.2,
+          "lengthM": 0.172794,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0.0735,
+            "comY": -0.0031,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1728,
+          "y": 0,
+          "angleDeg": 23.8,
+          "lengthM": 0.060450000000000004,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0.0279,
+            "comY": 0.0279,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "cane",
+          "parent": "hand-r",
+          "title": {
+            "en": "Walking cane",
+            "de": "Gehstock"
+          },
+          "x": 0.0884,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.87,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -130,
+            "maxDeg": 130
+          },
+          "mass": {
+            "kg": 0.35,
+            "comX": 0.3915,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0101,
+        "y": -0.0807,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linker Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-l",
+        "bone": "foot-l",
+        "x": 0.1728,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linker Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.095,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0101,
+        "y": -0.0807,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechter Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-r",
+        "bone": "foot-r",
+        "x": 0.1728,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechter Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.095,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "cane-tip",
+        "bone": "cane",
+        "x": 0.87,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Rubber cane ferrule",
+          "de": "Gummi-Zwinge des Stocks"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.8
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": -0.0047,
+        "y": -0.0745,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth and nose",
+          "de": "Mund und Nase"
+        }
+      },
+      {
+        "id": "cane-grip",
+        "bone": "hand-r",
+        "x": 0.0884,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Hand on the crook handle",
+          "de": "Hand am Krückgriff"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "sleeve-l",
+          "bone": "arm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.5,
+          "filled": true,
+          "tone": 0.43,
+          "kind": "path",
+          "d": "M -0.0065 -0.054 C 0.0511 -0.0558 0.1906 -0.0512 0.3022 -0.0428 C 0.3301 -0.0428 0.3376 -0.0233 0.3376 0 C 0.3376 0.0232 0.3301 0.0465 0.3022 0.0465 C 0.1906 0.052 0.0697 0.0595 0.0028 0.0576 C -0.0307 0.0372 -0.0307 -0.0279 -0.0065 -0.054 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "forearm-l",
+          "bone": "forearm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.5,
+          "filled": true,
+          "tone": 0.43,
+          "kind": "path",
+          "d": "M -0.0093 -0.0437 C -0.0279 -0.0447 -0.0372 -0.0242 -0.0372 0 C -0.0372 0.0251 -0.0279 0.0465 -0.0093 0.0465 C 0.0697 0.0465 0.1627 0.0418 0.2325 0.0372 L 0.2325 -0.0363 C 0.1627 -0.0372 0.0697 -0.0428 -0.0093 -0.0437 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "hand-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.6,
+          "filled": true,
+          "tone": 0.71,
+          "kind": "path",
+          "d": "M -0.014 -0.0279 C 0.0279 -0.0326 0.0698 -0.0316 0.0977 -0.0288 L 0.1497 -0.0279 C 0.1618 -0.0279 0.1618 -0.014 0.1497 -0.014 L 0.1274 -0.0136 L 0.1628 -0.0147 C 0.1748 -0.0147 0.1748 0.0007 0.1628 0.0007 L 0.1274 0.0011 L 0.1702 0 C 0.1823 0 0.1823 0.0158 0.1702 0.0158 L 0.1274 0.0162 L 0.1637 0.0153 C 0.1758 0.0153 0.1758 0.0302 0.1637 0.0302 C 0.1209 0.0316 0.0558 0.0353 0 0.0381 L -0.014 0.0344 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 2,
+          "z": 0.62,
+          "filled": true,
+          "tone": 0.6887,
+          "kind": "path",
+          "d": "M -0.0037 0.0223 C 0.0242 0.0465 0.0614 0.067 0.0911 0.0763 C 0.1014 0.0791 0.1088 0.0698 0.1014 0.0605 C 0.0856 0.0465 0.0651 0.0372 0.0428 0.0205 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-0",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              -0.0142
+            ],
+            [
+              0.1274,
+              -0.0142
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-1",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              0.0003
+            ],
+            [
+              0.1274,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-2",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              0.0156
+            ],
+            [
+              0.1274,
+              0.0156
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.33,
+          "kind": "path",
+          "d": "M -0.0139 -0.0884 C 0.0791 -0.0976 0.293 -0.0818 0.386 -0.0577 C 0.4092 -0.0558 0.4186 -0.0325 0.4186 0 C 0.4186 0.0372 0.4092 0.0614 0.386 0.0614 C 0.293 0.0791 0.107 0.093 -0.0232 0.0818 Z",
+          "region": "trousers",
+          "material": "wool-trouser"
+        },
+        {
+          "id": "shank-l",
+          "bone": "shank-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.02,
+          "filled": true,
+          "tone": 0.33,
+          "kind": "path",
+          "d": "M 0 -0.0577 C -0.0298 -0.0595 -0.0419 -0.0325 -0.0419 0 C -0.0419 0.0372 -0.0298 0.0595 0 0.0595 C 0.0372 0.0577 0.093 0.0521 0.186 0.0484 C 0.2604 0.0465 0.3348 0.0419 0.3859 0.0381 L 0.3859 -0.04 C 0.3534 -0.0437 0.2883 -0.0484 0.2325 -0.0558 C 0.1488 -0.0725 0.0744 -0.0707 0 -0.0577 Z",
+          "region": "trousers",
+          "material": "wool-trouser"
+        },
+        {
+          "id": "shoe-rear-l",
+          "bone": "foot-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.22999999999999998,
+          "kind": "path",
+          "d": "M -0.0406 -0.028 C -0.0345 -0.0508 -0.0243 -0.0716 -0.0163 -0.0783 L -0.0059 -0.0788 L 0.1736 0.0003 L 0.1481 0.0582 C 0.0995 0.051 0.0598 0.0487 0.0313 0.0443 L 0.0167 0.0429 C 0.0034 0.0269 -0.0264 0.0138 -0.0373 0.0039 C -0.0464 -0.0052 -0.0462 -0.0153 -0.0406 -0.028 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-l",
+          "bone": "toe-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.22999999999999998,
+          "kind": "path",
+          "d": "M -0.0009 0 L 0.0419 0 C 0.0632 0 0.0707 0.0112 0.0651 0.0242 C 0.0577 0.0419 0.0279 0.0577 -0.0009 0.0632 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-sole-l",
+          "bone": "foot-l",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.15,
+          "filled": false,
+          "tone": 0.05,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0227,
+              -0.0638
+            ],
+            [
+              0.1645,
+              0.0187
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "sleeve-r",
+          "bone": "arm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M -0.0065 -0.054 C 0.0511 -0.0558 0.1906 -0.0512 0.3022 -0.0428 C 0.3301 -0.0428 0.3376 -0.0233 0.3376 0 C 0.3376 0.0232 0.3301 0.0465 0.3022 0.0465 C 0.1906 0.052 0.0697 0.0595 0.0028 0.0576 C -0.0307 0.0372 -0.0307 -0.0279 -0.0065 -0.054 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "forearm-r",
+          "bone": "forearm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M -0.0093 -0.0437 C -0.0279 -0.0447 -0.0372 -0.0242 -0.0372 0 C -0.0372 0.0251 -0.0279 0.0465 -0.0093 0.0465 C 0.0697 0.0465 0.1627 0.0418 0.2325 0.0372 L 0.2325 -0.0363 C 0.1627 -0.0372 0.0697 -0.0428 -0.0093 -0.0437 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "hand-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.78,
+          "kind": "path",
+          "d": "M -0.014 -0.0279 C 0.0279 -0.0326 0.0698 -0.0316 0.0977 -0.0288 L 0.1497 -0.0279 C 0.1618 -0.0279 0.1618 -0.014 0.1497 -0.014 L 0.1274 -0.0136 L 0.1628 -0.0147 C 0.1748 -0.0147 0.1748 0.0007 0.1628 0.0007 L 0.1274 0.0011 L 0.1702 0 C 0.1823 0 0.1823 0.0158 0.1702 0.0158 L 0.1274 0.0162 L 0.1637 0.0153 C 0.1758 0.0153 0.1758 0.0302 0.1637 0.0302 C 0.1209 0.0316 0.0558 0.0353 0 0.0381 L -0.014 0.0344 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 2,
+          "z": 6.22,
+          "filled": true,
+          "tone": 0.7566,
+          "kind": "path",
+          "d": "M -0.0037 0.0223 C 0.0242 0.0465 0.0614 0.067 0.0911 0.0763 C 0.1014 0.0791 0.1088 0.0698 0.1014 0.0605 C 0.0856 0.0465 0.0651 0.0372 0.0428 0.0205 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-0",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              -0.0142
+            ],
+            [
+              0.1274,
+              -0.0142
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-1",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              0.0003
+            ],
+            [
+              0.1274,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-2",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0698,
+              0.0156
+            ],
+            [
+              0.1274,
+              0.0156
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.0139 -0.0884 C 0.0791 -0.0976 0.293 -0.0818 0.386 -0.0577 C 0.4092 -0.0558 0.4186 -0.0325 0.4186 0 C 0.4186 0.0372 0.4092 0.0614 0.386 0.0614 C 0.293 0.0791 0.107 0.093 -0.0232 0.0818 Z",
+          "region": "trousers",
+          "material": "wool-trouser"
+        },
+        {
+          "id": "shank-r",
+          "bone": "shank-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.02,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0 -0.0577 C -0.0298 -0.0595 -0.0419 -0.0325 -0.0419 0 C -0.0419 0.0372 -0.0298 0.0595 0 0.0595 C 0.0372 0.0577 0.093 0.0521 0.186 0.0484 C 0.2604 0.0465 0.3348 0.0419 0.3859 0.0381 L 0.3859 -0.04 C 0.3534 -0.0437 0.2883 -0.0484 0.2325 -0.0558 C 0.1488 -0.0725 0.0744 -0.0707 0 -0.0577 Z",
+          "region": "trousers",
+          "material": "wool-trouser"
+        },
+        {
+          "id": "shoe-rear-r",
+          "bone": "foot-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.0406 -0.028 C -0.0345 -0.0508 -0.0243 -0.0716 -0.0163 -0.0783 L -0.0059 -0.0788 L 0.1736 0.0003 L 0.1481 0.0582 C 0.0995 0.051 0.0598 0.0487 0.0313 0.0443 L 0.0167 0.0429 C 0.0034 0.0269 -0.0264 0.0138 -0.0373 0.0039 C -0.0464 -0.0052 -0.0462 -0.0153 -0.0406 -0.028 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-toe-r",
+          "bone": "toe-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.0009 0 L 0.0419 0 C 0.0632 0 0.0707 0.0112 0.0651 0.0242 C 0.0577 0.0419 0.0279 0.0577 -0.0009 0.0632 Z",
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "shoe-sole-r",
+          "bone": "foot-r",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.15,
+          "filled": false,
+          "tone": 0.05,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0227,
+              -0.0638
+            ],
+            [
+              0.1645,
+              0.0187
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "leather-shoe"
+        },
+        {
+          "id": "pelvis-trousers",
+          "bone": "pelvis",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0.1233 0.0759 C 0.0845 0.1093 0.0302 0.122 -0.0389 0.1176 L -0.0927 -0.0702 C -0.0378 -0.1149 0.0153 -0.1321 0.0637 -0.1324 Z",
+          "region": "trousers",
+          "material": "wool-trouser"
+        },
+        {
+          "id": "jacket",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M 0.436 0.0023 C 0.4268 0.0581 0.3802 0.0999 0.3152 0.1139 C 0.2501 0.1213 0.1757 0.0859 0.0826 0.0813 C 0.0083 0.086 -0.0662 0.0906 -0.1592 0.0906 L -0.1591 -0.1465 C -0.0754 -0.1511 -0.001 -0.1511 0.064 -0.1484 C 0.157 -0.1465 0.2128 -0.154 0.2594 -0.1558 C 0.3337 -0.1512 0.3896 -0.1261 0.4193 -0.0832 C 0.4314 -0.0628 0.4408 -0.035 0.436 0.0023 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-hump",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.05,
+          "filled": true,
+          "tone": 0.42,
+          "kind": "path",
+          "d": "M 0.371 0.1046 C 0.3245 0.1511 0.2501 0.1511 0.1756 0.1046 C 0.25 0.1092 0.3245 0.0999 0.3803 0.086 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-front",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": false,
+          "tone": 0.15,
+          "kind": "poly",
+          "points": [
+            [
+              0.4193,
+              -0.0832
+            ],
+            [
+              0.2501,
+              -0.1093
+            ],
+            [
+              -0.1406,
+              -0.1373
+            ]
+          ],
+          "closed": false,
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-pocket",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.38,
+          "kind": "path",
+          "d": "M -0.0475 -0.021 L -0.0475 -0.1233 L -0.094 -0.1233 L -0.094 -0.0209 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-check-1",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.3245,
+              0.0673
+            ],
+            [
+              0.3245,
+              -0.1279
+            ]
+          ],
+          "closed": false,
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-check-2",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1106,
+              0.0674
+            ],
+            [
+              0.1106,
+              -0.128
+            ]
+          ],
+          "closed": false,
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-check-3",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.3895,
+              -0.0256
+            ],
+            [
+              -0.1405,
+              -0.0256
+            ]
+          ],
+          "closed": false,
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "jacket-button",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.2,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.0827,
+          "cy": -0.1372,
+          "rx": 0.008,
+          "ry": 0.008,
+          "rotationDeg": -74,
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "neck",
+          "bone": "neck",
+          "role": "body",
+          "lod": 0,
+          "z": 3.8,
+          "filled": true,
+          "tone": 0.78,
+          "kind": "path",
+          "d": "M 0.0863 0.0544 C 0.0488 0.0538 0.0205 0.0545 -0.0124 0.0546 L -0.0028 -0.0473 C 0.0246 -0.0416 0.0512 -0.0304 0.0566 -0.0221 Z",
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "collar",
+          "bone": "neck",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M 0.0226 0.0736 C -0.0068 0.0817 -0.0303 0.069 -0.0347 0.0327 L -0.0215 -0.0613 C -0.0086 -0.0857 0.0219 -0.0889 0.048 -0.074 C 0.0606 -0.0572 0.0505 -0.0117 0.0435 0.0249 C 0.0396 0.0525 0.0324 0.0703 0.0226 0.0736 Z",
+          "region": "jacket",
+          "material": "tweed"
+        },
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M 0.0102 0.0687 C 0.0381 0.1012 0.1032 0.1041 0.1451 0.0641 C 0.1628 0.0315 0.1609 -0.0289 0.1292 -0.0568 C 0.1144 -0.0689 0.0939 -0.0736 0.0772 -0.0727 C 0.0679 -0.0745 0.0605 -0.0782 0.0493 -0.0875 C 0.0344 -0.1006 0.027 -0.0996 0.0214 -0.0912 C 0.0167 -0.08 0.0121 -0.0782 0.0074 -0.0782 C 0.0009 -0.08 -0.0037 -0.0782 -0.0065 -0.0745 C -0.0177 -0.0763 -0.0288 -0.0726 -0.0363 -0.0652 C -0.0484 -0.0521 -0.0475 -0.0289 -0.04 -0.015 C -0.027 0.0017 -0.0131 0.0315 -0.0084 0.0548 C -0.0038 0.0641 0.0028 0.0669 0.0102 0.0687 Z",
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "hair-white",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 5.4,
+          "filled": true,
+          "tone": 0.92,
+          "kind": "path",
+          "d": "M 0.1358 0.0129 C 0.1423 0.0594 0.1126 0.106 0.0661 0.1106 C 0.0288 0.1133 0.0103 0.0967 0.0065 0.078 C 0.0382 0.0762 0.0939 0.0688 0.1171 0.0409 Z",
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "cap",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.32,
+          "kind": "path",
+          "d": "M 0.1265 0.0827 C 0.1637 0.0873 0.1823 0.0223 0.1637 -0.0289 C 0.1497 -0.0661 0.1264 -0.094 0.1125 -0.108 C 0.1051 -0.1126 0.1013 -0.0987 0.1041 -0.0847 C 0.1079 -0.0568 0.1144 -0.0057 0.1144 0.0315 C 0.1144 0.0594 0.1171 0.0781 0.1265 0.0827 Z",
+          "region": "cap",
+          "material": "tweed"
+        },
+        {
+          "id": "ear",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.76,
+          "kind": "ellipse",
+          "cx": 0.0428,
+          "cy": 0.0241,
+          "rx": 0.01209,
+          "ry": 0.02046,
+          "rotationDeg": -76,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.7,
+          "filled": true,
+          "tone": 0.05,
+          "kind": "ellipse",
+          "cx": 0.0633,
+          "cy": -0.0568,
+          "rx": 0.00651,
+          "ry": 0.00372,
+          "rotationDeg": -76,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "glasses",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.7,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              0.0641,
+              -0.0429
+            ],
+            [
+              0.0642,
+              -0.0708
+            ],
+            [
+              0.066,
+              0.013
+            ]
+          ],
+          "closed": false,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "wrinkle",
+          "bone": "head",
+          "role": "texture",
+          "lod": 3,
+          "z": 5.7,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.0474,
+              -0.0522
+            ],
+            [
+              0.0455,
+              -0.0708
+            ]
+          ],
+          "closed": false,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "cane-shaft",
+          "bone": "cane",
+          "role": "body",
+          "lod": 0,
+          "z": 6.3,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "capsule",
+          "x0": 0.05,
+          "y0": 0,
+          "x1": 0.84,
+          "y1": 0,
+          "r0": 0.0105,
+          "r1": 0.0095,
+          "region": "cane-wood",
+          "material": "ash-wood"
+        },
+        {
+          "id": "cane-crook",
+          "bone": "cane",
+          "role": "body",
+          "lod": 0,
+          "z": 6.35,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -0.035 -0.012 C -0.085 -0.012 -0.09 0.07 -0.045 0.075 C -0.03 0.077 -0.022 0.065 -0.026 0.055 C -0.045 0.06 -0.06 0.02 -0.03 0.012 Z",
+          "region": "cane-wood",
+          "material": "ash-wood"
+        },
+        {
+          "id": "cane-ferrule",
+          "bone": "cane",
+          "role": "body",
+          "lod": 0,
+          "z": 6.4,
+          "filled": true,
+          "tone": 0.05,
+          "kind": "capsule",
+          "x0": 0.82,
+          "y0": 0,
+          "x1": 0.8575,
+          "y1": 0,
+          "r0": 0.0125,
+          "r1": 0.012,
+          "region": "cane-wood",
+          "material": "rubber"
+        },
+        {
+          "id": "cane-grain",
+          "bone": "cane",
+          "role": "texture",
+          "lod": 3,
+          "z": 6.32,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.67,
+              0.004
+            ],
+            [
+              0.32,
+              0.004
+            ]
+          ],
+          "closed": false,
+          "region": "cane-wood",
+          "material": "ash-wood"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "stooped-standing",
+        "title": {
+          "en": "Stooped standing",
+          "de": "Gebeugtes Stehen"
+        },
+        "description": {
+          "en": "Standing on both feet with a rounded upper back, the cane planted beside the foot and lightly loaded.",
+          "de": "Stand auf beiden Füßen mit rundem Rücken, der Stock neben dem Fuß aufgesetzt und leicht belastet."
+        },
+        "bones": {
+          "arm-r": {
+            "angleDeg": -26.2583
+          },
+          "forearm-r": {
+            "angleDeg": 87.2192
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -51.7006
+          },
+          "arm-l": {
+            "angleDeg": 6
+          },
+          "forearm-l": {
+            "angleDeg": 16
+          },
+          "hand-l": {
+            "angleDeg": 3
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 1.2,
+          "emitters": {
+            "breath": 0.5
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "cane-planted",
+        "title": {
+          "en": "Leaning on the planted cane",
+          "de": "Auf den aufgesetzten Stock gestützt"
+        },
+        "description": {
+          "en": "The cane is set one step ahead and the trunk leans onto it before the weak foot follows.",
+          "de": "Der Stock steht einen Schritt voraus und der Rumpf lehnt sich auf ihn, bevor der schwache Fuß folgt."
+        },
+        "bones": {
+          "arm-r": {
+            "angleDeg": -12.176
+          },
+          "forearm-r": {
+            "angleDeg": 91.3371
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -69.1849
+          },
+          "arm-l": {
+            "angleDeg": 14
+          },
+          "forearm-l": {
+            "angleDeg": 22
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -8
+          },
+          "neck": {
+            "angleDeg": 5
+          },
+          "head": {
+            "angleDeg": 3
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 1.5,
+          "emitters": {
+            "breath": 0.7
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "resting-on-cane",
+        "title": {
+          "en": "Resting with the hand on the crook",
+          "de": "Rast mit der Hand auf dem Griff"
+        },
+        "description": {
+          "en": "Standing still, the near hand resting on the crook handle, the far hand on the near wrist, head up.",
+          "de": "Ruhiger Stand, die nahe Hand auf dem Krückgriff, die ferne Hand am nahen Handgelenk, Kopf erhoben."
+        },
+        "bones": {
+          "arm-r": {
+            "angleDeg": -5.2266
+          },
+          "forearm-r": {
+            "angleDeg": 67.8848
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -67.6582
+          },
+          "arm-l": {
+            "angleDeg": 34
+          },
+          "forearm-l": {
+            "angleDeg": 86
+          },
+          "hand-l": {
+            "angleDeg": -10
+          },
+          "torso": {
+            "angleDeg": 5
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -6
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 1.1,
+          "emitters": {
+            "breath": 0.4
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "contact-left",
+        "title": {
+          "en": "Left heel strike with the cane",
+          "de": "Linker Fersenkontakt mit Stock"
+        },
+        "description": {
+          "en": "Cane tip and left heel land together one step ahead of the body.",
+          "de": "Stockspitze und linke Ferse setzen gemeinsam einen Schritt vor dem Körper auf."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 25.8652
+          },
+          "shank-l": {
+            "angleDeg": -24.7283
+          },
+          "foot-l": {
+            "angleDeg": 4.8631
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": -1.8497
+          },
+          "shank-r": {
+            "angleDeg": -35.6866
+          },
+          "foot-r": {
+            "angleDeg": 19.5423
+          },
+          "toe-r": {
+            "angleDeg": 17.9941
+          },
+          "arm-r": {
+            "angleDeg": -25.4425
+          },
+          "forearm-r": {
+            "angleDeg": 85.3767
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -38.0597
+          },
+          "arm-l": {
+            "angleDeg": -10
+          },
+          "forearm-l": {
+            "angleDeg": 22
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -1
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-r",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "loading-left",
+        "title": {
+          "en": "Left foot flat on the cane side",
+          "de": "Linker Fuß flach"
+        },
+        "description": {
+          "en": "Left foot flat, right toe-off, the body moving over the planted cane.",
+          "de": "Linker Fuß flach, rechter Abdruck, der Körper bewegt sich über den aufgesetzten Stock."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 20.4492
+          },
+          "shank-l": {
+            "angleDeg": -32.4957
+          },
+          "foot-l": {
+            "angleDeg": 12.0465
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": -13.9643
+          },
+          "shank-r": {
+            "angleDeg": -26.697
+          },
+          "foot-r": {
+            "angleDeg": 8.6613
+          },
+          "toe-r": {
+            "angleDeg": 32
+          },
+          "arm-r": {
+            "angleDeg": -28.6967
+          },
+          "forearm-r": {
+            "angleDeg": 95.5784
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -54.7594
+          },
+          "arm-l": {
+            "angleDeg": -6.3742
+          },
+          "forearm-l": {
+            "angleDeg": 20.5497
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -0.3836
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "ball-r",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "passing-left",
+        "title": {
+          "en": "Left mid-stance over the cane",
+          "de": "Linke Standbeinmitte über dem Stock"
+        },
+        "description": {
+          "en": "Body above the left foot and the cane, the right leg swinging through.",
+          "de": "Körper über linkem Fuß und Stock, das rechte Bein schwingt durch."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 0.7211
+          },
+          "shank-l": {
+            "angleDeg": -16.5395
+          },
+          "foot-l": {
+            "angleDeg": 15.8184
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 15.2489
+          },
+          "shank-r": {
+            "angleDeg": -50.5023
+          },
+          "foot-r": {
+            "angleDeg": 20.2783
+          },
+          "toe-r": {
+            "angleDeg": 8.2659
+          },
+          "arm-r": {
+            "angleDeg": -28.593
+          },
+          "forearm-r": {
+            "angleDeg": 95.139
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -65.2689
+          },
+          "arm-l": {
+            "angleDeg": 3.6812
+          },
+          "forearm-l": {
+            "angleDeg": 16.5275
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -0.2562
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "contact-right",
+        "title": {
+          "en": "Right heel strike",
+          "de": "Rechter Fersenkontakt"
+        },
+        "description": {
+          "en": "Right heel strike while the left foot and the cane still carry.",
+          "de": "Rechter Fersenkontakt, während linker Fuß und Stock noch tragen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -1.8497
+          },
+          "shank-l": {
+            "angleDeg": -35.6866
+          },
+          "foot-l": {
+            "angleDeg": 19.5423
+          },
+          "toe-l": {
+            "angleDeg": 17.9941
+          },
+          "thigh-r": {
+            "angleDeg": 25.8652
+          },
+          "shank-r": {
+            "angleDeg": -24.7283
+          },
+          "foot-r": {
+            "angleDeg": 4.8631
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-r": {
+            "angleDeg": -29.1361
+          },
+          "forearm-r": {
+            "angleDeg": 97.4935
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -78.2901
+          },
+          "arm-l": {
+            "angleDeg": 10
+          },
+          "forearm-l": {
+            "angleDeg": 14
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -1
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "ball-l",
+          "cane-tip"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "loading-right",
+        "title": {
+          "en": "Right foot flat, cane lifting",
+          "de": "Rechter Fuß flach, Stock hebt ab"
+        },
+        "description": {
+          "en": "Right foot flat, left toe-off, the cane lifts for the next step.",
+          "de": "Rechter Fuß flach, linker Abdruck, der Stock hebt für den nächsten Schritt ab."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": -13.9643
+          },
+          "shank-l": {
+            "angleDeg": -26.697
+          },
+          "foot-l": {
+            "angleDeg": 8.6613
+          },
+          "toe-l": {
+            "angleDeg": 32
+          },
+          "thigh-r": {
+            "angleDeg": 20.4492
+          },
+          "shank-r": {
+            "angleDeg": -32.4957
+          },
+          "foot-r": {
+            "angleDeg": 12.0465
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-r": {
+            "angleDeg": -25.7023
+          },
+          "forearm-r": {
+            "angleDeg": 86.6099
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -79.3222
+          },
+          "arm-l": {
+            "angleDeg": 6.3742
+          },
+          "forearm-l": {
+            "angleDeg": 15.4503
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -1.6164
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "passing-right",
+        "title": {
+          "en": "Right mid-stance, cane swinging",
+          "de": "Rechte Standbeinmitte, Stock schwingt"
+        },
+        "description": {
+          "en": "Body above the right foot while the cane and left leg swing forward together.",
+          "de": "Körper über dem rechten Fuß, während Stock und linkes Bein gemeinsam nach vorn schwingen."
+        },
+        "bones": {
+          "thigh-l": {
+            "angleDeg": 18.4961
+          },
+          "shank-l": {
+            "angleDeg": -51.2352
+          },
+          "foot-l": {
+            "angleDeg": 19.7391
+          },
+          "toe-l": {
+            "angleDeg": 6.5
+          },
+          "thigh-r": {
+            "angleDeg": -0.5692
+          },
+          "shank-r": {
+            "angleDeg": -15.3079
+          },
+          "foot-r": {
+            "angleDeg": 15.8772
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-r": {
+            "angleDeg": -31.8914
+          },
+          "forearm-r": {
+            "angleDeg": 108.6779
+          },
+          "hand-r": {
+            "angleDeg": 0
+          },
+          "cane": {
+            "angleDeg": -74.6675
+          },
+          "arm-l": {
+            "angleDeg": -4.2578
+          },
+          "forearm-l": {
+            "angleDeg": 19.7031
+          },
+          "hand-l": {
+            "angleDeg": 3
+          },
+          "torso": {
+            "angleDeg": -1.7239
+          },
+          "neck": {
+            "angleDeg": 2
+          },
+          "head": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 2,
+          "emitters": {
+            "breath": 0.8
+          }
+        },
+        "loads": [],
+        "key": true
+      }
+    ],
+    "clips": [
+      {
+        "id": "cane-gait",
+        "title": {
+          "en": "Three-point cane gait",
+          "de": "Dreipunktgang mit Stock"
+        },
+        "description": {
+          "en": "The cane tip lands together with the weak (left) foot and carries a share of the weight through the whole left stance; then the cane and the left leg swing forward together while the right foot carries alone. Slow walking at about 0.56 m/s.",
+          "de": "Die Stockspitze setzt gemeinsam mit dem schwachen (linken) Fuß auf und trägt während der ganzen linken Standphase einen Teil des Gewichts; dann schwingen Stock und linkes Bein gemeinsam nach vorn, während der rechte Fuß allein trägt. Langsames Gehen mit etwa 0,56 m/s."
+        },
+        "durationS": 1.7,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "plant",
+        "advanceM": 0.949231,
+        "keys": [
+          {
+            "t": 0,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 25.8652
+              },
+              "shank-l": {
+                "angleDeg": -24.7283
+              },
+              "foot-l": {
+                "angleDeg": 4.8631
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -1.8497
+              },
+              "shank-r": {
+                "angleDeg": -35.6866
+              },
+              "foot-r": {
+                "angleDeg": 19.5423
+              },
+              "toe-r": {
+                "angleDeg": 17.9941
+              },
+              "arm-r": {
+                "angleDeg": -25.4425
+              },
+              "forearm-r": {
+                "angleDeg": 85.3767
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -38.0597
+              },
+              "arm-l": {
+                "angleDeg": -10
+              },
+              "forearm-l": {
+                "angleDeg": 22
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.0283,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 26.3346
+              },
+              "shank-l": {
+                "angleDeg": -27.909
+              },
+              "foot-l": {
+                "angleDeg": 7.4903
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -1.5975
+              },
+              "shank-r": {
+                "angleDeg": -37.9638
+              },
+              "foot-r": {
+                "angleDeg": 18.3392
+              },
+              "toe-r": {
+                "angleDeg": 21.222
+              },
+              "arm-r": {
+                "angleDeg": -26.1711
+              },
+              "forearm-r": {
+                "angleDeg": 87.5758
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -40.7258
+              },
+              "arm-l": {
+                "angleDeg": -9.9452
+              },
+              "forearm-l": {
+                "angleDeg": 21.9781
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.9164
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.0567,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 26.3678
+              },
+              "shank-l": {
+                "angleDeg": -30.1841
+              },
+              "foot-l": {
+                "angleDeg": 9.2681
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -1.7084
+              },
+              "shank-r": {
+                "angleDeg": -39.4782
+              },
+              "foot-r": {
+                "angleDeg": 16.9901
+              },
+              "toe-r": {
+                "angleDeg": 24.1965
+              },
+              "arm-r": {
+                "angleDeg": -26.7923
+              },
+              "forearm-r": {
+                "angleDeg": 89.4897
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -43.2055
+              },
+              "arm-l": {
+                "angleDeg": -9.7815
+              },
+              "forearm-l": {
+                "angleDeg": 21.9126
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.8337
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.085,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 26.0401
+              },
+              "shank-l": {
+                "angleDeg": -31.6849
+              },
+              "foot-l": {
+                "angleDeg": 10.1666
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -2.2344
+              },
+              "shank-r": {
+                "angleDeg": -40.1601
+              },
+              "foot-r": {
+                "angleDeg": 15.6131
+              },
+              "toe-r": {
+                "angleDeg": 26.7814
+              },
+              "arm-r": {
+                "angleDeg": -27.3125
+              },
+              "forearm-r": {
+                "angleDeg": 91.1221
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -45.4957
+              },
+              "arm-l": {
+                "angleDeg": -9.5106
+              },
+              "forearm-l": {
+                "angleDeg": 21.8042
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.7528
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.1133,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 25.4174
+              },
+              "shank-l": {
+                "angleDeg": -32.5628
+              },
+              "foot-l": {
+                "angleDeg": 10.4128
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -3.2212
+              },
+              "shank-r": {
+                "angleDeg": -39.9495
+              },
+              "foot-r": {
+                "angleDeg": 14.2985
+              },
+              "toe-r": {
+                "angleDeg": 28.8722
+              },
+              "arm-r": {
+                "angleDeg": -27.7385
+              },
+              "forearm-r": {
+                "angleDeg": 92.4802
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -47.5964
+              },
+              "arm-l": {
+                "angleDeg": -9.1355
+              },
+              "forearm-l": {
+                "angleDeg": 21.6542
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.6746
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.1417,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 24.5581
+              },
+              "shank-l": {
+                "angleDeg": -32.9754
+              },
+              "foot-l": {
+                "angleDeg": 10.3715
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -4.7086
+              },
+              "shank-r": {
+                "angleDeg": -38.7881
+              },
+              "foot-r": {
+                "angleDeg": 13.0884
+              },
+              "toe-r": {
+                "angleDeg": 30.4083
+              },
+              "arm-r": {
+                "angleDeg": -28.0779
+              },
+              "forearm-r": {
+                "angleDeg": 93.5755
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -49.5113
+              },
+              "arm-l": {
+                "angleDeg": -8.6603
+              },
+              "forearm-l": {
+                "angleDeg": 21.4641
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.6
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.17,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 23.5147
+              },
+              "shank-l": {
+                "angleDeg": -33.0713
+              },
+              "foot-l": {
+                "angleDeg": 10.4249
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -6.7303
+              },
+              "shank-r": {
+                "angleDeg": -36.6118
+              },
+              "foot-r": {
+                "angleDeg": 11.957
+              },
+              "toe-r": {
+                "angleDeg": 31.3851
+              },
+              "arm-r": {
+                "angleDeg": -28.3389
+              },
+              "forearm-r": {
+                "angleDeg": 94.4237
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -51.2474
+              },
+              "arm-l": {
+                "angleDeg": -8.0902
+              },
+              "forearm-l": {
+                "angleDeg": 21.2361
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.5298
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.1983,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 22.3276
+              },
+              "shank-l": {
+                "angleDeg": -32.9609
+              },
+              "foot-l": {
+                "angleDeg": 10.8462
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -9.3177
+              },
+              "shank-r": {
+                "angleDeg": -33.3405
+              },
+              "foot-r": {
+                "angleDeg": 10.7917
+              },
+              "toe-r": {
+                "angleDeg": 31.8665
+              },
+              "arm-r": {
+                "angleDeg": -28.53
+              },
+              "forearm-r": {
+                "angleDeg": 95.0446
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -52.816
+              },
+              "arm-l": {
+                "angleDeg": -7.4314
+              },
+              "forearm-l": {
+                "angleDeg": 20.9726
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.4647
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.2267,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 21.0134
+              },
+              "shank-l": {
+                "angleDeg": -32.6746
+              },
+              "foot-l": {
+                "angleDeg": 11.6673
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -12.5072
+              },
+              "shank-r": {
+                "angleDeg": -28.8631
+              },
+              "foot-r": {
+                "angleDeg": 9.3736
+              },
+              "toe-r": {
+                "angleDeg": 31.9966
+              },
+              "arm-r": {
+                "angleDeg": -28.6599
+              },
+              "forearm-r": {
+                "angleDeg": 95.4622
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -54.2319
+              },
+              "arm-l": {
+                "angleDeg": -6.6913
+              },
+              "forearm-l": {
+                "angleDeg": 20.6765
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.4055
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.255,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 19.5565
+              },
+              "shank-l": {
+                "angleDeg": -32.1336
+              },
+              "foot-l": {
+                "angleDeg": 12.5772
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -16.3413
+              },
+              "shank-r": {
+                "angleDeg": -23.0179
+              },
+              "foot-r": {
+                "angleDeg": 7.367
+              },
+              "toe-r": {
+                "angleDeg": 31.9856
+              },
+              "arm-r": {
+                "angleDeg": -28.7376
+              },
+              "forearm-r": {
+                "angleDeg": 95.7039
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -55.5131
+              },
+              "arm-l": {
+                "angleDeg": -5.8779
+              },
+              "forearm-l": {
+                "angleDeg": 20.3511
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.3528
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.2833,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 17.9519
+              },
+              "shank-l": {
+                "angleDeg": -31.2885
+              },
+              "foot-l": {
+                "angleDeg": 13.3366
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -20.5665
+              },
+              "shank-r": {
+                "angleDeg": -15.9482
+              },
+              "foot-r": {
+                "angleDeg": 4.6525
+              },
+              "toe-r": {
+                "angleDeg": 31.7467
+              },
+              "arm-r": {
+                "angleDeg": -28.7725
+              },
+              "forearm-r": {
+                "angleDeg": 95.7998
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -56.6805
+              },
+              "arm-l": {
+                "angleDeg": -5
+              },
+              "forearm-l": {
+                "angleDeg": 20
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.3072
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.3117,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 16.2183
+              },
+              "shank-l": {
+                "angleDeg": -30.1714
+              },
+              "foot-l": {
+                "angleDeg": 13.9532
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -24.5463
+              },
+              "shank-r": {
+                "angleDeg": -8.5003
+              },
+              "foot-r": {
+                "angleDeg": 1.5954
+              },
+              "toe-r": {
+                "angleDeg": 30.9969
+              },
+              "arm-r": {
+                "angleDeg": -28.7739
+              },
+              "forearm-r": {
+                "angleDeg": 95.7821
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -57.7568
+              },
+              "arm-l": {
+                "angleDeg": -4.0674
+              },
+              "forearm-l": {
+                "angleDeg": 19.6269
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2692
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.34,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 14.3748
+              },
+              "shank-l": {
+                "angleDeg": -28.8183
+              },
+              "foot-l": {
+                "angleDeg": 14.4435
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -25.5171
+              },
+              "shank-r": {
+                "angleDeg": -5.9978
+              },
+              "foot-r": {
+                "angleDeg": 0.8636
+              },
+              "toe-r": {
+                "angleDeg": 29.5633
+              },
+              "arm-r": {
+                "angleDeg": -28.7511
+              },
+              "forearm-r": {
+                "angleDeg": 95.6841
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -58.7657
+              },
+              "arm-l": {
+                "angleDeg": -3.0902
+              },
+              "forearm-l": {
+                "angleDeg": 19.2361
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2392
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.3683,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 12.4404
+              },
+              "shank-l": {
+                "angleDeg": -27.2656
+              },
+              "foot-l": {
+                "angleDeg": 14.8252
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -21.0387
+              },
+              "shank-r": {
+                "angleDeg": -13.2214
+              },
+              "foot-r": {
+                "angleDeg": 4.8577
+              },
+              "toe-r": {
+                "angleDeg": 27.3924
+              },
+              "arm-r": {
+                "angleDeg": -28.7135
+              },
+              "forearm-r": {
+                "angleDeg": 95.5387
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -59.731
+              },
+              "arm-l": {
+                "angleDeg": -2.0791
+              },
+              "forearm-l": {
+                "angleDeg": 18.8316
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2175
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.3967,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 10.4333
+              },
+              "shank-l": {
+                "angleDeg": -25.5503
+              },
+              "foot-l": {
+                "angleDeg": 15.1169
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -15.0549
+              },
+              "shank-r": {
+                "angleDeg": -22.0932
+              },
+              "foot-r": {
+                "angleDeg": 9.462
+              },
+              "toe-r": {
+                "angleDeg": 24.5432
+              },
+              "arm-r": {
+                "angleDeg": -28.6699
+              },
+              "forearm-r": {
+                "angleDeg": 95.3775
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -60.6757
+              },
+              "arm-l": {
+                "angleDeg": -1.0453
+              },
+              "forearm-l": {
+                "angleDeg": 18.4181
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2044
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.425,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 8.3713
+              },
+              "shank-l": {
+                "angleDeg": -23.7091
+              },
+              "foot-l": {
+                "angleDeg": 15.3378
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -8.4826
+              },
+              "shank-r": {
+                "angleDeg": -30.6947
+              },
+              "foot-r": {
+                "angleDeg": 13.6566
+              },
+              "toe-r": {
+                "angleDeg": 21.1693
+              },
+              "arm-r": {
+                "angleDeg": -28.6285
+              },
+              "forearm-r": {
+                "angleDeg": 95.2294
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -61.6208
+              },
+              "arm-l": {
+                "angleDeg": 0
+              },
+              "forearm-l": {
+                "angleDeg": 18
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.4533,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 6.2707
+              },
+              "shank-l": {
+                "angleDeg": -21.7775
+              },
+              "foot-l": {
+                "angleDeg": 15.5067
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -1.64
+              },
+              "shank-r": {
+                "angleDeg": -38.3632
+              },
+              "foot-r": {
+                "angleDeg": 17.0492
+              },
+              "toe-r": {
+                "angleDeg": 17.4898
+              },
+              "arm-r": {
+                "angleDeg": -28.5964
+              },
+              "forearm-r": {
+                "angleDeg": 95.1196
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -62.5843
+              },
+              "arm-l": {
+                "angleDeg": 1.0453
+              },
+              "forearm-l": {
+                "angleDeg": 17.5819
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2044
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.4817,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 4.146
+              },
+              "shank-l": {
+                "angleDeg": -19.7872
+              },
+              "foot-l": {
+                "angleDeg": 15.6413
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 5.1854
+              },
+              "shank-r": {
+                "angleDeg": -44.5875
+              },
+              "foot-r": {
+                "angleDeg": 19.3434
+              },
+              "toe-r": {
+                "angleDeg": 13.7553
+              },
+              "arm-r": {
+                "angleDeg": -28.5794
+              },
+              "forearm-r": {
+                "angleDeg": 95.068
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -63.581
+              },
+              "arm-l": {
+                "angleDeg": 2.0791
+              },
+              "forearm-l": {
+                "angleDeg": 17.1684
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2175
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.51,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 2.0079
+              },
+              "shank-l": {
+                "angleDeg": -17.7636
+              },
+              "foot-l": {
+                "angleDeg": 15.7557
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 11.6704
+              },
+              "shank-r": {
+                "angleDeg": -48.9344
+              },
+              "foot-r": {
+                "angleDeg": 20.3381
+              },
+              "toe-r": {
+                "angleDeg": 10.2116
+              },
+              "arm-r": {
+                "angleDeg": -28.5816
+              },
+              "forearm-r": {
+                "angleDeg": 95.0886
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -64.6212
+              },
+              "arm-l": {
+                "angleDeg": 3.0902
+              },
+              "forearm-l": {
+                "angleDeg": 16.7639
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2392
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.5383,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -0.1387
+              },
+              "shank-l": {
+                "angleDeg": -15.7194
+              },
+              "foot-l": {
+                "angleDeg": 15.8581
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 17.4552
+              },
+              "shank-r": {
+                "angleDeg": -51.0852
+              },
+              "foot-r": {
+                "angleDeg": 19.9704
+              },
+              "toe-r": {
+                "angleDeg": 7.0669
+              },
+              "arm-r": {
+                "angleDeg": -28.605
+              },
+              "forearm-r": {
+                "angleDeg": 95.1887
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -65.7108
+              },
+              "arm-l": {
+                "angleDeg": 4.0674
+              },
+              "forearm-l": {
+                "angleDeg": 16.3731
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.2692
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.5667,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -2.2997
+              },
+              "shank-l": {
+                "angleDeg": -13.6457
+              },
+              "foot-l": {
+                "angleDeg": 15.9454
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 22.185
+              },
+              "shank-r": {
+                "angleDeg": -50.892
+              },
+              "foot-r": {
+                "angleDeg": 18.3362
+              },
+              "toe-r": {
+                "angleDeg": 4.4678
+              },
+              "arm-r": {
+                "angleDeg": -28.6499
+              },
+              "forearm-r": {
+                "angleDeg": 95.3687
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -66.8506
+              },
+              "arm-l": {
+                "angleDeg": 5
+              },
+              "forearm-l": {
+                "angleDeg": 16
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.3072
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.595,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -4.4774
+              },
+              "shank-l": {
+                "angleDeg": -11.5391
+              },
+              "foot-l": {
+                "angleDeg": 16.0052
+              },
+              "toe-l": {
+                "angleDeg": 0.0113
+              },
+              "thigh-r": {
+                "angleDeg": 25.5813
+              },
+              "shank-r": {
+                "angleDeg": -48.4172
+              },
+              "foot-r": {
+                "angleDeg": 15.6644
+              },
+              "toe-r": {
+                "angleDeg": 2.4858
+              },
+              "arm-r": {
+                "angleDeg": -28.7143
+              },
+              "forearm-r": {
+                "angleDeg": 95.6218
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -68.0367
+              },
+              "arm-l": {
+                "angleDeg": 5.8779
+              },
+              "forearm-l": {
+                "angleDeg": 15.6489
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.3528
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.6233,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -6.317
+              },
+              "shank-l": {
+                "angleDeg": -10.1036
+              },
+              "foot-l": {
+                "angleDeg": 16.2247
+              },
+              "toe-l": {
+                "angleDeg": 0.1958
+              },
+              "thigh-r": {
+                "angleDeg": 27.5094
+              },
+              "shank-r": {
+                "angleDeg": -43.9351
+              },
+              "foot-r": {
+                "angleDeg": 12.2562
+              },
+              "toe-r": {
+                "angleDeg": 1.1158
+              },
+              "arm-r": {
+                "angleDeg": -28.7942
+              },
+              "forearm-r": {
+                "angleDeg": 95.9346
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.2602
+              },
+              "arm-l": {
+                "angleDeg": 6.6913
+              },
+              "forearm-l": {
+                "angleDeg": 15.3235
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.4055
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.6517,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -7.2037
+              },
+              "shank-l": {
+                "angleDeg": -10.5678
+              },
+              "foot-l": {
+                "angleDeg": 17.004
+              },
+              "toe-l": {
+                "angleDeg": 0.7675
+              },
+              "thigh-r": {
+                "angleDeg": 28.0098
+              },
+              "shank-r": {
+                "angleDeg": -37.9026
+              },
+              "foot-r": {
+                "angleDeg": 8.4314
+              },
+              "toe-r": {
+                "angleDeg": 0.2869
+              },
+              "arm-r": {
+                "angleDeg": -28.8842
+              },
+              "forearm-r": {
+                "angleDeg": 96.2876
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -70.5083
+              },
+              "arm-l": {
+                "angleDeg": 7.4314
+              },
+              "forearm-l": {
+                "angleDeg": 15.0274
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.4647
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.68,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -7.0482
+              },
+              "shank-l": {
+                "angleDeg": -13.1044
+              },
+              "foot-l": {
+                "angleDeg": 18.2991
+              },
+              "toe-l": {
+                "angleDeg": 1.8534
+              },
+              "thigh-r": {
+                "angleDeg": 27.2933
+              },
+              "shank-r": {
+                "angleDeg": -30.9392
+              },
+              "foot-r": {
+                "angleDeg": 4.5177
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -28.9774
+              },
+              "forearm-r": {
+                "angleDeg": 96.6566
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -71.7644
+              },
+              "arm-l": {
+                "angleDeg": 8.0902
+              },
+              "forearm-l": {
+                "angleDeg": 14.7639
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.5298
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.7083,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -6.2743
+              },
+              "shank-l": {
+                "angleDeg": -16.8483
+              },
+              "foot-l": {
+                "angleDeg": 19.6197
+              },
+              "toe-l": {
+                "angleDeg": 3.5028
+              },
+              "thigh-r": {
+                "angleDeg": 25.748
+              },
+              "shank-r": {
+                "angleDeg": -23.8825
+              },
+              "foot-r": {
+                "angleDeg": 0.9062
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.066
+              },
+              "forearm-r": {
+                "angleDeg": 97.0129
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -73.0089
+              },
+              "arm-l": {
+                "angleDeg": 8.6603
+              },
+              "forearm-l": {
+                "angleDeg": 14.5359
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.6
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.7367,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -5.2509
+              },
+              "shank-l": {
+                "angleDeg": -21.0429
+              },
+              "foot-l": {
+                "angleDeg": 20.5951
+              },
+              "toe-l": {
+                "angleDeg": 5.6988
+              },
+              "thigh-r": {
+                "angleDeg": 24.0302
+              },
+              "shank-r": {
+                "angleDeg": -18.0264
+              },
+              "foot-r": {
+                "angleDeg": -1.7963
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.1413
+              },
+              "forearm-r": {
+                "angleDeg": 97.3256
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -74.2205
+              },
+              "arm-l": {
+                "angleDeg": 9.1355
+              },
+              "forearm-l": {
+                "angleDeg": 14.3458
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.6746
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.765,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -4.1882
+              },
+              "shank-l": {
+                "angleDeg": -25.2511
+              },
+              "foot-l": {
+                "angleDeg": 21.0681
+              },
+              "toe-l": {
+                "angleDeg": 8.3712
+              },
+              "thigh-r": {
+                "angleDeg": 23.1633
+              },
+              "shank-r": {
+                "angleDeg": -15.3505
+              },
+              "foot-r": {
+                "angleDeg": -2.6306
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.1948
+              },
+              "forearm-r": {
+                "angleDeg": 97.5621
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -75.3765
+              },
+              "arm-l": {
+                "angleDeg": 9.5106
+              },
+              "forearm-l": {
+                "angleDeg": 14.1958
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.7528
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.7933,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -3.2115
+              },
+              "shank-l": {
+                "angleDeg": -29.2082
+              },
+              "foot-l": {
+                "angleDeg": 21.0116
+              },
+              "toe-l": {
+                "angleDeg": 11.4081
+              },
+              "thigh-r": {
+                "angleDeg": 23.7256
+              },
+              "shank-r": {
+                "angleDeg": -16.8727
+              },
+              "foot-r": {
+                "angleDeg": -1.1142
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.2174
+              },
+              "forearm-r": {
+                "angleDeg": 97.6897
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -76.4543
+              },
+              "arm-l": {
+                "angleDeg": 9.7815
+              },
+              "forearm-l": {
+                "angleDeg": 14.0874
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.8337
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.8217,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -2.4085
+              },
+              "shank-l": {
+                "angleDeg": -32.7323
+              },
+              "foot-l": {
+                "angleDeg": 20.4723
+              },
+              "toe-l": {
+                "angleDeg": 14.6684
+              },
+              "thigh-r": {
+                "angleDeg": 24.9126
+              },
+              "shank-r": {
+                "angleDeg": -20.7141
+              },
+              "foot-r": {
+                "angleDeg": 1.7663
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.2007
+              },
+              "forearm-r": {
+                "angleDeg": 97.6767
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -77.4321
+              },
+              "arm-l": {
+                "angleDeg": 9.9452
+              },
+              "forearm-l": {
+                "angleDeg": 14.0219
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.9164
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.85,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -1.8497
+              },
+              "shank-l": {
+                "angleDeg": -35.6866
+              },
+              "foot-l": {
+                "angleDeg": 19.5423
+              },
+              "toe-l": {
+                "angleDeg": 17.9941
+              },
+              "thigh-r": {
+                "angleDeg": 25.8652
+              },
+              "shank-r": {
+                "angleDeg": -24.7283
+              },
+              "foot-r": {
+                "angleDeg": 4.8631
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.1361
+              },
+              "forearm-r": {
+                "angleDeg": 97.4935
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -78.2901
+              },
+              "arm-l": {
+                "angleDeg": 10
+              },
+              "forearm-l": {
+                "angleDeg": 14
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.8783,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -1.5975
+              },
+              "shank-l": {
+                "angleDeg": -37.9638
+              },
+              "foot-l": {
+                "angleDeg": 18.3392
+              },
+              "toe-l": {
+                "angleDeg": 21.222
+              },
+              "thigh-r": {
+                "angleDeg": 26.3346
+              },
+              "shank-r": {
+                "angleDeg": -27.909
+              },
+              "foot-r": {
+                "angleDeg": 7.4903
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.0154
+              },
+              "forearm-r": {
+                "angleDeg": 97.1133
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.0109
+              },
+              "arm-l": {
+                "angleDeg": 9.9452
+              },
+              "forearm-l": {
+                "angleDeg": 14.0219
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.0836
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.9067,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -1.7084
+              },
+              "shank-l": {
+                "angleDeg": -39.4782
+              },
+              "foot-l": {
+                "angleDeg": 16.9901
+              },
+              "toe-l": {
+                "angleDeg": 24.1965
+              },
+              "thigh-r": {
+                "angleDeg": 26.3678
+              },
+              "shank-r": {
+                "angleDeg": -30.1841
+              },
+              "foot-r": {
+                "angleDeg": 9.2681
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -28.831
+              },
+              "forearm-r": {
+                "angleDeg": 96.5131
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.5806
+              },
+              "arm-l": {
+                "angleDeg": 9.7815
+              },
+              "forearm-l": {
+                "angleDeg": 14.0874
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.1663
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.935,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -2.2344
+              },
+              "shank-l": {
+                "angleDeg": -40.1601
+              },
+              "foot-l": {
+                "angleDeg": 15.6131
+              },
+              "toe-l": {
+                "angleDeg": 26.7814
+              },
+              "thigh-r": {
+                "angleDeg": 26.0401
+              },
+              "shank-r": {
+                "angleDeg": -31.6849
+              },
+              "foot-r": {
+                "angleDeg": 10.1666
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -28.5754
+              },
+              "forearm-r": {
+                "angleDeg": 95.6738
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.9888
+              },
+              "arm-l": {
+                "angleDeg": 9.5106
+              },
+              "forearm-l": {
+                "angleDeg": 14.1958
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.2472
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.9633,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -3.2212
+              },
+              "shank-l": {
+                "angleDeg": -39.9495
+              },
+              "foot-l": {
+                "angleDeg": 14.2985
+              },
+              "toe-l": {
+                "angleDeg": 28.8722
+              },
+              "thigh-r": {
+                "angleDeg": 25.4174
+              },
+              "shank-r": {
+                "angleDeg": -32.5628
+              },
+              "foot-r": {
+                "angleDeg": 10.4128
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -28.2417
+              },
+              "forearm-r": {
+                "angleDeg": 94.581
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.2295
+              },
+              "arm-l": {
+                "angleDeg": 9.1355
+              },
+              "forearm-l": {
+                "angleDeg": 14.3458
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.3254
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 0.9917,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -4.7086
+              },
+              "shank-l": {
+                "angleDeg": -38.7881
+              },
+              "foot-l": {
+                "angleDeg": 13.0884
+              },
+              "toe-l": {
+                "angleDeg": 30.4083
+              },
+              "thigh-r": {
+                "angleDeg": 24.5581
+              },
+              "shank-r": {
+                "angleDeg": -32.9754
+              },
+              "foot-r": {
+                "angleDeg": 10.3715
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -27.8236
+              },
+              "forearm-r": {
+                "angleDeg": 93.225
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.3005
+              },
+              "arm-l": {
+                "angleDeg": 8.6603
+              },
+              "forearm-l": {
+                "angleDeg": 14.5359
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.4
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.02,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -6.7303
+              },
+              "shank-l": {
+                "angleDeg": -36.6118
+              },
+              "foot-l": {
+                "angleDeg": 11.957
+              },
+              "toe-l": {
+                "angleDeg": 31.3851
+              },
+              "thigh-r": {
+                "angleDeg": 23.5147
+              },
+              "shank-r": {
+                "angleDeg": -33.0713
+              },
+              "foot-r": {
+                "angleDeg": 10.4249
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -27.3154
+              },
+              "forearm-r": {
+                "angleDeg": 91.6005
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.2035
+              },
+              "arm-l": {
+                "angleDeg": 8.0902
+              },
+              "forearm-l": {
+                "angleDeg": 14.7639
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.4702
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.0483,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -9.3177
+              },
+              "shank-l": {
+                "angleDeg": -33.3405
+              },
+              "foot-l": {
+                "angleDeg": 10.7917
+              },
+              "toe-l": {
+                "angleDeg": 31.8665
+              },
+              "thigh-r": {
+                "angleDeg": 22.3276
+              },
+              "shank-r": {
+                "angleDeg": -32.9609
+              },
+              "foot-r": {
+                "angleDeg": 10.8462
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -26.7124
+              },
+              "forearm-r": {
+                "angleDeg": 89.7068
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.9437
+              },
+              "arm-l": {
+                "angleDeg": 7.4314
+              },
+              "forearm-l": {
+                "angleDeg": 15.0274
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.5353
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.0767,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -12.5072
+              },
+              "shank-l": {
+                "angleDeg": -28.8631
+              },
+              "foot-l": {
+                "angleDeg": 9.3736
+              },
+              "toe-l": {
+                "angleDeg": 31.9966
+              },
+              "thigh-r": {
+                "angleDeg": 21.0134
+              },
+              "shank-r": {
+                "angleDeg": -32.6746
+              },
+              "foot-r": {
+                "angleDeg": 11.6673
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -26.011
+              },
+              "forearm-r": {
+                "angleDeg": 87.547
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.5292
+              },
+              "arm-l": {
+                "angleDeg": 6.6913
+              },
+              "forearm-l": {
+                "angleDeg": 15.3235
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.5945
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.105,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -16.3413
+              },
+              "shank-l": {
+                "angleDeg": -23.0179
+              },
+              "foot-l": {
+                "angleDeg": 7.367
+              },
+              "toe-l": {
+                "angleDeg": 31.9856
+              },
+              "thigh-r": {
+                "angleDeg": 19.5565
+              },
+              "shank-r": {
+                "angleDeg": -32.1336
+              },
+              "foot-r": {
+                "angleDeg": 12.5772
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -25.2165
+              },
+              "forearm-r": {
+                "angleDeg": 85.1512
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -78.9721
+              },
+              "arm-l": {
+                "angleDeg": 5.8779
+              },
+              "forearm-l": {
+                "angleDeg": 15.6489
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.6472
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.1333,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -20.5665
+              },
+              "shank-l": {
+                "angleDeg": -15.9482
+              },
+              "foot-l": {
+                "angleDeg": 4.6525
+              },
+              "toe-l": {
+                "angleDeg": 31.7467
+              },
+              "thigh-r": {
+                "angleDeg": 17.9519
+              },
+              "shank-r": {
+                "angleDeg": -31.2885
+              },
+              "foot-r": {
+                "angleDeg": 13.3366
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -24.4651
+              },
+              "forearm-r": {
+                "angleDeg": 82.9338
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -78.3489
+              },
+              "arm-l": {
+                "angleDeg": 5
+              },
+              "forearm-l": {
+                "angleDeg": 16
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.6928
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.1617,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -24.5463
+              },
+              "shank-l": {
+                "angleDeg": -8.5003
+              },
+              "foot-l": {
+                "angleDeg": 1.5954
+              },
+              "toe-l": {
+                "angleDeg": 30.9969
+              },
+              "thigh-r": {
+                "angleDeg": 16.2183
+              },
+              "shank-r": {
+                "angleDeg": -30.1714
+              },
+              "foot-r": {
+                "angleDeg": 13.9532
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -24.0241
+              },
+              "forearm-r": {
+                "angleDeg": 81.6613
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -77.8736
+              },
+              "arm-l": {
+                "angleDeg": 4.0674
+              },
+              "forearm-l": {
+                "angleDeg": 16.3731
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7308
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.19,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -25.5171
+              },
+              "shank-l": {
+                "angleDeg": -5.9978
+              },
+              "foot-l": {
+                "angleDeg": 0.8636
+              },
+              "toe-l": {
+                "angleDeg": 29.5633
+              },
+              "thigh-r": {
+                "angleDeg": 14.3748
+              },
+              "shank-r": {
+                "angleDeg": -28.8183
+              },
+              "foot-r": {
+                "angleDeg": 14.4435
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -24.1403
+              },
+              "forearm-r": {
+                "angleDeg": 82.0251
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -77.7956
+              },
+              "arm-l": {
+                "angleDeg": 3.0902
+              },
+              "forearm-l": {
+                "angleDeg": 16.7639
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7608
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.2183,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -21.0387
+              },
+              "shank-l": {
+                "angleDeg": -13.2214
+              },
+              "foot-l": {
+                "angleDeg": 4.8577
+              },
+              "toe-l": {
+                "angleDeg": 27.3924
+              },
+              "thigh-r": {
+                "angleDeg": 12.4404
+              },
+              "shank-r": {
+                "angleDeg": -27.2656
+              },
+              "foot-r": {
+                "angleDeg": 14.8252
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -24.92
+              },
+              "forearm-r": {
+                "angleDeg": 84.3558
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -78.2384
+              },
+              "arm-l": {
+                "angleDeg": 2.0791
+              },
+              "forearm-l": {
+                "angleDeg": 17.1684
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7825
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.2467,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -15.0549
+              },
+              "shank-l": {
+                "angleDeg": -22.0932
+              },
+              "foot-l": {
+                "angleDeg": 9.462
+              },
+              "toe-l": {
+                "angleDeg": 24.5432
+              },
+              "thigh-r": {
+                "angleDeg": 10.4333
+              },
+              "shank-r": {
+                "angleDeg": -25.5503
+              },
+              "foot-r": {
+                "angleDeg": 15.1169
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -26.2582
+              },
+              "forearm-r": {
+                "angleDeg": 88.4552
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -79.0935
+              },
+              "arm-l": {
+                "angleDeg": 1.0453
+              },
+              "forearm-l": {
+                "angleDeg": 17.5819
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7956
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.275,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -8.4826
+              },
+              "shank-l": {
+                "angleDeg": -30.6947
+              },
+              "foot-l": {
+                "angleDeg": 13.6566
+              },
+              "toe-l": {
+                "angleDeg": 21.1693
+              },
+              "thigh-r": {
+                "angleDeg": 8.3713
+              },
+              "shank-r": {
+                "angleDeg": -23.7091
+              },
+              "foot-r": {
+                "angleDeg": 15.3378
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -27.8801
+              },
+              "forearm-r": {
+                "angleDeg": 93.6661
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.0349
+              },
+              "arm-l": {
+                "angleDeg": 0
+              },
+              "forearm-l": {
+                "angleDeg": 18
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.8
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.3033,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": -1.64
+              },
+              "shank-l": {
+                "angleDeg": -38.3632
+              },
+              "foot-l": {
+                "angleDeg": 17.0492
+              },
+              "toe-l": {
+                "angleDeg": 17.4898
+              },
+              "thigh-r": {
+                "angleDeg": 6.2707
+              },
+              "shank-r": {
+                "angleDeg": -21.7775
+              },
+              "foot-r": {
+                "angleDeg": 15.5067
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -29.4591
+              },
+              "forearm-r": {
+                "angleDeg": 99.1007
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.608
+              },
+              "arm-l": {
+                "angleDeg": -1.0453
+              },
+              "forearm-l": {
+                "angleDeg": 18.4181
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7956
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.3317,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 5.1854
+              },
+              "shank-l": {
+                "angleDeg": -44.5875
+              },
+              "foot-l": {
+                "angleDeg": 19.3434
+              },
+              "toe-l": {
+                "angleDeg": 13.7553
+              },
+              "thigh-r": {
+                "angleDeg": 4.146
+              },
+              "shank-r": {
+                "angleDeg": -19.7872
+              },
+              "foot-r": {
+                "angleDeg": 15.6413
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -30.7314
+              },
+              "forearm-r": {
+                "angleDeg": 103.8665
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -80.3216
+              },
+              "arm-l": {
+                "angleDeg": -2.0791
+              },
+              "forearm-l": {
+                "angleDeg": 18.8316
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7825
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.36,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 11.6704
+              },
+              "shank-l": {
+                "angleDeg": -48.9344
+              },
+              "foot-l": {
+                "angleDeg": 20.3381
+              },
+              "toe-l": {
+                "angleDeg": 10.2116
+              },
+              "thigh-r": {
+                "angleDeg": 2.0079
+              },
+              "shank-r": {
+                "angleDeg": -17.7636
+              },
+              "foot-r": {
+                "angleDeg": 15.7557
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -31.553
+              },
+              "forearm-r": {
+                "angleDeg": 107.2182
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -78.7272
+              },
+              "arm-l": {
+                "angleDeg": -3.0902
+              },
+              "forearm-l": {
+                "angleDeg": 19.2361
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7608
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.3883,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 17.4552
+              },
+              "shank-l": {
+                "angleDeg": -51.0852
+              },
+              "foot-l": {
+                "angleDeg": 19.9704
+              },
+              "toe-l": {
+                "angleDeg": 7.0669
+              },
+              "thigh-r": {
+                "angleDeg": -0.1387
+              },
+              "shank-r": {
+                "angleDeg": -15.7194
+              },
+              "foot-r": {
+                "angleDeg": 15.8581
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -31.884
+              },
+              "forearm-r": {
+                "angleDeg": 108.6475
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -75.5149
+              },
+              "arm-l": {
+                "angleDeg": -4.0674
+              },
+              "forearm-l": {
+                "angleDeg": 19.6269
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.7308
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.4167,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 22.185
+              },
+              "shank-l": {
+                "angleDeg": -50.892
+              },
+              "foot-l": {
+                "angleDeg": 18.3362
+              },
+              "toe-l": {
+                "angleDeg": 4.4678
+              },
+              "thigh-r": {
+                "angleDeg": -2.2997
+              },
+              "shank-r": {
+                "angleDeg": -13.6457
+              },
+              "foot-r": {
+                "angleDeg": 15.9454
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": -31.7253
+              },
+              "forearm-r": {
+                "angleDeg": 107.9349
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -70.6239
+              },
+              "arm-l": {
+                "angleDeg": -5
+              },
+              "forearm-l": {
+                "angleDeg": 20
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.6928
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.445,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 25.5813
+              },
+              "shank-l": {
+                "angleDeg": -48.4172
+              },
+              "foot-l": {
+                "angleDeg": 15.6644
+              },
+              "toe-l": {
+                "angleDeg": 2.4858
+              },
+              "thigh-r": {
+                "angleDeg": -4.4774
+              },
+              "shank-r": {
+                "angleDeg": -11.5391
+              },
+              "foot-r": {
+                "angleDeg": 16.0052
+              },
+              "toe-r": {
+                "angleDeg": 0.0113
+              },
+              "arm-r": {
+                "angleDeg": -31.0732
+              },
+              "forearm-r": {
+                "angleDeg": 105.172
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -64.3098
+              },
+              "arm-l": {
+                "angleDeg": -5.8779
+              },
+              "forearm-l": {
+                "angleDeg": 20.3511
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.6472
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.4733,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 27.5094
+              },
+              "shank-l": {
+                "angleDeg": -43.9351
+              },
+              "foot-l": {
+                "angleDeg": 12.2562
+              },
+              "toe-l": {
+                "angleDeg": 1.1158
+              },
+              "thigh-r": {
+                "angleDeg": -6.317
+              },
+              "shank-r": {
+                "angleDeg": -10.1036
+              },
+              "foot-r": {
+                "angleDeg": 16.2247
+              },
+              "toe-r": {
+                "angleDeg": 0.1958
+              },
+              "arm-r": {
+                "angleDeg": -29.9411
+              },
+              "forearm-r": {
+                "angleDeg": 100.752
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -57.1121
+              },
+              "arm-l": {
+                "angleDeg": -6.6913
+              },
+              "forearm-l": {
+                "angleDeg": 20.6765
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.5945
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.5017,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 28.0098
+              },
+              "shank-l": {
+                "angleDeg": -37.9026
+              },
+              "foot-l": {
+                "angleDeg": 8.4314
+              },
+              "toe-l": {
+                "angleDeg": 0.2869
+              },
+              "thigh-r": {
+                "angleDeg": -7.2037
+              },
+              "shank-r": {
+                "angleDeg": -10.5678
+              },
+              "foot-r": {
+                "angleDeg": 17.004
+              },
+              "toe-r": {
+                "angleDeg": 0.7675
+              },
+              "arm-r": {
+                "angleDeg": -28.4247
+              },
+              "forearm-r": {
+                "angleDeg": 95.3316
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -49.7485
+              },
+              "arm-l": {
+                "angleDeg": -7.4314
+              },
+              "forearm-l": {
+                "angleDeg": 20.9726
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.5353
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.53,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 27.2933
+              },
+              "shank-l": {
+                "angleDeg": -30.9392
+              },
+              "foot-l": {
+                "angleDeg": 4.5177
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -7.0482
+              },
+              "shank-r": {
+                "angleDeg": -13.1044
+              },
+              "foot-r": {
+                "angleDeg": 18.2991
+              },
+              "toe-r": {
+                "angleDeg": 1.8534
+              },
+              "arm-r": {
+                "angleDeg": -26.7432
+              },
+              "forearm-r": {
+                "angleDeg": 89.761
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -42.996
+              },
+              "arm-l": {
+                "angleDeg": -8.0902
+              },
+              "forearm-l": {
+                "angleDeg": 21.2361
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.4702
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.5583,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 25.748
+              },
+              "shank-l": {
+                "angleDeg": -23.8825
+              },
+              "foot-l": {
+                "angleDeg": 0.9062
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -6.2743
+              },
+              "shank-r": {
+                "angleDeg": -16.8483
+              },
+              "foot-r": {
+                "angleDeg": 19.6197
+              },
+              "toe-r": {
+                "angleDeg": 3.5028
+              },
+              "arm-r": {
+                "angleDeg": -25.213
+              },
+              "forearm-r": {
+                "angleDeg": 84.9632
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -37.5843
+              },
+              "arm-l": {
+                "angleDeg": -8.6603
+              },
+              "forearm-l": {
+                "angleDeg": 21.4641
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.4
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.5867,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 24.0302
+              },
+              "shank-l": {
+                "angleDeg": -18.0264
+              },
+              "foot-l": {
+                "angleDeg": -1.7963
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -5.2509
+              },
+              "shank-r": {
+                "angleDeg": -21.0429
+              },
+              "foot-r": {
+                "angleDeg": 20.5951
+              },
+              "toe-r": {
+                "angleDeg": 5.6988
+              },
+              "arm-r": {
+                "angleDeg": -24.1518
+              },
+              "forearm-r": {
+                "angleDeg": 81.7349
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -34.0721
+              },
+              "arm-l": {
+                "angleDeg": -9.1355
+              },
+              "forearm-l": {
+                "angleDeg": 21.6542
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.3254
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.615,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 23.1633
+              },
+              "shank-l": {
+                "angleDeg": -15.3505
+              },
+              "foot-l": {
+                "angleDeg": -2.6306
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -4.1882
+              },
+              "shank-r": {
+                "angleDeg": -25.2511
+              },
+              "foot-r": {
+                "angleDeg": 21.0681
+              },
+              "toe-r": {
+                "angleDeg": 8.3712
+              },
+              "arm-r": {
+                "angleDeg": -23.7494
+              },
+              "forearm-r": {
+                "angleDeg": 80.4943
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -32.7036
+              },
+              "arm-l": {
+                "angleDeg": -9.5106
+              },
+              "forearm-l": {
+                "angleDeg": 21.8042
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.2472
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.6433,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 23.7256
+              },
+              "shank-l": {
+                "angleDeg": -16.8727
+              },
+              "foot-l": {
+                "angleDeg": -1.1142
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -3.2115
+              },
+              "shank-r": {
+                "angleDeg": -29.2082
+              },
+              "foot-r": {
+                "angleDeg": 21.0116
+              },
+              "toe-r": {
+                "angleDeg": 11.4081
+              },
+              "arm-r": {
+                "angleDeg": -23.9825
+              },
+              "forearm-r": {
+                "angleDeg": 81.1174
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -33.3117
+              },
+              "arm-l": {
+                "angleDeg": -9.7815
+              },
+              "forearm-l": {
+                "angleDeg": 21.9126
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.1663
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.6717,
+            "pose": "contact-left",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 24.9126
+              },
+              "shank-l": {
+                "angleDeg": -20.7141
+              },
+              "foot-l": {
+                "angleDeg": 1.7663
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -2.4085
+              },
+              "shank-r": {
+                "angleDeg": -32.7323
+              },
+              "foot-r": {
+                "angleDeg": 20.4723
+              },
+              "toe-r": {
+                "angleDeg": 14.6684
+              },
+              "arm-r": {
+                "angleDeg": -24.6411
+              },
+              "forearm-r": {
+                "angleDeg": 83.0106
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -35.3535
+              },
+              "arm-l": {
+                "angleDeg": -9.9452
+              },
+              "forearm-l": {
+                "angleDeg": 21.9781
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.0836
+              },
+              "neck": {
+                "angleDeg": 2
+              },
+              "head": {
+                "angleDeg": 0
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 0.578
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0.238,
+            "toS": 1.088
+          },
+          {
+            "anchor": "cane-tip",
+            "fromS": 0,
+            "toS": 1.088
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0.85,
+            "toS": 1.428
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 1.088,
+            "toS": 1.7
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 0.238
+          }
+        ],
+        "phases": [
+          {
+            "id": "left-stance-with-cane",
+            "fromS": 0,
+            "toS": 1.088,
+            "title": {
+              "en": "Left stance with the cane",
+              "de": "Linke Standphase mit Stock"
+            }
+          },
+          {
+            "id": "cane-and-left-swing",
+            "fromS": 1.088,
+            "toS": 1.7,
+            "title": {
+              "en": "Cane and left leg swing",
+              "de": "Stock und linkes Bein schwingen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Cane tip and left heel land",
+              "de": "Stockspitze und linke Ferse landen"
+            },
+            "target": "cane-tip"
+          },
+          {
+            "t": 0,
+            "kind": "contact-on",
+            "title": {
+              "en": "Left heel strike",
+              "de": "Linker Fersenkontakt"
+            },
+            "target": "heel-l"
+          },
+          {
+            "t": 0.238,
+            "kind": "contact-off",
+            "title": {
+              "en": "Right toe-off",
+              "de": "Rechter Abdruck"
+            },
+            "target": "ball-r"
+          },
+          {
+            "t": 0.85,
+            "kind": "contact-on",
+            "title": {
+              "en": "Right heel strike",
+              "de": "Rechter Fersenkontakt"
+            },
+            "target": "heel-r"
+          },
+          {
+            "t": 1.088,
+            "kind": "contact-off",
+            "title": {
+              "en": "Cane lifts, left toe-off",
+              "de": "Stock hebt ab, linker Abdruck"
+            },
+            "target": "cane-tip"
+          },
+          {
+            "t": 0.5,
+            "kind": "inhale",
+            "title": {
+              "en": "Inhalation",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 1.2,
+            "kind": "exhale",
+            "title": {
+              "en": "Exhalation",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 0.85,
+                "v": 0.6
+              },
+              {
+                "t": 1.7,
+                "v": 0.8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rest-on-cane",
+        "title": {
+          "en": "Stopping to rest on the cane",
+          "de": "Rast auf den Stock gestützt"
+        },
+        "description": {
+          "en": "From stooped standing the person leans onto the planted cane, then straightens the head and lets the hand settle on the crook while breathing deeper.",
+          "de": "Aus gebeugtem Stand lehnt sich die Person auf den aufgesetzten Stock, richtet dann den Kopf auf und lässt die Hand auf dem Griff ruhen, während sie tiefer atmet."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -26.2583
+              },
+              "forearm-r": {
+                "angleDeg": 87.2192
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -51.7006
+              },
+              "arm-l": {
+                "angleDeg": 6
+              },
+              "forearm-l": {
+                "angleDeg": 16
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": 0
+              },
+              "neck": {
+                "angleDeg": 3
+              },
+              "head": {
+                "angleDeg": 1
+              }
+            }
+          },
+          {
+            "t": 0.2667,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -25.8026
+              },
+              "forearm-r": {
+                "angleDeg": 87.4516
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -52.3652
+              },
+              "arm-l": {
+                "angleDeg": 6.284
+              },
+              "forearm-l": {
+                "angleDeg": 16.213
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -0.284
+              },
+              "neck": {
+                "angleDeg": 3.071
+              },
+              "head": {
+                "angleDeg": 1.071
+              }
+            }
+          },
+          {
+            "t": 0.5333,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -23.5131
+              },
+              "forearm-r": {
+                "angleDeg": 88.4995
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -55.5844
+              },
+              "arm-l": {
+                "angleDeg": 7.679
+              },
+              "forearm-l": {
+                "angleDeg": 17.2593
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -1.679
+              },
+              "neck": {
+                "angleDeg": 3.4198
+              },
+              "head": {
+                "angleDeg": 1.4198
+              }
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -19.5261
+              },
+              "forearm-r": {
+                "angleDeg": 89.9023
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -60.7694
+              },
+              "arm-l": {
+                "angleDeg": 10
+              },
+              "forearm-l": {
+                "angleDeg": 19
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -4
+              },
+              "neck": {
+                "angleDeg": 4
+              },
+              "head": {
+                "angleDeg": 2
+              }
+            }
+          },
+          {
+            "t": 1.0667,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -15.3314
+              },
+              "forearm-r": {
+                "angleDeg": 90.8857
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -65.7351
+              },
+              "arm-l": {
+                "angleDeg": 12.321
+              },
+              "forearm-l": {
+                "angleDeg": 20.7407
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -6.321
+              },
+              "neck": {
+                "angleDeg": 4.5802
+              },
+              "head": {
+                "angleDeg": 2.5802
+              }
+            }
+          },
+          {
+            "t": 1.3333,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -12.7165
+              },
+              "forearm-r": {
+                "angleDeg": 91.2761
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -68.6102
+              },
+              "arm-l": {
+                "angleDeg": 13.716
+              },
+              "forearm-l": {
+                "angleDeg": 21.787
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -7.716
+              },
+              "neck": {
+                "angleDeg": 4.929
+              },
+              "head": {
+                "angleDeg": 2.929
+              }
+            }
+          },
+          {
+            "t": 1.6,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -12.176
+              },
+              "forearm-r": {
+                "angleDeg": 91.3371
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.1849
+              },
+              "arm-l": {
+                "angleDeg": 14
+              },
+              "forearm-l": {
+                "angleDeg": 22
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -8
+              },
+              "neck": {
+                "angleDeg": 5
+              },
+              "head": {
+                "angleDeg": 3
+              }
+            }
+          },
+          {
+            "t": 2.3,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -12.176
+              },
+              "forearm-r": {
+                "angleDeg": 91.3371
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.1849
+              },
+              "arm-l": {
+                "angleDeg": 14
+              },
+              "forearm-l": {
+                "angleDeg": 22
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -8
+              },
+              "neck": {
+                "angleDeg": 5
+              },
+              "head": {
+                "angleDeg": 3
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -12.176
+              },
+              "forearm-r": {
+                "angleDeg": 91.3371
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.1849
+              },
+              "arm-l": {
+                "angleDeg": 14
+              },
+              "forearm-l": {
+                "angleDeg": 22
+              },
+              "hand-l": {
+                "angleDeg": 3
+              },
+              "torso": {
+                "angleDeg": -8
+              },
+              "neck": {
+                "angleDeg": 5
+              },
+              "head": {
+                "angleDeg": 3
+              }
+            }
+          },
+          {
+            "t": 3.3,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -11.9579
+              },
+              "forearm-r": {
+                "angleDeg": 90.6085
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.206
+              },
+              "arm-l": {
+                "angleDeg": 14.7099
+              },
+              "forearm-l": {
+                "angleDeg": 24.2716
+              },
+              "hand-l": {
+                "angleDeg": 2.5386
+              },
+              "torso": {
+                "angleDeg": -7.5386
+              },
+              "neck": {
+                "angleDeg": 4.6096
+              },
+              "head": {
+                "angleDeg": 2.6806
+              }
+            }
+          },
+          {
+            "t": 3.6,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -10.8651
+              },
+              "forearm-r": {
+                "angleDeg": 86.9356
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.2377
+              },
+              "arm-l": {
+                "angleDeg": 18.1975
+              },
+              "forearm-l": {
+                "angleDeg": 35.4321
+              },
+              "hand-l": {
+                "angleDeg": 0.2716
+              },
+              "torso": {
+                "angleDeg": -5.2716
+              },
+              "neck": {
+                "angleDeg": 2.6914
+              },
+              "head": {
+                "angleDeg": 1.1111
+              }
+            }
+          },
+          {
+            "t": 3.9,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -8.9505
+              },
+              "forearm-r": {
+                "angleDeg": 80.4487
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -69.0103
+              },
+              "arm-l": {
+                "angleDeg": 24
+              },
+              "forearm-l": {
+                "angleDeg": 54
+              },
+              "hand-l": {
+                "angleDeg": -3.5
+              },
+              "torso": {
+                "angleDeg": -1.5
+              },
+              "neck": {
+                "angleDeg": -0.5
+              },
+              "head": {
+                "angleDeg": -1.5
+              }
+            }
+          },
+          {
+            "t": 4.2,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -6.8721
+              },
+              "forearm-r": {
+                "angleDeg": 73.4067
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -68.3916
+              },
+              "arm-l": {
+                "angleDeg": 29.8025
+              },
+              "forearm-l": {
+                "angleDeg": 72.5679
+              },
+              "hand-l": {
+                "angleDeg": -7.2716
+              },
+              "torso": {
+                "angleDeg": 2.2716
+              },
+              "neck": {
+                "angleDeg": -3.6914
+              },
+              "head": {
+                "angleDeg": -4.1111
+              }
+            }
+          },
+          {
+            "t": 4.5,
+            "pose": "stooped-standing",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": -5.5151
+              },
+              "forearm-r": {
+                "angleDeg": 68.8477
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "cane": {
+                "angleDeg": -67.8011
+              },
+              "arm-l": {
+                "angleDeg": 33.2901
+              },
+              "forearm-l": {
+                "angleDeg": 83.7284
+              },
+              "hand-l": {
+                "angleDeg": -9.5386
+              },
+              "torso": {
+                "angleDeg": 4.5386
+              },
+              "neck": {
+                "angleDeg": -5.6096
+              },
+              "head": {
+                "angleDeg": -5.6806
+              }
+            }
+          },
+          {
+            "t": 4.8,
+            "pose": "resting-on-cane",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "resting-on-cane",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "cane-tip",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "lean",
+            "fromS": 0,
+            "toS": 1.6,
+            "title": {
+              "en": "Leaning onto the cane",
+              "de": "Auf den Stock lehnen"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 1.6,
+            "toS": 3,
+            "title": {
+              "en": "Holding the lean",
+              "de": "Lehnen halten"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "Settling on the crook",
+              "de": "Auf den Griff stützen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.6,
+            "kind": "load-on",
+            "title": {
+              "en": "Cane carries the lean",
+              "de": "Stock trägt die Neigung"
+            }
+          },
+          {
+            "t": 2.2,
+            "kind": "inhale",
+            "title": {
+              "en": "Deep breath",
+              "de": "Tiefes Einatmen"
+            }
+          },
+          {
+            "t": 3.6,
+            "kind": "exhale",
+            "title": {
+              "en": "Long exhalation",
+              "de": "Langes Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.2
+              },
+              {
+                "t": 1.6,
+                "v": 1.5
+              },
+              {
+                "t": 3,
+                "v": 1.4
+              },
+              {
+                "t": 6,
+                "v": 1.1
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5
+              },
+              {
+                "t": 3,
+                "v": 0.8
+              },
+              {
+                "t": 6,
+                "v": 0.4
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 10,
+        "meanRadiantTempC": 10,
+        "relativeHumidity": 0.8,
+        "windMS": 1.5,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.2,
+      "regions": [
+        {
+          "id": "face-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.2,
+          "coreTempC": 36.4,
+          "insulationM2KW": 0.05,
+          "metabolicShare": 0.07,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "material": "hair",
+          "model": "core-resistance",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.4,
+          "insulationM2KW": 0.07,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "cap",
+          "title": {
+            "en": "Flat cap",
+            "de": "Schiebermütze"
+          },
+          "kind": "clothing",
+          "material": "tweed",
+          "model": "core-resistance",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.15,
+          "coreTempC": 36.4,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0.01,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "hand-skin",
+          "title": {
+            "en": "Bare hands",
+            "de": "Unbedeckte Hände"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.09,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 33,
+          "insulationM2KW": 0.06,
+          "metabolicShare": 0.04,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "jacket",
+          "title": {
+            "en": "Tweed jacket on torso and arms",
+            "de": "Tweedjacke an Rumpf und Armen"
+          },
+          "kind": "clothing",
+          "material": "tweed",
+          "model": "core-resistance",
+          "areaM2": 0.97,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.4,
+          "insulationM2KW": 0.24,
+          "metabolicShare": 0.5,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "trousers",
+          "title": {
+            "en": "Trousers",
+            "de": "Hose"
+          },
+          "kind": "clothing",
+          "material": "wool-trouser",
+          "model": "core-resistance",
+          "areaM2": 0.5,
+          "characteristicLengthM": 0.13,
+          "coreTempC": 36.4,
+          "insulationM2KW": 0.15,
+          "metabolicShare": 0.3,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shoes",
+          "title": {
+            "en": "Shoes",
+            "de": "Schuhe"
+          },
+          "kind": "surface",
+          "material": "leather-shoe",
+          "model": "core-resistance",
+          "areaM2": 0.11,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 33,
+          "insulationM2KW": 0.12,
+          "metabolicShare": 0.06,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "cane-wood",
+          "title": {
+            "en": "Cane",
+            "de": "Gehstock"
+          },
+          "kind": "surface",
+          "material": "ash-wood",
+          "model": "passive",
+          "areaM2": 0.07,
+          "characteristicLengthM": 0.05,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath",
+          "kind": "breath",
+          "title": {
+            "en": "Exhaled breath",
+            "de": "Ausgeatmete Luft"
+          },
+          "anchor": "mouth",
+          "directionDeg": -20,
+          "carries": "vapour",
+          "temperatureC": 33.5,
+          "velocityMS": 1.1,
+          "diameterM": 0.018,
+          "vapourKgPerKg": 0.033,
+          "periodS": 3.5,
+          "dutyFrom": 0.4,
+          "dutyTo": 1,
+          "source": "literature",
+          "reference": "gupta-2010"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Body regions sum to the DuBois area of 1.80 m² (70 kg, 165 cm); the cane is an additional passive surface.",
+          "de": "Die Körperregionen ergeben die DuBois-Fläche von 1,80 m² (70 kg, 165 cm); der Stock ist eine zusätzliche passive Fläche."
+        },
+        {
+          "en": "Slow walking at 2 km/h is 2.0 met (ISO 8996); core temperature 36.4 °C and cooler hands reflect reduced perfusion at higher age.",
+          "de": "Langsames Gehen mit 2 km/h entspricht 2,0 met (ISO 8996); Kerntemperatur 36,4 °C und kühlere Hände bilden die geringere Durchblutung im Alter ab."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "The cane tip is a unilateral contact with rubber friction; the share it carries follows the elastic-support model of the solver and is not a clinical load measurement.",
+          "de": "Die Stockspitze ist ein einseitiger Kontakt mit Gummireibung; ihr Lastanteil folgt dem Elastizitätsmodell des Lösers und ist keine klinische Lastmessung."
+        },
+        {
+          "en": "Segments are point masses at the de Leva centres.",
+          "de": "Segmente sind Punktmassen in den Schwerpunkten nach de Leva."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "stooped-standing",
+      "defaultClip": "cane-gait",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

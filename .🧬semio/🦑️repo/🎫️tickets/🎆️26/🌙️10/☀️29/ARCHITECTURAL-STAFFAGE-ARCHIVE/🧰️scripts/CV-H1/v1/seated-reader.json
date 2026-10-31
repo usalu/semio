@@ -1,0 +1,4089 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "seated-reader",
+    "category": "humans",
+    "title": {
+      "en": "Seated Reader",
+      "de": "Lesende Person im Sitzen"
+    },
+    "summary": {
+      "en": "A woman reading a top-bound notebook on the edge of a park bench: pelvis and thighs carried by the seat, feet flat, with a page-turn, a sit-to-stand transition and a reach for a paper cup on the seat.",
+      "de": "Eine Frau liest in einem oben gebundenen Notizbuch an der Kante einer Parkbank: Becken und Oberschenkel liegen auf der Sitzfläche, die Füße stehen flach; mit Umblättern, Aufstehen und Griff zum Pappbecher auf der Sitzfläche."
+    },
+    "tags": [
+      "human",
+      "adult",
+      "seated",
+      "reader",
+      "bench",
+      "female"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker humans-a",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230. Tables 4 (male) and 5 (female), segment mass fractions and centre-of-mass positions."
+        },
+        {
+          "id": "winter-2009",
+          "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, anthropometric segment data."
+        },
+        {
+          "id": "drillis-contini-1966",
+          "citation": "Drillis, R., Contini, R. and Bluestein, M. (1964/1966). Body segment parameters: a survey of measurement techniques. Artificial Limbs 8(1), 44-66; segment lengths as fractions of stature."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-8996-2021",
+          "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment, analytical determination of thermal comfort; Annex A metabolic rates."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort; Chapter 18 Nonresidential cooling and heating load calculations for emissivities and metabolic data."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H. and Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39."
+        }
+      ],
+      "notes": {
+        "en": "A 1.68 m, 61 kg woman: segment masses from the de Leva (1996) female fractions plus 2.9 kg of clothing and footwear, lengths scaled from the 1.78 m design by 0.944. The rest configuration is seated; the bench seat is a fixed root bone so that sitting and standing up are the same rig.",
+        "de": "Eine 1,68 m große, 61 kg schwere Frau: Segmentmassen nach den weiblichen Anteilen von de Leva (1996) plus 2,9 kg Kleidung und Schuhe, Längen mit 0,944 aus dem 1,78-m-Entwurf skaliert. Die Ruhekonfiguration ist sitzend; die Bankfläche ist ein fester Wurzelknochen, sodass Sitzen und Aufstehen dasselbe Skelett nutzen."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.34,
+      "widthM": 1.02,
+      "depthM": 0.5,
+      "massKg": 64.5
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Hair",
+          "de": "Haar"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "knit-wool",
+        "title": {
+          "en": "Knitted wool sweater",
+          "de": "Wollstrickpullover"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "denim",
+        "title": {
+          "en": "Denim",
+          "de": "Denim"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.65,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "canvas-sneaker",
+        "title": {
+          "en": "Canvas sneaker",
+          "de": "Stoffturnschuh"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "paper",
+        "title": {
+          "en": "Paper",
+          "de": "Papier"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.4,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "paper-cup",
+        "title": {
+          "en": "Paper cup",
+          "de": "Pappbecher"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.4,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "wood-bench",
+        "title": {
+          "en": "Painted bench timber",
+          "de": "Gestrichenes Bankholz"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "seat",
+      "bones": [
+        {
+          "id": "seat",
+          "parent": null,
+          "title": {
+            "en": "Bench seat",
+            "de": "Bankfläche"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.48,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "hip-lift",
+          "parent": "seat",
+          "title": {
+            "en": "Pelvis vertical travel",
+            "de": "Vertikale Beckenverschiebung"
+          },
+          "x": 0,
+          "y": 0.5,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 90,
+            "minM": 0,
+            "maxM": 0.46
+          }
+        },
+        {
+          "id": "hip-shift",
+          "parent": "hip-lift",
+          "title": {
+            "en": "Pelvis horizontal travel",
+            "de": "Horizontale Beckenverschiebung"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.01,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.1,
+            "maxM": 0.5
+          }
+        },
+        {
+          "id": "pelvis",
+          "parent": "hip-shift",
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 0.0944,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -25,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 7.8,
+            "comX": 0.057,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Torso with sweater",
+            "de": "Rumpf mit Pullover"
+          },
+          "x": 0.0944,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.439,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 18.96,
+            "comX": 0.2,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "neck",
+          "parent": "torso",
+          "title": {
+            "en": "Neck",
+            "de": "Hals"
+          },
+          "x": 0.439,
+          "y": 0,
+          "angleDeg": -8,
+          "lengthM": 0.0944,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -35,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.57,
+            "comX": 0.047,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "neck",
+          "title": {
+            "en": "Head with bun",
+            "de": "Kopf mit Dutt"
+          },
+          "x": 0.0944,
+          "y": 0,
+          "angleDeg": 8,
+          "lengthM": 0.17,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 3.6,
+            "comX": 0.07,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.3965,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.3115,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 1.66,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3115,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2454,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.89,
+            "comX": 0.112,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.2454,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1794,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.34,
+            "comX": 0.09,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -93.9,
+          "lengthM": 0.4106,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -125,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 9.32,
+            "comX": 0.168,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.4106,
+          "y": 0,
+          "angleDeg": -86.1,
+          "lengthM": 0.4012,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 90
+          },
+          "mass": {
+            "kg": 3.13,
+            "comX": 0.179,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot and shoe",
+            "de": "Linker Fuß mit Schuh"
+          },
+          "x": 0.4012,
+          "y": 0,
+          "angleDeg": 66.2,
+          "lengthM": 0.1754,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 1.06,
+            "comX": 0.0747,
+            "comY": -0.0032,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1754,
+          "y": 0,
+          "angleDeg": 23.8,
+          "lengthM": 0.0614,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.08,
+            "comX": 0.0283,
+            "comY": 0.0283,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.3965,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.3115,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 1.66,
+            "comX": 0.18,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3115,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2454,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.89,
+            "comX": 0.112,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.2454,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1794,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.34,
+            "comX": 0.09,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": -93.9,
+          "lengthM": 0.4106,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -125,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 9.32,
+            "comX": 0.168,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.4106,
+          "y": 0,
+          "angleDeg": -86.1,
+          "lengthM": 0.4012,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -65,
+            "maxDeg": 90
+          },
+          "mass": {
+            "kg": 3.13,
+            "comX": 0.179,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot and shoe",
+            "de": "Rechter Fuß mit Schuh"
+          },
+          "x": 0.4012,
+          "y": 0,
+          "angleDeg": 66.2,
+          "lengthM": 0.1754,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 1.06,
+            "comX": 0.0747,
+            "comY": -0.0032,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1754,
+          "y": 0,
+          "angleDeg": 23.8,
+          "lengthM": 0.0614,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.08,
+            "comX": 0.0283,
+            "comY": 0.0283,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "pad",
+          "parent": "hand-l",
+          "title": {
+            "en": "Top-bound notebook",
+            "de": "Oben gebundenes Notizbuch"
+          },
+          "x": 0.1794,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 120
+          },
+          "mass": {
+            "kg": 0.6,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "page",
+          "parent": "pad",
+          "title": {
+            "en": "Turning page",
+            "de": "Umblätternde Seite"
+          },
+          "x": 0.2,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.19,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -185,
+            "maxDeg": 5
+          },
+          "mass": {
+            "kg": 0.01,
+            "comX": 0.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "cup",
+          "parent": "seat",
+          "title": {
+            "en": "Paper cup on the seat",
+            "de": "Pappbecher auf der Sitzfläche"
+          },
+          "x": -0.215,
+          "y": 0.42,
+          "angleDeg": 90,
+          "lengthM": 0.11,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0,
+            "comX": 0.05,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "seat",
+        "bone": "pelvis",
+        "x": -0.08,
+        "y": 0.03,
+        "kind": "support",
+        "title": {
+          "en": "Seat bones on the bench",
+          "de": "Sitzbeinhöcker auf der Bank"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.16,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "thigh-support",
+        "bone": "thigh-r",
+        "x": 0.1052,
+        "y": -0.073,
+        "kind": "support",
+        "title": {
+          "en": "Thighs on the seat edge",
+          "de": "Oberschenkel auf der Sitzkante"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.2,
+        "footprintWidthM": 0.3,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "backrest",
+        "bone": "torso",
+        "x": 0.2056,
+        "y": 0.12,
+        "kind": "support",
+        "title": {
+          "en": "Back against the backrest",
+          "de": "Rücken an der Lehne"
+        },
+        "support": "contact",
+        "normalDeg": 0,
+        "footprintLengthM": 0.3,
+        "footprintWidthM": 0.35,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0103,
+        "y": -0.0819,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linker Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-l",
+        "bone": "foot-l",
+        "x": 0.1754,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linker Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.095,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0103,
+        "y": -0.0819,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechter Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.065,
+        "footprintWidthM": 0.06,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-r",
+        "bone": "foot-r",
+        "x": 0.1754,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechter Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.095,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": -0.0048,
+        "y": -0.0756,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth and nose",
+          "de": "Mund und Nase"
+        }
+      },
+      {
+        "id": "pad-grip",
+        "bone": "pad",
+        "x": 0.0999,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Notebook centre of gravity",
+          "de": "Schwerpunkt des Notizbuchs"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "bench-seat",
+          "bone": "seat",
+          "role": "body",
+          "lod": 0,
+          "z": 1.5,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.28 0.42 L 0.2 0.42 L 0.2 0.38 L -0.28 0.38 Z",
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-slat-1",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.28,
+              0.4
+            ],
+            [
+              0.2,
+              0.4
+            ]
+          ],
+          "closed": false,
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-leg-front",
+          "bone": "seat",
+          "role": "body",
+          "lod": 0,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M 0.12 0.38 L 0.17 0.38 L 0.17 0 L 0.12 0 Z",
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-leg-rear",
+          "bone": "seat",
+          "role": "body",
+          "lod": 0,
+          "z": 1.4,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "path",
+          "d": "M -0.25 0.38 L -0.2 0.38 L -0.2 0 L -0.25 0 Z",
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-back",
+          "bone": "seat",
+          "role": "body",
+          "lod": 0,
+          "z": 0.8,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "path",
+          "d": "M -0.3 0.42 L -0.265 0.42 L -0.345 0.86 L -0.38 0.86 Z",
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-back-slat",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 1,
+          "z": 0.9,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.3,
+              0.62
+            ],
+            [
+              -0.355,
+              0.62
+            ]
+          ],
+          "closed": false,
+          "material": "wood-bench"
+        },
+        {
+          "id": "bench-back-slat-2",
+          "bone": "seat",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.9,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.32,
+              0.75
+            ],
+            [
+              -0.365,
+              0.75
+            ]
+          ],
+          "closed": false,
+          "material": "wood-bench"
+        },
+        {
+          "id": "pelvis-jeans",
+          "bone": "pelvis",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.33,
+          "kind": "path",
+          "d": "M 0.0991 0.1086 C 0.0519 0.1303 -0.0047 0.1274 -0.0708 0.1038 L -0.0708 -0.0944 C -0.0047 -0.1227 0.0519 -0.1246 0.0991 -0.1114 Z",
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "sweater",
+          "bone": "torso",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M 0.439 0.0283 C 0.4295 0.0802 0.3823 0.1086 0.3257 0.1114 C 0.2502 0.1133 0.1558 0.102 0.0614 0.1086 C -0.0047 0.1152 -0.0802 0.118 -0.1274 0.1133 L -0.1274 -0.1274 C -0.0519 -0.1227 0.0142 -0.1208 0.0614 -0.1189 C 0.1558 -0.1171 0.203 -0.1274 0.2596 -0.1369 C 0.3351 -0.1274 0.3918 -0.102 0.422 -0.0585 C 0.4342 -0.0378 0.4437 -0.0094 0.439 0.0283 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "sweater-hem",
+          "bone": "torso",
+          "role": "detail",
+          "lod": 1,
+          "z": 4.1,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M -0.0991 0.1133 L -0.0991 -0.1265 L -0.1274 -0.1274 L -0.1274 0.1133 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "sweater-rib-1",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.3257,
+              0.0944
+            ],
+            [
+              -0.033,
+              0.0944
+            ]
+          ],
+          "closed": false,
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "sweater-rib-2",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.3918,
+              0
+            ],
+            [
+              -0.0802,
+              0
+            ]
+          ],
+          "closed": false,
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "sweater-rib-3",
+          "bone": "torso",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.05,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.2974,
+              -0.0755
+            ],
+            [
+              -0.0802,
+              -0.085
+            ]
+          ],
+          "closed": false,
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "cowl",
+          "bone": "neck",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "path",
+          "d": "M 0.0375 0.072 C 0.0075 0.082 -0.0246 0.0728 -0.0334 0.0335 L -0.02 -0.0619 C -0.002 -0.0879 0.0311 -0.0862 0.0572 -0.0682 C 0.0686 -0.0475 0.056 0.0079 0.0521 0.0359 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "neck",
+          "bone": "neck",
+          "role": "body",
+          "lod": 0,
+          "z": 3.8,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M 0.0876 0.0552 C 0.0495 0.0546 0.0208 0.0553 -0.0126 0.0554 L -0.0028 -0.0481 C 0.0249 -0.0422 0.052 -0.0309 0.0575 -0.0224 Z",
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "head",
+          "bone": "head",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.86,
+          "kind": "path",
+          "d": "M 0.0103 0.0697 C 0.0386 0.1028 0.1047 0.1056 0.1472 0.065 C 0.1651 0.032 0.1632 -0.0294 0.1311 -0.0577 C 0.116 -0.07 0.0953 -0.0747 0.0783 -0.0737 C 0.0688 -0.0756 0.0613 -0.0794 0.0499 -0.0889 C 0.0348 -0.1021 0.0273 -0.1011 0.0216 -0.0926 C 0.0169 -0.0813 0.0122 -0.0794 0.0075 -0.0794 C 0.0009 -0.0813 -0.0039 -0.0794 -0.0067 -0.0756 C -0.018 -0.0775 -0.0293 -0.0737 -0.0369 -0.0662 C -0.0492 -0.053 -0.0482 -0.0294 -0.0407 -0.0152 C -0.0275 0.0018 -0.0133 0.032 -0.0086 0.0556 C -0.0039 0.065 0.0027 0.0679 0.0103 0.0697 Z",
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "hair",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 5.5,
+          "filled": true,
+          "tone": 0.22,
+          "kind": "path",
+          "d": "M 0.1311 -0.0586 C 0.1632 -0.0454 0.1746 0.032 0.1519 0.0679 C 0.1283 0.1151 0.0575 0.1217 0.0009 0.0933 C -0.0039 0.0839 0.0009 0.0716 0.015 0.066 C 0.0481 0.0716 0.0953 0.0603 0.116 0.0225 C 0.1311 -0.0152 0.1292 -0.0435 0.1311 -0.0586 Z",
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "hair-bun",
+          "bone": "head",
+          "role": "body",
+          "lod": 1,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "ellipse",
+          "cx": 0.1566,
+          "cy": 0.0933,
+          "rx": 0.03776,
+          "ry": 0.034927999999999994,
+          "rotationDeg": -90,
+          "region": "hair",
+          "material": "hair"
+        },
+        {
+          "id": "ear",
+          "bone": "head",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "ellipse",
+          "cx": 0.0433,
+          "cy": 0.0244,
+          "rx": 0.011328,
+          "ry": 0.01888,
+          "rotationDeg": -90,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "eye",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": true,
+          "tone": 0.05,
+          "kind": "ellipse",
+          "cx": 0.0641,
+          "cy": -0.0577,
+          "rx": 0.006608,
+          "ry": 0.003776,
+          "rotationDeg": -90,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "mouth-line",
+          "bone": "head",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -0.001,
+              -0.0653
+            ],
+            [
+              -0.001,
+              -0.0775
+            ]
+          ],
+          "closed": false,
+          "region": "face-skin",
+          "material": "skin"
+        },
+        {
+          "id": "sleeve-l",
+          "bone": "arm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.5,
+          "filled": true,
+          "tone": 0.54,
+          "kind": "path",
+          "d": "M -0.0066 -0.0548 C 0.0519 -0.0566 0.1935 -0.0519 0.3068 -0.0434 C 0.3351 -0.0434 0.3427 -0.0236 0.3427 0 C 0.3427 0.0236 0.3351 0.0472 0.3068 0.0472 C 0.1935 0.0529 0.0708 0.0604 0.0029 0.0585 C -0.0311 0.0378 -0.0311 -0.0283 -0.0066 -0.0548 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "forearm-l",
+          "bone": "forearm-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.5,
+          "filled": true,
+          "tone": 0.54,
+          "kind": "path",
+          "d": "M -0.0094 -0.0444 C -0.0283 -0.0453 -0.0377 -0.0245 -0.0377 0 C -0.0377 0.0255 -0.0283 0.0472 -0.0094 0.0472 C 0.0708 0.0472 0.1652 0.0425 0.236 0.0378 L 0.236 -0.0368 C 0.1652 -0.0378 0.0708 -0.0434 -0.0094 -0.0444 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "cuff-l",
+          "bone": "forearm-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.52,
+          "filled": true,
+          "tone": 0.42,
+          "kind": "path",
+          "d": "M 0.2172 -0.0406 L 0.2172 0.0406 L 0.236 0.0406 L 0.236 -0.0396 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "hand-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 0,
+          "z": 0.6,
+          "filled": true,
+          "tone": 0.76,
+          "kind": "path",
+          "d": "M -0.0142 -0.0283 C 0.0283 -0.033 0.0708 -0.0321 0.0991 -0.0293 L 0.152 -0.0283 C 0.1643 -0.0283 0.1643 -0.0142 0.152 -0.0142 L 0.1294 -0.0138 L 0.1652 -0.0149 C 0.1775 -0.0149 0.1775 0.0008 0.1652 0.0008 L 0.1294 0.0011 L 0.1728 0 C 0.1851 0 0.1851 0.0161 0.1728 0.0161 L 0.1294 0.0164 L 0.1662 0.0156 C 0.1785 0.0156 0.1785 0.0307 0.1662 0.0307 C 0.1227 0.0321 0.0567 0.0359 0 0.0387 L -0.0142 0.0349 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-l",
+          "bone": "hand-l",
+          "role": "body",
+          "lod": 2,
+          "z": 0.62,
+          "filled": true,
+          "tone": 0.7372,
+          "kind": "path",
+          "d": "M -0.0038 0.0227 C 0.0245 0.0472 0.0623 0.068 0.0925 0.0774 C 0.1029 0.0803 0.1105 0.0708 0.1029 0.0614 C 0.0869 0.0472 0.0661 0.0378 0.0434 0.0208 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-0",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              -0.0144
+            ],
+            [
+              0.1294,
+              -0.0144
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-1",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              0.0003
+            ],
+            [
+              0.1294,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-l-2",
+          "bone": "hand-l",
+          "role": "detail",
+          "lod": 2,
+          "z": 0.63,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              0.0159
+            ],
+            [
+              0.1294,
+              0.0159
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-l",
+          "bone": "thigh-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.26999999999999996,
+          "kind": "path",
+          "d": "M -0.0141 -0.0897 C 0.0802 -0.0991 0.2973 -0.0831 0.3918 -0.0585 C 0.4153 -0.0567 0.4248 -0.0331 0.4248 0 C 0.4248 0.0378 0.4153 0.0623 0.3918 0.0623 C 0.2973 0.0802 0.1085 0.0944 -0.0236 0.0831 Z",
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "shank-l",
+          "bone": "shank-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.02,
+          "filled": true,
+          "tone": 0.26999999999999996,
+          "kind": "path",
+          "d": "M 0 -0.0585 C -0.0302 -0.0604 -0.0425 -0.033 -0.0425 0 C -0.0425 0.0378 -0.0302 0.0605 0 0.0605 C 0.0378 0.0586 0.0944 0.0529 0.1888 0.0491 C 0.2643 0.0472 0.3399 0.0425 0.3918 0.0388 L 0.3918 -0.0405 C 0.3587 -0.0443 0.2927 -0.049 0.236 -0.0566 C 0.1511 -0.0736 0.0755 -0.0717 0 -0.0585 Z",
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "jeans-seam-l",
+          "bone": "thigh-l",
+          "role": "texture",
+          "lod": 3,
+          "z": 1.02,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.0141,
+              -0.0189
+            ],
+            [
+              0.269,
+              0
+            ],
+            [
+              0.3918,
+              -0.0095
+            ]
+          ],
+          "closed": false,
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "shoe-rear-l",
+          "bone": "foot-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M -0.0411 -0.0285 C -0.035 -0.0516 -0.0247 -0.0728 -0.0166 -0.0795 L -0.006 -0.08 L 0.1763 0.0004 L 0.1504 0.0591 C 0.1009 0.0518 0.0608 0.0495 0.0317 0.0449 L 0.0169 0.0436 C 0.0034 0.0273 -0.0268 0.014 -0.0379 0.004 C -0.0472 -0.0054 -0.0468 -0.0155 -0.0411 -0.0285 Z",
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "shoe-toe-l",
+          "bone": "toe-l",
+          "role": "body",
+          "lod": 0,
+          "z": 1.1,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "path",
+          "d": "M -0.0009 0 L 0.0425 0 C 0.0642 0 0.0718 0.0113 0.0661 0.0245 C 0.0586 0.0425 0.0283 0.0585 -0.0009 0.0642 Z",
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "shoe-sole-l",
+          "bone": "foot-l",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.15,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0223,
+              -0.0665
+            ],
+            [
+              0.1677,
+              0.0173
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "sleeve-r",
+          "bone": "arm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.0066 -0.0548 C 0.0519 -0.0566 0.1935 -0.0519 0.3068 -0.0434 C 0.3351 -0.0434 0.3427 -0.0236 0.3427 0 C 0.3427 0.0236 0.3351 0.0472 0.3068 0.0472 C 0.1935 0.0529 0.0708 0.0604 0.0029 0.0585 C -0.0311 0.0378 -0.0311 -0.0283 -0.0066 -0.0548 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "forearm-r",
+          "bone": "forearm-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -0.0094 -0.0444 C -0.0283 -0.0453 -0.0377 -0.0245 -0.0377 0 C -0.0377 0.0255 -0.0283 0.0472 -0.0094 0.0472 C 0.0708 0.0472 0.1652 0.0425 0.236 0.0378 L 0.236 -0.0368 C 0.1652 -0.0378 0.0708 -0.0434 -0.0094 -0.0444 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "cuff-r",
+          "bone": "forearm-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.05,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "path",
+          "d": "M 0.2172 -0.0406 L 0.2172 0.0406 L 0.236 0.0406 L 0.236 -0.0396 Z",
+          "region": "sweater",
+          "material": "knit-wool"
+        },
+        {
+          "id": "hand-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 0,
+          "z": 6.2,
+          "filled": true,
+          "tone": 0.84,
+          "kind": "path",
+          "d": "M -0.0142 -0.0283 C 0.0283 -0.033 0.0708 -0.0321 0.0991 -0.0293 L 0.152 -0.0283 C 0.1643 -0.0283 0.1643 -0.0142 0.152 -0.0142 L 0.1294 -0.0138 L 0.1652 -0.0149 C 0.1775 -0.0149 0.1775 0.0008 0.1652 0.0008 L 0.1294 0.0011 L 0.1728 0 C 0.1851 0 0.1851 0.0161 0.1728 0.0161 L 0.1294 0.0164 L 0.1662 0.0156 C 0.1785 0.0156 0.1785 0.0307 0.1662 0.0307 C 0.1227 0.0321 0.0567 0.0359 0 0.0387 L -0.0142 0.0349 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thumb-r",
+          "bone": "hand-r",
+          "role": "body",
+          "lod": 2,
+          "z": 6.22,
+          "filled": true,
+          "tone": 0.8148,
+          "kind": "path",
+          "d": "M -0.0038 0.0227 C 0.0245 0.0472 0.0623 0.068 0.0925 0.0774 C 0.1029 0.0803 0.1105 0.0708 0.1029 0.0614 C 0.0869 0.0472 0.0661 0.0378 0.0434 0.0208 Z",
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-0",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              -0.0144
+            ],
+            [
+              0.1294,
+              -0.0144
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-1",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              0.0003
+            ],
+            [
+              0.1294,
+              0.0003
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "fingers-r-2",
+          "bone": "hand-r",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.23,
+          "filled": false,
+          "tone": 0.5,
+          "kind": "poly",
+          "points": [
+            [
+              0.0708,
+              0.0159
+            ],
+            [
+              0.1294,
+              0.0159
+            ]
+          ],
+          "closed": false,
+          "region": "hand-skin",
+          "material": "skin"
+        },
+        {
+          "id": "thigh-r",
+          "bone": "thigh-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "path",
+          "d": "M -0.0141 -0.0897 C 0.0802 -0.0991 0.2973 -0.0831 0.3918 -0.0585 C 0.4153 -0.0567 0.4248 -0.0331 0.4248 0 C 0.4248 0.0378 0.4153 0.0623 0.3918 0.0623 C 0.2973 0.0802 0.1085 0.0944 -0.0236 0.0831 Z",
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "shank-r",
+          "bone": "shank-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.02,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "path",
+          "d": "M 0 -0.0585 C -0.0302 -0.0604 -0.0425 -0.033 -0.0425 0 C -0.0425 0.0378 -0.0302 0.0605 0 0.0605 C 0.0378 0.0586 0.0944 0.0529 0.1888 0.0491 C 0.2643 0.0472 0.3399 0.0425 0.3918 0.0388 L 0.3918 -0.0405 C 0.3587 -0.0443 0.2927 -0.049 0.236 -0.0566 C 0.1511 -0.0736 0.0755 -0.0717 0 -0.0585 Z",
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "jeans-seam-r",
+          "bone": "thigh-r",
+          "role": "texture",
+          "lod": 3,
+          "z": 3.02,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              0.0141,
+              -0.0189
+            ],
+            [
+              0.269,
+              0
+            ],
+            [
+              0.3918,
+              -0.0095
+            ]
+          ],
+          "closed": false,
+          "region": "jeans",
+          "material": "denim"
+        },
+        {
+          "id": "shoe-rear-r",
+          "bone": "foot-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.88,
+          "kind": "path",
+          "d": "M -0.0411 -0.0285 C -0.035 -0.0516 -0.0247 -0.0728 -0.0166 -0.0795 L -0.006 -0.08 L 0.1763 0.0004 L 0.1504 0.0591 C 0.1009 0.0518 0.0608 0.0495 0.0317 0.0449 L 0.0169 0.0436 C 0.0034 0.0273 -0.0268 0.014 -0.0379 0.004 C -0.0472 -0.0054 -0.0468 -0.0155 -0.0411 -0.0285 Z",
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "shoe-toe-r",
+          "bone": "toe-r",
+          "role": "body",
+          "lod": 0,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.88,
+          "kind": "path",
+          "d": "M -0.0009 0 L 0.0425 0 C 0.0642 0 0.0718 0.0113 0.0661 0.0245 C 0.0586 0.0425 0.0283 0.0585 -0.0009 0.0642 Z",
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "shoe-sole-r",
+          "bone": "foot-r",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.15,
+          "filled": false,
+          "tone": 0.1,
+          "kind": "poly",
+          "points": [
+            [
+              -0.0223,
+              -0.0665
+            ],
+            [
+              0.1677,
+              0.0173
+            ]
+          ],
+          "closed": false,
+          "region": "shoes",
+          "material": "canvas-sneaker"
+        },
+        {
+          "id": "pad-cover",
+          "bone": "pad",
+          "role": "body",
+          "lod": 0,
+          "z": 6.4,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.1999 0 L 0.1999 0.016 L -0.0001 0.016 L -0.0001 0 Z",
+          "region": "notebook",
+          "material": "paper"
+        },
+        {
+          "id": "pad-pages",
+          "bone": "pad",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.45,
+          "filled": true,
+          "tone": 0.95,
+          "kind": "path",
+          "d": "M 0.1999 -0.012 L 0.1999 0 L -0.0001 0 L -0.0001 -0.012 Z",
+          "region": "notebook",
+          "material": "paper"
+        },
+        {
+          "id": "pad-ruling",
+          "bone": "pad",
+          "role": "texture",
+          "lod": 3,
+          "z": 6.46,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.1046,
+              -0.012
+            ],
+            [
+              0.1046,
+              0
+            ]
+          ],
+          "closed": false,
+          "region": "notebook",
+          "material": "paper"
+        },
+        {
+          "id": "page-sheet",
+          "bone": "page",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.5,
+          "filled": true,
+          "tone": 0.98,
+          "kind": "path",
+          "d": "M 0.0001 0.016 L 0.0001 0.012 L 0.1901 0.012 L 0.1901 0.016 Z",
+          "region": "notebook",
+          "material": "paper"
+        },
+        {
+          "id": "cup-body",
+          "bone": "cup",
+          "role": "body",
+          "lod": 0,
+          "z": 1.7,
+          "filled": true,
+          "tone": 0.9,
+          "kind": "path",
+          "d": "M 0 0.03 L 0 -0.03 L 0.105 -0.025 L 0.105 0.025 Z",
+          "material": "paper-cup"
+        },
+        {
+          "id": "cup-lid",
+          "bone": "cup",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.75,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M 0.105 0.028 L 0.105 -0.028 L 0.12 -0.027 L 0.12 0.027 Z",
+          "material": "paper-cup"
+        },
+        {
+          "id": "cup-sleeve",
+          "bone": "cup",
+          "role": "detail",
+          "lod": 2,
+          "z": 1.75,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "poly",
+          "points": [
+            [
+              0.04,
+              0.0245
+            ],
+            [
+              0.04,
+              -0.0245
+            ]
+          ],
+          "closed": false,
+          "material": "paper-cup"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "seated-upright",
+        "title": {
+          "en": "Reading upright",
+          "de": "Aufrecht lesend"
+        },
+        "description": {
+          "en": "Upright on the bench, head bowed to the notebook held in both hands.",
+          "de": "Aufrecht auf der Bank, der Kopf zum Notizbuch in beiden Händen geneigt."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -4
+          },
+          "neck": {
+            "angleDeg": -8
+          },
+          "head": {
+            "angleDeg": -14
+          },
+          "arm-l": {
+            "angleDeg": -0.5121
+          },
+          "forearm-l": {
+            "angleDeg": 93.2152
+          },
+          "hand-l": {
+            "angleDeg": 37.2969
+          },
+          "pad": {
+            "angleDeg": 36
+          },
+          "arm-r": {
+            "angleDeg": -3.6683
+          },
+          "forearm-r": {
+            "angleDeg": 84.5114
+          },
+          "hand-r": {
+            "angleDeg": 59.1569
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 0
+          },
+          "shank-l": {
+            "angleDeg": 0
+          },
+          "shank-r": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 0
+          },
+          "foot-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "seat",
+          "thigh-support",
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1,
+          "emitters": {
+            "breath": 0.4
+          },
+          "regions": {
+            "jeans": {
+              "exposedFraction": 0.85
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "reclined-reading",
+        "title": {
+          "en": "Reclined reading",
+          "de": "Zurückgelehnt lesend"
+        },
+        "description": {
+          "en": "Leaning back against the backrest with the notebook raised to eye level.",
+          "de": "An die Lehne zurückgelehnt, das Notizbuch auf Augenhöhe angehoben."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 14
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -14
+          },
+          "arm-l": {
+            "angleDeg": 44.9734
+          },
+          "forearm-l": {
+            "angleDeg": 89.2849
+          },
+          "hand-l": {
+            "angleDeg": 5.7417
+          },
+          "pad": {
+            "angleDeg": 20
+          },
+          "arm-r": {
+            "angleDeg": 32.4343
+          },
+          "forearm-r": {
+            "angleDeg": 93.4396
+          },
+          "hand-r": {
+            "angleDeg": 19.1261
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 0
+          },
+          "shank-l": {
+            "angleDeg": 0
+          },
+          "shank-r": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 0
+          },
+          "foot-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "seat",
+          "thigh-support",
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r",
+          "backrest"
+        ],
+        "thermal": {
+          "activityMet": 1,
+          "emitters": {
+            "breath": 0.4
+          },
+          "regions": {
+            "jeans": {
+              "exposedFraction": 0.85
+            },
+            "sweater": {
+              "exposedFraction": 0.86
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "reaching-for-cup",
+        "title": {
+          "en": "Reaching for the cup",
+          "de": "Nach dem Becher greifen"
+        },
+        "description": {
+          "en": "Notebook resting on the knee, the near hand reaching back for the paper cup on the seat.",
+          "de": "Notizbuch auf dem Knie, die nahe Hand greift nach hinten zum Pappbecher auf der Sitzfläche."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -6
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -12
+          },
+          "arm-r": {
+            "angleDeg": -50.3238
+          },
+          "forearm-r": {
+            "angleDeg": 46.4234
+          },
+          "hand-r": {
+            "angleDeg": 23.9004
+          },
+          "arm-l": {
+            "angleDeg": -6.2228
+          },
+          "forearm-l": {
+            "angleDeg": 77.4328
+          },
+          "hand-l": {
+            "angleDeg": 33.79
+          },
+          "pad": {
+            "angleDeg": -7
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "thigh-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 0
+          },
+          "shank-l": {
+            "angleDeg": 0
+          },
+          "shank-r": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 0
+          },
+          "foot-r": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "seat",
+          "thigh-support",
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.2,
+          "emitters": {
+            "breath": 0.5
+          },
+          "regions": {
+            "jeans": {
+              "exposedFraction": 0.85
+            }
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "leaning-forward",
+        "title": {
+          "en": "Leaning forward",
+          "de": "Vorgeneigt"
+        },
+        "description": {
+          "en": "Weight shifted forward over the feet, ready to stand up, hands gathering the notebook.",
+          "de": "Gewicht nach vorn über die Füße verlagert, bereit zum Aufstehen, die Hände nehmen das Notizbuch."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -38
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -4
+          },
+          "hip-lift": {
+            "dy": 0
+          },
+          "hip-shift": {
+            "dx": 0.08
+          },
+          "thigh-l": {
+            "angleDeg": -1.1102
+          },
+          "thigh-r": {
+            "angleDeg": -1.1102
+          },
+          "shank-l": {
+            "angleDeg": -10.3018
+          },
+          "shank-r": {
+            "angleDeg": -10.3018
+          },
+          "arm-l": {
+            "angleDeg": 30
+          },
+          "arm-r": {
+            "angleDeg": 30
+          },
+          "forearm-l": {
+            "angleDeg": 40
+          },
+          "forearm-r": {
+            "angleDeg": 40
+          },
+          "pad": {
+            "angleDeg": 60
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 11.4119
+          },
+          "foot-r": {
+            "angleDeg": 11.4119
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "seat",
+          "thigh-support",
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.6,
+          "emitters": {
+            "breath": 0.8
+          },
+          "regions": {
+            "jeans": {
+              "exposedFraction": 0.92
+            }
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "rising",
+        "title": {
+          "en": "Rising",
+          "de": "Aufrichten"
+        },
+        "description": {
+          "en": "Pelvis lifted off the seat, trunk still inclined, the legs extending.",
+          "de": "Becken von der Sitzfläche abgehoben, Rumpf noch geneigt, die Beine strecken sich."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -35
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -4
+          },
+          "hip-lift": {
+            "dy": 0.16
+          },
+          "hip-shift": {
+            "dx": 0.27
+          },
+          "thigh-l": {
+            "angleDeg": -31.5828
+          },
+          "thigh-r": {
+            "angleDeg": -31.5828
+          },
+          "shank-l": {
+            "angleDeg": 2.5514
+          },
+          "shank-r": {
+            "angleDeg": 2.5514
+          },
+          "arm-l": {
+            "angleDeg": 30
+          },
+          "arm-r": {
+            "angleDeg": 30
+          },
+          "forearm-l": {
+            "angleDeg": 40
+          },
+          "forearm-r": {
+            "angleDeg": 40
+          },
+          "pad": {
+            "angleDeg": 60
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 29.0314
+          },
+          "foot-r": {
+            "angleDeg": 29.0314
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 2.2,
+          "emitters": {
+            "breath": 1
+          }
+        },
+        "loads": [],
+        "key": true
+      },
+      {
+        "id": "standing",
+        "title": {
+          "en": "Standing up",
+          "de": "Aufgestanden"
+        },
+        "description": {
+          "en": "Upright on both feet next to the bench, notebook held at waist height.",
+          "de": "Aufrecht auf beiden Füßen neben der Bank, das Notizbuch auf Hüfthöhe."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -4
+          },
+          "neck": {
+            "angleDeg": -6
+          },
+          "head": {
+            "angleDeg": -4
+          },
+          "hip-lift": {
+            "dy": 0.3727
+          },
+          "hip-shift": {
+            "dx": 0.41
+          },
+          "thigh-l": {
+            "angleDeg": -77.2393
+          },
+          "thigh-r": {
+            "angleDeg": -77.2393
+          },
+          "shank-l": {
+            "angleDeg": 68.1184
+          },
+          "shank-r": {
+            "angleDeg": 68.1184
+          },
+          "arm-l": {
+            "angleDeg": 10
+          },
+          "arm-r": {
+            "angleDeg": 10
+          },
+          "forearm-l": {
+            "angleDeg": 75
+          },
+          "forearm-r": {
+            "angleDeg": 75
+          },
+          "pad": {
+            "angleDeg": 80
+          },
+          "page": {
+            "angleDeg": 0
+          },
+          "foot-l": {
+            "angleDeg": 9.1208
+          },
+          "foot-r": {
+            "angleDeg": 9.1208
+          }
+        },
+        "ground": "authored",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.4,
+          "emitters": {
+            "breath": 0.7
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "page-turn",
+        "title": {
+          "en": "Turning the page",
+          "de": "Seite umblättern"
+        },
+        "description": {
+          "en": "The near hand travels from the lap to the free edge of the top-bound page, lifts it over the spine and returns to the notebook while the far hand keeps holding it.",
+          "de": "Die nahe Hand wandert vom Schoß zur freien Kante der oben gebundenen Seite, hebt sie über die Bindung und kehrt zum Notizbuch zurück, während die ferne Hand es hält."
+        },
+        "durationS": 3.6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-upright",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.7,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 17.1276
+              },
+              "forearm-r": {
+                "angleDeg": 119.6347
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.2,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 22.1122
+              },
+              "forearm-r": {
+                "angleDeg": 138.9177
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "page": {
+                "angleDeg": -50
+              }
+            }
+          },
+          {
+            "t": 1.7,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 61.4268
+              },
+              "forearm-r": {
+                "angleDeg": 136.8977
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "page": {
+                "angleDeg": -110
+              }
+            }
+          },
+          {
+            "t": 2.3,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 71.8013
+              },
+              "forearm-r": {
+                "angleDeg": 97.0182
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "page": {
+                "angleDeg": -178
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 5.1075
+              },
+              "forearm-r": {
+                "angleDeg": 80.2995
+              },
+              "hand-r": {
+                "angleDeg": 54.593
+              },
+              "page": {
+                "angleDeg": -178
+              }
+            }
+          },
+          {
+            "t": 3.6,
+            "pose": "seated-upright",
+            "ease": "smooth",
+            "bones": {
+              "arm-r": {
+                "angleDeg": 5.1075
+              },
+              "forearm-r": {
+                "angleDeg": 80.2995
+              },
+              "hand-r": {
+                "angleDeg": 54.593
+              },
+              "page": {
+                "angleDeg": -178
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 3.6
+          },
+          {
+            "anchor": "thigh-support",
+            "fromS": 0,
+            "toS": 3.6
+          },
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 3.6
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 3.6
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 3.6
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 3.6
+          }
+        ],
+        "phases": [
+          {
+            "id": "reach",
+            "fromS": 0,
+            "toS": 0.7,
+            "title": {
+              "en": "Hand to the page edge",
+              "de": "Hand zur Seitenkante"
+            }
+          },
+          {
+            "id": "turn",
+            "fromS": 0.7,
+            "toS": 2.3,
+            "title": {
+              "en": "Lifting the page over",
+              "de": "Seite umlegen"
+            }
+          },
+          {
+            "id": "settle",
+            "fromS": 2.3,
+            "toS": 3.6,
+            "title": {
+              "en": "Back to reading",
+              "de": "Zurück zum Lesen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.7,
+            "kind": "motion",
+            "title": {
+              "en": "Fingers at the page edge",
+              "de": "Finger an der Seitenkante"
+            }
+          },
+          {
+            "t": 1.2,
+            "kind": "motion",
+            "title": {
+              "en": "Page passes the vertical",
+              "de": "Seite passiert die Senkrechte"
+            }
+          },
+          {
+            "t": 2.3,
+            "kind": "motion",
+            "title": {
+              "en": "Page lies over",
+              "de": "Seite liegt um"
+            }
+          },
+          {
+            "t": 1,
+            "kind": "inhale",
+            "title": {
+              "en": "Breath in",
+              "de": "Einatmen"
+            }
+          },
+          {
+            "t": 2,
+            "kind": "exhale",
+            "title": {
+              "en": "Breath out",
+              "de": "Ausatmen"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.4
+              },
+              {
+                "t": 1,
+                "v": 0.2
+              },
+              {
+                "t": 2,
+                "v": 0.5
+              },
+              {
+                "t": 3.6,
+                "v": 0.4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "stand-up",
+        "title": {
+          "en": "Standing up from the bench",
+          "de": "Von der Bank aufstehen"
+        },
+        "description": {
+          "en": "Sit-to-stand: the trunk leans forward over the feet, the pelvis leaves the seat and travels 0.4 m forward and 0.37 m up while both feet stay planted; the activity rises from 1 to about 2.2 met and falls again.",
+          "de": "Aufstehen aus dem Sitz: Der Rumpf neigt sich über die Füße, das Becken verlässt die Sitzfläche und bewegt sich 0,4 m nach vorn und 0,37 m nach oben, während beide Füße stehen bleiben; die Aktivität steigt von 1 auf etwa 2,2 met und fällt wieder."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-upright",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.8,
+            "pose": "leaning-forward",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.1,
+            "pose": "leaning-forward",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.0538
+              },
+              "hip-shift": {
+                "dx": 0.1436,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -39.7339
+              },
+              "neck": {
+                "angleDeg": -5.8535
+              },
+              "head": {
+                "angleDeg": -3.2676
+              },
+              "arm-l": {
+                "angleDeg": 32.343
+              },
+              "forearm-l": {
+                "angleDeg": 35.9131
+              },
+              "hand-l": {
+                "angleDeg": -2.7317
+              },
+              "thigh-l": {
+                "angleDeg": -10.3303
+              },
+              "shank-l": {
+                "angleDeg": -7.4522
+              },
+              "foot-l": {
+                "angleDeg": 17.7824
+              },
+              "toe-l": {
+                "angleDeg": 5.95
+              },
+              "arm-r": {
+                "angleDeg": 32.5741
+              },
+              "forearm-r": {
+                "angleDeg": 36.5505
+              },
+              "hand-r": {
+                "angleDeg": -4.3328
+              },
+              "thigh-r": {
+                "angleDeg": -10.3303
+              },
+              "shank-r": {
+                "angleDeg": -7.4522
+              },
+              "foot-r": {
+                "angleDeg": 17.7824
+              },
+              "toe-r": {
+                "angleDeg": 5.95
+              },
+              "pad": {
+                "angleDeg": 61.6496
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.2,
+            "pose": "leaning-forward",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.0759
+              },
+              "hip-shift": {
+                "dx": 0.1681,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -39.1887
+              },
+              "neck": {
+                "angleDeg": -5.8648
+              },
+              "head": {
+                "angleDeg": -3.3242
+              },
+              "arm-l": {
+                "angleDeg": 32.1987
+              },
+              "forearm-l": {
+                "angleDeg": 36.1645
+              },
+              "hand-l": {
+                "angleDeg": -2.5204
+              },
+              "thigh-l": {
+                "angleDeg": -14.2908
+              },
+              "shank-l": {
+                "angleDeg": -5.7868
+              },
+              "foot-l": {
+                "angleDeg": 20.0775
+              },
+              "toe-l": {
+                "angleDeg": 7.14
+              },
+              "arm-r": {
+                "angleDeg": 32.412
+              },
+              "forearm-r": {
+                "angleDeg": 36.7526
+              },
+              "hand-r": {
+                "angleDeg": -3.9977
+              },
+              "thigh-r": {
+                "angleDeg": -14.2908
+              },
+              "shank-r": {
+                "angleDeg": -5.7868
+              },
+              "foot-r": {
+                "angleDeg": 20.0775
+              },
+              "toe-r": {
+                "angleDeg": 7.14
+              },
+              "pad": {
+                "angleDeg": 61.4851
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.3,
+            "pose": "leaning-forward",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.0986
+              },
+              "hip-shift": {
+                "dx": 0.1937,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -38.2443
+              },
+              "neck": {
+                "angleDeg": -5.8973
+              },
+              "head": {
+                "angleDeg": -3.4868
+              },
+              "arm-l": {
+                "angleDeg": 31.726
+              },
+              "forearm-l": {
+                "angleDeg": 36.9889
+              },
+              "hand-l": {
+                "angleDeg": -1.9138
+              },
+              "thigh-l": {
+                "angleDeg": -18.5651
+              },
+              "shank-l": {
+                "angleDeg": -3.8632
+              },
+              "foot-l": {
+                "angleDeg": 22.4283
+              },
+              "toe-l": {
+                "angleDeg": 7.45
+              },
+              "arm-r": {
+                "angleDeg": 31.8879
+              },
+              "forearm-r": {
+                "angleDeg": 37.4354
+              },
+              "hand-r": {
+                "angleDeg": -3.0355
+              },
+              "thigh-r": {
+                "angleDeg": -18.5651
+              },
+              "shank-r": {
+                "angleDeg": -3.8632
+              },
+              "foot-r": {
+                "angleDeg": 22.4283
+              },
+              "toe-r": {
+                "angleDeg": 7.45
+              },
+              "pad": {
+                "angleDeg": 61.0712
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.4,
+            "pose": "leaning-forward",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.1201
+              },
+              "hip-shift": {
+                "dx": 0.2196,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -37.2448
+              },
+              "neck": {
+                "angleDeg": -5.9332
+              },
+              "head": {
+                "angleDeg": -3.6664
+              },
+              "arm-l": {
+                "angleDeg": 31.2071
+              },
+              "forearm-l": {
+                "angleDeg": 37.8938
+              },
+              "hand-l": {
+                "angleDeg": -1.2439
+              },
+              "thigh-l": {
+                "angleDeg": -22.8864
+              },
+              "shank-l": {
+                "angleDeg": -1.9144
+              },
+              "foot-l": {
+                "angleDeg": 24.8008
+              },
+              "toe-l": {
+                "angleDeg": 6.27
+              },
+              "arm-r": {
+                "angleDeg": 31.3123
+              },
+              "forearm-r": {
+                "angleDeg": 38.184
+              },
+              "hand-r": {
+                "angleDeg": -1.973
+              },
+              "thigh-r": {
+                "angleDeg": -22.8864
+              },
+              "shank-r": {
+                "angleDeg": -1.9144
+              },
+              "foot-r": {
+                "angleDeg": 24.8008
+              },
+              "toe-r": {
+                "angleDeg": 6.27
+              },
+              "pad": {
+                "angleDeg": 60.611
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.6,
+            "pose": "rising",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.7,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.1876
+              },
+              "hip-shift": {
+                "dx": 0.2882,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -32.7183
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 28.615
+              },
+              "forearm-l": {
+                "angleDeg": 42.4237
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -36.1158
+              },
+              "shank-l": {
+                "angleDeg": 7.6703
+              },
+              "foot-l": {
+                "angleDeg": 28.4455
+              },
+              "toe-l": {
+                "angleDeg": 5.54
+              },
+              "arm-r": {
+                "angleDeg": 28.615
+              },
+              "forearm-r": {
+                "angleDeg": 42.4237
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -36.1158
+              },
+              "shank-r": {
+                "angleDeg": 7.6703
+              },
+              "foot-r": {
+                "angleDeg": 28.4455
+              },
+              "toe-r": {
+                "angleDeg": 5.54
+              },
+              "pad": {
+                "angleDeg": 61.385
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.8,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.2203
+              },
+              "hip-shift": {
+                "dx": 0.3029,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -29.4074
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 26.4763
+              },
+              "forearm-l": {
+                "angleDeg": 46.1664
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -40.9569
+              },
+              "shank-l": {
+                "angleDeg": 14.6643
+              },
+              "foot-l": {
+                "angleDeg": 26.2926
+              },
+              "toe-l": {
+                "angleDeg": 15.06
+              },
+              "arm-r": {
+                "angleDeg": 26.4763
+              },
+              "forearm-r": {
+                "angleDeg": 46.1664
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -40.9569
+              },
+              "shank-r": {
+                "angleDeg": 14.6643
+              },
+              "foot-r": {
+                "angleDeg": 26.2926
+              },
+              "toe-r": {
+                "angleDeg": 15.06
+              },
+              "pad": {
+                "angleDeg": 63.5237
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 1.9,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.251
+              },
+              "hip-shift": {
+                "dx": 0.3173,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -25.9989
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 24.2667
+              },
+              "forearm-l": {
+                "angleDeg": 50.0332
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -45.8339
+              },
+              "shank-l": {
+                "angleDeg": 21.8377
+              },
+              "foot-l": {
+                "angleDeg": 23.9962
+              },
+              "toe-l": {
+                "angleDeg": 22.9
+              },
+              "arm-r": {
+                "angleDeg": 24.2667
+              },
+              "forearm-r": {
+                "angleDeg": 50.0332
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -45.8339
+              },
+              "shank-r": {
+                "angleDeg": 21.8377
+              },
+              "foot-r": {
+                "angleDeg": 23.9962
+              },
+              "toe-r": {
+                "angleDeg": 22.9
+              },
+              "pad": {
+                "angleDeg": 65.7333
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.2788
+              },
+              "hip-shift": {
+                "dx": 0.3317,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -22.5752
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 22.0465
+              },
+              "forearm-l": {
+                "angleDeg": 53.9186
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -50.7225
+              },
+              "shank-l": {
+                "angleDeg": 29.0405
+              },
+              "foot-l": {
+                "angleDeg": 21.6819
+              },
+              "toe-l": {
+                "angleDeg": 28.19
+              },
+              "arm-r": {
+                "angleDeg": 22.0465
+              },
+              "forearm-r": {
+                "angleDeg": 53.9186
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -50.7225
+              },
+              "shank-r": {
+                "angleDeg": 29.0405
+              },
+              "foot-r": {
+                "angleDeg": 21.6819
+              },
+              "toe-r": {
+                "angleDeg": 28.19
+              },
+              "pad": {
+                "angleDeg": 67.9535
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.1,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.3036
+              },
+              "hip-shift": {
+                "dx": 0.3462,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -19.1458
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 19.8225
+              },
+              "forearm-l": {
+                "angleDeg": 57.8107
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -55.6182
+              },
+              "shank-l": {
+                "angleDeg": 36.2551
+              },
+              "foot-l": {
+                "angleDeg": 19.3629
+              },
+              "toe-l": {
+                "angleDeg": 30.35
+              },
+              "arm-r": {
+                "angleDeg": 19.8225
+              },
+              "forearm-r": {
+                "angleDeg": 57.8107
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -55.6182
+              },
+              "shank-r": {
+                "angleDeg": 36.2551
+              },
+              "foot-r": {
+                "angleDeg": 19.3629
+              },
+              "toe-r": {
+                "angleDeg": 30.35
+              },
+              "pad": {
+                "angleDeg": 70.1775
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.2,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.3251
+              },
+              "hip-shift": {
+                "dx": 0.3606,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -15.7168
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 17.5987
+              },
+              "forearm-l": {
+                "angleDeg": 61.7023
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -60.5132
+              },
+              "shank-l": {
+                "angleDeg": 43.4689
+              },
+              "foot-l": {
+                "angleDeg": 17.0441
+              },
+              "toe-l": {
+                "angleDeg": 29.13
+              },
+              "arm-r": {
+                "angleDeg": 17.5987
+              },
+              "forearm-r": {
+                "angleDeg": 61.7023
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -60.5132
+              },
+              "shank-r": {
+                "angleDeg": 43.4689
+              },
+              "foot-r": {
+                "angleDeg": 17.0441
+              },
+              "toe-r": {
+                "angleDeg": 29.13
+              },
+              "pad": {
+                "angleDeg": 72.4013
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.3,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.3432
+              },
+              "hip-shift": {
+                "dx": 0.375,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -12.3042
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 15.3855
+              },
+              "forearm-l": {
+                "angleDeg": 65.5753
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -65.3848
+              },
+              "shank-l": {
+                "angleDeg": 50.6482
+              },
+              "foot-l": {
+                "angleDeg": 14.7364
+              },
+              "toe-l": {
+                "angleDeg": 24.48
+              },
+              "arm-r": {
+                "angleDeg": 15.3855
+              },
+              "forearm-r": {
+                "angleDeg": 65.5753
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -65.3848
+              },
+              "shank-r": {
+                "angleDeg": 50.6482
+              },
+              "foot-r": {
+                "angleDeg": 14.7364
+              },
+              "toe-r": {
+                "angleDeg": 24.48
+              },
+              "pad": {
+                "angleDeg": 74.6145
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.4,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.3576
+              },
+              "hip-shift": {
+                "dx": 0.3891,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -8.9579
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 13.2154
+              },
+              "forearm-l": {
+                "angleDeg": 69.3731
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -70.1617
+              },
+              "shank-l": {
+                "angleDeg": 57.688
+              },
+              "foot-l": {
+                "angleDeg": 12.4735
+              },
+              "toe-l": {
+                "angleDeg": 16.82
+              },
+              "arm-r": {
+                "angleDeg": 13.2154
+              },
+              "forearm-r": {
+                "angleDeg": 69.3731
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -70.1617
+              },
+              "shank-r": {
+                "angleDeg": 57.688
+              },
+              "foot-r": {
+                "angleDeg": 12.4735
+              },
+              "toe-r": {
+                "angleDeg": 16.82
+              },
+              "pad": {
+                "angleDeg": 76.7846
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.5,
+            "pose": "rising",
+            "ease": "smooth",
+            "bones": {
+              "hip-lift": {
+                "dx": 0,
+                "dy": 0.3679
+              },
+              "hip-shift": {
+                "dx": 0.4021,
+                "dy": 0
+              },
+              "pelvis": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -5.8644
+              },
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -4
+              },
+              "arm-l": {
+                "angleDeg": 11.2091
+              },
+              "forearm-l": {
+                "angleDeg": 72.884
+              },
+              "hand-l": {
+                "angleDeg": 0
+              },
+              "thigh-l": {
+                "angleDeg": -74.5778
+              },
+              "shank-l": {
+                "angleDeg": 64.1961
+              },
+              "foot-l": {
+                "angleDeg": 10.3816
+              },
+              "toe-l": {
+                "angleDeg": 7.17
+              },
+              "arm-r": {
+                "angleDeg": 11.2091
+              },
+              "forearm-r": {
+                "angleDeg": 72.884
+              },
+              "hand-r": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": -74.5778
+              },
+              "shank-r": {
+                "angleDeg": 64.1961
+              },
+              "foot-r": {
+                "angleDeg": 10.3816
+              },
+              "toe-r": {
+                "angleDeg": 7.17
+              },
+              "pad": {
+                "angleDeg": 78.7909
+              },
+              "page": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 2.6,
+            "pose": "standing",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "standing",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 1.3
+          },
+          {
+            "anchor": "thigh-support",
+            "fromS": 0,
+            "toS": 1.3
+          },
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "lean",
+            "fromS": 0,
+            "toS": 0.8,
+            "title": {
+              "en": "Trunk leans forward",
+              "de": "Rumpf neigt sich vor"
+            }
+          },
+          {
+            "id": "lift-off",
+            "fromS": 0.8,
+            "toS": 1.6,
+            "title": {
+              "en": "Pelvis leaves the seat",
+              "de": "Becken verlässt die Sitzfläche"
+            }
+          },
+          {
+            "id": "extend",
+            "fromS": 1.6,
+            "toS": 2.6,
+            "title": {
+              "en": "Legs extend",
+              "de": "Beine strecken sich"
+            }
+          },
+          {
+            "id": "stand",
+            "fromS": 2.6,
+            "toS": 4,
+            "title": {
+              "en": "Standing",
+              "de": "Stehen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.3,
+            "kind": "contact-off",
+            "title": {
+              "en": "Seat contact released",
+              "de": "Sitzkontakt gelöst"
+            },
+            "target": "seat"
+          },
+          {
+            "t": 1.3,
+            "kind": "contact-off",
+            "title": {
+              "en": "Thigh support released",
+              "de": "Oberschenkelauflage gelöst"
+            },
+            "target": "thigh-support"
+          },
+          {
+            "t": 0.5,
+            "kind": "inhale",
+            "title": {
+              "en": "Breath in before rising",
+              "de": "Einatmen vor dem Aufstehen"
+            }
+          },
+          {
+            "t": 1.8,
+            "kind": "exhale",
+            "title": {
+              "en": "Breath out while rising",
+              "de": "Ausatmen beim Aufrichten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 1.2,
+                "v": 2.2
+              },
+              {
+                "t": 2.8,
+                "v": 1.8
+              },
+              {
+                "t": 4,
+                "v": 1.4
+              }
+            ]
+          },
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.4
+              },
+              {
+                "t": 1.8,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 0.7
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lean-back",
+        "title": {
+          "en": "Settling back and reaching for the cup",
+          "de": "Zurücklehnen und Becher greifen"
+        },
+        "description": {
+          "en": "From upright reading she leans back against the backrest and then turns the near arm backwards to the paper cup on the seat.",
+          "de": "Aus aufrechtem Lesen lehnt sie sich an die Lehne und greift mit dem nahen Arm nach hinten zum Pappbecher auf der Sitzfläche."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "seated-upright",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "reclined-reading",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.5,
+            "pose": "reclined-reading",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.6,
+            "pose": "reaching-for-cup",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "reaching-for-cup",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "seat",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "thigh-support",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 5
+          },
+          {
+            "anchor": "backrest",
+            "fromS": 1.1,
+            "toS": 2.9
+          }
+        ],
+        "phases": [
+          {
+            "id": "recline",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "Leaning back",
+              "de": "Zurücklehnen"
+            }
+          },
+          {
+            "id": "read",
+            "fromS": 1.5,
+            "toS": 2.5,
+            "title": {
+              "en": "Reading reclined",
+              "de": "Zurückgelehnt lesen"
+            }
+          },
+          {
+            "id": "reach",
+            "fromS": 2.5,
+            "toS": 5,
+            "title": {
+              "en": "Reaching for the cup",
+              "de": "Nach dem Becher greifen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.1,
+            "kind": "contact-on",
+            "title": {
+              "en": "Back touches the backrest",
+              "de": "Rücken berührt die Lehne"
+            },
+            "target": "backrest"
+          },
+          {
+            "t": 2.9,
+            "kind": "contact-off",
+            "title": {
+              "en": "Back leaves the backrest",
+              "de": "Rücken löst sich von der Lehne"
+            },
+            "target": "backrest"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "emitter:breath",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.4
+              },
+              {
+                "t": 5,
+                "v": 0.5
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 14,
+        "meanRadiantTempC": 16,
+        "relativeHumidity": 0.6,
+        "windMS": 0.3,
+        "windDirectionDeg": 180,
+        "solarWM2": 150,
+        "pressurePa": 101325
+      },
+      "baseMet": 1,
+      "regions": [
+        {
+          "id": "face-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.09,
+          "characteristicLengthM": 0.2,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.04,
+          "metabolicShare": 0.08,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "material": "hair",
+          "model": "core-resistance",
+          "areaM2": 0.05,
+          "characteristicLengthM": 0.18,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.08,
+          "metabolicShare": 0.02,
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hand-skin",
+          "title": {
+            "en": "Bare hands",
+            "de": "Unbedeckte Hände"
+          },
+          "kind": "skin",
+          "material": "skin",
+          "model": "core-resistance",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 35,
+          "insulationM2KW": 0.05,
+          "metabolicShare": 0.05,
+          "source": "literature",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "sweater",
+          "title": {
+            "en": "Sweater with cowl",
+            "de": "Pullover mit Rollkragen"
+          },
+          "kind": "clothing",
+          "material": "knit-wool",
+          "model": "core-resistance",
+          "areaM2": 0.81,
+          "characteristicLengthM": 0.3,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.2,
+          "metabolicShare": 0.52,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "jeans",
+          "title": {
+            "en": "Jeans",
+            "de": "Jeans"
+          },
+          "kind": "clothing",
+          "material": "denim",
+          "model": "core-resistance",
+          "areaM2": 0.56,
+          "characteristicLengthM": 0.13,
+          "coreTempC": 36.8,
+          "insulationM2KW": 0.12,
+          "metabolicShare": 0.28,
+          "source": "literature",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "shoes",
+          "title": {
+            "en": "Sneakers",
+            "de": "Turnschuhe"
+          },
+          "kind": "surface",
+          "material": "canvas-sneaker",
+          "model": "core-resistance",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.1,
+          "coreTempC": 34,
+          "insulationM2KW": 0.1,
+          "metabolicShare": 0.05,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "notebook",
+          "title": {
+            "en": "Notebook",
+            "de": "Notizbuch"
+          },
+          "kind": "surface",
+          "material": "paper",
+          "model": "passive",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.2,
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "breath",
+          "kind": "breath",
+          "title": {
+            "en": "Exhaled breath",
+            "de": "Ausgeatmete Luft"
+          },
+          "anchor": "mouth",
+          "directionDeg": -20,
+          "carries": "vapour",
+          "temperatureC": 34,
+          "velocityMS": 1,
+          "diameterM": 0.018,
+          "vapourKgPerKg": 0.0345,
+          "periodS": 5,
+          "dutyFrom": 0.4,
+          "dutyTo": 1,
+          "source": "literature",
+          "reference": "gupta-2010"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Body regions sum to the DuBois area of 1.69 m² (61 kg, 168 cm); contact with the seat and backrest is modelled as reduced exposed fractions of the jeans and the sweater.",
+          "de": "Die Körperregionen ergeben die DuBois-Fläche von 1,69 m² (61 kg, 168 cm); Kontakt mit Sitz und Lehne wird durch verminderte freie Anteile von Jeans und Pullover abgebildet."
+        },
+        {
+          "en": "Seated quiet reading is 1.0 met (ISO 8996); breathing at 12 per minute with 60 % exhalation.",
+          "de": "Ruhiges Sitzen und Lesen entspricht 1,0 met (ISO 8996); 12 Atemzüge pro Minute mit 60 % Ausatmung."
+        },
+        {
+          "en": "Sun-exposed autumn day with 150 W/m² of diffuse and direct radiation on the vertical surface.",
+          "de": "Sonniger Herbsttag mit 150 W/m² Strahlung auf der vertikalen Fläche."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Seat, thigh support and backrest are unilateral contacts; they release when they would have to pull. The bench is rigid and fixed.",
+          "de": "Sitz, Oberschenkelauflage und Lehne sind einseitige Kontakte; sie lösen sich, wenn sie ziehen müssten. Die Bank ist starr und fest."
+        },
+        {
+          "en": "Segments are point masses at the de Leva centres; the notebook is a 0.6 kg bone mass on the far hand.",
+          "de": "Segmente sind Punktmassen in den Schwerpunkten nach de Leva; das Notizbuch ist eine Knochenmasse von 0,6 kg an der fernen Hand."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "seated-upright",
+      "defaultClip": "page-turn",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

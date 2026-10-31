@@ -1,0 +1,5 @@
+import fs from "node:fs/promises";
+import {readRustSourceClosureV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const base="✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base",root=process.cwd(),entry=base+"/📦️packages/🦀️rust/🦀️.rs",cfg=["unix","target_os=linux","target_arch=x86_64","target_pointer_width=64","debug_assertions"];
+const inputs=await readRustSourceClosureV1([entry],root,cfg,async path=>{try{return await fs.readFile(path)}catch(error){if(error.code==="ENOENT")return null;throw error;}},{manifestDirectory:root+"/"+base+"/📦️packages/🦀️rust",generated:()=>{}});
+const result={entry,cfg,files:inputs.length,bytes:inputs.reduce((sum,input)=>sum+input.bytes,0),activeLines:inputs.reduce((sum,input)=>sum+input.activeLines,0),inputs};await fs.writeFile(new URL("🗑️generated/native-ifc-source-census.json",import.meta.url),JSON.stringify(result,null,2)+"\n");console.log(JSON.stringify({...result,inputs:inputs.map(input=>({path:input.path.slice(base.length+1),bytes:input.bytes,activeLines:input.activeLines,kind:input.kind}))}));

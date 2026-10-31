@@ -15,14 +15,25 @@ import { DESKTOP_CELLS_OF_THE_REFERENCE, TABLET_CELLS_OF_THE_REFERENCE, cards } 
 
 /** 🔷 Registers the replays language agnostic hierarchy tests of the 🏠️ home overview suite. */
 export function registerReplaysLanguageAgnosticHierarchyTests(): void {
-  it.each([375, 900])("brings each guided introduction card into the swipe viewport at %s px", (width) => {
-    atViewport(width, 300);
+  it("brings each guided introduction card into the swipe viewport at 375 px", () => {
+    atViewport(375, 300);
     const props = { session: stubSession() as unknown as CourseSession, state: STATE, text: courseText("en"), locale: "en" as const, preferences: PREFERENCES, onPreferences: () => undefined };
     const { rerender } = render(<HomeScreen {...props} introductionPage="board" />);
     expect(document.querySelector('[data-grid-active] > [data-layered-overview]')?.getAttribute("data-layered-resting")).toBe("board");
     rerender(<HomeScreen {...props} introductionPage="prefs" />);
     expect(document.querySelector('[data-grid-active] > [data-layered-overview]')?.getAttribute("data-layered-resting")).toBe("prefs");
     for (const page of PAGES) expect(document.querySelector(`[data-element-alias="course.home.${page}"]`)).not.toBeNull();
+  });
+  it("keeps the card grid at 900 px when the window is short", () => {
+    atViewport(900, 300);
+    const props = { session: stubSession() as unknown as CourseSession, state: STATE, text: courseText("en"), locale: "en" as const, preferences: PREFERENCES, onPreferences: () => undefined };
+    const { rerender } = render(<HomeScreen {...props} introductionPage="board" />);
+    const overview = document.querySelector("[data-grid-active] > [data-layered-overview]")!;
+    expect(overview.getAttribute("data-mode")).toBe("strip");
+    expect(overview.querySelector(":scope > [data-layered-overlay].course-home-grid")).not.toBeNull();
+    rerender(<HomeScreen {...props} introductionPage="prefs" />);
+    expect(overview.getAttribute("data-mode")).toBe("strip");
+    for (const page of PAGES) expect(document.querySelector(`[data-element-alias="course.home.${page}"].course-home-cell`)).not.toBeNull();
   });
   for (const vector of followedLayouts.layouts) it(`mirrors the peer's ${vector.grid} ${vector.mode} layout and settled ${vector.swipe} page from a desktop observer`, () => {
     atViewport(1440, 1200);

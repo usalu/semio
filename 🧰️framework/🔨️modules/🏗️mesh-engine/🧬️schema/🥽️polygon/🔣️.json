@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:mesh:polygon",
   "title": "Indexed Polygon Mesh",
   "type": "object",
@@ -70,7 +70,24 @@
                     "type": "array",
                     "minItems": 4,
                     "maxItems": 4,
-                    "prefixItems": [
+                    "not": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": [
+                        {
+                          "const": 0
+                        },
+                        {
+                          "const": 0
+                        },
+                        {
+                          "const": 0
+                        },
+                        {}
+                      ]
+                    },
+                    "items": [
                       {
                         "type": "number",
                         "minimum": -3.4028234663852886e+38,
@@ -92,24 +109,7 @@
                           1
                         ]
                       }
-                    ],
-                    "not": {
-                      "prefixItems": [
-                        {
-                          "const": 0
-                        },
-                        {
-                          "const": 0
-                        },
-                        {
-                          "const": 0
-                        },
-                        {}
-                      ],
-                      "type": "array",
-                      "minItems": 4,
-                      "maxItems": 4
-                    }
+                    ]
                   },
                   "type": "array"
                 }

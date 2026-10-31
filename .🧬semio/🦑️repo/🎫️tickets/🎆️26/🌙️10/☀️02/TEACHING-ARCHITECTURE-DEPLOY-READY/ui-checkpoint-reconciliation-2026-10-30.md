@@ -1,0 +1,7 @@
+# UI Checkpoint Reconciliation
+
+Bounded read-only SHA256 comparison at 2026-10-29T23:03:49.396Z compared all 14 declared rows across feedback-identity-checkpoint.json, browser-pet-access-checkpoint.json and records-content-checkpoint.json with actual current files. All 14 match; no drift found. Exact per-path expected/current hashes are retained in generated/ui-checkpoint-reconciliation.json. The feedback manifest uses results, the Records manifest files and pet manifest an array; all three shapes were explicitly included.
+
+The manifests cover Results DOM IDs and learner exact-ID helper (the feedback manifest does not list its neutral fixture/test files); AccessGate/pet journeys/geometry and owning unit; Records hook/CSS/semantic include/neutral fixture and test. Exact matches preserve the Source checkpoint associated with focused GREEN93164 (43tests/3files), subject to the actual runner evidence already retained. This hash audit is not execution, does not add pet browser coverage to that focused result, and does not establish the full43-file React suite or19-file teaching suite.
+
+The next full BOTH must admit and build these current files under its own Source/receipt authority, execute all declared topologies/projects/specs and validate its actual output budget. No restoration/freeze/blocking of other owners, Source mutation, app probe, browser or test job occurred. Concurrent edits after this timestamp require new evidence rather than rewriting this snapshot.

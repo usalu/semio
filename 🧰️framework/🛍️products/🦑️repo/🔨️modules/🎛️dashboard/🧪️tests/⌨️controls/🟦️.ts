@@ -5,7 +5,7 @@ import "../../🖥️terminal/📣️feedback/🧪️tests/🟦️.ts";
 import "../../🖥️terminal/⚙️settings/⌨️keymap/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { readFileSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 

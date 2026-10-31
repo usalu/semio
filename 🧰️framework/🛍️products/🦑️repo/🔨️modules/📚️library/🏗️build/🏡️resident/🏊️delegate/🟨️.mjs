@@ -3,6 +3,7 @@ import {spawn} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mkdirSync,renameSync,writeFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
+import {preparePrivateDirectoryV1} from "../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 
 /** 📜 Source of the preload that warms the module cache, announces readiness on fd 3, waits for one request line, and then lets the main script run as if it had been started with that command. */
 export const WARM_PRELOAD_SOURCE=`import {readSync,writeSync} from "node:fs";
@@ -21,8 +22,9 @@ writeSync(3,"started\\n");
 
 /** 📝 Writes the preload under an ASCII path (bun cannot preload a path with emoji) and returns it; content-addressed so concurrent services agree. */
 export function writeWarmPreloadV1(directory){
+ preparePrivateDirectoryV1(directory);
  const name="warm-"+createHash("sha256").update(WARM_PRELOAD_SOURCE).digest("hex").slice(0,12)+".mjs",path=join(directory,name);
- if(!existsSync(path)){mkdirSync(directory,{recursive:true});const temporary=path+"."+process.pid+".tmp";writeFileSync(temporary,WARM_PRELOAD_SOURCE);renameSync(temporary,path);}
+ if(!existsSync(path)){const temporary=path+"."+process.pid+".tmp";writeFileSync(temporary,WARM_PRELOAD_SOURCE);renameSync(temporary,path);}
  return path;
 }
 

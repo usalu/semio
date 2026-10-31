@@ -1,0 +1,1628 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [],
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "descendants-and-unrelated",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "10",
+          "kernel": "5",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 300,
+          "parent": 100,
+          "user": "20",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 400,
+          "parent": 200,
+          "user": "0",
+          "kernel": "5",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 500,
+          "parent": 1,
+          "user": "99",
+          "kernel": "99",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [
+        200,
+        300,
+        400
+      ],
+      "clock": 100,
+      "milliseconds": 400
+    },
+    {
+      "name": "observer-excluded-with-descendants-retained",
+      "pid": 100,
+      "observer": 200,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "10",
+          "kernel": "5",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 300,
+          "parent": 100,
+          "user": "20",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 400,
+          "parent": 200,
+          "user": "0",
+          "kernel": "5",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [
+        300,
+        400
+      ],
+      "clock": 100,
+      "milliseconds": 250
+    },
+    {
+      "name": "vanished-unrelated-row",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 500,
+          "error": "ENOENT"
+        }
+      ],
+      "expected": [],
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "unreadable-table-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 500,
+          "error": "EACCES"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "malformed-row-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 500,
+          "raw": "malformed"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "missing-root-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 200,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "reused-root-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": null,
+      "reused": true,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "cycle-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 200,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "invalid-pid-is-unknown",
+      "pid": 0,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "clock-unavailable-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "10",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [
+        200
+      ],
+      "clock": null,
+      "milliseconds": null
+    },
+    {
+      "name": "ticks-converted-with-real-frequency",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "5",
+          "kernel": "3",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [
+        200
+      ],
+      "clock": 250,
+      "milliseconds": 32
+    },
+    {
+      "name": "cpu-overflow-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "18446744073709551615",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker (x) )"
+        }
+      ],
+      "expected": [
+        200
+      ],
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "depth-64",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 101,
+          "parent": 100,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 102,
+          "parent": 101,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 103,
+          "parent": 102,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 104,
+          "parent": 103,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 105,
+          "parent": 104,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 106,
+          "parent": 105,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 107,
+          "parent": 106,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 108,
+          "parent": 107,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 109,
+          "parent": 108,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 110,
+          "parent": 109,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 111,
+          "parent": 110,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 112,
+          "parent": 111,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 113,
+          "parent": 112,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 114,
+          "parent": 113,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 115,
+          "parent": 114,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 116,
+          "parent": 115,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 117,
+          "parent": 116,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 118,
+          "parent": 117,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 119,
+          "parent": 118,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 120,
+          "parent": 119,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 121,
+          "parent": 120,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 122,
+          "parent": 121,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 123,
+          "parent": 122,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 124,
+          "parent": 123,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 125,
+          "parent": 124,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 126,
+          "parent": 125,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 127,
+          "parent": 126,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 128,
+          "parent": 127,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 129,
+          "parent": 128,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 130,
+          "parent": 129,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 131,
+          "parent": 130,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 132,
+          "parent": 131,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 133,
+          "parent": 132,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 134,
+          "parent": 133,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 135,
+          "parent": 134,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 136,
+          "parent": 135,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 137,
+          "parent": 136,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 138,
+          "parent": 137,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 139,
+          "parent": 138,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 140,
+          "parent": 139,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 141,
+          "parent": 140,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 142,
+          "parent": 141,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 143,
+          "parent": 142,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 144,
+          "parent": 143,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 145,
+          "parent": 144,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 146,
+          "parent": 145,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 147,
+          "parent": 146,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 148,
+          "parent": 147,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 149,
+          "parent": 148,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 150,
+          "parent": 149,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 151,
+          "parent": 150,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 152,
+          "parent": 151,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 153,
+          "parent": 152,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 154,
+          "parent": 153,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 155,
+          "parent": 154,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 156,
+          "parent": 155,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 157,
+          "parent": 156,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 158,
+          "parent": 157,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 159,
+          "parent": 158,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 160,
+          "parent": 159,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 161,
+          "parent": 160,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 162,
+          "parent": 161,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 163,
+          "parent": 162,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 164,
+          "parent": 163,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        }
+      ],
+      "expected": [
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164
+      ],
+      "clock": 100,
+      "milliseconds": 0
+    },
+    {
+      "name": "depth-65",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 101,
+          "parent": 100,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 102,
+          "parent": 101,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 103,
+          "parent": 102,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 104,
+          "parent": 103,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 105,
+          "parent": 104,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 106,
+          "parent": 105,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 107,
+          "parent": 106,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 108,
+          "parent": 107,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 109,
+          "parent": 108,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 110,
+          "parent": 109,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 111,
+          "parent": 110,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 112,
+          "parent": 111,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 113,
+          "parent": 112,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 114,
+          "parent": 113,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 115,
+          "parent": 114,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 116,
+          "parent": 115,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 117,
+          "parent": 116,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 118,
+          "parent": 117,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 119,
+          "parent": 118,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 120,
+          "parent": 119,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 121,
+          "parent": 120,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 122,
+          "parent": 121,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 123,
+          "parent": 122,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 124,
+          "parent": 123,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 125,
+          "parent": 124,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 126,
+          "parent": 125,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 127,
+          "parent": 126,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 128,
+          "parent": 127,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 129,
+          "parent": 128,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 130,
+          "parent": 129,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 131,
+          "parent": 130,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 132,
+          "parent": 131,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 133,
+          "parent": 132,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 134,
+          "parent": 133,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 135,
+          "parent": 134,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 136,
+          "parent": 135,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 137,
+          "parent": 136,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 138,
+          "parent": 137,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 139,
+          "parent": 138,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 140,
+          "parent": 139,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 141,
+          "parent": 140,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 142,
+          "parent": 141,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 143,
+          "parent": 142,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 144,
+          "parent": 143,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 145,
+          "parent": 144,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 146,
+          "parent": 145,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 147,
+          "parent": 146,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 148,
+          "parent": 147,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 149,
+          "parent": 148,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 150,
+          "parent": 149,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 151,
+          "parent": 150,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 152,
+          "parent": 151,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 153,
+          "parent": 152,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 154,
+          "parent": 153,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 155,
+          "parent": 154,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 156,
+          "parent": 155,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 157,
+          "parent": 156,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 158,
+          "parent": 157,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 159,
+          "parent": 158,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 160,
+          "parent": 159,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 161,
+          "parent": 160,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 162,
+          "parent": 161,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 163,
+          "parent": 162,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 164,
+          "parent": 163,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        },
+        {
+          "pid": 165,
+          "parent": 164,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "worker"
+        }
+      ],
+      "expected": null,
+      "clock": 100,
+      "milliseconds": null
+    },
+    {
+      "name": "reused-descendant-cpu-is-unknown",
+      "pid": 100,
+      "observer": 100,
+      "rows": [
+        {
+          "pid": 100,
+          "parent": 1,
+          "user": "0",
+          "kernel": "0",
+          "start": "100",
+          "name": "root"
+        },
+        {
+          "pid": 200,
+          "parent": 100,
+          "user": "10",
+          "kernel": "0",
+          "start": "100",
+          "name": "child"
+        }
+      ],
+      "expected": [
+        200
+      ],
+      "clock": 100,
+      "milliseconds": null,
+      "cpuReused": true
+    }
+  ],
+  "auxv": [
+    {
+      "name": "little64",
+      "word": 8,
+      "little": true,
+      "entries": [
+        [
+          6,
+          4096
+        ],
+        [
+          17,
+          100
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": 100
+    },
+    {
+      "name": "big64",
+      "word": 8,
+      "little": false,
+      "entries": [
+        [
+          17,
+          250
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": 250
+    },
+    {
+      "name": "little32",
+      "word": 4,
+      "little": true,
+      "entries": [
+        [
+          17,
+          100
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": 100
+    },
+    {
+      "name": "missing",
+      "word": 8,
+      "little": true,
+      "entries": [
+        [
+          6,
+          4096
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": null
+    },
+    {
+      "name": "zero-rate",
+      "word": 8,
+      "little": true,
+      "entries": [
+        [
+          17,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": null
+    },
+    {
+      "name": "conflicting",
+      "word": 8,
+      "little": true,
+      "entries": [
+        [
+          17,
+          100
+        ],
+        [
+          17,
+          250
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "expected": null
+    }
+  ]
+}

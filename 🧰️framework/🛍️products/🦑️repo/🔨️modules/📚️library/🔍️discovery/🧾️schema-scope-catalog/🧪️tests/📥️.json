@@ -1,0 +1,154 @@
+{
+  "cases": [
+    {
+      "id": "surface-✏️editor-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-✏️editor-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️config",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-✏️editor-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "surface-✏️editor-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-✏️editor-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/👥️presence",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-✏️editor-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/👥️presence",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "surface-✏️editor-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-✏️editor-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🫧️transient",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-✏️editor-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "surface-👁️viewer-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-👁️viewer-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🎚️config",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-👁️viewer-🎚️config",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🪟️windows/✒️main/🎚️config",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "surface-👁️viewer-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-👁️viewer-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/👥️presence",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-👁️viewer-👥️presence",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🪟️windows/✒️main/👥️presence",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "surface-👁️viewer-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient",
+      "level": "surface-state-lane"
+    },
+    {
+      "id": "mode-👁️viewer-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🫧️transient",
+      "level": "mode-state-lane"
+    },
+    {
+      "id": "window-👁️viewer-🫧️transient",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient",
+      "level": "window-state-lane"
+    },
+    {
+      "id": "mode-container",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes",
+      "level": null
+    },
+    {
+      "id": "window-container",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/🪟️windows",
+      "level": null
+    },
+    {
+      "id": "undeclared-direct-window",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🪟️windows/✒️main/🎚️config",
+      "level": null
+    },
+    {
+      "id": "unrelated-mode",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🎭️modes/✏️edit/🎚️config",
+      "level": null
+    },
+    {
+      "id": "unrelated-window",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine/🪟️windows/✒️main/🎚️config",
+      "level": null
+    },
+    {
+      "id": "near-lane",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️configuration",
+      "level": null
+    },
+    {
+      "id": "nested-mode",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/✏️edit/internal/🎚️config",
+      "level": null
+    },
+    {
+      "id": "fixture",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/case/👁️viewer/🎚️config",
+      "level": null
+    },
+    {
+      "id": "example",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️examples/case/👁️viewer/🎚️config",
+      "level": null
+    },
+    {
+      "id": "package",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/📦️packages/🟦️typescript/👁️viewer/🎚️config",
+      "level": null
+    },
+    {
+      "id": "target",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🎯️targets/🌐️web/👁️viewer/🎚️config",
+      "level": null
+    },
+    {
+      "id": "element",
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧱️elements/🌐️view/👁️viewer/🎚️config",
+      "level": null
+    }
+  ]
+}

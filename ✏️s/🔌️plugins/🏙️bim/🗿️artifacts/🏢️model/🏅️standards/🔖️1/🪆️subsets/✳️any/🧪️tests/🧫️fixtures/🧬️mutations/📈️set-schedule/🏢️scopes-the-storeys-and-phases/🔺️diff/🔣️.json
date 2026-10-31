@@ -2,14 +2,16 @@
   "schedules": {
     "sch-walls": {
       "entry": "Patched",
-      "phases": [
-        "New",
-        "Existing"
-      ],
-      "storeys": [
-        "st-ground",
-        "st-first"
-      ]
+      "value": {
+        "phases": [
+          "New",
+          "Existing"
+        ],
+        "storeys": [
+          "st-ground",
+          "st-first"
+        ]
+      }
     }
   }
 }

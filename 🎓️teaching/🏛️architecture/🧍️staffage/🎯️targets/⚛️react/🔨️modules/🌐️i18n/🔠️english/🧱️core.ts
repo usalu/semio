@@ -61,6 +61,7 @@ export const CORE_EN = {
   "sort.ascending": "Ascending",
   "sort.descending": "Descending",
   "analytic.thermal": "Thermal model",
+  "analytic.transport": "Air transport",
   "analytic.structural": "Structural model",
   "completion.planned": "Planned",
   "completion.authored": "Authored",

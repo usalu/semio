@@ -1,5 +1,5 @@
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {parse,ParseError} from "jsonc-parser";
 import contract from "../🧬️schema/🔣️.json";
 import corpus from "../🧪️tests/🧫️fixtures/🔣️.json";

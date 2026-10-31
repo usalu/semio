@@ -1,0 +1,31 @@
+import{mkdirSync,writeFileSync,readFileSync,lstatSync}from"node:fs";
+import{join}from"node:path";
+import{createHash}from"node:crypto";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{acquireResourceLease,acquireQueuedResourceLease}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{withRepositoryRuntimeEntriesV1}from"../../🟦️.ts";
+import{openNativePlatformStorageV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import{withNativeStorageSelectionV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
+import{observeExistingNativeStorageStateV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/👁️existing/🟦️.ts";
+import{nativeStorageUsedBytesV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
+import fixture from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/👁️existing/🧪️tests/🔣️.json"with{type:"json"};
+const wire=fixture.events.map(event=>JSON.stringify(event)).join("\n")+"\n";
+if(import.meta.main)await receiveScriptProcessInvocation(process.env,async original=>{
+ const control=createIssuedResourceControlV1(original,"test:existing-reader-physical",90000),area=process.argv[2]!,mode=process.argv[3]??"positive";
+ if(mode==="writer"){const directory=process.argv[4]!,resource=process.argv[5]!,expectation=process.argv[6]!,lease=await acquireResourceLease({directory,resource,mode:"exclusive",control,signal:control.signal,timeoutMs:0}).catch(error=>{if(expectation==="blocked"&&error instanceof Error&&error.message==="Resource lease timed out: "+resource)return undefined;throw error;});if(lease){try{if(expectation!=="free")throw Error("Shared journal reader failed to exclude a real writer");console.log(JSON.stringify({acquired:true}));}finally{lease.release();}}else console.log(JSON.stringify({refused:true}));return;}
+ if(!["positive","missing","partial","foreign"].includes(mode))throw Error("Closed existing-reader fixture mode required");
+ await withRepositoryRuntimeEntriesV1(process.cwd(),original,control,()=>withNativeStorageSelectionV1({backend:"directory-partition"},async()=>{
+  const base=join(area,mode);mkdirSync(base,{recursive:true});const leaseDirectory=join(base,"l"),image=await openNativePlatformStorageV1({directory:join(base,"i"),leaseDirectory,filesystemBytes:fixture.filesystemBytes,maximumPhysicalBytes:fixture.maximumPhysicalBytes,control}),policy={version:1 as const,root:image.root,leaseDirectory,capacityBytes:fixture.maximumPhysicalBytes,maximumWorkspaceBytes:fixture.filesystemBytes,maximumArtifactBytes:fixture.filesystemBytes};
+  try{const backing=await image.port.observe(policy,control);if(!backing)throw Error("Actual registered Native backing required");const resource="native-storage:"+backing.identity,journal=join(image.root,"storage-events.jsonl");
+   if(mode!=="missing"){const writer=await acquireQueuedResourceLease({directory:leaseDirectory,resource,mode:"exclusive",control,signal:control.signal,owner:"existing-reader-fixture"});try{writeFileSync(journal,mode==="partial"?wire.slice(0,-1):wire);}finally{writer.release();}}
+   if(mode!=="positive"){const messages={missing:"Existing initialized Native journal required",partial:"Complete existing Native journal required",foreign:"Exact existing Native observation policy required"};try{await observeExistingNativeStorageStateV1({image,policy:mode==="foreign"?{...policy,root:join(image.root,"foreign")}:policy,control});}catch(error){if(!(error instanceof Error)||!error.message.includes(messages[mode as keyof typeof messages]))throw error;console.log(JSON.stringify({version:1,mode,refused:true}));throw error;}throw Error("Actual invalid existing journal was accepted");}
+   const before=readFileSync(journal),stamp=lstatSync(journal,{bigint:true});let unlock!:()=>void,entered!:()=>void,rejectReady!:(error:unknown)=>void;const gate=new Promise<void>(done=>{unlock=done;}),ready=new Promise<void>((accept,reject)=>{entered=accept;rejectReady=reject;});let holding=false;
+   const pending=observeExistingNativeStorageStateV1({image,policy,control,onProgress:async progress=>{if(progress.phase==="read"){holding=true;entered();await gate;}}});void pending.catch(rejectReady);
+   const writer=async(expectation:"blocked"|"free")=>{const result=await captureOwnedCommandResultV1(process.execPath,[process.argv[1]!,area,"writer",leaseDirectory,resource,expectation],process.cwd(),{control,env:scriptResourceProcessEnvironmentV1(control,{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}),output:{maximumBytes:65536,maximumLines:256}});if(result.status!==0||result.signal!==null)throw Error("Actual journal writer fixture failed: "+result.stderr);return JSON.parse(result.stdout.trim().split("\n").at(-1)!);};
+   let result:Awaited<typeof pending>,readerShared=false,writerExcluded=false;try{await ready;const second=await observeExistingNativeStorageStateV1({image,policy,control});readerShared=holding&&second.journal.sha256===createHash("sha256").update(before).digest("hex");const blocked=await writer("blocked");writerExcluded=blocked.refused===true;}finally{unlock();result=await pending;holding=false;}
+   const free=await writer("free");writerExcluded&&=free.acquired===true;const after=lstatSync(journal,{bigint:true}),unchanged=readFileSync(journal).equals(before)&&[after.ino,after.size,after.mtimeNs].every((value,index)=>value===[stamp.ino,stamp.size,stamp.mtimeNs][index]);if(!readerShared||!writerExcluded||!unchanged||result!.journal.sha256!==createHash("sha256").update(before).digest("hex"))throw Error("Actual shared reader physical contract failed");
+   console.log(JSON.stringify({version:1,readerShared,writerExcluded,unchanged,usedBytes:nativeStorageUsedBytesV1(result!.state),snapshot:result!}));
+  }finally{await image.close();}
+ }));
+});

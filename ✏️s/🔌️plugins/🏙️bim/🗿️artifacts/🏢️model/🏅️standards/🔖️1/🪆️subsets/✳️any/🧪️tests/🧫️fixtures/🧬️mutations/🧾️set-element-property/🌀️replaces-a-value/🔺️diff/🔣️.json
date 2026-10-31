@@ -1,16 +1,18 @@
 {
   "properties": {
     "w-south": {
-      "assigned": {
-        "Pset_WallCommon": {
-          "FireRating": {
-            "Text": {
-              "value": "F120"
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "Pset_WallCommon": {
+            "FireRating": {
+              "Text": {
+                "value": "F120"
+              }
             }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

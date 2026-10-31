@@ -1,3 +1,5 @@
+import {profilePhaseV1,repoProfileV1} from "../../../🏗️build/⏱️profile/🟨️.mjs";
+import {observeCargoPlanningPortV1} from "./⏱️observation/🟦️.ts";
 import{nativeArtifactCargoConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../📋️native-orchestration/📥️invocation/🟦️.ts";
@@ -14,9 +16,9 @@ import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.
 import { publishedCargoArtifactDirectoryV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { actualCargoCompilerPlanningPortV1, withCargoArtifactPlanV1, type CargoArtifactPlanV1, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {recordStoreContentV1} from "../../../🏗️build/🧾️store-receipt/🟨️.mjs";
-import {withRepositoryCompilerStoreLaneV1,withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {withRepositoryCompilerStoreProductV1,withRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {focusFromCargoArgumentsV1} from "../../🦀️cargo/🗃️unit-cache/🚪️launch/🟦️.ts";
 import {runtimeParseTomlV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -49,14 +51,21 @@ export function cargoLaneCratesV1(args: readonly string[], manifest: string, roo
   return [name ?? relative(root, manifest).split(sep).join("/")];
 }
 /** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
-export async function buildRepositoryCargoArtifacts(manifest: string, args: string[], root: string, options: Omit<CargoArtifactBuildOptionsV1,"storage"|"sourceBoundary"|"maximumObservationBytes"|"withCargoInputs">&Readonly<{invocation:ScriptInvocation;producer:"artifact"|"descriptor-emitter";network:CargoDependencyNetworkV1}>): Promise<void> {
+export async function withRepositoryCargoArtifactPlanV1<T>(manifest: string, args: string[], root: string, options: Omit<CargoArtifactBuildOptionsV1,"storage"|"sourceBoundary"|"maximumObservationBytes"|"withCargoInputs">&Readonly<{invocation:ScriptInvocation;producer:"artifact"|"descriptor-emitter";network:CargoDependencyNetworkV1}>, body:(plan:CargoArtifactPlanV1,control:ResourceLeaseControl)=>Promise<T>): Promise<T> {
   args=[...args];options=Object.freeze({...options,...(options.environment?{environment:Object.freeze({...options.environment})}:{})});requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authority=readNativeCallerAuthorityV1(options.invocation.capabilities);if(resolve(root)!==authority.repositoryRoot||options.environment?.SEMIO_BUILD_MODE!==undefined&&options.environment.SEMIO_BUILD_MODE!==authority.original.buildMode)throw Error("Actual Cargo producer workspace and mode required");const consumption=nativeArtifactCargoConsumptionV1(options.producer,options.command??"build"),selectedEnvironment={...(options.environment??process.env),SEMIO_BUILD_MODE:authority.original.buildMode};const policy = repositoryCargoArtifactBuildPolicyV1(root, root, selectedEnvironment), control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs), path = resolve(root, manifest);
   const environment = selectedEnvironment;
-  await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,async (store,control)=>{
+  return profilePhaseV1("cargo.store.scope",()=>withRepositoryCompilerStoreV1(root,policy.mode,control,environment,async (store,control)=>profilePhaseV1("cargo.store.body",async()=>{
+    let produced=false;
     const storage={...repositoryCargoPreparationStorageV1(root),directory:requireNativeStoragePathV1(store.root,join(store.buildDirectory,"preparation"))},preparedEnvironment={...store.environment,CARGO_NET_OFFLINE:String(options.network.offline)},request=cargoWorkspacePreparationInvocationV1(storage,root,[options.command??"build","--manifest-path",path,...args],root,preparedEnvironment);
-    if(request&&!cargoPreparationInvocationCurrentV1(storage,root,request)){await store.storage.recheck();const output=await captureOwnedCommandV1(request.command,[...request.args],request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}});if(output)process.stderr.write(output);await store.storage.recheck();}
-    const compile=(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>{const withCargoInputs=repositoryCargoCompilerInputsV1({invocation:options.invocation,consumption,workspace:root,network:options.network,control,storage:view.storage});return buildCargoArtifacts(path,args,{...policy,buildDirectory:view.buildDirectory,captureDirectory:view.captureDirectory},{...options,withCargoInputs,control,maximumObservationBytes:Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,authority.transport.maximumBytes),storage:view.storage,sourceBoundary:view.sourceBoundary,environment:{...view.environment,CARGO_NET_OFFLINE:String(options.network.offline)}});};
-    await(options.observationOutput?compile(store,control):withRepositoryCompilerStoreLaneV1(store,control,{crates:cargoLaneCratesV1(args,path,root)},compile));
-    if(!options.observationOutput)await recordStoreContentV1({workspaceRoot:root,paths:[options.output===undefined?publishedCargoArtifactDirectoryV1(store.storage.backing.root,path,policy.mode):resolve(dirname(path),options.output)]});
-  });
+    if(request&&!cargoPreparationInvocationCurrentV1(storage,root,request)){await store.storage.recheck();const output=await profilePhaseV1("cargo.prepare.workspace",()=>captureOwnedCommandV1(request.command,[...request.args],request.cwd,{control,env:request.environment,output:{maximumBytes:16777216,maximumLines:65536}}));if(output)process.stderr.write(output);await store.storage.recheck();}
+    const compile=async(view:RepositoryCompilerStoreV1,control:ResourceLeaseControl)=>{const withCargoInputs=repositoryCargoCompilerInputsV1({invocation:options.invocation,consumption,workspace:root,network:options.network,control,storage:view.storage});const observed=repoProfileV1().enabled?observeCargoPlanningPortV1(options.planningPort??actualCargoCompilerPlanningPortV1()):undefined;try{return await profilePhaseV1("cargo.plan.scope",()=>withCargoArtifactPlanV1(path,args,{...policy,buildDirectory:view.buildDirectory,captureDirectory:view.captureDirectory},{...options,...(observed?{planningPort:observed.port}:{}),withCargoInputs,control,maximumObservationBytes:Math.min(CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,authority.transport.maximumBytes),storage:view.storage,sourceBoundary:view.sourceBoundary,environment:{...view.environment,CARGO_NET_OFFLINE:String(options.network.offline)}},(plan,actual)=>body(Object.freeze({...plan,async produce(){await plan.produce();produced=true;}}),actual)));}finally{await observed?.finish();}};
+    const result=await(options.observationOutput?compile(store,control):withRepositoryCompilerStoreProductV1(store,control,{manifest:path,command:options.command??"build",producer:options.producer,arguments:args,crates:cargoLaneCratesV1(args,path,root)},compile));
+    if(produced&&!options.observationOutput)await recordStoreContentV1({workspaceRoot:root,environment:selectedEnvironment,paths:[options.output===undefined?publishedCargoArtifactDirectoryV1(store.storage.backing.root,path,policy.mode):resolve(dirname(path),options.output)]});
+    return result;
+  })));
+}
+
+/** 🏭️ Uses the same owned plan and publication path as planned native consumers. */
+export async function buildRepositoryCargoArtifacts(manifest: string, args: string[], root: string, options: Omit<CargoArtifactBuildOptionsV1,"storage"|"sourceBoundary"|"maximumObservationBytes"|"withCargoInputs">&Readonly<{invocation:ScriptInvocation;producer:"artifact"|"descriptor-emitter";network:CargoDependencyNetworkV1}>): Promise<void> {
+  return withRepositoryCargoArtifactPlanV1(manifest,args,root,options,plan=>plan.produce());
 }

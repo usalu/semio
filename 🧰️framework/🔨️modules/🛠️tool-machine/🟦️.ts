@@ -816,7 +816,7 @@ export class TypingHost<M> implements Host<TypingSpec<M>> {
 }
 
 /** 💬️ One window's open typing run between dispatches (window transient, never history). */
-export type TypingState<M> = { readonly states: readonly string[]; readonly tool: string; readonly actor: ToolActor; readonly buffer: string; readonly deadlineMs: number; readonly transaction: TransactionRef; readonly entries: ReadonlyArray<readonly [string, M]> };
+export type TypingState<M> = { readonly states: readonly string[]; readonly tool: string; readonly actor: ToolActor; readonly buffer: string; readonly deadlineMs: number; readonly transaction: TransactionRef; readonly net: readonly M[] };
 
 /** ✒️ One typing run (twin of Rust `Typing<M>`); every input runs on its own clock, unique per author and tool. */
 export class Typing<M> {
@@ -835,10 +835,10 @@ export class Typing<M> {
   /** ▶️ The run a window persisted; a state the chart cannot restore is refused (`closed`). */
   static resume<M>(state: TypingState<M>): { readonly ok: true; readonly typing: Typing<M> } | { readonly ok: false; readonly refusal: ToolRefusal } {
     const machine = typingMachine<M>();
-    const restored = restore(machine, { version: 1, fingerprint: TYPING_FINGERPRINT, states: state.states, history: [], done: false }, { buffer: state.buffer, keys: state.entries.length }, []);
+    const restored = restore(machine, { version: 1, fingerprint: TYPING_FINGERPRINT, states: state.states, history: [], done: false }, { buffer: state.buffer, keys: state.net.length }, []);
     if (!restored.ok) return { ok: false, refusal: "toolTransaction.closed" };
     const host = new TypingHost<M>(0, state.deadlineMs);
-    const resumed = ToolMachineRunner.resume(machine, state.tool, state.actor, { buffer: undefined, keys: 0 }, restored.snapshot, ToolTransaction.resume(state.transaction, state.entries), host);
+    const resumed = ToolMachineRunner.resume(machine, state.tool, state.actor, { buffer: undefined, keys: 0 }, restored.snapshot, ToolTransaction.resume(state.transaction, state.net.map((mutation,index)=>[String(index),mutation] as const)), host);
     return resumed.ok ? { ok: true, typing: new Typing(resumed.runner, host) } : resumed;
   }
 
@@ -892,7 +892,7 @@ export class Typing<M> {
     const [snapshot, transaction] = this.runner.intoParts();
     const buffer = snapshot.context.buffer;
     if (transaction?.state !== "open" || buffer === undefined || this.host.deadlineMs === undefined) return undefined;
-    return { states: persist(typingMachine<M>(), snapshot).states, tool: this.runner.tool, actor: this.runner.actor, buffer, deadlineMs: this.host.deadlineMs, transaction: transaction.reference, entries: transaction.entries().map(([key, mutation]) => [key, mutation] as const) };
+    return { states: persist(typingMachine<M>(), snapshot).states, tool: this.runner.tool, actor: this.runner.actor, buffer, deadlineMs: this.host.deadlineMs, transaction: transaction.reference, net: transaction.mutations() };
   }
 }
 
@@ -915,7 +915,7 @@ export class TypingLedger<M> {
 
   /** 👀️ Every open run's net leaves, window by window in window id order — the render overlay. */
   provisional(): M[] {
-    return this.windows().flatMap((window) => this.#windows.get(window)!.entries.map(([, leaf]) => leaf));
+    return this.windows().flatMap((window) => this.#windows.get(window)!.net);
   }
 
   nextDeadlineMs(): number | undefined {

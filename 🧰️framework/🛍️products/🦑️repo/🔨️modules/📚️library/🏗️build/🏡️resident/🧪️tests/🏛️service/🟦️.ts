@@ -14,7 +14,7 @@ import coreSchema from "../../../📥️caller/🛰️service/🧬️schema/🔣
 import {createFilterV1} from "../../🗃️state/🟨️.mjs";
 import {residentGraphSeamsV1} from "../../🕰️graph-hooks/🔌️host/🟨️.mjs";
 import {taskClosureV1} from "../../🔌️ports/🗺️graph/🟨️.mjs";
-import {NATIVE,cleanup,haveBinary,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
+import {cleanup,haveBinary,pick,residentWatcherV1,rng,shortTempDirectory,sleep,snapshot,tempRoot,waitFor,writeTree} from "../🟦️.ts";
 import {agentSessionAddressV1,agentSessionRegistryRootV1,agentSessionStoreV1,agentSessionWorktreeKeyV1,readAgentSessionTokenV1,readAgentSessionV1,listAgentSessionsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 
 const WATCHER=await residentWatcherV1(),native=haveBinary(WATCHER);
@@ -488,7 +488,7 @@ describe("degraded trust stays correct",()=>{
  },30000);
 });
 
-describe.skipIf(!native||!NATIVE)("process level crash safety",()=>{
+describe("process level crash safety",()=>{
  test("kill -9 of the service process leaves no watcher behind, clients fall back at once, a new service takes over",async()=>{
   const root=tempRoot("svc-crash-");cleanups.push(()=>cleanup(root));
   writeTree(root,{"package.json":"{}","tsconfig.base.json":"{}","bun.lock":"l","pkgs/a/src/x.ts":"a"});
@@ -496,7 +496,7 @@ describe.skipIf(!native||!NATIVE)("process level crash safety",()=>{
   const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
   const serve=join(import.meta.dir,"..","🖥️fixture-server","🟨️.mjs");
   const env={...process.env,XDG_RUNTIME_DIR:base};
-  const first=spawn("bun",[serve,root,"--bin",process.env.SEMIO_REPO_NATIVE_DIR??"","--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
+  const first=spawn("bun",[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
   const line=await new Promise<string>(resolve=>first.stdout.once("data",c=>resolve(String(c))));
   expect(JSON.parse(line.split("\n")[0]!).ready).toBe(true);
   const watcherPid=Number(spawnSync("pgrep",["-f","semio-repo-watch watch --root "+root]).stdout.toString().trim().split("\n")[0]);
@@ -505,9 +505,24 @@ describe.skipIf(!native||!NATIVE)("process level crash safety",()=>{
   expect(await waitFor(()=>{try{process.kill(watcherPid,0);return false;}catch{return true;}},4000)).toBe(true);
   const probe=await forwardCommandV1({root,command:"ping",args:[],cwd:root,languages:["en"],environment:env,stdout:{write(){}},stderr:{write(){}}});
   expect(probe.handled).toBe(false);
-  const second=spawn("bun",[serve,root,"--bin",process.env.SEMIO_REPO_NATIVE_DIR??"","--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
+  const second=spawn("bun",[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
   const line2=await new Promise<string>(resolve=>second.stdout.once("data",c=>resolve(String(c))));
   expect(JSON.parse(line2.split("\n")[0]!).ready).toBe(true);
   second.kill("SIGTERM");await new Promise(r=>second.once("exit",r));
  },30000);
 });
+
+test("foreground repository composition retains native readiness through public status and stop",async()=>{
+ const {createForegroundRunnerV1}=await import("../../🏗️composition/🟨️.mjs"),{runResidentCommandV1}=await import("../../⌨️command/🟨️.mjs"),{repositoryFilesystemJournalPolicyV1}=await import("../../../../⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts");
+ const root=tempRoot("svc-composition-"),base=shortTempDirectory("sc-");cleanups.push(()=>cleanup(root),()=>cleanup(base));writeFileSync(join(root,"visible.json"),"visible");writeFileSync(join(root,".p0123abcd"),"private");
+ const environment={...ambientV1,XDG_RUNTIME_DIR:base,SEMIO_RESIDENT_EXECUTORS:"0"},runtime=endpointsV1(root,environment),sourcePolicy=await repositoryFilesystemJournalPolicyV1(root),controller=new AbortController();
+ const run=createForegroundRunnerV1({sourcePolicy,signal:controller.signal,watcherBinary:WATCHER,script:"unused",loadGraph:async()=>({version:1,projects:{},dependencies:[]}),salt:()=>"",warmSize:0,executorSize:0,environmentPaths:[],environmentPrefixes:[]});
+ const running=run({root,runtime,environment});let ended=false;void running.finally(()=>{ended=true;}).catch(()=>{});
+ const sink=()=>{let text="";return{write(value:string){text+=value;},text:()=>text};};
+ try{
+  expect(await waitFor(()=>existsSync(runtime.descriptor)||ended,15000)).toBe(true);if(ended)await running;
+  const output=sink();expect(await runResidentCommandV1({root,args:["status","--json"],languages:["en","de"],environment,stdout:output,stderr:output})).toBe(0);
+  const status=JSON.parse(output.text());expect(status.watcher.backend).toBe(process.platform==="linux"?"inotify":process.platform==="darwin"?"fsevents":"rdcw");expect(status.watcher.trust).toBe("exact");expect(status.state.files).toBe(1);
+ }finally{const output=sink();await runResidentCommandV1({root,args:["stop"],languages:["en","de"],environment,stdout:output,stderr:output});}
+ expect(await running).toBe(0);expect(existsSync(WATCHER)).toBe(true);
+},30000);

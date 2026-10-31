@@ -1,7 +1,7 @@
 /** 🎨️ Painted query grants match independent SVG cap, dash, join and affine regions. */
 import {expect,test,spyOn} from "bun:test";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import sharp from "sharp";
 import cases from "../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";

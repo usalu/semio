@@ -1,0 +1,2593 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "stepladder",
+    "category": "objects",
+    "title": {
+      "en": "Aluminium Stepladder",
+      "de": "Aluminium-Stehleiter"
+    },
+    "summary": {
+      "en": "A five-step aluminium stepladder with platform, 1.50 m high and 0.68 m across the feet, open and locked: empty, under a person standing on it and under the EN 131 rated test load, with the standing load and lateral thrust as loads.",
+      "de": "Eine fünfstufige Aluminium-Stehleiter mit Plattform, 1,50 m hoch und 0,68 m über den Füßen, aufgeklappt und gesperrt: leer, unter einer stehenden Person und unter der EN-131-Nennprüflast, mit Standlast und Seitenschub als Lasten."
+    },
+    "tags": [
+      "stepladder",
+      "ladder",
+      "aluminium",
+      "tool",
+      "standing-load"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-131-1",
+          "citation": "EN 131-1:2015+A1:2019 Ladders - Part 1: Terms, types, functional sizes (stepladder types, tread depth, step pitch)."
+        },
+        {
+          "id": "en-131-2",
+          "citation": "EN 131-2:2010+A2:2017 Ladders - Part 2: Requirements, testing, marking (rated load 150 kg for professional ladders, strength and stability tests)."
+        },
+        {
+          "id": "en-1999-1-1",
+          "citation": "EN 1999-1-1:2007 Eurocode 9: Design of aluminium structures, Part 1-1 (E = 70 GPa, density 2700 kg/m3)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (aluminium, steel, rubber)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of metals)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of the open A-frame: front frame with four treads (pitch 0.25 m) and a platform at 1.25 m, rear frame hinged under the platform and locked by the spreaders. Dimensions and mass (5.3 kg) are typical of the 5-step class, authored estimates; the person is a load (100 kg), not a second asset. The folded state is NOT authored: in a folded pose the nearly parallel rails, treads and spreader links crowd into gaps below the print profile at every scale, and a folded rear foot would sink 0.05 m into the floor (rear rail 4 % longer than the front rail below the hinge); the hinge is therefore a fixed joint here.",
+        "de": "Seitenansicht des aufgeklappten A-Gestells: Vorderholm mit vier Stufen (Teilung 0,25 m) und Plattform auf 1,25 m, Hinterholm unter der Plattform angelenkt und durch die Spreizen gesperrt. Maße und Masse (5,3 kg) sind für die 5-Stufen-Klasse typische Schätzwerte; die Person ist eine Last (100 kg), kein zweites Asset. Der zusammengeklappte Zustand ist NICHT verfasst: in einer zusammengeklappten Pose drängen sich die nahezu parallelen Holme, Stufen und Spreizenglieder in Abstände unter dem Druckprofil bei jedem Maßstab, und ein zusammengeklappter Hinterfuß sänke 0,05 m in den Boden ein (Hinterholm 4 % länger als der Vorderholm unter dem Gelenk); das Gelenk ist daher hier ein festes Gelenk."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.5,
+      "widthM": 0.68,
+      "depthM": 0.46,
+      "massKg": 5.3
+    },
+    "materials": [
+      {
+        "id": "alu-mill",
+        "title": {
+          "en": "Mill-finish aluminium extrusion",
+          "de": "Aluminiumstrangpressprofil, walzblank"
+        },
+        "emissivity": 0.12,
+        "solarAbsorptivity": 0.3,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 880,
+        "elasticModulusPa": 70000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "steel-zinc",
+        "title": {
+          "en": "Zinc-plated steel",
+          "de": "Verzinkter Stahl"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "rubber-black",
+        "title": {
+          "en": "Black rubber",
+          "de": "Schwarzer Gummi"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1100,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 1900,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "front-frame",
+      "bones": [
+        {
+          "id": "front-frame",
+          "parent": null,
+          "title": {
+            "en": "Front frame with treads and platform",
+            "de": "Vorderholm mit Stufen und Plattform"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 1.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.95,
+            "comX": -0.2,
+            "comY": 0.75,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-131-1"
+          }
+        },
+        {
+          "id": "rear-frame",
+          "parent": "front-frame",
+          "title": {
+            "en": "Rear support frame (locked open)",
+            "de": "Hinterholm (Stützrahmen)"
+          },
+          "x": -0.13,
+          "y": 1.2,
+          "angleDeg": 0,
+          "lengthM": 1.25,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.35,
+            "comX": 0.18,
+            "comY": -0.6,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-131-1"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-front",
+        "bone": "front-frame",
+        "x": -0.36,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Front foot pads",
+          "de": "Vordere Fußkappen"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.08,
+        "footprintWidthM": 0.46,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "foot-rear",
+        "bone": "rear-frame",
+        "x": 0.36,
+        "y": -1.2,
+        "kind": "contact",
+        "title": {
+          "en": "Rear foot pads",
+          "de": "Hintere Fußkappen"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.08,
+        "footprintWidthM": 0.4,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "standing-point",
+        "bone": "front-frame",
+        "x": -0.05,
+        "y": 1.26,
+        "kind": "load",
+        "title": {
+          "en": "Standing point on the platform",
+          "de": "Standpunkt auf der Plattform"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "front-rail",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.421121,
+                  0.061059
+                ],
+                [
+                  -0.189121,
+                  1.511059
+                ],
+                [
+                  -0.050879,
+                  1.488941
+                ],
+                [
+                  -0.282879,
+                  0.038941
+                ]
+              ],
+              "closed": true,
+              "region": "front-rails",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-0",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.41,
+                  0.25
+                ],
+                [
+                  -0.29,
+                  0.25
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.13
+            },
+            {
+              "id": "tread-1",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.37,
+                  0.5
+                ],
+                [
+                  -0.25,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.13
+            },
+            {
+              "id": "tread-2",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.33,
+                  0.75
+                ],
+                [
+                  -0.21,
+                  0.75
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.238
+            },
+            {
+              "id": "tread-3",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.29,
+                  1.0
+                ],
+                [
+                  -0.17,
+                  1.0
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.13
+            },
+            {
+              "id": "platform",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.22,
+                  1.25
+                ],
+                [
+                  0.04,
+                  1.25
+                ]
+              ],
+              "closed": false,
+              "region": "platform",
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-rail",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.077158,
+                  0.021135
+                ],
+                [
+                  0.392158,
+                  -1.128865
+                ],
+                [
+                  0.237842,
+                  -1.171135
+                ],
+                [
+                  -0.077158,
+                  -0.021135
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "rear-frame",
+                "spreaders"
+              ],
+              "material": "alu-mill"
+            ,
+              "penMm": 0.238
+             },
+            {
+              "id": "foot-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32,
+                  -1.18
+                ],
+                [
+                  0.4,
+                  -1.18
+                ]
+              ],
+              "closed": false,
+              "region": "feet",
+              "penMm": 0.18
+            },
+            {
+              "id": "foot-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.02
+                ],
+                [
+                  -0.32,
+                  0.02
+                ]
+              ],
+              "closed": false,
+              "region": "feet",
+              "penMm": 0.18
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "An A-shaped sign 1.4 mm wide and 3 mm high: a solid front rail leaning towards the rear rail, four tread ticks and a platform tick.",
+            "de": "Ein A-förmiges Zeichen, 1,4 mm breit und 3 mm hoch: ein voller Vorderholm, der zum Hinterholm hin geneigt ist, vier Stufenstriche und ein Plattformstrich."
+          },
+          "retained": {
+            "en": "Both rails with their true inclination, the four treads and the platform at their true heights, both foot pads, the 0.68 m span.",
+            "de": "Beide Holme mit wahrer Neigung, die vier Stufen und die Plattform in wahrer Höhe, beide Fußkappen, die Spannweite 0,68 m."
+          },
+          "merged": {
+            "en": "The two front rails merge into one band, the two rear rails likewise; the top cap merges into the rail end.",
+            "de": "Die zwei Vorderholme gehen in einem Band auf, ebenso die zwei Hinterholme; die Abschlusskappe geht im Holmende auf."
+          },
+          "omitted": {
+            "en": "Separate spreader stroke, hinge, rear cross brace, tread profile and handrail (the spreaders are merged into the rear band).",
+            "de": "Eigener Spreizenstrich, Gelenk, hintere Quertraverse, Stufenprofil und Handlauf (die Spreizen gehen im Hinterband auf)."
+          },
+          "thinElements": {
+            "en": "The 0.06 m rail would be 0.12 mm wide on paper: thickened symmetrically to 0.14 m (0.28 mm); the 0.03 m treads are single 0.13 mm strokes and the platform one 0.25 mm stroke, pen inflation 4 to 8 times.",
+            "de": "Der 0,06 m breite Holm wäre auf dem Papier 0,12 mm breit: symmetrisch auf 0,14 m (0,28 mm) verbreitert; die 0,03 m starken Stufen sind einzelne 0,13-mm-Striche und die Plattform ein 0,25-mm-Strich, Stiftaufblähung 4- bis 8-fach."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rails tone 0.5 with 0.13 mm outline; ticks and ground 0.13 / 0.18 mm.",
+            "de": "Holme Ton 0,5 mit 0,13-mm-Kontur; Striche und Boden 0,13 / 0,18 mm."
+          },
+          "overlays": {
+            "en": "Front rail = front-rails, treads = treads, platform = platform, rear rail = rear-frame and spreaders (merged), foot ticks = feet.",
+            "de": "Vorderholm = front-rails, Stufen = treads, Plattform = platform, Hinterholm = rear-frame und spreaders (verschmolzen), Fußstriche = feet."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "front-rail",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.389623,
+                  0.00474
+                ],
+                [
+                  -0.149623,
+                  1.50474
+                ],
+                [
+                  -0.090377,
+                  1.49526
+                ],
+                [
+                  -0.330377,
+                  -0.00474
+                ]
+              ],
+              "closed": true,
+              "region": "front-rails",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-0",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.41,
+                  0.25
+                ],
+                [
+                  -0.29,
+                  0.25
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.18
+            },
+            {
+              "id": "tread-1",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.37,
+                  0.5
+                ],
+                [
+                  -0.25,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.18
+            },
+            {
+              "id": "tread-2",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.33,
+                  0.75
+                ],
+                [
+                  -0.21,
+                  0.75
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.18
+            },
+            {
+              "id": "tread-3",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.29,
+                  1.0
+                ],
+                [
+                  -0.17,
+                  1.0
+                ]
+              ],
+              "closed": false,
+              "region": "treads",
+              "penMm": 0.26
+            },
+            {
+              "id": "platform",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.22,
+                  1.205
+                ],
+                [
+                  0.04,
+                  1.205
+                ],
+                [
+                  0.04,
+                  1.265
+                ],
+                [
+                  -0.22,
+                  1.265
+                ]
+              ],
+              "closed": true,
+              "region": "platform",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rear-rail",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.042908,
+                  0.049313
+                ],
+                [
+                  0.402908,
+                  -1.155687
+                ],
+                [
+                  0.307092,
+                  -1.184313
+                ],
+                [
+                  -0.052908,
+                  0.020687
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "rear-frame",
+                "spreaders"
+              ],
+              "material": "alu-mill"
+            ,
+              "penMm": 0.26
+             },
+            {
+              "id": "foot-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.0
+                ],
+                [
+                  -0.32,
+                  0.0
+                ],
+                [
+                  -0.32,
+                  0.06
+                ],
+                [
+                  -0.4,
+                  0.06
+                ]
+              ],
+              "closed": true,
+              "region": "feet",
+              "material": "rubber-black"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  0.32,
+                  -1.2
+                ],
+                [
+                  0.4,
+                  -1.2
+                ],
+                [
+                  0.4,
+                  -1.14
+                ],
+                [
+                  0.32,
+                  -1.14
+                ]
+              ],
+              "closed": true,
+              "region": "feet",
+              "material": "rubber-black"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A-frame 3.4 mm wide and 7.5 mm high: front rail band, a thicker rear rail band (0.10 m, real 0.05 m), four tread strokes, platform slab, two foot pads.",
+            "de": "A-Gestell 3,4 mm breit und 7,5 mm hoch: Vorderholmband, ein dickeres Hinterholmband (0,10 m, real 0,05 m), vier Stufenstriche, Plattformplatte, zwei Fußkappen."
+          },
+          "retained": {
+            "en": "Front rail at its true profile depth 0.06 m, rear rail 0.10 m, treads, platform, spreader and both feet.",
+            "de": "Vorderholm in wahrer Profiltiefe 0,06 m, Hinterholm 0,10 m, Stufen, Plattform, Spreize und beide Füße."
+          },
+          "merged": {
+            "en": "The paired rails per side are one band; tread nosing and anti-slip ribs merge into the stroke.",
+            "de": "Die paarigen Holme je Seite sind ein Band; Stufenkante und Rippen gehen im Strich auf."
+          },
+          "omitted": {
+            "en": "Hinge, rivets, cross braces, handrail, tread ribs; the spreader links are merged into the rear rail band (region spreaders listed on it) and not drawn separately.",
+            "de": "Gelenk, Nieten, Traversen, Handlauf, Stufenrippen; die Spreizenglieder gehen im Hinterholmband auf (Region spreaders dort aufgeführt) und werden nicht getrennt gezeichnet."
+          },
+          "thinElements": {
+            "en": "Treads (0.03 m = 0.15 mm) are 0.18 mm strokes; the spreader is a 0.13 mm hairline in two links; the platform slab is thickened to 0.06 m and the foot pads to 0.06 m (0.3 mm).",
+            "de": "Stufen (0,03 m = 0,15 mm) sind 0,18-mm-Striche; die Spreize ist eine 0,13-mm-Haarlinie in zwei Gliedern; die Plattformplatte ist auf 0,06 m und die Fußkappen sind auf 0,06 m (0,3 mm) verdickt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rails 0.5, platform 0.4, rubber feet 0.9; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Holme 0,5, Plattform 0,4, Gummifüße 0,9; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Spreader strokes carry the region spreaders; feet carry feet; all regions drawn.",
+            "de": "Spreizenstriche tragen die Region spreaders, Füße die Region feet; alle Regionen sind gezeichnet."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "front-rail",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.389608,
+                  0.034834
+                ],
+                [
+                  -0.149608,
+                  1.504834
+                ],
+                [
+                  -0.090392,
+                  1.495166
+                ],
+                [
+                  -0.330392,
+                  0.025166
+                ]
+              ],
+              "closed": true,
+              "region": "front-rails",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-0",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.41,
+                  0.238
+                ],
+                [
+                  -0.29,
+                  0.238
+                ],
+                [
+                  -0.29,
+                  0.268
+                ],
+                [
+                  -0.41,
+                  0.268
+                ]
+              ],
+              "closed": true,
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-1",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.37,
+                  0.488
+                ],
+                [
+                  -0.25,
+                  0.488
+                ],
+                [
+                  -0.25,
+                  0.518
+                ],
+                [
+                  -0.37,
+                  0.518
+                ]
+              ],
+              "closed": true,
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-2",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.33,
+                  0.738
+                ],
+                [
+                  -0.21,
+                  0.738
+                ],
+                [
+                  -0.21,
+                  0.768
+                ],
+                [
+                  -0.33,
+                  0.768
+                ]
+              ],
+              "closed": true,
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-3",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.29,
+                  0.988
+                ],
+                [
+                  -0.17,
+                  0.988
+                ],
+                [
+                  -0.17,
+                  1.018
+                ],
+                [
+                  -0.29,
+                  1.018
+                ]
+              ],
+              "closed": true,
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "platform",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.23,
+                  1.225
+                ],
+                [
+                  0.04,
+                  1.225
+                ],
+                [
+                  0.04,
+                  1.265
+                ],
+                [
+                  -0.23,
+                  1.265
+                ]
+              ],
+              "closed": true,
+              "region": "platform",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rear-rail",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.018954,
+                  0.042156
+                ],
+                [
+                  0.378954,
+                  -1.162844
+                ],
+                [
+                  0.331046,
+                  -1.177156
+                ],
+                [
+                  -0.028954,
+                  0.027844
+                ]
+              ],
+              "closed": true,
+              "region": "rear-frame",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rear-brace",
+              "bone": "rear-frame",
+              "role": "detail",
+              "z": 2.85,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.274,
+                  -0.98
+                ],
+                [
+                  0.314,
+                  -0.98
+                ]
+              ],
+              "closed": false,
+              "region": "rear-frame"
+            },
+            {
+              "id": "spreader-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.254157,
+                  0.638865
+                ],
+                [
+                  -0.05546,
+                  0.568901
+                ],
+                [
+                  -0.068745,
+                  0.531172
+                ],
+                [
+                  -0.267443,
+                  0.601135
+                ]
+              ],
+              "closed": true,
+              "region": "spreaders",
+              "material": "steel-zinc"
+            },
+            {
+              "id": "spreader-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.203357,
+                  -0.718865
+                ],
+                [
+                  0.00466,
+                  -0.648901
+                ],
+                [
+                  0.017945,
+                  -0.611172
+                ],
+                [
+                  0.216643,
+                  -0.681135
+                ]
+              ],
+              "closed": true,
+              "region": "spreaders",
+              "material": "steel-zinc"
+            },
+            {
+              "id": "hinge",
+              "bone": "rear-frame",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.025,
+              "ry": 0.025,
+              "region": "platform"
+            },
+            {
+              "id": "foot-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M -0.41 0 L -0.315 0 L -0.32 0.05 L -0.405 0.05 Z",
+              "region": "feet",
+              "material": "rubber-black"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0.31 -1.2 L 0.4 -1.2 L 0.395 -1.15 L 0.315 -1.15 Z",
+              "region": "feet",
+              "material": "rubber-black"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A-frame 6.8 mm wide and 15 mm high with treads protruding on the climbing side, a slab platform, rear rail with one brace and a two-link spreader.",
+            "de": "A-Gestell 6,8 mm breit und 15 mm hoch mit auf der Aufstiegsseite vorstehenden Stufen, Plattformplatte, Hinterholm mit einer Traverse und zweigliedriger Spreize."
+          },
+          "retained": {
+            "en": "Rail bands at true depth, four treads of 0.09 m depth, platform, brace, spreader links, hinge circle, two tapered foot pads.",
+            "de": "Holmbänder in wahrer Tiefe, vier Stufen von 0,10 m Tiefe, Plattform, Traverse, Spreizenglieder, Gelenkkreis, zwei verjüngte Fußkappen."
+          },
+          "merged": {
+            "en": "Paired rails merge to one band per side; the top cap ends the front band.",
+            "de": "Paarige Holme gehen je Seite in einem Band auf; die Kappe schließt das Vorderband ab."
+          },
+          "omitted": {
+            "en": "Tread ribs, rivets, handrail, second rear brace.",
+            "de": "Stufenrippen, Nieten, Handlauf, zweite Hintertraverse."
+          },
+          "thinElements": {
+            "en": "The spreader links are 0.04 m (0.4 mm) solid bands; the hinge ring (0.05 m = 0.5 mm) is a 0.13 mm line.",
+            "de": "Die Spreizenglieder sind 0,04-m-Vollbänder (0,4 mm); der Gelenkring (0,05 m = 0,5 mm) ist eine 0,13-mm-Linie."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rails 0.5, treads 0.55, platform 0.4, spreader 0.6, feet 0.9; body pen 0.25 mm, detail 0.13 mm.",
+            "de": "Holme 0,5, Stufen 0,55, Plattform 0,4, Spreize 0,6, Füße 0,9; Körperstift 0,25 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "The hinge ring carries the platform region it belongs to; spreader bands carry spreaders.",
+            "de": "Der Gelenkring trägt die Region platform, zu der er gehört; Spreizenbänder tragen spreaders."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": null,
+          "ground": 0.7
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "front-rail",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.389608,
+                  0.034834
+                ],
+                [
+                  -0.149608,
+                  1.504834
+                ],
+                [
+                  -0.090392,
+                  1.495166
+                ],
+                [
+                  -0.330392,
+                  0.025166
+                ]
+              ],
+              "closed": true,
+              "region": "front-rails",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rail-groove",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.356,
+                  0.1
+                ],
+                [
+                  -0.14,
+                  1.45
+                ]
+              ],
+              "closed": false,
+              "region": "front-rails"
+            },
+            {
+              "id": "top-cap",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "path",
+              "d": "M -0.15 1.49 C -0.15 1.52 -0.09 1.52 -0.09 1.49 L -0.09 1.44 L -0.15 1.44 Z",
+              "region": "front-rails",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-0",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.41 0.238 L -0.29 0.238 L -0.29 0.268 L -0.4 0.268 C -0.41 0.268 -0.414 0.255 -0.41 0.238 Z",
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-0-rib-0",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.39,
+                  0.252
+                ],
+                [
+                  -0.39,
+                  0.266
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-0-rib-1",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.355,
+                  0.252
+                ],
+                [
+                  -0.355,
+                  0.266
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-0-rib-2",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32,
+                  0.252
+                ],
+                [
+                  -0.32,
+                  0.266
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-1",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.37 0.488 L -0.25 0.488 L -0.25 0.518 L -0.36 0.518 C -0.37 0.518 -0.374 0.505 -0.37 0.488 Z",
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-1-rib-0",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.35,
+                  0.502
+                ],
+                [
+                  -0.35,
+                  0.516
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-1-rib-1",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.315,
+                  0.502
+                ],
+                [
+                  -0.315,
+                  0.516
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-1-rib-2",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.28,
+                  0.502
+                ],
+                [
+                  -0.28,
+                  0.516
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-2",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.33 0.738 L -0.21 0.738 L -0.21 0.768 L -0.32 0.768 C -0.33 0.768 -0.334 0.755 -0.33 0.738 Z",
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-2-rib-0",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.31,
+                  0.752
+                ],
+                [
+                  -0.31,
+                  0.766
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-2-rib-1",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.275,
+                  0.752
+                ],
+                [
+                  -0.275,
+                  0.766
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-2-rib-2",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.24,
+                  0.752
+                ],
+                [
+                  -0.24,
+                  0.766
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-3",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "path",
+              "d": "M -0.29 0.988 L -0.17 0.988 L -0.17 1.018 L -0.28 1.018 C -0.29 1.018 -0.294 1.005 -0.29 0.988 Z",
+              "region": "treads",
+              "material": "alu-mill"
+            },
+            {
+              "id": "tread-3-rib-0",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  1.002
+                ],
+                [
+                  -0.27,
+                  1.016
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-3-rib-1",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.235,
+                  1.002
+                ],
+                [
+                  -0.235,
+                  1.016
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "tread-3-rib-2",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  1.002
+                ],
+                [
+                  -0.2,
+                  1.016
+                ]
+              ],
+              "closed": false,
+              "region": "treads"
+            },
+            {
+              "id": "platform",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.23 1.225 L 0.04 1.225 L 0.04 1.265 L -0.215 1.265 C -0.228 1.265 -0.234 1.245 -0.23 1.225 Z",
+              "region": "platform",
+              "material": "alu-mill"
+            },
+            {
+              "id": "platform-ribs",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  1.258
+                ],
+                [
+                  0.01,
+                  1.258
+                ]
+              ],
+              "closed": false,
+              "region": "platform"
+            },
+            {
+              "id": "rear-rail",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.018937,
+                  0.042211
+                ],
+                [
+                  0.378937,
+                  -1.152789
+                ],
+                [
+                  0.331063,
+                  -1.167211
+                ],
+                [
+                  -0.028937,
+                  0.027789
+                ]
+              ],
+              "closed": true,
+              "region": "rear-frame",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rear-groove",
+              "bone": "rear-frame",
+              "role": "texture",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  -0.1
+                ],
+                [
+                  0.34,
+                  -1.1
+                ]
+              ],
+              "closed": false,
+              "region": "rear-frame"
+            },
+            {
+              "id": "rear-brace-0",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.272,
+                  -0.992
+                ],
+                [
+                  0.316,
+                  -0.992
+                ],
+                [
+                  0.316,
+                  -0.968
+                ],
+                [
+                  0.272,
+                  -0.968
+                ]
+              ],
+              "closed": true,
+              "region": "rear-frame",
+              "material": "alu-mill"
+            },
+            {
+              "id": "rear-brace-1",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.083,
+                  -0.362
+                ],
+                [
+                  0.127,
+                  -0.362
+                ],
+                [
+                  0.127,
+                  -0.338
+                ],
+                [
+                  0.083,
+                  -0.338
+                ]
+              ],
+              "closed": true,
+              "region": "rear-frame",
+              "material": "alu-mill"
+            },
+            {
+              "id": "spreader-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.256814,
+                  0.631319
+                ],
+                [
+                  -0.058117,
+                  0.561355
+                ],
+                [
+                  -0.066088,
+                  0.538717
+                ],
+                [
+                  -0.264786,
+                  0.608681
+                ]
+              ],
+              "closed": true,
+              "region": "spreaders",
+              "material": "steel-zinc"
+            },
+            {
+              "id": "spreader-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.206014,
+                  -0.711319
+                ],
+                [
+                  0.007317,
+                  -0.641355
+                ],
+                [
+                  0.015288,
+                  -0.618717
+                ],
+                [
+                  0.213986,
+                  -0.688681
+                ]
+              ],
+              "closed": true,
+              "region": "spreaders",
+              "material": "steel-zinc"
+            },
+            {
+              "id": "hinge",
+              "bone": "rear-frame",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.027,
+              "ry": 0.027,
+              "region": "platform"
+            },
+            {
+              "id": "foot-front",
+              "bone": "front-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M -0.405 0 L -0.315 0 L -0.32 0.045 L -0.4 0.045 Z",
+              "region": "feet",
+              "material": "rubber-black"
+            },
+            {
+              "id": "foot-rear",
+              "bone": "rear-frame",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "path",
+              "d": "M 0.31 -1.2 L 0.4 -1.2 L 0.395 -1.155 L 0.315 -1.155 Z",
+              "region": "feet",
+              "material": "rubber-black"
+            },
+            {
+              "id": "foot-tread",
+              "bone": "front-frame",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.395,
+                  0.008
+                ],
+                [
+                  -0.325,
+                  0.008
+                ]
+              ],
+              "closed": false,
+              "region": "feet"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A-frame 13.6 mm wide and 30 mm high, drawn in full construction: rails with groove line and top cap, four ribbed treads with nosing, ribbed platform, rear rail with two braces, two-link spreader, hinge disc, rubber feet.",
+            "de": "A-Gestell 13,6 mm breit und 30 mm hoch, in voller Konstruktion gezeichnet: Holme mit Rillenlinie und Kappe, vier gerippte Stufen mit Nase, gerippte Plattform, Hinterholm mit zwei Traversen, zweigliedrige Spreize, Gelenkscheibe, Gummifüße."
+          },
+          "retained": {
+            "en": "All construction elements at real size and position.",
+            "de": "Alle Konstruktionselemente in realer Größe und Lage."
+          },
+          "merged": {
+            "en": "Paired rails merge to one band per side.",
+            "de": "Paarige Holme gehen je Seite in einem Band auf."
+          },
+          "omitted": {
+            "en": "Tread-bolt ends and rivets of the rungs, the side handrail, labels.",
+            "de": "Bolzenenden der Stufen und Nieten, der seitliche Handlauf, Beschriftungen."
+          },
+          "thinElements": {
+            "en": "Spreader links are 0.024 m (0.48 mm) bands, the hinge disc 0.054 m (1.1 mm); ribs are 0.13 mm lines every 1.75 mm.",
+            "de": "Spreizenglieder sind 0,024-m-Bänder (0,48 mm), die Gelenkscheibe 0,054 m (1,1 mm); Rippen sind 0,13-mm-Linien im Abstand 1,75 mm."
+          },
+          "hatching": {
+            "en": "Tread ribs and platform ribs as parallel 0.13 mm lines (not as hatch fill); no other hatching.",
+            "de": "Stufen- und Plattformrippen als parallele 0,13-mm-Linien (keine Schraffur); sonst keine Schraffur."
+          },
+          "styles": {
+            "en": "Aluminium 0.4-0.55, spreader 0.6, rubber 0.9; body pen 0.5 mm, detail 0.25 mm, texture 0.13 mm.",
+            "de": "Aluminium 0,4-0,55, Spreize 0,6, Gummi 0,9; Körperstift 0,5 mm, Detail 0,25 mm, Textur 0,13 mm."
+          },
+          "overlays": {
+            "en": "Ribs and grooves carry the region of the part they mark; the hinge disc carries platform.",
+            "de": "Rippen und Rillen tragen die Region des Teils, das sie kennzeichnen; die Gelenkscheibe trägt platform."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "open-empty",
+        "title": {
+          "en": "Open, empty",
+          "de": "Aufgeklappt, leer"
+        },
+        "description": {
+          "en": "Opened and locked, standing on four feet, no one on it, the sun on the platform.",
+          "de": "Aufgeklappt und gesperrt, auf vier Füßen stehend, niemand darauf, die Sonne auf der Plattform."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-front",
+          "foot-rear"
+        ],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "rear-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "open-in-use",
+        "title": {
+          "en": "Open, in use",
+          "de": "Aufgeklappt, in Gebrauch"
+        },
+        "description": {
+          "en": "A 100 kg person stands on the platform (981 N) and pushes 80 N sideways while working overhead; the rated load class is 150 kg.",
+          "de": "Eine 100-kg-Person steht auf der Plattform (981 N) und drückt bei Überkopfarbeit mit 80 N seitlich; die Nennlastklasse beträgt 150 kg."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-front",
+          "foot-rear"
+        ],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "rear-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "occupant",
+            "kind": "occupant",
+            "title": {
+              "en": "Person standing on the platform (100 kg)",
+              "de": "Person auf der Plattform (100 kg)"
+            },
+            "fxN": 0,
+            "fyN": -981,
+            "source": "authored-estimate",
+            "anchor": "standing-point",
+            "reference": "en-131-2"
+          },
+          {
+            "id": "lateral-thrust",
+            "kind": "live",
+            "title": {
+              "en": "Lateral thrust of work above the head",
+              "de": "Seitenschub durch Arbeit über Kopf"
+            },
+            "fxN": 80,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "anchor": "standing-point",
+            "reference": "en-131-2"
+          }
+        ]
+      },
+      {
+        "id": "rated-load-test",
+        "title": {
+          "en": "Rated load test",
+          "de": "Nennlastprüfung"
+        },
+        "description": {
+          "en": "The 150 kg rated load (1471 N) on the platform with a 150 N lateral thrust, the test case of EN 131-2.",
+          "de": "Die Nennlast von 150 kg (1471 N) auf der Plattform mit 150 N Seitenschub, der Prüffall der EN 131-2."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-front",
+          "foot-rear"
+        ],
+        "thermal": {
+          "regions": {
+            "front-rails": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "treads": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "platform": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "rear-frame": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "spreaders": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.2
+            },
+            "feet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "test-load",
+            "kind": "occupant",
+            "title": {
+              "en": "EN 131 test load of 150 kg",
+              "de": "EN-131-Prüflast von 150 kg"
+            },
+            "fxN": 0,
+            "fyN": -1471,
+            "source": "literature",
+            "anchor": "standing-point",
+            "reference": "en-131-2"
+          },
+          {
+            "id": "test-thrust",
+            "kind": "live",
+            "title": {
+              "en": "Lateral test thrust of 150 N",
+              "de": "Seitliche Prüfkraft von 150 N"
+            },
+            "fxN": 150,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "anchor": "standing-point",
+            "reference": "en-131-2"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "climb-and-work",
+        "title": {
+          "en": "Climb and work",
+          "de": "Besteigen und Arbeiten"
+        },
+        "description": {
+          "en": "A person steps onto the platform, works overhead and steps down: the standing load and the lateral thrust rise and fall.",
+          "de": "Eine Person steigt auf die Plattform, arbeitet über Kopf und steigt wieder ab: Standlast und Seitenschub steigen und fallen."
+        },
+        "durationS": 12,
+        "fps": 10,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "open-in-use",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "open-in-use",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "foot-rear",
+            "fromS": 0,
+            "toS": 12
+          }
+        ],
+        "phases": [
+          {
+            "id": "climb",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Climbing",
+              "de": "Aufsteigen"
+            }
+          },
+          {
+            "id": "work",
+            "fromS": 4,
+            "toS": 9,
+            "title": {
+              "en": "Working on the platform",
+              "de": "Arbeit auf der Plattform"
+            }
+          },
+          {
+            "id": "descent",
+            "fromS": 9,
+            "toS": 12,
+            "title": {
+              "en": "Descending",
+              "de": "Absteigen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2,
+            "kind": "load-on",
+            "title": {
+              "en": "Person steps onto the platform",
+              "de": "Person betritt die Plattform"
+            },
+            "target": "occupant"
+          },
+          {
+            "t": 10,
+            "kind": "load-off",
+            "title": {
+              "en": "Person steps off",
+              "de": "Person steigt ab"
+            },
+            "target": "occupant"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:occupant",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 9,
+                "v": 1
+              },
+              {
+                "t": 10.5,
+                "v": 0
+              },
+              {
+                "t": 12,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:lateral-thrust",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              },
+              {
+                "t": 8,
+                "v": 1
+              },
+              {
+                "t": 9,
+                "v": 0
+              },
+              {
+                "t": 12,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rated-load-ramp",
+        "title": {
+          "en": "Rated load ramp",
+          "de": "Nennlast-Rampe"
+        },
+        "description": {
+          "en": "The test load rises from zero to 150 kg in ten seconds and the lateral thrust follows: a quasi-static EN 131-2 style load ramp.",
+          "de": "Die Prüflast steigt in zehn Sekunden von null auf 150 kg und der Seitenschub folgt: eine quasistatische Lastrampe im Stil der EN 131-2."
+        },
+        "durationS": 20,
+        "fps": 10,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "rated-load-test",
+            "ease": "smooth"
+          },
+          {
+            "t": 20,
+            "pose": "rated-load-test",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "foot-rear",
+            "fromS": 0,
+            "toS": 20
+          }
+        ],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Load rises",
+              "de": "Last steigt"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 10,
+            "toS": 16,
+            "title": {
+              "en": "Load held",
+              "de": "Last gehalten"
+            }
+          },
+          {
+            "id": "release",
+            "fromS": 16,
+            "toS": 20,
+            "title": {
+              "en": "Load released",
+              "de": "Last entlastet"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "load-on",
+            "title": {
+              "en": "Test load starts to rise",
+              "de": "Prüflast beginnt zu steigen"
+            },
+            "target": "test-load"
+          },
+          {
+            "t": 16,
+            "kind": "load-off",
+            "title": {
+              "en": "Test load released",
+              "de": "Prüflast entlastet"
+            },
+            "target": "test-load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:test-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              },
+              {
+                "t": 16,
+                "v": 1
+              },
+              {
+                "t": 20,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:test-thrust",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 6,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 1
+              },
+              {
+                "t": 16,
+                "v": 1
+              },
+              {
+                "t": 19,
+                "v": 0
+              },
+              {
+                "t": 20,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 18,
+        "meanRadiantTempC": 22,
+        "relativeHumidity": 0.5,
+        "windMS": 0.8,
+        "windDirectionDeg": 0,
+        "solarWM2": 600,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325,
+        "skyTempC": 8,
+        "groundTempC": 22
+      },
+      "operating": [],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "front-rails",
+          "title": {
+            "en": "Front rails",
+            "de": "Vorderholme"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-mill",
+          "areaM2": 0.52,
+          "characteristicLengthM": 0.06,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Extruded aluminium wall",
+                "de": "Aluminiumprofilwand"
+              },
+              "kind": "metal",
+              "material": "alu-mill",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 9e-06,
+              "heatCapacityJM2K": 3564,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3564,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "treads",
+          "title": {
+            "en": "Treads",
+            "de": "Stufen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-mill",
+          "areaM2": 0.5,
+          "characteristicLengthM": 0.1,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.7,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Extruded aluminium wall",
+                "de": "Aluminiumprofilwand"
+              },
+              "kind": "metal",
+              "material": "alu-mill",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 1.3e-05,
+              "heatCapacityJM2K": 4752,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4752,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "platform",
+          "title": {
+            "en": "Platform",
+            "de": "Plattform"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-mill",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.34,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Extruded aluminium wall",
+                "de": "Aluminiumprofilwand"
+              },
+              "kind": "metal",
+              "material": "alu-mill",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 1.3e-05,
+              "heatCapacityJM2K": 4752,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4752,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "rear-frame",
+          "title": {
+            "en": "Rear frame",
+            "de": "Hinterholme"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-mill",
+          "areaM2": 0.43,
+          "characteristicLengthM": 0.05,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wall",
+              "title": {
+                "en": "Extruded aluminium wall",
+                "de": "Aluminiumprofilwand"
+              },
+              "kind": "metal",
+              "material": "alu-mill",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 7e-06,
+              "heatCapacityJM2K": 2851,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2851,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "spreaders",
+          "title": {
+            "en": "Spreader links",
+            "de": "Spreizenglieder"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-zinc",
+          "areaM2": 0.06,
+          "characteristicLengthM": 0.02,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "strap",
+              "title": {
+                "en": "Zinc-plated steel strap 2 mm",
+                "de": "Verzinktes Stahlband 2 mm"
+              },
+              "kind": "metal",
+              "material": "steel-zinc",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 4e-05,
+              "heatCapacityJM2K": 7020,
+              "source": "literature",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7020,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "feet",
+          "title": {
+            "en": "Rubber foot pads",
+            "de": "Gummifußkappen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "rubber-black",
+          "areaM2": 0.02,
+          "characteristicLengthM": 0.08,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "rubber",
+              "title": {
+                "en": "Rubber pad 20 mm (active 12 mm)",
+                "de": "Gummikappe 20 mm (wirksam 12 mm)"
+              },
+              "kind": "polymer",
+              "material": "rubber-black",
+              "thicknessM": 0.02,
+              "resistanceM2KW": 0.08,
+              "heatCapacityJM2K": 41800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 41800,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "All parts are inert passive aluminium, zinc-plated steel or rubber: solar gain, radiation, convection; no internal heat. Bare aluminium has low emissivity and absorptivity.",
+          "de": "Alle Teile sind inerte passive Flächen aus Aluminium, verzinktem Stahl oder Gummi: Solargewinn, Strahlung, Konvektion; keine innere Wärme. Blankes Aluminium hat niedrigen Emissions- und Absorptionsgrad."
+        },
+        {
+          "en": "The person standing on the ladder is a load only; the thermal exchange with the feet is neglected.",
+          "de": "Die stehende Person ist nur eine Last; der Wärmeaustausch mit den Füßen wird vernachlässigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-front",
+        "foot-rear"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid body on elastic contacts: the four foot pads (two in the plane).",
+          "de": "Starrer Körper auf elastischen Kontakten: die vier Fußkappen (zwei in der Ebene)."
+        },
+        {
+          "en": "Rated load 150 kg (EN 131-2); the standing load of 100 kg and the 80 N lateral thrust are authored estimates.",
+          "de": "Nennlast 150 kg (EN 131-2); die Standlast von 100 kg und der Seitenschub von 80 N sind Schätzwerte."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "open-empty",
+      "defaultClip": "climb-and-work",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

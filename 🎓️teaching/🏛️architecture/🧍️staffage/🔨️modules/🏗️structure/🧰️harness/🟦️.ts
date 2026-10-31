@@ -106,7 +106,10 @@ export function buildState(doc: StructureCase, scenario?: CaseScenario): Evaluat
     anchors: Object.fromEntries(anchors.map((a) => [a.id, { anchor: a, at: at(a) }])),
     contacts: scenario?.contacts ?? doc.contacts,
     loads,
-    thermal: { activityMet: 1, operating: {}, regions: {}, emitters: {} },
+    thermal: { activityMet: 1, externalWorkW: 0, operating: {}, regions: {}, emitters: {}, breathing: null, passengers: {} },
+    respiration: null,
+    cycle: 0,
+    representation: { kind: "none" },
     bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
     kinematics: { comVelocity: { x: 0, y: 0 }, segmentAccelerations: scenario?.accelerations ?? {} },
   };

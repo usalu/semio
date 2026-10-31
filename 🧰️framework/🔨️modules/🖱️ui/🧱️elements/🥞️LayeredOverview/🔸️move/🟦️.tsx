@@ -7,7 +7,7 @@ import { type LayeredSwipeDrive, useSwipe } from "../👆️swipe/🟦️.ts";
 import type { usePanesState } from "../🔶️panes/🟦️.tsx";
 
 /** 🔹 Builds moveTo, glideTo, follow, focusView of LayeredOverview. */
-export function useMoveState({ targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink }: Pick<ReturnType<typeof usePanesState>, "targetRef" | "offsetRef" | "latest" | "stop" | "driveRef" | "paint" | "settleGhost" | "run" | "runningRef" | "aim" | "finishGhost" | "rootRef" | "interactive" | "swiping" | "opened" | "stripRef" | "repaint" | "veilRef" | "cardStripRef" | "cardElements" | "openedRef" | "revealedRef" | "cellList" | "sourceRef" | "setRevealSource" | "setRevealedId" | "touch" | "revealedId" | "setOwnOpened" | "deepLink"> & { readonly props: LayeredOverviewProps }) {
+export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink }: Pick<ReturnType<typeof usePanesState>, "layoutRef" | "logicalRestingRef" | "targetRef" | "offsetRef" | "latest" | "stop" | "driveRef" | "paint" | "settleGhost" | "run" | "runningRef" | "aim" | "finishGhost" | "rootRef" | "interactive" | "swiping" | "opened" | "stripRef" | "repaint" | "veilRef" | "cardStripRef" | "cardElements" | "openedRef" | "revealedRef" | "cellList" | "sourceRef" | "setRevealSource" | "setRevealedId" | "touch" | "revealedId" | "setOwnOpened" | "deepLink"> & { readonly props: LayeredOverviewProps }) {
   const moveTo = React.useCallback(
     (to: LayeredOffset, kind: "glide" | "settle") => {
       targetRef.current = to;
@@ -87,19 +87,24 @@ export function useMoveState({ targetRef, offsetRef, latest, stop, driveRef, pai
   }, []);
 
   const firstCells = React.useRef(true);
+  const mode = latest.current.mode, ids = latest.current.ids;
   React.useLayoutEffect(() => {
     if (firstCells.current) {
       firstCells.current = false;
       return;
     }
-    const focus = openedRef.current ?? revealedRef.current;
+    const current = latest.current, active = document.activeElement;
+    const host = current.props.interactive !== false && active instanceof HTMLElement && active.closest("[inert],[hidden],[aria-hidden=true]") === null && active.closest("[data-layered-overview]") === rootRef.current ? active.closest<HTMLElement>("[data-layered-card]") : null;
+    const focused = host !== null && cardElements.current.get(host.dataset.layeredCard ?? "") === host ? host.dataset.layeredCard : null;
+    const anchor = [opened, current.props.revealedId, mode === "swipe" ? current.props.swipeId : null, focused, revealedRef.current, logicalRestingRef.current].find((id): id is string => typeof id === "string" && current.ids.includes(id));
+    const next = anchor === undefined ? clampOffset(offsetRef.current, cellList) : cellOffset(requireCell(current.cells, anchor));
     stop();
     aim(null);
     driveRef.current = FOLLOW;
-    const next = focus === null ? clampOffset(offsetRef.current, cellList) : cellOffset(requireCell(latest.current.cells, focus));
+    layoutRef.current = { mode, cellList, ids };
     targetRef.current = next;
     paint(next);
-  }, [aim, cellList, paint, stop]);
+  }, [aim, cellList, ids, mode, paint, stop]);
 
   const reveal = React.useCallback(
     (id: string, source: LayeredRevealSource) => {

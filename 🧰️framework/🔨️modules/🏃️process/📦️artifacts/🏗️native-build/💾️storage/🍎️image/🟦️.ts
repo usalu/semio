@@ -34,7 +34,7 @@ async function readNativeImageInformationV1(directory:string,control:ResourceLea
 }
 
 /** 🏪️ Reopens one persistent fixed image under shared custody; its lease directory fixes the sole queue catalog. */
-export function openNativeImageStorageV1(options:Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>):Promise<NativeImageStorageV1>{requireNativeRecomputableRetirementSettledV1(options.directory,options.control);return openPersistentNativeImageV1(options);}
+export function openNativeImageStorageV1(options:Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;preparationControl?:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>):Promise<NativeImageStorageV1>{requireNativeRecomputableRetirementSettledV1(options.directory,options.control);return openPersistentNativeImageV1(options);}
 
 /** ♻️ Retires only the exact owned image after all original shared users have settled. */
 export async function retireNativeImageStorageV1(options:Readonly<{directory:string;leaseDirectory:string;control:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number;filesystemBytes:number;maximumPhysicalBytes:number}>,request:NativeImageRetirementRequestV1={version:1,wait:true},recomputable?:NativePlatformRecomputableRetirementV1):Promise<boolean>{

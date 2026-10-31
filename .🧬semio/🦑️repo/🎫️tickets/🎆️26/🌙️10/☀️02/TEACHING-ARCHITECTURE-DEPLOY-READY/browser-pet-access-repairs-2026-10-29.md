@@ -1,0 +1,29 @@
+# Browser Pet and Locked Access Repairs
+
+Source changes began only after Root confirmed48540 authoritative130 from deliberate cooperative cancellation of its known-failing baseline. No peer service was stopped. Parent owns feedback identity, frontend owns Records/physics, LinuxRoot owns watcher; this worker owns tint and four pet fixture preconditions.
+
+## Authored content journeys
+
+Only the existing cast-and-choices EN/DE topic journeys and its one all-quiz/question journey explicitly call the existing authorPreview ingress after anonymous entry. They reawait actual pets after that navigation. The shared enterWithPets helper and all public-release lock tests remain unchanged. Baseline browser failures attempted locked parametric content through ordinary URLs; these authored-completeness tests now declare their intended preview scope. This is not a production unlock.
+
+## Measured drop and current grid
+
+The parachute test retains strict fall>200, realcanopy path/geometry, normalcarry, handcursor, hang, glide, retries for another pet interception, landing and finaltrail assertions. It remeasures actual pageedges/otherpets for every attempt. If the current scene offers no qualifiedcolumn it navigates to the existing heating page, waits for its openpane, reobserves a genuine parachute pet and remeasures beforepickup. The existing no-reachable-pet fallback is retained. The selector is pure testgeometry, with no production pet-state or fakephysics change.
+
+The control-under-pet test measures only actual non-inert current-grid cardIDs, validated nonempty/unique/against the authoredquizroster before choosing the tallest physicalsurface. Its fall/hit/click/open/trail/cursor checks are retained. It does not measure unrelated lockedtopic cards and does not globallyenable preview.
+
+Neutral schema/corpus: `🎓️teaching/🏛️architecture/📚️course/🧪️tests/🐕️pet-walk/📐️geometry/{🔣️.json,🧬️schema/🔣️.json}`. Actual selectors: adjacent `🟦️.ts`. Existing ordinary courseunit owner `🧪️tests/🐾️pet-cast/🟦️.ts` now imports the corpus/selectors and independently computes expectedselection using Lodash, with Ajv closed validation. No undiscovered testtarget is substituted.
+
+Actual baseline browser evidence: parachute precondition187.21875pixels, beforecarry; all-authored measurement outside activeEnergy grid timesout on parametric-design. Bounded neutral baseline models reproduce those original choices: original finite-floor algorithm chooses187.21875fall instead of refusing (`🗑️generated/pet-browser-geometry-red.log`, exit1); originalall-authored measurement selects3IDs instead of2currentgridIDs (`🗑️generated/pet-browser-current-grid-red.log`, exit1). These are explicit algorithm models, not a rerun of the historical browser. Current actual helper + Ajv/Lodash oracle passes4dropcases and4rostercases, exit0 (`🗑️generated/pet-browser-geometry-oracle.log`, input `pet-browser-geometry-oracle.mjs`). IndependentTypeScript parser reports0syntaxdiagnostics in all5changedTS/TSXfiles. Ordinaryunit and actualbrowserexecution remain pending.
+
+## Locked tint regression pending parent run
+
+New actual AccessGate React/userEvent test renders EN/DE inside a pointer-events-none parent, asserts computed tintauto, clicks normally, and verifies the preview remains inert/hidden with noaction. A separate JSDOM instance independently parses/computes the rendered DOM. Closed schema/fixture reside at productcourse/🧫️fixtures/🔓️access/{👆️pointer.json,🧬️schema/👆️pointer.json}. Existing course/tests/🔓️access/TSX owns the tests. Parent combined normal RED51495 includes access+challengeviews; tintproduction is intentionally unchanged until frontend focused physics12039 terminates to avoid HMR interference. Noactualpointerbrowserpass is claimed yet.
+
+Independent review added oddviewport401 with onlythelastvalidcolumn available. Actualhelper firstfailed the Lodash range oracle (retained `pet-browser-odd-width-red.log`), then exactcolumncount corrected toceil(width span/8). Current corpus now5drop+4roster cases; unchanged1440 browsergeometry semantics. This is testfixturegeometry correctness, not a petphysics change.
+
+Parent combined normal component RED51495 settled before any React law: OS owner absent20:53:22UTC, actual Cargo101 while building the newly owned semio-repo-watch (linker cc notfound). Therefore the new tint component law has NOT produced its actualRED yet. Productiontint remains unchanged. This separate watcher compiler-projection failure belongs to LinuxRoot; no ambient PATH/toolchain change or bypass made here. Dependency publication epoch5 occurred before that refusal.
+
+Actual registered component RED17392 authoritatively exited1:43tests across3files,34passed/9failed. Both new AccessGate EN/DE laws failed exactly expected none tobe auto, with no prerequisite refusal. This actual rendered regression now justifies the oneclass production repair: course-access-tint explicitly reenables pointer-events-auto while the preview remains inert/pointer-events-none and public access policy stays unchanged. Production fix and all pet candidates are frozen; exact Source hashes recorded in `🗑️generated/browser-pet-access-checkpoint.json`. Parent owns the combined3fileGREEN; this worker launched no duplicatecomponent orbrowser job. Actualpositivecomponent/browser proofs remain pending.
+
+Parent authoritatively confirmed registered combinedGREEN93164 exit0: all43tests across3files pass, after actual9-failureRED17392. This includes the two EN/DE actual tint/userEvent/JSDOM regressions. It is component proof, not full ordinaryowner or browseracceptance. Root owns complete course-react:test73624; this worker launched complete unfiltered @teaching/architecture-course:test28199 (`🗑️generated/course-unit-browser-repairs.log`), covering the ordinary pet-cast geometry law. Managedrestart4262 remains frontend-owned; read-only40runpersistence requery waits actualreadiness.

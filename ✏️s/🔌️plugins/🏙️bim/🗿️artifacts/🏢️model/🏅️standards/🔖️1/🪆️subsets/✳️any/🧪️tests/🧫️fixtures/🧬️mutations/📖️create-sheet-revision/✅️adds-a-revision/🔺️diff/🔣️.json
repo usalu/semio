@@ -1,12 +1,14 @@
 {
   "sheet_revisions": {
     "rev-1": {
-      "author": "UG",
-      "date": "2026-10-01",
-      "description": "Issued for permit",
       "entry": "Created",
-      "number": "A",
-      "sheet": "sh-1"
+      "value": {
+        "author": "UG",
+        "date": "2026-10-01",
+        "description": "Issued for permit",
+        "number": "A",
+        "sheet": "sh-1"
+      }
     }
   }
 }

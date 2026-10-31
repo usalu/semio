@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import ts from "typescript";
 import { BundleScript } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { refusalSchema as valueSchema } from "@semio-tech/value-ts/refusal/schema";

@@ -10,7 +10,9 @@ import vectors from "../../🧫️fixtures/🖥️mockups/🔣️.json";
 
 describe("workspace previews", () => {
   it("distinguishes native parameter, component, slider, panel and plugin widgets", () => {
-    for (const vector of vectors.filter((vector) => vector.id.startsWith("widget-"))) {
+    const widgets = vectors.filter((vector) => vector.valid && vector.schemaValid && vector.id.startsWith("widget-"));
+    expect(widgets.map((vector) => vector.id)).toEqual(["widget-parameter", "widget-component", "widget-slider", "widget-panel", "widget-plugin"]);
+    for (const vector of widgets) {
       const { container, unmount } = render(<MockupView value={vector.mockup as Mockup} locale="en" />);
       expect(container.querySelector(`[data-widget="${vector.id.slice(7)}"]`)).not.toBeNull();
       if (vector.id === "widget-slider") {

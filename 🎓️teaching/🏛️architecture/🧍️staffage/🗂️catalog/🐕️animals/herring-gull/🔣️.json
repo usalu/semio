@@ -1,0 +1,7367 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "herring-gull",
+  "category": "animals",
+  "title": {
+   "en": "Herring Gull",
+   "de": "Silbermöwe"
+  },
+  "summary": {
+   "en": "An adult herring gull (Larus argentatus, 1.0 kg, wingspan 1.45 m): upright standing, soaring on spread wings and a landing flare to touchdown; rig with two-piece neck, arm and hand wings, webbed legs; plumage thermal model (41 degC core), nares breathing, back plume, breathing patterns for rest, soaring and the flare. The side elevation shows spread wings in oblique projection.",
+   "de": "Eine erwachsene Silbermöwe (Larus argentatus, 1,0 kg, Spannweite 1,45 m): aufrechtes Stehen, Segeln mit gespreizten Flügeln und ein Landeanflug bis zum Aufsetzen; Rig mit zweiteiligem Hals, Flügeln aus Arm und Hand, Schwimmbeinen; Gefieder-Wärmemodell (41 Grad Kern), Nasenatmung, Rückenfahne, Atemmuster für Ruhe, Segeln und Abfangen. Der Seitenaufriss zeigt gespreizte Flügel in schräger Projektion."
+  },
+  "tags": [
+   "animal",
+   "bird",
+   "gull",
+   "coastal",
+   "flight",
+   "glide",
+   "landing",
+   "urban"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-A2 (animals)",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "cramp-simmons-1983",
+     "citation": "Cramp, S. (ed.) (1983). Handbook of the Birds of Europe, the Middle East and North Africa: The Birds of the Western Palearctic, Vol. III (Waders to Gulls). Oxford University Press. Herring gull Larus argentatus: length 56-66 cm, wingspan 123-155 cm, mass about 0.7-1.5 kg."
+    },
+    {
+     "id": "pennycuick-1989",
+     "citation": "Pennycuick, C. J. (1989). Bird Flight Performance: A Practical Calculation Manual. Oxford University Press. Wing loading, glide polar and soaring of gulls; the glide attitude here is an authored estimate guided by it."
+    },
+    {
+     "id": "lasiewski-dawson-1967",
+     "citation": "Lasiewski, R. C., Dawson, W. R. (1967). A re-examination of the relation between standard metabolic rate and body weight in birds. The Condor 69, 13-23. Non-passerine standard metabolic rate 78.3 M^0.723 kcal/day (M in kg)."
+    },
+    {
+     "id": "lasiewski-calder-1971",
+     "citation": "Lasiewski, R. C., Calder, W. A. (1971). A preliminary allometric analysis of respiratory variables in resting birds. Respiration Physiology 11, 152-166. Resting frequency and tidal volume scale with body mass; the gull values are authored estimates guided by these allometries."
+    },
+    {
+     "id": "walsberg-king-1978",
+     "citation": "Walsberg, G. E., King, J. R. (1978). The relationship of the external surface area of birds to body mass. Journal of Experimental Biology 76, 185-189. Plumage-covered area about 8.1 M^0.667 cm2 (M in g)."
+    },
+    {
+     "id": "scholander-1950",
+     "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236."
+    },
+    {
+     "id": "de-vries-van-eerden-1995",
+     "citation": "de Vries, J., van Eerden, M. R. (1995). Thermal conductance in aquatic birds in relation to the degree of water contact, body mass, and body fat. Physiological Zoology 68, 1143-1163. Layer resistances here are authored estimates guided by it."
+    },
+    {
+     "id": "calder-king-1974",
+     "citation": "Calder, W. A., King, J. R. (1974). Thermal and caloric relations of birds. In: Farner, D. S., King, J. R. (eds), Avian Biology IV, Academic Press, pp. 259-413. Body temperature of non-passerines about 40-42 degC."
+    },
+    {
+     "id": "kahl-1963",
+     "citation": "Kahl, M. P. (1963). Thermoregulation in the wood stork, with special reference to the role of the legs. Physiological Zoology 36, 141-151. Bare legs and feet are the controlled heat-loss path of long-legged waterbirds."
+    },
+    {
+     "id": "schmidt-nielsen-1970",
+     "citation": "Schmidt-Nielsen, K., Hainsworth, F. R., Murrish, D. E. (1970). Counter-current heat exchange in the respiratory passages: effect on water and heat balance. Respiration Physiology 9, 263-276."
+    },
+    {
+     "id": "gupta-2010",
+     "citation": "Gupta, J. K., Lin, C.-H., Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39. Nares areas and jet angles of the gull are authored estimates guided by the human case.",
+     "url": "https://research.polyu.edu.hk/en/publications/characterizing-exhaled-airflow-from-breathing-and-talking/"
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort: emissivity of skin and respiratory heat loss."
+    },
+    {
+     "id": "kleiber-1961",
+     "citation": "Kleiber, M. (1961). The Fire of Life: An Introduction to Animal Energetics. Wiley, New York."
+    }
+   ],
+   "notes": {
+    "en": "Handcrafted: rig, outlines, poses and numbers are authored by hand; parameters without a verifiable source are tagged authored-estimate and name the reference they are guided by.",
+    "de": "Handgefertigt: Rig, Umrisse, Posen und Zahlen sind von Hand erstellt; Parameter ohne prüfbare Quelle sind als authored-estimate gekennzeichnet und nennen die Referenz, an der sie sich orientieren."
+   }
+  },
+  "dimensions": {
+   "heightM": 0.51,
+   "widthM": 0.699,
+   "depthM": 0.2,
+   "massKg": 1
+  },
+  "rig": {
+   "kind": "anatomical",
+   "root": "trunk",
+   "bones": [
+    {
+     "id": "trunk",
+     "parent": null,
+     "title": {
+      "en": "Trunk: keel, flight muscles and gut",
+      "de": "Rumpf: Kiel, Flugmuskeln und Darm"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.34,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -80,
+      "maxDeg": 80
+     },
+     "mass": {
+      "kg": 0.473,
+      "comX": 0.17,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "tail",
+     "parent": "trunk",
+     "title": {
+      "en": "Tail with twelve rectrices (fan)",
+      "de": "Schwanz mit zwölf Steuerfedern (Fächer)"
+     },
+     "x": 0,
+     "y": 0.01,
+     "angleDeg": 175,
+     "lengthM": 0.14,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -60,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.03,
+      "comX": 0.07,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "neck-1",
+     "parent": "trunk",
+     "title": {
+      "en": "Lower neck",
+      "de": "Unterer Hals"
+     },
+     "x": 0.29,
+     "y": 0.035,
+     "angleDeg": 55,
+     "lengthM": 0.08,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -80,
+      "maxDeg": 80
+     },
+     "mass": {
+      "kg": 0.03,
+      "comX": 0.04,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "neck-2",
+     "parent": "neck-1",
+     "title": {
+      "en": "Upper neck",
+      "de": "Oberer Hals"
+     },
+     "x": 0.08,
+     "y": 0,
+     "angleDeg": 20,
+     "lengthM": 0.07,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -80,
+      "maxDeg": 80
+     },
+     "mass": {
+      "kg": 0.025,
+      "comX": 0.035,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "head",
+     "parent": "neck-2",
+     "title": {
+      "en": "Head with strong bill (skull and bill)",
+      "de": "Kopf mit kräftigem Schnabel (Schädel und Schnabel)"
+     },
+     "x": 0.07,
+     "y": 0,
+     "angleDeg": -85,
+     "lengthM": 0.125,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 0.1,
+      "comX": 0.045,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "arm-n",
+     "parent": "trunk",
+     "title": {
+      "en": "Near arm (humerus and forearm)",
+      "de": "Naher Arm (Ober- und Unterarm)"
+     },
+     "x": 0.2,
+     "y": 0.04,
+     "angleDeg": 180,
+     "lengthM": 0.2,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.045,
+      "comX": 0.1,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "hand-n",
+     "parent": "arm-n",
+     "title": {
+      "en": "Near hand with primaries",
+      "de": "Naher Hand mit Handschwingen"
+     },
+     "x": 0.2,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.22,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.11,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "arm-f",
+     "parent": "trunk",
+     "title": {
+      "en": "Far arm (humerus and forearm)",
+      "de": "Ferner Arm (Ober- und Unterarm)"
+     },
+     "x": 0.2,
+     "y": 0.04,
+     "angleDeg": 180,
+     "lengthM": 0.2,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -150,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.045,
+      "comX": 0.1,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "hand-f",
+     "parent": "arm-f",
+     "title": {
+      "en": "Far hand with primaries",
+      "de": "Ferner Hand mit Handschwingen"
+     },
+     "x": 0.2,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.22,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.11,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "thigh-n",
+     "parent": "trunk",
+     "title": {
+      "en": "Near thigh (inside the plumage)",
+      "de": "Nahes Oberschenkel (im Gefieder)"
+     },
+     "x": 0.15,
+     "y": -0.05,
+     "angleDeg": -60,
+     "lengthM": 0.06,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -130,
+      "maxDeg": 130
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.03,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "shank-n",
+     "parent": "thigh-n",
+     "title": {
+      "en": "Near shank (tibiotarsus)",
+      "de": "Nahes Unterschenkel (Tibiotarsus)"
+     },
+     "x": 0.06,
+     "y": 0,
+     "angleDeg": -50,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.028,
+      "comX": 0.05,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "tarsus-n",
+     "parent": "shank-n",
+     "title": {
+      "en": "Near tarsus (bare)",
+      "de": "Nahes Lauf (unbefiedert)"
+     },
+     "x": 0.1,
+     "y": 0,
+     "angleDeg": 45,
+     "lengthM": 0.065,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -140,
+      "maxDeg": 110
+     },
+     "mass": {
+      "kg": 0.008,
+      "comX": 0.0325,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "foot-n",
+     "parent": "tarsus-n",
+     "title": {
+      "en": "Near webbed foot",
+      "de": "Nahes Schwimmfuß"
+     },
+     "x": 0.065,
+     "y": 0,
+     "angleDeg": 75,
+     "lengthM": 0.075,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.01,
+      "comX": 0.0375,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "thigh-f",
+     "parent": "trunk",
+     "title": {
+      "en": "Far thigh (inside the plumage)",
+      "de": "Fernes Oberschenkel (im Gefieder)"
+     },
+     "x": 0.15,
+     "y": -0.05,
+     "angleDeg": -60,
+     "lengthM": 0.06,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -130,
+      "maxDeg": 130
+     },
+     "mass": {
+      "kg": 0.04,
+      "comX": 0.03,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "shank-f",
+     "parent": "thigh-f",
+     "title": {
+      "en": "Far shank (tibiotarsus)",
+      "de": "Fernes Unterschenkel (Tibiotarsus)"
+     },
+     "x": 0.06,
+     "y": 0,
+     "angleDeg": -50,
+     "lengthM": 0.1,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -170,
+      "maxDeg": 60
+     },
+     "mass": {
+      "kg": 0.028,
+      "comX": 0.05,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "tarsus-f",
+     "parent": "shank-f",
+     "title": {
+      "en": "Far tarsus (bare)",
+      "de": "Fernes Lauf (unbefiedert)"
+     },
+     "x": 0.1,
+     "y": 0,
+     "angleDeg": 45,
+     "lengthM": 0.065,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -140,
+      "maxDeg": 110
+     },
+     "mass": {
+      "kg": 0.008,
+      "comX": 0.0325,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    },
+    {
+     "id": "foot-f",
+     "parent": "tarsus-f",
+     "title": {
+      "en": "Far webbed foot",
+      "de": "Fernes Schwimmfuß"
+     },
+     "x": 0.065,
+     "y": 0,
+     "angleDeg": 75,
+     "lengthM": 0.075,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 100
+     },
+     "mass": {
+      "kg": 0.01,
+      "comX": 0.0375,
+      "comY": 0,
+      "distribution": "uniform",
+      "source": "authored-estimate",
+      "reference": "cramp-simmons-1983"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-n",
+    "bone": "foot-n",
+    "x": 0.04,
+    "y": -0.01,
+    "kind": "contact",
+    "title": {
+     "en": "Near foot, centre of the web",
+     "de": "Naher Fuß, Mitte der Schwimmhaut"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.07,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "contact-f",
+    "bone": "foot-f",
+    "x": 0.04,
+    "y": -0.01,
+    "kind": "contact",
+    "title": {
+     "en": "Far foot, centre of the web",
+     "de": "Ferner Fuß, Mitte der Schwimmhaut"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.07,
+    "footprintWidthM": 0.05,
+    "frictionCoefficient": 0.7
+   },
+   {
+    "id": "nostrils",
+    "bone": "head",
+    "x": 0.075,
+    "y": 0.006,
+    "kind": "emitter",
+    "title": {
+     "en": "Nares slits in the bill",
+     "de": "Nasenschlitze im Schnabel"
+    }
+   },
+   {
+    "id": "bill-tip",
+    "bone": "head",
+    "x": 0.125,
+    "y": -0.004,
+    "kind": "attachment",
+    "title": {
+     "en": "Bill tip with the red spot",
+     "de": "Schnabelspitze mit rotem Fleck"
+    }
+   },
+   {
+    "id": "eye",
+    "bone": "head",
+    "x": 0.035,
+    "y": 0.012,
+    "kind": "attachment",
+    "title": {
+     "en": "Eye",
+     "de": "Auge"
+    }
+   },
+   {
+    "id": "back-plume",
+    "bone": "trunk",
+    "x": 0.17,
+    "y": 0.11,
+    "kind": "emitter",
+    "title": {
+     "en": "Back above the trunk (plume source)",
+     "de": "Rücken über dem Rumpf (Fahnenquelle)"
+    }
+   }
+  ],
+  "materials": [
+   {
+    "id": "plumage",
+    "title": {
+     "en": "White body plumage over down",
+     "de": "Weißes Körpergefieder über Daunen"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.3,
+    "densityKgM3": 100,
+    "conductivityWmK": 0.04,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "wing-feathers",
+    "title": {
+     "en": "Pale grey mantle and wing feathers with black tips",
+     "de": "Hellgraue Mantel- und Flügelfedern mit schwarzen Spitzen"
+    },
+    "emissivity": 0.95,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 120,
+    "conductivityWmK": 0.05,
+    "source": "authored-estimate",
+    "reference": "scholander-1950"
+   },
+   {
+    "id": "bill-keratin",
+    "title": {
+     "en": "Yellow bill keratin with red spot",
+     "de": "Gelbes Schnabelhorn mit rotem Fleck"
+    },
+    "emissivity": 0.92,
+    "solarAbsorptivity": 0.5,
+    "source": "authored-estimate",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "scaled-skin",
+    "title": {
+     "en": "Scaled pink skin of tarsus and web",
+     "de": "Beschuppte rosa Haut von Lauf und Schwimmhaut"
+    },
+    "emissivity": 0.96,
+    "solarAbsorptivity": 0.7,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "poses": [
+   {
+    "id": "standing",
+    "title": {
+     "en": "Standing",
+     "de": "Stehend"
+    },
+    "description": {
+     "en": "Standing upright on both pink webbed feet, body tilted 20 degrees, neck upright with the head slightly down, wings folded with the black primaries just beyond the tail.",
+     "de": "Aufrecht auf beiden rosa Schwimmfüßen stehend, Körper um 20 Grad geneigt, Hals aufrecht mit leicht gesenktem Kopf, Flügel angelegt, die schwarzen Handschwingen ragen knapp über den Schwanz."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 20
+     },
+     "neck-1": {
+      "angleDeg": -9
+     },
+     "neck-2": {
+      "angleDeg": 4
+     },
+     "head": {
+      "angleDeg": -17
+     },
+     "arm-n": {
+      "angleDeg": -18
+     },
+     "hand-n": {
+      "angleDeg": -4
+     },
+     "arm-f": {
+      "angleDeg": -18
+     },
+     "hand-f": {
+      "angleDeg": -4
+     },
+     "thigh-n": {
+      "angleDeg": -14.22
+     },
+     "shank-n": {
+      "angleDeg": -24.02
+     },
+     "tarsus-n": {
+      "angleDeg": 8.24
+     },
+     "foot-n": {
+      "angleDeg": 0
+     },
+     "thigh-f": {
+      "angleDeg": -63.9
+     },
+     "shank-f": {
+      "angleDeg": 17.51
+     },
+     "tarsus-f": {
+      "angleDeg": 16.39
+     },
+     "foot-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": -0.17
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-n",
+     "contact-f"
+    ],
+    "thermal": {
+     "activityMet": 1.5,
+     "breathing": "rest",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "wing-plumage": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.4
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "legs-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.12,
+        "tempC": 14
+       }
+      },
+      "web-feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "gliding",
+    "title": {
+     "en": "Gliding with spread wings",
+     "de": "Gleiten mit gespreizten Flügeln"
+    },
+    "description": {
+     "en": "Soaring in lift at about 1.5 m above the ground: both wings spread, drawn in oblique projection with the wrist raised and the hand swept back (the span of 1.45 m is foreshortened in elevation), neck drawn in, tail fanned, feet trailing.",
+     "de": "Segeln in der Aufwindzone etwa 1,5 m über dem Boden: beide Flügel gespreizt, in schräger Projektion gezeichnet mit angehobenem Handgelenk und zurückgeschwungener Hand (die Spannweite von 1,45 m ist im Aufriss verkürzt), Hals eingezogen, Schwanz gefächert, Füße nach hinten."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": -2
+     },
+     "neck-1": {
+      "angleDeg": -31
+     },
+     "neck-2": {
+      "angleDeg": -28
+     },
+     "head": {
+      "angleDeg": 65
+     },
+     "arm-n": {
+      "angleDeg": -46
+     },
+     "hand-n": {
+      "angleDeg": 36
+     },
+     "arm-f": {
+      "angleDeg": -32
+     },
+     "hand-f": {
+      "angleDeg": 30
+     },
+     "tail": {
+      "angleDeg": -14
+     },
+     "thigh-n": {
+      "angleDeg": -63
+     },
+     "shank-n": {
+      "angleDeg": 45
+     },
+     "tarsus-n": {
+      "angleDeg": -30
+     },
+     "foot-n": {
+      "angleDeg": -60
+     },
+     "thigh-f": {
+      "angleDeg": -63
+     },
+     "shank-f": {
+      "angleDeg": 45
+     },
+     "tarsus-f": {
+      "angleDeg": -30
+     },
+     "foot-f": {
+      "angleDeg": -60
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 1.5
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "glide",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "landing",
+    "title": {
+     "en": "Landing flare",
+     "de": "Landeanflug mit Abfangen"
+    },
+    "description": {
+     "en": "The flare just before touchdown: body pitched up 30 degrees, wings raised high and cupped to brake, tail fanned down, legs and webbed feet stretched forward and down.",
+     "de": "Das Abfangen kurz vor dem Aufsetzen: Körper um 30 Grad angehoben, Flügel hoch und gewölbt zum Bremsen, Schwanz nach unten gefächert, Beine und Schwimmfüße nach vorn und unten gestreckt."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 30
+     },
+     "neck-1": {
+      "angleDeg": -45
+     },
+     "neck-2": {
+      "angleDeg": 0
+     },
+     "head": {
+      "angleDeg": 3
+     },
+     "arm-n": {
+      "angleDeg": -110
+     },
+     "hand-n": {
+      "angleDeg": 28
+     },
+     "arm-f": {
+      "angleDeg": -98
+     },
+     "hand-f": {
+      "angleDeg": 24
+     },
+     "tail": {
+      "angleDeg": 30
+     },
+     "thigh-n": {
+      "angleDeg": -50
+     },
+     "shank-n": {
+      "angleDeg": 35
+     },
+     "tarsus-n": {
+      "angleDeg": -40
+     },
+     "foot-n": {
+      "angleDeg": -20
+     },
+     "thigh-f": {
+      "angleDeg": -50
+     },
+     "shank-f": {
+      "angleDeg": 35
+     },
+     "tarsus-f": {
+      "angleDeg": -40
+     },
+     "foot-f": {
+      "angleDeg": -20
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 0.55
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 5,
+     "breathing": "flare",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.3
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "gliding-up",
+    "title": {
+     "en": "Soaring, wings up",
+     "de": "Segeln, Flügel oben"
+    },
+    "description": {
+     "en": "Wings 4 degrees higher in the gust.",
+     "de": "Flügel 4 Grad höher in der Böe."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": -1
+     },
+     "neck-1": {
+      "angleDeg": -32
+     },
+     "neck-2": {
+      "angleDeg": -28
+     },
+     "head": {
+      "angleDeg": 65
+     },
+     "arm-n": {
+      "angleDeg": -43
+     },
+     "hand-n": {
+      "angleDeg": 34
+     },
+     "arm-f": {
+      "angleDeg": -29
+     },
+     "hand-f": {
+      "angleDeg": 28
+     },
+     "tail": {
+      "angleDeg": -12
+     },
+     "thigh-n": {
+      "angleDeg": -64
+     },
+     "shank-n": {
+      "angleDeg": 45
+     },
+     "tarsus-n": {
+      "angleDeg": -30
+     },
+     "foot-n": {
+      "angleDeg": -60
+     },
+     "thigh-f": {
+      "angleDeg": -64
+     },
+     "shank-f": {
+      "angleDeg": 45
+     },
+     "tarsus-f": {
+      "angleDeg": -30
+     },
+     "foot-f": {
+      "angleDeg": -60
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 1.5
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "glide",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "gliding-down",
+    "title": {
+     "en": "Soaring, wings down",
+     "de": "Segeln, Flügel unten"
+    },
+    "description": {
+     "en": "Wings 4 degrees lower.",
+     "de": "Flügel 4 Grad tiefer."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": -3
+     },
+     "neck-1": {
+      "angleDeg": -30
+     },
+     "neck-2": {
+      "angleDeg": -28
+     },
+     "head": {
+      "angleDeg": 65
+     },
+     "arm-n": {
+      "angleDeg": -49
+     },
+     "hand-n": {
+      "angleDeg": 38
+     },
+     "arm-f": {
+      "angleDeg": -35
+     },
+     "hand-f": {
+      "angleDeg": 32
+     },
+     "tail": {
+      "angleDeg": -16
+     },
+     "thigh-n": {
+      "angleDeg": -62
+     },
+     "shank-n": {
+      "angleDeg": 45
+     },
+     "tarsus-n": {
+      "angleDeg": -30
+     },
+     "foot-n": {
+      "angleDeg": -60
+     },
+     "thigh-f": {
+      "angleDeg": -62
+     },
+     "shank-f": {
+      "angleDeg": 45
+     },
+     "tarsus-f": {
+      "angleDeg": -30
+     },
+     "foot-f": {
+      "angleDeg": -60
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 1.5
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "glide",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "touchdown",
+    "title": {
+     "en": "Touchdown",
+     "de": "Aufsetzen"
+    },
+    "description": {
+     "en": "Both feet touch down with the wings still raised.",
+     "de": "Beide Füße setzen auf, die Flügel sind noch angehoben."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 18
+     },
+     "neck-1": {
+      "angleDeg": -11
+     },
+     "neck-2": {
+      "angleDeg": 4
+     },
+     "head": {
+      "angleDeg": -11
+     },
+     "arm-n": {
+      "angleDeg": -86
+     },
+     "hand-n": {
+      "angleDeg": 28
+     },
+     "arm-f": {
+      "angleDeg": -78
+     },
+     "hand-f": {
+      "angleDeg": 26
+     },
+     "tail": {
+      "angleDeg": 20
+     },
+     "thigh-n": {
+      "angleDeg": 17.55
+     },
+     "shank-n": {
+      "angleDeg": -25.25
+     },
+     "tarsus-n": {
+      "angleDeg": -15.3
+     },
+     "foot-n": {
+      "angleDeg": -5
+     },
+     "thigh-f": {
+      "angleDeg": 8.8
+     },
+     "shank-f": {
+      "angleDeg": -31.91
+     },
+     "tarsus-f": {
+      "angleDeg": 0.11
+     },
+     "foot-f": {
+      "angleDeg": -5
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 0.1957
+    },
+    "ground": "authored",
+    "contacts": [
+     "contact-n",
+     "contact-f"
+    ],
+    "thermal": {
+     "activityMet": 4,
+     "breathing": "flare",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "legs-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.12,
+        "tempC": 14
+       }
+      },
+      "web-feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "settled",
+    "title": {
+     "en": "Settled after landing",
+     "de": "Nach der Landung ruhend"
+    },
+    "description": {
+     "en": "Wings folded, standing.",
+     "de": "Flügel angelegt, stehend."
+    },
+    "key": true,
+    "bones": {
+     "trunk": {
+      "angleDeg": 20
+     },
+     "neck-1": {
+      "angleDeg": -9
+     },
+     "neck-2": {
+      "angleDeg": 4
+     },
+     "head": {
+      "angleDeg": -17
+     },
+     "arm-n": {
+      "angleDeg": -18
+     },
+     "hand-n": {
+      "angleDeg": -4
+     },
+     "arm-f": {
+      "angleDeg": -18
+     },
+     "hand-f": {
+      "angleDeg": -4
+     },
+     "thigh-n": {
+      "angleDeg": -14.22
+     },
+     "shank-n": {
+      "angleDeg": -24.02
+     },
+     "tarsus-n": {
+      "angleDeg": 8.24
+     },
+     "foot-n": {
+      "angleDeg": 0
+     },
+     "thigh-f": {
+      "angleDeg": -63.9
+     },
+     "shank-f": {
+      "angleDeg": 17.51
+     },
+     "tarsus-f": {
+      "angleDeg": 16.39
+     },
+     "foot-f": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": -0.17,
+     "y": 0.1957
+    },
+    "ground": "authored",
+    "contacts": [
+     "contact-n",
+     "contact-f"
+    ],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "rest",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "wing-plumage": {
+       "exposedFraction": 0.5,
+       "sunlitFraction": 0.4
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "legs-skin": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.25,
+       "contact": {
+        "fraction": 0.12,
+        "tempC": 14
+       }
+      },
+      "web-feet": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.15,
+       "contact": {
+        "fraction": 0.45,
+        "tempC": 14
+       }
+      }
+     },
+     "emitters": {
+      "plume-back": 1
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "approach-a",
+    "title": {
+     "en": "Approach a",
+     "de": "Anflug a"
+    },
+    "description": {
+     "en": "Key pose of the landing approach.",
+     "de": "Schlüsselpose des Landeanflugs."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": -2
+     },
+     "neck-1": {
+      "angleDeg": -31
+     },
+     "neck-2": {
+      "angleDeg": -28
+     },
+     "head": {
+      "angleDeg": 65
+     },
+     "arm-n": {
+      "angleDeg": -46
+     },
+     "hand-n": {
+      "angleDeg": 36
+     },
+     "arm-f": {
+      "angleDeg": -32
+     },
+     "hand-f": {
+      "angleDeg": 30
+     },
+     "tail": {
+      "angleDeg": -14
+     },
+     "thigh-n": {
+      "angleDeg": -63
+     },
+     "shank-n": {
+      "angleDeg": 45
+     },
+     "tarsus-n": {
+      "angleDeg": -30
+     },
+     "foot-n": {
+      "angleDeg": -60
+     },
+     "thigh-f": {
+      "angleDeg": -63
+     },
+     "shank-f": {
+      "angleDeg": 45
+     },
+     "tarsus-f": {
+      "angleDeg": -30
+     },
+     "foot-f": {
+      "angleDeg": -60
+     }
+    },
+    "root": {
+     "x": -1.5699999999999998,
+     "y": 1.5
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 2,
+     "breathing": "glide",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.35,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.6
+     }
+    },
+    "loads": [],
+    "key": true
+   },
+   {
+    "id": "flare-key",
+    "title": {
+     "en": "Flare (key)",
+     "de": "Abfangen (Schlüssel)"
+    },
+    "description": {
+     "en": "Key pose of the flare.",
+     "de": "Schlüsselpose des Abfangens."
+    },
+    "bones": {
+     "trunk": {
+      "angleDeg": 30
+     },
+     "neck-1": {
+      "angleDeg": -45
+     },
+     "neck-2": {
+      "angleDeg": 0
+     },
+     "head": {
+      "angleDeg": 3
+     },
+     "arm-n": {
+      "angleDeg": -110
+     },
+     "hand-n": {
+      "angleDeg": 28
+     },
+     "arm-f": {
+      "angleDeg": -98
+     },
+     "hand-f": {
+      "angleDeg": 24
+     },
+     "tail": {
+      "angleDeg": 30
+     },
+     "thigh-n": {
+      "angleDeg": -50
+     },
+     "shank-n": {
+      "angleDeg": 35
+     },
+     "tarsus-n": {
+      "angleDeg": -40
+     },
+     "foot-n": {
+      "angleDeg": -20
+     },
+     "thigh-f": {
+      "angleDeg": -50
+     },
+     "shank-f": {
+      "angleDeg": 35
+     },
+     "tarsus-f": {
+      "angleDeg": -40
+     },
+     "foot-f": {
+      "angleDeg": -20
+     }
+    },
+    "root": {
+     "x": -0.7200000000000001,
+     "y": 0.55
+    },
+    "ground": "authored",
+    "contacts": [],
+    "thermal": {
+     "activityMet": 5,
+     "breathing": "flare",
+     "regions": {
+      "body-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "neck-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "head-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "bill": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "wing-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.6
+      },
+      "tail-plumage": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.48
+      },
+      "legs-skin": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.18
+      },
+      "web-feet": {
+       "exposedFraction": 0.9,
+       "sunlitFraction": 0.18
+      }
+     },
+     "emitters": {
+      "plume-back": 0.3
+     }
+    },
+    "loads": [],
+    "key": true
+   }
+  ],
+  "clips": [
+   {
+    "id": "soar",
+    "title": {
+     "en": "Soaring in lift",
+     "de": "Segeln im Aufwind"
+    },
+    "description": {
+     "en": "Hovering soaring of a gull in ridge lift: the wings flex 4 degrees up and down with the gusts over 4 s while the body stays level; the clip is a ballistic phase, nothing touches the ground.",
+     "de": "Rüttelndes Segeln einer Möwe im Hangaufwind: Die Flügel federn über 4 s mit den Böen um 4 Grad auf und ab, während der Körper waagerecht bleibt; der Clip ist eine ballistische Phase, nichts berührt den Boden."
+    },
+    "durationS": 4,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "gliding",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "gliding-up",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "gliding",
+      "ease": "smooth"
+     },
+     {
+      "t": 3,
+      "pose": "gliding-down",
+      "ease": "smooth"
+     },
+     {
+      "t": 4,
+      "pose": "gliding",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [],
+    "phases": [
+     {
+      "id": "soar",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Soaring in lift",
+       "de": "Segeln im Aufwind"
+      },
+      "ballistic": true
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "kind": "motion",
+      "title": {
+       "en": "Gust lifts the wings",
+       "de": "Böe hebt die Flügel"
+      }
+     },
+     {
+      "t": 3,
+      "kind": "motion",
+      "title": {
+       "en": "Wings sink",
+       "de": "Flügel sinken ab"
+      }
+     }
+    ],
+    "tracks": [
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2
+       },
+       {
+        "t": 1,
+        "v": 2.3
+       },
+       {
+        "t": 3,
+        "v": 1.8
+       },
+       {
+        "t": 4,
+        "v": 2
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "landing",
+    "title": {
+     "en": "Landing",
+     "de": "Landung"
+    },
+    "description": {
+     "en": "A landing in 3.2 s: gliding approach, flare with raised wings and forward feet, touchdown with both feet at 2.0 s and folding of the wings to the standing posture; breathing steps from gliding to the flare pattern and back to rest.",
+     "de": "Eine Landung in 3,2 s: Gleitanflug, Abfangen mit angehobenen Flügeln und Füßen nach vorn, Aufsetzen mit beiden Füßen bei 2,0 s und Anlegen der Flügel in die Standhaltung; die Atmung wechselt vom Gleiten zum Abfangmuster und zurück zur Ruhe."
+    },
+    "durationS": 3.2,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "approach-a",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.3,
+      "pose": "flare-key",
+      "ease": "smooth"
+     },
+     {
+      "t": 2,
+      "pose": "touchdown",
+      "ease": "smooth"
+     },
+     {
+      "t": 3.2,
+      "pose": "settled",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-n",
+      "fromS": 2,
+      "toS": 3.2
+     },
+     {
+      "anchor": "contact-f",
+      "fromS": 2,
+      "toS": 3.2
+     }
+    ],
+    "phases": [
+     {
+      "id": "approach",
+      "fromS": 0,
+      "toS": 2,
+      "title": {
+       "en": "Approach and flare",
+       "de": "Anflug und Abfangen"
+      },
+      "ballistic": true
+     },
+     {
+      "id": "ground",
+      "fromS": 2,
+      "toS": 3.2,
+      "title": {
+       "en": "On the ground, folding the wings",
+       "de": "Am Boden, Flügel anlegen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 2,
+      "kind": "contact-on",
+      "title": {
+       "en": "Feet touch down",
+       "de": "Füße setzen auf"
+      },
+      "target": "contact-n"
+     },
+     {
+      "t": 2,
+      "kind": "contact-on",
+      "title": {
+       "en": "Far foot touches down",
+       "de": "Ferner Fuß setzt auf"
+      },
+      "target": "contact-f"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "breathing",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       },
+       {
+        "t": 1,
+        "v": 2
+       },
+       {
+        "t": 2.4,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "activityMet",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 2
+       },
+       {
+        "t": 1.3,
+        "v": 5
+       },
+       {
+        "t": 2,
+        "v": 4
+       },
+       {
+        "t": 3.2,
+        "v": 2
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 12,
+    "meanRadiantTempC": 12,
+    "skyTempC": 2,
+    "groundTempC": 14,
+    "relativeHumidity": 0.75,
+    "windMS": 4,
+    "windDirectionDeg": 180,
+    "solarWM2": 500,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "baseMet": 1.5,
+   "body": {
+    "species": "gull",
+    "massKg": 1,
+    "skinAreaM2": 0.106,
+    "basalMetabolismW": 3.8,
+    "metWM2": 35.8,
+    "coreSetPointC": 41,
+    "skinSetPointC": 38.5,
+    "sweating": false,
+    "panting": true,
+    "maxSkinBloodFlowLM2H": 70,
+    "minSkinBloodFlowLM2H": 5,
+    "source": "authored-estimate",
+    "reference": "lasiewski-dawson-1967"
+   },
+   "respiration": {
+    "noseEmitter": "breath-nares",
+    "exhaledTempC": 30,
+    "exhaledRelativeHumidity": 0.95,
+    "patterns": [
+     {
+      "id": "rest",
+      "title": {
+       "en": "Resting, nostril breathing",
+       "de": "Ruhe, Nasenatmung"
+      },
+      "rateBpm": 18,
+      "tidalVolumeL": 0.013,
+      "inhaleFraction": 0.45,
+      "pauseAfterInhaleFraction": 0.03,
+      "exhaleFraction": 0.45,
+      "pauseAfterExhaleFraction": 0.07,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "lasiewski-calder-1971"
+     },
+     {
+      "id": "glide",
+      "title": {
+       "en": "Soaring, steady breathing",
+       "de": "Segeln, gleichmäßige Atmung"
+      },
+      "rateBpm": 40,
+      "tidalVolumeL": 0.016,
+      "inhaleFraction": 0.47,
+      "pauseAfterInhaleFraction": 0.01,
+      "exhaleFraction": 0.47,
+      "pauseAfterExhaleFraction": 0.05,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "lasiewski-calder-1971"
+     },
+     {
+      "id": "flare",
+      "title": {
+       "en": "Flapping and landing effort",
+       "de": "Flügelschlag und Landeanstrengung"
+      },
+      "rateBpm": 90,
+      "tidalVolumeL": 0.022,
+      "inhaleFraction": 0.5,
+      "pauseAfterInhaleFraction": 0,
+      "exhaleFraction": 0.5,
+      "pauseAfterExhaleFraction": 0,
+      "route": "nose",
+      "source": "authored-estimate",
+      "reference": "lasiewski-calder-1971"
+     }
+    ],
+    "motion": [
+     {
+      "bone": "trunk",
+      "angleDeg": 1.2,
+      "dy": 0.0015
+     }
+    ],
+    "source": "authored-estimate",
+    "reference": "schmidt-nielsen-1970"
+   },
+   "passengers": [],
+   "operating": [],
+   "regions": [
+    {
+     "id": "body-plumage",
+     "title": {
+      "en": "Body plumage (back, breast, belly)",
+      "de": "Körpergefieder (Rücken, Brust, Bauch)"
+     },
+     "kind": "feather",
+     "model": "body",
+     "material": "plumage",
+     "areaM2": 0.05,
+     "characteristicLengthM": 0.22,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "body-down",
+       "title": {
+        "en": "Down layer with enclosed air",
+        "de": "Daunenschicht mit eingeschlossener Luft"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0132,
+       "resistanceM2KW": 0.3,
+       "vapourResistanceM2PaW": 30.3,
+       "heatCapacityJM2K": 360,
+       "source": "authored-estimate",
+       "reference": "de-vries-van-eerden-1995"
+      },
+      {
+       "id": "body-contour",
+       "title": {
+        "en": "Contour feather layer",
+        "de": "Konturfederschicht"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0108,
+       "resistanceM2KW": 0.2,
+       "vapourResistanceM2PaW": 20.2,
+       "heatCapacityJM2K": 540,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 14000,
+     "body": {
+      "segment": "trunk",
+      "metabolicShare": 0.7,
+      "skinFraction": 0.47169
+     },
+     "source": "authored-estimate",
+     "reference": "walsberg-king-1978"
+    },
+    {
+     "id": "neck-plumage",
+     "title": {
+      "en": "Neck plumage",
+      "de": "Halsgefieder"
+     },
+     "kind": "feather",
+     "model": "body",
+     "material": "plumage",
+     "areaM2": 0.01,
+     "characteristicLengthM": 0.06,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "neck-down",
+       "title": {
+        "en": "Down layer with enclosed air",
+        "de": "Daunenschicht mit eingeschlossener Luft"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0077,
+       "resistanceM2KW": 0.18,
+       "vapourResistanceM2PaW": 18.18,
+       "heatCapacityJM2K": 240,
+       "source": "authored-estimate",
+       "reference": "de-vries-van-eerden-1995"
+      },
+      {
+       "id": "neck-contour",
+       "title": {
+        "en": "Contour feather layer",
+        "de": "Konturfederschicht"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0063,
+       "resistanceM2KW": 0.12,
+       "vapourResistanceM2PaW": 12.12,
+       "heatCapacityJM2K": 360,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 10000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.06,
+      "skinFraction": 0.09434
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "head-plumage",
+     "title": {
+      "en": "Head plumage",
+      "de": "Kopfgefieder"
+     },
+     "kind": "feather",
+     "model": "body",
+     "material": "plumage",
+     "areaM2": 0.0055,
+     "characteristicLengthM": 0.05,
+     "geometry": "sphere",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "head-down",
+       "title": {
+        "en": "Down layer with enclosed air",
+        "de": "Daunenschicht mit eingeschlossener Luft"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0044,
+       "resistanceM2KW": 0.12,
+       "vapourResistanceM2PaW": 12.12,
+       "heatCapacityJM2K": 160,
+       "source": "authored-estimate",
+       "reference": "de-vries-van-eerden-1995"
+      },
+      {
+       "id": "head-contour",
+       "title": {
+        "en": "Contour feather layer",
+        "de": "Konturfederschicht"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0036,
+       "resistanceM2KW": 0.08,
+       "vapourResistanceM2PaW": 8.08,
+       "heatCapacityJM2K": 240,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 9000,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.07,
+      "skinFraction": 0.05189
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "bill",
+     "title": {
+      "en": "Bill (keratin sheath)",
+      "de": "Schnabel (Hornscheide)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "bill-keratin",
+     "areaM2": 0.002,
+     "characteristicLengthM": 0.03,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 2500,
+     "body": {
+      "segment": "head",
+      "metabolicShare": 0.01,
+      "skinFraction": 0.01887
+     },
+     "source": "authored-estimate",
+     "reference": "kahl-1963"
+    },
+    {
+     "id": "wing-plumage",
+     "title": {
+      "en": "Wings (both)",
+      "de": "Flügel (beide)"
+     },
+     "kind": "feather",
+     "model": "body",
+     "material": "wing-feathers",
+     "areaM2": 0.024,
+     "characteristicLengthM": 0.25,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wing-down",
+       "title": {
+        "en": "Down layer with enclosed air",
+        "de": "Daunenschicht mit eingeschlossener Luft"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0088,
+       "resistanceM2KW": 0.21,
+       "vapourResistanceM2PaW": 21.21,
+       "heatCapacityJM2K": 280,
+       "source": "authored-estimate",
+       "reference": "de-vries-van-eerden-1995"
+      },
+      {
+       "id": "wing-contour",
+       "title": {
+        "en": "Contour feather layer",
+        "de": "Konturfederschicht"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0072,
+       "resistanceM2KW": 0.14,
+       "vapourResistanceM2PaW": 14.14,
+       "heatCapacityJM2K": 420,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 6000,
+     "body": {
+      "segment": "wing",
+      "metabolicShare": 0.08,
+      "skinFraction": 0.22642
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "tail-plumage",
+     "title": {
+      "en": "Tail feathers",
+      "de": "Schwanzfedern"
+     },
+     "kind": "feather",
+     "model": "body",
+     "material": "plumage",
+     "areaM2": 0.0075,
+     "characteristicLengthM": 0.1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "tail-down",
+       "title": {
+        "en": "Down layer with enclosed air",
+        "de": "Daunenschicht mit eingeschlossener Luft"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0055,
+       "resistanceM2KW": 0.12,
+       "vapourResistanceM2PaW": 12.12,
+       "heatCapacityJM2K": 160,
+       "source": "authored-estimate",
+       "reference": "de-vries-van-eerden-1995"
+      },
+      {
+       "id": "tail-contour",
+       "title": {
+        "en": "Contour feather layer",
+        "de": "Konturfederschicht"
+       },
+       "kind": "feather",
+       "material": "plumage",
+       "thicknessM": 0.0045,
+       "resistanceM2KW": 0.08,
+       "vapourResistanceM2PaW": 8.08,
+       "heatCapacityJM2K": 240,
+       "source": "authored-estimate",
+       "reference": "scholander-1950"
+      }
+     ],
+     "heatCapacityJM2K": 3500,
+     "body": {
+      "segment": "tail",
+      "metabolicShare": 0.01,
+      "skinFraction": 0.07075
+     },
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    },
+    {
+     "id": "legs-skin",
+     "title": {
+      "en": "Bare shank and tarsus (both legs)",
+      "de": "Unbefiederter Unterschenkel und Lauf (beide Beine)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "scaled-skin",
+     "areaM2": 0.0033,
+     "characteristicLengthM": 0.015,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 3000,
+     "body": {
+      "segment": "leg",
+      "metabolicShare": 0.05,
+      "skinFraction": 0.03113
+     },
+     "source": "authored-estimate",
+     "reference": "kahl-1963"
+    },
+    {
+     "id": "web-feet",
+     "title": {
+      "en": "Webbed feet (both)",
+      "de": "Schwimmfüße (beide)"
+     },
+     "kind": "skin",
+     "model": "body",
+     "material": "scaled-skin",
+     "areaM2": 0.0037,
+     "characteristicLengthM": 0.07,
+     "geometry": "horizontal-plate-down",
+     "skyViewFactor": 0,
+     "layers": [],
+     "heatCapacityJM2K": 2500,
+     "body": {
+      "segment": "foot",
+      "metabolicShare": 0.02,
+      "skinFraction": 0.03491
+     },
+     "source": "authored-estimate",
+     "reference": "kahl-1963"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "breath-nares",
+     "kind": "breath",
+     "title": {
+      "en": "Nares slits in the bill (both, combined)",
+      "de": "Nasenschlitze im Schnabel (beide zusammen)"
+     },
+     "anchor": "nostrils",
+     "directionDeg": -15,
+     "diameterM": 0.006,
+     "source": "authored-estimate",
+     "reference": "gupta-2010"
+    },
+    {
+     "id": "plume-back",
+     "kind": "plume",
+     "title": {
+      "en": "Warm-air plume above the back",
+      "de": "Warmluftfahne über dem Rücken"
+     },
+     "anchor": "back-plume",
+     "directionDeg": 90,
+     "diameterM": 0.16,
+     "region": "body-plumage",
+     "source": "authored-estimate",
+     "reference": "scholander-1950"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Surface temperatures are solved, not authored: heat flows from the 41 degC core through tissue and the plumage layers (resistance about 0.5 m2K/W on the body, 0.2-0.35 elsewhere, authored estimates guided by plumage conductance data of waterbirds); the 4 m/s coastal wind acts through the convection model.",
+     "de": "Oberflächentemperaturen werden gelöst, nicht vorgegeben: Wärme fließt vom 41-Grad-Kern durch Gewebe und die Gefiederschichten (Widerstand rund 0,5 m2K/W am Rumpf, 0,2-0,35 sonst, Schätzwerte nach Leitwertdaten von Wasservögeln); der Küstenwind von 4 m/s wirkt über das Konvektionsmodell."
+    },
+    {
+     "en": "Bare legs and feet carry 7 % of the heat production as a controlled heat-loss path; in flight they are held against the tail and bind a reduced exposed fraction.",
+     "de": "Unbefiederte Beine und Füße tragen 7 % der Wärmeproduktion als geregelten Wärmeabgabeweg; im Flug werden sie an den Schwanz gelegt und binden einen verringerten freien Anteil."
+    },
+    {
+     "en": "Birds breathe through the nares; the exhaled air leaves at 30 degC and 95 % relative humidity.",
+     "de": "Vögel atmen durch die Nasenlöcher; die Ausatemluft verlässt sie mit 30 Grad und 95 % relativer Feuchte."
+    },
+    {
+     "en": "Spread wings in elevation are an oblique projection: the 1.45 m wingspan is not visible in the side view, but the thermal wing region keeps its full area.",
+     "de": "Gespreizte Flügel sind im Aufriss eine schräge Projektion: die Spannweite von 1,45 m ist in der Seitenansicht nicht sichtbar, die thermische Flügelregion behält aber ihre volle Fläche."
+    }
+   ]
+  },
+  "representations": {
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.31,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "far-arm",
+       "bone": "arm-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "path",
+       "d": "M -0.03 -0.04 C -0.015 -0.0483 0.03 -0.0487 0.06 -0.05 C 0.09 -0.0513 0.1242 -0.05 0.15 -0.048 C 0.1758 -0.046 0.202 -0.046 0.215 -0.038 C 0.228 -0.03 0.2305 -0.013 0.228 0 C 0.2255 0.013 0.2213 0.0317 0.2 0.04 C 0.1787 0.0483 0.1333 0.05 0.1 0.05 C 0.0667 0.05 0.0217 0.0483 0 0.04 C -0.0217 0.0317 -0.025 0.0133 -0.03 0 C -0.035 -0.0133 -0.045 -0.0317 -0.03 -0.04 Z",
+       "region": "wing-plumage"
+      },
+      {
+       "id": "far-hand",
+       "bone": "hand-f",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.03 -0.032 C -0.0117 -0.0427 0.0467 -0.0363 0.08 -0.036 C 0.1133 -0.0357 0.1442 -0.0335 0.17 -0.03 C 0.1958 -0.0265 0.2228 -0.022 0.235 -0.015 C 0.2472 -0.008 0.2538 0.0052 0.243 0.012 C 0.2322 0.0188 0.1972 0.023 0.17 0.026 C 0.1428 0.029 0.1133 0.0297 0.08 0.03 C 0.0467 0.0303 -0.0117 0.0383 -0.03 0.028 C -0.0483 0.0177 -0.0483 -0.0213 -0.03 -0.032 Z",
+       "region": "wing-plumage"
+      },
+      {
+       "id": "near-arm",
+       "bone": "arm-n",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M -0.03 -0.04 C -0.015 -0.0483 0.03 -0.0487 0.06 -0.05 C 0.09 -0.0513 0.1242 -0.05 0.15 -0.048 C 0.1758 -0.046 0.202 -0.046 0.215 -0.038 C 0.228 -0.03 0.2305 -0.013 0.228 0 C 0.2255 0.013 0.2213 0.0317 0.2 0.04 C 0.1787 0.0483 0.1333 0.05 0.1 0.05 C 0.0667 0.05 0.0217 0.0483 0 0.04 C -0.0217 0.0317 -0.025 0.0133 -0.03 0 C -0.035 -0.0133 -0.045 -0.0317 -0.03 -0.04 Z",
+       "region": "wing-plumage"
+      },
+      {
+       "id": "near-hand",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.03,
+         -0.032
+        ],
+        [
+         -0.02139,
+         -0.03526
+        ],
+        [
+         -0.00977,
+         -0.03718
+        ],
+        [
+         0.00407,
+         -0.03805
+        ],
+        [
+         0.01938,
+         -0.03812
+        ],
+        [
+         0.08,
+         -0.036
+        ],
+        [
+         0.12781,
+         -0.0342
+        ],
+        [
+         0.17,
+         -0.03
+        ],
+        [
+         0.2076,
+         -0.02381
+        ],
+        [
+         0.22333,
+         -0.0198
+        ],
+        [
+         0.235,
+         -0.015
+        ],
+        [
+         0.24292,
+         -0.00878
+        ],
+        [
+         0.24763,
+         -0.00142
+        ],
+        [
+         0.24843,
+         0.00231
+        ],
+        [
+         0.24802,
+         0.0059
+        ],
+        [
+         0.24626,
+         0.00917
+        ],
+        [
+         0.243,
+         0.012
+        ],
+        [
+         0.23788,
+         0.01443
+        ],
+        [
+         0.23086,
+         0.01663
+        ],
+        [
+         0.21265,
+         0.02042
+        ],
+        [
+         0.17,
+         0.026
+        ],
+        [
+         0.12729,
+         0.02901
+        ],
+        [
+         0.08,
+         0.03
+        ],
+        [
+         0.05134,
+         0.03126
+        ],
+        [
+         0.01655,
+         0.03549
+        ],
+        [
+         -0.00222,
+         0.03883
+        ],
+        [
+         -0.0126,
+         0.03522
+        ],
+        [
+         -0.02139,
+         0.03106
+        ],
+        [
+         -0.03,
+         0.028
+        ],
+        [
+         -0.036,
+         0.0229
+        ],
+        [
+         -0.04029,
+         0.01578
+        ],
+        [
+         -0.04287,
+         0.00731
+        ],
+        [
+         -0.04372,
+         -0.00185
+        ],
+        [
+         -0.04287,
+         -0.01103
+        ],
+        [
+         -0.04029,
+         -0.01956
+        ],
+        [
+         -0.036,
+         -0.02677
+        ],
+        [
+         -0.03,
+         -0.032
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "wingtip",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "path",
+       "d": "M 0.15 -0.027 C 0.1608 -0.0328 0.2102 -0.0198 0.225 -0.014 C 0.2398 -0.0082 0.2498 0.0022 0.239 0.008 C 0.2282 0.0138 0.1748 0.0268 0.16 0.021 C 0.1452 0.0152 0.1392 -0.0212 0.15 -0.027 Z",
+       "region": "wing-plumage"
+      },
+      {
+       "id": "far-shank",
+       "bone": "shank-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "legs-skin",
+       "points": [
+        [
+         -0.01993,
+         -0.00906
+        ],
+        [
+         -0.00445,
+         -0.00982
+        ],
+        [
+         0.01723,
+         -0.01117
+        ],
+        [
+         0.06,
+         -0.0105
+        ],
+        [
+         0.0895,
+         -0.01117
+        ],
+        [
+         0.10115,
+         -0.01126
+        ],
+        [
+         0.11,
+         -0.0105
+        ],
+        [
+         0.11534,
+         -0.00814
+        ],
+        [
+         0.11764,
+         -0.00461
+        ],
+        [
+         0.118,
+         0
+        ],
+        [
+         0.11764,
+         0.00461
+        ],
+        [
+         0.11534,
+         0.00814
+        ],
+        [
+         0.11,
+         0.0105
+        ],
+        [
+         0.10115,
+         0.01126
+        ],
+        [
+         0.0895,
+         0.01118
+        ],
+        [
+         0.06,
+         0.0105
+        ],
+        [
+         0.01723,
+         0.01118
+        ],
+        [
+         -0.00452,
+         0.01126
+        ],
+        [
+         -0.02,
+         0.0105
+        ],
+        [
+         -0.02697,
+         0.00863
+        ],
+        [
+         -0.02818,
+         0.00735
+        ],
+        [
+         -0.02836,
+         0.00593
+        ],
+        [
+         -0.02707,
+         0.00288
+        ],
+        [
+         -0.026,
+         0
+        ],
+        [
+         -0.02707,
+         -0.00288
+        ],
+        [
+         -0.02836,
+         -0.00593
+        ],
+        [
+         -0.02818,
+         -0.00735
+        ],
+        [
+         -0.02697,
+         -0.00863
+        ],
+        [
+         -0.02,
+         -0.0105
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-tarsus",
+       "bone": "tarsus-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.016 -0.0105 C -0.0015 -0.0123 0.0498 -0.0123 0.065 -0.0105 C 0.0802 -0.0088 0.075 0 0.075 0 C 0.075 0 0.0802 0.0088 0.065 0.0105 C 0.0498 0.0123 -0.0015 0.0123 -0.016 0.0105 C -0.0305 0.0088 -0.022 0.0035 -0.022 0 C -0.022 -0.0035 -0.0305 -0.0088 -0.016 -0.0105 Z",
+       "region": "legs-skin"
+      },
+      {
+       "id": "far-foot",
+       "bone": "foot-f",
+       "role": "body",
+       "z": 1.2,
+       "filled": false,
+       "tone": 0.55,
+       "kind": "path",
+       "d": "M -0.016 0.0105 C -0.0082 0.0123 0.0115 0.0111 0.025 0.0105 C 0.0385 0.0099 0.0545 0.0088 0.065 0.007 C 0.0755 0.0053 0.088 0 0.088 0 C 0.088 0 0.088 -0.007 0.088 -0.007 C 0.088 -0.007 0.0473 -0.0099 0.03 -0.0105 C 0.0127 -0.0111 -0.0073 -0.0123 -0.016 -0.0105 C -0.0247 -0.0088 -0.022 -0.0035 -0.022 0 C -0.022 0.0035 -0.0238 0.0088 -0.016 0.0105 Z",
+       "region": "web-feet"
+      },
+      {
+       "id": "near-shank",
+       "bone": "shank-n",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "legs-skin",
+       "points": [
+        [
+         -0.02095,
+         -0.01354
+        ],
+        [
+         -0.00374,
+         -0.01628
+        ],
+        [
+         0.01864,
+         -0.01279
+        ],
+        [
+         0.06,
+         -0.0105
+        ],
+        [
+         0.0895,
+         -0.01117
+        ],
+        [
+         0.10115,
+         -0.01126
+        ],
+        [
+         0.11,
+         -0.0105
+        ],
+        [
+         0.11534,
+         -0.00814
+        ],
+        [
+         0.11764,
+         -0.00461
+        ],
+        [
+         0.118,
+         0
+        ],
+        [
+         0.11764,
+         0.00461
+        ],
+        [
+         0.11534,
+         0.00814
+        ],
+        [
+         0.11,
+         0.0105
+        ],
+        [
+         0.10115,
+         0.01126
+        ],
+        [
+         0.0895,
+         0.01118
+        ],
+        [
+         0.06,
+         0.0105
+        ],
+        [
+         0.01723,
+         0.01118
+        ],
+        [
+         -0.00452,
+         0.01126
+        ],
+        [
+         -0.0213,
+         0.01328
+        ],
+        [
+         -0.02986,
+         0.0148
+        ],
+        [
+         -0.02948,
+         0.01013
+        ],
+        [
+         -0.02836,
+         0.00593
+        ],
+        [
+         -0.02707,
+         0.00288
+        ],
+        [
+         -0.026,
+         0
+        ],
+        [
+         -0.02707,
+         -0.00288
+        ],
+        [
+         -0.02836,
+         -0.00593
+        ],
+        [
+         -0.02818,
+         -0.00735
+        ],
+        [
+         -0.02697,
+         -0.00863
+        ],
+        [
+         -0.02,
+         -0.0105
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-tarsus",
+       "bone": "tarsus-n",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "path",
+       "d": "M -0.016 -0.0105 C -0.0015 -0.0123 0.0498 -0.0123 0.065 -0.0105 C 0.0802 -0.0088 0.075 0 0.075 0 C 0.075 0 0.0802 0.0088 0.065 0.0105 C 0.0498 0.0123 -0.0015 0.0123 -0.016 0.0105 C -0.0305 0.0088 -0.022 0.0035 -0.022 0 C -0.022 -0.0035 -0.0305 -0.0088 -0.016 -0.0105 Z",
+       "region": "legs-skin"
+      },
+      {
+       "id": "near-foot",
+       "bone": "foot-n",
+       "role": "body",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "path",
+       "d": "M -0.016 0.0105 C -0.0082 0.0123 0.0115 0.0111 0.025 0.0105 C 0.0385 0.0099 0.0545 0.0088 0.065 0.007 C 0.0755 0.0053 0.088 0 0.088 0 C 0.088 0 0.088 -0.007 0.088 -0.007 C 0.088 -0.007 0.0473 -0.0099 0.03 -0.0105 C 0.0127 -0.0111 -0.0073 -0.0123 -0.016 -0.0105 C -0.0247 -0.0088 -0.022 -0.0035 -0.022 0 C -0.022 0.0035 -0.0238 0.0088 -0.016 0.0105 Z",
+       "region": "web-feet"
+      },
+      {
+       "id": "far-thigh",
+       "bone": "thigh-f",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "region": "body-plumage",
+       "points": [
+        [
+         -0.02,
+         -0.03
+        ],
+        [
+         -0.01608,
+         -0.03349
+        ],
+        [
+         -0.0108,
+         -0.03582
+        ],
+        [
+         -0.00449,
+         -0.03718
+        ],
+        [
+         0.00249,
+         -0.03776
+        ],
+        [
+         0.01703,
+         -0.03733
+        ],
+        [
+         0.03,
+         -0.036
+        ],
+        [
+         0.04159,
+         -0.03409
+        ],
+        [
+         0.053,
+         -0.03085
+        ],
+        [
+         0.06291,
+         -0.02618
+        ],
+        [
+         0.06689,
+         -0.02329
+        ],
+        [
+         0.07,
+         -0.02
+        ],
+        [
+         0.07421,
+         -0.01109
+        ],
+        [
+         0.07614,
+         0.00011
+        ],
+        [
+         0.0755,
+         0.01126
+        ],
+        [
+         0.0729,
+         0.01623
+        ],
+        [
+         0.0693,
+         0.02034
+        ],
+        [
+         0.06768,
+         0.02327
+        ],
+        [
+         0.06476,
+         0.02575
+        ],
+        [
+         0.05422,
+         0.02974
+        ],
+        [
+         0.04208,
+         0.03236
+        ],
+        [
+         0.03,
+         0.034
+        ],
+        [
+         0.0169,
+         0.0356
+        ],
+        [
+         0.00237,
+         0.03665
+        ],
+        [
+         -0.00457,
+         0.03642
+        ],
+        [
+         -0.01084,
+         0.03538
+        ],
+        [
+         -0.0161,
+         0.03331
+        ],
+        [
+         -0.02,
+         0.03
+        ],
+        [
+         -0.02272,
+         0.0248
+        ],
+        [
+         -0.02467,
+         0.01766
+        ],
+        [
+         -0.02622,
+         0.00011
+        ],
+        [
+         -0.02467,
+         -0.01749
+        ],
+        [
+         -0.02272,
+         -0.0247
+        ],
+        [
+         -0.02,
+         -0.03
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail",
+       "bone": "tail",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "region": "tail-plumage",
+       "points": [
+        [
+         -0.03,
+         -0.034
+        ],
+        [
+         -0.02299,
+         -0.03872
+        ],
+        [
+         -0.01359,
+         -0.04229
+        ],
+        [
+         -0.00171,
+         -0.04634
+        ],
+        [
+         0.01152,
+         -0.04992
+        ],
+        [
+         0.03679,
+         -0.05023
+        ],
+        [
+         0.06,
+         -0.05
+        ],
+        [
+         0.08229,
+         -0.05095
+        ],
+        [
+         0.10488,
+         -0.05075
+        ],
+        [
+         0.12503,
+         -0.04868
+        ],
+        [
+         0.13333,
+         -0.04671
+        ],
+        [
+         0.14,
+         -0.044
+        ],
+        [
+         0.14491,
+         -0.04033
+        ],
+        [
+         0.14833,
+         -0.03569
+        ],
+        [
+         0.15052,
+         -0.03031
+        ],
+        [
+         0.15174,
+         -0.0244
+        ],
+        [
+         0.15228,
+         -0.01191
+        ],
+        [
+         0.152,
+         0
+        ],
+        [
+         0.15228,
+         0.01191
+        ],
+        [
+         0.15174,
+         0.0244
+        ],
+        [
+         0.15052,
+         0.03031
+        ],
+        [
+         0.14833,
+         0.03569
+        ],
+        [
+         0.14491,
+         0.04033
+        ],
+        [
+         0.14,
+         0.044
+        ],
+        [
+         0.13333,
+         0.04669
+        ],
+        [
+         0.12503,
+         0.04862
+        ],
+        [
+         0.10488,
+         0.0506
+        ],
+        [
+         0.08229,
+         0.05078
+        ],
+        [
+         0.06,
+         0.05
+        ],
+        [
+         0.03611,
+         0.04923
+        ],
+        [
+         0.01001,
+         0.04776
+        ],
+        [
+         -0.00239,
+         0.04624
+        ],
+        [
+         -0.01359,
+         0.04391
+        ],
+        [
+         -0.02299,
+         0.04057
+        ],
+        [
+         -0.03,
+         0.036
+        ],
+        [
+         -0.03492,
+         0.02956
+        ],
+        [
+         -0.03844,
+         0.02117
+        ],
+        [
+         -0.04055,
+         0.01147
+        ],
+        [
+         -0.04125,
+         0.00111
+        ],
+        [
+         -0.04055,
+         -0.00926
+        ],
+        [
+         -0.03844,
+         -0.019
+        ],
+        [
+         -0.03492,
+         -0.02746
+        ],
+        [
+         -0.03,
+         -0.034
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "body",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "body-plumage",
+       "points": [
+        [
+         -0.03,
+         0.02
+        ],
+        [
+         -0.02589,
+         0.02922
+        ],
+        [
+         -0.01969,
+         0.03814
+        ],
+        [
+         -0.01227,
+         0.04863
+        ],
+        [
+         -0.00251,
+         0.05922
+        ],
+        [
+         0.01287,
+         0.0652
+        ],
+        [
+         0.03065,
+         0.07154
+        ],
+        [
+         0.04947,
+         0.079
+        ],
+        [
+         0.07,
+         0.085
+        ],
+        [
+         0.09311,
+         0.08939
+        ],
+        [
+         0.11873,
+         0.09251
+        ],
+        [
+         0.14498,
+         0.09438
+        ],
+        [
+         0.17,
+         0.095
+        ],
+        [
+         0.19392,
+         0.09438
+        ],
+        [
+         0.21751,
+         0.09251
+        ],
+        [
+         0.23985,
+         0.08939
+        ],
+        [
+         0.26,
+         0.085
+        ],
+        [
+         0.27781,
+         0.07913
+        ],
+        [
+         0.29375,
+         0.07187
+        ],
+        [
+         0.30781,
+         0.06368
+        ],
+        [
+         0.32,
+         0.055
+        ],
+        [
+         0.33043,
+         0.04592
+        ],
+        [
+         0.33905,
+         0.03624
+        ],
+        [
+         0.34733,
+         0.02689
+        ],
+        [
+         0.35374,
+         0.01713
+        ],
+        [
+         0.35384,
+         0.00393
+        ],
+        [
+         0.35219,
+         -0.01
+        ],
+        [
+         0.34987,
+         -0.02297
+        ],
+        [
+         0.345,
+         -0.035
+        ],
+        [
+         0.33787,
+         -0.04624
+        ],
+        [
+         0.32846,
+         -0.05706
+        ],
+        [
+         0.31607,
+         -0.06685
+        ],
+        [
+         0.30854,
+         -0.07117
+        ],
+        [
+         0.3,
+         -0.075
+        ],
+        [
+         0.27885,
+         -0.08135
+        ],
+        [
+         0.25341,
+         -0.08624
+        ],
+        [
+         0.22627,
+         -0.08975
+        ],
+        [
+         0.19698,
+         -0.09148
+        ],
+        [
+         0.1676,
+         -0.09177
+        ],
+        [
+         0.14511,
+         -0.09199
+        ],
+        [
+         0.12469,
+         -0.09345
+        ],
+        [
+         0.10443,
+         -0.09048
+        ],
+        [
+         0.0822,
+         -0.08398
+        ],
+        [
+         0.06219,
+         -0.07905
+        ],
+        [
+         0.04573,
+         -0.07273
+        ],
+        [
+         0.03,
+         -0.065
+        ],
+        [
+         0.01404,
+         -0.0552
+        ],
+        [
+         -0.00155,
+         -0.04359
+        ],
+        [
+         -0.01511,
+         -0.03143
+        ],
+        [
+         -0.025,
+         -0.02
+        ],
+        [
+         -0.03059,
+         -0.00952
+        ],
+        [
+         -0.03283,
+         0.00064
+        ],
+        [
+         -0.0324,
+         0.01047
+        ],
+        [
+         -0.03,
+         0.02
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "mantle",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "path",
+       "d": "M 0.03 0.05 C 0.035 0.0638 0.0717 0.0767 0.1 0.083 C 0.1283 0.0893 0.17 0.0902 0.2 0.088 C 0.23 0.0858 0.2717 0.0788 0.28 0.07 C 0.2883 0.0612 0.2717 0.0433 0.25 0.035 C 0.2283 0.0267 0.18 0.0258 0.15 0.02 C 0.12 0.0142 0.09 -0.005 0.07 0 C 0.05 0.005 0.025 0.0362 0.03 0.05 Z",
+       "region": "body-plumage"
+      },
+      {
+       "id": "near-thigh",
+       "bone": "thigh-n",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.1,
+       "kind": "poly",
+       "region": "body-plumage",
+       "points": [
+        [
+         -0.02,
+         -0.03
+        ],
+        [
+         -0.01608,
+         -0.03349
+        ],
+        [
+         -0.0108,
+         -0.03582
+        ],
+        [
+         -0.00449,
+         -0.03718
+        ],
+        [
+         0.00249,
+         -0.03776
+        ],
+        [
+         0.01559,
+         -0.03746
+        ],
+        [
+         0.02856,
+         -0.03613
+        ],
+        [
+         0.04226,
+         -0.03512
+        ],
+        [
+         0.05449,
+         -0.03313
+        ],
+        [
+         0.06358,
+         -0.02721
+        ],
+        [
+         0.06689,
+         -0.02329
+        ],
+        [
+         0.07,
+         -0.02
+        ],
+        [
+         0.07421,
+         -0.01109
+        ],
+        [
+         0.07614,
+         0.00011
+        ],
+        [
+         0.0755,
+         0.01126
+        ],
+        [
+         0.07412,
+         0.01608
+        ],
+        [
+         0.072,
+         0.02
+        ],
+        [
+         0.0689,
+         0.02312
+        ],
+        [
+         0.06476,
+         0.02575
+        ],
+        [
+         0.05422,
+         0.02974
+        ],
+        [
+         0.04208,
+         0.03236
+        ],
+        [
+         0.03,
+         0.034
+        ],
+        [
+         0.0169,
+         0.0356
+        ],
+        [
+         0.00237,
+         0.03665
+        ],
+        [
+         -0.00457,
+         0.03642
+        ],
+        [
+         -0.01084,
+         0.03538
+        ],
+        [
+         -0.0161,
+         0.03331
+        ],
+        [
+         -0.02,
+         0.03
+        ],
+        [
+         -0.02272,
+         0.0248
+        ],
+        [
+         -0.02467,
+         0.01766
+        ],
+        [
+         -0.02622,
+         0.00011
+        ],
+        [
+         -0.02467,
+         -0.01749
+        ],
+        [
+         -0.02272,
+         -0.0247
+        ],
+        [
+         -0.02,
+         -0.03
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck-1",
+       "bone": "neck-1",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "path",
+       "d": "M -0.05 -0.045 C -0.0417 -0.0595 -0.0217 -0.0438 0 -0.042 C 0.0217 -0.0402 0.0633 -0.041 0.08 -0.034 C 0.0967 -0.027 0.1 -0.0113 0.1 0 C 0.1 0.0113 0.0967 0.027 0.08 0.034 C 0.0633 0.041 0.0217 0.0402 0 0.042 C -0.0217 0.0438 -0.0417 0.0595 -0.05 0.045 C -0.0583 0.0305 -0.0583 -0.0305 -0.05 -0.045 Z",
+       "region": "neck-plumage"
+      },
+      {
+       "id": "neck-2",
+       "bone": "neck-2",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "neck-plumage",
+       "points": [
+        [
+         -0.04,
+         -0.034
+        ],
+        [
+         -0.03094,
+         -0.03731
+        ],
+        [
+         -0.02014,
+         -0.03959
+        ],
+        [
+         -0.00728,
+         -0.04072
+        ],
+        [
+         0.01296,
+         -0.04118
+        ],
+        [
+         0.04903,
+         -0.03951
+        ],
+        [
+         0.07141,
+         -0.03346
+        ],
+        [
+         0.07753,
+         -0.02944
+        ],
+        [
+         0.0834,
+         -0.02614
+        ],
+        [
+         0.0878,
+         -0.02227
+        ],
+        [
+         0.09094,
+         -0.01799
+        ],
+        [
+         0.09302,
+         -0.01346
+        ],
+        [
+         0.09426,
+         -0.00884
+        ],
+        [
+         0.095,
+         0
+        ],
+        [
+         0.09426,
+         0.00915
+        ],
+        [
+         0.09302,
+         0.01409
+        ],
+        [
+         0.09094,
+         0.01899
+        ],
+        [
+         0.0878,
+         0.02364
+        ],
+        [
+         0.0834,
+         0.02783
+        ],
+        [
+         0.07753,
+         0.03135
+        ],
+        [
+         0.07,
+         0.034
+        ],
+        [
+         0.04589,
+         0.03799
+        ],
+        [
+         0.01343,
+         0.04038
+        ],
+        [
+         -0.00309,
+         0.04047
+        ],
+        [
+         -0.01826,
+         0.03957
+        ],
+        [
+         -0.03094,
+         0.03748
+        ],
+        [
+         -0.04,
+         0.034
+        ],
+        [
+         -0.046,
+         0.02828
+        ],
+        [
+         -0.05029,
+         0.02015
+        ],
+        [
+         -0.05287,
+         0.01042
+        ],
+        [
+         -0.05372,
+         -0.00011
+        ],
+        [
+         -0.05287,
+         -0.01063
+        ],
+        [
+         -0.05029,
+         -0.02032
+        ],
+        [
+         -0.046,
+         -0.02838
+        ],
+        [
+         -0.04,
+         -0.034
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.06,
+       "kind": "path",
+       "d": "M -0.05 -0.03 C -0.0625 -0.02 -0.0533 0.018 -0.045 0.03 C -0.0367 0.042 -0.0142 0.0403 0 0.042 C 0.0142 0.0437 0.03 0.0423 0.04 0.04 C 0.05 0.0377 0.0557 0.0338 0.06 0.028 C 0.0643 0.0222 0.0663 0.0122 0.066 0.005 C 0.0657 -0.0022 0.064 -0.0092 0.058 -0.015 C 0.052 -0.0208 0.048 -0.0275 0.03 -0.03 C 0.012 -0.0325 -0.0375 -0.04 -0.05 -0.03 Z",
+       "region": "head-plumage"
+      },
+      {
+       "id": "bill",
+       "bone": "head",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "bill",
+       "points": [
+        [
+         0.05,
+         0.02
+        ],
+        [
+         0.05357,
+         0.02173
+        ],
+        [
+         0.05844,
+         0.02236
+        ],
+        [
+         0.07063,
+         0.02123
+        ],
+        [
+         0.095,
+         0.016
+        ],
+        [
+         0.11255,
+         0.01138
+        ],
+        [
+         0.125,
+         0.006
+        ],
+        [
+         0.12803,
+         0.00305
+        ],
+        [
+         0.12914,
+         -0.00024
+        ],
+        [
+         0.129,
+         -0.004
+        ],
+        [
+         0.112,
+         -0.014
+        ],
+        [
+         0.10523,
+         -0.01752
+        ],
+        [
+         0.095,
+         -0.02
+        ],
+        [
+         0.07145,
+         -0.024
+        ],
+        [
+         0.05875,
+         -0.0247
+        ],
+        [
+         0.05366,
+         -0.02389
+        ],
+        [
+         0.04835,
+         -0.02319
+        ],
+        [
+         0.04388,
+         -0.02118
+        ],
+        [
+         0.04413,
+         -0.01469
+        ],
+        [
+         0.04438,
+         -0.00085
+        ],
+        [
+         0.04578,
+         0.01172
+        ],
+        [
+         0.04754,
+         0.01666
+        ],
+        [
+         0.05,
+         0.02
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Full articulation 0.66 x 0.52 m = 13.2 x 10.4 mm: white gull with pale grey mantle, black wingtips (wings drawn in oblique projection when spread), yellow bill, pink legs.",
+      "de": "Volle Gliederung 0,66 x 0,52 m = 13,2 x 10,4 mm: weiße Möwe mit hellgrauem Mantel, schwarzen Flügelspitzen (gespreizte Flügel in schräger Projektion), gelbem Schnabel, rosa Beinen."
+     },
+     "retained": {
+      "en": "Both wings in arm and hand, black wingtip, both legs with shank, tarsus and webbed foot, thigh pads, neck in two pieces, head, hooked bill.",
+      "de": "Beide Flügel in Arm und Hand, schwarze Flügelspitze, beide Beine mit Unterschenkel, Lauf und Schwimmfuß, Schenkelpolster, zweiteiliger Hals, Kopf, Hakenschnabel."
+     },
+     "merged": {
+      "en": "The mantle and thigh pads use the body region; the black wingtip uses the wing region.",
+      "de": "Mantel und Schenkelpolster nutzen die Körperregion; die schwarze Flügelspitze die Flügelregion."
+     },
+     "omitted": {
+      "en": "The eye (0.015 m) and the covert line (both would lie within 0.15 mm of the bill, neck or wing outline in some pose), individual feathers, the red spot of the bill (0.008 m = 0.16 mm), nostrils, toe lines.",
+      "de": "Das Auge (0,015 m) und die Deckfederlinie (beide läge in irgendeiner Pose näher als 0,15 mm an Schnabel-, Hals- oder Flügelkontur), einzelne Federn, der rote Schnabelfleck (0,008 m = 0,16 mm), Nasenlöcher, Zehenlinien."
+     },
+     "thinElements": {
+      "en": "Shank, tarsus and foot are filled 0.021 m wide (0.42 mm) instead of the real 0.012 m: 0.009 m wider, less than the 0.0125 m the outline pen adds.",
+      "de": "Unterschenkel, Lauf und Fuß sind 0,021 m (0,42 mm) breit gefüllt statt real 0,012 m: 0,009 m breiter, weniger als die 0,0125 m, die der Konturstift hinzufügt."
+     },
+     "hatching": {
+      "en": "None: white plumage stays clean, the tone separates mantle and wingtip.",
+      "de": "Keine: das weiße Gefieder bleibt sauber, der Ton trennt Mantel und Flügelspitze."
+     },
+     "styles": {
+      "en": "0.25 mm silhouette, no detail pen; tones white 0.1, mantle 0.3, wingtip 0.9, legs 0.45.",
+      "de": "0,25-mm-Kontur, kein Detailstift; Töne weiß 0,1, Mantel 0,3, Flügelspitze 0,9, Beine 0,45."
+     },
+     "overlays": {
+      "en": "Every thermal region has its own shape so a thermal overlay separates plumage, wing, bill and bare skin.",
+      "de": "Jede thermische Region hat eine eigene Form, sodass ein Wärmebild Gefieder, Flügel, Schnabel und nackte Haut trennt."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "far-arm",
+       "bone": "arm-f",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.45,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.04,
+         -0.044
+        ],
+        [
+         -0.02907,
+         -0.04704
+        ],
+        [
+         -0.01438,
+         -0.04946
+        ],
+        [
+         0.0225,
+         -0.05264
+        ],
+        [
+         0.06313,
+         -0.054
+        ],
+        [
+         0.1,
+         -0.054
+        ],
+        [
+         0.13388,
+         -0.05278
+        ],
+        [
+         0.16788,
+         -0.05011
+        ],
+        [
+         0.19793,
+         -0.04589
+        ],
+        [
+         0.21022,
+         -0.04316
+        ],
+        [
+         0.22,
+         -0.04
+        ],
+        [
+         0.22714,
+         -0.03627
+        ],
+        [
+         0.23206,
+         -0.03192
+        ],
+        [
+         0.2351,
+         -0.02708
+        ],
+        [
+         0.2366,
+         -0.02187
+        ],
+        [
+         0.2369,
+         -0.01644
+        ],
+        [
+         0.23634,
+         -0.01089
+        ],
+        [
+         0.23791,
+         0.00082
+        ],
+        [
+         0.23161,
+         0.01161
+        ],
+        [
+         0.22989,
+         0.01789
+        ],
+        [
+         0.22727,
+         0.02414
+        ],
+        [
+         0.22338,
+         0.03012
+        ],
+        [
+         0.2178,
+         0.03559
+        ],
+        [
+         0.21014,
+         0.0403
+        ],
+        [
+         0.2,
+         0.044
+        ],
+        [
+         0.18638,
+         0.04694
+        ],
+        [
+         0.16924,
+         0.04947
+        ],
+        [
+         0.12849,
+         0.05285
+        ],
+        [
+         0.086,
+         0.05331
+        ],
+        [
+         0.06667,
+         0.05218
+        ],
+        [
+         0.05,
+         0.05
+        ],
+        [
+         0.03526,
+         0.0464
+        ],
+        [
+         0.02117,
+         0.04132
+        ],
+        [
+         0.0079,
+         0.03511
+        ],
+        [
+         -0.00437,
+         0.02815
+        ],
+        [
+         -0.02523,
+         0.01341
+        ],
+        [
+         -0.04,
+         0
+        ],
+        [
+         -0.0496,
+         -0.01223
+        ],
+        [
+         -0.05274,
+         -0.01845
+        ],
+        [
+         -0.05436,
+         -0.02451
+        ],
+        [
+         -0.05419,
+         -0.03026
+        ],
+        [
+         -0.05194,
+         -0.03554
+        ],
+        [
+         -0.0473,
+         -0.04017
+        ],
+        [
+         -0.04,
+         -0.044
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "far-hand",
+       "bone": "hand-f",
+       "role": "body",
+       "z": 1.1,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.04,
+         -0.036
+        ],
+        [
+         -0.02735,
+         -0.03947
+        ],
+        [
+         -0.0102,
+         -0.04154
+        ],
+        [
+         0.01023,
+         -0.04247
+        ],
+        [
+         0.03276,
+         -0.04247
+        ],
+        [
+         0.07935,
+         -0.04067
+        ],
+        [
+         0.12,
+         -0.038
+        ],
+        [
+         0.15454,
+         -0.03434
+        ],
+        [
+         0.18726,
+         -0.02887
+        ],
+        [
+         0.21536,
+         -0.02247
+        ],
+        [
+         0.236,
+         -0.016
+        ],
+        [
+         0.24958,
+         -0.00921
+        ],
+        [
+         0.25425,
+         -0.00552
+        ],
+        [
+         0.25722,
+         -0.00177
+        ],
+        [
+         0.2583,
+         0.00195
+        ],
+        [
+         0.25726,
+         0.00554
+        ],
+        [
+         0.2539,
+         0.00893
+        ],
+        [
+         0.248,
+         0.012
+        ],
+        [
+         0.23893,
+         0.01486
+        ],
+        [
+         0.22661,
+         0.01764
+        ],
+        [
+         0.19277,
+         0.02755
+        ],
+        [
+         0.15312,
+         0.03764
+        ],
+        [
+         0.11801,
+         0.03479
+        ],
+        [
+         0.0785,
+         0.03281
+        ],
+        [
+         0.03201,
+         0.03525
+        ],
+        [
+         0.0097,
+         0.03563
+        ],
+        [
+         -0.01049,
+         0.03506
+        ],
+        [
+         -0.02743,
+         0.03328
+        ],
+        [
+         -0.04,
+         0.03
+        ],
+        [
+         -0.04469,
+         0.02757
+        ],
+        [
+         -0.04876,
+         0.02447
+        ],
+        [
+         -0.05502,
+         0.01664
+        ],
+        [
+         -0.05811,
+         0.00158
+        ],
+        [
+         -0.05936,
+         -0.00857
+        ],
+        [
+         -0.05877,
+         -0.01305
+        ],
+        [
+         -0.05502,
+         -0.02247
+        ],
+        [
+         -0.04876,
+         -0.03037
+        ],
+        [
+         -0.04469,
+         -0.03352
+        ],
+        [
+         -0.04,
+         -0.036
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-arm",
+       "bone": "arm-n",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.04,
+         -0.044
+        ],
+        [
+         -0.02907,
+         -0.04704
+        ],
+        [
+         -0.01438,
+         -0.04946
+        ],
+        [
+         0.0225,
+         -0.05264
+        ],
+        [
+         0.06313,
+         -0.054
+        ],
+        [
+         0.1,
+         -0.054
+        ],
+        [
+         0.13388,
+         -0.05278
+        ],
+        [
+         0.16788,
+         -0.05011
+        ],
+        [
+         0.19793,
+         -0.04589
+        ],
+        [
+         0.21022,
+         -0.04316
+        ],
+        [
+         0.22,
+         -0.04
+        ],
+        [
+         0.22714,
+         -0.03627
+        ],
+        [
+         0.23206,
+         -0.03192
+        ],
+        [
+         0.2351,
+         -0.02708
+        ],
+        [
+         0.2366,
+         -0.02187
+        ],
+        [
+         0.2369,
+         -0.01644
+        ],
+        [
+         0.23634,
+         -0.01089
+        ],
+        [
+         0.23791,
+         0.00082
+        ],
+        [
+         0.23161,
+         0.01161
+        ],
+        [
+         0.22989,
+         0.01789
+        ],
+        [
+         0.22727,
+         0.02414
+        ],
+        [
+         0.22338,
+         0.03012
+        ],
+        [
+         0.2178,
+         0.03559
+        ],
+        [
+         0.21014,
+         0.0403
+        ],
+        [
+         0.2,
+         0.044
+        ],
+        [
+         0.18638,
+         0.04694
+        ],
+        [
+         0.16924,
+         0.04947
+        ],
+        [
+         0.12849,
+         0.05285
+        ],
+        [
+         0.086,
+         0.05331
+        ],
+        [
+         0.06667,
+         0.05218
+        ],
+        [
+         0.05,
+         0.05
+        ],
+        [
+         0.03526,
+         0.0464
+        ],
+        [
+         0.02117,
+         0.04132
+        ],
+        [
+         0.0079,
+         0.03511
+        ],
+        [
+         -0.00437,
+         0.02815
+        ],
+        [
+         -0.02523,
+         0.01341
+        ],
+        [
+         -0.04,
+         0
+        ],
+        [
+         -0.0496,
+         -0.01223
+        ],
+        [
+         -0.05274,
+         -0.01845
+        ],
+        [
+         -0.05436,
+         -0.02451
+        ],
+        [
+         -0.05419,
+         -0.03026
+        ],
+        [
+         -0.05194,
+         -0.03554
+        ],
+        [
+         -0.0473,
+         -0.04017
+        ],
+        [
+         -0.04,
+         -0.044
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-hand",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.04,
+         -0.036
+        ],
+        [
+         -0.02735,
+         -0.03947
+        ],
+        [
+         -0.0102,
+         -0.04154
+        ],
+        [
+         0.01023,
+         -0.04247
+        ],
+        [
+         0.03276,
+         -0.04247
+        ],
+        [
+         0.07935,
+         -0.04067
+        ],
+        [
+         0.12,
+         -0.038
+        ],
+        [
+         0.15454,
+         -0.03434
+        ],
+        [
+         0.18726,
+         -0.02887
+        ],
+        [
+         0.21536,
+         -0.02247
+        ],
+        [
+         0.236,
+         -0.016
+        ],
+        [
+         0.24958,
+         -0.00921
+        ],
+        [
+         0.25425,
+         -0.00552
+        ],
+        [
+         0.25722,
+         -0.00177
+        ],
+        [
+         0.2583,
+         0.00195
+        ],
+        [
+         0.25726,
+         0.00554
+        ],
+        [
+         0.2539,
+         0.00893
+        ],
+        [
+         0.248,
+         0.012
+        ],
+        [
+         0.23893,
+         0.01486
+        ],
+        [
+         0.22661,
+         0.01764
+        ],
+        [
+         0.19476,
+         0.02276
+        ],
+        [
+         0.15754,
+         0.027
+        ],
+        [
+         0.12,
+         0.03
+        ],
+        [
+         0.0785,
+         0.03281
+        ],
+        [
+         0.02928,
+         0.0377
+        ],
+        [
+         0.00364,
+         0.04108
+        ],
+        [
+         -0.01289,
+         0.0415
+        ],
+        [
+         -0.02887,
+         0.03881
+        ],
+        [
+         -0.04144,
+         0.03553
+        ],
+        [
+         -0.04803,
+         0.02978
+        ],
+        [
+         -0.04876,
+         0.02447
+        ],
+        [
+         -0.05502,
+         0.01664
+        ],
+        [
+         -0.05877,
+         0.00726
+        ],
+        [
+         -0.06002,
+         -0.00289
+        ],
+        [
+         -0.05877,
+         -0.01305
+        ],
+        [
+         -0.05502,
+         -0.02247
+        ],
+        [
+         -0.04876,
+         -0.03037
+        ],
+        [
+         -0.04469,
+         -0.03352
+        ],
+        [
+         -0.04,
+         -0.036
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "wingtip",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.92,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         0.17,
+         -0.03
+        ],
+        [
+         0.17494,
+         -0.0314
+        ],
+        [
+         0.18186,
+         -0.0311
+        ],
+        [
+         0.19914,
+         -0.02687
+        ],
+        [
+         0.21684,
+         -0.02021
+        ],
+        [
+         0.23,
+         -0.014
+        ],
+        [
+         0.23878,
+         -0.00831
+        ],
+        [
+         0.24536,
+         -0.00185
+        ],
+        [
+         0.24721,
+         0.0014
+        ],
+        [
+         0.24776,
+         0.00453
+        ],
+        [
+         0.24677,
+         0.00743
+        ],
+        [
+         0.244,
+         0.01
+        ],
+        [
+         0.22995,
+         0.01579
+        ],
+        [
+         0.20786,
+         0.02188
+        ],
+        [
+         0.18535,
+         0.02553
+        ],
+        [
+         0.1763,
+         0.02558
+        ],
+        [
+         0.17,
+         0.024
+        ],
+        [
+         0.16606,
+         0.02001
+        ],
+        [
+         0.1634,
+         0.01362
+        ],
+        [
+         0.16196,
+         0.00563
+        ],
+        [
+         0.16164,
+         -0.00315
+        ],
+        [
+         0.16236,
+         -0.01191
+        ],
+        [
+         0.16405,
+         -0.01985
+        ],
+        [
+         0.16662,
+         -0.02615
+        ],
+        [
+         0.17,
+         -0.03
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail",
+       "bone": "tail",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "region": "tail-plumage",
+       "points": [
+        [
+         -0.03,
+         -0.034
+        ],
+        [
+         -0.01944,
+         -0.03889
+        ],
+        [
+         -0.00485,
+         -0.04286
+        ],
+        [
+         0.01257,
+         -0.04595
+        ],
+        [
+         0.03163,
+         -0.04822
+        ],
+        [
+         0.06979,
+         -0.05048
+        ],
+        [
+         0.1,
+         -0.05
+        ],
+        [
+         0.11077,
+         -0.04853
+        ],
+        [
+         0.12012,
+         -0.04599
+        ],
+        [
+         0.1315,
+         -0.04658
+        ],
+        [
+         0.14247,
+         -0.04742
+        ],
+        [
+         0.14938,
+         -0.0333
+        ],
+        [
+         0.154,
+         -0.02
+        ],
+        [
+         0.15695,
+         -0.0154
+        ],
+        [
+         0.15906,
+         -0.01046
+        ],
+        [
+         0.16075,
+         0
+        ],
+        [
+         0.15906,
+         0.01046
+        ],
+        [
+         0.15695,
+         0.0154
+        ],
+        [
+         0.154,
+         0.02
+        ],
+        [
+         0.14608,
+         0.02924
+        ],
+        [
+         0.13514,
+         0.03838
+        ],
+        [
+         0.1282,
+         0.04241
+        ],
+        [
+         0.12012,
+         0.04582
+        ],
+        [
+         0.11077,
+         0.04842
+        ],
+        [
+         0.1,
+         0.05
+        ],
+        [
+         0.06979,
+         0.05092
+        ],
+        [
+         0.03163,
+         0.04926
+        ],
+        [
+         0.01257,
+         0.04729
+        ],
+        [
+         -0.00485,
+         0.04447
+        ],
+        [
+         -0.01944,
+         0.04073
+        ],
+        [
+         -0.03,
+         0.036
+        ],
+        [
+         -0.03712,
+         0.02956
+        ],
+        [
+         -0.04221,
+         0.02117
+        ],
+        [
+         -0.04526,
+         0.01147
+        ],
+        [
+         -0.04627,
+         0.00111
+        ],
+        [
+         -0.04526,
+         -0.00926
+        ],
+        [
+         -0.04221,
+         -0.019
+        ],
+        [
+         -0.03712,
+         -0.02746
+        ],
+        [
+         -0.03,
+         -0.034
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "body",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "body-plumage",
+       "points": [
+        [
+         -0.03,
+         0.02
+        ],
+        [
+         -0.02819,
+         0.02483
+        ],
+        [
+         -0.02535,
+         0.02972
+        ],
+        [
+         -0.01854,
+         0.04289
+        ],
+        [
+         -0.00909,
+         0.05669
+        ],
+        [
+         0.00654,
+         0.06209
+        ],
+        [
+         0.02329,
+         0.06763
+        ],
+        [
+         0.03916,
+         0.0756
+        ],
+        [
+         0.05498,
+         0.08248
+        ],
+        [
+         0.07,
+         0.088
+        ],
+        [
+         0.08487,
+         0.09222
+        ],
+        [
+         0.10061,
+         0.09538
+        ],
+        [
+         0.11697,
+         0.09756
+        ],
+        [
+         0.13373,
+         0.09883
+        ],
+        [
+         0.16748,
+         0.09886
+        ],
+        [
+         0.2,
+         0.096
+        ],
+        [
+         0.2161,
+         0.09332
+        ],
+        [
+         0.23283,
+         0.08952
+        ],
+        [
+         0.26626,
+         0.07944
+        ],
+        [
+         0.29657,
+         0.06738
+        ],
+        [
+         0.30938,
+         0.06113
+        ],
+        [
+         0.32,
+         0.055
+        ],
+        [
+         0.3286,
+         0.04893
+        ],
+        [
+         0.3357,
+         0.04271
+        ],
+        [
+         0.34135,
+         0.03629
+        ],
+        [
+         0.34561,
+         0.02964
+        ],
+        [
+         0.35007,
+         0.02391
+        ],
+        [
+         0.3536,
+         0.01813
+        ],
+        [
+         0.3522,
+         0.00913
+        ],
+        [
+         0.34666,
+         0.00023
+        ],
+        [
+         0.33806,
+         -0.01814
+        ],
+        [
+         0.33817,
+         -0.02887
+        ],
+        [
+         0.33625,
+         -0.03971
+        ],
+        [
+         0.32958,
+         -0.05005
+        ],
+        [
+         0.3214,
+         -0.05967
+        ],
+        [
+         0.31157,
+         -0.06813
+        ],
+        [
+         0.3,
+         -0.075
+        ],
+        [
+         0.28584,
+         -0.08047
+        ],
+        [
+         0.26884,
+         -0.08503
+        ],
+        [
+         0.24977,
+         -0.08872
+        ],
+        [
+         0.22939,
+         -0.09156
+        ],
+        [
+         0.18774,
+         -0.09481
+        ],
+        [
+         0.15,
+         -0.095
+        ],
+        [
+         0.11648,
+         -0.0923
+        ],
+        [
+         0.08438,
+         -0.08656
+        ],
+        [
+         0.06929,
+         -0.08248
+        ],
+        [
+         0.05508,
+         -0.07755
+        ],
+        [
+         0.04192,
+         -0.07173
+        ],
+        [
+         0.03,
+         -0.065
+        ],
+        [
+         0.01853,
+         -0.05688
+        ],
+        [
+         0.00703,
+         -0.0472
+        ],
+        [
+         -0.00393,
+         -0.03639
+        ],
+        [
+         -0.01376,
+         -0.02486
+        ],
+        [
+         -0.02187,
+         -0.01304
+        ],
+        [
+         -0.02767,
+         -0.00134
+        ],
+        [
+         -0.03058,
+         0.00981
+        ],
+        [
+         -0.03076,
+         0.01505
+        ],
+        [
+         -0.03,
+         0.02
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck-1",
+       "bone": "neck-1",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "neck-plumage",
+       "points": [
+        [
+         -0.06,
+         -0.046
+        ],
+        [
+         -0.0549,
+         -0.04823
+        ],
+        [
+         -0.04844,
+         -0.04982
+        ],
+        [
+         -0.03223,
+         -0.0513
+        ],
+        [
+         -0.0096,
+         -0.0517
+        ],
+        [
+         0.01546,
+         -0.05081
+        ],
+        [
+         0.05284,
+         -0.04355
+        ],
+        [
+         0.08,
+         -0.036
+        ],
+        [
+         0.08924,
+         -0.03273
+        ],
+        [
+         0.09619,
+         -0.02881
+        ],
+        [
+         0.10116,
+         -0.02439
+        ],
+        [
+         0.1045,
+         -0.01961
+        ],
+        [
+         0.10652,
+         -0.01463
+        ],
+        [
+         0.10756,
+         -0.0096
+        ],
+        [
+         0.108,
+         0
+        ],
+        [
+         0.10756,
+         0.0096
+        ],
+        [
+         0.10652,
+         0.01463
+        ],
+        [
+         0.1045,
+         0.01961
+        ],
+        [
+         0.10116,
+         0.02439
+        ],
+        [
+         0.09619,
+         0.02881
+        ],
+        [
+         0.09626,
+         0.03578
+        ],
+        [
+         0.09561,
+         0.04278
+        ],
+        [
+         0.05661,
+         0.04579
+        ],
+        [
+         0.00824,
+         0.04903
+        ],
+        [
+         -0.01285,
+         0.05089
+        ],
+        [
+         -0.03223,
+         0.0513
+        ],
+        [
+         -0.04844,
+         0.04982
+        ],
+        [
+         -0.0549,
+         0.04823
+        ],
+        [
+         -0.06,
+         0.046
+        ],
+        [
+         -0.0641,
+         0.04286
+        ],
+        [
+         -0.06765,
+         0.03868
+        ],
+        [
+         -0.07311,
+         0.02777
+        ],
+        [
+         -0.07638,
+         0.01448
+        ],
+        [
+         -0.07747,
+         0
+        ],
+        [
+         -0.07638,
+         -0.01448
+        ],
+        [
+         -0.07311,
+         -0.02777
+        ],
+        [
+         -0.06765,
+         -0.03868
+        ],
+        [
+         -0.0641,
+         -0.04286
+        ],
+        [
+         -0.06,
+         -0.046
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck-2",
+       "bone": "neck-2",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "neck-plumage",
+       "points": [
+        [
+         -0.06,
+         -0.036
+        ],
+        [
+         -0.04931,
+         -0.03952
+        ],
+        [
+         -0.03619,
+         -0.04219
+        ],
+        [
+         -0.02055,
+         -0.04369
+        ],
+        [
+         0.00104,
+         -0.04236
+        ],
+        [
+         0.04114,
+         -0.03849
+        ],
+        [
+         0.07,
+         -0.034
+        ],
+        [
+         0.0794,
+         -0.03128
+        ],
+        [
+         0.08707,
+         -0.02775
+        ],
+        [
+         0.09316,
+         -0.02358
+        ],
+        [
+         0.09781,
+         -0.01899
+        ],
+        [
+         0.10118,
+         -0.01414
+        ],
+        [
+         0.1034,
+         -0.00924
+        ],
+        [
+         0.105,
+         0
+        ],
+        [
+         0.1034,
+         0.00924
+        ],
+        [
+         0.10118,
+         0.01414
+        ],
+        [
+         0.09781,
+         0.01899
+        ],
+        [
+         0.09316,
+         0.02358
+        ],
+        [
+         0.08707,
+         0.02775
+        ],
+        [
+         0.0794,
+         0.03128
+        ],
+        [
+         0.07,
+         0.034
+        ],
+        [
+         0.04114,
+         0.03849
+        ],
+        [
+         0.00283,
+         0.04164
+        ],
+        [
+         -0.01658,
+         0.04209
+        ],
+        [
+         -0.0344,
+         0.04147
+        ],
+        [
+         -0.04931,
+         0.03952
+        ],
+        [
+         -0.06,
+         0.036
+        ],
+        [
+         -0.06381,
+         0.03339
+        ],
+        [
+         -0.06712,
+         0.03003
+        ],
+        [
+         -0.07221,
+         0.02146
+        ],
+        [
+         -0.07526,
+         0.01116
+        ],
+        [
+         -0.07627,
+         0
+        ],
+        [
+         -0.07526,
+         -0.01116
+        ],
+        [
+         -0.07221,
+         -0.02146
+        ],
+        [
+         -0.06712,
+         -0.03003
+        ],
+        [
+         -0.06381,
+         -0.03339
+        ],
+        [
+         -0.06,
+         -0.036
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-leg",
+       "bone": "shank-n",
+       "role": "body",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.03,
+         0
+        ],
+        [
+         0.1,
+         0
+        ],
+        [
+         0.1389,
+         0.0521
+        ],
+        [
+         0.0863,
+         0.1188
+        ]
+       ],
+       "closed": false,
+       "regions": [
+        "legs-skin",
+        "web-feet"
+       ],
+       "penMm": 0.2
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.06,
+       "kind": "poly",
+       "region": "head-plumage",
+       "points": [
+        [
+         -0.06,
+         -0.032
+        ],
+        [
+         -0.06284,
+         -0.02661
+        ],
+        [
+         -0.06451,
+         -0.01915
+        ],
+        [
+         -0.0651,
+         -0.01026
+        ],
+        [
+         -0.0647,
+         -0.00064
+        ],
+        [
+         -0.0634,
+         0.00907
+        ],
+        [
+         -0.06129,
+         0.01819
+        ],
+        [
+         -0.05846,
+         0.02605
+        ],
+        [
+         -0.055,
+         0.032
+        ],
+        [
+         -0.05048,
+         0.03613
+        ],
+        [
+         -0.04465,
+         0.03913
+        ],
+        [
+         -0.03782,
+         0.04119
+        ],
+        [
+         -0.03031,
+         0.0425
+        ],
+        [
+         -0.01457,
+         0.04362
+        ],
+        [
+         0,
+         0.044
+        ],
+        [
+         0.01361,
+         0.04393
+        ],
+        [
+         0.02733,
+         0.04263
+        ],
+        [
+         0.03988,
+         0.04001
+        ],
+        [
+         0.05,
+         0.036
+        ],
+        [
+         0.05758,
+         0.02996
+        ],
+        [
+         0.06324,
+         0.02213
+        ],
+        [
+         0.06678,
+         0.01373
+        ],
+        [
+         0.068,
+         0.006
+        ],
+        [
+         0.06678,
+         -0.00104
+        ],
+        [
+         0.06324,
+         -0.00797
+        ],
+        [
+         0.05758,
+         -0.01442
+        ],
+        [
+         0.05,
+         -0.02
+        ],
+        [
+         0.03999,
+         -0.02473
+        ],
+        [
+         0.02762,
+         -0.02876
+        ],
+        [
+         0.01394,
+         -0.03191
+        ],
+        [
+         0,
+         -0.034
+        ],
+        [
+         -0.015,
+         -0.04026
+        ],
+        [
+         -0.03163,
+         -0.04716
+        ],
+        [
+         -0.04122,
+         -0.04557
+        ],
+        [
+         -0.04981,
+         -0.04478
+        ],
+        [
+         -0.05575,
+         -0.03873
+        ],
+        [
+         -0.06,
+         -0.032
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bill",
+       "bone": "head",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.35,
+       "kind": "poly",
+       "region": "bill",
+       "points": [
+        [
+         0.05,
+         0.022
+        ],
+        [
+         0.05399,
+         0.02379
+        ],
+        [
+         0.05944,
+         0.02431
+        ],
+        [
+         0.07313,
+         0.02264
+        ],
+        [
+         0.1,
+         0.016
+        ],
+        [
+         0.1103,
+         0.01286
+        ],
+        [
+         0.11999,
+         0.00888
+        ],
+        [
+         0.13,
+         0.004
+        ],
+        [
+         0.12499,
+         -0.0025
+        ],
+        [
+         0.116,
+         -0.012
+        ],
+        [
+         0.10914,
+         -0.01675
+        ],
+        [
+         0.098,
+         -0.02
+        ],
+        [
+         0.07287,
+         -0.02537
+        ],
+        [
+         0.05933,
+         -0.02661
+        ],
+        [
+         0.05391,
+         -0.02592
+        ],
+        [
+         0.05,
+         -0.024
+        ],
+        [
+         0.04736,
+         -0.02029
+        ],
+        [
+         0.04546,
+         -0.0148
+        ],
+        [
+         0.04389,
+         -0.00089
+        ],
+        [
+         0.04537,
+         0.01297
+        ],
+        [
+         0.04729,
+         0.01839
+        ],
+        [
+         0.05,
+         0.022
+        ]
+       ],
+       "closed": true
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Articulated outline 0.66 x 0.52 m = 6.6 x 5.2 mm: body, tail, both wings in arm and hand, black wingtip, two neck pieces, head and bill, the near leg as one polyline.",
+      "de": "Gegliederter Umriss 0,66 x 0,52 m = 6,6 x 5,2 mm: Körper, Schwanz, beide Flügel in Arm und Hand, schwarze Flügelspitze, zwei Halsstücke, Kopf und Schnabel, das nahe Bein als ein Linienzug."
+     },
+     "retained": {
+      "en": "The wing in two pieces so gliding and landing postures articulate; bill as a separate darker piece; the near leg.",
+      "de": "Der Flügel in zwei Stücken, damit Gleit- und Landehaltung gegliedert sind; Schnabel als eigenes dunkleres Stück; das nahe Bein."
+     },
+     "merged": {
+      "en": "Mantle, covert lines, thigh pads and eye merge into the body and wing tones; the wingtip stays its own black piece.",
+      "de": "Mantel, Deckfederlinien, Schenkelpolster und Auge gehen in die Körper- und Flügeltöne auf; die Flügelspitze bleibt ein eigenes schwarzes Stück."
+     },
+     "omitted": {
+      "en": "The far leg (its outline comes within 0.15 mm of the near leg, tail or body in some pose), eye (0.015 m = 0.15 mm), red bill spot, feather lines, toes.",
+      "de": "Das ferne Bein (seine Kontur kommt in irgendeiner Pose näher als 0,15 mm an das nahe Bein, den Schwanz oder den Körper), Auge (0,015 m = 0,15 mm), roter Schnabelfleck, Federlinien, Zehen."
+     },
+     "thinElements": {
+      "en": "Leg 0.012 m = 0.12 mm real is a 0.2 mm stroke (0.02 m); thigh, shank, tarsus and foot are one polyline bound to the shank in the standing configuration, so the foot angle of flight and landing poses is not articulated at 1:100 (it is at 1:50); wing tips are blunted to 0.025 m so the feature stays above 0.2 mm.",
+      "de": "Das reale Bein von 0,012 m = 0,12 mm ist ein 0,2-mm-Strich (0,02 m); Oberschenkel, Unterschenkel, Lauf und Fuß sind ein Linienzug, an den Unterschenkel in der Stehkonfiguration gebunden, sodass der Fußwinkel der Flug- und Landeposen bei 1:100 nicht gegliedert ist (bei 1:50 schon); die Flügelspitzen sind auf 0,025 m abgestumpft, damit die Merkmalsbreite über 0,2 mm bleibt."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "0.18 mm silhouette; tones white 0.1, wing 0.3, wingtip 0.92.",
+      "de": "0,18-mm-Kontur; Töne weiß 0,1, Flügel 0,3, Flügelspitze 0,92."
+     },
+     "overlays": {
+      "en": "Each region has a shape; the leg polyline carries both bare-skin regions.",
+      "de": "Jede Region hat eine Form; der Beinlinienzug trägt beide Regionen der nackten Haut."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.15
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "id": "arm",
+       "bone": "arm-n",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.05,
+         -0.05
+        ],
+        [
+         -0.04395,
+         -0.053
+        ],
+        [
+         -0.03653,
+         -0.05541
+        ],
+        [
+         -0.01821,
+         -0.05864
+        ],
+        [
+         0.00365,
+         -0.06013
+        ],
+        [
+         0.02773,
+         -0.06027
+        ],
+        [
+         0.07729,
+         -0.05827
+        ],
+        [
+         0.12017,
+         -0.06
+        ],
+        [
+         0.15553,
+         -0.05503
+        ],
+        [
+         0.18865,
+         -0.05336
+        ],
+        [
+         0.20339,
+         -0.05165
+        ],
+        [
+         0.21644,
+         -0.04901
+        ],
+        [
+         0.22743,
+         -0.04521
+        ],
+        [
+         0.236,
+         -0.04
+        ],
+        [
+         0.24233,
+         -0.03247
+        ],
+        [
+         0.24686,
+         -0.02248
+        ],
+        [
+         0.24957,
+         -0.0109
+        ],
+        [
+         0.25048,
+         0.00139
+        ],
+        [
+         0.24957,
+         0.0135
+        ],
+        [
+         0.24686,
+         0.02456
+        ],
+        [
+         0.24233,
+         0.03369
+        ],
+        [
+         0.23939,
+         0.03725
+        ],
+        [
+         0.236,
+         0.04
+        ],
+        [
+         0.22743,
+         0.0432
+        ],
+        [
+         0.21644,
+         0.04401
+        ],
+        [
+         0.20339,
+         0.04306
+        ],
+        [
+         0.18865,
+         0.04098
+        ],
+        [
+         0.15501,
+         0.03992
+        ],
+        [
+         0.13767,
+         0.03826
+        ],
+        [
+         0.12016,
+         0.038
+        ],
+        [
+         0.10064,
+         0.03972
+        ],
+        [
+         0.07795,
+         0.04313
+        ],
+        [
+         0.02773,
+         0.04789
+        ],
+        [
+         0.00365,
+         0.05154
+        ],
+        [
+         -0.01821,
+         0.05365
+        ],
+        [
+         -0.03653,
+         0.0534
+        ],
+        [
+         -0.04395,
+         0.05215
+        ],
+        [
+         -0.05,
+         0.05
+        ],
+        [
+         -0.05497,
+         0.04676
+        ],
+        [
+         -0.05929,
+         0.04241
+        ],
+        [
+         -0.06293,
+         0.03709
+        ],
+        [
+         -0.06592,
+         0.03096
+        ],
+        [
+         -0.0699,
+         0.01687
+        ],
+        [
+         -0.07122,
+         0.00139
+        ],
+        [
+         -0.0699,
+         -0.01427
+        ],
+        [
+         -0.06592,
+         -0.02888
+        ],
+        [
+         -0.06293,
+         -0.0354
+        ],
+        [
+         -0.05929,
+         -0.0412
+        ],
+        [
+         -0.05497,
+         -0.04611
+        ],
+        [
+         -0.05,
+         -0.05
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "hand",
+       "bone": "hand-n",
+       "role": "body",
+       "z": 4.1,
+       "filled": true,
+       "tone": 0.55,
+       "kind": "poly",
+       "region": "wing-plumage",
+       "points": [
+        [
+         -0.06,
+         -0.04
+        ],
+        [
+         -0.0457,
+         -0.04363
+        ],
+        [
+         -0.02625,
+         -0.04551
+        ],
+        [
+         -0.00305,
+         -0.04601
+        ],
+        [
+         0.0225,
+         -0.04547
+        ],
+        [
+         0.075,
+         -0.0427
+        ],
+        [
+         0.12,
+         -0.04
+        ],
+        [
+         0.15675,
+         -0.03778
+        ],
+        [
+         0.1905,
+         -0.03465
+        ],
+        [
+         0.219,
+         -0.03069
+        ],
+        [
+         0.24,
+         -0.026
+        ],
+        [
+         0.24683,
+         -0.02332
+        ],
+        [
+         0.25116,
+         -0.02033
+        ],
+        [
+         0.25346,
+         -0.01712
+        ],
+        [
+         0.25425,
+         -0.01375
+        ],
+        [
+         0.25322,
+         -0.00679
+        ],
+        [
+         0.256,
+         0
+        ],
+        [
+         0.25322,
+         0.00693
+        ],
+        [
+         0.25425,
+         0.01412
+        ],
+        [
+         0.25346,
+         0.01756
+        ],
+        [
+         0.25116,
+         0.02076
+        ],
+        [
+         0.24683,
+         0.0236
+        ],
+        [
+         0.24,
+         0.026
+        ],
+        [
+         0.219,
+         0.02947
+        ],
+        [
+         0.1905,
+         0.03165
+        ],
+        [
+         0.12016,
+         0.038
+        ],
+        [
+         0.07521,
+         0.04027
+        ],
+        [
+         0.0225,
+         0.0391
+        ],
+        [
+         -0.00305,
+         0.03975
+        ],
+        [
+         -0.02625,
+         0.03937
+        ],
+        [
+         -0.0457,
+         0.03758
+        ],
+        [
+         -0.06,
+         0.034
+        ],
+        [
+         -0.06527,
+         0.03128
+        ],
+        [
+         -0.06984,
+         0.02779
+        ],
+        [
+         -0.07371,
+         0.02366
+        ],
+        [
+         -0.07687,
+         0.01898
+        ],
+        [
+         -0.08109,
+         0.00842
+        ],
+        [
+         -0.0825,
+         -0.003
+        ],
+        [
+         -0.08109,
+         -0.01442
+        ],
+        [
+         -0.07687,
+         -0.02498
+        ],
+        [
+         -0.07371,
+         -0.02966
+        ],
+        [
+         -0.06984,
+         -0.03379
+        ],
+        [
+         -0.06527,
+         -0.03728
+        ],
+        [
+         -0.06,
+         -0.04
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "tail",
+       "bone": "tail",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.12,
+       "kind": "poly",
+       "region": "tail-plumage",
+       "points": [
+        [
+         -0.03,
+         -0.04
+        ],
+        [
+         -0.01946,
+         -0.04542
+        ],
+        [
+         -0.00489,
+         -0.04971
+        ],
+        [
+         0.0125,
+         -0.05296
+        ],
+        [
+         0.03151,
+         -0.05524
+        ],
+        [
+         0.06966,
+         -0.05714
+        ],
+        [
+         0.1,
+         -0.056
+        ],
+        [
+         0.11093,
+         -0.05403
+        ],
+        [
+         0.12052,
+         -0.05077
+        ],
+        [
+         0.12889,
+         -0.04651
+        ],
+        [
+         0.13614,
+         -0.04152
+        ],
+        [
+         0.14769,
+         -0.03052
+        ],
+        [
+         0.156,
+         -0.02
+        ],
+        [
+         0.16123,
+         -0.01018
+        ],
+        [
+         0.16298,
+         0
+        ],
+        [
+         0.16123,
+         0.01018
+        ],
+        [
+         0.156,
+         0.02
+        ],
+        [
+         0.14769,
+         0.03052
+        ],
+        [
+         0.13614,
+         0.04153
+        ],
+        [
+         0.12889,
+         0.04651
+        ],
+        [
+         0.12052,
+         0.05077
+        ],
+        [
+         0.11093,
+         0.05403
+        ],
+        [
+         0.1,
+         0.056
+        ],
+        [
+         0.06966,
+         0.05714
+        ],
+        [
+         0.03151,
+         0.05524
+        ],
+        [
+         0.0125,
+         0.05296
+        ],
+        [
+         -0.00489,
+         0.04971
+        ],
+        [
+         -0.01946,
+         0.04542
+        ],
+        [
+         -0.03,
+         0.04
+        ],
+        [
+         -0.03712,
+         0.03263
+        ],
+        [
+         -0.04221,
+         0.023
+        ],
+        [
+         -0.04526,
+         0.01188
+        ],
+        [
+         -0.04627,
+         0
+        ],
+        [
+         -0.04526,
+         -0.01187
+        ],
+        [
+         -0.04221,
+         -0.023
+        ],
+        [
+         -0.03712,
+         -0.03262
+        ],
+        [
+         -0.03,
+         -0.04
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "body",
+       "bone": "trunk",
+       "role": "body",
+       "z": 3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "body-plumage",
+       "points": [
+        [
+         -0.03,
+         0.02
+        ],
+        [
+         -0.02819,
+         0.0249
+        ],
+        [
+         -0.02535,
+         0.02988
+        ],
+        [
+         -0.01693,
+         0.03999
+        ],
+        [
+         -0.00551,
+         0.05006
+        ],
+        [
+         0.00815,
+         0.0598
+        ],
+        [
+         0.02329,
+         0.06894
+        ],
+        [
+         0.03916,
+         0.07721
+        ],
+        [
+         0.05498,
+         0.08432
+        ],
+        [
+         0.07,
+         0.09
+        ],
+        [
+         0.08487,
+         0.09431
+        ],
+        [
+         0.10061,
+         0.09755
+        ],
+        [
+         0.11697,
+         0.09977
+        ],
+        [
+         0.13373,
+         0.10105
+        ],
+        [
+         0.16748,
+         0.10103
+        ],
+        [
+         0.2,
+         0.098
+        ],
+        [
+         0.21609,
+         0.09516
+        ],
+        [
+         0.23278,
+         0.09113
+        ],
+        [
+         0.26615,
+         0.08044
+        ],
+        [
+         0.29644,
+         0.06778
+        ],
+        [
+         0.32,
+         0.055
+        ],
+        [
+         0.32877,
+         0.04885
+        ],
+        [
+         0.33614,
+         0.04258
+        ],
+        [
+         0.34211,
+         0.03616
+        ],
+        [
+         0.34673,
+         0.02953
+        ],
+        [
+         0.35,
+         0.02264
+        ],
+        [
+         0.35195,
+         0.01546
+        ],
+        [
+         0.35261,
+         0.00793
+        ],
+        [
+         0.352,
+         0
+        ],
+        [
+         0.3502,
+         -0.0088
+        ],
+        [
+         0.34722,
+         -0.01862
+        ],
+        [
+         0.34298,
+         -0.02905
+        ],
+        [
+         0.3374,
+         -0.03964
+        ],
+        [
+         0.33039,
+         -0.04996
+        ],
+        [
+         0.32188,
+         -0.05958
+        ],
+        [
+         0.31177,
+         -0.06807
+        ],
+        [
+         0.3,
+         -0.075
+        ],
+        [
+         0.28572,
+         -0.08057
+        ],
+        [
+         0.26867,
+         -0.08527
+        ],
+        [
+         0.24959,
+         -0.08912
+        ],
+        [
+         0.22924,
+         -0.09214
+        ],
+        [
+         0.18768,
+         -0.09569
+        ],
+        [
+         0.15,
+         -0.096
+        ],
+        [
+         0.11648,
+         -0.09315
+        ],
+        [
+         0.10017,
+         -0.09053
+        ],
+        [
+         0.08438,
+         -0.0871
+        ],
+        [
+         0.06929,
+         -0.08284
+        ],
+        [
+         0.05508,
+         -0.07775
+        ],
+        [
+         0.04192,
+         -0.0718
+        ],
+        [
+         0.03,
+         -0.065
+        ],
+        [
+         0.01853,
+         -0.05686
+        ],
+        [
+         0.00703,
+         -0.0472
+        ],
+        [
+         -0.00393,
+         -0.03643
+        ],
+        [
+         -0.01376,
+         -0.02494
+        ],
+        [
+         -0.02187,
+         -0.01314
+        ],
+        [
+         -0.02767,
+         -0.00145
+        ],
+        [
+         -0.03058,
+         0.00973
+        ],
+        [
+         -0.03076,
+         0.01501
+        ],
+        [
+         -0.03,
+         0.02
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck-1",
+       "bone": "neck-1",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "neck-plumage",
+       "points": [
+        [
+         -0.07,
+         -0.05
+        ],
+        [
+         -0.06523,
+         -0.05245
+        ],
+        [
+         -0.05918,
+         -0.05422
+        ],
+        [
+         -0.04394,
+         -0.05593
+        ],
+        [
+         -0.02571,
+         -0.05562
+        ],
+        [
+         -0.00594,
+         -0.05374
+        ],
+        [
+         0.01395,
+         -0.05077
+        ],
+        [
+         0.03253,
+         -0.04717
+        ],
+        [
+         0.06,
+         -0.04
+        ],
+        [
+         0.06759,
+         -0.03644
+        ],
+        [
+         0.07255,
+         -0.03212
+        ],
+        [
+         0.07538,
+         -0.0272
+        ],
+        [
+         0.07658,
+         -0.02187
+        ],
+        [
+         0.07606,
+         -0.01069
+        ],
+        [
+         0.079,
+         0
+        ],
+        [
+         0.07944,
+         0.00854
+        ],
+        [
+         0.09275,
+         0.02792
+        ],
+        [
+         0.09155,
+         0.03324
+        ],
+        [
+         0.07308,
+         0.03608
+        ],
+        [
+         0.06759,
+         0.03644
+        ],
+        [
+         0.06,
+         0.04
+        ],
+        [
+         0.03253,
+         0.04717
+        ],
+        [
+         0.01395,
+         0.05077
+        ],
+        [
+         -0.00594,
+         0.05374
+        ],
+        [
+         -0.02571,
+         0.05562
+        ],
+        [
+         -0.04394,
+         0.05593
+        ],
+        [
+         -0.05918,
+         0.05422
+        ],
+        [
+         -0.06523,
+         0.05245
+        ],
+        [
+         -0.07,
+         0.05
+        ],
+        [
+         -0.07381,
+         0.04657
+        ],
+        [
+         -0.07712,
+         0.04201
+        ],
+        [
+         -0.08221,
+         0.03016
+        ],
+        [
+         -0.08526,
+         0.01572
+        ],
+        [
+         -0.08627,
+         0
+        ],
+        [
+         -0.08526,
+         -0.01572
+        ],
+        [
+         -0.08221,
+         -0.03016
+        ],
+        [
+         -0.07712,
+         -0.04201
+        ],
+        [
+         -0.07381,
+         -0.04657
+        ],
+        [
+         -0.07,
+         -0.05
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "neck-2",
+       "bone": "neck-2",
+       "role": "body",
+       "z": 3.3,
+       "filled": true,
+       "tone": 0.08,
+       "kind": "poly",
+       "region": "neck-plumage",
+       "points": [
+        [
+         -0.07,
+         -0.04
+        ],
+        [
+         -0.05924,
+         -0.04392
+        ],
+        [
+         -0.04416,
+         -0.04611
+        ],
+        [
+         -0.02613,
+         -0.04685
+        ],
+        [
+         -0.00654,
+         -0.04639
+        ],
+        [
+         0.03185,
+         -0.04297
+        ],
+        [
+         0.06,
+         -0.038
+        ],
+        [
+         0.06848,
+         -0.03496
+        ],
+        [
+         0.07479,
+         -0.03102
+        ],
+        [
+         0.07925,
+         -0.02638
+        ],
+        [
+         0.08218,
+         -0.02125
+        ],
+        [
+         0.08389,
+         -0.01584
+        ],
+        [
+         0.08472,
+         -0.01035
+        ],
+        [
+         0.085,
+         0
+        ],
+        [
+         0.08472,
+         0.01035
+        ],
+        [
+         0.08389,
+         0.01584
+        ],
+        [
+         0.08218,
+         0.02125
+        ],
+        [
+         0.07925,
+         0.02638
+        ],
+        [
+         0.07479,
+         0.03102
+        ],
+        [
+         0.06848,
+         0.03496
+        ],
+        [
+         0.06,
+         0.038
+        ],
+        [
+         0.03185,
+         0.04297
+        ],
+        [
+         -0.00654,
+         0.04639
+        ],
+        [
+         -0.02613,
+         0.04685
+        ],
+        [
+         -0.04416,
+         0.04611
+        ],
+        [
+         -0.05924,
+         0.04392
+        ],
+        [
+         -0.07,
+         0.04
+        ],
+        [
+         -0.07381,
+         0.0371
+        ],
+        [
+         -0.07712,
+         0.03336
+        ],
+        [
+         -0.08221,
+         0.02384
+        ],
+        [
+         -0.08526,
+         0.0124
+        ],
+        [
+         -0.08627,
+         0
+        ],
+        [
+         -0.08526,
+         -0.0124
+        ],
+        [
+         -0.08221,
+         -0.02384
+        ],
+        [
+         -0.07712,
+         -0.03336
+        ],
+        [
+         -0.07381,
+         -0.0371
+        ],
+        [
+         -0.07,
+         -0.04
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "near-leg",
+       "bone": "shank-n",
+       "role": "body",
+       "z": 4.5,
+       "filled": false,
+       "tone": 0.5,
+       "kind": "poly",
+       "points": [
+        [
+         -0.03,
+         0
+        ],
+        [
+         0.1,
+         0
+        ],
+        [
+         0.1389,
+         0.0521
+        ],
+        [
+         0.0863,
+         0.1188
+        ]
+       ],
+       "closed": false,
+       "regions": [
+        "legs-skin",
+        "web-feet"
+       ],
+       "penMm": 0.16
+      },
+      {
+       "id": "head",
+       "bone": "head",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.06,
+       "kind": "poly",
+       "region": "head-plumage",
+       "points": [
+        [
+         -0.07,
+         -0.036
+        ],
+        [
+         -0.07337,
+         -0.03002
+        ],
+        [
+         -0.07542,
+         -0.02161
+        ],
+        [
+         -0.07625,
+         -0.01156
+        ],
+        [
+         -0.07594,
+         -0.00064
+        ],
+        [
+         -0.07457,
+         0.01036
+        ],
+        [
+         -0.07224,
+         0.02066
+        ],
+        [
+         -0.06902,
+         0.02947
+        ],
+        [
+         -0.065,
+         0.036
+        ],
+        [
+         -0.05964,
+         0.04035
+        ],
+        [
+         -0.05261,
+         0.0433
+        ],
+        [
+         -0.04435,
+         0.04511
+        ],
+        [
+         -0.03531,
+         0.04603
+        ],
+        [
+         -0.01661,
+         0.04624
+        ],
+        [
+         0.00005,
+         0.05
+        ],
+        [
+         0.01427,
+         0.04582
+        ],
+        [
+         0.02781,
+         0.04463
+        ],
+        [
+         0.03995,
+         0.04212
+        ],
+        [
+         0.05,
+         0.038
+        ],
+        [
+         0.05806,
+         0.03158
+        ],
+        [
+         0.06439,
+         0.02324
+        ],
+        [
+         0.06852,
+         0.01428
+        ],
+        [
+         0.07,
+         0.006
+        ],
+        [
+         0.06852,
+         -0.00161
+        ],
+        [
+         0.06439,
+         -0.00912
+        ],
+        [
+         0.05806,
+         -0.01608
+        ],
+        [
+         0.05,
+         -0.022
+        ],
+        [
+         0.04006,
+         -0.02682
+        ],
+        [
+         0.02811,
+         -0.03076
+        ],
+        [
+         0.01723,
+         -0.03684
+        ],
+        [
+         0.00255,
+         -0.05307
+        ],
+        [
+         -0.01531,
+         -0.05573
+        ],
+        [
+         -0.04,
+         -0.04505
+        ],
+        [
+         -0.04838,
+         -0.04188
+        ],
+        [
+         -0.05732,
+         -0.04139
+        ],
+        [
+         -0.06471,
+         -0.03954
+        ],
+        [
+         -0.07,
+         -0.036
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "bill",
+       "bone": "head",
+       "role": "body",
+       "z": 4.1,
+       "filled": false,
+       "tone": 0.35,
+       "kind": "poly",
+       "points": [
+        [
+         0,
+         0
+        ],
+        [
+         0.13,
+         -0.002
+        ]
+       ],
+       "closed": false,
+       "region": "bill",
+       "penMm": 0.2
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Composed profile 0.66 x 0.52 m = 3.3 x 2.6 mm: body, fan tail, near wing in two blunt pieces, two-piece neck, head, bill stroke, the near leg as one polyline.",
+      "de": "Zusammengesetztes Profil 0,66 x 0,52 m = 3,3 x 2,6 mm: Körper, Fächerschwanz, naher Flügel in zwei stumpfen Stücken, zweiteiliger Hals, Kopf, Schnabelstrich, das nahe Bein als ein Linienzug."
+     },
+     "retained": {
+      "en": "The dark tipped hand against the paler arm and body, the upright neck, the heavy bill line.",
+      "de": "Die dunkle Hand gegen Arm und Körper, der aufrechte Hals, der kräftige Schnabelstrich."
+     },
+     "merged": {
+      "en": "Wingtip, mantle, eye and thigh pad merge into the hand tone; the hand tip is blunted to 0.05 m (real primaries 0.05-0.06 m wide near the tip).",
+      "de": "Flügelspitze, Mantel, Auge und Schenkelpolster gehen im Handton auf; die Handspitze ist auf 0,05 m abgestumpft (reale Handschwingen 0,05-0,06 m breit nahe der Spitze)."
+     },
+     "omitted": {
+      "en": "Far wing (hidden behind the near wing in standing, a thin sliver in flight) and far leg (every outline of it comes within 0.15 mm of the near leg or tail in some pose), eye, feather lines.",
+      "de": "Ferner Flügel (verdeckt im Stand, im Flug nur ein schmaler Streifen) und fernes Bein (jede Kontur davon kommt in irgendeiner Pose näher als 0,15 mm an das nahe Bein oder den Schwanz), Auge, Federlinien."
+     },
+     "thinElements": {
+      "en": "Bill 0.02-0.04 m is a 0.2 mm stroke (0.04 m); leg 0.012 m is a 0.16 mm polyline stroke (0.032 m) bound to the shank in the standing configuration (no foot articulation at 1:200).",
+      "de": "Der 0,02-0,04 m dicke Schnabel ist ein 0,2-mm-Strich (0,04 m); das 0,012 m dicke Bein ein 0,16-mm-Linienzug (0,032 m), an den Unterschenkel in der Stehkonfiguration gebunden (keine Fußgliederung bei 1:200)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "0.15 mm outline only, tones white 0.1 / wing 0.3-0.55.",
+      "de": "Nur 0,15-mm-Kontur, Töne weiß 0,1 / Flügel 0,3-0,55."
+     },
+     "overlays": {
+      "en": "Each region is carried by a shape or stroke; the bill region appears as the bill stroke, leg and foot regions as the leg polyline.",
+      "de": "Jede Region wird von einer Form oder einem Strich getragen; die Schnabelregion erscheint als Schnabelstrich, Bein- und Fußregion als Beinlinienzug."
+     }
+    }
+   },
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "A standing herring gull is 0.66 m x 0.52 m = 1.3 x 1.0 mm on paper at 1:500; the neck (0.07 m = 0.14 mm), head (0.07 m) and legs (0.012 m = 0.02 mm) are below the 0.2 mm feature width of the office laser profile, and the spread wings of the gliding pose are foreshortened in elevation to the chord (0.18 m = 0.36 mm).",
+     "de": "Eine stehende Silbermöwe misst 0,66 m x 0,52 m = 1,3 x 1,0 mm auf dem Papier bei 1:500; Hals (0,07 m = 0,14 mm), Kopf (0,07 m) und Beine (0,012 m = 0,02 mm) liegen unter der Merkmalsbreite von 0,2 mm des Büro-Laser-Profils, und die gespreizten Flügel der Gleitpose sind im Aufriss auf die Flügeltiefe (0,18 m = 0,36 mm) verkürzt."
+    },
+    "limitingFeature": {
+     "en": "Neck and head (0.07 m = 0.14 mm)",
+     "de": "Hals und Kopf (0,07 m = 0,14 mm)"
+    },
+    "limitingSizeM": 0.07,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     }
+    ]
+   }
+  },
+  "symbols": [],
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "clinical": false,
+   "assumptions": [
+    {
+     "en": "Segments are rigid with authored masses summing to 1.0 kg; on the ground both feet carry the weight; in flight no support exists (ballistic phases) and the quasi-static check reports it.",
+     "de": "Segmente sind starr mit Massen von zusammen 1,0 kg; am Boden tragen beide Füße; im Flug gibt es kein Auflager (ballistische Phasen), was die quasi-statische Prüfung meldet."
+    },
+    {
+     "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle or aerodynamic model is assumed.",
+     "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; weder ein Muskel- noch ein Aerodynamikmodell wird angenommen."
+    }
+   ]
+  },
+  "presentation": {
+   "defaultPose": "standing",
+   "defaultClip": "soar",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

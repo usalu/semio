@@ -1,0 +1,3375 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "excavator",
+    "category": "machinery",
+    "title": {
+      "en": "Excavator",
+      "de": "Bagger"
+    },
+    "summary": {
+      "en": "A 20 t diesel crawler excavator in side elevation: tracked undercarriage with four load-sharing ground contacts, house with cab, engine hood, exhaust stack and counterweight, and a boom, stick and bucket chain driven by three hydraulic cylinders with extending rods.",
+      "de": "Ein 20-t-Kettenbagger mit Dieselmotor in der Seitenansicht: Raupenfahrwerk mit vier lastverteilenden Bodenkontakten, Oberwagen mit Kabine, Motorhaube, Auspuffrohr und Gegengewicht sowie eine Ausleger-, Stiel- und Löffelkette mit drei Hydraulikzylindern und ausfahrenden Kolbenstangen."
+    },
+    "tags": [
+      "machine",
+      "excavator",
+      "crawler",
+      "diesel",
+      "hydraulic",
+      "construction"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker (vehicles)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "iso-10265",
+          "citation": "ISO 10265:2008 Earth-moving machinery, crawler machines: performance requirements and test procedures for brake systems; and ISO 10567:2007 Earth-moving machinery, hydraulic excavators: lifting capacity, tipping load definition."
+        },
+        {
+          "id": "heywood-2018",
+          "citation": "Heywood, J. B. (2018). Internal Combustion Engine Fundamentals, 2nd ed., McGraw-Hill. Diesel exhaust gas temperature and mass flow."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer; surface emissivity and absorptivity of painted and bare metals."
+        }
+      ],
+      "notes": {
+        "en": "The three working-gear cylinders are modelled as real barrel and rod bones whose angles and strokes were solved so that the rod eyes sit on the pins in every authored pose and clip key (the in-between interpolation deviates by a few centimetres). The slewing ring turns about a vertical axis and is therefore a fixed joint in elevation; the dig cycle is swing-free. Bucket linkage levers are omitted: the bucket cylinder acts on an ear of the bucket. The class dimensions, masses and loads are authored typical values for this vehicle class (authored-estimate); they are not taken from a cited data sheet.",
+        "de": "Die drei Arbeitszylinder sind als echte Zylinder- und Kolbenstangenknochen modelliert, deren Winkel und Hübe so gelöst wurden, dass die Stangenaugen in jeder erstellten Pose und jedem Clip-Schlüssel auf den Bolzen sitzen (zwischen den Schlüsseln weicht die Interpolation um wenige Zentimeter ab). Der Drehkranz dreht um eine vertikale Achse und ist in der Ansicht daher ein festes Gelenk; der Grabzyklus ist schwenkfrei. Die Löffelhebel sind weggelassen: Der Löffelzylinder greift an einem Ohr des Löffels an. Abmessungen, Massen und Lasten sind selbst gesetzte typische Werte dieser Fahrzeugklasse (authored-estimate); sie stammen nicht aus einem zitierten Datenblatt."
+      }
+    },
+    "dimensions": {
+      "heightM": 3.43,
+      "widthM": 9.85,
+      "depthM": 2.99,
+      "massKg": 20180
+    },
+    "materials": [
+      {
+        "id": "paint-steel",
+        "title": {
+          "en": "Painted structural steel",
+          "de": "Lackierter Baustahl"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "wear-steel",
+        "title": {
+          "en": "Bucket wear steel",
+          "de": "Löffel-Verschleißstahl"
+        },
+        "emissivity": 0.6,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 7850,
+        "conductivityWmK": 45,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "track-steel",
+        "title": {
+          "en": "Track shoes and rollers",
+          "de": "Kettenglieder und Rollen"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.75,
+        "densityKgM3": 7850,
+        "conductivityWmK": 45,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "Counterweight cast iron",
+          "de": "Gegengewicht aus Gusseisen"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 7200,
+        "conductivityWmK": 46,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "glass",
+        "title": {
+          "en": "Cab safety glass",
+          "de": "Kabinen-Sicherheitsglas"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.2,
+        "densityKgM3": 2500,
+        "conductivityWmK": 1.0,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "chrome",
+        "title": {
+          "en": "Chromed piston rod",
+          "de": "Verchromte Kolbenstange"
+        },
+        "emissivity": 0.12,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "exhaust-steel",
+        "title": {
+          "en": "Oxidised exhaust steel",
+          "de": "Oxidierter Abgasstahl"
+        },
+        "emissivity": 0.7,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7800,
+        "conductivityWmK": 25,
+        "source": "literature",
+        "reference": "heywood-2018"
+      },
+      {
+        "id": "engine-metal",
+        "title": {
+          "en": "Engine compartment surfaces",
+          "de": "Oberflächen des Motorraums"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7000,
+        "conductivityWmK": 50,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "undercarriage",
+      "bones": [
+        {
+          "id": "undercarriage",
+          "parent": null,
+          "title": {
+            "en": "Tracked undercarriage",
+            "de": "Raupenfahrwerk"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 4.2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5700,
+            "comX": 0,
+            "comY": 0.55,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "upper",
+          "parent": "undercarriage",
+          "title": {
+            "en": "Upper structure with cab (slew ring fixed in elevation)",
+            "de": "Oberwagen mit Kabine (Drehkranz in der Ansicht fest)"
+          },
+          "x": 0,
+          "y": 1.0,
+          "angleDeg": 0,
+          "lengthM": 3.4,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4300,
+            "comX": -0.5,
+            "comY": 0.7,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "counterweight",
+          "parent": "upper",
+          "title": {
+            "en": "Counterweight",
+            "de": "Gegengewicht"
+          },
+          "x": -2.35,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4800,
+            "comX": 0,
+            "comY": 0.6,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "engine",
+          "parent": "upper",
+          "title": {
+            "en": "Diesel engine and pumps",
+            "de": "Dieselmotor und Pumpen"
+          },
+          "x": -1.0,
+          "y": 0.5,
+          "angleDeg": 0,
+          "lengthM": 0.9,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 900,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "boom",
+          "parent": "upper",
+          "title": {
+            "en": "Boom",
+            "de": "Ausleger"
+          },
+          "x": 1.0,
+          "y": 0.65,
+          "angleDeg": 40,
+          "lengthM": 5.7,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -75,
+            "maxDeg": 45
+          },
+          "mass": {
+            "kg": 1750,
+            "comX": 2.5,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stick",
+          "parent": "boom",
+          "title": {
+            "en": "Stick",
+            "de": "Löffelstiel"
+          },
+          "x": 5.7,
+          "y": 0,
+          "angleDeg": -90,
+          "lengthM": 2.9,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -50,
+            "maxDeg": 70
+          },
+          "mass": {
+            "kg": 900,
+            "comX": 1.3,
+            "comY": 0.05,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "bucket",
+          "parent": "stick",
+          "title": {
+            "en": "Bucket",
+            "de": "Löffel"
+          },
+          "x": 2.9,
+          "y": 0,
+          "angleDeg": 30,
+          "lengthM": 1.35,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 640,
+            "comX": 0.65,
+            "comY": 0.25,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "boom-cyl",
+          "parent": "upper",
+          "title": {
+            "en": "Boom cylinders, barrels",
+            "de": "Auslegerzylinder, Zylinderrohre"
+          },
+          "x": 0.45,
+          "y": 0.1,
+          "angleDeg": 30,
+          "lengthM": 1.45,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -20,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 380,
+            "comX": 0.7,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "boom-rod",
+          "parent": "boom-cyl",
+          "title": {
+            "en": "Boom cylinders, rods",
+            "de": "Auslegerzylinder, Kolbenstangen"
+          },
+          "x": 0.45,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 1.65,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 0.6
+          },
+          "mass": {
+            "kg": 240,
+            "comX": 0.8,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stick-cyl",
+          "parent": "boom",
+          "title": {
+            "en": "Stick cylinder, barrel",
+            "de": "Stielzylinder, Zylinderrohr"
+          },
+          "x": 3.0,
+          "y": 0.95,
+          "angleDeg": -33,
+          "lengthM": 1.6,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 8
+          },
+          "mass": {
+            "kg": 230,
+            "comX": 0.75,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "stick-rod",
+          "parent": "stick-cyl",
+          "title": {
+            "en": "Stick cylinder, rod",
+            "de": "Stielzylinder, Kolbenstange"
+          },
+          "x": 0.5,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 2.35,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 1.1
+          },
+          "mass": {
+            "kg": 140,
+            "comX": 1.1,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "bucket-cyl",
+          "parent": "stick",
+          "title": {
+            "en": "Bucket cylinder, barrel",
+            "de": "Löffelzylinder, Zylinderrohr"
+          },
+          "x": 1.25,
+          "y": 0.36,
+          "angleDeg": -4,
+          "lengthM": 0.85,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -8,
+            "maxDeg": 8
+          },
+          "mass": {
+            "kg": 130,
+            "comX": 0.4,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "bucket-rod",
+          "parent": "bucket-cyl",
+          "title": {
+            "en": "Bucket cylinder, rod",
+            "de": "Löffelzylinder, Kolbenstange"
+          },
+          "x": 0.3,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.95,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 0.9
+          },
+          "mass": {
+            "kg": 70,
+            "comX": 0.45,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "track-r2",
+        "bone": "undercarriage",
+        "x": -1.35,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Track patch, rear (sprocket end)",
+          "de": "Kettenstandfläche hinten (Antriebsrad)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.9,
+        "footprintWidthM": 1.2,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "track-r1",
+        "bone": "undercarriage",
+        "x": -0.45,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Track patch, rear middle",
+          "de": "Kettenstandfläche hinten Mitte"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.9,
+        "footprintWidthM": 1.2,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "track-f1",
+        "bone": "undercarriage",
+        "x": 0.45,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Track patch, front middle",
+          "de": "Kettenstandfläche vorn Mitte"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.9,
+        "footprintWidthM": 1.2,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "track-f2",
+        "bone": "undercarriage",
+        "x": 1.35,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Track patch, front (idler end)",
+          "de": "Kettenstandfläche vorn (Leitrad)"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.9,
+        "footprintWidthM": 1.2,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "stack-mouth",
+        "bone": "upper",
+        "x": -1.2,
+        "y": 1.84,
+        "kind": "emitter",
+        "title": {
+          "en": "Exhaust stack mouth",
+          "de": "Auspuffmündung"
+        }
+      },
+      {
+        "id": "bucket-cog",
+        "bone": "bucket",
+        "x": 0.65,
+        "y": 0.22,
+        "kind": "load",
+        "title": {
+          "en": "Bucket content centre",
+          "de": "Schwerpunkt der Löffelfüllung"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "track-belt",
+          "bone": "undercarriage",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M -1.65,0 L 1.65,0 C 1.9,0 2.08,0.2 2.08,0.43 C 2.08,0.66 1.9,0.86 1.65,0.86 L -1.65,0.86 C -1.9,0.86 -2.08,0.66 -2.08,0.43 C -2.08,0.2 -1.9,0 -1.65,0 Z",
+          "region": "tracks",
+          "material": "track-steel"
+        },
+        {
+          "id": "track-frame",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -1.7,0.25 L 1.7,0.25 L 1.7,0.7 L -1.7,0.7 Z",
+          "material": "paint-steel"
+        },
+        {
+          "id": "sprocket",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "ellipse",
+          "cx": -1.65,
+          "cy": 0.43,
+          "rx": 0.33,
+          "ry": 0.33,
+          "material": "track-steel"
+        },
+        {
+          "id": "idler",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "ellipse",
+          "cx": 1.65,
+          "cy": 0.43,
+          "rx": 0.33,
+          "ry": 0.33,
+          "material": "track-steel"
+        },
+        {
+          "id": "sprocket-hub",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "ellipse",
+          "cx": -1.65,
+          "cy": 0.43,
+          "rx": 0.1,
+          "ry": 0.1,
+          "material": "track-steel"
+        },
+        {
+          "id": "idler-hub",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.1,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "ellipse",
+          "cx": 1.65,
+          "cy": 0.43,
+          "rx": 0.1,
+          "ry": 0.1,
+          "material": "track-steel"
+        },
+        {
+          "id": "roller-1",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": -1.0,
+          "cy": 0.2,
+          "rx": 0.11,
+          "ry": 0.11,
+          "material": "track-steel"
+        },
+        {
+          "id": "roller-2",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": -0.5,
+          "cy": 0.2,
+          "rx": 0.11,
+          "ry": 0.11,
+          "material": "track-steel"
+        },
+        {
+          "id": "roller-3",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": 0.0,
+          "cy": 0.2,
+          "rx": 0.11,
+          "ry": 0.11,
+          "material": "track-steel"
+        },
+        {
+          "id": "roller-4",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": 0.5,
+          "cy": 0.2,
+          "rx": 0.11,
+          "ry": 0.11,
+          "material": "track-steel"
+        },
+        {
+          "id": "roller-5",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": 1.0,
+          "cy": 0.2,
+          "rx": 0.11,
+          "ry": 0.11,
+          "material": "track-steel"
+        },
+        {
+          "id": "carrier-roller",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 2,
+          "z": 3,
+          "filled": true,
+          "tone": 0.55,
+          "kind": "ellipse",
+          "cx": 0.0,
+          "cy": 0.74,
+          "rx": 0.07,
+          "ry": 0.07,
+          "material": "track-steel"
+        },
+        {
+          "id": "grousers-bottom",
+          "bone": "undercarriage",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M-1.50,0.0 L-1.50,0.07 M-1.38,0.0 L-1.38,0.07 M-1.26,0.0 L-1.26,0.07 M-1.14,0.0 L-1.14,0.07 M-1.02,0.0 L-1.02,0.07 M-0.90,0.0 L-0.90,0.07 M-0.78,0.0 L-0.78,0.07 M-0.66,0.0 L-0.66,0.07 M-0.54,0.0 L-0.54,0.07 M-0.42,0.0 L-0.42,0.07 M-0.30,0.0 L-0.30,0.07 M-0.18,0.0 L-0.18,0.07 M-0.06,0.0 L-0.06,0.07 M0.06,0.0 L0.06,0.07 M0.18,0.0 L0.18,0.07 M0.30,0.0 L0.30,0.07 M0.42,0.0 L0.42,0.07 M0.54,0.0 L0.54,0.07 M0.66,0.0 L0.66,0.07 M0.78,0.0 L0.78,0.07 M0.90,0.0 L0.90,0.07 M1.02,0.0 L1.02,0.07 M1.14,0.0 L1.14,0.07 M1.26,0.0 L1.26,0.07 M1.38,0.0 L1.38,0.07 M1.50,0.0 L1.50,0.07",
+          "material": "track-steel"
+        },
+        {
+          "id": "grousers-top",
+          "bone": "undercarriage",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.1,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M-1.40,0.86 L-1.40,0.79 M-1.28,0.86 L-1.28,0.79 M-1.16,0.86 L-1.16,0.79 M-1.04,0.86 L-1.04,0.79 M-0.92,0.86 L-0.92,0.79 M-0.80,0.86 L-0.80,0.79 M-0.68,0.86 L-0.68,0.79 M-0.56,0.86 L-0.56,0.79 M-0.44,0.86 L-0.44,0.79 M-0.32,0.86 L-0.32,0.79 M-0.20,0.86 L-0.20,0.79 M-0.08,0.86 L-0.08,0.79 M0.04,0.86 L0.04,0.79 M0.16,0.86 L0.16,0.79 M0.28,0.86 L0.28,0.79 M0.40,0.86 L0.40,0.79 M0.52,0.86 L0.52,0.79 M0.64,0.86 L0.64,0.79 M0.76,0.86 L0.76,0.79 M0.88,0.86 L0.88,0.79 M1.00,0.86 L1.00,0.79 M1.12,0.86 L1.12,0.79 M1.24,0.86 L1.24,0.79 M1.36,0.86 L1.36,0.79 M1.48,0.86 L1.48,0.79 M1.60,0.86 L1.60,0.79",
+          "material": "track-steel"
+        },
+        {
+          "id": "slew-ring",
+          "bone": "undercarriage",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": -0.8,
+          "y": 0.86,
+          "w": 1.6,
+          "h": 0.14,
+          "material": "paint-steel"
+        },
+        {
+          "id": "house",
+          "bone": "upper",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.62,
+          "kind": "path",
+          "d": "M -1.75,0 L 1.6,0 L 1.6,0.3 L 1.58,0.95 C 1.56,1.4 1.5,1.75 1.42,1.88 C 1.36,1.96 1.28,1.97 1.2,1.97 L 0.4,1.97 C 0.22,1.97 0.12,1.88 0.12,1.7 L 0.12,1.25 L -1.4,1.25 C -1.62,1.25 -1.75,1.15 -1.75,0.95 Z",
+          "region": "house",
+          "material": "paint-steel"
+        },
+        {
+          "id": "skirt-line",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.2,
+          "filled": false,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M -1.75,0.22 L 1.6,0.22"
+        },
+        {
+          "id": "hood-grille",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.2,
+          "filled": true,
+          "tone": 0.15,
+          "kind": "path",
+          "d": "M -1.55,0.4 L -0.55,0.4 L -0.55,1.05 L -1.55,1.05 Z",
+          "region": "engine-compartment",
+          "material": "engine-metal"
+        },
+        {
+          "id": "hood-louvres",
+          "bone": "upper",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -1.5,0.5 L -0.6,0.5 M -1.5,0.6 L -0.6,0.6 M -1.5,0.7 L -0.6,0.7 M -1.5,0.8 L -0.6,0.8 M -1.5,0.9 L -0.6,0.9 M -1.5,1.0 L -0.6,1.0",
+          "material": "engine-metal"
+        },
+        {
+          "id": "hood-rail",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.3,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              -1.65,
+              1.25
+            ],
+            [
+              -1.65,
+              1.5
+            ],
+            [
+              -0.3,
+              1.5
+            ],
+            [
+              -0.3,
+              1.25
+            ]
+          ],
+          "closed": false,
+          "material": "paint-steel"
+        },
+        {
+          "id": "stack",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.4,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "capsule",
+          "x0": -1.2,
+          "y0": 1.25,
+          "x1": -1.2,
+          "y1": 1.8,
+          "r0": 0.055,
+          "r1": 0.055,
+          "region": "exhaust-stack",
+          "material": "exhaust-steel"
+        },
+        {
+          "id": "stack-cap",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.45,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": -1.28,
+          "y": 1.78,
+          "w": 0.16,
+          "h": 0.04,
+          "material": "exhaust-steel"
+        },
+        {
+          "id": "cab-glass-front",
+          "bone": "upper",
+          "role": "glazing",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "path",
+          "d": "M 1.02,0.55 L 1.56,0.55 C 1.55,1.1 1.5,1.6 1.43,1.84 C 1.38,1.9 1.3,1.9 1.2,1.9 L 1.02,1.9 Z",
+          "region": "cab-glazing",
+          "material": "glass"
+        },
+        {
+          "id": "cab-glass-side",
+          "bone": "upper",
+          "role": "glazing",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "path",
+          "d": "M 0.3,0.6 L 0.95,0.6 L 0.95,1.9 L 0.45,1.9 C 0.35,1.9 0.3,1.85 0.3,1.75 Z",
+          "region": "cab-glazing",
+          "material": "glass"
+        },
+        {
+          "id": "cab-sill",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.12,0.55 L 1.58,0.55"
+        },
+        {
+          "id": "cab-seat",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 2,
+          "z": 3,
+          "filled": true,
+          "tone": 0.25,
+          "kind": "capsule",
+          "x0": 0.55,
+          "y0": 0.85,
+          "x1": 0.5,
+          "y1": 1.45,
+          "r0": 0.1,
+          "r1": 0.07,
+          "material": "engine-metal"
+        },
+        {
+          "id": "boom-foot",
+          "bone": "upper",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 0.78,0.22 L 1.3,0.22 L 1.3,0.55 L 1.15,0.78 L 0.9,0.78 L 0.78,0.55 Z",
+          "region": "house",
+          "material": "paint-steel"
+        },
+        {
+          "id": "boom-pin",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 1.0,
+          "cy": 0.65,
+          "rx": 0.09,
+          "ry": 0.09,
+          "material": "track-steel"
+        },
+        {
+          "id": "boom-cyl-foot",
+          "bone": "upper",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.2,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0.45,
+          "cy": 0.1,
+          "rx": 0.08,
+          "ry": 0.08,
+          "material": "track-steel"
+        },
+        {
+          "id": "counterweight-body",
+          "bone": "counterweight",
+          "role": "body",
+          "lod": 0,
+          "z": 2,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "path",
+          "d": "M 0.65,0 L -0.5,0 C -0.6,0 -0.65,0.1 -0.65,0.25 L -0.63,0.85 C -0.6,1.1 -0.4,1.2 -0.15,1.2 L 0.65,1.2 Z",
+          "region": "counterweight",
+          "material": "cast-iron"
+        },
+        {
+          "id": "counterweight-seam",
+          "bone": "counterweight",
+          "role": "texture",
+          "lod": 2,
+          "z": 2.2,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M -0.55,0.4 L 0.65,0.4 M -0.55,0.8 L 0.65,0.8"
+        },
+        {
+          "id": "engine-block",
+          "bone": "engine",
+          "role": "detail",
+          "lod": 1,
+          "z": 1.9,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "rect",
+          "x": -0.55,
+          "y": -0.3,
+          "w": 1.1,
+          "h": 0.65,
+          "region": "engine-compartment",
+          "material": "engine-metal"
+        },
+        {
+          "id": "boom-body",
+          "bone": "boom",
+          "role": "body",
+          "lod": 0,
+          "z": 2.5,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "path",
+          "d": "M 0,-0.5 C 0.6,-0.72 1.6,-0.6 2.6,-0.28 C 3.6,0.04 4.8,-0.14 5.7,-0.3 L 5.7,0.3 C 4.8,0.34 3.9,0.75 2.9,0.98 C 2.1,1.1 1.1,0.95 0,0.5 Z",
+          "region": "attachment",
+          "material": "paint-steel"
+        },
+        {
+          "id": "boom-weld-1",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.4,-0.6 L 1.4,0.9"
+        },
+        {
+          "id": "boom-weld-2",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 3.4,0.05 L 3.4,0.9"
+        },
+        {
+          "id": "boom-weld-3",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 4.6,-0.14 L 4.6,0.45"
+        },
+        {
+          "id": "boom-root-boss",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.28,
+          "ry": 0.28,
+          "material": "paint-steel"
+        },
+        {
+          "id": "boom-tip-boss",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 5.7,
+          "cy": 0,
+          "rx": 0.26,
+          "ry": 0.26,
+          "material": "paint-steel"
+        },
+        {
+          "id": "boom-rod-eye",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 1.8,
+          "cy": -0.45,
+          "rx": 0.07,
+          "ry": 0.07,
+          "material": "track-steel"
+        },
+        {
+          "id": "stick-cyl-foot",
+          "bone": "boom",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 3.0,
+          "cy": 0.95,
+          "rx": 0.07,
+          "ry": 0.07,
+          "material": "track-steel"
+        },
+        {
+          "id": "stick-body",
+          "bone": "stick",
+          "role": "body",
+          "lod": 0,
+          "z": 2.6,
+          "filled": true,
+          "tone": 0.58,
+          "kind": "path",
+          "d": "M 0,-0.38 C 0.9,-0.44 2.0,-0.32 2.9,-0.2 L 2.9,0.2 C 2.0,0.3 0.9,0.46 0,0.42 Z",
+          "region": "attachment",
+          "material": "paint-steel"
+        },
+        {
+          "id": "stick-root-boss",
+          "bone": "stick",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.28,
+          "ry": 0.28,
+          "material": "paint-steel"
+        },
+        {
+          "id": "stick-tip-boss",
+          "bone": "stick",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 2.9,
+          "cy": 0,
+          "rx": 0.22,
+          "ry": 0.22,
+          "material": "paint-steel"
+        },
+        {
+          "id": "stick-rod-eye",
+          "bone": "stick",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0.9,
+          "cy": 0.38,
+          "rx": 0.07,
+          "ry": 0.07,
+          "material": "track-steel"
+        },
+        {
+          "id": "bucket-cyl-foot",
+          "bone": "stick",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 1.25,
+          "cy": 0.36,
+          "rx": 0.06,
+          "ry": 0.06,
+          "material": "track-steel"
+        },
+        {
+          "id": "stick-seam",
+          "bone": "stick",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.7,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 1.9,-0.34 L 1.9,0.3"
+        },
+        {
+          "id": "bucket-body",
+          "bone": "bucket",
+          "role": "body",
+          "lod": 0,
+          "z": 2.7,
+          "filled": true,
+          "tone": 0.4,
+          "kind": "path",
+          "d": "M 1.35,0 L 1.3,0.05 C 1.05,0.62 0.35,0.78 -0.08,0.34 L -0.12,0.06 L 0.02,-0.12 C 0.4,-0.1 0.95,-0.1 1.35,0 Z",
+          "region": "attachment",
+          "material": "wear-steel"
+        },
+        {
+          "id": "bucket-teeth",
+          "bone": "bucket",
+          "role": "detail",
+          "lod": 1,
+          "z": 2.8,
+          "filled": true,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M 1.3,0.07 L 1.5,-0.03 L 1.28,-0.09 Z",
+          "region": "attachment",
+          "material": "wear-steel"
+        },
+        {
+          "id": "bucket-plate",
+          "bone": "bucket",
+          "role": "detail",
+          "lod": 2,
+          "z": 2.8,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.9,0.1 C 0.7,0.42 0.3,0.55 0.05,0.3"
+        },
+        {
+          "id": "bucket-pin",
+          "bone": "bucket",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.3,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0,
+          "cy": 0,
+          "rx": 0.1,
+          "ry": 0.1,
+          "material": "track-steel"
+        },
+        {
+          "id": "bucket-ear",
+          "bone": "bucket",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.4,
+          "filled": true,
+          "tone": 0.12,
+          "kind": "ellipse",
+          "cx": 0.15,
+          "cy": 0.36,
+          "rx": 0.06,
+          "ry": 0.06,
+          "material": "track-steel"
+        },
+        {
+          "id": "boom-cyl-barrel",
+          "bone": "boom-cyl",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.45,
+          "y1": 0,
+          "r0": 0.1,
+          "r1": 0.1,
+          "region": "hydraulics",
+          "material": "paint-steel"
+        },
+        {
+          "id": "boom-cyl-rod",
+          "bone": "boom-rod",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.45,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.65,
+          "y1": 0,
+          "r0": 0.05,
+          "r1": 0.05,
+          "region": "hydraulics",
+          "material": "chrome"
+        },
+        {
+          "id": "stick-cyl-barrel",
+          "bone": "stick-cyl",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 1.6,
+          "y1": 0,
+          "r0": 0.09,
+          "r1": 0.09,
+          "region": "hydraulics",
+          "material": "paint-steel"
+        },
+        {
+          "id": "stick-cyl-rod",
+          "bone": "stick-rod",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.45,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 2.35,
+          "y1": 0,
+          "r0": 0.045,
+          "r1": 0.045,
+          "region": "hydraulics",
+          "material": "chrome"
+        },
+        {
+          "id": "bucket-cyl-barrel",
+          "bone": "bucket-cyl",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.85,
+          "y1": 0,
+          "r0": 0.07,
+          "r1": 0.07,
+          "region": "hydraulics",
+          "material": "paint-steel"
+        },
+        {
+          "id": "bucket-cyl-rod",
+          "bone": "bucket-rod",
+          "role": "detail",
+          "lod": 1,
+          "z": 3.45,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "capsule",
+          "x0": 0,
+          "y0": 0,
+          "x1": 0.95,
+          "y1": 0,
+          "r0": 0.04,
+          "r1": 0.04,
+          "region": "hydraulics",
+          "material": "chrome"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "stowed",
+        "title": {
+          "en": "Stowed, engine off",
+          "de": "Transportstellung, Motor aus"
+        },
+        "description": {
+          "en": "Parked with the stick folded in and the bucket curled just above the ground; engine and hydraulics cold.",
+          "de": "Geparkt mit eingezogenem Stiel und eingerolltem Löffel knapp über dem Boden; Motor und Hydraulik kalt."
+        },
+        "bones": {
+          "boom": {
+            "angleDeg": -25
+          },
+          "stick": {
+            "angleDeg": -50
+          },
+          "bucket": {
+            "angleDeg": -85
+          },
+          "boom-cyl": {
+            "angleDeg": -16.41
+          },
+          "boom-rod": {
+            "dx": 0.374
+          },
+          "stick-cyl": {
+            "angleDeg": -5.9
+          },
+          "stick-rod": {
+            "dx": 0.047
+          },
+          "bucket-cyl": {
+            "angleDeg": -3.75
+          },
+          "bucket-rod": {
+            "dx": 0.8
+          }
+        },
+        "root": {
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "track-r2",
+          "track-r1",
+          "track-f1",
+          "track-f2"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0,
+            "hydraulic": 0
+          },
+          "emitters": {
+            "exhaust-stack": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "digging",
+        "title": {
+          "en": "Digging, full bucket",
+          "de": "Graben, Löffel gefüllt"
+        },
+        "description": {
+          "en": "Bucket tip on the ground 6.6 m from the track centre with 1.3 t of soil in the bucket; engine at 80 % load.",
+          "de": "Löffelspitze auf dem Boden 6,6 m von der Fahrwerksmitte mit 1,3 t Boden im Löffel; Motor bei 80 % Last."
+        },
+        "bones": {
+          "boom": {
+            "angleDeg": -24
+          },
+          "stick": {
+            "angleDeg": -38
+          },
+          "bucket": {
+            "angleDeg": 60
+          },
+          "boom-cyl": {
+            "angleDeg": -15.68
+          },
+          "boom-rod": {
+            "dx": 0.381
+          },
+          "stick-cyl": {
+            "angleDeg": -4.75
+          },
+          "stick-rod": {
+            "dx": 0.243
+          },
+          "bucket-cyl": {
+            "angleDeg": -5.25
+          },
+          "bucket-rod": {
+            "dx": 0.057
+          }
+        },
+        "root": {
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "track-r2",
+          "track-r1",
+          "track-f1",
+          "track-f2"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.8,
+            "hydraulic": 0.9
+          },
+          "emitters": {
+            "exhaust-stack": 0.8
+          }
+        },
+        "loads": [
+          {
+            "id": "bucket-load",
+            "kind": "carried",
+            "title": {
+              "en": "Soil in the bucket",
+              "de": "Boden im Löffel"
+            },
+            "anchor": "bucket-cog",
+            "fxN": 0,
+            "fyN": -12749,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "raised-boom",
+        "title": {
+          "en": "Boom raised with load",
+          "de": "Ausleger gehoben mit Last"
+        },
+        "description": {
+          "en": "Boom lifted 65 degrees above its working position, stick out, bucket 7.3 m from the track centre and 6.8 m high with 1.3 t: the tipping-critical lever arm; rear track patches unload.",
+          "de": "Ausleger 65 Grad über die Arbeitsstellung gehoben, Stiel ausgestreckt, Löffel 7,3 m von der Fahrwerksmitte und 6,8 m hoch mit 1,3 t: der kippkritische Hebelarm; die hinteren Kettenstandflächen werden entlastet."
+        },
+        "bones": {
+          "boom": {
+            "angleDeg": 25
+          },
+          "stick": {
+            "angleDeg": 10
+          },
+          "bucket": {
+            "angleDeg": 20
+          },
+          "boom-cyl": {
+            "angleDeg": 19.2
+          },
+          "boom-rod": {
+            "dx": 0.53
+          },
+          "stick-cyl": {
+            "angleDeg": 4.28
+          },
+          "stick-rod": {
+            "dx": 0.834
+          },
+          "bucket-cyl": {
+            "angleDeg": 3.47
+          },
+          "bucket-rod": {
+            "dx": 0.221
+          }
+        },
+        "root": {
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0
+        },
+        "ground": "auto",
+        "contacts": [
+          "track-r2",
+          "track-r1",
+          "track-f1",
+          "track-f2"
+        ],
+        "thermal": {
+          "operating": {
+            "engine-load": 0.7,
+            "hydraulic": 0.8
+          },
+          "emitters": {
+            "exhaust-stack": 0.7
+          }
+        },
+        "loads": [
+          {
+            "id": "bucket-load",
+            "kind": "carried",
+            "title": {
+              "en": "Soil in the bucket",
+              "de": "Boden im Löffel"
+            },
+            "anchor": "bucket-cog",
+            "fxN": 0,
+            "fyN": -12749,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "dig-cycle",
+        "title": {
+          "en": "Swing-free dig cycle",
+          "de": "Schwenkfreier Grabzyklus"
+        },
+        "description": {
+          "en": "A 9 s loop: reach out, crowd into the ground, curl and drag the bucket full, boom up, dump at 2.7 m height and return. The bucket load rises from 0 to 1.3 t while digging and drops at the dump.",
+          "de": "Eine Schleife von 9 s: Ausholen, in den Boden drücken, Löffel füllen und heranziehen, Ausleger heben, bei 2,7 m Höhe entleeren und zurück. Die Löffellast steigt beim Graben von 0 auf 1,3 t und fällt beim Entleeren."
+        },
+        "durationS": 9,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -18.0
+              },
+              "stick": {
+                "angleDeg": -8.0
+              },
+              "bucket": {
+                "angleDeg": 45.0
+              },
+              "boom-cyl": {
+                "angleDeg": -11.323
+              },
+              "boom-rod": {
+                "dx": 0.4202
+              },
+              "stick-cyl": {
+                "angleDeg": 0.306
+              },
+              "stick-rod": {
+                "dx": 0.6566
+              },
+              "bucket-cyl": {
+                "angleDeg": -1.195
+              },
+              "bucket-rod": {
+                "dx": 0.0966
+              }
+            }
+          },
+          {
+            "t": 0.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -22.091
+              },
+              "stick": {
+                "angleDeg": -12.624
+              },
+              "bucket": {
+                "angleDeg": 51.032
+              },
+              "boom-cyl": {
+                "angleDeg": -14.292
+              },
+              "boom-rod": {
+                "dx": 0.3943
+              },
+              "stick-cyl": {
+                "angleDeg": -0.624
+              },
+              "stick-rod": {
+                "dx": 0.6016
+              },
+              "bucket-cyl": {
+                "angleDeg": -2.739
+              },
+              "bucket-rod": {
+                "dx": 0.077
+              }
+            }
+          },
+          {
+            "t": 1.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -23.433
+              },
+              "stick": {
+                "angleDeg": -19.693
+              },
+              "bucket": {
+                "angleDeg": 58.175
+              },
+              "boom-cyl": {
+                "angleDeg": -15.269
+              },
+              "boom-rod": {
+                "dx": 0.3853
+              },
+              "stick-cyl": {
+                "angleDeg": -1.954
+              },
+              "stick-rod": {
+                "dx": 0.5107
+              },
+              "bucket-cyl": {
+                "angleDeg": -4.72
+              },
+              "bucket-rod": {
+                "dx": 0.0601
+              }
+            }
+          },
+          {
+            "t": 1.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -23.25
+              },
+              "stick": {
+                "angleDeg": -26.0
+              },
+              "bucket": {
+                "angleDeg": 55.0
+              },
+              "boom-cyl": {
+                "angleDeg": -15.136
+              },
+              "boom-rod": {
+                "dx": 0.3865
+              },
+              "stick-cyl": {
+                "angleDeg": -3.033
+              },
+              "stick-rod": {
+                "dx": 0.4233
+              },
+              "bucket-cyl": {
+                "angleDeg": -3.822
+              },
+              "bucket-rod": {
+                "dx": 0.0667
+              }
+            }
+          },
+          {
+            "t": 2.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -18.549
+              },
+              "stick": {
+                "angleDeg": -31.071
+              },
+              "bucket": {
+                "angleDeg": 36.004
+              },
+              "boom-cyl": {
+                "angleDeg": -11.72
+              },
+              "boom-rod": {
+                "dx": 0.4169
+              },
+              "stick-cyl": {
+                "angleDeg": -3.816
+              },
+              "stick-rod": {
+                "dx": 0.349
+              },
+              "bucket-cyl": {
+                "angleDeg": 0.829
+              },
+              "bucket-rod": {
+                "dx": 0.1342
+              }
+            }
+          },
+          {
+            "t": 2.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -13.5
+              },
+              "stick": {
+                "angleDeg": -36.0
+              },
+              "bucket": {
+                "angleDeg": 8.571
+              },
+              "boom-cyl": {
+                "angleDeg": -8.078
+              },
+              "boom-rod": {
+                "dx": 0.4457
+              },
+              "stick-cyl": {
+                "angleDeg": -4.496
+              },
+              "stick-rod": {
+                "dx": 0.2738
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.556
+              },
+              "bucket-rod": {
+                "dx": 0.2929
+              }
+            }
+          },
+          {
+            "t": 3.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -11.576
+              },
+              "stick": {
+                "angleDeg": -39.929
+              },
+              "bucket": {
+                "angleDeg": -19.397
+              },
+              "boom-cyl": {
+                "angleDeg": -6.696
+              },
+              "boom-rod": {
+                "dx": 0.4557
+              },
+              "stick-cyl": {
+                "angleDeg": -4.974
+              },
+              "stick-rod": {
+                "dx": 0.212
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.71
+              },
+              "bucket-rod": {
+                "dx": 0.4813
+              }
+            }
+          },
+          {
+            "t": 3.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -14.25
+              },
+              "stick": {
+                "angleDeg": -42.0
+              },
+              "bucket": {
+                "angleDeg": -40.0
+              },
+              "boom-cyl": {
+                "angleDeg": -8.618
+              },
+              "boom-rod": {
+                "dx": 0.4417
+              },
+              "stick-cyl": {
+                "angleDeg": -5.201
+              },
+              "stick-rod": {
+                "dx": 0.1788
+              },
+              "bucket-cyl": {
+                "angleDeg": 3.029
+              },
+              "bucket-rod": {
+                "dx": 0.6105
+              }
+            }
+          },
+          {
+            "t": 4.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -8.438
+              },
+              "stick": {
+                "angleDeg": -40.899
+              },
+              "bucket": {
+                "angleDeg": -47.46
+              },
+              "boom-cyl": {
+                "angleDeg": -4.45
+              },
+              "boom-rod": {
+                "dx": 0.4707
+              },
+              "stick-cyl": {
+                "angleDeg": -5.083
+              },
+              "stick-rod": {
+                "dx": 0.1965
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.144
+              },
+              "bucket-rod": {
+                "dx": 0.6521
+              }
+            }
+          },
+          {
+            "t": 4.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -1.038
+              },
+              "stick": {
+                "angleDeg": -37.005
+              },
+              "bucket": {
+                "angleDeg": -46.508
+              },
+              "boom-cyl": {
+                "angleDeg": 0.82
+              },
+              "boom-rod": {
+                "dx": 0.4997
+              },
+              "stick-cyl": {
+                "angleDeg": -4.624
+              },
+              "stick-rod": {
+                "dx": 0.2581
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.264
+              },
+              "bucket-rod": {
+                "dx": 0.647
+              }
+            }
+          },
+          {
+            "t": 5.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 5.0
+              },
+              "stick": {
+                "angleDeg": -32.0
+              },
+              "bucket": {
+                "angleDeg": -45.0
+              },
+              "boom-cyl": {
+                "angleDeg": 5.098
+              },
+              "boom-rod": {
+                "dx": 0.5168
+              },
+              "stick-cyl": {
+                "angleDeg": -3.951
+              },
+              "stick-rod": {
+                "dx": 0.335
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.45
+              },
+              "bucket-rod": {
+                "dx": 0.6388
+              }
+            }
+          },
+          {
+            "t": 5.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 8.448
+              },
+              "stick": {
+                "angleDeg": -25.481
+              },
+              "bucket": {
+                "angleDeg": -49.37
+              },
+              "boom-cyl": {
+                "angleDeg": 7.534
+              },
+              "boom-rod": {
+                "dx": 0.5239
+              },
+              "stick-cyl": {
+                "angleDeg": -2.949
+              },
+              "stick-rod": {
+                "dx": 0.4307
+              },
+              "bucket-cyl": {
+                "angleDeg": 1.898
+              },
+              "bucket-rod": {
+                "dx": 0.6622
+              }
+            }
+          },
+          {
+            "t": 6.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 10.535
+              },
+              "stick": {
+                "angleDeg": -17.852
+              },
+              "bucket": {
+                "angleDeg": -53.185
+              },
+              "boom-cyl": {
+                "angleDeg": 9.007
+              },
+              "boom-rod": {
+                "dx": 0.5272
+              },
+              "stick-cyl": {
+                "angleDeg": -1.619
+              },
+              "stick-rod": {
+                "dx": 0.5351
+              },
+              "bucket-cyl": {
+                "angleDeg": 1.385
+              },
+              "bucket-rod": {
+                "dx": 0.6816
+              }
+            }
+          },
+          {
+            "t": 6.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 12.0
+              },
+              "stick": {
+                "angleDeg": -12.0
+              },
+              "bucket": {
+                "angleDeg": -45.0
+              },
+              "boom-cyl": {
+                "angleDeg": 10.041
+              },
+              "boom-rod": {
+                "dx": 0.5291
+              },
+              "stick-cyl": {
+                "angleDeg": -0.501
+              },
+              "stick-rod": {
+                "dx": 0.6092
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.45
+              },
+              "bucket-rod": {
+                "dx": 0.6388
+              }
+            }
+          },
+          {
+            "t": 7.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 13.85
+              },
+              "stick": {
+                "angleDeg": -11.2
+              },
+              "bucket": {
+                "angleDeg": 0.0
+              },
+              "boom-cyl": {
+                "angleDeg": 11.345
+              },
+              "boom-rod": {
+                "dx": 0.531
+              },
+              "stick-cyl": {
+                "angleDeg": -0.342
+              },
+              "stick-rod": {
+                "dx": 0.6189
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.959
+              },
+              "bucket-rod": {
+                "dx": 0.3501
+              }
+            }
+          },
+          {
+            "t": 7.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 12.0
+              },
+              "stick": {
+                "angleDeg": -12.0
+              },
+              "bucket": {
+                "angleDeg": 45.0
+              },
+              "boom-cyl": {
+                "angleDeg": 10.041
+              },
+              "boom-rod": {
+                "dx": 0.5291
+              },
+              "stick-cyl": {
+                "angleDeg": -0.501
+              },
+              "stick-rod": {
+                "dx": 0.6092
+              },
+              "bucket-cyl": {
+                "angleDeg": -1.195
+              },
+              "bucket-rod": {
+                "dx": 0.0966
+              }
+            }
+          },
+          {
+            "t": 8.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 2.861
+              },
+              "stick": {
+                "angleDeg": -10.089
+              },
+              "bucket": {
+                "angleDeg": 52.63
+              },
+              "boom-cyl": {
+                "angleDeg": 3.584
+              },
+              "boom-rod": {
+                "dx": 0.5114
+              },
+              "stick-cyl": {
+                "angleDeg": -0.12
+              },
+              "stick-rod": {
+                "dx": 0.6322
+              },
+              "bucket-cyl": {
+                "angleDeg": -3.169
+              },
+              "bucket-rod": {
+                "dx": 0.0726
+              }
+            }
+          },
+          {
+            "t": 8.5,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -8.944
+              },
+              "stick": {
+                "angleDeg": -7.822
+              },
+              "bucket": {
+                "angleDeg": 48.259
+              },
+              "boom-cyl": {
+                "angleDeg": -4.812
+              },
+              "boom-rod": {
+                "dx": 0.4684
+              },
+              "stick-cyl": {
+                "angleDeg": 0.342
+              },
+              "stick-rod": {
+                "dx": 0.6587
+              },
+              "bucket-cyl": {
+                "angleDeg": -2.013
+              },
+              "bucket-rod": {
+                "dx": 0.0854
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "track-r2",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-r1",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-f1",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-f2",
+            "fromS": 0,
+            "toS": 9
+          }
+        ],
+        "phases": [
+          {
+            "id": "reach",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "Reach out",
+              "de": "Ausholen"
+            }
+          },
+          {
+            "id": "dig",
+            "fromS": 1.5,
+            "toS": 3.5,
+            "title": {
+              "en": "Dig and curl",
+              "de": "Graben und Einrollen"
+            }
+          },
+          {
+            "id": "lift",
+            "fromS": 3.5,
+            "toS": 6.5,
+            "title": {
+              "en": "Boom up",
+              "de": "Ausleger heben"
+            }
+          },
+          {
+            "id": "dump",
+            "fromS": 6.5,
+            "toS": 7.5,
+            "title": {
+              "en": "Dump",
+              "de": "Entleeren"
+            }
+          },
+          {
+            "id": "return",
+            "fromS": 7.5,
+            "toS": 9,
+            "title": {
+              "en": "Return",
+              "de": "Rückführung"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "load-on",
+            "title": {
+              "en": "Bucket filled",
+              "de": "Löffel gefüllt"
+            },
+            "target": "bucket-load"
+          },
+          {
+            "t": 7.2,
+            "kind": "load-off",
+            "title": {
+              "en": "Soil dumped",
+              "de": "Boden entleert"
+            },
+            "target": "bucket-load"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:engine-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 1.5,
+                "v": 0.95
+              },
+              {
+                "t": 3.5,
+                "v": 0.9
+              },
+              {
+                "t": 5,
+                "v": 0.85
+              },
+              {
+                "t": 6.5,
+                "v": 0.7
+              },
+              {
+                "t": 7.5,
+                "v": 0.6
+              }
+            ]
+          },
+          {
+            "target": "operating:hydraulic",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 1.5,
+                "v": 0.95
+              },
+              {
+                "t": 3.5,
+                "v": 0.9
+              },
+              {
+                "t": 5,
+                "v": 0.9
+              },
+              {
+                "t": 6.5,
+                "v": 0.7
+              },
+              {
+                "t": 7.5,
+                "v": 0.6
+              }
+            ]
+          },
+          {
+            "target": "emitter:exhaust-stack",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 1.5,
+                "v": 0.95
+              },
+              {
+                "t": 3.5,
+                "v": 0.9
+              },
+              {
+                "t": 5,
+                "v": 0.85
+              },
+              {
+                "t": 6.5,
+                "v": 0.7
+              },
+              {
+                "t": 7.5,
+                "v": 0.6
+              }
+            ]
+          },
+          {
+            "target": "load:bucket-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.4,
+                "v": 0
+              },
+              {
+                "t": 3.4,
+                "v": 1
+              },
+              {
+                "t": 6.8,
+                "v": 1
+              },
+              {
+                "t": 7.6,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dump-and-stow",
+        "title": {
+          "en": "Dump, stow and shut down",
+          "de": "Entleeren, einziehen und abstellen"
+        },
+        "description": {
+          "en": "From the full digging position the bucket is raised and dumped over a truck, the arm is folded to the stowed position and the engine is shut down.",
+          "de": "Aus der gefüllten Grabstellung wird der Löffel gehoben und über einem Lkw entleert, der Arm in die Transportstellung eingeklappt und der Motor abgestellt."
+        },
+        "durationS": 9,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -23.25
+              },
+              "stick": {
+                "angleDeg": -38.0
+              },
+              "bucket": {
+                "angleDeg": 60.0
+              },
+              "boom-cyl": {
+                "angleDeg": -15.136
+              },
+              "boom-rod": {
+                "dx": 0.3865
+              },
+              "stick-cyl": {
+                "angleDeg": -4.747
+              },
+              "stick-rod": {
+                "dx": 0.2425
+              },
+              "bucket-cyl": {
+                "angleDeg": -5.246
+              },
+              "bucket-rod": {
+                "dx": 0.057
+              }
+            }
+          },
+          {
+            "t": 0.4,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -16.368
+              },
+              "stick": {
+                "angleDeg": -32.488
+              },
+              "bucket": {
+                "angleDeg": 35.94
+              },
+              "boom-cyl": {
+                "angleDeg": -10.144
+              },
+              "boom-rod": {
+                "dx": 0.4298
+              },
+              "stick-cyl": {
+                "angleDeg": -4.02
+              },
+              "stick-rod": {
+                "dx": 0.3277
+              },
+              "bucket-cyl": {
+                "angleDeg": 0.842
+              },
+              "bucket-rod": {
+                "dx": 0.1345
+              }
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -8.304
+              },
+              "stick": {
+                "angleDeg": -26.664
+              },
+              "bucket": {
+                "angleDeg": 8.82
+              },
+              "boom-cyl": {
+                "angleDeg": -4.354
+              },
+              "boom-rod": {
+                "dx": 0.4713
+              },
+              "stick-cyl": {
+                "angleDeg": -3.14
+              },
+              "stick-rod": {
+                "dx": 0.4137
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.54
+              },
+              "bucket-rod": {
+                "dx": 0.2913
+              }
+            }
+          },
+          {
+            "t": 1.2,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -0.456
+              },
+              "stick": {
+                "angleDeg": -20.996
+              },
+              "bucket": {
+                "angleDeg": -16.77
+              },
+              "boom-cyl": {
+                "angleDeg": 1.233
+              },
+              "boom-rod": {
+                "dx": 0.5016
+              },
+              "stick-cyl": {
+                "angleDeg": -2.186
+              },
+              "stick-rod": {
+                "dx": 0.4931
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.828
+              },
+              "bucket-rod": {
+                "dx": 0.4638
+              }
+            }
+          },
+          {
+            "t": 1.6,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 6.528
+              },
+              "stick": {
+                "angleDeg": -15.952
+              },
+              "bucket": {
+                "angleDeg": -36.24
+              },
+              "boom-cyl": {
+                "angleDeg": 6.178
+              },
+              "boom-rod": {
+                "dx": 0.5202
+              },
+              "stick-cyl": {
+                "angleDeg": -1.265
+              },
+              "stick-rod": {
+                "dx": 0.5598
+              },
+              "bucket-cyl": {
+                "angleDeg": 3.425
+              },
+              "bucket-rod": {
+                "dx": 0.5883
+              }
+            }
+          },
+          {
+            "t": 2.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 12.0
+              },
+              "stick": {
+                "angleDeg": -12.0
+              },
+              "bucket": {
+                "angleDeg": -45.0
+              },
+              "boom-cyl": {
+                "angleDeg": 10.041
+              },
+              "boom-rod": {
+                "dx": 0.5291
+              },
+              "stick-cyl": {
+                "angleDeg": -0.501
+              },
+              "stick-rod": {
+                "dx": 0.6092
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.45
+              },
+              "bucket-rod": {
+                "dx": 0.6388
+              }
+            }
+          },
+          {
+            "t": 2.4,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 14.731
+              },
+              "stick": {
+                "angleDeg": -9.805
+              },
+              "bucket": {
+                "angleDeg": -21.71
+              },
+              "boom-cyl": {
+                "angleDeg": 11.966
+              },
+              "boom-rod": {
+                "dx": 0.5317
+              },
+              "stick-cyl": {
+                "angleDeg": -0.062
+              },
+              "stick-rod": {
+                "dx": 0.6356
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.586
+              },
+              "bucket-rod": {
+                "dx": 0.4966
+              }
+            }
+          },
+          {
+            "t": 2.8,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 14.462
+              },
+              "stick": {
+                "angleDeg": -9.777
+              },
+              "bucket": {
+                "angleDeg": 22.83
+              },
+              "boom-cyl": {
+                "angleDeg": 11.776
+              },
+              "boom-rod": {
+                "dx": 0.5315
+              },
+              "stick-cyl": {
+                "angleDeg": -0.057
+              },
+              "stick-rod": {
+                "dx": 0.6359
+              },
+              "bucket-cyl": {
+                "angleDeg": 3.095
+              },
+              "bucket-rod": {
+                "dx": 0.2039
+              }
+            }
+          },
+          {
+            "t": 3.2,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 12.0
+              },
+              "stick": {
+                "angleDeg": -12.0
+              },
+              "bucket": {
+                "angleDeg": 45.0
+              },
+              "boom-cyl": {
+                "angleDeg": 10.041
+              },
+              "boom-rod": {
+                "dx": 0.5291
+              },
+              "stick-cyl": {
+                "angleDeg": -0.501
+              },
+              "stick-rod": {
+                "dx": 0.6092
+              },
+              "bucket-cyl": {
+                "angleDeg": -1.195
+              },
+              "bucket-rod": {
+                "dx": 0.0966
+              }
+            }
+          },
+          {
+            "t": 3.6,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 8.233
+              },
+              "stick": {
+                "angleDeg": -15.869
+              },
+              "bucket": {
+                "angleDeg": 37.942
+              },
+              "boom-cyl": {
+                "angleDeg": 7.382
+              },
+              "boom-rod": {
+                "dx": 0.5235
+              },
+              "stick-cyl": {
+                "angleDeg": -1.249
+              },
+              "stick-rod": {
+                "dx": 0.5609
+              },
+              "bucket-cyl": {
+                "angleDeg": 0.424
+              },
+              "bucket-rod": {
+                "dx": 0.1254
+              }
+            }
+          },
+          {
+            "t": 4.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": 3.693
+              },
+              "stick": {
+                "angleDeg": -20.531
+              },
+              "bucket": {
+                "angleDeg": 24.996
+              },
+              "boom-cyl": {
+                "angleDeg": 4.173
+              },
+              "boom-rod": {
+                "dx": 0.5136
+              },
+              "stick-cyl": {
+                "angleDeg": -2.104
+              },
+              "stick-rod": {
+                "dx": 0.4994
+              },
+              "bucket-cyl": {
+                "angleDeg": 2.783
+              },
+              "bucket-rod": {
+                "dx": 0.1915
+              }
+            }
+          },
+          {
+            "t": 4.4,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -1.344
+              },
+              "stick": {
+                "angleDeg": -25.704
+              },
+              "bucket": {
+                "angleDeg": 7.836
+              },
+              "boom-cyl": {
+                "angleDeg": 0.603
+              },
+              "boom-rod": {
+                "dx": 0.4987
+              },
+              "stick-cyl": {
+                "angleDeg": -2.985
+              },
+              "stick-rod": {
+                "dx": 0.4275
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.604
+              },
+              "bucket-rod": {
+                "dx": 0.2977
+              }
+            }
+          },
+          {
+            "t": 4.8,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -6.601
+              },
+              "stick": {
+                "angleDeg": -31.104
+              },
+              "bucket": {
+                "angleDeg": -11.863
+              },
+              "boom-cyl": {
+                "angleDeg": -3.138
+              },
+              "boom-rod": {
+                "dx": 0.4787
+              },
+              "stick-cyl": {
+                "angleDeg": -3.821
+              },
+              "stick-rod": {
+                "dx": 0.3485
+              },
+              "bucket-cyl": {
+                "angleDeg": 4.982
+              },
+              "bucket-rod": {
+                "dx": 0.4307
+              }
+            }
+          },
+          {
+            "t": 5.2,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -11.804
+              },
+              "stick": {
+                "angleDeg": -36.447
+              },
+              "bucket": {
+                "angleDeg": -32.428
+              },
+              "boom-cyl": {
+                "angleDeg": -6.86
+              },
+              "boom-rod": {
+                "dx": 0.4545
+              },
+              "stick-cyl": {
+                "angleDeg": -4.553
+              },
+              "stick-rod": {
+                "dx": 0.2668
+              },
+              "bucket-cyl": {
+                "angleDeg": 3.789
+              },
+              "bucket-rod": {
+                "dx": 0.5651
+              }
+            }
+          },
+          {
+            "t": 5.6,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -15.676
+              },
+              "stick": {
+                "angleDeg": -41.451
+              },
+              "bucket": {
+                "angleDeg": -52.183
+              },
+              "boom-cyl": {
+                "angleDeg": -9.645
+              },
+              "boom-rod": {
+                "dx": 0.4338
+              },
+              "stick-cyl": {
+                "angleDeg": -5.143
+              },
+              "stick-rod": {
+                "dx": 0.1877
+              },
+              "bucket-cyl": {
+                "angleDeg": 1.523
+              },
+              "bucket-rod": {
+                "dx": 0.6766
+              }
+            }
+          },
+          {
+            "t": 6.0,
+            "pose": "digging",
+            "ease": "smooth",
+            "bones": {
+              "boom": {
+                "angleDeg": -19.691
+              },
+              "stick": {
+                "angleDeg": -45.832
+              },
+              "bucket": {
+                "angleDeg": -69.454
+              },
+              "boom-cyl": {
+                "angleDeg": -12.548
+              },
+              "boom-rod": {
+                "dx": 0.4098
+              },
+              "stick-cyl": {
+                "angleDeg": -5.574
+              },
+              "stick-rod": {
+                "dx": 0.1165
+              },
+              "bucket-cyl": {
+                "angleDeg": -1.081
+              },
+              "bucket-rod": {
+                "dx": 0.7525
+              }
+            }
+          },
+          {
+            "t": 6.5,
+            "pose": "stowed",
+            "ease": "smooth"
+          },
+          {
+            "t": 9,
+            "pose": "stowed",
+            "ease": "linear"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "track-r2",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-r1",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-f1",
+            "fromS": 0,
+            "toS": 9
+          },
+          {
+            "anchor": "track-f2",
+            "fromS": 0,
+            "toS": 9
+          }
+        ],
+        "phases": [
+          {
+            "id": "swing-up",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Raise to the truck",
+              "de": "Zum Lkw heben"
+            }
+          },
+          {
+            "id": "dump",
+            "fromS": 2,
+            "toS": 3.6,
+            "title": {
+              "en": "Dump",
+              "de": "Entleeren"
+            }
+          },
+          {
+            "id": "stow",
+            "fromS": 3.6,
+            "toS": 6.5,
+            "title": {
+              "en": "Fold to stowed",
+              "de": "Einklappen"
+            }
+          },
+          {
+            "id": "cooldown",
+            "fromS": 6.5,
+            "toS": 9,
+            "title": {
+              "en": "Engine off",
+              "de": "Motor aus"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3.2,
+            "kind": "load-off",
+            "title": {
+              "en": "Soil dumped",
+              "de": "Boden entleert"
+            },
+            "target": "bucket-load"
+          },
+          {
+            "t": 6.8,
+            "kind": "shutdown",
+            "title": {
+              "en": "Engine shut down",
+              "de": "Motor abgestellt"
+            },
+            "target": "stack-mouth"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:bucket-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 3.8,
+                "v": 0
+              },
+              {
+                "t": 9,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:engine-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 3.2,
+                "v": 0.7
+              },
+              {
+                "t": 6.5,
+                "v": 0.2
+              },
+              {
+                "t": 7.5,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "operating:hydraulic",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.9
+              },
+              {
+                "t": 3.2,
+                "v": 0.8
+              },
+              {
+                "t": 6.5,
+                "v": 0.3
+              },
+              {
+                "t": 9,
+                "v": 0.1
+              }
+            ]
+          },
+          {
+            "target": "emitter:exhaust-stack",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 3.2,
+                "v": 0.7
+              },
+              {
+                "t": 6.5,
+                "v": 0.2
+              },
+              {
+                "t": 6.9,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 0.5,
+        "windDirectionDeg": 180,
+        "solarWM2": 400,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "house",
+          "title": {
+            "en": "Upper structure paintwork",
+            "de": "Lackierung des Oberwagens"
+          },
+          "kind": "surface",
+          "material": "paint-steel",
+          "model": "passive",
+          "areaM2": 30,
+          "characteristicLengthM": 2,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "counterweight",
+          "title": {
+            "en": "Counterweight",
+            "de": "Gegengewicht"
+          },
+          "kind": "surface",
+          "material": "cast-iron",
+          "model": "passive",
+          "areaM2": 4.5,
+          "characteristicLengthM": 1.2,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "cab-glazing",
+          "title": {
+            "en": "Cab glazing",
+            "de": "Kabinenverglasung"
+          },
+          "kind": "glazing",
+          "material": "glass",
+          "model": "passive",
+          "areaM2": 6,
+          "characteristicLengthM": 1,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "engine-compartment",
+          "title": {
+            "en": "Engine compartment surfaces",
+            "de": "Oberflächen des Motorraums"
+          },
+          "kind": "engine",
+          "material": "engine-metal",
+          "model": "operating",
+          "areaM2": 2.5,
+          "characteristicLengthM": 0.8,
+          "operatingKey": "engine-load",
+          "riseK": 45,
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "exhaust-stack",
+          "title": {
+            "en": "Exhaust stack",
+            "de": "Auspuffrohr"
+          },
+          "kind": "exhaust",
+          "material": "exhaust-steel",
+          "model": "operating",
+          "areaM2": 0.22,
+          "characteristicLengthM": 0.12,
+          "operatingKey": "engine-load",
+          "riseK": 330,
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        },
+        {
+          "id": "hydraulics",
+          "title": {
+            "en": "Hydraulic cylinders",
+            "de": "Hydraulikzylinder"
+          },
+          "kind": "surface",
+          "material": "paint-steel",
+          "model": "operating",
+          "areaM2": 3.5,
+          "characteristicLengthM": 0.3,
+          "operatingKey": "hydraulic",
+          "riseK": 35,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "attachment",
+          "title": {
+            "en": "Boom, stick and bucket steel",
+            "de": "Stahl von Ausleger, Stiel und Löffel"
+          },
+          "kind": "surface",
+          "material": "paint-steel",
+          "model": "passive",
+          "areaM2": 28,
+          "characteristicLengthM": 2,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "tracks",
+          "title": {
+            "en": "Track shoes and frames",
+            "de": "Kettenglieder und Rahmen"
+          },
+          "kind": "surface",
+          "material": "track-steel",
+          "model": "passive",
+          "areaM2": 14,
+          "characteristicLengthM": 1.2,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "exhaust-stack",
+          "kind": "exhaust",
+          "title": {
+            "en": "Exhaust plume",
+            "de": "Abgasfahne"
+          },
+          "anchor": "stack-mouth",
+          "directionDeg": 90,
+          "carries": "airflow",
+          "temperatureC": 380,
+          "velocityMS": 32,
+          "diameterM": 0.12,
+          "source": "authored-estimate",
+          "reference": "heywood-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The vertical stack carries 380 C gas at 32 m/s through 0.12 m at full strength; strength 0.6 to 0.95 covers the dig cycle and drops to zero at engine shutdown.",
+          "de": "Das senkrechte Auspuffrohr führt bei voller Stärke 380 C heißes Gas mit 32 m/s durch 0,12 m; die Stärke 0,6 bis 0,95 deckt den Grabzyklus ab und fällt beim Abstellen auf null."
+        },
+        {
+          "en": "Rises above air at operating level 1: engine compartment 45 K, exhaust stack 330 K, hydraulic cylinders 35 K (oil about 55 C).",
+          "de": "Erhöhungen über die Luft bei Betriebsstufe 1: Motorraum 45 K, Auspuffrohr 330 K, Hydraulikzylinder 35 K (Öl etwa 55 C)."
+        },
+        {
+          "en": "The engine block sits behind the hood and is represented by the hood grille and louvre surfaces.",
+          "de": "Der Motorblock liegt hinter der Haube und wird durch Haubengitter und Lüftungsschlitze dargestellt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Four equally stiff ground patches under the tracks share the load; a patch that would pull away from the ground is dropped, which exposes the tipping line about the front patch.",
+          "de": "Vier gleich steife Standflächen unter den Ketten teilen die Last; eine Fläche, die vom Boden abheben würde, entfällt; das zeigt die Kipplinie um die vordere Fläche."
+        },
+        {
+          "en": "The 1.3 t of soil is a point load at the bucket content centre (0.9 m3 at 1.45 t/m3); all dig-cycle motion is quasi-static (no digging resistance).",
+          "de": "Die 1,3 t Boden sind eine Einzellast im Schwerpunkt der Löffelfüllung (0,9 m3 mit 1,45 t/m3); die Bewegung im Grabzyklus ist quasi-statisch (ohne Grabwiderstand)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "stowed",
+      "defaultClip": "dig-cycle",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

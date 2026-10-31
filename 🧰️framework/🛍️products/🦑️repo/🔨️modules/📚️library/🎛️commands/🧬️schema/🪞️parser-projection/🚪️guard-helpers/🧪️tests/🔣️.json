@@ -1,0 +1,68 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "title"
+    ],
+    "properties": {
+      "title": true,
+      "format": true
+    },
+    "additionalProperties": false
+  },
+  "cases": [
+    {
+      "id": "required-value",
+      "value": {
+        "title": "Room"
+      },
+      "valid": true
+    },
+    {
+      "id": "opaque-null",
+      "value": {
+        "title": null
+      },
+      "valid": true
+    },
+    {
+      "id": "optional-value",
+      "value": {
+        "title": [],
+        "format": "plain"
+      },
+      "valid": true
+    },
+    {
+      "id": "missing-required",
+      "value": {},
+      "valid": false
+    },
+    {
+      "id": "optional-only",
+      "value": {
+        "format": "plain"
+      },
+      "valid": false
+    },
+    {
+      "id": "unknown-field",
+      "value": {
+        "title": "x",
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "id": "array",
+      "value": [],
+      "valid": false
+    },
+    {
+      "id": "null",
+      "value": null,
+      "valid": false
+    }
+  ],
+  "helperDeclarations": "/** 🧮️ Current domain reader. */\nexport function currentDomain(value: unknown): unknown {\nconst nested = () => ({ value });\nreturn nested().value;\n}\nconst domainMarker = `🧩️ kept\nexport const decoy = 9;\n`;\n/** 📏️ Current nullable domain reader. */\nexport const currentNullable = (value: unknown): unknown => value === null ? null : currentDomain(value);\n"
+}

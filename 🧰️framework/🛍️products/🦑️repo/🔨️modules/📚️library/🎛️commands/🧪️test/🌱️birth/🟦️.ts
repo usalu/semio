@@ -2,7 +2,11 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 const protocol=schema.$defs.Protocol.const;
 
 /** 🎯️ Selects only the closed infrastructure request whose initial issuer may declare Native build resources. */
-export function rootTestBuildArgumentsV1(argv:readonly string[],declared:readonly string[]):readonly string[]|null{return argv.length===protocol.operands&&protocol.prefix.every((word,index)=>argv[index]===word)&&declared.includes(argv[protocol.prefix.length]!)?Object.freeze([...argv]):null;}
+export function rootTestBuildArgumentsV1(argv:readonly string[],declared:readonly string[]):readonly string[]|null{
+ const testing=argv.length===protocol.operands&&protocol.prefix.every((word,index)=>argv[index]===word)&&declared.includes(argv[protocol.prefix.length]!);
+ const schema=argv.length>=protocol.schemaMinimumOperands&&protocol.schemaPrefix.every((word,index)=>argv[index]===word)&&protocol.schemaCommands.includes(argv[protocol.schemaPrefix.length]!)&&!argv.some(word=>protocol.helpFlags.includes(word));
+ return testing||schema?Object.freeze([...argv]):null;
+}
 
 /** 🌱️ Designates owned providers and builds fresh capability DATA before issuance; received Originals never enter this factory. */
 export async function rootTestFreshCapabilitiesV1(root:string,argv:readonly string[],environment:Record<string,string|undefined>):Promise<Readonly<Record<string,unknown>>>{

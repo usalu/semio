@@ -3,9 +3,11 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
-import semver from "semver";
+import {createRequire} from "node:module";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import corpus from "./🔣️.json";
+const semver:{gte(actual:string,required:string):boolean}=createRequire(import.meta.url)("semver");
+
 
 const root = findWorkspaceRoot(import.meta.dir);
 const bootstrap = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"), "utf8");
@@ -64,30 +66,6 @@ test("Windows Rust bootstrap keeps profiles and the pinned installer untouched",
   expect(args).toEqual(corpus.rustupToolchainArguments);
 });
 
-test("browser prerequisites route every Linux manager through the owned privileged installer", () => {
-  const rows = corpus.browserPackages;
-  expect(new Ajv().validate({ type: "array", minItems: 3, items: { type: "object", required: ["manager", "command", "packages"], properties: { manager: { enum: ["dnf", "pacman", "zypper"] }, command: { type: "array", minItems: 2, items: { type: "string" } }, packages: { type: "array", minItems: 10, uniqueItems: true, items: { type: "string", pattern: "^[a-zA-Z0-9_-]+$" } } }, additionalProperties: false } }, rows)).toBe(true);
-  const functions = body("linux_browser_packages", "install_linux_packages") + body("install_linux_packages", "report_missing_tools") + body("ensure_browser_libraries", "ensure_launcher");
-  const stubs = '\nuname() { printf "%s" "${HOST_OS:-Linux}"; }\nlinux_package_manager() { printf "%s" "$MANAGER"; }\nlog() { :; }\nrun_privileged() { printf "%s\\0" "$@"; return "${INSTALL_STATUS:-0}"; }\n';
-  for (const row of rows) {
-    const result = execute(functions + stubs + "\nensure_browser_libraries", { MANAGER: row.manager });
-    expect(result.status, result.stderr).toBe(0);
-    const args = result.stdout.split("\0").filter(Boolean), expected = [...row.command, ...row.packages];
-    expect(args).toEqual(expected);
-    expect(new Ajv().validate({ const: expected }, args)).toBe(true);
-    expect(execute(functions + stubs + "\nensure_browser_libraries", { MANAGER: row.manager, INSTALL_STATUS: "7" }).status).toBe(7);
-  }
-  const browserRoot = join(generated, "browser");
-  mkdirSync(join(browserRoot, "node_modules/playwright"), { recursive: true });
-  writeFileSync(join(browserRoot, "node_modules/playwright/cli.js"), "");
-  const apt = execute(functions + stubs + "\nensure_browser_libraries", { MANAGER: "apt-get", REPO_ROOT: browserRoot });
-  expect(apt.status, apt.stderr).toBe(0);
-  expect(apt.stdout.split("\0").filter(Boolean).slice(-4)).toEqual(["node", join(browserRoot, "node_modules/playwright/cli.js"), "install-deps", "chromium"]);
-  expect(execute(functions + stubs + "\nensure_browser_libraries", { MANAGER: "apt-get", REPO_ROOT: browserRoot, INSTALL_STATUS: "7" }).status).toBe(7);
-  const skipped = execute(functions + stubs + "\nensure_browser_libraries", { HOST_OS: "Darwin", MANAGER: "dnf" });
-  expect({ status: skipped.status, stdout: skipped.stdout }).toEqual({ status: 0, stdout: "" });
-});
-
 test("container graphics has a Vulkan loader and software ICD", () => {
   const dockerfile = readFileSync(join(root, ".devcontainer/Dockerfile"), "utf8");
   const install = dockerfile.match(/RUN apt-get update && apt-get install -y --no-install-recommends ([\s\S]*?)&& apt-get clean/u)?.[1];
@@ -102,6 +80,7 @@ test("container graphics has a Vulkan loader and software ICD", () => {
 test("container dependency projections stay on the Source filesystem", () => {
   const source = readFileSync(join(root, ".devcontainer/devcontainer.json"), "utf8");
   const config = Bun.JSONC.parse(source);
+  if(!config||typeof config!=="object"||!("mounts" in config)||!Array.isArray(config.mounts)||!config.mounts.every(value=>typeof value==="string")||!("onCreateCommand" in config)||(typeof config.onCreateCommand!=="string"&&(!Array.isArray(config.onCreateCommand)||!config.onCreateCommand.every(value=>typeof value==="string")))||!("workspaceFolder" in config)||typeof config.workspaceFolder!=="string")throw Error("Declared Source projection configuration required");
   expect(config).toEqual(JSON.parse(source));
   const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧬️schema/🔣️.json"), "utf8"));

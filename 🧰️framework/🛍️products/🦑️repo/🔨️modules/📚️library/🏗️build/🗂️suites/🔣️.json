@@ -14,7 +14,6 @@
         "🚀️bootstrap/🧪️tests",
         "🧭️invocation",
         "🟢️readiness",
-        "⏱️profile",
         "📖️texts"
       ],
       "platforms": [
@@ -125,7 +124,15 @@
         "posix-shell-script",
         "python3-command",
         "permission-bits"
-      ]
+      ],
+      "fileLaunchers": {
+        "🏡️resident/🧪️tests/🏗️provision/🟦️.ts": "setup-sdk",
+        "🏡️resident/🧪️tests/🔭️watch/🟦️.ts": "setup-sdk",
+        "🏡️resident/🧪️tests/🏛️service/🟦️.ts": "setup-sdk",
+        "🏡️resident/📜️journal/🔭️world/🧪️tests/🟦️.ts": "setup-sdk",
+        "🏡️resident/📜️journal/🧪️tests/🎲️fuzz/🟦️.ts": "setup-sdk",
+        "🏡️resident/📜️journal/🧪️tests/🟦️.ts": "setup-sdk"
+      }
     },
     {
       "id": "build-workers",
@@ -433,6 +440,24 @@
         "python3-command",
         "permission-bits"
       ]
+    },
+    {
+      "id": "build-native-storage",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👁️existing/🟦️.ts",
+        "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🎚️capacity/🟦️.ts",
+        "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/✅️conformance/🟦️.ts",
+        "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🧹️whole/🟦️.ts",
+        "📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📁️directory/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ],
+      "scratch": "checkout"
     },
     {
       "id": "build-bazel-sessions",
@@ -761,7 +786,8 @@
       "platformCauses": [
         "python3-command",
         "symlink"
-      ]
+      ],
+      "scratch": "checkout"
     },
     {
       "id": "build-inference-projects",
@@ -874,6 +900,20 @@
       "typecheck": "none",
       "trees": [
         "🗂️suites"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "build-cpu-profile",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "⏱️profile/📊️cpu/🧪️tests/🟦️.ts",
+        "⏱️profile/🧪️tests/🟦️.ts"
       ],
       "platforms": [
         "darwin",

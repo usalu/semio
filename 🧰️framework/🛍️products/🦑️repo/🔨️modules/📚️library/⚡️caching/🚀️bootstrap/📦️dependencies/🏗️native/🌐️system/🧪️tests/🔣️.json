@@ -1,0 +1,699 @@
+{
+  "cases": [
+    {
+      "name": "apt-get root",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "apt-get sudo",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/sudo",
+          "args": [
+            "-n",
+            "--",
+            "/tools/env",
+            "DEBIAN_FRONTEND=noninteractive",
+            "/tools/runtime",
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "dnf root",
+      "platform": "linux",
+      "available": [
+        "dnf",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/dnf",
+          "args": [
+            "install",
+            "-y",
+            "nss",
+            "nspr",
+            "atk",
+            "at-spi2-atk",
+            "cups-libs",
+            "libdrm",
+            "libxkbcommon",
+            "libXcomposite",
+            "libXdamage",
+            "libXfixes",
+            "libXrandr",
+            "mesa-libgbm",
+            "alsa-lib",
+            "libX11",
+            "libxcb",
+            "libXext",
+            "dbus-libs",
+            "expat",
+            "glib2",
+            "xorg-x11-server-Xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "dnf sudo",
+      "platform": "linux",
+      "available": [
+        "dnf",
+        "sudo",
+        "env"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/sudo",
+          "args": [
+            "-n",
+            "--",
+            "/tools/dnf",
+            "install",
+            "-y",
+            "nss",
+            "nspr",
+            "atk",
+            "at-spi2-atk",
+            "cups-libs",
+            "libdrm",
+            "libxkbcommon",
+            "libXcomposite",
+            "libXdamage",
+            "libXfixes",
+            "libXrandr",
+            "mesa-libgbm",
+            "alsa-lib",
+            "libX11",
+            "libxcb",
+            "libXext",
+            "dbus-libs",
+            "expat",
+            "glib2",
+            "xorg-x11-server-Xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "pacman root",
+      "platform": "linux",
+      "available": [
+        "pacman",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/pacman",
+          "args": [
+            "-Sy",
+            "--needed",
+            "--noconfirm",
+            "nss",
+            "nspr",
+            "at-spi2-core",
+            "libcups",
+            "libdrm",
+            "libxkbcommon",
+            "libxcomposite",
+            "libxdamage",
+            "libxfixes",
+            "libxrandr",
+            "mesa",
+            "alsa-lib",
+            "libx11",
+            "libxcb",
+            "libxext",
+            "dbus",
+            "expat",
+            "glib2",
+            "xorg-server-xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "pacman sudo",
+      "platform": "linux",
+      "available": [
+        "pacman",
+        "sudo",
+        "env"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/sudo",
+          "args": [
+            "-n",
+            "--",
+            "/tools/pacman",
+            "-Sy",
+            "--needed",
+            "--noconfirm",
+            "nss",
+            "nspr",
+            "at-spi2-core",
+            "libcups",
+            "libdrm",
+            "libxkbcommon",
+            "libxcomposite",
+            "libxdamage",
+            "libxfixes",
+            "libxrandr",
+            "mesa",
+            "alsa-lib",
+            "libx11",
+            "libxcb",
+            "libxext",
+            "dbus",
+            "expat",
+            "glib2",
+            "xorg-server-xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "zypper root",
+      "platform": "linux",
+      "available": [
+        "zypper",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/zypper",
+          "args": [
+            "--non-interactive",
+            "install",
+            "--no-recommends",
+            "mozilla-nss",
+            "mozilla-nspr",
+            "libatk-1_0-0",
+            "libatk-bridge-2_0-0",
+            "libcups2",
+            "libdrm2",
+            "libxkbcommon0",
+            "libXcomposite1",
+            "libXdamage1",
+            "libXfixes3",
+            "libXrandr2",
+            "libgbm1",
+            "libasound2",
+            "libX11-6",
+            "libxcb1",
+            "libXext6",
+            "libdbus-1-3",
+            "libexpat1",
+            "libglib-2_0-0",
+            "xvfb-run",
+            "xorg-x11-server-Xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "zypper sudo",
+      "platform": "linux",
+      "available": [
+        "zypper",
+        "sudo",
+        "env"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/sudo",
+          "args": [
+            "-n",
+            "--",
+            "/tools/zypper",
+            "--non-interactive",
+            "install",
+            "--no-recommends",
+            "mozilla-nss",
+            "mozilla-nspr",
+            "libatk-1_0-0",
+            "libatk-bridge-2_0-0",
+            "libcups2",
+            "libdrm2",
+            "libxkbcommon0",
+            "libXcomposite1",
+            "libXdamage1",
+            "libXfixes3",
+            "libXrandr2",
+            "libgbm1",
+            "libasound2",
+            "libX11-6",
+            "libxcb1",
+            "libXext6",
+            "libdbus-1-3",
+            "libexpat1",
+            "libglib-2_0-0",
+            "xvfb-run",
+            "xorg-x11-server-Xvfb"
+          ],
+          "env": {}
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "manager precedence",
+      "platform": "linux",
+      "available": [
+        "zypper",
+        "dnf",
+        "apt-get",
+        "pacman"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        },
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "win32",
+      "platform": "win32",
+      "available": [],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "darwin",
+      "platform": "darwin",
+      "available": [],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install",
+            "chromium"
+          ],
+          "env": {}
+        }
+      ],
+      "error": null
+    },
+    {
+      "name": "missing manager",
+      "platform": "linux",
+      "available": [],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Supported Linux package manager required"
+    },
+    {
+      "name": "missing sudo",
+      "platform": "linux",
+      "available": [
+        "dnf"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Noninteractive sudo required"
+    },
+    {
+      "name": "missing env",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo"
+      ],
+      "root": false,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "System env executable required"
+    },
+    {
+      "name": "missing CLI",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": false,
+      "offline": false,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Playwright CLI required"
+    },
+    {
+      "name": "offline",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": true,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Browser provisioning requires online authority"
+    },
+    {
+      "name": "already canceled",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "before",
+      "fail": false,
+      "expected": [],
+      "error": "canceled"
+    },
+    {
+      "name": "installer failed",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "none",
+      "fail": true,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        }
+      ],
+      "error": "installer status 7"
+    },
+    {
+      "name": "canceled installer",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "during",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        }
+      ],
+      "error": "canceled"
+    },
+    {
+      "name": "win32 offline",
+      "platform": "win32",
+      "available": [],
+      "root": false,
+      "cli": true,
+      "offline": true,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Browser provisioning requires online authority"
+    },
+    {
+      "name": "darwin offline",
+      "platform": "darwin",
+      "available": [],
+      "root": false,
+      "cli": true,
+      "offline": true,
+      "cancel": "none",
+      "fail": false,
+      "expected": [],
+      "error": "Browser provisioning requires online authority"
+    },
+    {
+      "name": "installer aborts and returns",
+      "platform": "linux",
+      "available": [
+        "apt-get",
+        "sudo",
+        "env"
+      ],
+      "root": true,
+      "cli": true,
+      "offline": false,
+      "cancel": "return",
+      "fail": false,
+      "expected": [
+        {
+          "command": "/tools/runtime",
+          "args": [
+            "/source/cli",
+            "install-deps",
+            "chromium"
+          ],
+          "env": {
+            "DEBIAN_FRONTEND": "noninteractive"
+          }
+        }
+      ],
+      "error": "canceled"
+    }
+  ]
+}

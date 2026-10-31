@@ -656,3 +656,1310 @@ export type Frame = {
   readonly held: Slug | null;
 };
 //#endregion 🔖️Frame
+
+//#region 🚪️Parsers
+/** 🛑️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+export class frameworkProductPetsGuardRefusal extends Error {
+  constructor(readonly at: string, readonly why: string) {
+    super(`${at}: ${why}`);
+  }
+}
+
+const frameworkProductPetsGuardReject = (at: string, why: string): never => {
+  throw new frameworkProductPetsGuardRefusal(at, why);
+};
+
+type frameworkProductPetsGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
+type frameworkProductPetsGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number; readonly exclusiveMinimum?: number; readonly exclusiveMaximum?: number };
+type frameworkProductPetsGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
+
+export const frameworkProductPetsGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : frameworkProductPetsGuardReject(at, "value is not an object");
+export const frameworkProductPetsGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) frameworkProductPetsGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
+export const frameworkProductPetsGuardArray = (value: unknown, at: string, bounds: frameworkProductPetsGuardSizeBounds = {}): readonly unknown[] => {
+  if (!Array.isArray(value)) return frameworkProductPetsGuardReject(at, "value is not an array");
+  if (bounds.minItems !== undefined && value.length < bounds.minItems) frameworkProductPetsGuardReject(at, `array has fewer than ${bounds.minItems} items`);
+  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) frameworkProductPetsGuardReject(at, `array has more than ${bounds.maxItems} items`);
+  return value;
+};
+export const frameworkProductPetsGuardString = (value: unknown, at: string, bounds: frameworkProductPetsGuardTextBounds = {}): string => {
+  if (typeof value !== "string") return frameworkProductPetsGuardReject(at, "value is not a string");
+  const length = [...value].length;
+  if (bounds.minLength !== undefined && length < bounds.minLength) frameworkProductPetsGuardReject(at, `string is shorter than ${bounds.minLength}`);
+  if (bounds.maxLength !== undefined && length > bounds.maxLength) frameworkProductPetsGuardReject(at, `string is longer than ${bounds.maxLength}`);
+  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) frameworkProductPetsGuardReject(at, `string does not match ${bounds.pattern}`);
+  return value;
+};
+export const frameworkProductPetsGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : frameworkProductPetsGuardReject(at, "value is not a boolean"));
+export const frameworkProductPetsGuardNumber = (value: unknown, at: string, bounds: frameworkProductPetsGuardRangeBounds = {}): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return frameworkProductPetsGuardReject(at, "value is not a finite number");
+  if (bounds.minimum !== undefined && value < bounds.minimum) frameworkProductPetsGuardReject(at, `number is below ${bounds.minimum}`);
+  if (bounds.maximum !== undefined && value > bounds.maximum) frameworkProductPetsGuardReject(at, `number is above ${bounds.maximum}`);
+  if (bounds.exclusiveMinimum !== undefined && value <= bounds.exclusiveMinimum) frameworkProductPetsGuardReject(at, `number is not above ${bounds.exclusiveMinimum}`);
+  if (bounds.exclusiveMaximum !== undefined && value >= bounds.exclusiveMaximum) frameworkProductPetsGuardReject(at, `number is not below ${bounds.exclusiveMaximum}`);
+  return value;
+};
+export const frameworkProductPetsGuardInteger = (value: unknown, at: string, bounds: frameworkProductPetsGuardRangeBounds = {}): number =>
+  Number.isSafeInteger(value) ? frameworkProductPetsGuardNumber(value, at, bounds) : frameworkProductPetsGuardReject(at, "value is not an integer");
+export const frameworkProductPetsGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : frameworkProductPetsGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const frameworkProductPetsGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : frameworkProductPetsGuardReject(at, `value is not ${String(expected)}`);
+//#endregion 🚪️Parsers
+
+export function parseActivity(value: unknown, at = "$"): Activity {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk", "hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"] as const);
+}
+
+export function parseActor(value: unknown, at = "$"): Actor {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["species", "perch", "host", "pitch", "grip", "footing", "x", "y", "vx", "vy", "tilt", "facing", "faced", "activity", "since", "until", "goal", "partner", "clip", "gaze", "blink", "needs", "opacity", "leaving", "draws", "feeling", "state", "stateSince", "former", "trick", "warmth", "hover", "hang", "chute", "rope", "emitters"]);
+  return {
+    species: parseSlug(row["species"], `${at}.species`),
+    perch: (row["perch"] === null ? null : frameworkProductPetsGuardString(row["perch"], `${at}.perch`)),
+    host: (row["host"] === null ? null : parseSlug(row["host"], `${at}.host`)),
+    pitch: (row["pitch"] === null ? null : parsePitch(row["pitch"], `${at}.pitch`)),
+    grip: frameworkProductPetsGuardNumber(row["grip"], `${at}.grip`, {"minimum": 0}),
+    footing: parseFooting(row["footing"], `${at}.footing`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    vx: frameworkProductPetsGuardNumber(row["vx"], `${at}.vx`),
+    vy: frameworkProductPetsGuardNumber(row["vy"], `${at}.vy`),
+    tilt: parseTurns(row["tilt"], `${at}.tilt`),
+    facing: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.facing`, "value is not one of 1, -1"))(row["facing"]),
+    faced: parseTicks(row["faced"], `${at}.faced`),
+    activity: parseActivity(row["activity"], `${at}.activity`),
+    since: parseTicks(row["since"], `${at}.since`),
+    until: parseTicks(row["until"], `${at}.until`),
+    goal: frameworkProductPetsGuardNumber(row["goal"], `${at}.goal`),
+    partner: (row["partner"] === null ? null : parseSlug(row["partner"], `${at}.partner`)),
+    clip: (row["clip"] === null ? null : parseSlug(row["clip"], `${at}.clip`)),
+    gaze: parseGaze(row["gaze"], `${at}.gaze`),
+    blink: parseTicks(row["blink"], `${at}.blink`),
+    needs: parseNeeds(row["needs"], `${at}.needs`),
+    opacity: frameworkProductPetsGuardNumber(row["opacity"], `${at}.opacity`, {"minimum": 0, "maximum": 1}),
+    leaving: frameworkProductPetsGuardBoolean(row["leaving"], `${at}.leaving`),
+    draws: frameworkProductPetsGuardInteger(row["draws"], `${at}.draws`, {"minimum": 0}),
+    feeling: parseFeeling(row["feeling"], `${at}.feeling`),
+    state: parseSlug(row["state"], `${at}.state`),
+    stateSince: parseTicks(row["stateSince"], `${at}.stateSince`),
+    former: parseSlug(row["former"], `${at}.former`),
+    trick: (row["trick"] === null ? null : parseSlug(row["trick"], `${at}.trick`)),
+    warmth: parseWarmth(row["warmth"], `${at}.warmth`),
+    hover: parseHover(row["hover"], `${at}.hover`),
+    hang: (row["hang"] === null ? null : parseHang(row["hang"], `${at}.hang`)),
+    chute: (row["chute"] === null ? null : parseParachute(row["chute"], `${at}.chute`)),
+    rope: (row["rope"] === null ? null : parseRope(row["rope"], `${at}.rope`)),
+    emitters: frameworkProductPetsGuardArray(row["emitters"], `${at}.emitters`).map((item, index) => parsePlume(item, `${at}.emitters[${index}]`)),
+  };
+}
+
+export function parseActorFrame(value: unknown, at = "$"): ActorFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["species", "x", "y", "facing", "activity", "opacity", "bones", "eyes", "footing", "state", "mood", "intensity", "spirits", "tilt", "pivot", "tools", "body"]);
+  return {
+    species: parseSlug(row["species"], `${at}.species`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    facing: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.facing`, "value is not one of 1, -1"))(row["facing"]),
+    activity: parseActivity(row["activity"], `${at}.activity`),
+    opacity: frameworkProductPetsGuardNumber(row["opacity"], `${at}.opacity`, {"minimum": 0, "maximum": 1}),
+    bones: frameworkProductPetsGuardArray(row["bones"], `${at}.bones`).map((item, index) => frameworkProductPetsGuardNumber(item, `${at}.bones[${index}]`)),
+    eyes: frameworkProductPetsGuardArray(row["eyes"], `${at}.eyes`).map((item, index) => parseEyeFrame(item, `${at}.eyes[${index}]`)),
+    footing: parseFooting(row["footing"], `${at}.footing`),
+    state: parseSlug(row["state"], `${at}.state`),
+    mood: parseMood(row["mood"], `${at}.mood`),
+    intensity: frameworkProductPetsGuardNumber(row["intensity"], `${at}.intensity`, {"minimum": 0, "maximum": 1}),
+    spirits: frameworkProductPetsGuardNumber(row["spirits"], `${at}.spirits`, {"minimum": -1, "maximum": 1}),
+    tilt: parseTurns(row["tilt"], `${at}.tilt`),
+    pivot: parsePoint(row["pivot"], `${at}.pivot`),
+    tools: frameworkProductPetsGuardArray(row["tools"], `${at}.tools`).map((item, index) => parseToolFrame(item, `${at}.tools[${index}]`)),
+    body: parseRect(row["body"], `${at}.body`),
+  };
+}
+
+export function parseBond(value: unknown, at = "$"): Bond {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["between", "affinity"]);
+  return {
+    between: ((items0) => [parseSlug(items0[0], `${at}.between[0]`), parseSlug(items0[1], `${at}.between[1]`)])(frameworkProductPetsGuardArray(row["between"], `${at}.between`, {"minItems": 2, "maxItems": 2})),
+    affinity: frameworkProductPetsGuardNumber(row["affinity"], `${at}.affinity`, {"minimum": -1, "maximum": 1}),
+  };
+}
+
+export function parseBone(value: unknown, at = "$"): Bone {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "parent", "x", "y", "rotation"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    parent: row["parent"] === undefined ? undefined : parseSlug(row["parent"], `${at}.parent`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    rotation: row["rotation"] === undefined ? undefined : parseDegrees(row["rotation"], `${at}.rotation`),
+  };
+}
+
+export function parseCancelled(value: unknown, at = "$"): Cancelled {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "cancelled"),
+  };
+}
+
+export function parseCanopy(value: unknown, at = "$"): Canopy {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "vx", "vy", "bob", "previous"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    vx: frameworkProductPetsGuardNumber(row["vx"], `${at}.vx`),
+    vy: frameworkProductPetsGuardNumber(row["vy"], `${at}.vy`),
+    bob: parsePoint(row["bob"], `${at}.bob`),
+    previous: parsePoint(row["previous"], `${at}.previous`),
+  };
+}
+
+export function parseCast(value: unknown, at = "$"): Cast {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["scene", "core", "rotation"]);
+  return {
+    scene: parseSlug(row["scene"], `${at}.scene`),
+    core: frameworkProductPetsGuardArray(row["core"], `${at}.core`, {"minItems": 1}).map((item, index) => parseSlug(item, `${at}.core[${index}]`)),
+    rotation: frameworkProductPetsGuardArray(row["rotation"], `${at}.rotation`).map((item, index) => parseSlug(item, `${at}.rotation[${index}]`)),
+  };
+}
+
+export function parseChannel(value: unknown, at = "$"): Channel {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["x", "y", "rotation", "scaleX", "scaleY"] as const);
+}
+
+export function parseChuteTool(value: unknown, at = "$"): ChuteTool {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "open", "sway"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "chute"),
+    open: frameworkProductPetsGuardNumber(row["open"], `${at}.open`, {"minimum": 0}),
+    sway: parseTurns(row["sway"], `${at}.sway`),
+  };
+}
+
+export function parseCircling(value: unknown, at = "$"): Circling {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["live", "inside", "sx", "sy", "px", "py", "turn", "quarters", "steps", "against", "first", "last", "open", "near", "far", "rest"]);
+  return {
+    live: frameworkProductPetsGuardBoolean(row["live"], `${at}.live`),
+    inside: parseTicks(row["inside"], `${at}.inside`),
+    sx: frameworkProductPetsGuardInteger(row["sx"], `${at}.sx`, {"minimum": -1, "maximum": 1}),
+    sy: frameworkProductPetsGuardInteger(row["sy"], `${at}.sy`, {"minimum": -1, "maximum": 1}),
+    px: frameworkProductPetsGuardNumber(row["px"], `${at}.px`),
+    py: frameworkProductPetsGuardNumber(row["py"], `${at}.py`),
+    turn: frameworkProductPetsGuardInteger(row["turn"], `${at}.turn`, {"minimum": -1, "maximum": 1}),
+    quarters: frameworkProductPetsGuardInteger(row["quarters"], `${at}.quarters`),
+    steps: frameworkProductPetsGuardInteger(row["steps"], `${at}.steps`, {"minimum": 0}),
+    against: frameworkProductPetsGuardInteger(row["against"], `${at}.against`, {"minimum": 0}),
+    first: parseTicks(row["first"], `${at}.first`),
+    last: parseTicks(row["last"], `${at}.last`),
+    open: frameworkProductPetsGuardNumber(row["open"], `${at}.open`, {"minimum": 0}),
+    near: frameworkProductPetsGuardNumber(row["near"], `${at}.near`, {"minimum": 0}),
+    far: frameworkProductPetsGuardNumber(row["far"], `${at}.far`, {"minimum": 0}),
+    rest: parseTicks(row["rest"], `${at}.rest`),
+  };
+}
+
+export function parseClaim(value: unknown, at = "$"): Claim {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["owner", "slices", "rest"]);
+  return {
+    owner: parseSlug(row["owner"], `${at}.owner`),
+    slices: frameworkProductPetsGuardArray(row["slices"], `${at}.slices`).map((item, index) => parseSlice(item, `${at}.slices[${index}]`)),
+    rest: (row["rest"] === null ? null : parseExtent(row["rest"], `${at}.rest`)),
+  };
+}
+
+export function parseClip(value: unknown, at = "$"): Clip {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "seconds", "loop", "tracks"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    seconds: frameworkProductPetsGuardNumber(row["seconds"], `${at}.seconds`, {"exclusiveMinimum": 0}),
+    loop: frameworkProductPetsGuardBoolean(row["loop"], `${at}.loop`),
+    tracks: frameworkProductPetsGuardArray(row["tracks"], `${at}.tracks`).map((item, index) => parseTrack(item, `${at}.tracks[${index}]`)),
+  };
+}
+
+export function parseColor(value: unknown, at = "$"): Color {
+  return frameworkProductPetsGuardString(value, `${at}`, {"pattern": "^#[0-9a-f]{6}$"});
+}
+
+export function parseCooling(value: unknown, at = "$"): Cooling {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["reaction", "when", "near", "until"]);
+  return {
+    reaction: parseSlug(row["reaction"], `${at}.reaction`),
+    when: parseSlug(row["when"], `${at}.when`),
+    near: parseSlug(row["near"], `${at}.near`),
+    until: parseTicks(row["until"], `${at}.until`),
+  };
+}
+
+export function parseCourse(value: unknown, at = "$"): Course {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["owner", "from", "steps", "ending", "landing", "touch"]);
+  return {
+    owner: parseSlug(row["owner"], `${at}.owner`),
+    from: parseTicks(row["from"], `${at}.from`),
+    steps: frameworkProductPetsGuardArray(row["steps"], `${at}.steps`, {"minItems": 1}).map((item, index) => parseWaypoint(item, `${at}.steps[${index}]`)),
+    ending: frameworkProductPetsGuardMember(row["ending"], `${at}.ending`, ["perch", "head", "away"] as const),
+    landing: frameworkProductPetsGuardString(row["landing"], `${at}.landing`),
+    touch: frameworkProductPetsGuardNumber(row["touch"], `${at}.touch`),
+  };
+}
+
+export function parseCue(value: unknown, at = "$"): Cue {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["click", "circle", "countercircle", "stroke", "shake", "whim", "show"] as const);
+}
+
+export function parseDeed(value: unknown, at = "$"): Deed {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["hello", "trick", "pet", "toss", "circle", "countercircle", "stroke", "shake"] as const);
+}
+
+export function parseDegrees(value: unknown, at = "$"): Degrees {
+  return frameworkProductPetsGuardNumber(value, `${at}`);
+}
+
+export function parseDragged(value: unknown, at = "$"): Dragged {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "dragged"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parseDrift(value: unknown, at = "$"): Drift {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["fall", "rise", "burst", "orbit", "drift"] as const);
+}
+
+export function parseEase(value: unknown, at = "$"): Ease {
+  return ((items0) => [frameworkProductPetsGuardNumber(items0[0], `${at}[0]`, {"minimum": 0, "maximum": 1}), frameworkProductPetsGuardNumber(items0[1], `${at}[1]`), frameworkProductPetsGuardNumber(items0[2], `${at}[2]`, {"minimum": 0, "maximum": 1}), frameworkProductPetsGuardNumber(items0[3], `${at}[3]`)])(frameworkProductPetsGuardArray(value, `${at}`, {"minItems": 4, "maxItems": 4}));
+}
+
+export function parseEffect(value: unknown, at = "$"): Effect {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["on", "state", "mood", "amount", "rapport", "encounter", "trick", "activity"]);
+  return {
+    on: frameworkProductPetsGuardMember(row["on"], `${at}.on`, ["when", "near"] as const),
+    state: row["state"] === undefined ? undefined : parseSlug(row["state"], `${at}.state`),
+    mood: row["mood"] === undefined ? undefined : parseMood(row["mood"], `${at}.mood`),
+    amount: row["amount"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["amount"], `${at}.amount`, {"minimum": 0, "maximum": 1}),
+    rapport: row["rapport"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["rapport"], `${at}.rapport`, {"minimum": -1, "maximum": 1}),
+    encounter: row["encounter"] === undefined ? undefined : frameworkProductPetsGuardMember(row["encounter"], `${at}.encounter`, ["greet", "cuddle", "squabble"] as const),
+    trick: row["trick"] === undefined ? undefined : parseSlug(row["trick"], `${at}.trick`),
+    activity: row["activity"] === undefined ? undefined : frameworkProductPetsGuardMember(row["activity"], `${at}.activity`, ["fidget", "walk", "hop", "sleep"] as const),
+  };
+}
+
+export function parseEllipseShape(value: unknown, at = "$"): EllipseShape {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "cx", "cy", "rx", "ry"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "ellipse"),
+    cx: frameworkProductPetsGuardNumber(row["cx"], `${at}.cx`),
+    cy: frameworkProductPetsGuardNumber(row["cy"], `${at}.cy`),
+    rx: frameworkProductPetsGuardNumber(row["rx"], `${at}.rx`, {"exclusiveMinimum": 0}),
+    ry: frameworkProductPetsGuardNumber(row["ry"], `${at}.ry`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseEmitter(value: unknown, at = "$"): Emitter {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "bone", "x", "y", "shape", "fill", "stroke", "strokeWidth", "motion", "count", "life", "speed", "spread"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    bone: parseSlug(row["bone"], `${at}.bone`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    shape: parseShape(row["shape"], `${at}.shape`),
+    fill: parsePaint(row["fill"], `${at}.fill`),
+    stroke: parsePaint(row["stroke"], `${at}.stroke`),
+    strokeWidth: row["strokeWidth"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["strokeWidth"], `${at}.strokeWidth`, {"exclusiveMinimum": 0}),
+    motion: parseDrift(row["motion"], `${at}.motion`),
+    count: frameworkProductPetsGuardInteger(row["count"], `${at}.count`, {"minimum": 1, "maximum": 32}),
+    life: frameworkProductPetsGuardNumber(row["life"], `${at}.life`, {"exclusiveMinimum": 0}),
+    speed: frameworkProductPetsGuardNumber(row["speed"], `${at}.speed`, {"minimum": 0}),
+    spread: frameworkProductPetsGuardNumber(row["spread"], `${at}.spread`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parseEnsemble(value: unknown, at = "$"): Ensemble {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["$schema", "schema", "id", "title", "species", "bonds", "casts", "chemistry"]);
+  return {
+    "$schema": row["$schema"] === undefined ? undefined : frameworkProductPetsGuardString(row["$schema"], `${at}.$schema`),
+    schema: frameworkProductPetsGuardConstant(row["schema"], `${at}.schema`, "semio.pets.ensemble/v1"),
+    id: parseSlug(row["id"], `${at}.id`),
+    title: parseText(row["title"], `${at}.title`),
+    species: frameworkProductPetsGuardArray(row["species"], `${at}.species`).map((item, index) => frameworkProductPetsGuardString(item, `${at}.species[${index}]`, {"minLength": 1})),
+    bonds: frameworkProductPetsGuardArray(row["bonds"], `${at}.bonds`).map((item, index) => parseBond(item, `${at}.bonds[${index}]`)),
+    casts: frameworkProductPetsGuardArray(row["casts"], `${at}.casts`).map((item, index) => parseCast(item, `${at}.casts[${index}]`)),
+    chemistry: frameworkProductPetsGuardArray(row["chemistry"], `${at}.chemistry`).map((item, index) => parseReaction(item, `${at}.chemistry[${index}]`)),
+  };
+}
+
+export function parseExtent(value: unknown, at = "$"): Extent {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x0", "y0", "x1", "y1"]);
+  return {
+    x0: frameworkProductPetsGuardNumber(row["x0"], `${at}.x0`),
+    y0: frameworkProductPetsGuardNumber(row["y0"], `${at}.y0`),
+    x1: frameworkProductPetsGuardNumber(row["x1"], `${at}.x1`),
+    y1: frameworkProductPetsGuardNumber(row["y1"], `${at}.y1`),
+  };
+}
+
+export function parseEye(value: unknown, at = "$"): Eye {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "bone", "x", "y", "radius", "pupil"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    bone: parseSlug(row["bone"], `${at}.bone`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    radius: frameworkProductPetsGuardNumber(row["radius"], `${at}.radius`, {"exclusiveMinimum": 0}),
+    pupil: frameworkProductPetsGuardNumber(row["pupil"], `${at}.pupil`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseEyeFrame(value: unknown, at = "$"): EyeFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "lid"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    lid: frameworkProductPetsGuardNumber(row["lid"], `${at}.lid`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parseFace(value: unknown, at = "$"): Face {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["eyes", "mouth", "above"]);
+  return {
+    eyes: frameworkProductPetsGuardArray(row["eyes"], `${at}.eyes`).map((item, index) => parseEye(item, `${at}.eyes[${index}]`)),
+    mouth: row["mouth"] === undefined ? undefined : parseMouth(row["mouth"], `${at}.mouth`),
+    above: row["above"] === undefined ? undefined : parseSlug(row["above"], `${at}.above`),
+  };
+}
+
+export function parseFeeling(value: unknown, at = "$"): Feeling {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["mood", "intensity", "since"]);
+  return {
+    mood: parseMood(row["mood"], `${at}.mood`),
+    intensity: frameworkProductPetsGuardNumber(row["intensity"], `${at}.intensity`, {"minimum": 0, "maximum": 1}),
+    since: parseTicks(row["since"], `${at}.since`),
+  };
+}
+
+export function parseFixture(value: unknown, at = "$"): Fixture {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "key", "x", "y", "width", "height"]);
+  return {
+    id: frameworkProductPetsGuardString(row["id"], `${at}.id`, {"minLength": 1}),
+    key: frameworkProductPetsGuardString(row["key"], `${at}.key`, {"minLength": 1}),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+  };
+}
+
+export function parseFoothold(value: unknown, at = "$"): Foothold {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "footing", "perch", "activity", "facing", "hold"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    footing: parseFooting(row["footing"], `${at}.footing`),
+    perch: (row["perch"] === null ? null : frameworkProductPetsGuardString(row["perch"], `${at}.perch`)),
+    activity: parseActivity(row["activity"], `${at}.activity`),
+    facing: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.facing`, "value is not one of 1, -1"))(row["facing"]),
+    hold: frameworkProductPetsGuardInteger(row["hold"], `${at}.hold`, {"minimum": -1}),
+  };
+}
+
+export function parseFooting(value: unknown, at = "$"): Footing {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["perch", "air", "chute", "hand", "rope", "ladder", "wall", "head"] as const);
+}
+
+export function parseFrame(value: unknown, at = "$"): Frame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["tick", "actors", "rate", "wake", "ladders", "particles", "lifts", "puffs", "held"]);
+  return {
+    tick: frameworkProductPetsGuardInteger(row["tick"], `${at}.tick`, {"minimum": 0}),
+    actors: frameworkProductPetsGuardArray(row["actors"], `${at}.actors`).map((item, index) => parseActorFrame(item, `${at}.actors[${index}]`)),
+    rate: ((input0: unknown) => ([0, 16, 32, 64] as readonly unknown[]).includes(input0) ? (input0 as 0 | 16 | 32 | 64) : frameworkProductPetsGuardReject(`${at}.rate`, "value is not one of 0, 16, 32, 64"))(row["rate"]),
+    wake: (row["wake"] === null ? null : parseTicks(row["wake"], `${at}.wake`)),
+    ladders: frameworkProductPetsGuardArray(row["ladders"], `${at}.ladders`).map((item, index) => parseLadderFrame(item, `${at}.ladders[${index}]`)),
+    particles: frameworkProductPetsGuardArray(row["particles"], `${at}.particles`).map((item, index) => parseParticleFrame(item, `${at}.particles[${index}]`)),
+    lifts: frameworkProductPetsGuardArray(row["lifts"], `${at}.lifts`).map((item, index) => parseLiftFrame(item, `${at}.lifts[${index}]`)),
+    puffs: frameworkProductPetsGuardArray(row["puffs"], `${at}.puffs`).map((item, index) => parsePuffFrame(item, `${at}.puffs[${index}]`)),
+    held: (row["held"] === null ? null : parseSlug(row["held"], `${at}.held`)),
+  };
+}
+
+export function parseGait(value: unknown, at = "$"): Gait {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["walk", "hop", "float"] as const);
+}
+
+export function parseGaze(value: unknown, at = "$"): Gaze {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "vx", "vy"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    vx: frameworkProductPetsGuardNumber(row["vx"], `${at}.vx`),
+    vy: frameworkProductPetsGuardNumber(row["vy"], `${at}.vy`),
+  };
+}
+
+export function parseGear(value: unknown, at = "$"): Gear {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["climb", "ladder", "grapple", "parachute"] as const);
+}
+
+export function parseGlanced(value: unknown, at = "$"): Glanced {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "points"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "glanced"),
+    points: frameworkProductPetsGuardArray(row["points"], `${at}.points`).map((item, index) => parsePoint(item, `${at}.points[${index}]`)),
+  };
+}
+
+export function parseGrip(value: unknown, at = "$"): Grip {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "vx", "vy"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    vx: frameworkProductPetsGuardNumber(row["vx"], `${at}.vx`),
+    vy: frameworkProductPetsGuardNumber(row["vy"], `${at}.vy`),
+  };
+}
+
+export function parseGunTool(value: unknown, at = "$"): GunTool {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "aim"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "gun"),
+    aim: parseTurns(row["aim"], `${at}.aim`),
+  };
+}
+
+export function parseHang(value: unknown, at = "$"): Hang {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["grip", "bob", "previous"]);
+  return {
+    grip: parseGrip(row["grip"], `${at}.grip`),
+    bob: parsePoint(row["bob"], `${at}.bob`),
+    previous: parsePoint(row["previous"], `${at}.previous`),
+  };
+}
+
+export function parseHookTool(value: unknown, at = "$"): HookTool {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "hook"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parseHover(value: unknown, at = "$"): Hover {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["circling", "stroking"]);
+  return {
+    circling: parseCircling(row["circling"], `${at}.circling`),
+    stroking: parseStroking(row["stroking"], `${at}.stroking`),
+  };
+}
+
+export function parseHushed(value: unknown, at = "$"): Hushed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "quiet"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "hushed"),
+    quiet: frameworkProductPetsGuardBoolean(row["quiet"], `${at}.quiet`),
+  };
+}
+
+export function parseKey(value: unknown, at = "$"): Key {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["at", "value", "ease"]);
+  return {
+    at: frameworkProductPetsGuardNumber(row["at"], `${at}.at`, {"minimum": 0, "maximum": 1}),
+    value: frameworkProductPetsGuardNumber(row["value"], `${at}.value`),
+    ease: row["ease"] === undefined ? undefined : parseEase(row["ease"], `${at}.ease`),
+  };
+}
+
+export function parseLadder(value: unknown, at = "$"): Ladder {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["owner", "wall", "surface", "side", "foot", "top", "since", "until", "rider"]);
+  return {
+    owner: parseSlug(row["owner"], `${at}.owner`),
+    wall: frameworkProductPetsGuardString(row["wall"], `${at}.wall`, {"minLength": 1}),
+    surface: frameworkProductPetsGuardString(row["surface"], `${at}.surface`, {"minLength": 1}),
+    side: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.side`, "value is not one of 1, -1"))(row["side"]),
+    foot: parsePoint(row["foot"], `${at}.foot`),
+    top: parsePoint(row["top"], `${at}.top`),
+    since: parseTicks(row["since"], `${at}.since`),
+    until: parseTicks(row["until"], `${at}.until`),
+    rider: (row["rider"] === null ? null : parseSlug(row["rider"], `${at}.rider`)),
+  };
+}
+
+export function parseLadderFrame(value: unknown, at = "$"): LadderFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x0", "y0", "x1", "y1", "rungs", "opacity"]);
+  return {
+    x0: frameworkProductPetsGuardNumber(row["x0"], `${at}.x0`),
+    y0: frameworkProductPetsGuardNumber(row["y0"], `${at}.y0`),
+    x1: frameworkProductPetsGuardNumber(row["x1"], `${at}.x1`),
+    y1: frameworkProductPetsGuardNumber(row["y1"], `${at}.y1`),
+    rungs: frameworkProductPetsGuardInteger(row["rungs"], `${at}.rungs`, {"minimum": 0}),
+    opacity: frameworkProductPetsGuardNumber(row["opacity"], `${at}.opacity`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parseLadderTool(value: unknown, at = "$"): LadderTool {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "lean", "length"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "ladder"),
+    lean: parseTurns(row["lean"], `${at}.lean`),
+    length: frameworkProductPetsGuardNumber(row["length"], `${at}.length`, {"minimum": 0}),
+  };
+}
+
+export function parseLiftFrame(value: unknown, at = "$"): LiftFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["fixture", "dx", "dy", "tilt", "opacity"]);
+  return {
+    fixture: frameworkProductPetsGuardString(row["fixture"], `${at}.fixture`, {"minLength": 1}),
+    dx: frameworkProductPetsGuardNumber(row["dx"], `${at}.dx`),
+    dy: frameworkProductPetsGuardNumber(row["dy"], `${at}.dy`),
+    tilt: parseTurns(row["tilt"], `${at}.tilt`),
+    opacity: frameworkProductPetsGuardNumber(row["opacity"], `${at}.opacity`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parseLineShape(value: unknown, at = "$"): LineShape {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x1", "y1", "x2", "y2"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "line"),
+    x1: frameworkProductPetsGuardNumber(row["x1"], `${at}.x1`),
+    y1: frameworkProductPetsGuardNumber(row["y1"], `${at}.y1`),
+    x2: frameworkProductPetsGuardNumber(row["x2"], `${at}.x2`),
+    y2: frameworkProductPetsGuardNumber(row["y2"], `${at}.y2`),
+  };
+}
+
+export function parseLocomotion(value: unknown, at = "$"): Locomotion {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["gait", "speed", "hover"]);
+  return {
+    gait: parseGait(row["gait"], `${at}.gait`),
+    speed: frameworkProductPetsGuardNumber(row["speed"], `${at}.speed`, {"exclusiveMinimum": 0}),
+    hover: row["hover"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["hover"], `${at}.hover`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseMenagerie(value: unknown, at = "$"): Menagerie {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["$schema", "schema", "id", "title", "species", "bonds", "casts", "chemistry"]);
+  return {
+    "$schema": row["$schema"] === undefined ? undefined : frameworkProductPetsGuardString(row["$schema"], `${at}.$schema`),
+    schema: frameworkProductPetsGuardConstant(row["schema"], `${at}.schema`, "semio.pets.menagerie/v1"),
+    id: parseSlug(row["id"], `${at}.id`),
+    title: parseText(row["title"], `${at}.title`),
+    species: frameworkProductPetsGuardArray(row["species"], `${at}.species`).map((item, index) => parseSpecies(item, `${at}.species[${index}]`)),
+    bonds: frameworkProductPetsGuardArray(row["bonds"], `${at}.bonds`).map((item, index) => parseBond(item, `${at}.bonds[${index}]`)),
+    casts: frameworkProductPetsGuardArray(row["casts"], `${at}.casts`).map((item, index) => parseCast(item, `${at}.casts[${index}]`)),
+    chemistry: frameworkProductPetsGuardArray(row["chemistry"], `${at}.chemistry`).map((item, index) => parseReaction(item, `${at}.chemistry[${index}]`)),
+  };
+}
+
+export function parseMood(value: unknown, at = "$"): Mood {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["content", "happy", "playful", "curious", "proud", "sleepy", "grumpy", "sad", "scared"] as const);
+}
+
+export function parseMouth(value: unknown, at = "$"): Mouth {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["bone", "x", "y", "width"]);
+  return {
+    bone: parseSlug(row["bone"], `${at}.bone`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseNeeds(value: unknown, at = "$"): Needs {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["energy", "sociability", "curiosity"]);
+  return {
+    energy: frameworkProductPetsGuardNumber(row["energy"], `${at}.energy`, {"minimum": 0, "maximum": 1}),
+    sociability: frameworkProductPetsGuardNumber(row["sociability"], `${at}.sociability`, {"minimum": 0, "maximum": 1}),
+    curiosity: frameworkProductPetsGuardNumber(row["curiosity"], `${at}.curiosity`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parsePaint(value: unknown, at = "$"): Paint {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["body", "accent", "detail", "ink", "paper", "none"] as const);
+}
+
+export function parsePalette(value: unknown, at = "$"): Palette {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["body", "accent", "detail"]);
+  return {
+    body: parseColor(row["body"], `${at}.body`),
+    accent: parseColor(row["accent"], `${at}.accent`),
+    detail: parseColor(row["detail"], `${at}.detail`),
+  };
+}
+
+export function parseParachute(value: unknown, at = "$"): Parachute {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["since", "open", "opening", "canopy"]);
+  return {
+    since: parseTicks(row["since"], `${at}.since`),
+    open: frameworkProductPetsGuardNumber(row["open"], `${at}.open`, {"minimum": 0}),
+    opening: frameworkProductPetsGuardNumber(row["opening"], `${at}.opening`),
+    canopy: parseCanopy(row["canopy"], `${at}.canopy`),
+  };
+}
+
+export function parsePart(value: unknown, at = "$"): Part {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "bone", "shape", "fill", "stroke", "strokeWidth"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    bone: parseSlug(row["bone"], `${at}.bone`),
+    shape: parseShape(row["shape"], `${at}.shape`),
+    fill: parsePaint(row["fill"], `${at}.fill`),
+    stroke: parsePaint(row["stroke"], `${at}.stroke`),
+    strokeWidth: row["strokeWidth"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["strokeWidth"], `${at}.strokeWidth`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseParticleFrame(value: unknown, at = "$"): ParticleFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["species", "emitter", "x", "y", "scale", "rotation", "opacity"]);
+  return {
+    species: parseSlug(row["species"], `${at}.species`),
+    emitter: parseSlug(row["emitter"], `${at}.emitter`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    scale: frameworkProductPetsGuardNumber(row["scale"], `${at}.scale`),
+    rotation: parseTurns(row["rotation"], `${at}.rotation`),
+    opacity: frameworkProductPetsGuardNumber(row["opacity"], `${at}.opacity`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parsePathShape(value: unknown, at = "$"): PathShape {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "d"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "path"),
+    d: frameworkProductPetsGuardString(row["d"], `${at}.d`, {"minLength": 1}),
+  };
+}
+
+export function parsePerch(value: unknown, at = "$"): Perch {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["surface", "x0", "x1", "y"]);
+  return {
+    surface: frameworkProductPetsGuardString(row["surface"], `${at}.surface`, {"minLength": 1}),
+    x0: frameworkProductPetsGuardNumber(row["x0"], `${at}.x0`),
+    x1: frameworkProductPetsGuardNumber(row["x1"], `${at}.x1`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parsePermitted(value: unknown, at = "$"): Permitted {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "play", "mischief"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "permitted"),
+    play: frameworkProductPetsGuardBoolean(row["play"], `${at}.play`),
+    mischief: frameworkProductPetsGuardBoolean(row["mischief"], `${at}.mischief`),
+  };
+}
+
+export function parsePetMode(value: unknown, at = "$"): PetMode {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["still", "calm", "lively"] as const);
+}
+
+export function parsePitch(value: unknown, at = "$"): Pitch {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["wall", "surface", "side", "x", "y0", "y1"]);
+  return {
+    wall: frameworkProductPetsGuardString(row["wall"], `${at}.wall`, {"minLength": 1}),
+    surface: frameworkProductPetsGuardString(row["surface"], `${at}.surface`, {"minLength": 1}),
+    side: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.side`, "value is not one of 1, -1"))(row["side"]),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y0: frameworkProductPetsGuardNumber(row["y0"], `${at}.y0`),
+    y1: frameworkProductPetsGuardNumber(row["y1"], `${at}.y1`),
+  };
+}
+
+export function parsePlayed(value: unknown, at = "$"): Played {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "species", "deed"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "played"),
+    species: parseSlug(row["species"], `${at}.species`),
+    deed: parseDeed(row["deed"], `${at}.deed`),
+  };
+}
+
+export function parsePledge(value: unknown, at = "$"): Pledge {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["between", "encounter", "until"]);
+  return {
+    between: ((items0) => [parseSlug(items0[0], `${at}.between[0]`), parseSlug(items0[1], `${at}.between[1]`)])(frameworkProductPetsGuardArray(row["between"], `${at}.between`, {"minItems": 2, "maxItems": 2})),
+    encounter: frameworkProductPetsGuardMember(row["encounter"], `${at}.encounter`, ["greet", "cuddle", "squabble"] as const),
+    until: parseTicks(row["until"], `${at}.until`),
+  };
+}
+
+export function parsePlume(value: unknown, at = "$"): Plume {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["emitter", "since", "until"]);
+  return {
+    emitter: parseSlug(row["emitter"], `${at}.emitter`),
+    since: parseTicks(row["since"], `${at}.since`),
+    until: (row["until"] === null ? null : parseTicks(row["until"], `${at}.until`)),
+  };
+}
+
+export function parsePoint(value: unknown, at = "$"): Point {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parsePointed(value: unknown, at = "$"): Pointed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y", "over"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "pointed"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    over: frameworkProductPetsGuardMember(row["over"], `${at}.over`, ["free", "control"] as const),
+  };
+}
+
+export function parsePointer(value: unknown, at = "$"): Pointer {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["mouse", "pen", "touch"] as const);
+}
+
+export function parsePrank(value: unknown, at = "$"): Prank {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["fixture", "pusher", "since", "side", "room", "span", "unit"]);
+  return {
+    fixture: frameworkProductPetsGuardString(row["fixture"], `${at}.fixture`, {"minLength": 1}),
+    pusher: parseSlug(row["pusher"], `${at}.pusher`),
+    since: parseTicks(row["since"], `${at}.since`),
+    side: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.side`, "value is not one of 1, -1"))(row["side"]),
+    room: frameworkProductPetsGuardNumber(row["room"], `${at}.room`, {"minimum": 0}),
+    span: frameworkProductPetsGuardNumber(row["span"], `${at}.span`, {"minimum": 0}),
+    unit: frameworkProductPetsGuardNumber(row["unit"], `${at}.unit`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parsePress(value: unknown, at = "$"): Press {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["phase", "x", "y", "since", "slop"]);
+  return {
+    phase: parsePressPhase(row["phase"], `${at}.phase`),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    since: parseTicks(row["since"], `${at}.since`),
+    slop: frameworkProductPetsGuardNumber(row["slop"], `${at}.slop`, {"minimum": 0}),
+  };
+}
+
+export function parsePressPhase(value: unknown, at = "$"): PressPhase {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["idle", "armed", "holding", "lifted"] as const);
+}
+
+export function parsePressed(value: unknown, at = "$"): Pressed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y", "pointer"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "pressed"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    pointer: parsePointer(row["pointer"], `${at}.pointer`),
+  };
+}
+
+export function parsePuff(value: unknown, at = "$"): Puff {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "width", "height", "tick"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+    tick: parseTicks(row["tick"], `${at}.tick`),
+  };
+}
+
+export function parsePuffFrame(value: unknown, at = "$"): PuffFrame {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "width", "height", "phase"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+    phase: frameworkProductPetsGuardNumber(row["phase"], `${at}.phase`, {"minimum": 0, "exclusiveMaximum": 1}),
+  };
+}
+
+export function parsePurr(value: unknown, at = "$"): Purr {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["clip", "emitter"]);
+  return {
+    clip: parseSlug(row["clip"], `${at}.clip`),
+    emitter: row["emitter"] === undefined ? undefined : parseSlug(row["emitter"], `${at}.emitter`),
+  };
+}
+
+export function parseRapport(value: unknown, at = "$"): Rapport {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["between", "drift"]);
+  return {
+    between: ((items0) => [parseSlug(items0[0], `${at}.between[0]`), parseSlug(items0[1], `${at}.between[1]`)])(frameworkProductPetsGuardArray(row["between"], `${at}.between`, {"minItems": 2, "maxItems": 2})),
+    drift: frameworkProductPetsGuardNumber(row["drift"], `${at}.drift`),
+  };
+}
+
+export function parseReaction(value: unknown, at = "$"): Reaction {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "when", "near", "within", "where", "unless", "affinity", "every", "chance", "then"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    when: parseTrait(row["when"], `${at}.when`),
+    near: parseTrait(row["near"], `${at}.near`),
+    within: frameworkProductPetsGuardNumber(row["within"], `${at}.within`, {"exclusiveMinimum": 0}),
+    where: row["where"] === undefined ? undefined : frameworkProductPetsGuardMember(row["where"], `${at}.where`, ["above", "below", "beside", "any"] as const),
+    unless: row["unless"] === undefined ? undefined : parseTrait(row["unless"], `${at}.unless`),
+    affinity: row["affinity"] === undefined ? undefined : ((items0) => [frameworkProductPetsGuardNumber(items0[0], `${at}.affinity[0]`, {"minimum": -1, "maximum": 1}), frameworkProductPetsGuardNumber(items0[1], `${at}.affinity[1]`, {"minimum": -1, "maximum": 1})])(frameworkProductPetsGuardArray(row["affinity"], `${at}.affinity`, {"minItems": 2, "maxItems": 2})),
+    every: frameworkProductPetsGuardNumber(row["every"], `${at}.every`, {"exclusiveMinimum": 0}),
+    chance: row["chance"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["chance"], `${at}.chance`, {"minimum": 0, "maximum": 1}),
+    then: frameworkProductPetsGuardArray(row["then"], `${at}.then`, {"minItems": 1}).map((item, index) => parseEffect(item, `${at}.then[${index}]`)),
+  };
+}
+
+export function parseReclaimed(value: unknown, at = "$"): Reclaimed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "fixture"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "reclaimed"),
+    fixture: frameworkProductPetsGuardString(row["fixture"], `${at}.fixture`, {"minLength": 1}),
+  };
+}
+
+export function parseRect(value: unknown, at = "$"): Rect {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "width", "height"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+  };
+}
+
+export function parseRectShape(value: unknown, at = "$"): RectShape {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y", "width", "height", "radius"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "rect"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"exclusiveMinimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"exclusiveMinimum": 0}),
+    radius: row["radius"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["radius"], `${at}.radius`, {"minimum": 0}),
+  };
+}
+
+export function parseReleased(value: unknown, at = "$"): Released {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "released"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parseRepertoire(value: unknown, at = "$"): Repertoire {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk", "hang", "tumble", "glide", "aim", "reel", "climb", "mantle", "slide", "carry", "trick", "purr", "dizzy", "shrug", "scoot", "push"]);
+  return {
+    idle: row["idle"] === undefined ? undefined : frameworkProductPetsGuardArray(row["idle"], `${at}.idle`).map((item, index) => parseSlug(item, `${at}.idle[${index}]`)),
+    fidget: row["fidget"] === undefined ? undefined : frameworkProductPetsGuardArray(row["fidget"], `${at}.fidget`).map((item, index) => parseSlug(item, `${at}.fidget[${index}]`)),
+    walk: row["walk"] === undefined ? undefined : frameworkProductPetsGuardArray(row["walk"], `${at}.walk`).map((item, index) => parseSlug(item, `${at}.walk[${index}]`)),
+    hop: row["hop"] === undefined ? undefined : frameworkProductPetsGuardArray(row["hop"], `${at}.hop`).map((item, index) => parseSlug(item, `${at}.hop[${index}]`)),
+    fall: row["fall"] === undefined ? undefined : frameworkProductPetsGuardArray(row["fall"], `${at}.fall`).map((item, index) => parseSlug(item, `${at}.fall[${index}]`)),
+    land: row["land"] === undefined ? undefined : frameworkProductPetsGuardArray(row["land"], `${at}.land`).map((item, index) => parseSlug(item, `${at}.land[${index}]`)),
+    sleep: row["sleep"] === undefined ? undefined : frameworkProductPetsGuardArray(row["sleep"], `${at}.sleep`).map((item, index) => parseSlug(item, `${at}.sleep[${index}]`)),
+    greet: row["greet"] === undefined ? undefined : frameworkProductPetsGuardArray(row["greet"], `${at}.greet`).map((item, index) => parseSlug(item, `${at}.greet[${index}]`)),
+    cuddle: row["cuddle"] === undefined ? undefined : frameworkProductPetsGuardArray(row["cuddle"], `${at}.cuddle`).map((item, index) => parseSlug(item, `${at}.cuddle[${index}]`)),
+    squabble: row["squabble"] === undefined ? undefined : frameworkProductPetsGuardArray(row["squabble"], `${at}.squabble`).map((item, index) => parseSlug(item, `${at}.squabble[${index}]`)),
+    sulk: row["sulk"] === undefined ? undefined : frameworkProductPetsGuardArray(row["sulk"], `${at}.sulk`).map((item, index) => parseSlug(item, `${at}.sulk[${index}]`)),
+    hang: row["hang"] === undefined ? undefined : frameworkProductPetsGuardArray(row["hang"], `${at}.hang`).map((item, index) => parseSlug(item, `${at}.hang[${index}]`)),
+    tumble: row["tumble"] === undefined ? undefined : frameworkProductPetsGuardArray(row["tumble"], `${at}.tumble`).map((item, index) => parseSlug(item, `${at}.tumble[${index}]`)),
+    glide: row["glide"] === undefined ? undefined : frameworkProductPetsGuardArray(row["glide"], `${at}.glide`).map((item, index) => parseSlug(item, `${at}.glide[${index}]`)),
+    aim: row["aim"] === undefined ? undefined : frameworkProductPetsGuardArray(row["aim"], `${at}.aim`).map((item, index) => parseSlug(item, `${at}.aim[${index}]`)),
+    reel: row["reel"] === undefined ? undefined : frameworkProductPetsGuardArray(row["reel"], `${at}.reel`).map((item, index) => parseSlug(item, `${at}.reel[${index}]`)),
+    climb: row["climb"] === undefined ? undefined : frameworkProductPetsGuardArray(row["climb"], `${at}.climb`).map((item, index) => parseSlug(item, `${at}.climb[${index}]`)),
+    mantle: row["mantle"] === undefined ? undefined : frameworkProductPetsGuardArray(row["mantle"], `${at}.mantle`).map((item, index) => parseSlug(item, `${at}.mantle[${index}]`)),
+    slide: row["slide"] === undefined ? undefined : frameworkProductPetsGuardArray(row["slide"], `${at}.slide`).map((item, index) => parseSlug(item, `${at}.slide[${index}]`)),
+    carry: row["carry"] === undefined ? undefined : frameworkProductPetsGuardArray(row["carry"], `${at}.carry`).map((item, index) => parseSlug(item, `${at}.carry[${index}]`)),
+    trick: row["trick"] === undefined ? undefined : frameworkProductPetsGuardArray(row["trick"], `${at}.trick`).map((item, index) => parseSlug(item, `${at}.trick[${index}]`)),
+    purr: row["purr"] === undefined ? undefined : frameworkProductPetsGuardArray(row["purr"], `${at}.purr`).map((item, index) => parseSlug(item, `${at}.purr[${index}]`)),
+    dizzy: row["dizzy"] === undefined ? undefined : frameworkProductPetsGuardArray(row["dizzy"], `${at}.dizzy`).map((item, index) => parseSlug(item, `${at}.dizzy[${index}]`)),
+    shrug: row["shrug"] === undefined ? undefined : frameworkProductPetsGuardArray(row["shrug"], `${at}.shrug`).map((item, index) => parseSlug(item, `${at}.shrug[${index}]`)),
+    scoot: row["scoot"] === undefined ? undefined : frameworkProductPetsGuardArray(row["scoot"], `${at}.scoot`).map((item, index) => parseSlug(item, `${at}.scoot[${index}]`)),
+    push: row["push"] === undefined ? undefined : frameworkProductPetsGuardArray(row["push"], `${at}.push`).map((item, index) => parseSlug(item, `${at}.push[${index}]`)),
+  };
+}
+
+export function parseRope(value: unknown, at = "$"): Rope {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["shot", "since", "length", "hand", "before", "caught"]);
+  return {
+    shot: parseShot(row["shot"], `${at}.shot`),
+    since: parseTicks(row["since"], `${at}.since`),
+    length: frameworkProductPetsGuardNumber(row["length"], `${at}.length`, {"minimum": 0}),
+    hand: parsePoint(row["hand"], `${at}.hand`),
+    before: parsePoint(row["before"], `${at}.before`),
+    caught: frameworkProductPetsGuardBoolean(row["caught"], `${at}.caught`),
+  };
+}
+
+export function parseRopeTool(value: unknown, at = "$"): RopeTool {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "x", "y", "slack"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "rope"),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    slack: frameworkProductPetsGuardNumber(row["slack"], `${at}.slack`),
+  };
+}
+
+export function parseScrolled(value: unknown, at = "$"): Scrolled {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "scrolled"),
+  };
+}
+
+export function parseShaking(value: unknown, at = "$"): Shaking {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["live", "ax", "ay", "at", "fx", "fy", "reached", "count", "mark1", "mark2", "mark3", "rest"]);
+  return {
+    live: frameworkProductPetsGuardBoolean(row["live"], `${at}.live`),
+    ax: frameworkProductPetsGuardNumber(row["ax"], `${at}.ax`),
+    ay: frameworkProductPetsGuardNumber(row["ay"], `${at}.ay`),
+    at: parseTicks(row["at"], `${at}.at`),
+    fx: frameworkProductPetsGuardNumber(row["fx"], `${at}.fx`),
+    fy: frameworkProductPetsGuardNumber(row["fy"], `${at}.fy`),
+    reached: parseTicks(row["reached"], `${at}.reached`),
+    count: frameworkProductPetsGuardInteger(row["count"], `${at}.count`, {"minimum": 0}),
+    mark1: parseTicks(row["mark1"], `${at}.mark1`),
+    mark2: parseTicks(row["mark2"], `${at}.mark2`),
+    mark3: parseTicks(row["mark3"], `${at}.mark3`),
+    rest: parseTicks(row["rest"], `${at}.rest`),
+  };
+}
+
+export function parseShape(value: unknown, at = "$"): Shape {
+  return ((input0: unknown) => { try { return parsePathShape(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseEllipseShape(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseRectShape(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseLineShape(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } return frameworkProductPetsGuardReject(`${at}`, "value matches no variant"); })(value);
+}
+
+export function parseShot(value: unknown, at = "$"): Shot {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["surface", "facing", "muzzle", "hook", "length", "reel"]);
+  return {
+    surface: frameworkProductPetsGuardString(row["surface"], `${at}.surface`, {"minLength": 1}),
+    facing: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.facing`, "value is not one of 1, -1"))(row["facing"]),
+    muzzle: parsePoint(row["muzzle"], `${at}.muzzle`),
+    hook: parsePoint(row["hook"], `${at}.hook`),
+    length: frameworkProductPetsGuardNumber(row["length"], `${at}.length`, {"minimum": 0}),
+    reel: frameworkProductPetsGuardMember(row["reel"], `${at}.reel`, ["zip", "swing"] as const),
+  };
+}
+
+export function parseSize(value: unknown, at = "$"): Size {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["width", "height"]);
+  return {
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"exclusiveMinimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"exclusiveMinimum": 0}),
+  };
+}
+
+export function parseSlice(value: unknown, at = "$"): Slice {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["from", "until", "extent"]);
+  return {
+    from: parseTicks(row["from"], `${at}.from`),
+    until: parseTicks(row["until"], `${at}.until`),
+    extent: parseExtent(row["extent"], `${at}.extent`),
+  };
+}
+
+export function parseSlug(value: unknown, at = "$"): Slug {
+  return frameworkProductPetsGuardString(value, `${at}`, {"minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"});
+}
+
+export function parseSpecies(value: unknown, at = "$"): Species {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["$schema", "id", "name", "thing", "grounds", "size", "palette", "bones", "parts", "face", "clips", "repertoire", "locomotion", "temperament", "states", "tricks", "purr", "emitters", "gear", "grip", "reach", "canopy", "mood"]);
+  return {
+    "$schema": row["$schema"] === undefined ? undefined : frameworkProductPetsGuardString(row["$schema"], `${at}.$schema`),
+    id: parseSlug(row["id"], `${at}.id`),
+    name: parseText(row["name"], `${at}.name`),
+    thing: parseText(row["thing"], `${at}.thing`),
+    grounds: frameworkProductPetsGuardArray(row["grounds"], `${at}.grounds`).map((item, index) => frameworkProductPetsGuardString(item, `${at}.grounds[${index}]`, {"minLength": 1})),
+    size: parseSize(row["size"], `${at}.size`),
+    palette: parsePalette(row["palette"], `${at}.palette`),
+    bones: frameworkProductPetsGuardArray(row["bones"], `${at}.bones`, {"minItems": 1}).map((item, index) => parseBone(item, `${at}.bones[${index}]`)),
+    parts: frameworkProductPetsGuardArray(row["parts"], `${at}.parts`).map((item, index) => parsePart(item, `${at}.parts[${index}]`)),
+    face: parseFace(row["face"], `${at}.face`),
+    clips: frameworkProductPetsGuardArray(row["clips"], `${at}.clips`).map((item, index) => parseClip(item, `${at}.clips[${index}]`)),
+    repertoire: parseRepertoire(row["repertoire"], `${at}.repertoire`),
+    locomotion: parseLocomotion(row["locomotion"], `${at}.locomotion`),
+    temperament: parseTemperament(row["temperament"], `${at}.temperament`),
+    states: frameworkProductPetsGuardArray(row["states"], `${at}.states`, {"minItems": 1}).map((item, index) => parseSpeciesState(item, `${at}.states[${index}]`)),
+    tricks: frameworkProductPetsGuardArray(row["tricks"], `${at}.tricks`).map((item, index) => parseTrick(item, `${at}.tricks[${index}]`)),
+    purr: parsePurr(row["purr"], `${at}.purr`),
+    emitters: frameworkProductPetsGuardArray(row["emitters"], `${at}.emitters`).map((item, index) => parseEmitter(item, `${at}.emitters[${index}]`)),
+    gear: frameworkProductPetsGuardArray(row["gear"], `${at}.gear`).map((item, index) => parseGear(item, `${at}.gear[${index}]`)),
+    grip: frameworkProductPetsGuardNumber(row["grip"], `${at}.grip`, {"exclusiveMinimum": 0}),
+    reach: frameworkProductPetsGuardNumber(row["reach"], `${at}.reach`, {"minimum": 0}),
+    canopy: row["canopy"] === undefined ? undefined : parseShape(row["canopy"], `${at}.canopy`),
+    mood: parseMood(row["mood"], `${at}.mood`),
+  };
+}
+
+export function parseSpeciesState(value: unknown, at = "$"): SpeciesState {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "name", "tint", "clip", "emitter", "lasts", "then"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    name: parseText(row["name"], `${at}.name`),
+    tint: row["tint"] === undefined ? undefined : parseTint(row["tint"], `${at}.tint`),
+    clip: row["clip"] === undefined ? undefined : parseSlug(row["clip"], `${at}.clip`),
+    emitter: row["emitter"] === undefined ? undefined : parseSlug(row["emitter"], `${at}.emitter`),
+    lasts: row["lasts"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["lasts"], `${at}.lasts`, {"exclusiveMinimum": 0}),
+    then: row["then"] === undefined ? undefined : parseSlug(row["then"], `${at}.then`),
+  };
+}
+
+export function parseStage(value: unknown, at = "$"): Stage {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["seed", "tick", "mode", "quiet", "width", "height", "pointer", "pointed", "over", "glances", "surfaces", "keepouts", "walls", "fixtures", "perches", "pitches", "wanted", "actors", "rapports", "met", "draws", "play", "mischief", "stirred", "scrolled", "press", "touched", "shaking", "trail", "coolings", "pledges", "ladders", "lift", "rested", "poofs", "puffs", "claims", "courses", "trips", "origin"]);
+  return {
+    seed: frameworkProductPetsGuardInteger(row["seed"], `${at}.seed`, {"minimum": 0, "maximum": 4294967295}),
+    tick: frameworkProductPetsGuardInteger(row["tick"], `${at}.tick`, {"minimum": 0}),
+    mode: parsePetMode(row["mode"], `${at}.mode`),
+    quiet: frameworkProductPetsGuardBoolean(row["quiet"], `${at}.quiet`),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+    pointer: (row["pointer"] === null ? null : parsePoint(row["pointer"], `${at}.pointer`)),
+    pointed: parseTicks(row["pointed"], `${at}.pointed`),
+    over: frameworkProductPetsGuardMember(row["over"], `${at}.over`, ["free", "control"] as const),
+    glances: frameworkProductPetsGuardArray(row["glances"], `${at}.glances`).map((item, index) => parsePoint(item, `${at}.glances[${index}]`)),
+    surfaces: frameworkProductPetsGuardArray(row["surfaces"], `${at}.surfaces`).map((item, index) => parseSurface(item, `${at}.surfaces[${index}]`)),
+    keepouts: frameworkProductPetsGuardArray(row["keepouts"], `${at}.keepouts`).map((item, index) => parseRect(item, `${at}.keepouts[${index}]`)),
+    walls: frameworkProductPetsGuardArray(row["walls"], `${at}.walls`).map((item, index) => parseWall(item, `${at}.walls[${index}]`)),
+    fixtures: frameworkProductPetsGuardArray(row["fixtures"], `${at}.fixtures`).map((item, index) => parseFixture(item, `${at}.fixtures[${index}]`)),
+    perches: frameworkProductPetsGuardArray(row["perches"], `${at}.perches`).map((item, index) => parsePerch(item, `${at}.perches[${index}]`)),
+    pitches: frameworkProductPetsGuardArray(row["pitches"], `${at}.pitches`).map((item, index) => parsePitch(item, `${at}.pitches[${index}]`)),
+    wanted: frameworkProductPetsGuardArray(row["wanted"], `${at}.wanted`).map((item, index) => parseSlug(item, `${at}.wanted[${index}]`)),
+    actors: frameworkProductPetsGuardArray(row["actors"], `${at}.actors`).map((item, index) => parseActor(item, `${at}.actors[${index}]`)),
+    rapports: frameworkProductPetsGuardArray(row["rapports"], `${at}.rapports`).map((item, index) => parseRapport(item, `${at}.rapports[${index}]`)),
+    met: parseTicks(row["met"], `${at}.met`),
+    draws: frameworkProductPetsGuardInteger(row["draws"], `${at}.draws`, {"minimum": 0}),
+    play: frameworkProductPetsGuardBoolean(row["play"], `${at}.play`),
+    mischief: frameworkProductPetsGuardBoolean(row["mischief"], `${at}.mischief`),
+    stirred: parseTicks(row["stirred"], `${at}.stirred`),
+    scrolled: parseTicks(row["scrolled"], `${at}.scrolled`),
+    press: parsePress(row["press"], `${at}.press`),
+    touched: (row["touched"] === null ? null : parseSlug(row["touched"], `${at}.touched`)),
+    shaking: parseShaking(row["shaking"], `${at}.shaking`),
+    trail: frameworkProductPetsGuardArray(row["trail"], `${at}.trail`).map((item, index) => parsePoint(item, `${at}.trail[${index}]`)),
+    coolings: frameworkProductPetsGuardArray(row["coolings"], `${at}.coolings`).map((item, index) => parseCooling(item, `${at}.coolings[${index}]`)),
+    pledges: frameworkProductPetsGuardArray(row["pledges"], `${at}.pledges`).map((item, index) => parsePledge(item, `${at}.pledges[${index}]`)),
+    ladders: frameworkProductPetsGuardArray(row["ladders"], `${at}.ladders`).map((item, index) => parseLadder(item, `${at}.ladders[${index}]`)),
+    lift: (row["lift"] === null ? null : parsePrank(row["lift"], `${at}.lift`)),
+    rested: parseTicks(row["rested"], `${at}.rested`),
+    poofs: frameworkProductPetsGuardInteger(row["poofs"], `${at}.poofs`, {"minimum": 0}),
+    puffs: frameworkProductPetsGuardArray(row["puffs"], `${at}.puffs`).map((item, index) => parsePuff(item, `${at}.puffs[${index}]`)),
+    claims: frameworkProductPetsGuardArray(row["claims"], `${at}.claims`).map((item, index) => parseClaim(item, `${at}.claims[${index}]`)),
+    courses: frameworkProductPetsGuardArray(row["courses"], `${at}.courses`).map((item, index) => parseCourse(item, `${at}.courses[${index}]`)),
+    trips: frameworkProductPetsGuardArray(row["trips"], `${at}.trips`).map((item, index) => parseTrip(item, `${at}.trips[${index}]`)),
+    origin: (row["origin"] === null ? null : parsePoint(row["origin"], `${at}.origin`)),
+  };
+}
+
+export function parseStageEvent(value: unknown, at = "$"): StageEvent {
+  return ((input0: unknown) => { try { return parseTicked(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parsePointed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseUnpointed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseGlanced(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseSurveyed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseSummoned(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseTuned(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseHushed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parsePressed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseDragged(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseReleased(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseCancelled(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseReclaimed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseStirred(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseScrolled(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parsePlayed(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parsePermitted(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } return frameworkProductPetsGuardReject(`${at}`, "value matches no variant"); })(value);
+}
+
+export function parseStirred(value: unknown, at = "$"): Stirred {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "stirred"),
+  };
+}
+
+export function parseStroking(value: unknown, at = "$"): Stroking {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["live", "way", "from", "began", "peak", "reached", "top", "bottom", "topSince", "bottomSince", "count", "first", "second", "rest"]);
+  return {
+    live: frameworkProductPetsGuardBoolean(row["live"], `${at}.live`),
+    way: frameworkProductPetsGuardInteger(row["way"], `${at}.way`, {"minimum": -1, "maximum": 1}),
+    from: frameworkProductPetsGuardNumber(row["from"], `${at}.from`),
+    began: parseTicks(row["began"], `${at}.began`),
+    peak: frameworkProductPetsGuardNumber(row["peak"], `${at}.peak`),
+    reached: parseTicks(row["reached"], `${at}.reached`),
+    top: frameworkProductPetsGuardNumber(row["top"], `${at}.top`),
+    bottom: frameworkProductPetsGuardNumber(row["bottom"], `${at}.bottom`),
+    topSince: frameworkProductPetsGuardNumber(row["topSince"], `${at}.topSince`),
+    bottomSince: frameworkProductPetsGuardNumber(row["bottomSince"], `${at}.bottomSince`),
+    count: frameworkProductPetsGuardInteger(row["count"], `${at}.count`, {"minimum": -1}),
+    first: parseTicks(row["first"], `${at}.first`),
+    second: parseTicks(row["second"], `${at}.second`),
+    rest: parseTicks(row["rest"], `${at}.rest`),
+  };
+}
+
+export function parseSummoned(value: unknown, at = "$"): Summoned {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "species"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "summoned"),
+    species: frameworkProductPetsGuardArray(row["species"], `${at}.species`).map((item, index) => parseSlug(item, `${at}.species[${index}]`)),
+  };
+}
+
+export function parseSurface(value: unknown, at = "$"): Surface {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "x0", "x1", "y"]);
+  return {
+    id: frameworkProductPetsGuardString(row["id"], `${at}.id`, {"minLength": 1}),
+    x0: frameworkProductPetsGuardNumber(row["x0"], `${at}.x0`),
+    x1: frameworkProductPetsGuardNumber(row["x1"], `${at}.x1`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+  };
+}
+
+export function parseSurveyed(value: unknown, at = "$"): Surveyed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "width", "height", "surfaces", "keepouts", "walls", "fixtures"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "surveyed"),
+    width: frameworkProductPetsGuardNumber(row["width"], `${at}.width`, {"minimum": 0}),
+    height: frameworkProductPetsGuardNumber(row["height"], `${at}.height`, {"minimum": 0}),
+    surfaces: frameworkProductPetsGuardArray(row["surfaces"], `${at}.surfaces`).map((item, index) => parseSurface(item, `${at}.surfaces[${index}]`)),
+    keepouts: frameworkProductPetsGuardArray(row["keepouts"], `${at}.keepouts`).map((item, index) => parseRect(item, `${at}.keepouts[${index}]`)),
+    walls: frameworkProductPetsGuardArray(row["walls"], `${at}.walls`).map((item, index) => parseWall(item, `${at}.walls[${index}]`)),
+    fixtures: frameworkProductPetsGuardArray(row["fixtures"], `${at}.fixtures`).map((item, index) => parseFixture(item, `${at}.fixtures[${index}]`)),
+  };
+}
+
+export function parseTemperament(value: unknown, at = "$"): Temperament {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["energy", "sociability", "curiosity"]);
+  return {
+    energy: frameworkProductPetsGuardNumber(row["energy"], `${at}.energy`, {"minimum": 0, "maximum": 1}),
+    sociability: frameworkProductPetsGuardNumber(row["sociability"], `${at}.sociability`, {"minimum": 0, "maximum": 1}),
+    curiosity: frameworkProductPetsGuardNumber(row["curiosity"], `${at}.curiosity`, {"minimum": 0, "maximum": 1}),
+  };
+}
+
+export function parseText(value: unknown, at = "$"): Text {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["en", "de"]);
+  return {
+    en: frameworkProductPetsGuardString(row["en"], `${at}.en`, {"minLength": 1}),
+    de: frameworkProductPetsGuardString(row["de"], `${at}.de`, {"minLength": 1}),
+  };
+}
+
+export function parseTicked(value: unknown, at = "$"): Ticked {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "ticks"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "ticked"),
+    ticks: frameworkProductPetsGuardInteger(row["ticks"], `${at}.ticks`, {"minimum": 0}),
+  };
+}
+
+export function parseTicks(value: unknown, at = "$"): Ticks {
+  return frameworkProductPetsGuardInteger(value, `${at}`);
+}
+
+export function parseTier(value: unknown, at = "$"): Tier {
+  return frameworkProductPetsGuardMember(value, `${at}`, ["hello", "trick", "purr", "enough"] as const);
+}
+
+export function parseTint(value: unknown, at = "$"): Tint {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["body", "accent", "detail"]);
+  return {
+    body: row["body"] === undefined ? undefined : parseColor(row["body"], `${at}.body`),
+    accent: row["accent"] === undefined ? undefined : parseColor(row["accent"], `${at}.accent`),
+    detail: row["detail"] === undefined ? undefined : parseColor(row["detail"], `${at}.detail`),
+  };
+}
+
+export function parseToolFrame(value: unknown, at = "$"): ToolFrame {
+  return ((input0: unknown) => { try { return parseChuteTool(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseRopeTool(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseHookTool(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseGunTool(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } try { return parseLadderTool(input0, `${at}`); } catch (error) { if (!(error instanceof frameworkProductPetsGuardRefusal)) throw error; } return frameworkProductPetsGuardReject(`${at}`, "value matches no variant"); })(value);
+}
+
+export function parseTrack(value: unknown, at = "$"): Track {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["bone", "channel", "keys"]);
+  return {
+    bone: parseSlug(row["bone"], `${at}.bone`),
+    channel: parseChannel(row["channel"], `${at}.channel`),
+    keys: frameworkProductPetsGuardArray(row["keys"], `${at}.keys`, {"minItems": 2}).map((item, index) => parseKey(item, `${at}.keys[${index}]`)),
+  };
+}
+
+export function parseTrait(value: unknown, at = "$"): Trait {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["species", "state", "held", "mood", "activity", "trick"]);
+  return {
+    species: row["species"] === undefined ? undefined : parseSlug(row["species"], `${at}.species`),
+    state: row["state"] === undefined ? undefined : parseSlug(row["state"], `${at}.state`),
+    held: row["held"] === undefined ? undefined : frameworkProductPetsGuardNumber(row["held"], `${at}.held`, {"exclusiveMinimum": 0}),
+    mood: row["mood"] === undefined ? undefined : parseMood(row["mood"], `${at}.mood`),
+    activity: row["activity"] === undefined ? undefined : parseActivity(row["activity"], `${at}.activity`),
+    trick: row["trick"] === undefined ? undefined : parseSlug(row["trick"], `${at}.trick`),
+  };
+}
+
+export function parseTrick(value: unknown, at = "$"): Trick {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "name", "clip", "cues", "emitter", "from", "to", "mood"]);
+  return {
+    id: parseSlug(row["id"], `${at}.id`),
+    name: parseText(row["name"], `${at}.name`),
+    clip: parseSlug(row["clip"], `${at}.clip`),
+    cues: frameworkProductPetsGuardArray(row["cues"], `${at}.cues`).map((item, index) => parseCue(item, `${at}.cues[${index}]`)),
+    emitter: row["emitter"] === undefined ? undefined : parseSlug(row["emitter"], `${at}.emitter`),
+    from: row["from"] === undefined ? undefined : frameworkProductPetsGuardArray(row["from"], `${at}.from`).map((item, index) => parseSlug(item, `${at}.from[${index}]`)),
+    to: row["to"] === undefined ? undefined : parseSlug(row["to"], `${at}.to`),
+    mood: row["mood"] === undefined ? undefined : parseMood(row["mood"], `${at}.mood`),
+  };
+}
+
+export function parseTrip(value: unknown, at = "$"): Trip {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["owner", "from", "steps", "pitches", "ladder", "ending", "landing", "grip"]);
+  return {
+    owner: parseSlug(row["owner"], `${at}.owner`),
+    from: parseTicks(row["from"], `${at}.from`),
+    steps: frameworkProductPetsGuardArray(row["steps"], `${at}.steps`, {"minItems": 1}).map((item, index) => parseFoothold(item, `${at}.steps[${index}]`)),
+    pitches: frameworkProductPetsGuardArray(row["pitches"], `${at}.pitches`).map((item, index) => parsePitch(item, `${at}.pitches[${index}]`)),
+    ladder: (row["ladder"] === null ? null : parseSlug(row["ladder"], `${at}.ladder`)),
+    ending: frameworkProductPetsGuardMember(row["ending"], `${at}.ending`, ["perch", "wall", "air"] as const),
+    landing: frameworkProductPetsGuardString(row["landing"], `${at}.landing`),
+    grip: frameworkProductPetsGuardNumber(row["grip"], `${at}.grip`, {"minimum": 0}),
+  };
+}
+
+export function parseTuned(value: unknown, at = "$"): Tuned {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind", "mode"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "tuned"),
+    mode: parsePetMode(row["mode"], `${at}.mode`),
+  };
+}
+
+export function parseTurns(value: unknown, at = "$"): Turns {
+  return frameworkProductPetsGuardNumber(value, `${at}`);
+}
+
+export function parseUnpointed(value: unknown, at = "$"): Unpointed {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["kind"]);
+  return {
+    kind: frameworkProductPetsGuardConstant(row["kind"], `${at}.kind`, "unpointed"),
+  };
+}
+
+export function parseWall(value: unknown, at = "$"): Wall {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["id", "surface", "side", "x", "y0", "y1"]);
+  return {
+    id: frameworkProductPetsGuardString(row["id"], `${at}.id`, {"minLength": 1}),
+    surface: frameworkProductPetsGuardString(row["surface"], `${at}.surface`, {"minLength": 1}),
+    side: ((input0: unknown) => ([1, -1] as readonly unknown[]).includes(input0) ? (input0 as 1 | -1) : frameworkProductPetsGuardReject(`${at}.side`, "value is not one of 1, -1"))(row["side"]),
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y0: frameworkProductPetsGuardNumber(row["y0"], `${at}.y0`),
+    y1: frameworkProductPetsGuardNumber(row["y1"], `${at}.y1`),
+  };
+}
+
+export function parseWarmth(value: unknown, at = "$"): Warmth {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["heat", "since", "until", "tier", "run", "tricks"]);
+  return {
+    heat: frameworkProductPetsGuardNumber(row["heat"], `${at}.heat`, {"minimum": 0}),
+    since: parseTicks(row["since"], `${at}.since`),
+    until: parseTicks(row["until"], `${at}.until`),
+    tier: parseTier(row["tier"], `${at}.tier`),
+    run: frameworkProductPetsGuardInteger(row["run"], `${at}.run`, {"minimum": 0}),
+    tricks: frameworkProductPetsGuardInteger(row["tricks"], `${at}.tricks`, {"minimum": 0}),
+  };
+}
+
+export function parseWaypoint(value: unknown, at = "$"): Waypoint {
+  const row = frameworkProductPetsGuardClosed(frameworkProductPetsGuardObject(value, at), at, ["x", "y", "vx", "vy", "tilt", "canopy"]);
+  return {
+    x: frameworkProductPetsGuardNumber(row["x"], `${at}.x`),
+    y: frameworkProductPetsGuardNumber(row["y"], `${at}.y`),
+    vx: frameworkProductPetsGuardNumber(row["vx"], `${at}.vx`),
+    vy: frameworkProductPetsGuardNumber(row["vy"], `${at}.vy`),
+    tilt: parseTurns(row["tilt"], `${at}.tilt`),
+    canopy: (row["canopy"] === null ? null : parseCanopy(row["canopy"], `${at}.canopy`)),
+  };
+}

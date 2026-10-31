@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {Management,captureProjection,pathContains,type EntryObservation,type ManagementPort,type Command} from "../🟦️.ts";

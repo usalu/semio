@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "success",
+      "fail": false
+    },
+    {
+      "id": "consumer-failure",
+      "fail": true
+    }
+  ],
+  "operations": [
+    "image",
+    "reservation",
+    "path:build",
+    "recheck",
+    "mkdir:build",
+    "path:capture",
+    "recheck",
+    "mkdir:capture",
+    "path:temp",
+    "recheck",
+    "mkdir:temp",
+    "path:home",
+    "recheck",
+    "mkdir:home",
+    "environment",
+    "native",
+    "workspace",
+    "body",
+    "close"
+  ],
+  "phases": [
+    "cargo.compiler.image-open",
+    "cargo.compiler.reservation",
+    "cargo.compiler.directories",
+    "cargo.compiler.launch-environment",
+    "cargo.compiler.native-scope",
+    "cargo.compiler.native-body",
+    "cargo.compiler.workspace-scope",
+    "cargo.compiler.workspace-body"
+  ]
+}

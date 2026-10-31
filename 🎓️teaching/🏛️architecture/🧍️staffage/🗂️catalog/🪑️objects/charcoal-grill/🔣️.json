@@ -1,0 +1,2278 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "charcoal-grill",
+    "category": "objects",
+    "title": {
+      "en": "Charcoal Kettle Grill",
+      "de": "Holzkohle-Kugelgrill"
+    },
+    "summary": {
+      "en": "A 57 cm charcoal kettle grill on three legs: lid closed or raised, a glowing charcoal bed inside, hot enamel shells and smoke leaving through the lid vent or over the open bowl.",
+      "de": "Ein Holzkohle-Kugelgrill von 57 cm auf drei Beinen: Deckel geschlossen oder angehoben, glühende Kohle im Inneren, heiße Emailleschalen und Rauch, der durch die Deckelöffnung oder über den offenen Kessel abzieht."
+    },
+    "tags": [
+      "charcoal-grill",
+      "kettle-grill",
+      "barbecue",
+      "fire",
+      "smoke",
+      "outdoor",
+      "lid"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "turns-2012",
+          "citation": "Turns, S. R. (2012). An Introduction to Combustion: Concepts and Applications, 3rd ed., McGraw-Hill (charcoal as nearly pure carbon, about 29-30 MJ/kg lower heating value, C + O2 -> CO2, stoichiometric air about 11.5 kg per kg carbon)."
+        },
+        {
+          "id": "en-1860-1",
+          "citation": "EN 1860-1:2013 Appliances, solid fuels and firelighters for barbecueing - Part 1: Barbecues burning solid fuels - Requirements and test methods (stability, surface temperatures of handles)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel, wood)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties, natural convection, buoyant plumes)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of a 57 cm kettle grill (mass 14 kg, typical class data, authored estimates). The lid is lifted off its rim hook in reality; the rig hinges it at the left rim to pose open and closed. The fire is 8 kW fuel (about 1 kg charcoal per hour at 29 MJ/kg): 3.6 kW released into the glowing bed, 1.8 kW into the bowl shell, 1.2 kW into the lid shell (closed), 1.4 kW sensible heat in the flue gas (0.0086 m3/s at 220 K), the rest to the food. Bed and grate lie inside the bowl and are hidden in the side elevation.",
+        "de": "Seitenansicht eines 57-cm-Kugelgrills (Masse 14 kg, typische Klassenwerte, Schätzwerte). Der Deckel wird in Wirklichkeit vom Randhaken gehoben; das Rig lenkt ihn am linken Rand an, um offen und geschlossen darzustellen. Das Feuer hat 8 kW Brennstoff (etwa 1 kg Holzkohle je Stunde bei 29 MJ/kg): 3,6 kW in die Glut, 1,8 kW in die Kesselschale, 1,2 kW in die Deckelschale (geschlossen), 1,4 kW fühlbare Wärme im Abgas (0,0086 m3/s bei 220 K), der Rest ins Grillgut. Bett und Rost liegen im Kessel und sind in der Seitenansicht verdeckt."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.97,
+      "widthM": 0.67,
+      "depthM": 0.64,
+      "massKg": 14.0
+    },
+    "materials": [
+      {
+        "id": "enamel-steel",
+        "title": {
+          "en": "Porcelain-enamelled steel, black",
+          "de": "Emaillierter Stahl, schwarz"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.85,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "steel-black",
+        "title": {
+          "en": "Black painted steel tube",
+          "de": "Schwarz lackiertes Stahlrohr"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.85,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "alu-cast",
+        "title": {
+          "en": "Cast aluminium",
+          "de": "Aluminiumguss"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 2700,
+        "conductivityWmK": 160,
+        "specificHeatJKgK": 880,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "wood-handle",
+        "title": {
+          "en": "Heat-resistant wood handle",
+          "de": "Hitzebeständiger Holzgriff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 700,
+        "conductivityWmK": 0.15,
+        "specificHeatJKgK": 1600,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "chrome-steel",
+        "title": {
+          "en": "Chrome-plated steel rod grate",
+          "de": "Verchromter Stahlstab-Rost"
+        },
+        "emissivity": 0.15,
+        "solarAbsorptivity": 0.4,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "charcoal",
+        "title": {
+          "en": "Glowing charcoal bed",
+          "de": "Glühende Holzkohleglut"
+        },
+        "emissivity": 0.95,
+        "solarAbsorptivity": 0.95,
+        "densityKgM3": 250,
+        "conductivityWmK": 0.2,
+        "specificHeatJKgK": 1000,
+        "source": "authored-estimate",
+        "reference": "turns-2012"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "bowl",
+      "bones": [
+        {
+          "id": "bowl",
+          "parent": null,
+          "title": {
+            "en": "Bowl with tripod legs and ash catcher",
+            "de": "Kessel mit Dreibein und Aschefänger"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.74,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 8.0,
+            "comX": 0.0,
+            "comY": 0.42,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1860-1"
+          }
+        },
+        {
+          "id": "grate",
+          "parent": "bowl",
+          "title": {
+            "en": "Cooking grate",
+            "de": "Grillrost"
+          },
+          "x": 0.0,
+          "y": 0.7,
+          "angleDeg": 0,
+          "lengthM": 0.39,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "charcoal",
+          "parent": "bowl",
+          "title": {
+            "en": "Charcoal bed (initial charge 1.5 kg)",
+            "de": "Holzkohlebett (Erstfüllung 1,5 kg)"
+          },
+          "x": 0.0,
+          "y": 0.58,
+          "angleDeg": 0,
+          "lengthM": 0.39,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.5,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "turns-2012"
+          }
+        },
+        {
+          "id": "lid",
+          "parent": "bowl",
+          "title": {
+            "en": "Lid (hung on the rim hook, modelled as a hinge)",
+            "de": "Deckel (am Randhaken eingehängt, als Gelenk modelliert)"
+          },
+          "x": -0.2925,
+          "y": 0.74,
+          "angleDeg": 0,
+          "lengthM": 0.585,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 115
+          },
+          "mass": {
+            "kg": 3.0,
+            "comX": 0.2925,
+            "comY": 0.07,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "lid-vent",
+          "parent": "lid",
+          "title": {
+            "en": "Lid vent dial",
+            "de": "Deckel-Lüftungsscheibe"
+          },
+          "x": 0.2925,
+          "y": 0.2,
+          "angleDeg": 0,
+          "lengthM": 0.07,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 90
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0.0,
+            "comY": 0.01,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "ash-damper",
+          "parent": "bowl",
+          "title": {
+            "en": "Bottom air damper",
+            "de": "Unterluft-Schieber"
+          },
+          "x": 0.0,
+          "y": 0.495,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 90
+          },
+          "mass": {
+            "kg": 0.1,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "leg-left",
+        "bone": "bowl",
+        "x": -0.27,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Left leg foot",
+          "de": "Fuß linkes Bein"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.04,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "leg-right",
+        "bone": "bowl",
+        "x": 0.27,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Right leg foot (with wheel)",
+          "de": "Fuß rechtes Bein (mit Rad)"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.04,
+        "footprintWidthM": 0.04,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "grate-point",
+        "bone": "grate",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "load",
+        "title": {
+          "en": "Food on the grate",
+          "de": "Grillgut auf dem Rost"
+        }
+      },
+      {
+        "id": "vent-top",
+        "bone": "lid-vent",
+        "x": 0.0,
+        "y": 0.025,
+        "kind": "emitter",
+        "title": {
+          "en": "Lid vent opening",
+          "de": "Deckelöffnung"
+        }
+      },
+      {
+        "id": "bowl-mouth",
+        "bone": "bowl",
+        "x": 0.0,
+        "y": 0.74,
+        "kind": "emitter",
+        "title": {
+          "en": "Open bowl mouth",
+          "de": "Offene Kesselmündung"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 -0.015 L 0 0 C 0 0.14 0.1225 0.22 0.2925 0.22 C 0.4625 0.22 0.585 0.14 0.585 0 L 0.585 -0.015 Z",
+              "regions": [
+                "lid-shell",
+                "vents-alu"
+              ],
+              "material": "enamel-steel"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.735 C -0.2925 0.6 -0.18 0.46 0 0.46 C 0.18 0.46 0.2925 0.6 0.2925 0.735 Z",
+              "regions": [
+                "bowl-shell",
+                "ash-catcher"
+              ],
+              "material": "enamel-steel"
+            ,
+              "penMm": 0.256
+             },
+            {
+              "id": "leg-0",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0.0
+                ],
+                [
+                  -0.17,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel",
+              "penMm": 0.13
+            },
+            {
+              "id": "leg-1",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.27,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel",
+              "penMm": 0.13
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.5625,
+                  0.11
+                ],
+                [
+                  0.6725,
+                  0.11
+                ]
+              ],
+              "closed": false,
+              "region": "handle-wood",
+              "penMm": 0.256
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A kettle sign 1.3 mm wide and 1.9 mm high: a dark lid dome over a bowl cup on two leg strokes, with a handle stroke to the right.",
+            "de": "Ein Kesselzeichen, 1,3 mm breit und 1,9 mm hoch: eine dunkle Deckelkuppel über einem Kesselnapf auf zwei Beinstrichen, mit einem Griffstrich nach rechts."
+          },
+          "retained": {
+            "en": "Lid and bowl at their real diameter 0.585 m, the tripod legs at their real spread, the lid handle reaching to 0.38 m, the dial on the lid top.",
+            "de": "Deckel und Kessel in realem Durchmesser 0,585 m, die Dreibeinbeine in realer Spreizung, der Deckelgriff bis 0,38 m, die Scheibe auf dem Deckel."
+          },
+          "merged": {
+            "en": "Lid and vent dial form one solid; bowl and ash catcher form one solid; the rim bead merges into the lid-bowl joint.",
+            "de": "Deckel und Lüftungsscheibe bilden einen Körper; Kessel und Aschefänger bilden einen Körper; der Randwulst geht in der Deckel-Kessel-Fuge auf."
+          },
+          "omitted": {
+            "en": "Grate, charcoal bed, damper, wheel, side handle, leg ring (the grate and bed are hidden anyway).",
+            "de": "Rost, Kohlebett, Schieber, Rad, Seitengriff, Beinring (Rost und Bett sind ohnehin verdeckt)."
+          },
+          "thinElements": {
+            "en": "The 0.02 m legs (0.04 mm) and the 0.03 m handle are single 0.13 mm strokes, inflation 3 to 4 times; lid and bowl overlap by 0.01 m so they print as one joined sign.",
+            "de": "Die 0,02 m dicken Beine (0,04 mm) und der 0,03 m dicke Griff sind einzelne 0,13-mm-Striche, Aufblähung 3- bis 4-fach; Deckel und Kessel überlappen um 0,01 m und drucken als ein verbundenes Zeichen."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Lid and bowl tone 0.3 (black enamel), strokes 0.13 mm, ground 0.18 mm.",
+            "de": "Deckel und Kessel Ton 0,3 (schwarzes Email), Striche 0,13 mm, Boden 0,18 mm."
+          },
+          "overlays": {
+            "en": "The merged lid solid lists lid-shell and vents-alu, the merged bowl solid lists bowl-shell and ash-catcher; the hot lid and bowl shells are the operating regions of the thermal view.",
+            "de": "Der verschmolzene Deckelkörper nennt lid-shell und vents-alu, der Kesselkörper bowl-shell und ash-catcher; die heißen Deckel- und Kesselschalen sind die Betriebsregionen der Thermalansicht."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 -0.005 L 0 0 C 0 0.14 0.1225 0.2 0.2925 0.2 C 0.4625 0.2 0.585 0.14 0.585 0 L 0.585 -0.005 Z",
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.005,
+              "w": 0.08,
+              "h": 0.035,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "rect",
+              "x": -0.12,
+              "y": 0.43,
+              "w": 0.24,
+              "h": 0.07,
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "leg-0",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.27,
+                  0.0
+                ],
+                [
+                  -0.17,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel",
+              "penMm": 0.13
+            },
+            {
+              "id": "leg-1",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.27,
+                  0.0
+                ],
+                [
+                  0.17,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel",
+              "penMm": 0.13
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.5825,
+              "y": 0.085,
+              "w": 0.09,
+              "h": 0.05,
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A kettle grill 3.4 mm wide and 4.9 mm high: black lid dome with a dial, a bowl with ash catcher, two leg strokes, a wooden lid handle and the rim line.",
+            "de": "Ein Kugelgrill 3,4 mm breit und 4,9 mm hoch: schwarze Deckelkuppel mit Scheibe, ein Kessel mit Aschefänger, zwei Beinstriche, ein Holzgriff am Deckel und die Randlinie."
+          },
+          "retained": {
+            "en": "Dome and bowl profile, lid dial, ash catcher under the bowl, leg spread, handle, rim joint line.",
+            "de": "Kuppel- und Kesselprofil, Deckelscheibe, Aschefänger unter dem Kessel, Beinspreizung, Griff, Randfugenlinie."
+          },
+          "merged": {
+            "en": "Handle bracket and heat shield merge into the handle block; the bowl bead merges into the rim line.",
+            "de": "Griffhalter und Hitzeschild gehen im Griffblock auf; der Kesselwulst geht in der Randlinie auf."
+          },
+          "omitted": {
+            "en": "Wheel, leg ring, side handle, grate, charcoal bed.",
+            "de": "Rad, Beinring, Seitengriff, Rost, Kohlebett."
+          },
+          "thinElements": {
+            "en": "Legs are 0.13 mm strokes (real 0.02 m = 0.1 mm); the lid dial is 0.35 mm tall.",
+            "de": "Beine sind 0,13-mm-Striche (real 0,02 m = 0,1 mm); die Deckelscheibe ist 0,35 mm hoch."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Enamel 0.3, aluminium 0.6-0.7, wood 0.5; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Email 0,3, Aluminium 0,6-0,7, Holz 0,5; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Lid shell, bowl shell, ash catcher, dial, handle and legs each carry their own region.",
+            "de": "Deckelschale, Kesselschale, Aschefänger, Scheibe, Griff und Beine tragen je ihre eigene Region."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 -0.005 L 0 0 C 0 0.14 0.1225 0.2 0.2925 0.2 C 0.4625 0.2 0.585 0.14 0.585 0 L 0.585 -0.005 Z",
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.005,
+              "w": 0.08,
+              "h": 0.035,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.12 0.5 L -0.12 0.44 C -0.12 0.425 -0.09 0.42 -0.08 0.42 L 0.08 0.42 C 0.09 0.42 0.12 0.425 0.12 0.44 L 0.12 0.5 Z",
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "leg-0",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": -0.27,
+              "y0": 0.012,
+              "x1": -0.17,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-1",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.27,
+              "y0": 0.012,
+              "x1": 0.17,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.235,
+                  0.22
+                ],
+                [
+                  0.235,
+                  0.22
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "wheel",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": 0.05,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.5475 0.095 L 0.5925 0.1 L 0.5925 0.08 L 0.6775 0.08 L 0.6775 0.14 L 0.5925 0.14 L 0.5925 0.125 L 0.5475 0.13 Z",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "side-handle",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.2925 0.715 L 0.345 0.715 L 0.345 0.745 L 0.2925 0.745 Z",
+              "region": "handle-wood",
+              "material": "wood-handle"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "lid-bead",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0225,
+                  0.06
+                ],
+                [
+                  0.1625,
+                  0.165
+                ]
+              ],
+              "closed": false,
+              "region": "lid-shell"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A kettle grill 6.7 mm wide and 9.7 mm high: lid dome with dial and highlight line, bowl with rim line and ash catcher, two legs with a ring and a wheel, a stepped lid handle and a side handle.",
+            "de": "Ein Kugelgrill 6,7 mm breit und 9,7 mm hoch: Deckelkuppel mit Scheibe und Lichtlinie, Kessel mit Randlinie und Aschefänger, zwei Beine mit Ring und Rad, ein abgesetzter Deckelgriff und ein Seitengriff."
+          },
+          "retained": {
+            "en": "Lid, dial, bowl, rim, ash catcher, leg tubes at real 0.024 m, leg ring, wheel, both handles.",
+            "de": "Deckel, Scheibe, Kessel, Rand, Aschefänger, Beinrohre in realen 0,024 m, Beinring, Rad, beide Griffe."
+          },
+          "merged": {
+            "en": "Third leg hidden behind the pair; heat shield and bracket merge into the handle.",
+            "de": "Das dritte Bein ist hinter dem Paar verdeckt; Hitzeschild und Halter gehen im Griff auf."
+          },
+          "omitted": {
+            "en": "Grate, charcoal bed, damper slot, lid vent holes.",
+            "de": "Rost, Kohlebett, Schieberschlitz, Lüftungslöcher des Deckels."
+          },
+          "thinElements": {
+            "en": "Leg tubes are 0.24 mm solid capsules; the ring wire is a 0.13 mm line; the handle block 0.6 mm thick.",
+            "de": "Beinrohre sind 0,24-mm-Vollkapseln; der Ringdraht ist eine 0,13-mm-Linie; der Griffblock ist 0,6 mm stark."
+          },
+          "hatching": {
+            "en": "None; enamel is solid black.",
+            "de": "Keine; Email ist voll schwarz."
+          },
+          "styles": {
+            "en": "Enamel 0.3, legs 0.3, aluminium 0.6-0.7, wood 0.5; body pen 0.25 mm, detail 0.13 mm.",
+            "de": "Email 0,3, Beine 0,3, Aluminium 0,6-0,7, Holz 0,5; Körperstift 0,25 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Wheel and ring carry legs-steel; both handles handle-wood; the highlight line lid-shell.",
+            "de": "Rad und Ring tragen legs-steel; beide Griffe handle-wood; die Lichtlinie lid-shell."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "grain",
+            "title": {
+              "en": "Wood grain",
+              "de": "Holzmaserung"
+            },
+            "pattern": "lines",
+            "angleDeg": 0,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "lid",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 -0.005 L 0 0 C 0 0.14 0.1225 0.2 0.2925 0.2 C 0.4625 0.2 0.585 0.14 0.585 0 L 0.585 -0.005 Z",
+              "region": "lid-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "lid-bead",
+              "bone": "lid",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0125,
+                  0.05
+                ],
+                [
+                  0.0725,
+                  0.13
+                ],
+                [
+                  0.1725,
+                  0.175
+                ]
+              ],
+              "closed": false,
+              "region": "lid-shell"
+            },
+            {
+              "id": "lid-rim",
+              "bone": "lid",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.012
+                ],
+                [
+                  0.585,
+                  0.012
+                ]
+              ],
+              "closed": false,
+              "region": "lid-shell"
+            ,
+              "penMm": 0.246
+             },
+            {
+              "id": "vent-dial",
+              "bone": "lid-vent",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.04,
+              "y": -0.005,
+              "w": 0.08,
+              "h": 0.035,
+              "r": 0.006,
+              "region": "vents-alu",
+              "material": "alu-cast"
+            },
+            {
+              "id": "vent-hole-0",
+              "bone": "lid-vent",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": -0.022,
+              "cy": 0.0125,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu"
+            },
+            {
+              "id": "vent-hole-1",
+              "bone": "lid-vent",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0125,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu"
+            },
+            {
+              "id": "vent-hole-2",
+              "bone": "lid-vent",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "ellipse",
+              "cx": 0.022,
+              "cy": 0.0125,
+              "rx": 0.006,
+              "ry": 0.006,
+              "region": "vents-alu"
+            },
+            {
+              "id": "bowl",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.2925 0.74 C -0.2925 0.6 -0.18 0.5 0 0.5 C 0.18 0.5 0.2925 0.6 0.2925 0.74 Z",
+              "region": "bowl-shell",
+              "material": "enamel-steel"
+            },
+            {
+              "id": "rim-line",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2925,
+                  0.74
+                ],
+                [
+                  0.2925,
+                  0.74
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            ,
+              "penMm": 0.246
+             },
+            {
+              "id": "bowl-highlight",
+              "bone": "bowl",
+              "role": "texture",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.25,
+                  0.68
+                ],
+                [
+                  -0.17,
+                  0.585
+                ],
+                [
+                  -0.08,
+                  0.535
+                ]
+              ],
+              "closed": false,
+              "region": "bowl-shell"
+            },
+            {
+              "id": "ash-catcher",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.12 0.5 L -0.12 0.44 C -0.12 0.425 -0.09 0.42 -0.08 0.42 L 0.08 0.42 C 0.09 0.42 0.12 0.425 0.12 0.44 L 0.12 0.5 Z",
+              "region": "ash-catcher",
+              "material": "alu-cast"
+            },
+            {
+              "id": "damper",
+              "bone": "ash-damper",
+              "role": "detail",
+              "z": 3.0,
+              "filled": false,
+              "tone": 0.8,
+              "kind": "path",
+              "d": "M -0.05 0 L 0.05 0 L 0.05 -0.025 L -0.05 -0.025 Z",
+              "region": "vents-alu"
+            },
+            {
+              "id": "leg-0",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": -0.27,
+              "y0": 0.012,
+              "x1": -0.17,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-1",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "capsule",
+              "x0": 0.27,
+              "y0": 0.012,
+              "x1": 0.17,
+              "y1": 0.58,
+              "r0": 0.012,
+              "r1": 0.012,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "leg-ring",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 2.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.235,
+                  0.22
+                ],
+                [
+                  0.235,
+                  0.22
+                ]
+              ],
+              "closed": false,
+              "region": "legs-steel"
+            },
+            {
+              "id": "wheel",
+              "bone": "bowl",
+              "role": "body",
+              "z": 2.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": 0.05,
+              "rx": 0.05,
+              "ry": 0.05,
+              "region": "legs-steel",
+              "material": "steel-black"
+            },
+            {
+              "id": "wheel-hub",
+              "bone": "bowl",
+              "role": "detail",
+              "z": 2.4,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.27,
+              "cy": 0.05,
+              "rx": 0.016,
+              "ry": 0.016,
+              "region": "legs-steel"
+            },
+            {
+              "id": "handle",
+              "bone": "lid",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.5475 0.095 L 0.5925 0.1 L 0.5925 0.08 L 0.6775 0.08 L 0.6775 0.14 L 0.5925 0.14 L 0.5925 0.125 L 0.5475 0.13 Z",
+              "region": "handle-wood",
+              "material": "wood-handle",
+              "hatch": "grain"
+            },
+            {
+              "id": "side-handle",
+              "bone": "bowl",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.2925 0.715 L 0.345 0.715 L 0.345 0.745 L 0.2925 0.745 Z",
+              "region": "handle-wood",
+              "material": "wood-handle",
+              "hatch": "grain"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A kettle grill 13.4 mm wide and 19.4 mm high with its construction: lid with rim, bead, dial with three air holes, bowl with rim, highlight and ash catcher with damper, tubular legs with ring and wheel hub, wooden lid and side handles with grain.",
+            "de": "Ein Kugelgrill 13,4 mm breit und 19,4 mm hoch mit seiner Konstruktion: Deckel mit Rand, Wulst, Scheibe mit drei Luftlöchern, Kessel mit Rand, Lichtlinie und Aschefänger mit Schieber, Rohrbeine mit Ring und Radnabe, hölzerne Deckel- und Seitengriffe mit Maserung."
+          },
+          "retained": {
+            "en": "Every visible part at real size; the dial turns with the lid-vent bone, the damper with the ash-damper bone.",
+            "de": "Jedes sichtbare Teil in realer Größe; die Scheibe dreht mit dem Lid-Vent-Knochen, der Schieber mit dem Ash-Damper-Knochen."
+          },
+          "merged": {
+            "en": "The third leg and the far wheel are hidden behind the near ones; grate and bed are inside the bowl.",
+            "de": "Das dritte Bein und das ferne Rad sind hinter den nahen verdeckt; Rost und Bett liegen im Kessel."
+          },
+          "omitted": {
+            "en": "Handle screws, firmware stamp, bowl drain slot.",
+            "de": "Griffschrauben, Prägung, Kesselablassschlitz."
+          },
+          "thinElements": {
+            "en": "Air holes are 0.012 m (0.24 mm) circles; legs are 0.024 m (0.48 mm) capsules; ring wire a 0.18 mm line.",
+            "de": "Luftlöcher sind Kreise von 0,012 m (0,24 mm); Beine sind 0,024-m-Kapseln (0,48 mm); der Ringdraht eine 0,18-mm-Linie."
+          },
+          "hatching": {
+            "en": "Wood grain as parallel lines at 0.5 mm spacing on both handles.",
+            "de": "Holzmaserung als parallele Linien im Abstand 0,5 mm auf beiden Griffen."
+          },
+          "styles": {
+            "en": "Enamel 0.3, wood 0.5, aluminium 0.7; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm.",
+            "de": "Email 0,3, Holz 0,5, Aluminium 0,7; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm."
+          },
+          "overlays": {
+            "en": "Lines carry the region of the part they mark; the thermal view paints the hot lid and bowl shells.",
+            "de": "Linien tragen die Region des Teils, das sie kennzeichnen; die Thermalansicht färbt die heißen Deckel- und Kesselschalen."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "cold-closed",
+        "title": {
+          "en": "Cold, lid closed",
+          "de": "Kalt, Deckel geschlossen"
+        },
+        "description": {
+          "en": "Unlit grill with closed lid and open vents in the afternoon sun.",
+          "de": "Unbefeuerter Grill mit geschlossenem Deckel und offenen Lüftungen in der Nachmittagssonne."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "bowl-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "lid-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "legs-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "ash-catcher": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "vents-alu": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "handle-wood": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "cooking-grate": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "charcoal-bed": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "lid-vent-flue": 0,
+            "open-bowl-plume": 0
+          },
+          "operating": {
+            "charcoal": 0,
+            "lid-heat": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "lit-lid-open",
+        "title": {
+          "en": "Lit, lid raised",
+          "de": "Angezündet, Deckel angehoben"
+        },
+        "description": {
+          "en": "Burning charcoal with the lid swung up 105 degrees: hot air and smoke rise freely from the open bowl.",
+          "de": "Brennende Holzkohle mit um 105 Grad hochgeschwenktem Deckel: heiße Luft und Rauch steigen frei aus dem offenen Kessel."
+        },
+        "bones": {
+          "lid": {
+            "angleDeg": 105
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "bowl-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "lid-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "ash-catcher": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "vents-alu": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "handle-wood": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "cooking-grate": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "charcoal-bed": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "lid-vent-flue": 0,
+            "open-bowl-plume": 1
+          },
+          "operating": {
+            "charcoal": 1,
+            "lid-heat": 0.2
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "grilling-closed",
+        "title": {
+          "en": "Grilling, lid closed",
+          "de": "Grillen, Deckel geschlossen"
+        },
+        "description": {
+          "en": "Hot fire under a closed lid with open vents and five kilograms of food on the grate: the lid shell heats and smoke leaves through the lid vent.",
+          "de": "Heißes Feuer unter geschlossenem Deckel mit offenen Lüftungen und fünf Kilogramm Grillgut auf dem Rost: die Deckelschale heizt sich auf und Rauch verlässt den Grill durch die Deckelöffnung."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "bowl-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "lid-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "ash-catcher": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "vents-alu": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "handle-wood": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "cooking-grate": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "charcoal-bed": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "lid-vent-flue": 1,
+            "open-bowl-plume": 0
+          },
+          "operating": {
+            "charcoal": 1,
+            "lid-heat": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "food",
+            "kind": "carried",
+            "title": {
+              "en": "Food on the grate (5 kg)",
+              "de": "Grillgut auf dem Rost (5 kg)"
+            },
+            "fxN": 0,
+            "fyN": -49,
+            "source": "authored-estimate",
+            "anchor": "grate-point",
+            "reference": "en-1860-1"
+          }
+        ]
+      },
+      {
+        "id": "embers-vents-low",
+        "title": {
+          "en": "Embers, vents nearly closed",
+          "de": "Glut, Lüftungen fast geschlossen"
+        },
+        "description": {
+          "en": "Slow-burning embers with the lid dial and the bottom damper turned to 70 degrees: little air, low heat, a weak smoke plume.",
+          "de": "Langsam brennende Glut mit auf 70 Grad gedrehter Deckelscheibe und Unterluftschieber: wenig Luft, geringe Wärme, eine schwache Rauchfahne."
+        },
+        "bones": {
+          "lid-vent": {
+            "angleDeg": 70
+          },
+          "ash-damper": {
+            "angleDeg": 70
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "leg-left",
+          "leg-right"
+        ],
+        "thermal": {
+          "regions": {
+            "bowl-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "lid-shell": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "legs-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "ash-catcher": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "vents-alu": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "handle-wood": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "cooking-grate": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "charcoal-bed": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "lid-vent-flue": 0.5,
+            "open-bowl-plume": 0
+          },
+          "operating": {
+            "charcoal": 0.3,
+            "lid-heat": 0.35
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "light-and-close",
+        "title": {
+          "en": "Light the fire and close the lid",
+          "de": "Feuer anzünden und Deckel schließen"
+        },
+        "description": {
+          "en": "The charcoal is lit with the lid raised, builds up over five minutes, then the lid closes and the shell heats during half an hour.",
+          "de": "Die Holzkohle wird bei angehobenem Deckel angezündet, baut sich über fünf Minuten auf, dann schließt der Deckel und die Schale heizt sich in einer halben Stunde auf."
+        },
+        "durationS": 1800,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "lit-lid-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 300,
+            "pose": "lit-lid-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 306,
+            "pose": "grilling-closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 1800,
+            "pose": "grilling-closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 1800
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 1800
+          }
+        ],
+        "phases": [
+          {
+            "id": "light",
+            "fromS": 0,
+            "toS": 300,
+            "title": {
+              "en": "Lighting, lid raised",
+              "de": "Anzünden, Deckel angehoben"
+            }
+          },
+          {
+            "id": "close",
+            "fromS": 300,
+            "toS": 306,
+            "title": {
+              "en": "Lid closes",
+              "de": "Deckel schließt"
+            }
+          },
+          {
+            "id": "grill",
+            "fromS": 306,
+            "toS": 1800,
+            "title": {
+              "en": "Grilling, lid closed",
+              "de": "Grillen, Deckel geschlossen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "ignition",
+            "title": {
+              "en": "Charcoal ignites",
+              "de": "Holzkohle zündet"
+            },
+            "target": "charcoal"
+          },
+          {
+            "t": 303,
+            "kind": "motion",
+            "title": {
+              "en": "Lid swings shut",
+              "de": "Deckel schwenkt zu"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:charcoal",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3
+              },
+              {
+                "t": 300,
+                "v": 1
+              },
+              {
+                "t": 1800,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:lid-heat",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.2
+              },
+              {
+                "t": 300,
+                "v": 0.2
+              },
+              {
+                "t": 306,
+                "v": 1
+              },
+              {
+                "t": 1800,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "lid-lift-cycle",
+        "title": {
+          "en": "Lift the lid and close it again",
+          "de": "Deckel heben und wieder schließen"
+        },
+        "description": {
+          "en": "A 20 s loop: the lid is lifted to turn the food and put back; smoke switches between the lid vent and the open bowl.",
+          "de": "Eine 20-s-Schleife: der Deckel wird zum Wenden des Grillguts angehoben und wieder aufgesetzt; der Rauch wechselt zwischen Deckelöffnung und offenem Kessel."
+        },
+        "durationS": 20,
+        "fps": 12,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "grilling-closed",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "lit-lid-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "lit-lid-open",
+            "ease": "smooth"
+          },
+          {
+            "t": 20,
+            "pose": "grilling-closed",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "leg-left",
+            "fromS": 0,
+            "toS": 20
+          },
+          {
+            "anchor": "leg-right",
+            "fromS": 0,
+            "toS": 20
+          }
+        ],
+        "phases": [
+          {
+            "id": "lift",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Lifting",
+              "de": "Anheben"
+            }
+          },
+          {
+            "id": "turn",
+            "fromS": 6,
+            "toS": 14,
+            "title": {
+              "en": "Turning the food",
+              "de": "Wenden"
+            }
+          },
+          {
+            "id": "lower",
+            "fromS": 14,
+            "toS": 20,
+            "title": {
+              "en": "Lowering",
+              "de": "Aufsetzen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 6,
+            "kind": "motion",
+            "title": {
+              "en": "Lid fully open",
+              "de": "Deckel ganz offen"
+            }
+          },
+          {
+            "t": 14,
+            "kind": "motion",
+            "title": {
+              "en": "Lid comes back",
+              "de": "Deckel kommt zurück"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 22,
+        "relativeHumidity": 0.55,
+        "windMS": 1.0,
+        "windDirectionDeg": 0,
+        "solarWM2": 700,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325,
+        "skyTempC": 8,
+        "groundTempC": 24
+      },
+      "operating": [
+        {
+          "id": "charcoal",
+          "title": {
+            "en": "Charcoal fire",
+            "de": "Holzkohlefeuer"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Cold",
+                "de": "Kalt"
+              }
+            },
+            {
+              "v": 0.3,
+              "title": {
+                "en": "Embers (2.4 kW fuel)",
+                "de": "Glut (2,4 kW Brennstoff)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Hot grilling fire (8 kW fuel)",
+                "de": "Heißes Grillfeuer (8 kW Brennstoff)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "lid-heat",
+          "title": {
+            "en": "Heat reaching the lid shell",
+            "de": "Wärme an der Deckelschale"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "None (lid off)",
+                "de": "Keine (Deckel ab)"
+              }
+            },
+            {
+              "v": 0.2,
+              "title": {
+                "en": "Lid raised",
+                "de": "Deckel angehoben"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Lid closed",
+                "de": "Deckel geschlossen"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "bowl-shell",
+          "title": {
+            "en": "Bowl shell (outside)",
+            "de": "Kesselschale (außen)"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "enamel-steel",
+          "areaM2": 0.45,
+          "characteristicLengthM": 0.585,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Enamelled steel sheet 0.8 mm",
+                "de": "Emailliertes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 1.6e-05,
+              "heatCapacityJM2K": 2826,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2826,
+          "operating": {
+            "key": "charcoal",
+            "heatW": 1800
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "lid-shell",
+          "title": {
+            "en": "Lid shell (outside)",
+            "de": "Deckelschale (außen)"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "enamel-steel",
+          "areaM2": 0.4,
+          "characteristicLengthM": 0.585,
+          "geometry": "sphere",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Enamelled steel sheet 0.8 mm",
+                "de": "Emailliertes Stahlblech 0,8 mm"
+              },
+              "kind": "metal",
+              "material": "enamel-steel",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 1.6e-05,
+              "heatCapacityJM2K": 2826,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 2826,
+          "operating": {
+            "key": "lid-heat",
+            "heatW": 1200
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "legs-steel",
+          "title": {
+            "en": "Tripod legs, ring and wheel",
+            "de": "Dreibein, Ring und Rad"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel-black",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.02,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Painted steel tube 1.5 mm",
+                "de": "Lackiertes Stahlrohr 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "steel-black",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 3e-05,
+              "heatCapacityJM2K": 5299,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5299,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "ash-catcher",
+          "title": {
+            "en": "Ash catcher pan",
+            "de": "Aschefängerschale"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-cast",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.25,
+          "geometry": "horizontal-plate-down",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "pan",
+              "title": {
+                "en": "Cast aluminium pan 2 mm",
+                "de": "Aluminiumgussschale 2 mm"
+              },
+              "kind": "metal",
+              "material": "alu-cast",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 1.3e-05,
+              "heatCapacityJM2K": 4752,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4752,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "vents-alu",
+          "title": {
+            "en": "Vent dial and air damper",
+            "de": "Lüftungsscheibe und Luftschieber"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "alu-cast",
+          "areaM2": 0.01,
+          "characteristicLengthM": 0.08,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "plate",
+              "title": {
+                "en": "Cast aluminium 3 mm",
+                "de": "Aluminiumguss 3 mm"
+              },
+              "kind": "metal",
+              "material": "alu-cast",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 1.9e-05,
+              "heatCapacityJM2K": 7128,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7128,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "handle-wood",
+          "title": {
+            "en": "Wooden handles",
+            "de": "Holzgriffe"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "wood-handle",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.08,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "wood",
+              "title": {
+                "en": "Wood 25 mm (active 10 mm)",
+                "de": "Holz 25 mm (wirksam 10 mm)"
+              },
+              "kind": "timber",
+              "material": "wood-handle",
+              "thicknessM": 0.025,
+              "resistanceM2KW": 0.166667,
+              "heatCapacityJM2K": 24593,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 24593,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "cooking-grate",
+          "title": {
+            "en": "Cooking grate",
+            "de": "Grillrost"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "chrome-steel",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.01,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "rods",
+              "title": {
+                "en": "Chrome-plated steel rods 6 mm",
+                "de": "Verchromte Stahlstäbe 6 mm"
+              },
+              "kind": "metal",
+              "material": "chrome-steel",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.00012,
+              "heatCapacityJM2K": 21195,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 21195,
+          "hidden": {
+            "en": "Inside the closed bowl: not visible from the side in any pose; its state is read numerically and in the thermal overlay of the bowl shell above it.",
+            "de": "Im geschlossenen Kessel: in keiner Pose von der Seite sichtbar; sein Zustand wird numerisch und über die Thermalansicht der darüberliegenden Kesselschale gelesen."
+          },
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "charcoal-bed",
+          "title": {
+            "en": "Glowing charcoal bed",
+            "de": "Glühende Holzkohleglut"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "charcoal",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.39,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "embers",
+              "title": {
+                "en": "Ember layer 30 mm (active 20 mm)",
+                "de": "Glutschicht 30 mm (wirksam 20 mm)"
+              },
+              "kind": "masonry",
+              "material": "charcoal",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.15,
+              "heatCapacityJM2K": 7500,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 7500,
+          "operating": {
+            "key": "charcoal",
+            "heatW": 3600
+          },
+          "hidden": {
+            "en": "Inside the closed bowl: not visible from the side in any pose; its state is read numerically and in the thermal overlay of the bowl shell above it.",
+            "de": "Im geschlossenen Kessel: in keiner Pose von der Seite sichtbar; sein Zustand wird numerisch und über die Thermalansicht der darüberliegenden Kesselschale gelesen."
+          },
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "lid-vent-flue",
+          "kind": "flue",
+          "title": {
+            "en": "Smoke and flue gas through the lid vent",
+            "de": "Rauch und Abgas durch die Deckelöffnung"
+          },
+          "anchor": "vent-top",
+          "directionDeg": 90,
+          "diameterM": 0.05,
+          "operatingKey": "charcoal",
+          "volumeFlowM3S": 0.0086,
+          "temperatureRiseK": 220,
+          "vapourKgPerKg": 0.003,
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        },
+        {
+          "id": "open-bowl-plume",
+          "kind": "vent",
+          "title": {
+            "en": "Hot air and smoke over the open bowl",
+            "de": "Heiße Luft und Rauch über dem offenen Kessel"
+          },
+          "anchor": "bowl-mouth",
+          "directionDeg": 90,
+          "diameterM": 0.4,
+          "operatingKey": "charcoal",
+          "volumeFlowM3S": 0.027,
+          "temperatureRiseK": 150,
+          "vapourKgPerKg": 0.004,
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Bed, bowl shell and lid shell are operating regions heated by the stated watts at level 1; the lid-heat key is 1 with the lid closed, 0.2 raised and 0 off. Flue and open-bowl flows are sized from the sensible heat of the 8 kW fire.",
+          "de": "Bett, Kessel- und Deckelschale sind Betriebsregionen, geheizt mit den genannten Watt bei Stufe 1; der Schlüssel lid-heat ist 1 bei geschlossenem, 0,2 bei angehobenem und 0 bei abgenommenem Deckel. Abgas- und Offenkesselströme sind aus der fühlbaren Wärme des 8-kW-Feuers bemessen."
+        },
+        {
+          "en": "Smoke particles are not modelled; the vapour share covers moisture and hydrogen of the charcoal.",
+          "de": "Rauchpartikel werden nicht modelliert; der Dampfanteil deckt Feuchte und Wasserstoff der Holzkohle."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "leg-left",
+        "leg-right"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid tripod body on two leg supports in the plane (the third leg coincides with the pair in elevation); the raised lid shifts the centre of mass by less than the leg span.",
+          "de": "Ein starrer Dreibeinkörper auf zwei Beinauflagern in der Ebene (das dritte Bein fällt in der Ansicht mit dem Paar zusammen); der angehobene Deckel verschiebt den Schwerpunkt weniger als die Beinspreizung."
+        },
+        {
+          "en": "Food load 5 kg on the grate is an authored estimate.",
+          "de": "Die Grillgutlast von 5 kg ist eine Schätzung."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "grilling-closed",
+      "defaultClip": "light-and-close",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

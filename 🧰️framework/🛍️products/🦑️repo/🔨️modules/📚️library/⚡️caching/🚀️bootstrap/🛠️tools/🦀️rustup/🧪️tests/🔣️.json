@@ -5,7 +5,8 @@
     "profile": "minimal",
     "components": [
       "rust-src",
-      "llvm-tools-preview"
+      "llvm-tools-preview",
+      "clippy"
     ],
     "targets": [
       "wasm32-unknown-unknown",
@@ -372,36 +373,55 @@
     {
       "home": "/owned/r",
       "path": "rust-src-nightly/rust-src/lib/rustlib/src/rust/library/core/src/lib.rs",
-      "accepted": true
+      "accepted": true,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "../foreign",
-      "accepted": false
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "/absolute",
-      "accepted": false
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "archive/a/../../foreign",
-      "accepted": false
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "archive/a\\b",
-      "accepted": false
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "archive/a:b",
-      "accepted": false
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
     },
     {
       "home": "/owned/r",
       "path": "archive/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": false,
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu"
+    },
+    {
+      "home": "/owned/r",
+      "toolchain": "/owned/r/toolchains/nightly-2026-07-20-x86_64-unknown-linux-gnu",
+      "path": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp/component/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accepted": true
+    },
+    {
+      "home": "/owned/r",
+      "toolchain": "/tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+      "path": "archive/component/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       "accepted": false
     }
   ],
@@ -517,6 +537,99 @@
       "inode": "401",
       "directory": false,
       "alias": false,
+      "accepted": false
+    }
+  ],
+  "generationHomes": [
+    {
+      "request": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "directory": "aaaaaaaaaaaaaaaa"
+    },
+    {
+      "request": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "directory": "bbbbbbbbbbbbbbbb"
+    }
+  ],
+  "archiveDrainMilliseconds": 10,
+  "archiveBatches": [
+    {
+      "name": "all-eight",
+      "count": 8,
+      "stop": "none",
+      "started": 8,
+      "completed": 8,
+      "peak": 2,
+      "outcome": "success"
+    },
+    {
+      "name": "first-error-drains",
+      "count": 8,
+      "stop": "error",
+      "started": 2,
+      "completed": 2,
+      "peak": 2,
+      "outcome": "primary"
+    },
+    {
+      "name": "undefined-error-drains",
+      "count": 8,
+      "stop": "undefined",
+      "started": 2,
+      "completed": 2,
+      "peak": 2,
+      "outcome": "undefined"
+    },
+    {
+      "name": "cancel-drains",
+      "count": 8,
+      "stop": "cancel",
+      "started": 2,
+      "completed": 2,
+      "peak": 2,
+      "outcome": "cancel"
+    },
+    {
+      "name": "pre-cancel-refuses",
+      "count": 8,
+      "stop": "pre-cancel",
+      "started": 0,
+      "completed": 0,
+      "peak": 0,
+      "outcome": "cancel"
+    },
+    {
+      "name": "closed-operation-bound",
+      "count": 33,
+      "stop": "over-bound",
+      "started": 0,
+      "completed": 0,
+      "peak": 0,
+      "outcome": "bound"
+    }
+  ],
+  "homeMaterialCases": [
+    {
+      "name": "absent owned roots",
+      "rustup": false,
+      "cargo": false,
+      "accepted": true
+    },
+    {
+      "name": "foreign Rustup container",
+      "rustup": true,
+      "cargo": false,
+      "accepted": false
+    },
+    {
+      "name": "foreign Cargo container",
+      "rustup": false,
+      "cargo": true,
+      "accepted": false
+    },
+    {
+      "name": "both foreign containers",
+      "rustup": true,
+      "cargo": true,
       "accepted": false
     }
   ]

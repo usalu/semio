@@ -23,7 +23,11 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
+        {
+          "externalDependencies": [
+            "vitest"
+          ]
+        }
       ],
       "cache": true,
       "options": {
@@ -40,7 +44,11 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
+        {
+          "externalDependencies": [
+            "vitest"
+          ]
+        }
       ],
       "cache": true,
       "options": {
@@ -57,7 +65,11 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
+        {
+          "externalDependencies": [
+            "vitest"
+          ]
+        }
       ],
       "cache": true,
       "options": {
@@ -79,7 +91,11 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
+        {
+          "externalDependencies": [
+            "vitest"
+          ]
+        }
       ],
       "cache": true,
       "dependsOn": [
@@ -147,7 +163,11 @@
           "tiles-prefetch"
         ],
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -208,7 +228,11 @@
         "^default",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🎭️variants/🌍️gis/**/*",
-        {"externalDependencies":["vitest"]}
+        {
+          "externalDependencies": [
+            "vitest"
+          ]
+        }
       ],
       "cache": true,
       "options": {
@@ -225,6 +249,15 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts verify physical-codecs"
+      }
+    }
+  },
+  "metadata": {
+    "semio": {
+      "artifactPackage": {
+        "kind": "typescript-artifact-package",
+        "source": "../../🟦️.ts",
+        "target": "build"
       }
     }
   }

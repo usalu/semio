@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "key",
+    "values"
+  ],
+  "properties": {
+    "code": {
+      "const": "stale"
+    },
+    "key": {
+      "const": "build.closure.source-differs"
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "expectedSha256",
+        "observedSha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "expectedSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "observedSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

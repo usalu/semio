@@ -16,7 +16,7 @@ test("native canonical program has complete schema-admitted corpus and current s
 });
 
 test("retained population reports cannot advertise incomplete validation as valid",async()=>{
- const {default:Ajv2020}=await import("ajv/dist/2020.js"),schema=await Bun.file(new URL("machine.json",import.meta.url)).json(),contract=await Bun.file(new URL("machine-terminal.json",import.meta.url)).json();
+ const {default:Ajv2020}=await import("ajv"),schema=await Bun.file(new URL("machine.json",import.meta.url)).json(),contract=await Bun.file(new URL("machine-terminal.json",import.meta.url)).json();
  const admit=new Ajv2020({strict:true,allErrors:true}).compile(schema);
  expect(contract.nativeExecution).toBe(false);
  for(const complete of [false,true])for(const valid of [false,true])expect(admit({schema:"IFC4X3_ADD2",complete,valid,results:[],diagnostics:[]})).toBe(complete||!valid);

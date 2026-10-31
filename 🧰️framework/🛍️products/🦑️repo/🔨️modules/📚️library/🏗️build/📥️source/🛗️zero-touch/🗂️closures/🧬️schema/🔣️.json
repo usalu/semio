@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Zero-Touch Closure Roster V1",
   "description": "The entries whose relative import closure must run on a checkout with no installed dependencies. A closure of mode full follows static imports, dynamic imports and require calls; mode static follows static imports only. A seam is a module that needs installed dependencies: a closure may load it through a dynamic import or require call (the edge is not followed) but never through a static import.",
   "type": "object",

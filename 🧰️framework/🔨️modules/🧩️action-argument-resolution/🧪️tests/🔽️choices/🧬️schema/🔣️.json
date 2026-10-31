@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/action-argument-resolution/choice-parity/schema.json",
+  "type": "object",
+  "required": [
+    "cases",
+    "generation",
+    "catalogTransitions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "format",
+          "options",
+          "required",
+          "value",
+          "unresolved"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "format": {
+            "enum": [
+              "text",
+              "artifactKind",
+              "surfaceApp"
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "value": {},
+          "unresolved": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "required": [
+        "before",
+        "after",
+        "text",
+        "staticChoice",
+        "staleSubmits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "staticChoice": {
+          "type": "string"
+        },
+        "staleSubmits": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "catalogTransitions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "loading",
+          "unavailable"
+        ]
+      }
+    }
+  }
+}

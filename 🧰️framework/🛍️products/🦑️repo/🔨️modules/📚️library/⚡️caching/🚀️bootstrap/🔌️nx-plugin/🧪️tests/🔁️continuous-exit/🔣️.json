@@ -1,0 +1,137 @@
+[
+  {
+    "name": "selected-failure",
+    "code": 1,
+    "selected": true,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "selected-successful-reuse",
+    "code": 0,
+    "selected": true,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "fulfilled"
+  },
+  {
+    "name": "selected-needed-failure",
+    "code": 1,
+    "selected": true,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "selected-needed-clean-exit",
+    "code": 0,
+    "selected": true,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "unneeded-dependency-failure",
+    "code": 1,
+    "selected": false,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "fulfilled"
+  },
+  {
+    "name": "unneeded-dependency-clean-exit",
+    "code": 0,
+    "selected": false,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "fulfilled"
+  },
+  {
+    "name": "needed-dependency-failure",
+    "code": 2,
+    "selected": false,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "needed-dependency-clean-exit",
+    "code": 0,
+    "selected": false,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "selected-interrupt",
+    "code": 130,
+    "selected": true,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "interrupted"
+  },
+  {
+    "name": "selected-termination",
+    "code": 143,
+    "selected": true,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "interrupted"
+  },
+  {
+    "name": "explicit-fulfilled-stop",
+    "code": 1,
+    "selected": true,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": "fulfilled",
+    "expected": "fulfilled"
+  },
+  {
+    "name": "explicit-interrupted-stop",
+    "code": 0,
+    "selected": true,
+    "needed": true,
+    "completed": false,
+    "stoppingReason": "interrupted",
+    "expected": "interrupted"
+  },
+  {
+    "name": "already-complete",
+    "code": 1,
+    "selected": true,
+    "needed": true,
+    "completed": true,
+    "stoppingReason": null,
+    "expected": "none"
+  },
+  {
+    "name": "selected-signal-null",
+    "code": null,
+    "selected": true,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  },
+  {
+    "name": "noop-expanded-selected-failure",
+    "code": 7,
+    "selected": true,
+    "needed": false,
+    "completed": false,
+    "stoppingReason": null,
+    "expected": "crashed"
+  }
+]

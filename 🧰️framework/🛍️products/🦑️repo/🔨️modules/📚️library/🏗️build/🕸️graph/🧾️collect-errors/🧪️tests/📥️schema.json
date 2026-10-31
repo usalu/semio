@@ -1,0 +1,50 @@
+[
+  {
+    "id": "valid",
+    "input": {
+      "project": "p",
+      "root": "r",
+      "phase": "project",
+      "error": "failed",
+      "cause": "cause",
+      "stackTop": []
+    },
+    "expected": true
+  },
+  {
+    "id": "missing-project",
+    "input": {
+      "root": "r",
+      "phase": "project",
+      "error": "failed",
+      "cause": "cause",
+      "stackTop": []
+    },
+    "expected": false
+  },
+  {
+    "id": "wrong-phase",
+    "input": {
+      "project": "p",
+      "root": "r",
+      "phase": "other",
+      "error": "failed",
+      "cause": "cause",
+      "stackTop": []
+    },
+    "expected": false
+  },
+  {
+    "id": "extra",
+    "input": {
+      "project": "p",
+      "root": "r",
+      "phase": "project",
+      "error": "failed",
+      "cause": "cause",
+      "stackTop": [],
+      "extra": true
+    },
+    "expected": false
+  }
+]

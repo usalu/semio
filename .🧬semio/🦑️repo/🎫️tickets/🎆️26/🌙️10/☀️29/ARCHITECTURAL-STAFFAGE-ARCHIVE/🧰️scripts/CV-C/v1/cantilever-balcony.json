@@ -1,0 +1,990 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "cantilever-balcony",
+    "category": "components",
+    "title": {
+      "en": "Cantilever Balcony",
+      "de": "Kragbalkon"
+    },
+    "summary": {
+      "en": "A 1.5 m reinforced concrete slab cantilevered from a wall with a steel railing post, carrying a moving crowd point load; the wall connection carries the full bending moment.",
+      "de": "Eine 1,5 m auskragende Stahlbetonplatte an der Wand mit Stahl-Geländerpfosten, die eine wandernde Einzellast trägt; die Wandeinspannung nimmt das volle Biegemoment auf."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "balcony",
+      "cantilever",
+      "concrete"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1: densities, self-weight and imposed loads (reinforced concrete 25 kN/m3; imposed loads per category)."
+        },
+        {
+          "id": "en-1992-1-1",
+          "citation": "EN 1992-1-1:2004 Eurocode 2, Part 1-1, Table 3.1: C30/37 secant modulus E_cm = 33 GPa."
+        },
+        {
+          "id": "en-10219",
+          "citation": "EN 10219-2:2019 Cold formed welded structural hollow sections, section properties of 50x50x4 SHS."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (density 7850 kg/m3, E 210 GPa per EN 1993-1-1)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "Strip model: one metre of balcony width. Railing post and wall stub drawn for context; the crowd point load rides a massless load-carrier bone.",
+        "de": "Streifenmodell: ein Meter Balkonbreite. Geländerpfosten und Wandstück dienen der Darstellung; die Einzellast läuft auf einem masselosen Lastträger-Knochen."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.3,
+      "widthM": 1.8,
+      "depthM": 1.0,
+      "massKg": 756.9
+    },
+    "materials": [
+      {
+        "id": "concrete",
+        "title": {
+          "en": "Reinforced concrete C30/37",
+          "de": "Stahlbeton C30/37"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 33000000000,
+        "source": "literature",
+        "reference": "en-1992-1-1"
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "slab",
+      "bones": [
+        {
+          "id": "slab",
+          "parent": null,
+          "title": {
+            "en": "Slab (rigid root at the wall)",
+            "de": "Platte (starre Wurzel an der Wand)"
+          },
+          "x": 0,
+          "y": 0.1,
+          "angleDeg": 0,
+          "lengthM": 1.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 750,
+            "comX": 0.75,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.2,
+            "secondMomentM4": 0.000666667,
+            "extremeFibreM": 0.1,
+            "material": "concrete",
+            "title": {
+              "en": "1 m strip, 200 mm slab",
+              "de": "1 m Streifen, 200 mm Platte"
+            }
+          }
+        },
+        {
+          "id": "railing",
+          "parent": "slab",
+          "title": {
+            "en": "Railing post",
+            "de": "Geländerpfosten"
+          },
+          "x": 1.5,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 1.2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6.93,
+            "comX": 0.6,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10219"
+          },
+          "section": {
+            "areaM2": 0.000736,
+            "secondMomentM4": 2.61525e-07,
+            "extremeFibreM": 0.025,
+            "material": "steel",
+            "title": {
+              "en": "SHS 50x50x4",
+              "de": "Hohlprofil 50x50x4"
+            }
+          }
+        },
+        {
+          "id": "load-carrier",
+          "parent": "slab",
+          "title": {
+            "en": "Load carrier (massless, moves the crowd load)",
+            "de": "Lastträger (masselos, bewegt die Einzellast)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 1.5
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-fix",
+        "bone": "slab",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Wall connection, fixed",
+          "de": "Wandanschluss, eingespannt"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "load-point",
+        "bone": "load-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Crowd point load",
+          "de": "Einzellast Personengruppe"
+        }
+      },
+      {
+        "id": "railing-top",
+        "bone": "railing",
+        "x": 1.2,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Railing top",
+          "de": "Geländeroberkante"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "wall-stub",
+          "bone": "slab",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": -0.3,
+          "y": -0.1,
+          "w": 0.3,
+          "h": 1.3,
+          "region": "wall-face",
+          "material": "concrete"
+        },
+        {
+          "id": "slab-body",
+          "bone": "slab",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.72,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.1,
+          "w": 1.5,
+          "h": 0.2,
+          "region": "slab-soffit",
+          "material": "concrete"
+        },
+        {
+          "id": "slab-top-line",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 1,
+          "z": 4,
+          "filled": true,
+          "tone": 0.85,
+          "kind": "rect",
+          "x": 0,
+          "y": 0.08,
+          "w": 1.5,
+          "h": 0.02,
+          "region": "slab-top",
+          "material": "concrete"
+        },
+        {
+          "id": "slab-edge",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 1,
+          "z": 4,
+          "filled": true,
+          "tone": 0.5,
+          "kind": "rect",
+          "x": 1.47,
+          "y": -0.1,
+          "w": 0.03,
+          "h": 0.2,
+          "region": "slab-edge",
+          "material": "concrete"
+        },
+        {
+          "id": "railing-post",
+          "bone": "railing",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.025,
+          "w": 1.2,
+          "h": 0.05,
+          "region": "railing-steel",
+          "material": "steel"
+        },
+        {
+          "id": "slab-hatch",
+          "bone": "slab",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0000 0.0000 L 0.1000 0.1000 M 0.0000 -0.1000 L 0.2000 0.1000 M 0.1000 -0.1000 L 0.3000 0.1000 M 0.2000 -0.1000 L 0.4000 0.1000 M 0.3000 -0.1000 L 0.5000 0.1000 M 0.4000 -0.1000 L 0.6000 0.1000 M 0.5000 -0.1000 L 0.7000 0.1000 M 0.6000 -0.1000 L 0.8000 0.1000 M 0.7000 -0.1000 L 0.9000 0.1000 M 0.8000 -0.1000 L 1.0000 0.1000 M 0.9000 -0.1000 L 1.1000 0.1000 M 1.0000 -0.1000 L 1.2000 0.1000 M 1.1000 -0.1000 L 1.3000 0.1000 M 1.2000 -0.1000 L 1.4000 0.1000 M 1.3000 -0.1000 L 1.5000 0.1000 M 1.4000 -0.1000 L 1.5000 -0.0000"
+        },
+        {
+          "id": "wall-hatch",
+          "bone": "slab",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.3000 1.1000 L -0.2000 1.2000 M -0.3000 1.0000 L -0.1000 1.2000 M -0.3000 0.9000 L 0.0000 1.2000 M -0.3000 0.8000 L 0.0000 1.1000 M -0.3000 0.7000 L 0.0000 1.0000 M -0.3000 0.6000 L 0.0000 0.9000 M -0.3000 0.5000 L 0.0000 0.8000 M -0.3000 0.4000 L 0.0000 0.7000 M -0.3000 0.3000 L 0.0000 0.6000 M -0.3000 0.2000 L 0.0000 0.5000 M -0.3000 0.1000 L 0.0000 0.4000 M -0.3000 -0.0000 L 0.0000 0.3000 M -0.3000 -0.1000 L 0.0000 0.2000 M -0.2000 -0.1000 L 0.0000 0.1000 M -0.1000 -0.1000 L 0.0000 -0.0000"
+        },
+        {
+          "id": "rebar-top",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              -0.25,
+              0.062
+            ],
+            [
+              1.46,
+              0.062
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "rebar-bottom",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              -0.02,
+              -0.062
+            ],
+            [
+              0.9,
+              -0.062
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "rebar-wall-hook",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.3,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M -0.25 0.062 L -0.25 -0.03"
+        },
+        {
+          "id": "rebar-dot-0",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.1,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-1",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.25,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-2",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.4,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-3",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.55,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-4",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.7,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-5",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.85,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-6",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 1.0,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-7",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 1.15,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-8",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 1.3,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "rebar-dot-9",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 1.45,
+          "cy": 0.062,
+          "rx": 0.007,
+          "ry": 0.007
+        },
+        {
+          "id": "slab-drip",
+          "bone": "slab",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "poly",
+          "points": [
+            [
+              1.38,
+              -0.1
+            ],
+            [
+              1.38,
+              -0.07
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "railing-base-plate",
+          "bone": "railing",
+          "role": "body",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0.095,
+          "y": -0.07,
+          "w": 0.02,
+          "h": 0.14,
+          "r": 0.003,
+          "region": "railing-steel",
+          "material": "steel"
+        },
+        {
+          "id": "railing-bolt-0",
+          "bone": "railing",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.3,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.105,
+          "cy": -0.05,
+          "rx": 0.006,
+          "ry": 0.006,
+          "region": "railing-steel",
+          "material": "steel"
+        },
+        {
+          "id": "railing-bolt-1",
+          "bone": "railing",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.3,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.105,
+          "cy": 0.05,
+          "rx": 0.006,
+          "ry": 0.006,
+          "region": "railing-steel",
+          "material": "steel"
+        },
+        {
+          "id": "railing-handrail",
+          "bone": "railing",
+          "role": "body",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 1.19,
+          "cy": 0,
+          "rx": 0.03,
+          "ry": 0.03,
+          "region": "railing-steel",
+          "material": "steel"
+        },
+        {
+          "id": "railing-mid-rail",
+          "bone": "railing",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "ellipse",
+          "cx": 0.6,
+          "cy": 0,
+          "rx": 0.02,
+          "ry": 0.02,
+          "region": "railing-steel",
+          "material": "steel"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Self-weight only",
+          "de": "Nur Eigengewicht"
+        },
+        "description": {
+          "en": "Slab and railing post under their own weight, no imposed load.",
+          "de": "Platte und Geländerpfosten unter Eigengewicht, ohne Nutzlast."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "distributed-live-load",
+        "title": {
+          "en": "Distributed imposed load",
+          "de": "Gleichmäßige Nutzlast"
+        },
+        "description": {
+          "en": "Imposed load of 4 kN/m² on the slab over the 1 m strip (4 kN/m line load).",
+          "de": "Nutzlast 4 kN/m² auf der Platte, bezogen auf den 1 m Streifen (4 kN/m Linienlast)."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "imposed-floor",
+            "kind": "imposed",
+            "title": {
+              "en": "Imposed load 4 kN/m² (balcony)",
+              "de": "Nutzlast 4 kN/m² (Balkon)"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "slab",
+              "fromM": 0,
+              "toM": 1.5,
+              "wxNPerM": 0,
+              "wyNPerM": -4000
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "point-load-tip",
+        "title": {
+          "en": "Crowd at the edge",
+          "de": "Personengruppe an der Kante"
+        },
+        "description": {
+          "en": "A concentrated 3 kN crowd load at the tip and a 1 kN/m horizontal barrier load at the railing top.",
+          "de": "Einzellast 3 kN an der Kragspitze und horizontale Geländerlast 1 kN/m an der Geländeroberkante."
+        },
+        "bones": {
+          "load-carrier": {
+            "dx": 1.5
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "crowd-tip",
+            "kind": "live",
+            "title": {
+              "en": "Crowd point load 3 kN",
+              "de": "Einzellast Personengruppe 3 kN"
+            },
+            "anchor": "load-point",
+            "fxN": 0,
+            "fyN": -3000,
+            "source": "authored-estimate"
+          },
+          {
+            "id": "barrier-line",
+            "kind": "live",
+            "title": {
+              "en": "Barrier load 1 kN/m",
+              "de": "Geländerlast 1 kN/m"
+            },
+            "anchor": "railing-top",
+            "fxN": 1000,
+            "fyN": 0,
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The imposed load rises smoothly from zero to 4 kN/m² and holds.",
+          "de": "Die Nutzlast steigt weich von null auf 4 kN/m² und hält."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "distributed-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 6,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Imposed load at full value",
+              "de": "Nutzlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:imposed-floor",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "moving-point-load",
+        "title": {
+          "en": "Moving crowd load",
+          "de": "Wandernde Einzellast"
+        },
+        "description": {
+          "en": "The 3 kN crowd load walks from the wall to the tip, so the root moment grows with its lever arm.",
+          "de": "Die 3-kN-Einzellast wandert von der Wand zur Spitze; das Einspannmoment wächst mit dem Hebelarm."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "point-load-tip",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 0
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "point-load-tip",
+            "ease": "smooth",
+            "bones": {
+              "load-carrier": {
+                "dx": 1.5
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "approach",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Approach to the tip",
+              "de": "Annäherung an die Spitze"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Load starts at the wall",
+              "de": "Last beginnt an der Wand"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "slab-top",
+          "title": {
+            "en": "Slab top surface",
+            "de": "Plattenoberseite"
+          },
+          "kind": "surface",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 1.5,
+          "characteristicLengthM": 1.5,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "slab-soffit",
+          "title": {
+            "en": "Slab soffit",
+            "de": "Plattenunterseite"
+          },
+          "kind": "surface",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 1.5,
+          "characteristicLengthM": 1.5,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "slab-edge",
+          "title": {
+            "en": "Slab edge",
+            "de": "Plattenkante"
+          },
+          "kind": "surface",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 0.2,
+          "characteristicLengthM": 0.2,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "railing-steel",
+          "title": {
+            "en": "Railing post steel",
+            "de": "Geländerpfosten Stahl"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 0.24,
+          "characteristicLengthM": 0.05,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "wall-face",
+          "title": {
+            "en": "Wall face at the connection",
+            "de": "Wandfläche am Anschluss"
+          },
+          "kind": "wall",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 1.3,
+          "characteristicLengthM": 1.3,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Passive surfaces balance solar absorption against convection and long-wave exchange with the reference environment.",
+          "de": "Passive Oberflächen gleichen Sonnenabsorption gegen Konvektion und Langwellenaustausch mit der Referenzumgebung ab."
+        },
+        {
+          "en": "Areas refer to the one-metre strip used by the structural model.",
+          "de": "Flächen beziehen sich auf den einen Meter breiten Streifen des Tragmodells."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-fix"
+      ],
+      "assumptions": [
+        {
+          "en": "Rigid root in a fixed wall connection; the slab is a 1 m strip of 200 mm concrete, E = 33 GPa, with uniform self-weight.",
+          "de": "Starre Wurzel mit eingespannter Wandverbindung; die Platte ist ein 1 m Streifen aus 200 mm Beton mit E = 33 GPa und gleichmäßigem Eigengewicht."
+        },
+        {
+          "en": "Crowd and barrier loads are per metre of balcony width; the railing is a rigid fixed post carrying the barrier load at its top.",
+          "de": "Personen- und Geländerlasten beziehen sich auf den Meter Balkonbreite; der Pfosten ist starr eingespannt und trägt die Geländerlast an der Oberkante."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "distributed-live-load",
+      "defaultClip": "loading-ramp",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

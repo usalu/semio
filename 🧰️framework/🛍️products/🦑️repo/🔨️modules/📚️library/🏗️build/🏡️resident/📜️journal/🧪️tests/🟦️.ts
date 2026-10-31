@@ -6,10 +6,13 @@ import {dirname,join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {CHANGE_JOURNAL_POLICY_V1,readChangeRecordsAfterV1,readChangeStateV1,changeHeartbeatAgeV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
 import {createChangeJournalClientV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
+import {residentWatcherV1} from "../../🧪️tests/🟦️.ts";
+import {liveChildPidsV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {observeTreeMegabytesV1,readHostTextV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {changeJournalDirectoryV1,runChangeJournalServiceV1,startChangeJournalServiceV1,ChangeJournalRunningErrorV1,type ChangeWatchFactoryV1} from "../🟦️.ts";
 
 const here=dirname(fileURLToPath(import.meta.url)),policy=CHANGE_JOURNAL_POLICY_V1;
-const binary=process.env.SEMIO_REPO_WATCH_BINARY??"";
+const binary=await residentWatcherV1();
 let sandbox="";
 beforeAll(()=>{sandbox=realpathSync(mkdtempSync(join(tmpdir(),"journal-service-")));});
 afterAll(()=>rmSync(sandbox,{recursive:true,force:true}));
@@ -17,7 +20,8 @@ let counter=0;
 const workspace=():{root:string;directory:string}=>{const root=join(sandbox,"w"+(counter++));mkdirSync(root,{recursive:true});return{root,directory:join(sandbox,"j"+counter)};};
 const exclude={rooted:[".git"],names:["node_modules"]};
 const alive=(pid:number)=>{try{process.kill(pid,0);return true;}catch{return false;}};
-const watchers=(root:string):string[]=>{try{return execFileSync("pgrep",["-f","semio-repo-watch.*"+root.replaceAll("/",".")],{encoding:"utf8"}).trim().split("\n").filter(Boolean);}catch{return[];}};
+const startJournal=(options:Parameters<typeof startChangeJournalServiceV1>[0])=>startChangeJournalServiceV1({...options,arguments:["--binary",binary]});
+const running=async(pid:number)=>process.platform==="linux"?(await readHostTextV1("/proc/"+pid+"/status"))?.match(/^State:\s+([^\s])/mu)?.[1]!=="Z"&&alive(pid):alive(pid);
 const sleep=(milliseconds:number)=>new Promise(resolve=>setTimeout(resolve,milliseconds));
 
 type Handles={emit:(rows:[string,number,string][])=>Promise<void>;lost:(scope:string,reason:string)=>void;trust:(trust:string,reason?:string)=>void};
@@ -117,25 +121,25 @@ test("a burst of one million change rows does not stop the service under its dec
  expect(run(50*1024*1024).result).toBe("memory");
 },60000);
 
-test.skipIf(!binary)("the detached process starts on demand with the real watcher, is shared by concurrent starters, stays under its memory bound, and a kill -9 ends in stale, then a new epoch that refuses the old cursor",async()=>{
- const{root}=workspace(),environment={...process.env,SEMIO_REPO_WATCH_BINARY:binary,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"};
+test("the detached process starts on demand with the real watcher, is shared by concurrent starters, stays under its memory bound, and a kill -9 ends in stale, then a new epoch that refuses the old cursor",async()=>{
+ const{root}=workspace(),environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"};
  const directory=changeJournalDirectoryV1(root,environment);
  const startedAt=performance.now();
- await Promise.all([1,2,3].map(()=>startChangeJournalServiceV1({directory,root,environment})));
+ await Promise.all([1,2,3].map(()=>startJournal({directory,root,environment})));
  const startMs=performance.now()-startedAt,state=readChangeStateV1(directory)!;
  expect(state).toMatchObject({ready:true,trust:"exact",root});
  expect(alive(state.pid)).toBe(true);
- expect(watchers(root).length).toBe(1);
- const rss=Number(execFileSync("ps",["-o","rss=","-p",String(state.pid)],{encoding:"utf8"}).trim())*1024;
- expect(rss).toBeLessThan(policy.maximumResidentBytes);
- const client=createChangeJournalClientV1({directory,root,environment,start:()=>startChangeJournalServiceV1({directory,root,environment})});
+ const watchers=liveChildPidsV1(state.pid);expect(watchers).toBeDefined();expect(watchers).toHaveLength(1);
+ const memory=await observeTreeMegabytesV1(state.pid,undefined,undefined,undefined,undefined,"resident");
+ expect(memory).not.toBeNull();expect(memory!*1024*1024).toBeLessThan(policy.maximumResidentBytes);
+ const client=createChangeJournalClientV1({directory,root,environment,start:()=>startJournal({directory,root,environment})});
  const cursor=await client.cursor() as {epoch:string;seq:number};
  expect(cursor.epoch).toBe(state.epoch);
  writeFileSync(join(root,"x.ts"),"x");
  expect(await client.since(cursor,[""])).toMatchObject({exact:true,rows:[["a",0,"x.ts"]]});
  process.kill(state.pid,"SIGKILL");
  await sleep(policy.heartbeatStaleMilliseconds+500);
- expect(watchers(root)).toEqual([]);
+ expect(await Promise.all(watchers!.map(running))).toEqual([false]);
  const after=await createChangeJournalClientV1({directory,root,environment}).since(cursor,["x.ts"]);
  expect(after).toMatchObject({exact:false,reason:"no-service"});
  const restarted=await client.since(cursor,["x.ts"]);
@@ -147,8 +151,8 @@ test.skipIf(!binary)("the detached process starts on demand with the real watche
  expect(existsSync(join(directory,"heartbeat"))).toBe(false);
 },60000);
 
-test.skipIf(!binary||process.platform!=="darwin")("a copy-on-write clone (clonefile, cp -c: how every mirror copies the checkout) is no change of its source: the source leaves no row, the destination is an addition, a real write is still a modification (FSEvents repeats the creation flags of a new file for 10-20 s, so the clone is retried until they faded)",async()=>{
- const{root}=workspace(),environment={...process.env,SEMIO_REPO_WATCH_BINARY:binary,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"},directory=changeJournalDirectoryV1(root,environment),start=()=>startChangeJournalServiceV1({directory,root,environment});
+test.skipIf(process.platform!=="darwin")("a copy-on-write clone (clonefile, cp -c: how every mirror copies the checkout) is no change of its source: the source leaves no row, the destination is an addition, a real write is still a modification (FSEvents repeats the creation flags of a new file for 10-20 s, so the clone is retried until they faded)",async()=>{
+ const{root}=workspace(),environment={...process.env,XDG_RUNTIME_DIR:sandbox,SEMIO_REPO_CHANGES:"on"},directory=changeJournalDirectoryV1(root,environment),start=()=>startJournal({directory,root,environment});
  await start();
  const client=createChangeJournalClientV1({directory,root,environment,start}),source=join(root,"source.ts"),born=await client.cursor() as {epoch:string;seq:number};
  writeFileSync(source,"x");

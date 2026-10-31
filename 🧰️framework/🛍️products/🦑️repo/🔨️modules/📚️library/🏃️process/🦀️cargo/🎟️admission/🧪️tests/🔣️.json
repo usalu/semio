@@ -221,5 +221,55 @@
       "accepted": false,
       "dispatches": 1
     }
+  ],
+  "runnerCases": [
+    {
+      "name": "prepared-runner-replaces-early-miss",
+      "incoming": false,
+      "ready": true,
+      "lint": false,
+      "accepted": true,
+      "selected": true
+    },
+    {
+      "name": "prepared-runner-retains-ready-selection",
+      "incoming": true,
+      "ready": true,
+      "lint": false,
+      "accepted": true,
+      "selected": true
+    },
+    {
+      "name": "lost-runner-never-falls-back-from-early-hit",
+      "incoming": true,
+      "ready": false,
+      "lint": false,
+      "accepted": false,
+      "selected": null
+    },
+    {
+      "name": "missing-runner-never-falls-back",
+      "incoming": false,
+      "ready": false,
+      "lint": false,
+      "accepted": false,
+      "selected": null
+    },
+    {
+      "name": "lint-does-not-select-a-test-runner",
+      "incoming": false,
+      "ready": false,
+      "lint": true,
+      "accepted": true,
+      "selected": false
+    },
+    {
+      "name": "lint-retains-neutral-policy",
+      "incoming": true,
+      "ready": true,
+      "lint": true,
+      "accepted": true,
+      "selected": true
+    }
   ]
 }

@@ -2,8 +2,10 @@
   "window_types": {
     "win-1": {
       "entry": "Patched",
-      "u_value": {
-        "value": 0.7
+      "value": {
+        "u_value": {
+          "value": 0.7
+        }
       }
     }
   }

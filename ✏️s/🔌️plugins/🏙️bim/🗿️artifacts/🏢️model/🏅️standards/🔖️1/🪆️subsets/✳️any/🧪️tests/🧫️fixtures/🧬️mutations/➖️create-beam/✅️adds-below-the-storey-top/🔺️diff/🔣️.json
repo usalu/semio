@@ -1,24 +1,26 @@
 {
   "beams": {
     "b-b": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 4.0,
-            "y": 3.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 3.0
-          }
-        }
-      },
-      "beam_type": "bt-40x60",
       "entry": "Created",
-      "name": "Beam B",
-      "phase": "New",
-      "storey": "st-ground",
-      "top_offset": -0.2
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 4,
+              "y": 3
+            },
+            "start": {
+              "x": 0,
+              "y": 3
+            }
+          }
+        },
+        "beam_type": "bt-40x60",
+        "name": "Beam B",
+        "phase": "New",
+        "storey": "st-ground",
+        "top_offset": -0.2
+      }
     }
   }
 }

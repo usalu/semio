@@ -824,7 +824,7 @@
     },
     "TypingOpen": {
       "title": "TypingOpen",
-      "description": "One window`s open typing run as the ledger persists it (window transient, never history): its buffer, the authoring tool, the idle deadline, the open transaction and its keyed net leaves.",
+      "description": "💬️ One window's open typing run: its buffer, authoring tool, idle deadline, transaction and ordered net mutations. Transaction keys are the canonical decimal positions.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -832,7 +832,7 @@
         "tool",
         "deadline",
         "transaction",
-        "entries"
+        "net"
       ],
       "properties": {
         "buffer": {
@@ -847,8 +847,8 @@
         "transaction": {
           "$ref": "#/$defs/TransactionRef"
         },
-        "entries": {
-          "$ref": "#/$defs/TransactionEntries"
+        "net": {
+          "type": "array"
         }
       }
     },

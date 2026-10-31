@@ -1,8 +1,10 @@
 {
   "materials": {
     "m-brick": {
-      "category": "Finish",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "category": "Finish"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/todos/schema.json",
   "title": "📝️ semio repo todos",
   "$comment": "🧬️ The wire contract of the 📝️todos module: a todo is a line of source rather than a stored document, so the shapes here are the todo a scan yields, the draft a store keeps, and the fixture files under 🧫️fixtures that state the trees, the lines and the scripts every implementation replays.",

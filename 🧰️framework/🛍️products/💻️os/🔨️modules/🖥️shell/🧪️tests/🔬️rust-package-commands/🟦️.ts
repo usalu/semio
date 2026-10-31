@@ -23,7 +23,7 @@ function generatedBindingsPath(root: string): string {
 const OWNED_JSON_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shell/component.json";
 const OWNED_JSON_SCHEMA_DIALECT = "http://json-schema.org/draft-07/schema#";
 async function runTypegenExportTest(root:string,outPath:string,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
-  await runAdmittedCargoCommandV1(invocation,phaseControl,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
+  await runAdmittedCargoCommandV1(invocation,phaseControl,workspace,["test",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
 }
 function readOwnedJsonSchema(root: string): { $schema?: string; $id?: string; $defs?: Record<string, unknown> } {
   const path = schemaModulePath(root, "🔣️.json");
@@ -72,7 +72,7 @@ export async function runTypegenScript(context: Readonly<{ root: string; repoRoo
 
 /** 🏃️ Runs the `PreviewGeneratedScript` command under the caller's roots and invocation. */
 export async function runPreviewGeneratedScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>): Promise<void> {
-  const targetPath=generatedBindingsPath(context.root),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),request=readRepositoryCargoLaunchV1(["--store=shared","--configuration="+mode,"--","test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_BUILD_MODE:mode});
+  const targetPath=generatedBindingsPath(context.root),mode=readBuildMode(process.env.SEMIO_BUILD_MODE),request=readRepositoryCargoLaunchV1(["--store=shared","--configuration="+mode,"--","test","--locked",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_BUILD_MODE:mode});
   await launchRepositoryCargoV1(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:typegen-preview",0),context.repoRoot,request,context.root,process.env,{maximumMilliseconds:buildBudgetMs(),output:"capture",limits:{maximumBytes:16777216,maximumLines:65536},generated:readRepositoryCargoGeneratedCapturePolicyV1({version:1,maximumBytes:1048576}),consume:async(result,issued)=>{
     if(result.status!==0||result.signal!==null){if(result.stderr)await writeOwnedCommandOutputV1(process.stderr,result.stderr,issued.control);throw new OwnedCommandFailure("shell:preview-generated",{version:1,status:result.status,signal:result.signal});}
     if(!issued.generated)throw new Error("Actual shell generated output absent");
@@ -97,6 +97,6 @@ export async function runSchemaCheckScript(context: Readonly<{ root: string; rep
     for (const problem of problems) console.error(`framework-os-shell schema-check: ${problem}`);
     throw new Error("framework-os-shell schema ownership disagreement");
   }
-  await runAdmittedCargoCommandV1(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:caller",0),context.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],context.root,process.env,buildBudgetMs());
+  await runAdmittedCargoCommandV1(context.invocation,scriptCompilerAdmissionControlV1(context.invocation,"cargo:caller",0),context.repoRoot,["test",SCHEMA_GATE_TEST_FILTER],context.root,process.env,buildBudgetMs());
   console.log(`framework-os-shell schema-check: ${declared.length} 🔣️.json \`$defs\` exports agree with the Rust registry, the rendered mirror and 🧬️schema/🟦️.ts.`);
 }

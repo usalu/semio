@@ -2,7 +2,7 @@ import "../../../🧪️testing/💾️allocator/🧪️tests/🟦️.ts";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import {applyPatch} from "fast-json-patch";
 import {Database} from "bun:sqlite";
 test("original mutex payload survives poisoned status and independent owned transfer replay",()=>{

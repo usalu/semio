@@ -1,0 +1,3884 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "diesel-generator",
+  "category": "machinery",
+  "title": {
+   "en": "Silenced container diesel generator, 400 kVA",
+   "de": "Schallgedämmtes Container-Dieselaggregat, 400 kVA"
+  },
+  "summary": {
+   "en": "A 400 kVA diesel generating set in a silenced 20 ft container in side elevation: louvred inlets, roof silencer with a stack and rain cap flap, and the radiator discharge hood with a weather flap. Exhaust jet and radiator fan air are separate emitters; the flaps open with load.",
+   "de": "Ein 400-kVA-Dieselaggregat im schallgedämmten 20-ft-Container in der Seitenansicht: Eintrittslamellen, Dachschalldämpfer mit Abgasrohr und Regenklappe sowie die Kühlerluft-Austrittshaube mit Wetterklappe. Abgasstrahl und Kühlerlüfterluft sind getrennte Emitter; die Klappen öffnen mit der Last."
+  },
+  "tags": [
+   "machine",
+   "generator",
+   "genset",
+   "diesel",
+   "container",
+   "silenced",
+   "power"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-MA",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "iso-8528",
+     "citation": "ISO 8528-1:2018 Reciprocating internal combustion engine driven alternating current generating sets, application, ratings and performance (prime power, standby power, load classes)."
+    },
+    {
+     "id": "heywood-2018",
+     "citation": "Heywood, J. B. (2018). Internal Combustion Engine Fundamentals, 2nd ed., McGraw-Hill. Ch. 4 and 12 (air flow, exhaust gas temperature, mass flow and composition of diesel engines)."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 25 Heat, Air and Moisture Control (surface emissivity and solar absorptivity of painted and bare metals, glass)."
+    },
+    {
+     "id": "class-data-note",
+     "citation": "Manufacturer class data (public data sheets of the product class, quoted as orders of magnitude from memory of the data sheet families, not retrieved for this asset); every number derived from it is tagged authored-estimate."
+    }
+   ],
+   "notes": {
+    "en": "Class data of 400 kVA prime-power container gensets (about 320 kW electrical, 360 kW engine, 7.2 t dry in a 20 ft container with roof silencer). Prime rating per ISO 8528-1; all machine numbers are authored estimates of that class. Fan blade rotation is not visible in the side elevation; the flaps are the moving parts.",
+    "de": "Klassendaten von 400-kVA-Containeraggregaten mit Dauerleistung (etwa 320 kW elektrisch, 360 kW Motor, 7,2 t trocken im 20-ft-Container mit Dachschalldämpfer). Dauerleistung nach ISO 8528-1; alle Maschinenzahlen sind Schätzungen dieser Klasse. Die Lüfterdrehung ist in der Seitenansicht nicht sichtbar; die Klappen sind die bewegten Teile."
+   }
+  },
+  "dimensions": {
+   "heightM": 3.57,
+   "widthM": 6.06,
+   "depthM": 2.44,
+   "massKg": 7200
+  },
+  "materials": [
+   {
+    "id": "container-steel",
+    "title": {
+     "en": "Painted container steel (RAL 7035 light grey)",
+     "de": "Lackierter Containerstahl (RAL 7035 lichtgrau)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.45,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "exhaust-steel",
+    "title": {
+     "en": "Oxidised exhaust steel",
+     "de": "Oxidierter Auspuffstahl"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.7,
+    "densityKgM3": 7850,
+    "conductivityWmK": 45,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "aluminium",
+    "title": {
+     "en": "Aluminium sheet",
+     "de": "Aluminiumblech"
+    },
+    "emissivity": 0.25,
+    "solarAbsorptivity": 0.4,
+    "densityKgM3": 2700,
+    "conductivityWmK": 200,
+    "specificHeatJKgK": 900,
+    "source": "literature",
+    "reference": "incropera-2011"
+   },
+   {
+    "id": "galvanised-steel",
+    "title": {
+     "en": "Galvanised steel",
+     "de": "Verzinkter Stahl"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "container",
+   "bones": [
+    {
+     "id": "container",
+     "parent": null,
+     "title": {
+      "en": "Container with engine, alternator, radiator and fuel base tank",
+      "de": "Container mit Motor, Generator, Kühler und Kraftstoff-Grundtank"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 6.06,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 6554,
+      "comX": 0,
+      "comY": 1.0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "silencer",
+     "parent": "container",
+     "title": {
+      "en": "Roof silencer",
+      "de": "Dachschalldämpfer"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 2.2,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 350,
+      "comX": -0.9,
+      "comY": 2.86,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "stack",
+     "parent": "container",
+     "title": {
+      "en": "Exhaust stack",
+      "de": "Abgasrohr"
+     },
+     "x": -1.2,
+     "y": 3.14,
+     "angleDeg": 90,
+     "lengthM": 0.33,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 90,
+      "comX": 0.18,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "cap-flap",
+     "parent": "container",
+     "title": {
+      "en": "Rain cap flap on the stack",
+      "de": "Regenklappe auf dem Abgasrohr"
+     },
+     "x": -1.05,
+     "y": 3.47,
+     "angleDeg": 180,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -100,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 6,
+      "comX": 0.15,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "outlet-hood",
+     "parent": "container",
+     "title": {
+      "en": "Radiator discharge hood",
+      "de": "Kühlerluft-Austrittshaube"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.13,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 160,
+      "comX": 2.5,
+      "comY": 2.9,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "outlet-flap",
+     "parent": "container",
+     "title": {
+      "en": "Discharge weather flap",
+      "de": "Wetterklappe des Luftaustritts"
+     },
+     "x": 3.03,
+     "y": 3.25,
+     "angleDeg": -90,
+     "lengthM": 0.63,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 80
+     },
+     "mass": {
+      "kg": 40,
+      "comX": 0.3,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-l",
+    "bone": "container",
+    "x": -2.9,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Corner casting support, left",
+     "de": "Eckbeschlag-Auflager links"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 2.0,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "contact-r",
+    "bone": "container",
+    "x": 2.9,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Corner casting support, right",
+     "de": "Eckbeschlag-Auflager rechts"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.3,
+    "footprintWidthM": 2.0,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "stack-mouth",
+    "bone": "stack",
+    "x": 0.33,
+    "y": 0.0,
+    "kind": "emitter",
+    "title": {
+     "en": "Exhaust stack mouth",
+     "de": "Abgasmündung"
+    }
+   },
+   {
+    "id": "radiator-outlet",
+    "bone": "container",
+    "x": 3.03,
+    "y": 2.9,
+    "kind": "emitter",
+    "title": {
+     "en": "Radiator air outlet",
+     "de": "Kühlerluftaustritt"
+    }
+   },
+   {
+    "id": "fuel-cog",
+    "bone": "container",
+    "x": 0.0,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Fuel base tank centre",
+     "de": "Mitte des Kraftstoff-Grundtanks"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "authored",
+    "denominator": 500,
+    "validRange": {
+     "minDenominator": 350,
+     "maxDenominator": 1000
+    },
+    "pens": {
+     "body": 0.15,
+     "detail": null,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.0
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "container-body",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.5,
+       "regions": [
+        "enclosure-walls",
+        "roof",
+        "inlet-louvres",
+        "skid-tank"
+       ],
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         2.92
+        ],
+        [
+         0.1705,
+         3.03
+        ],
+        [
+         0.09,
+         3.1105
+        ],
+        [
+         -0.02,
+         3.14
+        ],
+        [
+         -1.78,
+         3.14
+        ],
+        [
+         -1.89,
+         3.1105
+        ],
+        [
+         -1.9705,
+         3.03
+        ],
+        [
+         -2.0,
+         2.92
+        ],
+        [
+         -2.0,
+         2.81
+        ],
+        [
+         -1.9705,
+         2.7
+        ],
+        [
+         -1.89,
+         2.6195
+        ],
+        [
+         -1.78,
+         2.59
+        ],
+        [
+         -0.02,
+         2.59
+        ],
+        [
+         0.09,
+         2.6195
+        ],
+        [
+         0.1705,
+         2.7
+        ],
+        [
+         0.2,
+         2.81
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.1
+        ],
+        [
+         -0.04,
+         -0.1
+        ],
+        [
+         0.33,
+         -0.1
+        ],
+        [
+         0.33,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         2.59
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         3.03,
+         3.25
+        ],
+        [
+         2.2,
+         3.25
+        ],
+        [
+         1.9,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.63,
+         -0.1
+        ],
+        [
+         0.63,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "One closed container block, a roof silencer with its stack and rain cap flap, the discharge hood with its weather flap.",
+      "de": "Ein geschlossener Containerblock, ein Dachschalldämpfer mit Abgasrohr und Regenklappe, die Austrittshaube mit ihrer Wetterklappe."
+     },
+     "retained": {
+      "en": "The 6.06 x 2.59 m container, silencer, 0.2 m stack (0.4 mm), hood and both flaps (they rotate).",
+      "de": "Der Container von 6,06 x 2,59 m, Schalldämpfer, Abgasrohr von 0,2 m (0,4 mm), Haube und beide Klappen (sie drehen)."
+     },
+     "merged": {
+      "en": "Walls, roof, louvres and the base tank are one form.",
+      "de": "Wände, Dach, Lamellen und Grundtank sind eine Form."
+     },
+     "omitted": {
+      "en": "Door lines, louvre patterns, corner castings, clamps, lifting eyes.",
+      "de": "Türlinien, Lamellenmuster, Eckbeschläge, Schellen, Hebeösen."
+     },
+     "thinElements": {
+      "en": "The stack (0.4 mm) is at real width; the flaps are drawn 0.1 to 0.12 m thick (real about 0.05 m), the least thickening that stays above the 0.2 mm feature limit.",
+      "de": "Das Rohr (0,4 mm) ist in Realbreite; die Klappen sind 0,1 bis 0,12 m dick gezeichnet (real etwa 0,05 m), die geringste Verdickung über der Grenze von 0,2 mm."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Container mid-tone, silencer and stack dark, flaps light; pens 0.15 mm.",
+      "de": "Container mittlerer Ton, Schalldämpfer und Rohr dunkel, Klappen hell; Stifte 0,15 mm."
+     },
+     "overlays": {
+      "en": "The container form carries walls, roof, louvres and base tank (merged); every other region has its own form.",
+      "de": "Die Containerform trägt Wände, Dach, Lamellen und Grundtank (zusammengefasst); jede andere Region hat eine eigene Form."
+     }
+    }
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0.0
+        ],
+        [
+         3.0305,
+         0.0
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         -3.0294999999999996,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0.2
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         -3.0294999999999996,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         2.49
+        ],
+        [
+         3.0305,
+         2.49
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         -3.0294999999999996,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.7994999999999997,
+         0.55
+        ],
+        [
+         -1.4995,
+         0.55
+        ],
+        [
+         -1.4995,
+         2.05
+        ],
+        [
+         -2.7994999999999997,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.1995,
+         0.55
+        ],
+        [
+         1.1005,
+         0.55
+        ],
+        [
+         1.1005,
+         2.05
+        ],
+        [
+         -0.1995,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5005,
+         0.45
+        ],
+        [
+         2.2505,
+         0.45
+        ],
+        [
+         2.2505,
+         2.15
+        ],
+        [
+         1.5005,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2005,
+         2.87
+        ],
+        [
+         0.1873,
+         2.9534
+        ],
+        [
+         0.1489,
+         3.0287
+        ],
+        [
+         0.0892,
+         3.0884
+        ],
+        [
+         0.013900000000000001,
+         3.1268
+        ],
+        [
+         -0.0695,
+         3.14
+        ],
+        [
+         -1.7295,
+         3.14
+        ],
+        [
+         -1.8129,
+         3.1268
+        ],
+        [
+         -1.8882,
+         3.0884
+        ],
+        [
+         -1.9479,
+         3.0287
+        ],
+        [
+         -1.9863,
+         2.9534
+        ],
+        [
+         -1.9995,
+         2.87
+        ],
+        [
+         -1.9995,
+         2.86
+        ],
+        [
+         -1.9863,
+         2.7766
+        ],
+        [
+         -1.9479,
+         2.7013
+        ],
+        [
+         -1.8882,
+         2.6416
+        ],
+        [
+         -1.8129,
+         2.6032
+        ],
+        [
+         -1.7295,
+         2.59
+        ],
+        [
+         -0.0695,
+         2.59
+        ],
+        [
+         0.013900000000000001,
+         2.6032
+        ],
+        [
+         0.0892,
+         2.6416
+        ],
+        [
+         0.1489,
+         2.7013
+        ],
+        [
+         0.1873,
+         2.7766
+        ],
+        [
+         0.2005,
+         2.86
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.0395,
+         0.1
+        ],
+        [
+         -0.0395,
+         -0.1
+        ],
+        [
+         0.3305,
+         -0.1
+        ],
+        [
+         0.3305,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      ,
+       "penMm": 0.24
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         -0.1
+        ],
+        [
+         0.3005,
+         -0.1
+        ],
+        [
+         0.3005,
+         0.0
+        ],
+        [
+         0.0005,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel"
+      ,
+       "penMm": 0.24
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9004999999999999,
+         2.59
+        ],
+        [
+         3.0305,
+         2.59
+        ],
+        [
+         3.0305,
+         3.25
+        ],
+        [
+         2.2005000000000003,
+         3.25
+        ],
+        [
+         1.9004999999999999,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0005,
+         -0.06
+        ],
+        [
+         0.6305,
+         -0.06
+        ],
+        [
+         0.6305,
+         0.0
+        ],
+        [
+         0.0005,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.3505000000000003,
+         0.45
+        ],
+        [
+         2.8505000000000003,
+         0.45
+        ],
+        [
+         2.8505000000000003,
+         2.15
+        ],
+        [
+         2.3505000000000003,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.5995000000000001,
+         2.59
+        ],
+        [
+         -1.4795,
+         2.59
+        ],
+        [
+         -1.4795,
+         3.14
+        ],
+        [
+         -1.5995000000000001,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.4995,
+         2.59
+        ],
+        [
+         -0.3795,
+         2.59
+        ],
+        [
+         -0.3795,
+         3.14
+        ],
+        [
+         -0.4995,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.0294999999999996,
+         0.0
+        ],
+        [
+         -2.7794999999999996,
+         0.0
+        ],
+        [
+         -2.7794999999999996,
+         0.2
+        ],
+        [
+         -3.0294999999999996,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-l",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.7805,
+         0.0
+        ],
+        [
+         3.0305,
+         0.0
+        ],
+        [
+         3.0305,
+         0.2
+        ],
+        [
+         2.7805,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-r",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Base frame, wall, roof band, two inlet louvre fields, a door outline, silencer, stack with rain cap, hood with flap.",
+      "de": "Grundrahmen, Wand, Dachband, zwei Eintrittslamellenfelder, ein Türumriss, Schalldämpfer, Abgasrohr mit Regenklappe, Haube mit Klappe."
+     },
+     "retained": {
+      "en": "The louvre fields and the door outline; flaps at 0.07 and 0.06 m (0.35 and 0.3 mm).",
+      "de": "Die Lamellenfelder und der Türumriss; Klappen mit 0,07 und 0,06 m (0,35 und 0,3 mm)."
+     },
+     "merged": {
+      "en": "Corner castings and clamps are not drawn separately.",
+      "de": "Eckbeschläge und Schellen sind nicht einzeln gezeichnet."
+     },
+     "omitted": {
+      "en": "Clamps, castings, handles, lifting eyes, louvre blades.",
+      "de": "Schellen, Beschläge, Griffe, Hebeösen, Lamellenblätter."
+     },
+     "thinElements": {
+      "en": "Flaps are 0.3 to 0.35 mm at about real thickness.",
+      "de": "Klappen sind 0,3 bis 0,35 mm in etwa Realdicke."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Wall mid-tone, louvres dark, roof band and base darker.",
+      "de": "Wand mittlerer Ton, Lamellen dunkel, Dachband und Sockel dunkler."
+     },
+     "overlays": {
+      "en": "Every region has its own form.",
+      "de": "Jede Region hat eine eigene Form."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [
+     {
+      "id": "louvre",
+      "title": {
+       "en": "Louvre blades",
+       "de": "Lamellenblätter"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 0.5,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         -3.03,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.2
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      ,
+       "penMm": 0.306
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "roof",
+       "material": "container-steel"
+      ,
+       "penMm": 0.306
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.8,
+         0.55
+        ],
+        [
+         -1.5,
+         0.55
+        ],
+        [
+         -1.5,
+         2.05
+        ],
+        [
+         -2.8,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.2,
+         0.55
+        ],
+        [
+         1.1,
+         0.55
+        ],
+        [
+         1.1,
+         2.05
+        ],
+        [
+         -0.2,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         0.45
+        ],
+        [
+         2.25,
+         0.45
+        ],
+        [
+         2.25,
+         2.15
+        ],
+        [
+         1.5,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         2.87
+        ],
+        [
+         0.1868,
+         2.9534
+        ],
+        [
+         0.1484,
+         3.0287
+        ],
+        [
+         0.0887,
+         3.0884
+        ],
+        [
+         0.0134,
+         3.1268
+        ],
+        [
+         -0.07,
+         3.14
+        ],
+        [
+         -1.73,
+         3.14
+        ],
+        [
+         -1.8134,
+         3.1268
+        ],
+        [
+         -1.8887,
+         3.0884
+        ],
+        [
+         -1.9484,
+         3.0287
+        ],
+        [
+         -1.9868,
+         2.9534
+        ],
+        [
+         -2.0,
+         2.87
+        ],
+        [
+         -2.0,
+         2.86
+        ],
+        [
+         -1.9868,
+         2.7766
+        ],
+        [
+         -1.9484,
+         2.7013
+        ],
+        [
+         -1.8887,
+         2.6416
+        ],
+        [
+         -1.8134,
+         2.6032
+        ],
+        [
+         -1.73,
+         2.59
+        ],
+        [
+         -0.07,
+         2.59
+        ],
+        [
+         0.0134,
+         2.6032
+        ],
+        [
+         0.0887,
+         2.6416
+        ],
+        [
+         0.1484,
+         2.7013
+        ],
+        [
+         0.1868,
+         2.7766
+        ],
+        [
+         0.2,
+         2.86
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.1
+        ],
+        [
+         -0.04,
+         -0.1
+        ],
+        [
+         0.33,
+         -0.1
+        ],
+        [
+         0.33,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      ,
+       "penMm": 0.293
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel"
+      ,
+       "penMm": 0.293
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         2.59
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         3.03,
+         3.25
+        ],
+        [
+         2.2,
+         3.25
+        ],
+        [
+         1.9,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      ,
+       "penMm": 0.362
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.35,
+         0.45
+        ],
+        [
+         2.85,
+         0.45
+        ],
+        [
+         2.85,
+         2.15
+        ],
+        [
+         2.35,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -1.6,
+         2.59
+        ],
+        [
+         -1.48,
+         2.59
+        ],
+        [
+         -1.48,
+         3.14
+        ],
+        [
+         -1.6,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.5,
+         2.59
+        ],
+        [
+         -0.38,
+         2.59
+        ],
+        [
+         -0.38,
+         3.14
+        ],
+        [
+         -0.5,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-clamp-2",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.0
+        ],
+        [
+         -2.78,
+         0.0
+        ],
+        [
+         -2.78,
+         0.2
+        ],
+        [
+         -3.03,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-l",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.78,
+         0.0
+        ],
+        [
+         3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         2.78,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "corner-casting-r",
+       "bone": "container",
+       "role": "detail",
+       "z": 1.95,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "As 1:200 with a second door, silencer clamps, corner castings and louvre blade hatching.",
+      "de": "Wie 1:200 mit zweiter Tür, Schalldämpferschellen, Eckbeschlägen und Lamellenschraffur."
+     },
+     "retained": {
+      "en": "Both doors, clamps, castings.",
+      "de": "Beide Türen, Schellen, Beschläge."
+     },
+     "merged": {
+      "en": "Louvre blades are a hatch at 0.5 mm spacing (real 0.05 m pitch).",
+      "de": "Lamellenblätter sind eine Schraffur mit 0,5 mm Abstand (real 0,05 m Teilung)."
+     },
+     "omitted": {
+      "en": "Handles, lifting eyes.",
+      "de": "Griffe, Hebeösen."
+     },
+     "thinElements": {
+      "en": "Flaps 0.06 and 0.07 m (0.6 and 0.7 mm).",
+      "de": "Klappen 0,06 und 0,07 m (0,6 und 0,7 mm)."
+     },
+     "hatching": {
+      "en": "Louvre hatch only.",
+      "de": "Nur die Lamellenschraffur."
+     },
+     "styles": {
+      "en": "As 1:200, detail pen 0.18 mm.",
+      "de": "Wie 1:200, Detailstift 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; castings carry the skid-tank region.",
+      "de": "Wie 1:200; Beschläge tragen die Grundtank-Region."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [
+     {
+      "id": "louvre",
+      "title": {
+       "en": "Louvre blades",
+       "de": "Lamellenblätter"
+      },
+      "pattern": "lines",
+      "angleDeg": 0,
+      "spacingMm": 1.0,
+      "penMm": 0.13
+     }
+    ],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.0
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         -3.03,
+         0.2
+        ]
+       ],
+       "closed": true,
+       "id": "skid-tank",
+       "bone": "container",
+       "role": "body",
+       "z": 1.9,
+       "filled": true,
+       "tone": 0.3,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         0.2
+        ],
+        [
+         3.03,
+         0.2
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "wall",
+       "bone": "container",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.55,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.49
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         -3.03,
+         2.59
+        ]
+       ],
+       "closed": true,
+       "id": "roof-band",
+       "bone": "container",
+       "role": "body",
+       "z": 2.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.8,
+         0.55
+        ],
+        [
+         -1.5,
+         0.55
+        ],
+        [
+         -1.5,
+         2.05
+        ],
+        [
+         -2.8,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-1",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.2,
+         0.55
+        ],
+        [
+         1.1,
+         0.55
+        ],
+        [
+         1.1,
+         2.05
+        ],
+        [
+         -0.2,
+         2.05
+        ]
+       ],
+       "closed": true,
+       "id": "inlet-louvre-2",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.25,
+       "region": "inlet-louvres",
+       "material": "aluminium",
+       "hatch": "louvre"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.5,
+         0.45
+        ],
+        [
+         2.25,
+         0.45
+        ],
+        [
+         2.25,
+         2.15
+        ],
+        [
+         1.5,
+         2.15
+        ]
+       ],
+       "closed": true,
+       "id": "door-line",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.2,
+       "filled": false,
+       "tone": 0.5,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.2,
+         2.87
+        ],
+        [
+         0.1868,
+         2.9534
+        ],
+        [
+         0.1484,
+         3.0287
+        ],
+        [
+         0.0887,
+         3.0884
+        ],
+        [
+         0.0134,
+         3.1268
+        ],
+        [
+         -0.07,
+         3.14
+        ],
+        [
+         -1.73,
+         3.14
+        ],
+        [
+         -1.8134,
+         3.1268
+        ],
+        [
+         -1.8887,
+         3.0884
+        ],
+        [
+         -1.9484,
+         3.0287
+        ],
+        [
+         -1.9868,
+         2.9534
+        ],
+        [
+         -2.0,
+         2.87
+        ],
+        [
+         -2.0,
+         2.86
+        ],
+        [
+         -1.9868,
+         2.7766
+        ],
+        [
+         -1.9484,
+         2.7013
+        ],
+        [
+         -1.8887,
+         2.6416
+        ],
+        [
+         -1.8134,
+         2.6032
+        ],
+        [
+         -1.73,
+         2.59
+        ],
+        [
+         -0.07,
+         2.59
+        ],
+        [
+         0.0134,
+         2.6032
+        ],
+        [
+         0.0887,
+         2.6416
+        ],
+        [
+         0.1484,
+         2.7013
+        ],
+        [
+         0.1868,
+         2.7766
+        ],
+        [
+         0.2,
+         2.86
+        ]
+       ],
+       "closed": true,
+       "id": "silencer",
+       "bone": "silencer",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.35,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.04,
+         0.1
+        ],
+        [
+         -0.04,
+         -0.1
+        ],
+        [
+         0.33,
+         -0.1
+        ],
+        [
+         0.33,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "exhaust-stack",
+       "bone": "stack",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.2,
+       "region": "exhaust-stack",
+       "material": "exhaust-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.1
+        ],
+        [
+         0.3,
+         -0.1
+        ],
+        [
+         0.3,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "rain-cap",
+       "bone": "cap-flap",
+       "role": "body",
+       "z": 2.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rain-cap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.9,
+         2.59
+        ],
+        [
+         3.03,
+         2.59
+        ],
+        [
+         3.03,
+         3.25
+        ],
+        [
+         2.2,
+         3.25
+        ],
+        [
+         1.9,
+         2.95
+        ]
+       ],
+       "closed": true,
+       "id": "discharge-hood",
+       "bone": "outlet-hood",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.4,
+       "region": "discharge-hood",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         -0.06
+        ],
+        [
+         0.63,
+         -0.06
+        ],
+        [
+         0.63,
+         0.0
+        ],
+        [
+         0.0,
+         0.0
+        ]
+       ],
+       "closed": true,
+       "id": "outlet-flap",
+       "bone": "outlet-flap",
+       "role": "body",
+       "z": 2.6,
+       "filled": true,
+       "tone": 0.3,
+       "region": "outlet-flap",
+       "material": "galvanised-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.55,
+         1.2
+        ],
+        [
+         1.61,
+         1.2
+        ],
+        [
+         1.61,
+         1.5
+        ],
+        [
+         1.55,
+         1.5
+        ]
+       ],
+       "closed": true,
+       "id": "door-handle",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.2,
+       "region": "enclosure-walls",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -2.9,
+         0.05
+        ],
+        [
+         -2.5,
+         0.05
+        ],
+        [
+         -2.5,
+         0.15
+        ],
+        [
+         -2.9,
+         0.15
+        ]
+       ],
+       "closed": true,
+       "id": "fuel-fill",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.2,
+       "region": "skid-tank",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         2.5,
+         2.59
+        ],
+        [
+         2.8,
+         2.59
+        ],
+        [
+         2.8,
+         2.66
+        ],
+        [
+         2.5,
+         2.66
+        ]
+       ],
+       "closed": true,
+       "id": "lifting-eye",
+       "bone": "container",
+       "role": "detail",
+       "z": 2.3,
+       "filled": true,
+       "tone": 0.2,
+       "region": "roof",
+       "material": "container-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         2.59
+        ],
+        [
+         0.08,
+         2.59
+        ],
+        [
+         0.08,
+         3.14
+        ],
+        [
+         0.0,
+         3.14
+        ]
+       ],
+       "closed": true,
+       "id": "silencer-flange",
+       "bone": "silencer",
+       "role": "detail",
+       "z": 2.55,
+       "filled": true,
+       "tone": 0.2,
+       "region": "silencer",
+       "material": "exhaust-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "All 1:100 parts plus door handle, fuel filler, lifting eye and silencer flange.",
+      "de": "Alle 1:100-Teile plus Türgriff, Tankstutzen, Hebeöse und Schalldämpferflansch."
+     },
+     "retained": {
+      "en": "Louvre blades at the real 0.05 m pitch (1 mm).",
+      "de": "Lamellenblätter in der realen Teilung von 0,05 m (1 mm)."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Corrugation of the walls, hinges.",
+      "de": "Wellung der Wände, Scharniere."
+     },
+     "thinElements": {
+      "en": "Handle 0.06 m (1.2 mm).",
+      "de": "Griff 0,06 m (1,2 mm)."
+     },
+     "hatching": {
+      "en": "Louvre hatch at 1 mm spacing.",
+      "de": "Lamellenschraffur mit 1 mm Abstand."
+     },
+     "styles": {
+      "en": "Heavier pens 0.35 / 0.25 mm.",
+      "de": "Stärkere Stifte 0,35 / 0,25 mm."
+     },
+     "overlays": {
+      "en": "As 1:100.",
+      "de": "Wie 1:100."
+     }
+    }
+   }
+  },
+  "symbols": [],
+  "poses": [
+   {
+    "id": "off",
+    "title": {
+     "en": "Standby, engine off",
+     "de": "Bereitschaft, Motor aus"
+    },
+    "description": {
+     "en": "Flaps closed, engine and radiator fan stopped, everything at ambient.",
+     "de": "Klappen geschlossen, Motor und Kühlerlüfter stehen, alles auf Umgebungstemperatur."
+    },
+    "bones": {
+     "cap-flap": {
+      "angleDeg": 0
+     },
+     "outlet-flap": {
+      "angleDeg": 0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-l",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0,
+      "cooling-fan": 0
+     },
+     "regions": {
+      "enclosure-walls": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "inlet-louvres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "skid-tank": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 30
+       }
+      },
+      "silencer": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "rain-cap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "discharge-hood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "outlet-flap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 0,
+      "radiator-air": 0
+     }
+    },
+    "loads": [
+     {
+      "id": "fuel",
+      "kind": "equipment",
+      "title": {
+       "en": "Diesel in the base tank (500 l, 420 kg)",
+       "de": "Diesel im Grundtank (500 l, 420 kg)"
+      },
+      "anchor": "fuel-cog",
+      "fxN": 0,
+      "fyN": -4118.8,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "idle",
+    "title": {
+     "en": "Idling without load",
+     "de": "Leerlauf ohne Last"
+    },
+    "description": {
+     "en": "Engine at idle for warm-up: rain cap lifted a little, discharge flap pushed open by the low airflow.",
+     "de": "Motor im Leerlauf zum Warmlaufen: Regenklappe leicht gehoben, Austrittsklappe vom geringen Luftstrom geöffnet."
+    },
+    "bones": {
+     "cap-flap": {
+      "angleDeg": -35
+     },
+     "outlet-flap": {
+      "angleDeg": 25
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-l",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.1,
+      "cooling-fan": 0.5
+     },
+     "regions": {
+      "enclosure-walls": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "inlet-louvres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "skid-tank": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 30
+       }
+      },
+      "silencer": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "rain-cap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "discharge-hood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "outlet-flap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "fuel",
+      "kind": "equipment",
+      "title": {
+       "en": "Diesel in the base tank (500 l, 420 kg)",
+       "de": "Diesel im Grundtank (500 l, 420 kg)"
+      },
+      "anchor": "fuel-cog",
+      "fxN": 0,
+      "fyN": -4118.8,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "half-load",
+    "title": {
+     "en": "Half load",
+     "de": "Halblast"
+    },
+    "description": {
+     "en": "Half of the prime power, radiator fan at low speed.",
+     "de": "Halbe Dauerleistung, Kühlerlüfter mit niedriger Drehzahl."
+    },
+    "bones": {
+     "cap-flap": {
+      "angleDeg": -70
+     },
+     "outlet-flap": {
+      "angleDeg": 55
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-l",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.5,
+      "cooling-fan": 0.5
+     },
+     "regions": {
+      "enclosure-walls": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "inlet-louvres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "skid-tank": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 30
+       }
+      },
+      "silencer": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "rain-cap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "discharge-hood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "outlet-flap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "fuel",
+      "kind": "equipment",
+      "title": {
+       "en": "Diesel in the base tank (500 l, 420 kg)",
+       "de": "Diesel im Grundtank (500 l, 420 kg)"
+      },
+      "anchor": "fuel-cog",
+      "fxN": 0,
+      "fyN": -4118.8,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "rated-load",
+    "title": {
+     "en": "Prime power",
+     "de": "Dauerleistung"
+    },
+    "description": {
+     "en": "Full prime power, rain cap fully open and the discharge flap blown wide open by 9 m3/s of radiator air.",
+     "de": "Volle Dauerleistung, Regenklappe ganz offen und Austrittsklappe von 9 m3/s Kühlerluft weit aufgeblasen."
+    },
+    "bones": {
+     "cap-flap": {
+      "angleDeg": -90
+     },
+     "outlet-flap": {
+      "angleDeg": 80
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-l",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 1,
+      "cooling-fan": 1
+     },
+     "regions": {
+      "enclosure-walls": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "inlet-louvres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "skid-tank": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 30
+       }
+      },
+      "silencer": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "rain-cap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "discharge-hood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "outlet-flap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "fuel",
+      "kind": "equipment",
+      "title": {
+       "en": "Diesel in the base tank (500 l, 420 kg)",
+       "de": "Diesel im Grundtank (500 l, 420 kg)"
+      },
+      "anchor": "fuel-cog",
+      "fxN": 0,
+      "fyN": -4118.8,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "loading-up",
+    "title": {
+     "en": "Load stepping up",
+     "de": "Laststufe steigt"
+    },
+    "description": {
+     "en": "Key pose of the start sequence between idle and half load.",
+     "de": "Schlüsselpose der Anlauffolge zwischen Leerlauf und Halblast."
+    },
+    "key": true,
+    "bones": {
+     "cap-flap": {
+      "angleDeg": -55
+     },
+     "outlet-flap": {
+      "angleDeg": 40
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-l",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "engine-load": 0.3,
+      "cooling-fan": 0.5
+     },
+     "regions": {
+      "enclosure-walls": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "roof": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "inlet-louvres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.4
+      },
+      "skid-tank": {
+       "exposedFraction": 0.8,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.05,
+        "tempC": 30
+       }
+      },
+      "silencer": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "exhaust-stack": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "rain-cap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "discharge-hood": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.8
+      },
+      "outlet-flap": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      }
+     },
+     "emitters": {
+      "exhaust-stack-jet": 1,
+      "radiator-air": 1
+     }
+    },
+    "loads": [
+     {
+      "id": "fuel",
+      "kind": "equipment",
+      "title": {
+       "en": "Diesel in the base tank (500 l, 420 kg)",
+       "de": "Diesel im Grundtank (500 l, 420 kg)"
+      },
+      "anchor": "fuel-cog",
+      "fxN": 0,
+      "fyN": -4118.8,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "load-cycle",
+    "title": {
+     "en": "Load cycling between half and prime",
+     "de": "Lastwechsel zwischen Halblast und Dauerleistung"
+    },
+    "description": {
+     "en": "A 12 s loop: the load rises from half to prime power and back as the building demand cycles; flaps and fan follow, exhaust and radiator air keep flowing.",
+     "de": "Eine Schleife von 12 s: Die Last steigt von Halblast auf Dauerleistung und zurück, wie der Gebäudebedarf wechselt; Klappen und Lüfter folgen, Abgas und Kühlerluft strömen weiter."
+    },
+    "durationS": 12,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "half-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 4,
+      "pose": "rated-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 8,
+      "pose": "rated-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 12,
+      "pose": "half-load",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-l",
+      "fromS": 0,
+      "toS": 12
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 12
+     }
+    ],
+    "phases": [
+     {
+      "id": "up",
+      "fromS": 0,
+      "toS": 4,
+      "title": {
+       "en": "Load rising",
+       "de": "Last steigt"
+      }
+     },
+     {
+      "id": "hold",
+      "fromS": 4,
+      "toS": 8,
+      "title": {
+       "en": "Prime power",
+       "de": "Dauerleistung"
+      }
+     },
+     {
+      "id": "down",
+      "fromS": 8,
+      "toS": 12,
+      "title": {
+       "en": "Load falling",
+       "de": "Last fällt"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 0,
+      "kind": "operating",
+      "title": {
+       "en": "Running at half load",
+       "de": "Betrieb mit Halblast"
+      },
+      "target": "engine-load"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 12,
+        "v": 0.5
+       }
+      ]
+     },
+     {
+      "target": "operating:cooling-fan",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0.5
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 12,
+        "v": 0.5
+       }
+      ]
+     },
+     {
+      "target": "emitter:exhaust-stack-jet",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "emitter:radiator-air",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "start-run-stop",
+    "title": {
+     "en": "Start, load step and shutdown",
+     "de": "Anlassen, Laststufe und Abstellen"
+    },
+    "description": {
+     "en": "A 26 s sequence: key on at 1 s, warm-up idle, a step to prime power at 8 s, hold, unload and shut down at 24 s while the flaps fall shut.",
+     "de": "Eine Folge von 26 s: Zündung bei 1 s, Warmlauf im Leerlauf, Sprung auf Dauerleistung bei 8 s, Halten, Entlasten und Abstellen bei 24 s, während die Klappen zufallen."
+    },
+    "durationS": 26,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 1.5,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 3,
+      "pose": "idle",
+      "ease": "smooth"
+     },
+     {
+      "t": 7,
+      "pose": "idle",
+      "ease": "smooth"
+     },
+     {
+      "t": 9,
+      "pose": "loading-up",
+      "ease": "smooth"
+     },
+     {
+      "t": 11,
+      "pose": "rated-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 20,
+      "pose": "rated-load",
+      "ease": "smooth"
+     },
+     {
+      "t": 23,
+      "pose": "idle",
+      "ease": "smooth"
+     },
+     {
+      "t": 25,
+      "pose": "off",
+      "ease": "smooth"
+     },
+     {
+      "t": 26,
+      "pose": "off",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-l",
+      "fromS": 0,
+      "toS": 26
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 26
+     }
+    ],
+    "phases": [
+     {
+      "id": "crank",
+      "fromS": 0,
+      "toS": 3,
+      "title": {
+       "en": "Cranking and run-up",
+       "de": "Anlassen und Hochlauf"
+      }
+     },
+     {
+      "id": "warm",
+      "fromS": 3,
+      "toS": 8,
+      "title": {
+       "en": "Warm-up at idle",
+       "de": "Warmlauf im Leerlauf"
+      }
+     },
+     {
+      "id": "load",
+      "fromS": 8,
+      "toS": 22,
+      "title": {
+       "en": "Loaded",
+       "de": "Unter Last"
+      }
+     },
+     {
+      "id": "stop",
+      "fromS": 22,
+      "toS": 26,
+      "title": {
+       "en": "Unloading and stopping",
+       "de": "Entlasten und Abstellen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.0,
+      "kind": "ignition",
+      "title": {
+       "en": "Engine starts",
+       "de": "Motor startet"
+      },
+      "target": "exhaust-stack-jet"
+     },
+     {
+      "t": 8.0,
+      "kind": "operating",
+      "title": {
+       "en": "Load step to prime power",
+       "de": "Laststufe auf Dauerleistung"
+      },
+      "target": "engine-load"
+     },
+     {
+      "t": 24.0,
+      "kind": "shutdown",
+      "title": {
+       "en": "Engine stops",
+       "de": "Motor stoppt"
+      },
+      "target": "exhaust-stack-jet"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:engine-load",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 0
+       },
+       {
+        "t": 1.5,
+        "v": 0.1
+       },
+       {
+        "t": 7,
+        "v": 0.1
+       },
+       {
+        "t": 11,
+        "v": 1
+       },
+       {
+        "t": 20,
+        "v": 1
+       },
+       {
+        "t": 23,
+        "v": 0.1
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:cooling-fan",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0.5
+       },
+       {
+        "t": 8,
+        "v": 0.5
+       },
+       {
+        "t": 11,
+        "v": 1
+       },
+       {
+        "t": 20,
+        "v": 1
+       },
+       {
+        "t": 23,
+        "v": 0.5
+       },
+       {
+        "t": 26,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:exhaust-stack-jet",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 1
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:radiator-air",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.5,
+        "v": 1
+       },
+       {
+        "t": 24.5,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 30,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "engine-load",
+     "title": {
+      "en": "Engine load",
+      "de": "Motorlast"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Engine off",
+        "de": "Motor aus"
+       }
+      },
+      {
+       "v": 0.1,
+       "title": {
+        "en": "Idle, no load",
+        "de": "Leerlauf, ohne Last"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Half load",
+        "de": "Halblast"
+       }
+      },
+      {
+       "v": 0.75,
+       "title": {
+        "en": "Three quarter load",
+        "de": "Dreiviertellast"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Prime power",
+        "de": "Dauerleistung (Prime)"
+       }
+      }
+     ]
+    },
+    {
+     "id": "cooling-fan",
+     "title": {
+      "en": "Radiator fan",
+      "de": "Kühlerlüfter"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Stopped",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Low speed",
+        "de": "Niedrige Drehzahl"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Full speed",
+        "de": "Volle Drehzahl"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "enclosure-walls",
+     "title": {
+      "en": "Acoustic enclosure walls and doors",
+      "de": "Schallschutzwände und Türen"
+     },
+     "kind": "wall",
+     "model": "operating",
+     "material": "container-steel",
+     "areaM2": 29,
+     "characteristicLengthM": 2.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "wool",
+       "title": {
+        "en": "Mineral wool 50 mm (inside)",
+        "de": "Mineralwolle 50 mm (innen)"
+       },
+       "kind": "insulation",
+       "material": "container-steel",
+       "thicknessM": 0.05,
+       "resistanceM2KW": 1.25,
+       "heatCapacityJM2K": 4000,
+       "source": "literature",
+       "reference": "ashrae-2021"
+      },
+      {
+       "id": "skin",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "container-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 800
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "roof",
+     "title": {
+      "en": "Container roof",
+      "de": "Containerdach"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "container-steel",
+     "areaM2": 14,
+     "characteristicLengthM": 2.4,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 1.0,
+     "layers": [
+      {
+       "id": "sheet",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "container-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "inlet-louvres",
+     "title": {
+      "en": "Combustion and cooling air inlet louvres",
+      "de": "Eintrittslamellen für Verbrennungs- und Kühlluft"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "aluminium",
+     "areaM2": 4.2,
+     "characteristicLengthM": 1.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "alu",
+       "title": {
+        "en": "Aluminium louvre 2 mm",
+        "de": "Aluminiumlamelle 2 mm"
+       },
+       "kind": "metal",
+       "material": "aluminium",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 4860,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 4860,
+     "source": "authored-estimate",
+     "reference": "incropera-2011"
+    },
+    {
+     "id": "skid-tank",
+     "title": {
+      "en": "Base frame and fuel base tank",
+      "de": "Grundrahmen und Kraftstoff-Grundtank"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "container-steel",
+     "areaM2": 12,
+     "characteristicLengthM": 1.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "Steel plate 5 mm",
+        "de": "Stahlblech 5 mm"
+       },
+       "kind": "metal",
+       "material": "container-steel",
+       "thicknessM": 0.005,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 18055,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 200000,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "silencer",
+     "title": {
+      "en": "Roof silencer casing (lagged)",
+      "de": "Dachschalldämpfer (gedämmt)"
+     },
+     "kind": "exhaust",
+     "model": "operating",
+     "material": "exhaust-steel",
+     "areaM2": 3.0,
+     "characteristicLengthM": 0.55,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "shell",
+       "title": {
+        "en": "Steel plate 3 mm",
+        "de": "Stahlblech 3 mm"
+       },
+       "kind": "metal",
+       "material": "exhaust-steel",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 10833,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 3000,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 3000
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "exhaust-stack",
+     "title": {
+      "en": "Exhaust stack pipe",
+      "de": "Abgasrohr"
+     },
+     "kind": "exhaust",
+     "model": "operating",
+     "material": "exhaust-steel",
+     "areaM2": 0.3,
+     "characteristicLengthM": 0.2,
+     "geometry": "cylinder",
+     "skyViewFactor": 1.0,
+     "layers": [
+      {
+       "id": "pipe",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "exhaust-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 3600,
+     "operating": {
+      "key": "engine-load",
+      "heatW": 1200
+     },
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "rain-cap",
+     "title": {
+      "en": "Stack rain cap flap",
+      "de": "Regenklappe des Abgasrohrs"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 0.1,
+     "characteristicLengthM": 0.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 1.0,
+     "layers": [
+      {
+       "id": "flap",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "discharge-hood",
+     "title": {
+      "en": "Radiator discharge hood",
+      "de": "Kühlerluft-Austrittshaube"
+     },
+     "kind": "surface",
+     "model": "operating",
+     "material": "container-steel",
+     "areaM2": 4,
+     "characteristicLengthM": 1.1,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.7,
+     "layers": [
+      {
+       "id": "hood",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "container-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "operating": {
+      "key": "cooling-fan",
+      "heatW": 2000
+     },
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "outlet-flap",
+     "title": {
+      "en": "Discharge weather flap",
+      "de": "Wetterklappe des Luftaustritts"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "galvanised-steel",
+     "areaM2": 0.7,
+     "characteristicLengthM": 0.63,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.6,
+     "layers": [
+      {
+       "id": "flap",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "galvanised-steel",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "exhaust-stack-jet",
+     "kind": "exhaust",
+     "title": {
+      "en": "Exhaust jet of the stack",
+      "de": "Abgasstrahl des Abgasrohrs"
+     },
+     "anchor": "stack-mouth",
+     "directionDeg": 90,
+     "diameterM": 0.2,
+     "operatingKey": "engine-load",
+     "volumeFlowM3S": 1.66,
+     "temperatureRiseK": 450,
+     "vapourKgPerKg": 0.04,
+     "source": "authored-estimate",
+     "reference": "heywood-2018"
+    },
+    {
+     "id": "radiator-air",
+     "kind": "fan",
+     "title": {
+      "en": "Radiator fan air leaving through the discharge hood",
+      "de": "Kühlerlüfterluft aus der Austrittshaube"
+     },
+     "anchor": "radiator-outlet",
+     "directionDeg": 0,
+     "diameterM": 1.2,
+     "operatingKey": "cooling-fan",
+     "volumeFlowM3S": 9.0,
+     "temperatureRiseK": 30,
+     "vapourKgPerKg": 0.0,
+     "source": "authored-estimate"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "Engine 360 kW at prime: exhaust 0.0022 kg/s per kW = 0.78 kg/s at 470 C (rho 0.47 kg/m3) gives 1.66 m3/s through a 0.2 m stack (53 m/s) and 0.04 kg/kg vapour (Heywood 2018); flow and rise scale linearly with the engine level.",
+     "de": "Motor 360 kW bei Dauerleistung: Abgas 0,0022 kg/s je kW = 0,78 kg/s bei 470 C (rho 0,47 kg/m3) ergibt 1,66 m3/s durch ein 0,2-m-Rohr (53 m/s) und 0,04 kg/kg Dampf (Heywood 2018); Volumenstrom und Erhöhung skalieren linear mit der Motorstufe."
+    },
+    {
+     "en": "Radiator and charge-air cooler reject about 325 kW: 9 m3/s of air at +30 K leave through the discharge hood (rho cp V dT = 1.2 x 1005 x 9 x 30). The hood shell is heated by 2 kW of that, the walls by 0.8 kW through the 50 mm wool, the lagged silencer by 3 kW and the stack pipe by 1.2 kW. Authored estimates.",
+     "de": "Kühler und Ladeluftkühler führen etwa 325 kW ab: 9 m3/s Luft mit +30 K verlassen die Austrittshaube (rho cp V dT = 1,2 x 1005 x 9 x 30). Davon heizen 2 kW die Haube, 0,8 kW die Wände durch die 50 mm Wolle, 3 kW den gedämmten Schalldämpfer und 1,2 kW das Rohr. Schätzungen."
+    },
+    {
+     "en": "The base tank holds 420 kg of diesel (heat capacity 0.2 MJ/(m2 K) as a buffer); the flaps are driven by pressure and temperature, modelled by the pose bindings.",
+     "de": "Der Grundtank enthält 420 kg Diesel (Wärmekapazität 0,2 MJ/(m2 K) als Puffer); die Klappen werden von Druck und Temperatur bewegt, modelliert durch die Posenbindungen."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.8066,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "The container rests on two corner-casting supports; the fuel in the base tank is a point load; gravity only.",
+     "de": "Der Container ruht auf zwei Eckbeschlag-Auflagern; der Kraftstoff im Grundtank ist eine Einzellast; nur Schwerkraft."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "off",
+   "defaultClip": "load-cycle",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

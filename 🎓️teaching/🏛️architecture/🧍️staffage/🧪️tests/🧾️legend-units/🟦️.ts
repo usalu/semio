@@ -3,10 +3,11 @@
 import { describe, expect, it } from "vitest";
 import { VIEWS } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depictAll } from "../../🔨️modules/🎨️depiction/🟦️.ts";
-import { walkerState } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
+import { sampleState, unchecked } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 
+const plainOptions = (...args: Parameters<typeof defaultDepictionOptions>) => unchecked(defaultDepictionOptions(...args));
 describe("legend units", () => {
-  const scenes = depictAll(walkerState("carry-bag"), defaultDepictionOptions("forces", "de", 50));
+  const scenes = depictAll(sampleState("carry-bag", 50), plainOptions("forces", "de", 50));
   for (const view of ["thermal", "forces", "moments"] as const) {
     it(`states unit, convention and interpretation in ${view}`, () => {
       expect(scenes[view].legends.length).toBeGreaterThan(0);
@@ -26,12 +27,22 @@ describe("legend units", () => {
   it("has no legends in plain views", () => {
     for (const view of VIEWS.filter((v) => !["thermal", "forces", "moments"].includes(v))) expect(scenes[view].legends).toEqual([]);
   });
+  it("draws the conditions and assumptions of a legend as their own lines", () => {
+    const scene = depictAll(sampleState("carry-bag", 50), plainOptions("thermal", "en", 50)).thermal;
+    const texts = scene.layers.find((l) => l.id === "legend")!.items.flatMap((i) => (i.kind === "text" ? [i.text] : []));
+    const withConditions = scene.legends.filter((l) => l.conditions !== undefined);
+    const withAssumptions = scene.legends.flatMap((l) => l.assumptions ?? []);
+    expect(withConditions.length + withAssumptions.length).toBeGreaterThan(0);
+    if (withConditions.length > 0) expect(texts.some((t) => t.startsWith("Conditions:"))).toBe(true);
+    if (withAssumptions.length > 0) expect(texts.some((t) => t.startsWith("Assumption:"))).toBe(true);
+  });
+
   it("writes the legend text in the requested language", () => {
     const texts = scenes.forces.layers.find((l) => l.id === "legend")!.items.flatMap((i) => (i.kind === "text" ? [i.text] : []));
     expect(texts.some((t) => t.includes("Normalkraft"))).toBe(true);
   });
   it("draws analytic views on dark paper with light ink when asked", () => {
-    const dark = depictAll(walkerState("carry-bag"), { ...defaultDepictionOptions("forces", "en", 50, "elevation", "dark") });
+    const dark = depictAll(sampleState("carry-bag", 50), { ...plainOptions("forces", "en", 50, "elevation", "dark") });
     for (const view of ["thermal", "forces", "moments"] as const) {
       expect(dark[view].background).toBe("#001117");
       const text = dark[view].layers.flatMap((l) => l.items).find((i) => i.kind === "text");

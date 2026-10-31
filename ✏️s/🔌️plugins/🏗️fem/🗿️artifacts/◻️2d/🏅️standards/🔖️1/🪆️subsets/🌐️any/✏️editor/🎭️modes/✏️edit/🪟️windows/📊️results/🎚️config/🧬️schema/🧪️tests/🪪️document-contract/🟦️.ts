@@ -1,8 +1,7 @@
 import { appSurfaceResultModeSchema as resultModeSchema } from "@semio-tech/fem-js/engine/app-surface/schema/result-mode";
 import { appSurfaceResultsAnimationSchema as resultsAnimationSchema } from "@semio-tech/fem-js/engine/app-surface/schema/results-animation";
 import assert from "node:assert/strict";
-import Ajv from "ajv/dist/2020.js";
-import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json" };
+import Ajv from "ajv";
 import { viewport2dSchema as viewportSchema } from "@semio-tech/framework/ui/viewport/2d/schema";
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
@@ -10,7 +9,7 @@ import fixture from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪�
 import { parseFem2dResultsWindowConfig } from "../../🟦️.ts";
 
 export function testFem2dResultsWindowConfigContract(): void {
-  const validate = new Ajv({ strict: true, allErrors: true }).addMetaSchema(draft7).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).addSchema(viewportSchema).addSchema(resultModeSchema).addSchema(resultsAnimationSchema).compile(schema);
   const base = fixture.valid[0];
   for (const candidate of fixture.valid) {
     assert(validate(candidate), JSON.stringify(validate.errors));

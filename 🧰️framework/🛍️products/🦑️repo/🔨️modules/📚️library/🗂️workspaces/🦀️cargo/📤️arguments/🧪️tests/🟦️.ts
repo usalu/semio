@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import TOML, { type AnyJson, type JsonMap } from "@iarna/toml";
 const tomlTable=(value:AnyJson|undefined):JsonMap=>{if(typeof value==="object"&&value!==null&&!Array.isArray(value)&&!(value instanceof Date))return value;throw new Error("A TOML table was expected");};
 import glob from "fast-glob";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import Ajv, { type AnySchema } from "ajv/dist/2020.js";
+import Ajv, { type AnySchema } from "ajv";
 import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import routing from "../../../../🧪️tests/🧫️fixtures/🎯️spawned-document-routing/🔣️.json";

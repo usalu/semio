@@ -2,8 +2,10 @@
   "openings": {
     "o-1": {
       "entry": "Patched",
-      "sill_override": {
-        "value": null
+      "value": {
+        "sill_override": {
+          "value": null
+        }
       }
     }
   }

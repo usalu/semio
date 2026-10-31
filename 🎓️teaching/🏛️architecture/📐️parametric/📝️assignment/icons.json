@@ -7,97 +7,104 @@
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↘️backslash/🖋️capsule_backslash.svg",
       "output": "resources/metabolism-capsule-backslash.png",
       "sha256": "abe21a23f6a9901fb92c3130969d409f9c33be8f8ded291f70f4712edaf0a148",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↘️backslash/🖋️ellipsoid-capsule_backslash.svg",
       "output": "resources/metabolism-ellipsoid-capsule-backslash.png",
       "sha256": "dd2ae08f8a33e97888417c33cd3e04af9543611228d2412c820014cfa9043f3f",
-      "width": 2048
+      "width": 336
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↗️slash/🖋️capsule_slash.svg",
       "output": "resources/metabolism-capsule-slash.png",
       "sha256": "c2668df4c66a4205ed116993c8c36fe24f3d45aaf4f2a56444a713aca78876c2",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↗️slash/🖋️ellipsoid-capsule_slash.svg",
       "output": "resources/metabolism-ellipsoid-capsule-slash.png",
       "sha256": "2e2a4ca8dae28fb257bbaa362496db7f296a7a7bc0cc49c041d0b380c1986f9b",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🔎️q/🖋️capsule_q.svg",
       "output": "resources/metabolism-capsule-q.png",
       "sha256": "bd179ed56e88b85e7605ae617721edcd046cf448366e508c0da0b61e1ca6aca2",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🔎️q/🖋️ellipsoid-capsule_q.svg",
       "output": "resources/metabolism-ellipsoid-capsule-q.png",
       "sha256": "40299398550a07a56d9bc68fcb0b1b639531f36c0cda91e359f208463561ada6",
-      "width": 2048
+      "width": 336
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🅿️p/🖋️capsule_p.svg",
       "output": "resources/metabolism-capsule-p.png",
       "sha256": "8c86b9959ce5c46eb57e5f02c238c0d5dc8b0d2c6ce16e98d4504e46d77d1207",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🅿️p/🖋️ellipsoid-capsule_p.svg",
       "output": "resources/metabolism-ellipsoid-capsule-p.png",
       "sha256": "115a69d2224f6247f97bcbd326e34e2c9fe9475a1331e831f7780c6f67e0278e",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🪝️j/🖋️capsule_J.svg",
       "output": "resources/metabolism-capsule-J.png",
       "sha256": "fa8e122422ff12eac9614b726088a6cf548bf5c58aea6de904f2af7a38ed3928",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🪝️j/🖋️ellipsoid-capsule_J.svg",
       "output": "resources/metabolism-ellipsoid-capsule-J.png",
       "sha256": "3ce4dc7e020a92bb93cc9a6c0d546c798e7c4199e37504d9b7759ae720a488af",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/📐️l/🖋️capsule_L.svg",
       "output": "resources/metabolism-capsule-L.png",
       "sha256": "25ff9b497694795026e130c631e695ec8af82bfe2263b4c0e1f4ddf8d234cf71",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/📐️l/🖋️ellipsoid-capsule_L.svg",
       "output": "resources/metabolism-ellipsoid-capsule-L.png",
       "sha256": "ccb46dd068d4b5438c34495cc64aa6d3d1eea3680fe1803c5cb743753004e741",
-      "width": 2048
+      "width": 352
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/⚡️z/🖋️capsule_z.svg",
       "output": "resources/metabolism-capsule-z.png",
       "sha256": "afdf3527c095324ad23259821d0b79bb99d9557a11c165fedc7891dfe8c2852b",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/⚡️z/🖋️ellipsoid-capsule_z.svg",
       "output": "resources/metabolism-ellipsoid-capsule-z.png",
       "sha256": "81eec67e24c3a8e519f7fce325dad2d2d9ba33a4207a6a368fb14073688b06fc",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🐍️s/🖋️capsule_s.svg",
       "output": "resources/metabolism-capsule-s.png",
       "sha256": "f40685eb8466a82830645eb5c02ea44a9641952b9012091868bba1f8a2645427",
-      "width": 2048
+      "width": 272
     },
     {
       "source": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🐍️s/🖋️ellipsoid-capsule_s.svg",
       "output": "resources/metabolism-ellipsoid-capsule-s.png",
       "sha256": "2bf2b5f1ac6bf6b3ed694a642e8a630e836288d0b344a98b7be46f16f0ee9ef1",
-      "width": 2048
+      "width": 352
     }
-  ]
+  ],
+  "rasterization": {
+    "maximumWidthMillimeters": 22,
+    "maximumHeightMillimeters": 11,
+    "minimumDotsPerInch": 600,
+    "aspectRatio": "preserve-full-viewbox",
+    "pixelAlignment": 16
+  }
 }

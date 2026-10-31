@@ -2,7 +2,9 @@
   "viewports": {
     "vp-1": {
       "entry": "Patched",
-      "scale": 200
+      "value": {
+        "scale": 200
+      }
     }
   }
 }

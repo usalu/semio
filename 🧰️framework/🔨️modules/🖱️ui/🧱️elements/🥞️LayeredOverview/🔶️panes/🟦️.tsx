@@ -51,12 +51,14 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
   const windowRef = React.useRef(windowBox);
   const [resting, setResting] = React.useState<string | null>(() => paneAt.get(`${initial.x}:${initial.y}`) ?? null);
   const restingRef = React.useRef(resting);
+  const logicalRestingRef = React.useRef(resting);
+  const layoutRef = React.useRef({ mode, cellList, ids });
   const latest = React.useRef({ props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt });
   latest.current = { props, cells, cellList, grid, reduced, radius, mode, controlled, ids, paneAt };
 
   React.useEffect(() => {
-    if (mode === "swipe" && interactive && opened === null && resting !== null) props.onSwipeIdChange?.(resting);
-  }, [mode, interactive, opened, resting, props.onSwipeIdChange]);
+    if (mode === "swipe" && interactive && opened === null && resting !== null && ids.includes(resting) && resting === logicalRestingRef.current) props.onSwipeIdChange?.(resting);
+  }, [mode, interactive, opened, resting, ids, props.onSwipeIdChange]);
 
   const paint = React.useCallback((offset: LayeredOffset) => {
     offsetRef.current = offset;
@@ -72,6 +74,8 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
     }
     const cell = restingCell(offset);
     const still = cell === null ? null : (at.get(`${cell.column}:${cell.row}`) ?? null);
+    if (layoutRef.current.mode !== latest.current.mode || layoutRef.current.cellList !== latest.current.cellList || layoutRef.current.ids !== latest.current.ids) return;
+    if (still !== null) logicalRestingRef.current = still;
     if (still !== restingRef.current) {
       restingRef.current = still;
       setResting(still);
@@ -164,5 +168,5 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
     };
     frameRef.current = requestAnimationFrame(tick);
   }, [paint, settleGhost, stop]);
-  return { targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs };
+  return { layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs };
 }

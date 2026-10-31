@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Bazel session slots fixture",
   "description": "Language-agnostic rows of the session slot laws. `plans`: host and memory floor to the server plan; `ranks`: slot states and a key to the slot order; `garbage`: inventory to what is collected; `restore`: snapshot roots to hierarchical lease resources; `messages`: rendered progress lines in English and German. Every expected value was computed by an independent Python implementation (`mkfixture.py`), never by the code under test.",
   "type": "object",

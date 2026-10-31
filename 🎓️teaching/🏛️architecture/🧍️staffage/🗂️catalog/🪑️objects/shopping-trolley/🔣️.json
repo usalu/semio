@@ -1,0 +1,2533 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "shopping-trolley",
+    "category": "objects",
+    "title": {
+      "en": "Shopping Trolley",
+      "de": "Einkaufswagen"
+    },
+    "summary": {
+      "en": "A 100 litre zinc-plated wire-basket trolley on four castors, 1.05 m long and 1.0 m high: empty, loaded with 30 kg of groceries, and with the rear nesting gate swung up; a second trolley is not drawn.",
+      "de": "Ein 100-Liter-Einkaufswagen aus verzinktem Draht auf vier Rollen, 1,05 m lang und 1,0 m hoch: leer, mit 30 kg Einkäufen beladen und mit hochgeschwenkter hinterer Nesting-Klappe; ein zweiter Wagen wird nicht gezeichnet."
+    },
+    "tags": [
+      "shopping-trolley",
+      "wire-basket",
+      "castors",
+      "retail",
+      "nesting",
+      "carried-load"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel, polymers, rubber)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties of zinc-plated steel and polymers, cylinder convection)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1 (self-weight and imposed loads; mass of carried goods is an authored estimate here)."
+        },
+        {
+          "id": "trolley-class",
+          "citation": "Typical dimensions and mass of 100 litre wire-basket shopping trolleys with 125 mm wheels from manufacturer datasheets of the product class (length about 1.0 m, height 1.0 m, width 0.57 m, mass 12-15 kg); authored-estimate summary, no single datasheet."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation, push direction to the right, handle at the left. Dimensions and the 14 kg mass are typical class values (authored estimates). The nested state is the rear gate swung up, as when another trolley nose pushes in; the second trolley is not drawn (it would be a hidden second asset). Castors are drawn static: a rolling clip is not authored because the planted root solver is not used for caster swivel.",
+        "de": "Seitenansicht, Schieberichtung nach rechts, Griff links. Maße und die Masse von 14 kg sind typische Klassenwerte (Schätzwerte). Der Nesting-Zustand ist die hochgeschwenkte hintere Klappe, wie wenn die Spitze eines anderen Wagens hineingeschoben wird; der zweite Wagen wird nicht gezeichnet (er wäre ein verstecktes zweites Asset). Die Rollen sind statisch gezeichnet: ein Rollclip ist nicht verfasst, weil der Wurzellöser für das Schwenken der Lenkrollen nicht genutzt wird."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.0,
+      "widthM": 1.05,
+      "depthM": 0.57,
+      "massKg": 14.0
+    },
+    "materials": [
+      {
+        "id": "zinc-wire",
+        "title": {
+          "en": "Zinc-plated steel wire",
+          "de": "Verzinkter Stahldraht"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "zinc-tube",
+        "title": {
+          "en": "Zinc-plated steel tube",
+          "de": "Verzinktes Stahlrohr"
+        },
+        "emissivity": 0.25,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "pp-grip",
+        "title": {
+          "en": "Polypropylene grip",
+          "de": "Polypropylen-Griff"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "densityKgM3": 910,
+        "conductivityWmK": 0.22,
+        "specificHeatJKgK": 1900,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "pu-tyre",
+        "title": {
+          "en": "Polyurethane tyre with nylon hub",
+          "de": "Polyurethanreifen mit Nylonnabe"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1200,
+        "conductivityWmK": 0.25,
+        "specificHeatJKgK": 1800,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "chassis",
+      "bones": [
+        {
+          "id": "chassis",
+          "parent": null,
+          "title": {
+            "en": "Chassis with castors and wheels",
+            "de": "Fahrgestell mit Lenkrollen und Rädern"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.7,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 5.5,
+            "comX": 0.02,
+            "comY": 0.15,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "trolley-class"
+          }
+        },
+        {
+          "id": "basket",
+          "parent": "chassis",
+          "title": {
+            "en": "Wire basket",
+            "de": "Drahtkorb"
+          },
+          "x": 0.0,
+          "y": 0.38,
+          "angleDeg": 0,
+          "lengthM": 0.92,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 6.0,
+            "comX": 0.05,
+            "comY": 0.24,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "trolley-class"
+          }
+        },
+        {
+          "id": "handle",
+          "parent": "basket",
+          "title": {
+            "en": "Push handle",
+            "de": "Schiebegriff"
+          },
+          "x": -0.4,
+          "y": 0.5,
+          "angleDeg": 0,
+          "lengthM": 0.2,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.2,
+            "comX": -0.05,
+            "comY": 0.09,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "trolley-class"
+          }
+        },
+        {
+          "id": "gate",
+          "parent": "basket",
+          "title": {
+            "en": "Rear nesting gate",
+            "de": "Hintere Nesting-Klappe"
+          },
+          "x": -0.42,
+          "y": 0.5,
+          "angleDeg": 0,
+          "lengthM": 0.495,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 80
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0.06,
+            "comY": -0.24,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "trolley-class"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wheel-rear",
+        "bone": "chassis",
+        "x": -0.3,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear wheel patch",
+          "de": "Aufstandsfläche hinteres Rad"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "wheel-front",
+        "bone": "chassis",
+        "x": 0.33,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Front castor patch",
+          "de": "Aufstandsfläche vordere Lenkrolle"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.03,
+        "footprintWidthM": 0.03,
+        "frictionCoefficient": 0.7
+      },
+      {
+        "id": "basket-centre",
+        "bone": "basket",
+        "x": 0.02,
+        "y": 0.04,
+        "kind": "load",
+        "title": {
+          "en": "Centre of the basket floor",
+          "de": "Mitte des Korbbodens"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.5
+                ],
+                [
+                  0.5,
+                  0.5
+                ],
+                [
+                  0.34,
+                  0.0
+                ],
+                [
+                  -0.3,
+                  0.0
+                ]
+              ],
+              "closed": true,
+              "regions": [
+                "basket-wire",
+                "gate-wire"
+              ],
+              "material": "zinc-wire"
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  0.36,
+                  0.17
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.13
+            },
+            {
+              "id": "struts",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.38
+                ],
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  -0.3,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.13
+            },
+            {
+              "id": "front-strut",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.34,
+                  0.38
+                ],
+                [
+                  0.36,
+                  0.17
+                ],
+                [
+                  0.33,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.13
+            },
+            {
+              "id": "handle",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.15,
+                  0.11
+                ],
+                [
+                  0.02,
+                  0.11
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "handle-grip",
+              "penMm": 0.18
+            },
+            {
+              "id": "wheel-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.075,
+              "rx": 0.075,
+              "ry": 0.075,
+              "region": "wheels",
+              "material": "pu-tyre"
+            },
+            {
+              "id": "wheel-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.075,
+              "rx": 0.075,
+              "ry": 0.075,
+              "region": "wheels",
+              "material": "pu-tyre"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A trolley sign 2.1 mm long and 2 mm high: a light trapezoid basket on a chassis line with two dots as wheels and a hooked handle stroke at the rear.",
+            "de": "Ein Wagenzeichen, 2,1 mm lang und 2 mm hoch: ein heller Trapezkorb auf einer Fahrgestelllinie mit zwei Punkten als Rädern und einem gekröpften Griffstrich hinten."
+          },
+          "retained": {
+            "en": "Basket outline at real size and taper, chassis line, both strut strokes, handle height 1.0 m, two wheels.",
+            "de": "Korbumriss in realer Größe und Verjüngung, Fahrgestelllinie, beide Strebenstriche, Griffhöhe 1,0 m, zwei Räder."
+          },
+          "merged": {
+            "en": "Basket wires and the rear gate are one light solid (the gate is edge-on at the basket back).",
+            "de": "Korbdrähte und hintere Klappe sind ein heller Körper (die Klappe steht hinten am Korb kantenparallel)."
+          },
+          "omitted": {
+            "en": "All wire mesh, rim, castor forks, grip, hinge.",
+            "de": "Alles Drahtgitter, Rand, Rollengabeln, Griff, Gelenk."
+          },
+          "thinElements": {
+            "en": "Wires (4 mm) and tubes (20 mm) are 0.13 mm strokes; wheels are thickened to 0.15 m diameter (0.3 mm) from 0.125 m; the handle is a 0.18 mm stroke.",
+            "de": "Drähte (4 mm) und Rohre (20 mm) sind 0,13-mm-Striche; Räder sind von 0,125 m auf 0,15 m Durchmesser (0,3 mm) verdickt; der Griff ist ein 0,18-mm-Strich."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Basket tone 0.15 (open mesh reads light), wheels 0.15; strokes 0.13 mm, ground 0.18 mm.",
+            "de": "Korb Ton 0,15 (offenes Gitter wirkt hell), Räder 0,15; Striche 0,13 mm, Boden 0,18 mm."
+          },
+          "overlays": {
+            "en": "Basket solid lists basket-wire and gate-wire; the strokes carry frame-tube and handle-grip.",
+            "de": "Der Korbkörper nennt basket-wire und gate-wire; die Striche tragen frame-tube und handle-grip."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.5
+                ],
+                [
+                  0.5,
+                  0.5
+                ],
+                [
+                  0.34,
+                  0.0
+                ],
+                [
+                  -0.3,
+                  0.0
+                ]
+              ],
+              "closed": true,
+              "region": "basket-wire",
+              "material": "zinc-wire"
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3384,
+                  0.16
+                ],
+                [
+                  0.3912,
+                  0.16
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3768,
+                  0.32
+                ],
+                [
+                  0.4424,
+                  0.32
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.12,
+                  -0.48
+                ]
+              ],
+              "closed": false,
+              "region": "gate-wire",
+              "penMm": 0.25
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  0.36,
+                  0.17
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.282
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.38
+                ],
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  -0.3,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.18
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.34,
+                  0.38
+                ],
+                [
+                  0.36,
+                  0.17
+                ],
+                [
+                  0.33,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.18
+            },
+            {
+              "id": "handle-post",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.1
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.18
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.08,
+              "w": 0.19,
+              "h": 0.04,
+              "region": "handle-grip",
+              "material": "pp-grip"
+            },
+            {
+              "id": "wheel-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            ,
+              "penMm": 0.231
+             },
+            {
+              "id": "wheel-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            ,
+              "penMm": 0.231
+             }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A trolley 5.3 mm long and 5 mm high: light tapered basket with two wire lines, a rear gate stroke, chassis line with fork strokes, a grip bar on a post and two wheel discs.",
+            "de": "Ein Wagen 5,3 mm lang und 5 mm hoch: heller verjüngter Korb mit zwei Drahtlinien, ein Klappenstrich hinten, Fahrgestelllinie mit Gabelstrichen, ein Griffbalken auf einer Stütze und zwei Radscheiben."
+          },
+          "retained": {
+            "en": "Basket taper, two of the seven wire levels, gate, chassis, both forks, handle post and grip, both wheels at 0.125 m.",
+            "de": "Korbverjüngung, zwei der sieben Drahtebenen, Klappe, Fahrgestell, beide Gabeln, Griffstütze und Griff, beide Räder mit 0,125 m."
+          },
+          "merged": {
+            "en": "The paired side wire frames coincide in elevation; verticals are merged into the fill.",
+            "de": "Die paarigen seitlichen Drahtrahmen fallen in der Ansicht zusammen; Senkrechte gehen in der Füllung auf."
+          },
+          "omitted": {
+            "en": "Vertical wires, rim double, castor plates, hubs.",
+            "de": "Senkrechte Drähte, Randdopplung, Rollenplatten, Naben."
+          },
+          "thinElements": {
+            "en": "The gate (wire panel edge-on) is a 0.25 mm stroke, the chassis tube a 0.18 mm stroke; the grip is a 0.04 m (0.2 mm) bar.",
+            "de": "Die Klappe (Drahtfläche kantenparallel) ist ein 0,25-mm-Strich, das Fahrgestellrohr ein 0,18-mm-Strich; der Griff ist ein Balken von 0,04 m (0,2 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Basket 0.12, wheels 0.15, grip 0.7; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Korb 0,12, Räder 0,15, Griff 0,7; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Wire lines carry basket-wire; the gate stroke gate-wire; forks and post frame-tube; the grip handle-grip; wheels wheels.",
+            "de": "Drahtlinien tragen basket-wire; der Klappenstrich gate-wire; Gabeln und Stütze frame-tube; der Griff handle-grip; Räder wheels."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.5
+                ],
+                [
+                  0.5,
+                  0.5
+                ],
+                [
+                  0.34,
+                  0.0
+                ],
+                [
+                  -0.3,
+                  0.0
+                ]
+              ],
+              "closed": true,
+              "region": "basket-wire",
+              "material": "zinc-wire"
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.324,
+                  0.1
+                ],
+                [
+                  0.372,
+                  0.1
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.348,
+                  0.2
+                ],
+                [
+                  0.404,
+                  0.2
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-2",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.372,
+                  0.3
+                ],
+                [
+                  0.436,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-3",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.396,
+                  0.4
+                ],
+                [
+                  0.468,
+                  0.4
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.0
+                ],
+                [
+                  -0.15,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.06,
+                  0.0
+                ],
+                [
+                  0.075,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-2",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.24,
+                  0.0
+                ],
+                [
+                  0.3,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.485
+                ],
+                [
+                  0.5,
+                  0.485
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.014552,
+                  0.003638
+                ],
+                [
+                  0.134552,
+                  -0.476362
+                ],
+                [
+                  0.105448,
+                  -0.483638
+                ],
+                [
+                  -0.014552,
+                  -0.003638
+                ]
+              ],
+              "closed": true,
+              "region": "gate-wire",
+              "material": "zinc-wire"
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  0.36,
+                  0.17
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.25
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.38
+                ],
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  -0.3,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.25
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.34,
+                  0.38
+                ],
+                [
+                  0.36,
+                  0.17
+                ],
+                [
+                  0.33,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.25
+            },
+            {
+              "id": "handle-post",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.09
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.25
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.08,
+              "w": 0.19,
+              "h": 0.04,
+              "r": 0.012,
+              "region": "handle-grip",
+              "material": "pp-grip"
+            },
+            {
+              "id": "wheel-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            },
+            {
+              "id": "hub-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.022,
+              "ry": 0.022,
+              "region": "wheels"
+            },
+            {
+              "id": "wheel-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            },
+            {
+              "id": "hub-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.022,
+              "ry": 0.022,
+              "region": "wheels"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A trolley 10.5 mm long and 10 mm high: wire basket with a grid of four horizontals and three verticals, rim wire, rear gate band, chassis tube with forks, grip with post, two wheels with hubs.",
+            "de": "Ein Wagen 10,5 mm lang und 10 mm hoch: Drahtkorb mit einem Gitter aus vier Waagrechten und drei Senkrechten, Randdraht, hinteres Klappenband, Fahrgestellrohr mit Gabeln, Griff mit Stütze, zwei Räder mit Naben."
+          },
+          "retained": {
+            "en": "Basket, grid, rim, gate, chassis, forks, handle, wheels with hubs.",
+            "de": "Korb, Gitter, Rand, Klappe, Fahrgestell, Gabeln, Griff, Räder mit Naben."
+          },
+          "merged": {
+            "en": "The twelve real horizontal wires per side are drawn as four lines (spacing 1 mm); the far side frame coincides.",
+            "de": "Die zwölf realen Waagrechtdrähte je Seite sind als vier Linien gezeichnet (Abstand 1 mm); der ferne Seitenrahmen fällt zusammen."
+          },
+          "omitted": {
+            "en": "Castor plates, wire bends, hinge eyes.",
+            "de": "Rollenplatten, Drahtbögen, Gelenkösen."
+          },
+          "thinElements": {
+            "en": "Wires are 0.13 mm lines (real 4 mm = 0.04 mm); the gate is a 0.03 m (0.3 mm) band; tubes are 0.25 mm strokes.",
+            "de": "Drähte sind 0,13-mm-Linien (real 4 mm = 0,04 mm); die Klappe ist ein 0,03-m-Band (0,3 mm); Rohre sind 0,25-mm-Striche."
+          },
+          "hatching": {
+            "en": "None; the mesh is drawn as lines.",
+            "de": "Keine; das Gitter ist als Linien gezeichnet."
+          },
+          "styles": {
+            "en": "Basket 0.1, wheels 0.15, gate 0.5, grip 0.7; body pen 0.25 mm, detail 0.13 mm.",
+            "de": "Korb 0,1, Räder 0,15, Klappe 0,5, Griff 0,7; Körperstift 0,25 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Grid and rim carry basket-wire; the thermal view paints the open mesh as a light basket.",
+            "de": "Gitter und Rand tragen basket-wire; die Thermalansicht färbt das offene Gitter als hellen Korb."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": null,
+          "ground": 0.7
+        },
+        "hatches": [
+          {
+            "id": "grip-ribs",
+            "title": {
+              "en": "Grip ribs",
+              "de": "Griffrippen"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "basket",
+              "bone": "basket",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.08,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.5
+                ],
+                [
+                  0.5,
+                  0.5
+                ],
+                [
+                  0.34,
+                  0.0
+                ],
+                [
+                  -0.3,
+                  0.0
+                ]
+              ],
+              "closed": true,
+              "region": "basket-wire",
+              "material": "zinc-wire"
+            },
+            {
+              "id": "wire-h-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3144,
+                  0.06
+                ],
+                [
+                  0.3592,
+                  0.06
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3288,
+                  0.12
+                ],
+                [
+                  0.3784,
+                  0.12
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3432,
+                  0.18
+                ],
+                [
+                  0.3976,
+                  0.18
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3576,
+                  0.24
+                ],
+                [
+                  0.4168,
+                  0.24
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.372,
+                  0.3
+                ],
+                [
+                  0.436,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-5",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3864,
+                  0.36
+                ],
+                [
+                  0.4552,
+                  0.36
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-6",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4008,
+                  0.42
+                ],
+                [
+                  0.4744,
+                  0.42
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-h-7",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4152,
+                  0.48
+                ],
+                [
+                  0.4936,
+                  0.48
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-0",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2,
+                  0.0
+                ],
+                [
+                  -0.25,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-1",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.0
+                ],
+                [
+                  -0.1,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-2",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.04,
+                  0.0
+                ],
+                [
+                  0.05,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-3",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.16,
+                  0.0
+                ],
+                [
+                  0.2,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "wire-v-4",
+              "bone": "basket",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.28,
+                  0.0
+                ],
+                [
+                  0.35,
+                  0.5
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "rim",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.42,
+                  0.485
+                ],
+                [
+                  0.5,
+                  0.485
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "floor-wire",
+              "bone": "basket",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.015
+                ],
+                [
+                  0.34,
+                  0.015
+                ]
+              ],
+              "closed": false,
+              "region": "basket-wire"
+            },
+            {
+              "id": "gate",
+              "bone": "gate",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.014552,
+                  0.003638
+                ],
+                [
+                  0.134552,
+                  -0.476362
+                ],
+                [
+                  0.105448,
+                  -0.483638
+                ],
+                [
+                  -0.014552,
+                  -0.003638
+                ]
+              ],
+              "closed": true,
+              "region": "gate-wire",
+              "material": "zinc-wire"
+            },
+            {
+              "id": "gate-eye",
+              "bone": "gate",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "gate-wire"
+            },
+            {
+              "id": "chassis-line",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  0.36,
+                  0.17
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.35
+            },
+            {
+              "id": "rear-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.3,
+                  0.38
+                ],
+                [
+                  -0.32,
+                  0.17
+                ],
+                [
+                  -0.3,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.35
+            },
+            {
+              "id": "front-fork",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.34,
+                  0.38
+                ],
+                [
+                  0.36,
+                  0.17
+                ],
+                [
+                  0.33,
+                  0.0625
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.35
+            },
+            {
+              "id": "castor-plate",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "poly",
+              "points": [
+                [
+                  0.335,
+                  0.18
+                ],
+                [
+                  0.385,
+                  0.18
+                ],
+                [
+                  0.385,
+                  0.165
+                ],
+                [
+                  0.335,
+                  0.165
+                ]
+              ],
+              "closed": true,
+              "region": "frame-tube",
+              "material": "zinc-tube"
+            },
+            {
+              "id": "handle-post",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.09
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-tube",
+              "penMm": 0.35
+            },
+            {
+              "id": "grip",
+              "bone": "handle",
+              "role": "body",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.15,
+              "y": 0.08,
+              "w": 0.19,
+              "h": 0.04,
+              "r": 0.012,
+              "region": "handle-grip",
+              "material": "pp-grip",
+              "hatch": "grip-ribs"
+            },
+            {
+              "id": "wheel-rear",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            },
+            {
+              "id": "hub-rear",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.022,
+              "ry": 0.022,
+              "region": "wheels"
+            },
+            {
+              "id": "wheel-front",
+              "bone": "chassis",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.0625,
+              "ry": 0.0625,
+              "region": "wheels",
+              "material": "pu-tyre"
+            },
+            {
+              "id": "hub-front",
+              "bone": "chassis",
+              "role": "detail",
+              "z": 2.6,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.022,
+              "ry": 0.022,
+              "region": "wheels"
+            },
+            {
+              "id": "tread-rear",
+              "bone": "chassis",
+              "role": "texture",
+              "z": 2.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": -0.3,
+              "cy": 0.0625,
+              "rx": 0.047,
+              "ry": 0.047,
+              "region": "wheels"
+            },
+            {
+              "id": "tread-front",
+              "bone": "chassis",
+              "role": "texture",
+              "z": 2.55,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.33,
+              "cy": 0.0625,
+              "rx": 0.047,
+              "ry": 0.047,
+              "region": "wheels"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A trolley 21 mm long and 20 mm high in construction detail: wire basket with a mesh of eight horizontals and five verticals, rim and floor wire, gate band with hinge eye, chassis tube, forks, castor plate, ribbed grip, two wheels with hubs and tread ring.",
+            "de": "Ein Wagen 21 mm lang und 20 mm hoch im Konstruktionsdetail: Drahtkorb mit einem Gitter aus acht Waagrechten und fünf Senkrechten, Rand- und Bodendraht, Klappenband mit Gelenköse, Fahrgestellrohr, Gabeln, Rollenplatte, gerippter Griff, zwei Räder mit Naben und Laufring."
+          },
+          "retained": {
+            "en": "All visible tubes, wires and the gate at real positions; mesh spacing 0.06 m horizontal, 0.12 m vertical.",
+            "de": "Alle sichtbaren Rohre, Drähte und die Klappe in realen Lagen; Gitterabstand 0,06 m waagrecht, 0,12 m senkrecht."
+          },
+          "merged": {
+            "en": "The far-side frame coincides with the near side; the second front castor is hidden behind the first.",
+            "de": "Der Rahmen der fernen Seite fällt mit der nahen zusammen; die zweite vordere Rolle ist hinter der ersten verdeckt."
+          },
+          "omitted": {
+            "en": "Wire cross welds, brake lever, coin lock.",
+            "de": "Drahtkreuzschweißungen, Bremshebel, Pfandschloss."
+          },
+          "thinElements": {
+            "en": "Mesh lines are 0.13 mm (real wire 4 mm); the tread ring is a 0.13 mm ellipse; the hinge eye a 0.028 m (0.56 mm) circle.",
+            "de": "Gitterlinien sind 0,13 mm (realer Draht 4 mm); der Laufring ist eine 0,13-mm-Ellipse; die Gelenköse ein Kreis von 0,028 m (0,56 mm)."
+          },
+          "hatching": {
+            "en": "Grip ribs as 0.5 mm spaced lines at 90 degrees.",
+            "de": "Griffrippen als Linien im Abstand 0,5 mm unter 90 Grad."
+          },
+          "styles": {
+            "en": "Basket 0.08, wheels 0.15, gate 0.5, grip 0.7; body pen 0.5 mm, detail 0.25 mm, texture 0.13 mm.",
+            "de": "Korb 0,08, Räder 0,15, Klappe 0,5, Griff 0,7; Körperstift 0,5 mm, Detail 0,25 mm, Textur 0,13 mm."
+          },
+          "overlays": {
+            "en": "Mesh, rim and floor wires carry basket-wire; the tread rings carry wheels.",
+            "de": "Gitter-, Rand- und Bodendrähte tragen basket-wire; die Laufringe tragen wheels."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "empty",
+        "title": {
+          "en": "Empty",
+          "de": "Leer"
+        },
+        "description": {
+          "en": "Empty trolley in the car park sun, gate hanging closed.",
+          "de": "Leerer Einkaufswagen in der Parkplatzsonne, Klappe geschlossen."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "regions": {
+            "basket-wire": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "gate-wire": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "frame-tube": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "handle-grip": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "wheels": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "loaded",
+        "title": {
+          "en": "Loaded",
+          "de": "Beladen"
+        },
+        "description": {
+          "en": "Thirty kilograms of groceries on the basket floor and a 40 N push on the handle.",
+          "de": "Dreißig Kilogramm Einkäufe auf dem Korbboden und ein Schub von 40 N am Griff."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "regions": {
+            "basket-wire": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "gate-wire": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "frame-tube": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "handle-grip": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "wheels": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "groceries",
+            "kind": "carried",
+            "title": {
+              "en": "Groceries in the basket (30 kg)",
+              "de": "Einkäufe im Korb (30 kg)"
+            },
+            "fxN": 0,
+            "fyN": -294,
+            "source": "authored-estimate",
+            "anchor": "basket-centre",
+            "reference": "trolley-class"
+          },
+          {
+            "id": "push",
+            "kind": "live",
+            "title": {
+              "en": "Hand push on the handle",
+              "de": "Handschub am Griff"
+            },
+            "fxN": 40,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "bone": "handle",
+            "x": -0.15,
+            "y": 0.095,
+            "reference": "trolley-class"
+          }
+        ]
+      },
+      {
+        "id": "gate-raised",
+        "title": {
+          "en": "Gate raised for nesting",
+          "de": "Klappe zum Ineinanderschieben angehoben"
+        },
+        "description": {
+          "en": "The rear gate swung 65 degrees up and inward as when the nose of another trolley pushes in; the other trolley is not drawn.",
+          "de": "Die hintere Klappe ist um 65 Grad nach oben und innen geschwenkt, wie wenn die Spitze eines anderen Wagens hineingeschoben wird; der andere Wagen ist nicht gezeichnet."
+        },
+        "bones": {
+          "gate": {
+            "angleDeg": 65
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "wheel-rear",
+          "wheel-front"
+        ],
+        "thermal": {
+          "regions": {
+            "basket-wire": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.4
+            },
+            "gate-wire": {
+              "exposedFraction": 0.6,
+              "sunlitFraction": 0.4
+            },
+            "frame-tube": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "handle-grip": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "wheels": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "load-groceries",
+        "title": {
+          "en": "Load groceries",
+          "de": "Einkäufe einladen"
+        },
+        "description": {
+          "en": "Groceries are put into the basket one after another and the loading load rises to 30 kg while the shopper starts to push.",
+          "de": "Einkäufe werden nacheinander in den Korb gelegt, die Last steigt auf 30 kg, während der Einkaufende zu schieben beginnt."
+        },
+        "durationS": 16,
+        "fps": 10,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "loaded",
+            "ease": "smooth"
+          },
+          {
+            "t": 16,
+            "pose": "loaded",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wheel-rear",
+            "fromS": 0,
+            "toS": 16
+          },
+          {
+            "anchor": "wheel-front",
+            "fromS": 0,
+            "toS": 16
+          }
+        ],
+        "phases": [
+          {
+            "id": "loading",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Loading",
+              "de": "Einladen"
+            }
+          },
+          {
+            "id": "pushing",
+            "fromS": 10,
+            "toS": 16,
+            "title": {
+              "en": "Starting to push",
+              "de": "Anschieben"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1,
+            "kind": "load-on",
+            "title": {
+              "en": "First goods in the basket",
+              "de": "Erste Ware im Korb"
+            },
+            "target": "groceries"
+          },
+          {
+            "t": 10,
+            "kind": "load-on",
+            "title": {
+              "en": "Hands on the handle",
+              "de": "Hände am Griff"
+            },
+            "target": "push"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:groceries",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0.1
+              },
+              {
+                "t": 5,
+                "v": 0.45
+              },
+              {
+                "t": 9,
+                "v": 1
+              },
+              {
+                "t": 16,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "load:push",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 10,
+                "v": 0
+              },
+              {
+                "t": 12,
+                "v": 1
+              },
+              {
+                "t": 16,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "nesting-swing",
+        "title": {
+          "en": "Gate swings for nesting",
+          "de": "Klappe schwingt beim Ineinanderschieben"
+        },
+        "description": {
+          "en": "A 12 s loop: the rear gate swings up as another trolley is pushed in and drops back when it is pulled out.",
+          "de": "Eine 12-s-Schleife: die hintere Klappe schwingt auf, wenn ein anderer Wagen hineingeschoben wird, und fällt zurück, wenn er herausgezogen wird."
+        },
+        "durationS": 12,
+        "fps": 12,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "empty",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "gate-raised",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "gate-raised",
+            "ease": "smooth"
+          },
+          {
+            "t": 12,
+            "pose": "empty",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "wheel-rear",
+            "fromS": 0,
+            "toS": 12
+          },
+          {
+            "anchor": "wheel-front",
+            "fromS": 0,
+            "toS": 12
+          }
+        ],
+        "phases": [
+          {
+            "id": "nest-in",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Another trolley pushes in",
+              "de": "Ein anderer Wagen wird hineingeschoben"
+            }
+          },
+          {
+            "id": "nested",
+            "fromS": 4,
+            "toS": 8,
+            "title": {
+              "en": "Nested",
+              "de": "Ineinandergeschoben"
+            }
+          },
+          {
+            "id": "nest-out",
+            "fromS": 8,
+            "toS": 12,
+            "title": {
+              "en": "Pulled out",
+              "de": "Herausgezogen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "motion",
+            "title": {
+              "en": "Gate fully raised",
+              "de": "Klappe ganz oben"
+            }
+          },
+          {
+            "t": 8,
+            "kind": "motion",
+            "title": {
+              "en": "Gate starts to fall",
+              "de": "Klappe beginnt zu fallen"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 22,
+        "meanRadiantTempC": 30,
+        "relativeHumidity": 0.5,
+        "windMS": 1.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 800,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325,
+        "skyTempC": 10,
+        "groundTempC": 38
+      },
+      "operating": [],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "basket-wire",
+          "title": {
+            "en": "Basket wire mesh",
+            "de": "Korbdrahtgitter"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "zinc-wire",
+          "areaM2": 0.57,
+          "characteristicLengthM": 0.004,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wire",
+              "title": {
+                "en": "Zinc-plated steel wire 4 mm (equivalent skin 1 mm)",
+                "de": "Verzinkter Stahldraht 4 mm (Ersatzhaut 1 mm)"
+              },
+              "kind": "metal",
+              "material": "zinc-wire",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 2e-05,
+              "heatCapacityJM2K": 3510,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3510,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "gate-wire",
+          "title": {
+            "en": "Rear nesting gate",
+            "de": "Hintere Nesting-Klappe"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "zinc-wire",
+          "areaM2": 0.12,
+          "characteristicLengthM": 0.004,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "wire",
+              "title": {
+                "en": "Zinc-plated steel wire 4 mm (equivalent skin 1 mm)",
+                "de": "Verzinkter Stahldraht 4 mm (Ersatzhaut 1 mm)"
+              },
+              "kind": "metal",
+              "material": "zinc-wire",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 2e-05,
+              "heatCapacityJM2K": 3510,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3510,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "frame-tube",
+          "title": {
+            "en": "Chassis and handle tubes",
+            "de": "Fahrgestell- und Griffrohre"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "zinc-tube",
+          "areaM2": 0.28,
+          "characteristicLengthM": 0.02,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Zinc-plated steel tube wall 1.5 mm",
+                "de": "Verzinkte Stahlrohrwand 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "zinc-tube",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 3e-05,
+              "heatCapacityJM2K": 5265,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5265,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "handle-grip",
+          "title": {
+            "en": "Polypropylene grip",
+            "de": "Polypropylen-Griff"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "pp-grip",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.03,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "pp",
+              "title": {
+                "en": "Polypropylene sleeve 3 mm",
+                "de": "Polypropylen-Hülse 3 mm"
+              },
+              "kind": "polymer",
+              "material": "pp-grip",
+              "thicknessM": 0.003,
+              "resistanceM2KW": 0.013636,
+              "heatCapacityJM2K": 5187,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5187,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "wheels",
+          "title": {
+            "en": "Wheels and castors",
+            "de": "Räder und Lenkrollen"
+          },
+          "kind": "tyre",
+          "model": "passive",
+          "material": "pu-tyre",
+          "areaM2": 0.08,
+          "characteristicLengthM": 0.125,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.3,
+          "layers": [
+            {
+              "id": "tyre",
+              "title": {
+                "en": "Polyurethane tyre 15 mm (active 8 mm)",
+                "de": "Polyurethanreifen 15 mm (wirksam 8 mm)"
+              },
+              "kind": "polymer",
+              "material": "pu-tyre",
+              "thicknessM": 0.015,
+              "resistanceM2KW": 0.06,
+              "heatCapacityJM2K": 32400,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 32400,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "All parts are inert passive surfaces; wire is modelled as a thin equivalent skin of 1 mm steel (heat capacity 3.5 kJ/m2K) with cylinder convection on the 4 mm wire.",
+          "de": "Alle Teile sind inerte passive Flächen; der Draht wird als dünne Ersatzhaut aus 1 mm Stahl (Wärmekapazität 3,5 kJ/m2K) mit Zylinderkonvektion am 4-mm-Draht modelliert."
+        },
+        {
+          "en": "The groceries are a load only; their temperature is not modelled.",
+          "de": "Die Einkäufe sind nur eine Last; ihre Temperatur wird nicht modelliert."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wheel-rear",
+        "wheel-front"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid body on two wheel contacts in the plane (the paired wheels coincide in elevation); the gate is a revolute joint posed, not simulated.",
+          "de": "Ein starrer Körper auf zwei Radkontakten in der Ebene (die paarigen Räder fallen in der Ansicht zusammen); die Klappe ist ein Drehgelenk, das gestellt, nicht simuliert wird."
+        },
+        {
+          "en": "Goods mass of 30 kg and the 40 N push are authored estimates.",
+          "de": "Warenmasse von 30 kg und Schub von 40 N sind Schätzwerte."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "empty",
+      "defaultClip": "load-groceries",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

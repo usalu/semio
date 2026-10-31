@@ -63,6 +63,7 @@ export const CORE_DE: Record<keyof typeof CORE_EN, string> = {
   "sort.ascending": "Aufsteigend",
   "sort.descending": "Absteigend",
   "analytic.thermal": "Thermisches Modell",
+  "analytic.transport": "Lufttransport",
   "analytic.structural": "Statisches Modell",
   "completion.planned": "Geplant",
   "completion.authored": "Erstellt",

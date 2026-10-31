@@ -1,0 +1,108 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "controls",
+    "consumers",
+    "producers",
+    "requiredTargets"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parent"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "parent",
+          "consumer",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": "string"
+          },
+          "consumer": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "consumers": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "dev-site",
+          "build",
+          "test-e2e"
+        ]
+      },
+      "maxItems": 3
+    },
+    "producers": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "@teaching/architecture-course:build-parametrization-en",
+          "@teaching/architecture-course:build-parametrization-de"
+        ]
+      },
+      "maxItems": 2
+    },
+    "requiredTargets": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "dev",
+          "dev-site",
+          "build",
+          "test-e2e"
+        ]
+      },
+      "maxItems": 4
+    }
+  }
+}

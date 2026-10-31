@@ -7,13 +7,13 @@ const byCodePoint=(a,b)=>a<b?-1:a>b?1:0;
 const missing=error=>["ENOENT","ENOTDIR","ELOOP"].includes(error?.code);
 
 /** 🚫 The exclusion rule shared with the native watcher: rooted prefixes and component names. */
-export function createFilterV1({rooted=[],names=[]}={}){
+export function createFilterV1({rooted=[],names=[],opaqueBasenames}={}){
  const prefixes=rooted.map(item=>item.replace(/^\/+|\/+$/gu,"")),set=new Set(names);
  return Object.freeze({
   excluded(path){
    if(!path)return false;
    for(const prefix of prefixes)if(path===prefix||(path.length>prefix.length&&path.startsWith(prefix)&&path.charCodeAt(prefix.length)===47))return true;
-   if(set.size)for(const part of path.split("/"))if(set.has(part))return true;
+   for(const part of path.split(String.fromCharCode(92)).join("/").split("/")){if(set.has(part))return true;if(opaqueBasenames?.prefixes.some(prefix=>part.startsWith(prefix)&&part.length===prefix.length+opaqueBasenames.digestHex&&/^[0-9a-f]+$/u.test(part.slice(prefix.length))))return true;}
    return false;
   },
  });

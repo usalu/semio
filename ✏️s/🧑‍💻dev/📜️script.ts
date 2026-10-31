@@ -58,6 +58,14 @@ class CatalogPublicationTestScript extends BundleScript {
     await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/📣️publication/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🌐️browser-host/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧪️tests/🟦️.ts"),resolve(this.root,"🔁️rebuild/🧪️tests/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🧩️native-prerequisites/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🏗️preparation/🟦️.ts"),resolve(this.root,"🧩️catalog/🧪️tests/🌐️playground-site-dist/🟦️.ts")],this.repoRoot,"catalog-publication",120000,{signal:this.invocation.control.signal});
   }
 }
+/** 📦️ Verifies the specific catalog’s declared public package after its owning producer. */
+class CatalogExportsTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw new Error("Catalog public exports accept no arguments");
+  const {runOwnedCommand}=await import("../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"),control=createIssuedResourceControlV1(this.invocation,"catalog:public-exports",15000);
+  await runOwnedCommand(process.execPath,["test",resolve(this.root,"🧩️catalog/🧪️tests/📦️public-exports/🟦️.ts")],this.repoRoot,"catalog:public-exports",15000,{control,signal:control.signal});
+ }
+}
 /** 🤝️ The real-client end-to-end gate: spawns BOTH `.mcp.json` servers with the literal `command`/`args` a Claude Code or Cursor host uses, then drives the whole agent journey over stdio JSON-RPC against the pins this specific layer owns. `--folder <path>` binds an existing space instead of a throwaway one; the capability catalog always comes from the repo's installed plugin registry. */
 class McpClientEndToEndScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -86,5 +94,5 @@ class TypecheckScript extends BundleScript {
     await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "../tsconfig.json", owner: "s:typescript", args, timeoutMs: 1_800_000 });
   }
 }
-const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication-test",CatalogPublicationTestScript).register("catalog-exports-test",CatalogExportsTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

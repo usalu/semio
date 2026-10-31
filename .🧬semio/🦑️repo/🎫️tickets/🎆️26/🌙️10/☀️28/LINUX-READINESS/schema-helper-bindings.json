@@ -1,0 +1,44 @@
+[
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📖️events-commands-and-admin/🦀️.rs",
+    "anchor": "use super::*;",
+    "imports": [
+      "use super::views_and_document_open::valid_document_open_text;"
+    ]
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🛰️execution-target-artifacts-and-stream/🦀️.rs",
+    "anchor": "use super::*;",
+    "imports": [
+      "use super::views_and_document_open::valid_document_open_text;"
+    ]
+  },
+  {
+    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🦀️.rs",
+    "anchor": "use crate::*;",
+    "imports": [
+      "use crate::events_commands_and_admin::directory_event_page_has_control;",
+      "use crate::events_commands_and_admin::valid_directory_command_request_id;",
+      "use crate::views_and_document_open::directory_space_administration_cursor_valid;",
+      "use crate::views_and_document_open::directory_space_administration_text_valid;",
+      "use crate::views_and_document_open::directory_space_administration_members_valid;",
+      "use crate::views_and_document_open::directory_space_administration_invites_valid;"
+    ]
+  },
+  {
+    "file": "🧰️framework/🛍️products/🐾️pets/🧬️schema/🎞️frame/🦀️.rs",
+    "anchor": "use super::*;",
+    "imports": [
+      "use super::stage::elapsed;",
+      "use super::scalars::nullable;"
+    ]
+  },
+  {
+    "file": "🧰️framework/🛍️products/🐾️pets/🧬️schema/🎬️stage/🦀️.rs",
+    "anchor": "use super::*;",
+    "imports": [
+      "use super::scalars::nullable;",
+      "use super::menagerie_and_terrain::meeting;"
+    ]
+  }
+]

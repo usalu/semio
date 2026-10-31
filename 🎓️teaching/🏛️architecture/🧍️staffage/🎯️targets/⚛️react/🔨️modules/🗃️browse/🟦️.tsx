@@ -226,7 +226,7 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const { rows, manifest } = useRows();
   const { route, navigate: go } = useAddress();
   const breakpoint = useBreakpoint();
-  const [attach, size] = useSize({ width: 1280, height: 640 });
+  const [attach] = useSize({ width: 1280, height: 640 });
   const here: Route = { page: "category", category };
   const inside = view.opened && (route.page === "category" || route.page === "asset") && route.category === category;
   const { filters, set } = useAddressFilters(here, inside, category);
@@ -238,7 +238,7 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
   const entry = manifest?.categories.find((candidate) => candidate.id === category);
   const columns = CATEGORY_COLUMNS[breakpoint];
   const rowCount = Math.max(1, Math.ceil(withOpened.length / columns));
-  const mode = breakpoint === "mobile" || size.height < rowCount * CATEGORY_ROW_MIN_PX ? "swipe" : "strip";
+  const mode = breakpoint === "mobile" ? "swipe" : "strip";
   const pages: readonly LevelPage[] = useMemo(() => withOpened.map((row): LevelPage => ({ id: row.entry.id, label: row.entry.title[language], render: (pane) => <AssetPage row={row} view={pane} /> })), [withOpened, language]);
   const cells = useMemo(() => rowMajorCells(pages.map((page) => page.id), columns), [pages, columns]);
   const byId = useMemo(() => new Map(withOpened.map((row) => [row.entry.id, row])), [withOpened]);
@@ -287,8 +287,8 @@ export function CategoryPage(props: { readonly category: CategoryId; readonly vi
               );
             }}
             columns={tracks(Array.from({ length: columns }, () => 1))}
-            rows={tracks(Array.from({ length: rowCount }, () => 1))}
-            budget={4}
+            rows={tracks(Array.from({ length: rowCount }, () => 1), CATEGORY_ROW_MIN_PX)}
+            budget={breakpoint === "mobile" ? 1 : 4}
           />
         )}
       </div>

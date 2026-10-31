@@ -335,6 +335,10 @@ func replayShard(ctx context.Context, file *os.File, name string, expected *Shar
 	scanner := bufio.NewScanner(io.TeeReader(io.LimitReader(file, MaxIndexBytes+1), hash))
 	scanner.Buffer(make([]byte, 64<<10), MaxDocumentBytes*2+1)
 	index := &ownedIndex{docs: map[string]string{}, seen: map[uint64]struct{}{}}
+	reader := bytes.NewReader(nil)
+	decoder := json.NewDecoder(reader)
+	decoder.DisallowUnknownFields()
+	var lineStart int64
 	for scanner.Scan() {
 		if err = ctx.Err(); err != nil {
 			return nil, info, err
@@ -343,15 +347,21 @@ func replayShard(ctx context.Context, file *os.File, name string, expected *Shar
 		if len(line) > MaxDocumentBytes*2 {
 			return nil, info, fmt.Errorf("%w: shard event bytes", ErrCorrupt)
 		}
-		decoder := json.NewDecoder(bytes.NewReader(line))
-		decoder.DisallowUnknownFields()
+		reader.Reset(append(line, '\n'))
 		var item event
 		if err = decoder.Decode(&item); err != nil {
 			return nil, info, fmt.Errorf("%w: %v", ErrCorrupt, err)
 		}
-		if err = decoder.Decode(new(interface{})); err != io.EOF {
-			return nil, info, fmt.Errorf("%w: trailing shard event", ErrCorrupt)
+		end := decoder.InputOffset() - lineStart
+		if end < 0 || end > int64(len(line)) {
+			return nil, info, fmt.Errorf("%w: shard event framing", ErrCorrupt)
 		}
+		for _, value := range line[end:] {
+			if value != ' ' && value != '\t' && value != '\r' && value != '\n' {
+				return nil, info, fmt.Errorf("%w: trailing shard event", ErrCorrupt)
+			}
+		}
+		lineStart += int64(len(line) + 1 - reader.Len())
 		if item.Schema != schema || item.Seq != index.seq+1 || item.Seq > MaxPendingEvents || shardName(item.ID) != name {
 			return nil, info, fmt.Errorf("%w: shard event sequence or partition", ErrCorrupt)
 		}

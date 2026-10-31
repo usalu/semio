@@ -36,6 +36,12 @@ import (
 const cacheSchemaVersion = 6
 
 // 💿️cacheMeta holds the data fields for a cacheMeta record.
+type treeSourceCapture struct {
+	root string
+	fingerprint string
+	metadata *cacheMeta
+}
+
 type cacheMeta struct {
 	SchemaVersion     int               `json:"SchemaVersion"`
 	SuperHead         string            `json:"SuperHead"`
@@ -327,6 +333,18 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode, scope string, progr
 	if err != nil {
 		return nil, err
 	}
+	return ensureCacheIndexedCaptured(ctx, root, scope, progress, &treeSourceCapture{root: repoRoot, fingerprint: fingerprint, metadata: newMeta})
+}
+
+func ensureCacheIndexedCaptured(ctx context.Context, root *TreeNode, scope string, progress func(search.Progress), capture *treeSourceCapture) (search.Index, error) {
+	if err := ctx.Err(); err != nil { return nil, err }
+	if capture == nil || capture.root != workspace.GetRootDir() || capture.metadata == nil || capture.metadata.SchemaVersion != cacheSchemaVersion || capture.fingerprint != capture.metadata.Fingerprint || len(capture.fingerprint) != sha256.Size*2 {
+		return nil, fmt.Errorf("%w: operation-owned Source capture required", search.ErrCorrupt)
+	}
+	if digest, err := hex.DecodeString(capture.fingerprint); err != nil || len(digest) != sha256.Size { return nil, fmt.Errorf("%w: captured Source digest", search.ErrCorrupt) }
+	metadata := *capture.metadata
+	newMeta := &metadata
+	fingerprint := capture.fingerprint
 	projectionDigest, err := fingerprintSearchProjection(ctx, root)
 	if err != nil {
 		return nil, err

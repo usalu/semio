@@ -2,7 +2,9 @@
   "component_overrides": {
     "cmp-table.width": {
       "entry": "Patched",
-      "value": "double"
+      "value": {
+        "value": "double"
+      }
     }
   }
 }

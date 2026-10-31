@@ -121,7 +121,7 @@ pub(super) fn controlled_from_body(input:&DeriveInput,container:&ContainerAttrs,
                 let attrs=parse_variant_attrs(&variant.attrs)?;let ident=&variant.ident;let wire=variant_wire_name(&ident.to_string(),&attrs.rename,&container.rename_all);
                 if matches!(variant.fields,Fields::Unit){
                     string_arms.push(quote!{#wire=>Ok(Self::#ident),});
-                    let deny=if container.deny_unknown_fields&&container.content.is_none(){let allowed:Vec<_>=container.tag.iter().collect();quote!{#c::DslValue::deny_fields_controlled(__entries,&[#(#allowed),*],control)?;}}else{quote!{}};
+                    let deny=if container.deny_unknown_fields{let allowed:Vec<_>=container.tag.iter().collect();quote!{#c::DslValue::deny_fields_controlled(__entries,&[#(#allowed),*],control)?;}}else{quote!{}};
                     object_arms.push(quote!{#wire=>{#deny Ok(Self::#ident)},});continue
                 }
                 let payload=match(&container.tag,&container.content){

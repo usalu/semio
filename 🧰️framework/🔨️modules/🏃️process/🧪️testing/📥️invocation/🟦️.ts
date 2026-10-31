@@ -2,6 +2,9 @@ import {AsyncLocalStorage} from "node:async_hooks";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join,relative,resolve} from "node:path";
+import {stripVTControlCharacters} from "node:util";
+import {ISOLATED_BUILD_TEST_PROTOCOL_V1,readIsolatedBuildTestPolicyV1,isolatedBuildTestBudgetV1,isolatedBuildTestPrimaryMatchesV1,isolatedBuildTestFailureReasonV1,type IsolatedBuildTestPolicyV1,type IsolatedBuildTestFailureV1} from "./🪟️isolation/🟦️.ts";
+export {isolatedBuildTestBudgetV1,type IsolatedBuildTestPolicyV1} from "./🪟️isolation/🟦️.ts";
 import { afterAll, test } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🧪️test/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import envelopeSchema from "./🧬️schema/🪪️envelope.json" with {type:"json"};
@@ -73,7 +76,15 @@ async function bornInProcessV1(envelope:BuildTestEnvelopeV1,issuer:BuildTestGran
   if(artifacts!==undefined&&!configured)rmSync(artifacts,{recursive:true,force:true});
  }
 }
-const pending=new Set<Pending>(),suites=new Set<Suite>(),cleanups:(()=>Promise<void>)[]=[],failure=(error:unknown)=>{if(!failed){failed=true;primary=error;}};
+const isolationName=process.env.SEMIO_ISOLATED_BUILD_TEST,isolationFailures:IsolatedBuildTestFailureV1[]=[],seenIsolationFailures=new Set<unknown>();let isolationOverflow=false;
+const recordIsolationFailure=(error:unknown,phase:IsolatedBuildTestFailureV1["phase"],depth=0):void=>{
+ if(isolationName===undefined)return;if(depth>ISOLATED_BUILD_TEST_PROTOCOL_V1.maximumFailureDepth){isolationOverflow=true;return;}
+ if(error instanceof AggregateError){for(const child of error.errors)recordIsolationFailure(child,phase,depth+1);return;}
+ const observed=isolatedBuildTestFailureReasonV1(error),reason=observed.reason;if(observed.overflow)isolationOverflow=true;
+ const identity=error!==null&&(typeof error==="object"||typeof error==="function")?error:phase+":"+typeof error+":"+reason;if(seenIsolationFailures.has(identity))return;seenIsolationFailures.add(identity);
+ if(isolationFailures.length>=ISOLATED_BUILD_TEST_PROTOCOL_V1.maximumFailures){isolationOverflow=true;return;}isolationFailures.push({phase,reason:reason.slice(0,ISOLATED_BUILD_TEST_PROTOCOL_V1.maximumReasonCharacters)});
+};
+const pending=new Set<Pending>(),suites=new Set<Suite>(),cleanups:(()=>Promise<void>)[]=[],failure=(error:unknown,phase:IsolatedBuildTestFailureV1["phase"]="callback")=>{recordIsolationFailure(error,phase);if(!failed){failed=true;primary=error;}};
 /** 🧷️ Shares one actual process birth while retaining each privately issued cancellable callback through settlement. */
 function enqueue<T>(body:(original:IssuedScriptInvocationV1)=>Promise<T>,additionalSignal?:AbortSignal):Promise<T>{
  if(!accepting)throw Error("Build test receiver admission closed");
@@ -94,24 +105,26 @@ export function registerBuildTestLawV1(name:string,plan:BuildTestLawPlanV1,body:
  },budget.totalMilliseconds);
 }
 /** 🧬️ Runs one test in its own actual process birth, because any rejected issued operation closes the shared Original of its process; a `rejection` pattern declares that the process must end with that primary failure after the body reports its own settled post-conditions through `checkpoint`. */
-export function registerIsolatedBuildTestV1(file:string,name:string,timeoutMilliseconds:number,body:(checkpoint:()=>void)=>Promise<unknown>,rejection?:RegExp):void{
- const isolated=process.env.SEMIO_ISOLATED_BUILD_TEST,marker="[isolated-settled] "+name;
- if(isolated!==undefined){if(isolated===name)test(name,()=>body(()=>{console.log(marker);}),timeoutMilliseconds);return;}
- if(!Number.isSafeInteger(timeoutMilliseconds)||timeoutMilliseconds<2000)throw Error("Finite isolated build test timeout required");
+export function registerIsolatedBuildTestV1(file:string,name:string,value:IsolatedBuildTestPolicyV1,body:(checkpoint:()=>void)=>Promise<unknown>,rejection?:RegExp):void{
+ const policy=readIsolatedBuildTestPolicyV1(value),marker="[isolated-settled] "+name;
+ if(isolationName!==undefined){if(isolationName===name)test(name,async()=>{try{return await body(()=>{process.stdout.write(marker+"\n");});}catch(error){failure(error,"body");throw error;}},policy.bodyMilliseconds);return;}
  test(name,async()=>{
-  const result=await withBuildTestInvocationV1(original=>captureOwnedCommandResultV1(process.execPath,["test","--timeout",String(timeoutMilliseconds),"./"+relative(process.cwd(),file).replaceAll("\\","/"),"--test-name-pattern","^"+name.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"$"],process.cwd(),{control:createIssuedResourceControlV1(original,"fixture:isolated-test",timeoutMilliseconds),env:scriptInvocationEnvironment(original,{...process.env,SEMIO_ISOLATED_BUILD_TEST:name}),output:{maximumBytes:1048576,maximumLines:8192}})),tail="\n"+result.stderr.slice(-8000)+result.stdout.slice(-2000);
+  const result=await withBuildTestInvocationV1(original=>{const maximum=isolatedBuildTestBudgetV1(policy,process.uptime()*1000,original.control.remainingMilliseconds());return captureOwnedCommandResultV1(process.execPath,["test","--timeout",String(policy.bodyMilliseconds),"./"+relative(process.cwd(),file).replaceAll("\\","/"),"--test-name-pattern","^"+name.replace(/[.*+?^${}()|[\]\\]/gu,"\\$&")+"$"],process.cwd(),{control:createIssuedResourceControlV1(original,"fixture:isolated-test",maximum),env:scriptInvocationEnvironment(original,{...process.env,SEMIO_ISOLATED_BUILD_TEST:name}),output:{maximumBytes:1048576,maximumLines:8192}});}),tail="\n"+result.stderr.slice(-8000)+result.stdout.slice(-2000);
   if(result.signal!==null)throw Error("Isolated build test was killed: "+name+tail);
-  if(rejection===undefined){if(result.status!==0||!/^\s*1 pass$/mu.test(result.stderr)||/^\s*[1-9]\d* fail$/mu.test(result.stderr))throw Error("Isolated build test failed: "+name+tail);return;}
-  if(result.status===0||!(result.stdout+result.stderr).includes(marker)||!rejection.test(result.stderr))throw Error("Isolated build test did not end with its declared primary rejection: "+name+tail);
- },timeoutMilliseconds+5000);
+  const stderr=stripVTControlCharacters(result.stderr);
+  if(rejection===undefined){if(result.status!==0||!/^\s*1 pass$/mu.test(stderr)||/^\s*[1-9]\d* fail$/mu.test(stderr))throw Error("Isolated build test failed: "+name+tail);return;}
+  const records=result.stdout.split("\n").filter(line=>line.startsWith(ISOLATED_BUILD_TEST_PROTOCOL_V1.primaryPrefix));
+  let admitted=false;try{admitted=records.length===1&&isolatedBuildTestPrimaryMatchesV1(JSON.parse(records[0]!.slice(ISOLATED_BUILD_TEST_PROTOCOL_V1.primaryPrefix.length)),name,rejection);}catch{}
+  if(result.status===0||!result.stdout.includes(marker)||!admitted)throw Error("Isolated build test did not end with its declared primary rejection: "+name+tail);
+ },policy.scope.kind==="file"?policy.scope.maximumElapsedMilliseconds:policy.bodyMilliseconds+ISOLATED_BUILD_TEST_PROTOCOL_V1.observerGraceMilliseconds);
 }
 /** 🧪️ Enrolls a suite fixture before effects and retains its real receiver-owned resource scope until all users stop. */
 export function registerBuildTestFixtureV1<T>(open:FixtureOpen<T>):BuildTestFixtureV1<T>{
  if(!accepting||!ready)throw Error("Live build test receiver fixture admission required");
  let accept!:(value:T)=>void,refuse!:(error:unknown)=>void,close!:()=>void,published=false,closing=false;const available=new Promise<T>((resolve,reject)=>{accept=resolve;refuse=reject;}),closed=new Promise<void>(resolve=>{close=resolve;}),users=new Set<Promise<unknown>>();void available.catch(()=>{});
- const work=Promise.resolve().then(async()=>{await ready;if(!startFixture)throw Error("Actual build test fixture Original lifetime ended");await startFixture(open,async value=>{if(published)throw Error("Build test fixture already published");published=true;accept(value);await closed;});if(!published)throw Error("Build test fixture publication required");if(!closing)throw Error("Build test fixture returned before receiver close");}),entry:Suite={close:()=>{closing=true;close();},work,users,live:true};suites.add(entry);void work.then(()=>{entry.live=false;},error=>{entry.live=false;failure(error);refuse(error);});
+ const work=Promise.resolve().then(async()=>{await ready;if(!startFixture)throw Error("Actual build test fixture Original lifetime ended");await startFixture(open,async value=>{if(published)throw Error("Build test fixture already published");published=true;accept(value);await closed;});if(!published)throw Error("Build test fixture publication required");if(!closing)throw Error("Build test fixture returned before receiver close");}),entry:Suite={close:()=>{closing=true;close();},work,users,live:true};suites.add(entry);void work.then(()=>{entry.live=false;},error=>{entry.live=false;failure(error,"fixture");refuse(error);});
  return Object.freeze({settled:work,run<R>(body:(value:T)=>Promise<R>):Promise<R>{if(!accepting||!entry.live)return Promise.reject(Error("Build test fixture admission closed"));const use=Promise.resolve().then(async()=>{const value=await available;if(!entry.live)throw Error("Build test fixture lifetime ended");return body(value);});users.add(use);void use.then(()=>{users.delete(use);},error=>{failure(error);users.delete(use);});return use;}});
 }
 /** 🧹️ Registers physical fixture cleanup before the receiver closes callback admission. */
 export function registerBuildTestCleanupV1(cleanup:()=>Promise<void>):void{if(!accepting)throw Error("Build test cleanup admission closed");cleanups.push(cleanup);}
-afterAll(async()=>{accepting=false;if(activeLaw)activeLaw.completionOpen=false;for(const entry of pending)entry.controller.abort(Error("Build test receiver closed with active callback"));while(pending.size)await Promise.allSettled([...pending].map(entry=>entry.work));for(const entry of suites)while(entry.users.size)await Promise.allSettled([...entry.users]);for(const entry of suites)entry.close();await Promise.allSettled([...suites].map(entry=>entry.work));for(const cleanup of cleanups.reverse())try{await cleanup();}catch(error){failure(error);}finish?.();try{await lifetime;}catch(error){failure(error);}if(failed)throw primary;},100000);
+afterAll(async()=>{accepting=false;if(activeLaw)activeLaw.completionOpen=false;for(const entry of pending)entry.controller.abort(Error("Build test receiver closed with active callback"));while(pending.size)await Promise.allSettled([...pending].map(entry=>entry.work));for(const entry of suites)while(entry.users.size)await Promise.allSettled([...entry.users]);for(const entry of suites)entry.close();await Promise.allSettled([...suites].map(entry=>entry.work));for(const cleanup of cleanups.reverse())try{await cleanup();}catch(error){failure(error,"cleanup");}finish?.();try{await lifetime;}catch(error){failure(error,"receiver");}if(failed){if(isolationName!==undefined)process.stdout.write(ISOLATED_BUILD_TEST_PROTOCOL_V1.primaryPrefix+JSON.stringify({version:1,test:isolationName,overflow:isolationOverflow,failures:isolationFailures})+"\n");throw primary;}},100000);

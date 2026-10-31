@@ -1,12 +1,37 @@
 import {describe,expect,test} from "bun:test";
 import {join} from "node:path";
+import {Database} from "bun:sqlite";
+import markerCorpus from "./🔣️.json";
 import {isolateRequestV1,serveExecutorV1} from "../../🏭️executor/🟨️.mjs";
 import {createExecutorPoolV1} from "../../🏊️delegate/🏭️executor/🟨️.mjs";
 import {sleep,waitFor} from "../🟦️.ts";
 
 const FIXTURE=join(import.meta.dir,"🏗️fixture","🟨️.mjs");
-const pool=(extra:Record<string,string>={},size=1)=>createExecutorPoolV1({command:["bun",FIXTURE],environment:{...process.env,...extra},cwd:process.cwd(),size,readyTimeoutMilliseconds:20000});
+const pool=(extra:Record<string,string>={},size=1)=>createExecutorPoolV1({command:[process.execPath,FIXTURE],environment:{...process.env,FORCE_COLOR:"0",...extra},cwd:process.cwd(),size,readyTimeoutMilliseconds:20000});
 const collect=()=>{const out:string[]=[],err:string[]=[];return{out,err,onOutput:async(stream:string,text:string)=>{(stream==="stdout"?out:err).push(text);}};};
+
+describe("executor stream fences",()=>{
+ for(const scenario of markerCorpus.cases)test(`raw fence with FORCE_COLOR=${scenario.color}`,async()=>{
+  const oracle=new Database(":memory:");
+  try{
+   const expected=oracle.query("select char(0)||'semio-end:'||?||char(0)||char(10) as marker").get(markerCorpus.id) as {marker:string};
+   expect(expected.marker).toBe(markerCorpus.marker);
+   const p=pool({FORCE_COLOR:scenario.color});p.top();
+   try{
+    expect(await waitFor(()=>p.idleCount()===1,20000)).toBe(true);
+    const sink=collect();
+    const result=await Promise.race([p.run(p.take()!,{id:markerCorpus.id,argv:["echo","fence"]},sink),sleep(1500).then(()=>undefined)]);
+    expect(result).toMatchObject({exit:0});
+    expect(sink.out.join("")).toContain('"rest":["fence"]');
+    expect(sink.err.join("")).toContain("err fence");
+    expect(sink.out.join("")+sink.err.join("")).not.toContain("semio-end:");
+    const large=collect();
+    expect(await p.run(p.take()!,{id:markerCorpus.id+1,argv:["big",String(markerCorpus.bytes)]},large)).toMatchObject({exit:0});
+    expect(large.out.join("")).toBe("x".repeat(markerCorpus.bytes)+"\n");
+   }finally{await p.close();}
+  }finally{oracle.close();}
+ },60000);
+});
 
 describe("request isolation",()=>{
  const fake=()=>{const state:any={env:{KEEP:"1",CHANGE:"a"},directory:"/start",exitCode:undefined,cwd(){return this.directory;},chdir(path:string){this.directory=path;}};return state;};

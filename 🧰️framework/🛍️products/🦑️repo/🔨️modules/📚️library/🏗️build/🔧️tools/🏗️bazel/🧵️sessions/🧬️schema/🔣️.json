@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Bazel session slots",
   "description": "Schema-first contract of the concurrent Bazel sessions: a bounded set of numbered slots, each slot one persistent Bazel server with its own short output base and its own generated packages, all sharing one content-addressed cache (disk cache, repository cache, repository contents cache, optional remote cache). A session claims exactly one slot for the duration of one invocation, so concurrent invocations never meet in one Bazel server lock.",
   "definitions": {

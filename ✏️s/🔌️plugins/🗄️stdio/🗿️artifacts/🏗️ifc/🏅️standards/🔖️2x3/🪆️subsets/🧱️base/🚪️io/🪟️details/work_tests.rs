@@ -4,7 +4,7 @@ use semio_framework_plugin::app_testing::OriginalWorkFixture;
 use semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead;
 use semio_framework_plugin::{AppOperationContext,HistoryView,NoConfig};
 use protocol::ColdMutation;
-use crate::editor::ifc2x3_any::{Ifc2x3AnyEditor,Ifc2x3AnyEditCommand};
+use semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::{Ifc2x3AnyEditor,Ifc2x3AnyEditCommand};
 type Work=Ifc2x3DetailsWork<Ifc2x3AnyEditor>;
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:1_048_576,maximum_capacity_bytes:1_048_576,maximum_release_bytes:1_048_576,maximum_depth:256}}
 fn close(caller:&mut OriginalWorkFixture,work:&mut Work){work.begin_close();for _ in 0..8192{if work.terminal_is_empty(){return;}assert!(caller.close(work,grant()).is_ok());}panic!("own Part21 work close did not drain")}

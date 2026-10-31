@@ -1,0 +1,4 @@
+import {join,resolve} from "node:path";
+import {resourceLeasePathV1,resourceQueueClaimV1,resourceQueueTicketV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+const base=resolve(process.argv[2]!),ticket=resourceQueueTicketV1({arrivedAtMs:Date.now(),pid:9999999999,owner:Buffer.alloc(16).toString("base64url")});
+for(const id of["0","1"]){const directory=join(base,"r123456",id,"l"),resource="native-fixed-image:"+join(base,"r123456",id,"i"),database=resourceLeasePathV1(directory,resource,ticket),claim=resourceQueueClaimV1(directory,resource,ticket),claimPath=resourceLeasePathV1(claim.directory,claim.resource);console.log(JSON.stringify({id,databaseCharacters:database.length,queueCharacters:join(database.replace(/\.sqlite$/u,".queue"),ticket).length,claimJournalCharacters:(claimPath+"-journal").length}));}

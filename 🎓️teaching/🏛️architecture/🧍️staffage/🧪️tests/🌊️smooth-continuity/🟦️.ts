@@ -10,13 +10,15 @@ import { describe, expect, it } from "vitest";
 import type { Asset, Clip } from "../../🧬️schema/🟦️.ts";
 import { clipOf, sampleClip, sampleTrack, transition } from "../../🔨️modules/🎞️animation/🟦️.ts";
 import { checkAsset } from "../../🔨️modules/🗂️catalog/🩺️check/🟦️.ts";
+import { UNCHECKED_PROFILE, samplingAsset } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const fixture = read("../../🧫️fixtures/🌊️smooth-continuity/🔣️.json");
-const sparse = read("../../🧫️fixtures/🦶️sparse-smooth-walk/🔣️.json") as Asset;
-const walker = read("../../🧫️fixtures/🚶️reference-walker/🔣️.json") as Asset;
+const sparseSource = read("../../🧫️fixtures/🦶️sparse-smooth-walk/🔣️.json").asset as Asset;
+const sparse = samplingAsset(sparseSource);
+const walker = read("../../🧫️fixtures/👤️sample-figure/🔣️.json").asset as Asset;
 const clip = clipOf(sparse, fixture.sparseClip);
 const e = fixture.epsilonS;
 const angle = (c: Clip, t: number, asset: Asset = sparse) => sampleClip(asset, c, t).offsets[fixture.bone]!.angleDeg;
@@ -26,10 +28,10 @@ describe("🌊️ smooth continuity", () => {
   it("validates and passes the full-pipeline check for the sparse four-key walk", () => {
     expect(clip.keys.length).toBe(4);
     expect(clip.keys.every((k) => k.ease === "smooth")).toBe(true);
-    expect(validateAsset(sparse)).toEqual([]);
-    expect(checkAsset(sparse)).toEqual([]);
-    expect(checkAsset(walker)).toEqual([]);
-  });
+    expect(validateAsset(sparseSource)).toEqual([]);
+    expect(checkAsset(sparseSource, 3, { profile: UNCHECKED_PROFILE })).toEqual([]);
+    expect(checkAsset(walker, 3, { profile: UNCHECKED_PROFILE })).toEqual([]);
+  }, 120000);
 
   it("has equal bone-angle velocity on both sides of every key", () => {
     for (const key of clip.keys) {

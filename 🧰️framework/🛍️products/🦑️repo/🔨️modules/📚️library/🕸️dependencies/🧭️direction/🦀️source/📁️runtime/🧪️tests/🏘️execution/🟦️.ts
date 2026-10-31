@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import glob from "fast-glob";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { writeRustLayerOracle } from "../../../../../../🧪️tests/🧱️rust-source-direction/🔮️oracle/🟦️.ts";
 import { inspectRustSourceDirection, verifyRustSourceDirection } from "../../../🏃️execution/🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));

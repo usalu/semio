@@ -1,14 +1,23 @@
 /** 🧬️ ProgramSnapshot artifact schema — every field with its state class. */
+import type { TextField, TimestampMeta } from "./🪪️entity-foundation/🟦️.ts";
 
 import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
+import * as ieee754Text from "@semio-tech/framework/io/text/ieee754";
 import type { ProgramMeta, ProjectDefinition, QuantitySpec, TraceLink } from "./🪪️entity-foundation/🟦️.ts";
 import type { AccessRule, Activity, Adjacency, AdjacencyKind, FlowRequirement, Function, Process, ProgramElement, QuantityRequirement, Relationship, Stakeholder, UserProfile } from "./🏗️program-structure/🟦️.ts";
 import type { AccessibilityRequirement, CommunicationRequirement, CostRequirement, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, OperationalRequirement, OrganizationalRequirement, PrivacyRequirement, RegulatoryRequirement, ResilienceRequirement, Resource, SafetyRequirement, ScheduleRequirement, SecurityRequirement, ServiceRequirement, SiteContext, StorageRequirement, SustainabilityRequirement, WayfindingRequirement } from "./📋️requirements/🟦️.ts";
 import type { AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, BenchmarkRecord, ChangeRecord, CollaborationRecord, ComplianceRecord, Conflict, ConstraintRecord, Decision, Governance, Issue, KnowledgeRecord, MeetingRecord, OptionEvaluation, PerformanceCriterion, PriorityRecord, QualityRecord, ReportRecord, Requirement, Risk, Scenario, SearchFilter, StatusRecord, Survey, TemplateRecord, ValidationRecord, Workshop } from "./🗃️decision-records/🟦️.ts";
 export { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 export type { RegisterKey, RegisterRow } from "./🗄️registers/🗂️catalog/🟦️.ts";
+
+export type { AccessRule, Activity, Adjacency, FlowRequirement, Function, Process, ProgramElement, QuantityRequirement, Relationship, Stakeholder, UserProfile } from "./🏗️program-structure/🟦️.ts";
+export type { AccessibilityRequirement, CommunicationRequirement, CostRequirement, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, OperationalRequirement, OrganizationalRequirement, PrivacyRequirement, RegulatoryRequirement, ResilienceRequirement, Resource, SafetyRequirement, ScheduleRequirement, SecurityRequirement, ServiceRequirement, SiteContext, StorageRequirement, SustainabilityRequirement, WayfindingRequirement } from "./📋️requirements/🟦️.ts";
+export type { AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, ChangeRecord, CollaborationRecord, ComplianceRecord, Conflict, ConstraintRecord, Decision, Governance, Issue, MeetingRecord, OptionEvaluation, PerformanceCriterion, PriorityRecord, QualityRecord, ReportRecord, Requirement, Risk, Scenario, SearchFilter, StatusRecord, Survey, TemplateRecord, ValidationRecord, Workshop } from "./🗃️decision-records/🟦️.ts";
+export type { ProgramMeta, ProjectDefinition, TraceLink } from "./🪪️entity-foundation/🟦️.ts";
+
+export type { BenchmarkRecord, KnowledgeRecord } from "./🗃️decision-records/🟦️.ts";
 
 export const PROGRAM_ARTIFACT_FIELDS = [
   "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledgePayload", "knowledge", "benchmarksPayload", "benchmarks", "traces", "governance",
@@ -162,7 +171,7 @@ export interface ProgramArtifact {
 }
 
 //#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
+/** 🛑️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class architectProgramArtifactGuardRefusal extends Error {
   constructor(readonly at: string, readonly why: string) {
     super(`${at}: ${why}`);
@@ -174,13 +183,17 @@ const architectProgramArtifactGuardReject = (at: string, why: string): never => 
 };
 
 type architectProgramArtifactGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type architectProgramArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
+type architectProgramArtifactGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number; readonly exclusiveMinimum?: number; readonly exclusiveMaximum?: number };
 type architectProgramArtifactGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
 export const architectProgramArtifactGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : architectProgramArtifactGuardReject(at, "value is not an object");
+export const architectProgramArtifactGuardClosed = (row: Readonly<Record<string, unknown>>, at: string, keys: readonly string[]): Readonly<Record<string, unknown>> => {
+  for (const key of Object.keys(row)) if (!keys.includes(key)) architectProgramArtifactGuardReject(`${at}.${key}`, "unknown property");
+  return row;
+};
 export const architectProgramArtifactGuardExactObject = (value: unknown, at: string, fields: readonly string[], required: readonly string[] = fields): Readonly<Record<string, unknown>> => {
-  const row = parseSchemaRecord(value, fields, at);
+  const row = architectProgramArtifactGuardClosed(architectProgramArtifactGuardObject(value, at), at, fields);
   for (const field of required) if (!Object.hasOwn(row, field)) architectProgramArtifactGuardReject(`${at}.${field}`, "field is missing");
   return row;
 };
@@ -203,19 +216,28 @@ export const architectProgramArtifactGuardNumber = (value: unknown, at: string, 
   if (typeof value !== "number" || !Number.isFinite(value)) return architectProgramArtifactGuardReject(at, "value is not a finite number");
   if (bounds.minimum !== undefined && value < bounds.minimum) architectProgramArtifactGuardReject(at, `number is below ${bounds.minimum}`);
   if (bounds.maximum !== undefined && value > bounds.maximum) architectProgramArtifactGuardReject(at, `number is above ${bounds.maximum}`);
+  if (bounds.exclusiveMinimum !== undefined && value <= bounds.exclusiveMinimum) architectProgramArtifactGuardReject(at, `number is not above ${bounds.exclusiveMinimum}`);
+  if (bounds.exclusiveMaximum !== undefined && value >= bounds.exclusiveMaximum) architectProgramArtifactGuardReject(at, `number is not below ${bounds.exclusiveMaximum}`);
   return value;
 };
 export const architectProgramArtifactGuardInteger = (value: unknown, at: string, bounds: architectProgramArtifactGuardRangeBounds = {}): number =>
   Number.isSafeInteger(value) ? architectProgramArtifactGuardNumber(value, at, bounds) : architectProgramArtifactGuardReject(at, "value is not an integer");
+export const architectProgramArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
+  members.includes(value as T) ? (value as T) : architectProgramArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const architectProgramArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
+  value === expected ? expected : architectProgramArtifactGuardReject(at, `value is not ${String(expected)}`);
 /** 🔢️ Admits the canonical complete native unsigned64 domain without coercion. */
 export const architectProgramArtifactGuardUnsigned64 = (value:unknown,at:string):bigint =>
   typeof value==="bigint"&&value>=0n&&value<=18446744073709551615n?value:architectProgramArtifactGuardReject(at,"value is not an unsigned64 bigint");
-/** 🧮️ Canonical native doubles own exact words independently of JSON numeric transport. */
+
+/** 🧮️ Admits the normative numeric or exact-word transport into canonical native doubles. */
 export function architectProgramArtifactGuardBinary64(value:unknown,at:string):Binary64 {
-  const row=architectProgramArtifactGuardExactObject(value,at,["bits"]);
-  try{return parseBinary64(row);}catch{return architectProgramArtifactGuardReject(at,"value is not an exact binary64 word");}
+  const input=typeof value==="number"?architectProgramArtifactGuardNumber(value,at):architectProgramArtifactGuardExactObject(value,at,["bits"]);
+  try{return ieee754Text.parseBinary64Transport(input);}catch{return architectProgramArtifactGuardReject(at,"value is not a binary64 transport");}
 }
+
 function nullableBinary64(value:unknown,at:string):Binary64|null{return value===null?null:architectProgramArtifactGuardBinary64(value,at);}
+
 /** 📏️ Admit each literal quantity field as a bit-backed optional native double. */
 export function parseQuantitySpec(value:unknown,at="$"):QuantitySpec{
   const row=architectProgramArtifactGuardExactObject(value,at,["min","max","target","current","forecast","peak","average","unit"],["unit"]);
@@ -229,11 +251,6 @@ export function parseQuantitySpec(value:unknown,at="$"):QuantitySpec{
   if(row.average!==undefined)out.average=architectProgramArtifactGuardBinary64(row.average,at+".average");
   return out;
 }
-export const architectProgramArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : architectProgramArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const architectProgramArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : architectProgramArtifactGuardReject(at, `value is not ${String(expected)}`);
-
 //#endregion 🚪️Parsers
 function architectProgramArtifactGuardHeaderObject(value:unknown,at:string,fields:readonly string[],required:readonly string[]):Readonly<Record<string,unknown>>{
  const row=architectProgramArtifactGuardExactObject(value,at,fields,[...required,"tags","notes"]);
@@ -577,7 +594,24 @@ export function parseProgramElement(value: unknown, at = "$"): ProgramElement {
 }
 
 export function parseProgramMeta(value: unknown, at = "$"): ProgramMeta {
-  return architectProgramArtifactGuardExactObject(value, at, ["schema","documentId","title","subtitle","purpose","terminology","classification","industrySector","projectType","locale","revision","authorIds","sourceSystem","exportProfile","timestamps"], ["schema","documentId","title","subtitle","purpose","terminology","classification","industrySector","projectType","locale","revision","authorIds","sourceSystem","exportProfile","timestamps"]) as unknown as ProgramMeta;
+  const row = architectProgramArtifactGuardClosed(architectProgramArtifactGuardObject(value, at), at, ["schema", "documentId", "title", "subtitle", "purpose", "terminology", "classification", "industrySector", "projectType", "locale", "revision", "authorIds", "sourceSystem", "exportProfile", "timestamps"]);
+  return {
+    schema: architectProgramArtifactGuardString(row["schema"], `${at}.schema`),
+    documentId: architectProgramArtifactGuardString(row["documentId"], `${at}.documentId`),
+    title: architectProgramArtifactGuardString(row["title"], `${at}.title`),
+    subtitle: (row["subtitle"] === null ? null : architectProgramArtifactGuardString(row["subtitle"], `${at}.subtitle`)),
+    purpose: parseTextField(row["purpose"], `${at}.purpose`),
+    terminology: architectProgramArtifactGuardArray(row["terminology"], `${at}.terminology`).map((item, index) => architectProgramArtifactGuardString(item, `${at}.terminology[${index}]`)),
+    classification: architectProgramArtifactGuardArray(row["classification"], `${at}.classification`).map((item, index) => architectProgramArtifactGuardString(item, `${at}.classification[${index}]`)),
+    industrySector: architectProgramArtifactGuardString(row["industrySector"], `${at}.industrySector`),
+    projectType: architectProgramArtifactGuardString(row["projectType"], `${at}.projectType`),
+    locale: architectProgramArtifactGuardString(row["locale"], `${at}.locale`),
+    revision: architectProgramArtifactGuardString(row["revision"], `${at}.revision`),
+    authorIds: architectProgramArtifactGuardArray(row["authorIds"], `${at}.authorIds`).map((item, index) => architectProgramArtifactGuardString(item, `${at}.authorIds[${index}]`)),
+    sourceSystem: (row["sourceSystem"] === null ? null : architectProgramArtifactGuardString(row["sourceSystem"], `${at}.sourceSystem`)),
+    exportProfile: (row["exportProfile"] === null ? null : architectProgramArtifactGuardString(row["exportProfile"], `${at}.exportProfile`)),
+    timestamps: parseTimestampMeta(row["timestamps"], `${at}.timestamps`),
+  };
 }
 
 export function parseProjectDefinition(value: unknown, at = "$"): ProjectDefinition {
@@ -747,4 +781,34 @@ export function parseWorkshop(value: unknown, at = "$"): Workshop {
   const row = architectProgramArtifactGuardHeaderObject(value, at, ["id","name","description","status","priority","ownership","tags","notes","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"], ["id","name","status","priority","ownership","timestamps","workshopType","objectives","agenda","facilitatorId","participants","scheduledStart","scheduledEnd","location","materials","methods","outputs","decisions","issues","followUpActions","feedback","recordingRef","budget","workshopStatus","surveyIds"]);
   nullableBinary64(row.budget, at+".budget");
   return row as unknown as Workshop;
+}
+
+export type Binary64Transport = number | { readonly bits: string };
+
+export function parseBinary64Transport(value: unknown, at = "$"): Binary64Transport {
+  return ((input0: unknown) => { if (typeof input0 === "number") { try { return architectProgramArtifactGuardNumber(input0, `${at}`); } catch (error) { if (!(error instanceof architectProgramArtifactGuardRefusal)) throw error; } } if (typeof input0 === "object" && input0 !== null && !Array.isArray(input0)) { try { return ((row1) => ({ bits: architectProgramArtifactGuardString(row1["bits"], `${at}.bits`, {"pattern": "^[0-9a-f]{16}$"}) }))(architectProgramArtifactGuardClosed(architectProgramArtifactGuardObject(input0, `${at}`), `${at}`, ["bits"])); } catch (error) { if (!(error instanceof architectProgramArtifactGuardRefusal)) throw error; } } return architectProgramArtifactGuardReject(`${at}`, "value matches no variant"); })(value);
+}
+
+export type Unsigned64Transport = number | string;
+
+export function parseUnsigned64Transport(value: unknown, at = "$"): Unsigned64Transport {
+  return ((input0: unknown) => { if (typeof input0 === "number") { try { return architectProgramArtifactGuardInteger(input0, `${at}`, {"minimum": 0, "maximum": 9007199254740991}); } catch (error) { if (!(error instanceof architectProgramArtifactGuardRefusal)) throw error; } } if (typeof input0 === "string") { try { return architectProgramArtifactGuardString(input0, `${at}`, {"pattern": "^(0|[1-9][0-9]{0,19})$"}); } catch (error) { if (!(error instanceof architectProgramArtifactGuardRefusal)) throw error; } } return architectProgramArtifactGuardReject(`${at}`, "value matches no variant"); })(value);
+}
+
+export function parseTextField(value: unknown, at = "$"): TextField {
+  const row = architectProgramArtifactGuardClosed(architectProgramArtifactGuardObject(value, at), at, ["text", "format"]);
+  return {
+    text: architectProgramArtifactGuardString(row["text"], `${at}.text`),
+    format: row["format"] === undefined ? undefined : architectProgramArtifactGuardString(row["format"], `${at}.format`),
+  };
+}
+
+export function parseTimestampMeta(value: unknown, at = "$"): TimestampMeta {
+  const row = architectProgramArtifactGuardClosed(architectProgramArtifactGuardObject(value, at), at, ["created", "updated", "createdBy", "updatedBy"]);
+  return {
+    created: architectProgramArtifactGuardString(row["created"], `${at}.created`),
+    updated: architectProgramArtifactGuardString(row["updated"], `${at}.updated`),
+    createdBy: row["createdBy"] === undefined ? undefined : architectProgramArtifactGuardString(row["createdBy"], `${at}.createdBy`),
+    updatedBy: row["updatedBy"] === undefined ? undefined : architectProgramArtifactGuardString(row["updatedBy"], `${at}.updatedBy`),
+  };
 }

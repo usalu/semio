@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { Buffer } from "node:buffer";
-import Ajv from "ajv/dist/2020.js";
+import Ajv from "ajv";
 import { readSnapshotPack, type SnapshotPackPort } from "../🟦️.ts";
 import fixture from "./🔣️.json";
 import policy from "../🔣️.json";

@@ -330,7 +330,9 @@
                 "go",
                 "uv",
                 "cmake",
-                "ninja"
+                "ninja",
+                "cargo-nextest",
+                "cargo-llvm-cov"
               ]
             }
           }

@@ -46,7 +46,7 @@ export interface SceneDescriptor {
   edges: EdgeDescriptor[];
   wires: WireDescriptor[];
   regions: RegionDescriptor[];
-  selectionExitHighlightIds: String[];
+  selectionExitHighlightIds: string[];
 }
 
 export interface BoardSnapshot {

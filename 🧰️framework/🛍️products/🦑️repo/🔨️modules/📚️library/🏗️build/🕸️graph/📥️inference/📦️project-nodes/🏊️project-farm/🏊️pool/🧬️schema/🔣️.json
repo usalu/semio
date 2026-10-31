@@ -1,13 +1,16 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:graph-farm:v2",
   "title": "Graph inference farm",
-  "description": "A pool of worker processes that each infer whole projects into a private staging directory of their own; the parent adopts the finished leaves under its writer custody and every message is plain data.",
+  "description": "A pool of worker processes that each infer whole projects into a private staging directory of their own; the parent adopts the finished leaves under its writer custody and every message is plain data. A retiring worker continues to own its slot until its process exits. Replacement may start only after that exit, and pool close joins all retiring generations before returning. A refused or declined pool returns its capacity only after its worker processes settle, while still releasing before the overall graph closes.",
   "$defs": {
     "Policy": {
       "const": {
         "version": 2,
-        "languages": ["en", "de"],
+        "languages": [
+          "en",
+          "de"
+        ],
         "workersEnvironment": "SEMIO_GRAPH_WORKERS",
         "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN",
         "ownWorkers": 1,
@@ -35,8 +38,26 @@
           "pattern": "^semio-(?:graph-farm|graph-farm-image|farm-session)-(?<pid>[1-9][0-9]{0,9})-[A-Za-z0-9]{6}$"
         },
         "runtime": {
-          "bun": { "ramFactor": 0.75, "heap": { "variable": "BUN_JSC_forceRAMSize", "unit": "bytes" }, "environment": { "BUN_JSC_numberOfGCMarkers": "1", "BUN_JSC_useConcurrentGC": "0" } },
-          "node": { "ramFactor": 1, "heap": { "variable": "NODE_OPTIONS", "prefix": "--max-old-space-size=", "unit": "megabytes" }, "environment": {} }
+          "bun": {
+            "ramFactor": 0.75,
+            "heap": {
+              "variable": "BUN_JSC_forceRAMSize",
+              "unit": "bytes"
+            },
+            "environment": {
+              "BUN_JSC_numberOfGCMarkers": "1",
+              "BUN_JSC_useConcurrentGC": "0"
+            }
+          },
+          "node": {
+            "ramFactor": 1,
+            "heap": {
+              "variable": "NODE_OPTIONS",
+              "prefix": "--max-old-space-size=",
+              "unit": "megabytes"
+            },
+            "environment": {}
+          }
         }
       }
     },
@@ -70,26 +91,218 @@
         }
       }
     },
-    "Reasons": { "enum": ["disabled", "forced", "small", "work", "cpu"] },
+    "Reasons": {
+      "enum": [
+        "disabled",
+        "forced",
+        "small",
+        "work",
+        "cpu"
+      ]
+    },
     "Plan": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["workers", "reason"],
+      "required": [
+        "workers",
+        "reason"
+      ],
       "properties": {
-        "workers": { "type": "integer", "minimum": 0 },
-        "reason": { "$ref": "#/$defs/Reasons" }
+        "workers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$ref": "#/$defs/Reasons"
+        }
       }
     },
-    "Init": { "type": "object", "additionalProperties": false, "required": ["type", "service", "sessionFile", "slot", "generation"], "properties": { "type": { "const": "init" }, "service": { "type": "string", "pattern": "^file:///" }, "sessionFile": { "type": "string", "minLength": 1 }, "slot": { "type": "integer", "minimum": 0 }, "generation": { "type": "integer", "minimum": 1 } } },
-    "Ready": { "type": "object", "additionalProperties": false, "required": ["type", "pid", "identity"], "properties": { "type": { "const": "ready" }, "pid": { "type": "integer" }, "identity": {} } },
-    "Run": { "type": "object", "additionalProperties": false, "required": ["type", "id", "jobFile"], "properties": { "type": { "const": "run" }, "id": { "type": "integer", "minimum": 0 }, "jobFile": { "type": "string", "minLength": 1 } } },
-    "Result": { "type": "object", "additionalProperties": false, "required": ["type", "id", "reply", "rssMegabytes"], "properties": { "type": { "const": "result" }, "id": { "type": "integer", "minimum": 0 }, "reply": {}, "rssMegabytes": { "type": "number", "minimum": 0 } } },
-    "Failure": { "type": "object", "additionalProperties": false, "required": ["type", "id", "name", "message"], "properties": { "type": { "const": "failure" }, "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "message": { "type": "string" }, "code": { "type": ["string", "null"] } } },
-    "Fatal": { "type": "object", "additionalProperties": false, "required": ["type", "name", "message"], "properties": { "type": { "const": "fatal" }, "name": { "type": "string" }, "message": { "type": "string" } } },
-    "Shutdown": { "type": "object", "additionalProperties": false, "required": ["type"], "properties": { "type": { "const": "shutdown" } } }
+    "Init": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "service",
+        "sessionFile",
+        "slot",
+        "generation"
+      ],
+      "properties": {
+        "type": {
+          "const": "init"
+        },
+        "service": {
+          "type": "string",
+          "pattern": "^file:///"
+        },
+        "sessionFile": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "pid",
+        "identity"
+      ],
+      "properties": {
+        "type": {
+          "const": "ready"
+        },
+        "pid": {
+          "type": "integer"
+        },
+        "identity": {}
+      }
+    },
+    "Run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "jobFile"
+      ],
+      "properties": {
+        "type": {
+          "const": "run"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "jobFile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "reply",
+        "rssMegabytes"
+      ],
+      "properties": {
+        "type": {
+          "const": "result"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reply": {},
+        "rssMegabytes": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "name",
+        "message",
+        "rssMegabytes"
+      ],
+      "properties": {
+        "type": {
+          "const": "failure"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rssMegabytes": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "Fatal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "name",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "const": "fatal"
+        },
+        "name": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "shutdown"
+        }
+      }
+    }
   },
   "oneOf": [
-    { "$ref": "#/$defs/Init" }, { "$ref": "#/$defs/Ready" }, { "$ref": "#/$defs/Run" }, { "$ref": "#/$defs/Result" },
-    { "$ref": "#/$defs/Failure" }, { "$ref": "#/$defs/Fatal" }, { "$ref": "#/$defs/Shutdown" }
+    {
+      "$ref": "#/$defs/Init"
+    },
+    {
+      "$ref": "#/$defs/Ready"
+    },
+    {
+      "$ref": "#/$defs/Run"
+    },
+    {
+      "$ref": "#/$defs/Result"
+    },
+    {
+      "$ref": "#/$defs/Failure"
+    },
+    {
+      "$ref": "#/$defs/Fatal"
+    },
+    {
+      "$ref": "#/$defs/Shutdown"
+    }
   ]
 }

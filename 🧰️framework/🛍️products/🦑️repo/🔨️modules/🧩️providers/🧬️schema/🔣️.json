@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/providers.json",
   "title": "🧩️ repo providers",
   "description": "🧩️ Wire shapes of the repo providers module: the process transcripts its fixtures replay, the hook output records its agent-client providers format, and the GitHub DTOs its management provider parses out of `gh`.",

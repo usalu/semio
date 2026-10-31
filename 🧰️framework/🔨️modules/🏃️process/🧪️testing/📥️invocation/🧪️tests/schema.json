@@ -8,7 +8,8 @@
     "drainMilliseconds",
     "cases",
     "order",
-    "suiteCases"
+    "suiteCases",
+    "callbackOrder"
   ],
   "properties": {
     "version": {
@@ -95,6 +96,15 @@
           }
         }
       }
+    },
+    "callbackOrder": {
+      "const": [
+        "callback-first",
+        "sandbox-created",
+        "sandbox-released",
+        "callback-second",
+        "cleanup"
+      ]
     }
   }
 }

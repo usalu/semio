@@ -1,36 +1,38 @@
 {
   "dimensions": {
     "dim-free": {
-      "anchors": [
-        {
-          "Point": {
-            "point": {
-              "x": 0.0,
-              "y": 0.0
-            }
-          }
-        },
-        {
-          "Point": {
-            "point": {
-              "x": 3.0,
-              "y": 0.0
-            }
-          }
-        },
-        {
-          "Grid": {
-            "grid": "g-1"
-          }
-        }
-      ],
-      "angle": 0.0,
       "entry": "Created",
-      "lock": 3.0,
-      "name": "Free span",
-      "offset": -1.0,
-      "storey": "st-ground",
-      "style": "as-plan"
+      "value": {
+        "anchors": [
+          {
+            "Point": {
+              "point": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          },
+          {
+            "Point": {
+              "point": {
+                "x": 3,
+                "y": 0
+              }
+            }
+          },
+          {
+            "Grid": {
+              "grid": "g-1"
+            }
+          }
+        ],
+        "angle": 0,
+        "lock": 3,
+        "name": "Free span",
+        "offset": -1,
+        "storey": "st-ground",
+        "style": "as-plan"
+      }
     }
   }
 }

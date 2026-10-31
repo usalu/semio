@@ -123,11 +123,11 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
   }, [panning, follow]);
 
   React.useEffect(() => {
-    if (swiping && opened === null && resting !== null) touch(resting);
-  }, [swiping, opened, resting, touch]);
+    if (swiping && opened === null && resting !== null && ids.includes(resting)) touch(resting);
+  }, [swiping, opened, resting, ids, touch]);
 
   React.useEffect(() => {
-    if (!swiping || resting === null) return;
+    if (!swiping || resting === null || !ids.includes(resting)) return;
     const step = neighbourWarmBoot(ids, cellList, requireCell(latest.current.cells, resting), live, opened, lifecycle.budget);
     if (step.kind === "boot") warm(step.id);
   }, [swiping, resting, ids, cellList, live, opened, lifecycle.budget, warm]);
@@ -139,7 +139,7 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
   const cellStyles = React.useMemo(() => new Map([...paneStyles].map(([id, style]) => [id, { ...style, touchAction: "pinch-zoom", paddingTop: `calc(${insets.top} + 44px)`, paddingBottom: `calc(${insets.bottom} + 44px)` }])), [paneStyles, insets]);
   const restedOn = React.useRef(resting);
   if (resting !== null) restedOn.current = resting;
-  const hintFrom = restedOn.current;
+  const hintFrom = restedOn.current !== null && ids.includes(restedOn.current) ? restedOn.current : ids[0] ?? null;
   const neighbours = React.useMemo<readonly LayeredNeighbour[]>(
     () => (hintFrom === null ? [] : swipeNeighbours(requireCell(cells, hintFrom), cellList).map(({ direction, cell, slot }) => ({ direction, cell, slot, pane: panes[ids.indexOf(paneAt.get(`${cell.column}:${cell.row}`)!)]! }))),
     [hintFrom, cells, cellList, panes, ids, paneAt],
@@ -201,8 +201,8 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
   }, [interactive, reveal]);
-  const cardHost = (pane: LayeredPane) => (
-    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} source={revealedId === pane.id ? revealSource : null} zoomHold={zoomHold} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onElement={cardCallback} renderCard={renderCard} />
+  const cardHost = (pane: LayeredPane, placement: React.ComponentProps<typeof LayeredCardHost>["placement"]) => (
+    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} source={revealedId === pane.id ? revealSource : null} zoomHold={zoomHold} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onElement={cardCallback} renderCard={renderCard} placement={placement} />
   );
   const chrome = props.renderChrome?.({ revealed: revealedId !== null, opened: opened !== null });
   return { restedOn, stripStyle, paneView, cellStyles, cardHost, neighbours, insets, goTo, chrome };

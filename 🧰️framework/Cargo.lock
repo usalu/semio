@@ -7903,6 +7903,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-tool-typing-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-tool-machine",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-trace"
 version = "0.1.0"
 dependencies = [

@@ -1,9 +1,11 @@
 {
   "sheets": {
     "sh-1": {
-      "date": "",
-      "drawn_by": "",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "date": "",
+        "drawn_by": ""
+      }
     }
   }
 }

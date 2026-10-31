@@ -1,26 +1,28 @@
 {
   "dimensions": {
     "dim-south": {
-      "anchors": [
-        {
-          "WallEnd": {
-            "end": "Start",
-            "wall": "w-south"
+      "entry": "Patched",
+      "value": {
+        "anchors": [
+          {
+            "WallEnd": {
+              "end": "Start",
+              "wall": "w-south"
+            }
+          },
+          {
+            "OpeningCentre": {
+              "opening": "o-win"
+            }
+          },
+          {
+            "WallEnd": {
+              "end": "End",
+              "wall": "w-south"
+            }
           }
-        },
-        {
-          "OpeningCentre": {
-            "opening": "o-win"
-          }
-        },
-        {
-          "WallEnd": {
-            "end": "End",
-            "wall": "w-south"
-          }
-        }
-      ],
-      "entry": "Patched"
+        ]
+      }
     }
   }
 }

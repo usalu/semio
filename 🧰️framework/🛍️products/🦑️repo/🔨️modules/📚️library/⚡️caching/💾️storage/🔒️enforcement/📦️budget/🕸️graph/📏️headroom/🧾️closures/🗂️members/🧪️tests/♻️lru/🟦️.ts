@@ -7,7 +7,7 @@ import{parseMemberIndexV1,recordMemberLeafV1}from"../../🟨️.mjs";
 import storage from"../../../../../../../../../../🏗️build/📥️inputs/💾️storage/🧬️schema/🔣️.json"with{type:"json"};
 
 const scan=await import(new URL("../../🔎️scan/🟦️.ts",import.meta.url).href) as typeof import("../../🔎️scan/🟦️.ts");
-const roots:string[]=[],oracle=join(import.meta.dir,"🐍️.py"),policy=storage.definitions.OptionalQuota.policy,HOUR=3600000;
+const roots:string[]=[],oracle=join(import.meta.dir,"🐍️.py"),policy=storage.definitions.OptionalQuota.definitions.DefaultPolicy.const,HOUR=3600000;
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const control=(cancelled=()=>false)=>({cancelled,progress:()=>{}});
 const hex=(seed:number,length:number)=>Array.from({length},(_,i)=>"0123456789abcdef"[(seed*7+i*13+(seed>>3))%16]).join("");

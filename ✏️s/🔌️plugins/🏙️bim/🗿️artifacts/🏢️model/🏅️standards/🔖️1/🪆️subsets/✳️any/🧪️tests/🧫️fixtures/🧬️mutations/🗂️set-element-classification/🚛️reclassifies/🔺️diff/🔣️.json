@@ -1,10 +1,12 @@
 {
   "classifications": {
     "w-south": {
-      "assigned": {
-        "cs-uni": "EF_25"
-      },
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "cs-uni": "EF_25"
+        }
+      }
     }
   }
 }

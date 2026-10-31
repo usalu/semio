@@ -1,8 +1,10 @@
 {
   "sheet_revisions": {
     "rev-1": {
-      "date": "2026-10-02",
-      "entry": "Patched"
+      "entry": "Patched",
+      "value": {
+        "date": "2026-10-02"
+      }
     }
   }
 }

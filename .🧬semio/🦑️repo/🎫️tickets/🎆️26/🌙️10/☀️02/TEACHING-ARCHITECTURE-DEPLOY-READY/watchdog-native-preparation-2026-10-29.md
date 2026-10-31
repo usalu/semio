@@ -1,0 +1,7 @@
+# Native Preparation Watchdog Narrowing — 2026-10-29
+
+Owner19402 ended under the real no-progress watchdog after its last Nx graph-inventory activity. CPU and I/O were active, but this does not identify one expensive function. The persistent-proctor report retains full process evidence and terminal status.
+
+Read-only canonical directory usage probe nx-directory-usage-probe.ts measured actual .cache/b/n/m using measureNativeDirectoryUsageAsyncV1, an actual receipt-derived entry bound and five-second AbortSignal. Actual result:259entries,1,181,958,144allocatedbytes,1,181,191,564logicalbytes,5.91ms, unchanged root device/inode. Generated summary/log are nx-directory-usage-probe.json and .log. This pure filesystem measurement issues no Native authority and writes no cache state. It rules out that one directory census as the ten-minute explanation, not all Native work.
+
+Source already publishes inventory per namespace and every16entries. Immediately afterward acquireNamespace performs capacity/statfs, namespace lease, descriptor creation and retainNxGraphChildV1 → Native funded child open/recovery. Eviction may also recheck or retire Native children. No generic heartbeat or timeout extension was written. The later independently reproduced charge-writer/Native-journal order inversion takes priority; see cache-charge-order-2026-10-29.md. Exact watchdog hot-path attribution remains open pending a normal guarded execution with these corrections.

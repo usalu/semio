@@ -45,7 +45,7 @@ describe("📐️ writeDxf", () => {
   });
 
   it("writes an empty scene that still audits clean, snaps lineweights and refuses non-metre scenes", async () => {
-    const report = await reopen(writeDxf({ units: "m", asset: "probe", timeS: 0, layers: [] }));
+    const report = await reopen(writeDxf({ units: "m", asset: "probe", timeS: 0, representation: { kind: "none" }, layers: [] }));
     expect(report.errors).toEqual([]);
     expect(snapLineweight(48)).toBe(50);
     expect(snapLineweight(0)).toBe(0);

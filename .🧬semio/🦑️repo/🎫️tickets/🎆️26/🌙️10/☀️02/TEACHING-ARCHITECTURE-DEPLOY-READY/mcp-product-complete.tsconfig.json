@@ -1,0 +1,43 @@
+{
+  "extends": "/home/deck/semio/tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "bun"
+    ],
+    "incremental": false,
+    "noEmit": true
+  },
+  "files": [
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🎯️product/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🎯️product/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📦️acquisition/🎟️issuer/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📋️artifact-plan/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📋️artifact-plan/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👓️reader-lifetime/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👓️reader-lifetime/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📋️planning/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/⏱️observation/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📋️artifact-plan/⏱️tools/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📋️artifact-plan/⏱️tools/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📏️usage/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👁️existing/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/👁️existing/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🎚️capacity/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🎚️capacity/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/✅️conformance/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/✅️conformance/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🧹️whole/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/🧹️whole/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️whole/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📁️directory/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🧪️tests/📁️directory/📜️script.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🧪️tests/🌐️native-storage/🟦️.ts"
+  ],
+  "include": [],
+  "exclude": []
+}

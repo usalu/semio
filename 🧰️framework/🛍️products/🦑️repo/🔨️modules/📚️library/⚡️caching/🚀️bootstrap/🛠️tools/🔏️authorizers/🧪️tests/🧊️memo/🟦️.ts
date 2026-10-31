@@ -8,7 +8,7 @@ import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedImportsV1,nxAuthorizerCa
 import{NX_AUTHORIZER_MEMO_IMPLEMENTATION_FILES_V1,nxAuthorizerMemoBaseV1,nxAuthorizerMemoFileV1,readNxAuthorizerMemoSwitchV1}from"../../🧊️memo/🟦️.ts";
 import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1}from"../../../../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import{withAuthorizerFixtureArtifactsV1}from"../../🧪️testing/📁️artifacts/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
 
@@ -35,8 +35,8 @@ const mutations:readonly Readonly<{name:string;apply:(area:string)=>Promise<void
 
 async function plainV1(area:string,entry:string,installed:boolean){return captureNxAuthorizerSourcesV1(area,entry,new AbortController().signal,{installed});}
 
-test("the source memo answers exactly what a full capture answers after every kind of edit",()=>withBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:source-memo-artifacts",0),async()=>{
- const artifacts=repositoryTestArtifactRootV1(repository.root),area=await mkdtemp(join(artifacts,"sm-")),base=await mkdtemp(join(artifacts,"sb-"));
+test("the source memo answers exactly what a full capture answers after every kind of edit",()=>withBuildTestInvocationV1(async original=>withAuthorizerFixtureArtifactsV1(original,createIssuedResourceControlV1(original,"test:source-memo-artifacts",0),async artifacts=>{
+ const area=await mkdtemp(join(artifacts,"sm-")),base=await mkdtemp(join(artifacts,"sb-"));
  let failed=false,primary:unknown;
  try{
   for(const[name,text]of Object.entries(tree)){await mkdir(join(area,name,".."),{recursive:true});await writeFile(join(area,name),text);}

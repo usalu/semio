@@ -1,4 +1,4 @@
-import {test,expect} from "bun:test";import Ajv from "ajv/dist/2020.js";import {Database} from "bun:sqlite";import {readFileSync} from "node:fs";import schema from "../🧬️schema/🔣️.json";import fixture from "./🔣️.json";
+import {test,expect} from "bun:test";import Ajv from "ajv";import {Database} from "bun:sqlite";import {readFileSync} from "node:fs";import schema from "../🧬️schema/🔣️.json";import fixture from "./🔣️.json";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { familyText } from "../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 import {pluginFamilyText, pluginSubtreeText} from "../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";

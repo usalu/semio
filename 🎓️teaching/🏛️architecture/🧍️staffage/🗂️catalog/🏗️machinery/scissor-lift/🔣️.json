@@ -1,0 +1,5495 @@
+{
+ "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+ "version": "semio.staffage/v2",
+ "asset": {
+  "id": "scissor-lift",
+  "category": "machinery",
+  "title": {
+   "en": "Electric scissor lift, 5.8 m platform height",
+   "de": "Elektro-Scherenarbeitsbühne, 5,8 m Plattformhöhe"
+  },
+  "summary": {
+   "en": "A battery-electric 19 ft scissor lift in side elevation: five scissor stages built from ten arms that fold to a 0.55 m stack or rise to a 5.8 m platform, a sliding deck extension, guard rails, and two occupants with a tool box as loads.",
+   "de": "Eine batterieelektrische 19-ft-Scherenarbeitsbühne in der Seitenansicht: fünf Scherenstufen aus zehn Armen, die sich zu einem 0,55 m hohen Paket falten oder zu einer 5,8 m hohen Plattform heben, eine ausschiebbare Bühnenverlängerung, Geländer sowie zwei Personen mit Werkzeugkasten als Lasten."
+  },
+  "tags": [
+   "machine",
+   "scissor-lift",
+   "mewp",
+   "electric",
+   "battery",
+   "access-platform",
+   "construction"
+  ],
+  "provenance": {
+   "author": "Semio staffage content worker NW-MA",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": [
+    {
+     "id": "en-280",
+     "citation": "EN 280:2013 Mobile elevating work platforms, design calculations, stability criteria, construction, safety, examinations and tests (platform load, guard rail height 1.1 m)."
+    },
+    {
+     "id": "incropera-2011",
+     "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2011). Fundamentals of Heat and Mass Transfer, 7th ed., Wiley. Ch. 7 and 9 (external and natural convection), Appendix A (thermophysical properties of steel, glass, rubber, aluminium)."
+    },
+    {
+     "id": "ashrae-2021",
+     "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer and Chapter 25 Heat, Air and Moisture Control (surface emissivity and solar absorptivity of painted and bare metals, glass)."
+    },
+    {
+     "id": "class-data-note",
+     "citation": "Manufacturer class data (public data sheets of the product class, quoted as orders of magnitude from memory of the data sheet families, not retrieved for this asset); every number derived from it is tagged authored-estimate."
+    }
+   ],
+   "notes": {
+    "en": "Class data of 19 ft electric scissor lifts (about 1.85 x 0.81 m, 1.75 t, 5.8 m platform height, 230 kg platform load, 1.1 m guard rail per EN 280). The scissor stack is a closed linkage built as a tree: arms A_k hang from the end of B_(k-1) and B_k from the end of A_(k-1), the rolling foot is a prismatic bone and the platform is kept level by the pose offsets. All numbers are authored estimates of that class; 1:500 is unavailable.",
+    "de": "Klassendaten von 19-ft-Elektro-Scherenbühnen (etwa 1,85 x 0,81 m, 1,75 t, 5,8 m Plattformhöhe, 230 kg Plattformlast, 1,1 m Geländer nach EN 280). Das Scherenpaket ist ein geschlossenes Gestänge, als Baum aufgebaut: Arme A_k hängen am Ende von B_(k-1) und B_k am Ende von A_(k-1), der Rollenfuß ist ein Schubknochen und die Bühne bleibt durch die Posen-Offsets waagerecht. Alle Zahlen sind Schätzungen dieser Klasse; 1:500 ist nicht verfügbar."
+   }
+  },
+  "dimensions": {
+   "heightM": 2.2,
+   "widthM": 1.85,
+   "depthM": 0.81,
+   "massKg": 1750
+  },
+  "materials": [
+   {
+    "id": "chassis-paint",
+    "title": {
+     "en": "Painted chassis steel (orange)",
+     "de": "Lackierter Fahrgestellstahl (orange)"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "scissor-steel",
+    "title": {
+     "en": "Painted scissor arm steel",
+     "de": "Lackierter Scherenarmstahl"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.5,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "deck-steel",
+    "title": {
+     "en": "Anti-slip deck plate",
+     "de": "Rutschhemmendes Bühnenblech"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.6,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rail-steel",
+    "title": {
+     "en": "Galvanised guard rail tube",
+     "de": "Verzinktes Geländerrohr"
+    },
+    "emissivity": 0.3,
+    "solarAbsorptivity": 0.55,
+    "densityKgM3": 7850,
+    "conductivityWmK": 50,
+    "specificHeatJKgK": 460,
+    "source": "literature",
+    "reference": "ashrae-2021"
+   },
+   {
+    "id": "rubber",
+    "title": {
+     "en": "Tyre rubber",
+     "de": "Reifengummi"
+    },
+    "emissivity": 0.93,
+    "solarAbsorptivity": 0.9,
+    "densityKgM3": 1100,
+    "conductivityWmK": 0.15,
+    "specificHeatJKgK": 1700,
+    "source": "literature",
+    "reference": "incropera-2011"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "chassis",
+   "bones": [
+    {
+     "id": "chassis",
+     "parent": null,
+     "title": {
+      "en": "Chassis with battery, motor-pump unit and drive hubs",
+      "de": "Fahrgestell mit Batterie, Motor-Pumpen-Einheit und Antriebsnaben"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 1.85,
+     "joint": {
+      "type": "fixed"
+     },
+     "mass": {
+      "kg": 760,
+      "comX": 0,
+      "comY": 0.28,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-f",
+     "parent": "chassis",
+     "title": {
+      "en": "Front wheel",
+      "de": "Vorderrad"
+     },
+     "x": 0.55,
+     "y": 0.27,
+     "angleDeg": 0,
+     "lengthM": 0.27,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 45,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "wheel-r",
+     "parent": "chassis",
+     "title": {
+      "en": "Rear wheel",
+      "de": "Hinterrad"
+     },
+     "x": -0.55,
+     "y": 0.27,
+     "angleDeg": 0,
+     "lengthM": 0.27,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 45,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "A1",
+     "parent": "chassis",
+     "title": {
+      "en": "Scissor arm A1 (fixed foot)",
+      "de": "Scherenarm A1 (fester Fuß)"
+     },
+     "x": -0.85,
+     "y": 0.45,
+     "angleDeg": 3.71,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 45
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "slide",
+     "parent": "chassis",
+     "title": {
+      "en": "Rolling foot of arm B1",
+      "de": "Rollenfuß des Arms B1"
+     },
+     "x": 0.8464,
+     "y": 0.45,
+     "angleDeg": 0,
+     "lengthM": 0.3,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": -0.6,
+      "maxM": 0.0
+     },
+     "mass": {
+      "kg": 20,
+      "comX": 0,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "B1",
+     "parent": "slide",
+     "title": {
+      "en": "Scissor arm B1 (rolling foot)",
+      "de": "Scherenarm B1 (Rollenfuß)"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 176.29,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -45,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "A2",
+     "parent": "B1",
+     "title": {
+      "en": "Scissor arm A2",
+      "de": "Scherenarm A2"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": -172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "B2",
+     "parent": "A1",
+     "title": {
+      "en": "Scissor arm B2",
+      "de": "Scherenarm B2"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": 172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "A3",
+     "parent": "B2",
+     "title": {
+      "en": "Scissor arm A3",
+      "de": "Scherenarm A3"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": -172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "B3",
+     "parent": "A2",
+     "title": {
+      "en": "Scissor arm B3",
+      "de": "Scherenarm B3"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": 172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "A4",
+     "parent": "B3",
+     "title": {
+      "en": "Scissor arm A4",
+      "de": "Scherenarm A4"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": -172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "B4",
+     "parent": "A3",
+     "title": {
+      "en": "Scissor arm B4",
+      "de": "Scherenarm B4"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": 172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "A5",
+     "parent": "B4",
+     "title": {
+      "en": "Scissor arm A5",
+      "de": "Scherenarm A5"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": -172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 90
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "B5",
+     "parent": "A4",
+     "title": {
+      "en": "Scissor arm B5",
+      "de": "Scherenarm B5"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": 172.5801,
+     "lengthM": 1.7,
+     "joint": {
+      "type": "revolute",
+      "minDeg": -90,
+      "maxDeg": 0
+     },
+     "mass": {
+      "kg": 50,
+      "comX": 0.85,
+      "comY": 0,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "platform",
+     "parent": "B5",
+     "title": {
+      "en": "Work platform with guard rails",
+      "de": "Arbeitsbühne mit Geländer"
+     },
+     "x": 1.7,
+     "y": 0,
+     "angleDeg": -176.29,
+     "lengthM": 1.85,
+     "joint": {
+      "type": "revolute",
+      "minDeg": 0,
+      "maxDeg": 45
+     },
+     "mass": {
+      "kg": 340,
+      "comX": 0.85,
+      "comY": 0.5,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    },
+    {
+     "id": "deck-ext",
+     "parent": "platform",
+     "title": {
+      "en": "Sliding deck extension",
+      "de": "Ausschiebbare Bühnenverlängerung"
+     },
+     "x": 0.9,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.9,
+     "joint": {
+      "type": "prismatic",
+      "axisDeg": 0,
+      "minM": 0,
+      "maxM": 0.9
+     },
+     "mass": {
+      "kg": 40,
+      "comX": 0.45,
+      "comY": 0.03,
+      "distribution": "point",
+      "source": "authored-estimate"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "contact-f",
+    "bone": "chassis",
+    "x": 0.55,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Front tyre contact",
+     "de": "Vorderreifen-Aufstandspunkt"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.18,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "contact-r",
+    "bone": "chassis",
+    "x": -0.55,
+    "y": 0.0,
+    "kind": "contact",
+    "title": {
+     "en": "Rear tyre contact",
+     "de": "Hinterreifen-Aufstandspunkt"
+    },
+    "support": "contact",
+    "normalDeg": 90,
+    "footprintLengthM": 0.08,
+    "footprintWidthM": 0.18,
+    "frictionCoefficient": 0.6
+   },
+   {
+    "id": "motor-outlet",
+    "bone": "chassis",
+    "x": 0.925,
+    "y": 0.3,
+    "kind": "emitter",
+    "title": {
+     "en": "Motor air outlet",
+     "de": "Motorluftaustritt"
+    }
+   },
+   {
+    "id": "battery-top",
+    "bone": "chassis",
+    "x": -0.4,
+    "y": 0.45,
+    "kind": "emitter",
+    "title": {
+     "en": "Top of the battery cover",
+     "de": "Oberseite der Batterieabdeckung"
+    }
+   },
+   {
+    "id": "occupant-1",
+    "bone": "platform",
+    "x": 0.45,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "First occupant standing point",
+     "de": "Standpunkt der ersten Person"
+    }
+   },
+   {
+    "id": "occupant-2",
+    "bone": "platform",
+    "x": 1.15,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Second occupant standing point",
+     "de": "Standpunkt der zweiten Person"
+    }
+   },
+   {
+    "id": "tool-point",
+    "bone": "platform",
+    "x": 0.8,
+    "y": 0.1,
+    "kind": "load",
+    "title": {
+     "en": "Tool box position",
+     "de": "Position des Werkzeugkastens"
+    }
+   }
+  ],
+  "representations": {
+   "500": {
+    "status": "unavailable",
+    "denominator": 500,
+    "reason": {
+     "en": "Seen from the side the stowed scissor stack is five stages of 0.11 m (0.22 mm at 1:500) that merge into one block, while the raised scissors need ten crossing arms of 0.12 m (0.24 mm) and a guard rail of 0.04 to 0.05 m tubes (0.1 mm); at 1:500 neither state can be drawn as the same articulated rig without arms closer than the 0.15 mm gap limit.",
+     "de": "Von der Seite ist das eingefahrene Scherenpaket fünf Stufen von je 0,11 m (0,22 mm bei 1:500), die zu einem Block verschmelzen, während die gehobene Schere zehn kreuzende Arme von 0,12 m (0,24 mm) und ein Geländer aus Rohren von 0,04 bis 0,05 m (0,1 mm) braucht; bei 1:500 lässt sich keiner der beiden Zustände mit demselben gegliederten Rig zeichnen, ohne dass Arme näher als die Grenzlücke von 0,15 mm liegen."
+    },
+    "limitingFeature": {
+     "en": "Scissor stage pitch of the stowed stack and the 0.05 m guard rail tubes",
+     "de": "Stufenabstand des eingefahrenen Scherenpakets und die 0,05-m-Geländerrohre"
+    },
+    "limitingSizeM": 0.11,
+    "alternatives": [
+     {
+      "kind": "scale",
+      "denominator": 200
+     },
+     {
+      "kind": "symbol",
+      "symbol": "site-plan-footprint"
+     }
+    ]
+   },
+   "200": {
+    "status": "authored",
+    "denominator": 200,
+    "validRange": {
+     "minDenominator": 150,
+     "maxDenominator": 350
+    },
+    "pens": {
+     "body": 0.18,
+     "detail": 0.13,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a1",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a1",
+       "bone": "A1",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b1",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": -0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b1",
+       "bone": "B1",
+       "role": "detail",
+       "z": 3.57,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a2",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a2",
+       "bone": "A2",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b2",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b2",
+       "bone": "B2",
+       "role": "detail",
+       "z": 3.62,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a3",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a3",
+       "bone": "A3",
+       "role": "detail",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b3",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b3",
+       "bone": "B3",
+       "role": "detail",
+       "z": 3.67,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a4",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a4",
+       "bone": "A4",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b4",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b4",
+       "bone": "B4",
+       "role": "detail",
+       "z": 3.72,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a5",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -3.71,
+       "id": "pin-a5",
+       "bone": "A5",
+       "role": "detail",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b5",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.055,
+       "ry": 0.055,
+       "rotationDeg": -176.29,
+       "id": "pin-b5",
+       "bone": "B5",
+       "role": "detail",
+       "z": 3.77,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         0.14
+        ],
+        [
+         -0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.925,
+         0.14
+        ],
+        [
+         0.925,
+         0.45
+        ],
+        [
+         -0.925,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.62,
+         0.17
+        ],
+        [
+         -0.17,
+         0.17
+        ],
+        [
+         -0.17,
+         0.4
+        ],
+        [
+         -0.62,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "battery-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "battery-box",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.08,
+         0.17
+        ],
+        [
+         0.32,
+         0.17
+        ],
+        [
+         0.32,
+         0.4
+        ],
+        [
+         -0.08,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "pump-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "motor-pump",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ],
+        [
+         0.0,
+         0.09
+        ],
+        [
+         -0.9,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.0
+        ],
+        [
+         1.775,
+         0.0
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         -0.075,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         1.13
+        ],
+        [
+         1.775,
+         1.13
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.62
+        ],
+        [
+         1.775,
+         0.62
+        ],
+        [
+         1.775,
+         0.69
+        ],
+        [
+         -0.075,
+         0.69
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         0.3
+        ],
+        [
+         -0.075,
+         0.3
+        ]
+       ],
+       "closed": true,
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         -0.005,
+         0.1
+        ],
+        [
+         -0.005,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-rear",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.705,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         1.705,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-front",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "Ten scissor arms as 0.12 m bars (0.6 mm) that stack to a block when stowed and cross when raised, a chassis block with two cover fields, two tyres, the deck with its extension and a rail frame of top rail, mid rail, toe board and two posts.",
+      "de": "Zehn Scherenarme als Leisten von 0,12 m (0,6 mm), die sich eingefahren zum Block stapeln und gehoben kreuzen, ein Fahrgestellblock mit zwei Abdeckfeldern, zwei Reifen, der Boden mit Verlängerung und ein Geländerrahmen aus Handlauf, Knieleiste, Fußleiste und zwei Pfosten."
+     },
+     "retained": {
+      "en": "All ten arms individually (they are the moving mechanism), battery and pump covers, the rail frame windows.",
+      "de": "Alle zehn Arme einzeln (sie sind der Bewegungsmechanismus), Batterie- und Pumpenabdeckung, die Fenster des Geländerrahmens."
+     },
+     "merged": {
+      "en": "The extension deck hides under the deck when retracted; no pins or rollers are drawn.",
+      "de": "Die Verlängerung verschwindet eingefahren unter dem Boden; Bolzen und Rollen sind nicht gezeichnet."
+     },
+     "omitted": {
+      "en": "Pins, rollers, mesh infill, hydraulic cylinders, hubs.",
+      "de": "Bolzen, Rollen, Gitterfüllung, Hydraulikzylinder, Naben."
+     },
+     "thinElements": {
+      "en": "Rails 0.07 m (0.35 mm), arms 0.12 m (0.6 mm): at real size.",
+      "de": "Geländer 0,07 m (0,35 mm), Arme 0,12 m (0,6 mm): in Realgröße."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Arms dark, chassis mid-tone, deck mid-dark, rails dark; arms at 0.18 mm outline.",
+      "de": "Arme dunkel, Fahrgestell mittlerer Ton, Boden mitteldunkel, Geländer dunkel; Arme mit 0,18-mm-Kontur."
+     },
+     "overlays": {
+      "en": "Every region has its own form.",
+      "de": "Jede Region hat eine eigene Form."
+     }
+    }
+   },
+   "100": {
+    "status": "authored",
+    "denominator": 100,
+    "validRange": {
+     "minDenominator": 75,
+     "maxDenominator": 150
+    },
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": 0.13,
+     "ground": 0.35
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a1",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a1",
+       "bone": "A1",
+       "role": "detail",
+       "z": 3.55,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b1",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": -0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b1",
+       "bone": "B1",
+       "role": "detail",
+       "z": 3.57,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a2",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a2",
+       "bone": "A2",
+       "role": "detail",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b2",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b2",
+       "bone": "B2",
+       "role": "detail",
+       "z": 3.62,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a3",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a3",
+       "bone": "A3",
+       "role": "detail",
+       "z": 3.65,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b3",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b3",
+       "bone": "B3",
+       "role": "detail",
+       "z": 3.67,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a4",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a4",
+       "bone": "A4",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b4",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b4",
+       "bone": "B4",
+       "role": "detail",
+       "z": 3.72,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a5",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -3.71,
+       "id": "pin-a5",
+       "bone": "A5",
+       "role": "detail",
+       "z": 3.75,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b5",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.85,
+       "cy": 0.0,
+       "rx": 0.045,
+       "ry": 0.045,
+       "rotationDeg": -176.29,
+       "id": "pin-b5",
+       "bone": "B5",
+       "role": "detail",
+       "z": 3.77,
+       "filled": true,
+       "tone": 0.1,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         0.14
+        ],
+        [
+         -0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.925,
+         0.14
+        ],
+        [
+         0.925,
+         0.45
+        ],
+        [
+         -0.925,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.62,
+         0.17
+        ],
+        [
+         -0.17,
+         0.17
+        ],
+        [
+         -0.17,
+         0.4
+        ],
+        [
+         -0.62,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "battery-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "battery-box",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.08,
+         0.17
+        ],
+        [
+         0.32,
+         0.17
+        ],
+        [
+         0.32,
+         0.4
+        ],
+        [
+         -0.08,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "pump-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "motor-pump",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-f",
+       "bone": "wheel-f",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.11,
+       "ry": 0.11,
+       "id": "hub-r",
+       "bone": "wheel-r",
+       "role": "detail",
+       "z": 4.2,
+       "filled": true,
+       "tone": 0.6,
+       "region": "tyres",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ],
+        [
+         0.0,
+         0.09
+        ],
+        [
+         -0.9,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.0
+        ],
+        [
+         1.775,
+         0.0
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         -0.075,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         1.15
+        ],
+        [
+         1.775,
+         1.15
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.62
+        ],
+        [
+         1.775,
+         0.62
+        ],
+        [
+         1.775,
+         0.67
+        ],
+        [
+         -0.075,
+         0.67
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         0.25
+        ],
+        [
+         -0.075,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         -0.025,
+         0.1
+        ],
+        [
+         -0.025,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-rear",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.725,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         1.725,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-front",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.9
+        ],
+        [
+         1.775,
+         0.9
+        ],
+        [
+         1.775,
+         0.95
+        ],
+        [
+         -0.075,
+         0.95
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail-2",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "As 1:200 with hubs on the tyres, pivot pins on every arm and a second mid rail.",
+      "de": "Wie 1:200 mit Naben an den Reifen, Gelenkbolzen an jedem Arm und einer zweiten Knieleiste."
+     },
+     "retained": {
+      "en": "Ten pivot pins at the arm centres, hubs.",
+      "de": "Zehn Gelenkbolzen in den Armmitten, Naben."
+     },
+     "merged": {
+      "en": "Rail tubes 0.05 m (0.5 mm) are drawn at real size.",
+      "de": "Geländerrohre von 0,05 m (0,5 mm) sind in Realgröße gezeichnet."
+     },
+     "omitted": {
+      "en": "End pins, rollers, cylinders.",
+      "de": "Endbolzen, Rollen, Zylinder."
+     },
+     "thinElements": {
+      "en": "Pins 0.09 m (0.9 mm).",
+      "de": "Bolzen 0,09 m (0,9 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "As 1:200, detail pen 0.18 mm.",
+      "de": "Wie 1:200, Detailstift 0,18 mm."
+     },
+     "overlays": {
+      "en": "As 1:200; hubs and pins carry the tyres and arms regions.",
+      "de": "Wie 1:200; Naben und Bolzen tragen die Reifen- und Armregionen."
+     }
+    }
+   },
+   "50": {
+    "status": "authored",
+    "denominator": 50,
+    "validRange": {
+     "minDenominator": 20,
+     "maxDenominator": 75
+    },
+    "pens": {
+     "body": 0.35,
+     "detail": 0.25,
+     "texture": 0.13,
+     "glazing": 0.18,
+     "ground": 0.5
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a1",
+       "bone": "A1",
+       "role": "body",
+       "z": 3.05,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b1",
+       "bone": "B1",
+       "role": "body",
+       "z": 3.07,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a2",
+       "bone": "A2",
+       "role": "body",
+       "z": 3.1,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b2",
+       "bone": "B2",
+       "role": "body",
+       "z": 3.12,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a3",
+       "bone": "A3",
+       "role": "body",
+       "z": 3.15,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b3",
+       "bone": "B3",
+       "role": "body",
+       "z": 3.17,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a4",
+       "bone": "A4",
+       "role": "body",
+       "z": 3.2,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b4",
+       "bone": "B4",
+       "role": "body",
+       "z": 3.22,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-a5",
+       "bone": "A5",
+       "role": "body",
+       "z": 3.25,
+       "filled": true,
+       "tone": 0.4,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.07,
+         -0.06
+        ],
+        [
+         1.77,
+         -0.06
+        ],
+        [
+         1.77,
+         0.06
+        ],
+        [
+         -0.07,
+         0.06
+        ]
+       ],
+       "closed": true,
+       "id": "arm-b5",
+       "bone": "B5",
+       "role": "body",
+       "z": 3.27,
+       "filled": true,
+       "tone": 0.5,
+       "region": "arms",
+       "material": "scissor-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         0.14
+        ],
+        [
+         -0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.925,
+         0.14
+        ],
+        [
+         0.925,
+         0.45
+        ],
+        [
+         -0.925,
+         0.45
+        ]
+       ],
+       "closed": true,
+       "id": "chassis-body",
+       "bone": "chassis",
+       "role": "body",
+       "z": 2,
+       "filled": true,
+       "tone": 0.45,
+       "region": "chassis",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.62,
+         0.17
+        ],
+        [
+         -0.17,
+         0.17
+        ],
+        [
+         -0.17,
+         0.4
+        ],
+        [
+         -0.62,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "battery-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.3,
+       "region": "battery-box",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.08,
+         0.17
+        ],
+        [
+         0.32,
+         0.17
+        ],
+        [
+         0.32,
+         0.4
+        ],
+        [
+         -0.08,
+         0.4
+        ]
+       ],
+       "closed": true,
+       "id": "pump-cover",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2.2,
+       "filled": true,
+       "tone": 0.35,
+       "region": "motor-pump",
+       "material": "chassis-paint"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-f",
+       "bone": "wheel-f",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "ellipse",
+       "cx": 0.0,
+       "cy": 0.0,
+       "rx": 0.27,
+       "ry": 0.27,
+       "id": "tyre-r",
+       "bone": "wheel-r",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.12,
+       "region": "tyres",
+       "material": "rubber"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.9,
+         0.01
+        ],
+        [
+         0.0,
+         0.01
+        ],
+        [
+         0.0,
+         0.09
+        ],
+        [
+         -0.9,
+         0.09
+        ]
+       ],
+       "closed": true,
+       "id": "deck-ext",
+       "bone": "deck-ext",
+       "role": "body",
+       "z": 2.9,
+       "filled": true,
+       "tone": 0.55,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.0
+        ],
+        [
+         1.775,
+         0.0
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         -0.075,
+         0.1
+        ]
+       ],
+       "closed": true,
+       "id": "deck",
+       "bone": "platform",
+       "role": "body",
+       "z": 3.6,
+       "filled": true,
+       "tone": 0.5,
+       "region": "deck",
+       "material": "deck-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         1.15
+        ],
+        [
+         1.775,
+         1.15
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "top-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.62
+        ],
+        [
+         1.775,
+         0.62
+        ],
+        [
+         1.775,
+         0.67
+        ],
+        [
+         -0.075,
+         0.67
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         0.25
+        ],
+        [
+         -0.075,
+         0.25
+        ]
+       ],
+       "closed": true,
+       "id": "toe-board",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.1
+        ],
+        [
+         -0.025,
+         0.1
+        ],
+        [
+         -0.025,
+         1.2
+        ],
+        [
+         -0.075,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-rear",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.725,
+         0.1
+        ],
+        [
+         1.775,
+         0.1
+        ],
+        [
+         1.775,
+         1.2
+        ],
+        [
+         1.725,
+         1.2
+        ]
+       ],
+       "closed": true,
+       "id": "post-front",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.075,
+         0.9
+        ],
+        [
+         1.775,
+         0.9
+        ],
+        [
+         1.775,
+         0.95
+        ],
+        [
+         -0.075,
+         0.95
+        ]
+       ],
+       "closed": true,
+       "id": "mid-rail-2",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.85,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.9,
+         1.15
+        ],
+        [
+         0.85,
+         1.15
+        ]
+       ],
+       "closed": true,
+       "id": "post-mid",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.7,
+       "filled": true,
+       "tone": 0.3,
+       "region": "rails",
+       "material": "rail-steel"
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         1.4,
+         0.75
+        ],
+        [
+         1.62,
+         0.75
+        ],
+        [
+         1.62,
+         1.0
+        ],
+        [
+         1.4,
+         1.0
+        ]
+       ],
+       "closed": true,
+       "id": "control-box",
+       "bone": "platform",
+       "role": "detail",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.15,
+       "region": "rails",
+       "material": "chassis-paint"
+      }
+     ]
+    },
+    "decisions": {
+     "silhouette": {
+      "en": "All 1:100 parts plus a centre post and the control box on the rail frame.",
+      "de": "Alle 1:100-Teile plus ein Mittelpfosten und der Steuerkasten am Geländerrahmen."
+     },
+     "retained": {
+      "en": "Pins with 0.11 m diameter, control box, centre post.",
+      "de": "Bolzen mit 0,11 m Durchmesser, Steuerkasten, Mittelpfosten."
+     },
+     "merged": {
+      "en": "Nothing merged.",
+      "de": "Nichts zusammengefasst."
+     },
+     "omitted": {
+      "en": "Rollers, hydraulic cylinders, mesh infill, wheel studs.",
+      "de": "Rollen, Hydraulikzylinder, Gitterfüllung, Radbolzen."
+     },
+     "thinElements": {
+      "en": "Rail tubes 0.05 m (1 mm).",
+      "de": "Geländerrohre 0,05 m (1 mm)."
+     },
+     "hatching": {
+      "en": "None.",
+      "de": "Keine."
+     },
+     "styles": {
+      "en": "Heavier pens 0.35 / 0.25 mm.",
+      "de": "Stärkere Stifte 0,35 / 0,25 mm."
+     },
+     "overlays": {
+      "en": "As 1:100.",
+      "de": "Wie 1:100."
+     }
+    }
+   }
+  },
+  "symbols": [
+   {
+    "id": "site-plan-footprint",
+    "title": {
+     "en": "Site-plan footprint with deck extension",
+     "de": "Baustellenplan-Grundriss mit Bühnenverlängerung"
+    },
+    "description": {
+     "en": "Plan symbol of the 1.85 x 0.81 m lift with the 0.9 m deck extension outlined.",
+     "de": "Planzeichen der Hubbühne von 1,85 x 0,81 m mit umrissener Bühnenverlängerung von 0,9 m."
+    },
+    "semantics": "true-extent",
+    "units": "model-m",
+    "denominators": [
+     500,
+     200
+    ],
+    "pens": {
+     "body": 0.25,
+     "detail": 0.18,
+     "texture": null,
+     "glazing": null,
+     "ground": 0.25
+    },
+    "hatches": [],
+    "geometry": {
+     "elevation": [],
+     "plan": [
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         -0.405
+        ],
+        [
+         0.925,
+         -0.405
+        ],
+        [
+         0.925,
+         0.405
+        ],
+        [
+         -0.925,
+         0.405
+        ]
+       ],
+       "closed": true,
+       "id": "footprint",
+       "bone": "chassis",
+       "role": "body",
+       "z": 1,
+       "filled": true,
+       "tone": 0.6
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         -0.925,
+         -0.405
+        ],
+        [
+         0.925,
+         -0.405
+        ],
+        [
+         0.925,
+         0.405
+        ],
+        [
+         -0.925,
+         0.405
+        ]
+       ],
+       "closed": true,
+       "id": "platform-outline",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 2,
+       "filled": false,
+       "tone": 0.3
+      },
+      {
+       "kind": "poly",
+       "points": [
+        [
+         0.925,
+         -0.405
+        ],
+        [
+         1.825,
+         -0.405
+        ],
+        [
+         1.825,
+         0.405
+        ],
+        [
+         0.925,
+         0.405
+        ]
+       ],
+       "closed": true,
+       "id": "extension-outline",
+       "bone": "chassis",
+       "role": "detail",
+       "z": 3,
+       "filled": false,
+       "tone": 0.5
+      }
+     ]
+    },
+    "dimensionalNote": {
+     "en": "True extent in model metres: footprint 1.85 x 0.81 m, extension outline 0.9 m beyond the front; real size at both listed scales.",
+     "de": "Wahre Ausdehnung in Modellmetern: Grundriss 1,85 x 0,81 m, Verlängerungsumriss 0,9 m über der Front; in beiden gelisteten Maßstäben in Realgröße."
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "stowed",
+    "title": {
+     "en": "Stowed, ready to drive",
+     "de": "Eingefahren, fahrbereit"
+    },
+    "description": {
+     "en": "Scissors folded to a 0.55 m stack, platform at 1.1 m with its rails at 2.2 m, battery on standby.",
+     "de": "Schere zu einem 0,55 m hohen Paket zusammengefaltet, Bühne bei 1,1 m mit Geländer bei 2,2 m, Batterie in Bereitschaft."
+    },
+    "bones": {
+     "A1": {
+      "angleDeg": 0.0
+     },
+     "slide": {
+      "dx": -0.0
+     },
+     "B1": {
+      "angleDeg": -0.0
+     },
+     "platform": {
+      "angleDeg": 0.0
+     },
+     "A2": {
+      "angleDeg": 0.0
+     },
+     "B2": {
+      "angleDeg": -0.0
+     },
+     "A3": {
+      "angleDeg": 0.0
+     },
+     "B3": {
+      "angleDeg": -0.0
+     },
+     "A4": {
+      "angleDeg": 0.0
+     },
+     "B4": {
+      "angleDeg": -0.0
+     },
+     "A5": {
+      "angleDeg": 0.0
+     },
+     "B5": {
+      "angleDeg": -0.0
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "power-draw": 0,
+      "lift-pump": 0
+     },
+     "regions": {
+      "arms": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "battery-box": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "motor-pump": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "deck": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "rails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 30
+       }
+      }
+     },
+     "emitters": {
+      "motor-vent": {
+       "motor-vent": 0,
+       "battery-plume": 0
+      },
+      "battery-plume": {
+       "motor-vent": 0,
+       "battery-plume": 0
+      }
+     }
+    },
+    "loads": []
+   },
+   {
+    "id": "mid-raise",
+    "title": {
+     "en": "Half raised with two occupants",
+     "de": "Halb gehoben mit zwei Personen"
+    },
+    "description": {
+     "en": "Arm angle 22 degrees: platform at about 3.4 m, motor and pump at half speed under 220 kg.",
+     "de": "Armwinkel 22 Grad: Bühne bei etwa 3,4 m, Motor und Pumpe mit halber Drehzahl unter 220 kg."
+    },
+    "bones": {
+     "A1": {
+      "angleDeg": 18.29
+     },
+     "slide": {
+      "dx": -0.1202
+     },
+     "B1": {
+      "angleDeg": -18.29
+     },
+     "platform": {
+      "angleDeg": 18.29
+     },
+     "A2": {
+      "angleDeg": 36.5801
+     },
+     "B2": {
+      "angleDeg": -36.5801
+     },
+     "A3": {
+      "angleDeg": 36.5801
+     },
+     "B3": {
+      "angleDeg": -36.5801
+     },
+     "A4": {
+      "angleDeg": 36.5801
+     },
+     "B4": {
+      "angleDeg": -36.5801
+     },
+     "A5": {
+      "angleDeg": 36.5801
+     },
+     "B5": {
+      "angleDeg": -36.5801
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "power-draw": 1,
+      "lift-pump": 0.5
+     },
+     "regions": {
+      "arms": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "battery-box": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "motor-pump": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "deck": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "rails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 30
+       }
+      }
+     },
+     "emitters": {
+      "motor-vent": {
+       "motor-vent": 1,
+       "battery-plume": 1
+      },
+      "battery-plume": {
+       "motor-vent": 1,
+       "battery-plume": 1
+      }
+     }
+    },
+    "loads": [
+     {
+      "id": "occupant-a",
+      "kind": "occupant",
+      "title": {
+       "en": "First person, 90 kg",
+       "de": "Erste Person, 90 kg"
+      },
+      "anchor": "occupant-1",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "occupant-b",
+      "kind": "occupant",
+      "title": {
+       "en": "Second person, 90 kg",
+       "de": "Zweite Person, 90 kg"
+      },
+      "anchor": "occupant-2",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "tool-box",
+      "kind": "equipment",
+      "title": {
+       "en": "Tool box, 40 kg (rated platform load 230 kg)",
+       "de": "Werkzeugkasten, 40 kg (Nennlast der Bühne 230 kg)"
+      },
+      "anchor": "tool-point",
+      "fxN": 0,
+      "fyN": -392.3,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "raised-working",
+    "title": {
+     "en": "Fully raised, deck extended",
+     "de": "Voll gehoben, Bühne ausgeschoben"
+    },
+    "description": {
+     "en": "Arm angle 38 degrees: platform at 5.8 m, the deck extended by 0.9 m, two occupants and a tool box on board.",
+     "de": "Armwinkel 38 Grad: Bühne bei 5,8 m, Bühne um 0,9 m ausgeschoben, zwei Personen und ein Werkzeugkasten an Bord."
+    },
+    "bones": {
+     "A1": {
+      "angleDeg": 34.39
+     },
+     "slide": {
+      "dx": -0.3586
+     },
+     "B1": {
+      "angleDeg": -34.39
+     },
+     "platform": {
+      "angleDeg": 34.39
+     },
+     "A2": {
+      "angleDeg": 68.7801
+     },
+     "B2": {
+      "angleDeg": -68.7801
+     },
+     "A3": {
+      "angleDeg": 68.7801
+     },
+     "B3": {
+      "angleDeg": -68.7801
+     },
+     "A4": {
+      "angleDeg": 68.7801
+     },
+     "B4": {
+      "angleDeg": -68.7801
+     },
+     "A5": {
+      "angleDeg": 68.7801
+     },
+     "B5": {
+      "angleDeg": -68.7801
+     },
+     "deck-ext": {
+      "dx": 0.9
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "power-draw": 0.3,
+      "lift-pump": 0
+     },
+     "regions": {
+      "arms": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "battery-box": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "motor-pump": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "deck": {
+       "exposedFraction": 1,
+       "sunlitFraction": 1.0
+      },
+      "rails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 30
+       }
+      }
+     },
+     "emitters": {
+      "motor-vent": {
+       "motor-vent": 0,
+       "battery-plume": 1
+      },
+      "battery-plume": {
+       "motor-vent": 0,
+       "battery-plume": 1
+      }
+     }
+    },
+    "loads": [
+     {
+      "id": "occupant-a",
+      "kind": "occupant",
+      "title": {
+       "en": "First person, 90 kg",
+       "de": "Erste Person, 90 kg"
+      },
+      "anchor": "occupant-1",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "occupant-b",
+      "kind": "occupant",
+      "title": {
+       "en": "Second person, 90 kg",
+       "de": "Zweite Person, 90 kg"
+      },
+      "anchor": "occupant-2",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "tool-box",
+      "kind": "equipment",
+      "title": {
+       "en": "Tool box, 40 kg (rated platform load 230 kg)",
+       "de": "Werkzeugkasten, 40 kg (Nennlast der Bühne 230 kg)"
+      },
+      "anchor": "tool-point",
+      "fxN": 0,
+      "fyN": -392.3,
+      "source": "authored-estimate"
+     }
+    ]
+   },
+   {
+    "id": "lowering",
+    "title": {
+     "en": "Lowering, platform half down",
+     "de": "Absenken, Bühne halb unten"
+    },
+    "description": {
+     "en": "Key pose between raised and stowed: arm angle 22 degrees, deck retracted.",
+     "de": "Schlüsselpose zwischen gehoben und eingefahren: Armwinkel 22 Grad, Bühne eingefahren."
+    },
+    "key": true,
+    "bones": {
+     "A1": {
+      "angleDeg": 18.29
+     },
+     "slide": {
+      "dx": -0.1202
+     },
+     "B1": {
+      "angleDeg": -18.29
+     },
+     "platform": {
+      "angleDeg": 18.29
+     },
+     "A2": {
+      "angleDeg": 36.5801
+     },
+     "B2": {
+      "angleDeg": -36.5801
+     },
+     "A3": {
+      "angleDeg": 36.5801
+     },
+     "B3": {
+      "angleDeg": -36.5801
+     },
+     "A4": {
+      "angleDeg": 36.5801
+     },
+     "B4": {
+      "angleDeg": -36.5801
+     },
+     "A5": {
+      "angleDeg": 36.5801
+     },
+     "B5": {
+      "angleDeg": -36.5801
+     }
+    },
+    "root": {
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0
+    },
+    "ground": "auto",
+    "contacts": [
+     "contact-f",
+     "contact-r"
+    ],
+    "thermal": {
+     "operating": {
+      "power-draw": 0.3,
+      "lift-pump": 0
+     },
+     "regions": {
+      "arms": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.5
+      },
+      "chassis": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.3
+      },
+      "battery-box": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "motor-pump": {
+       "exposedFraction": 0.6,
+       "sunlitFraction": 0.2
+      },
+      "deck": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.9
+      },
+      "rails": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.7
+      },
+      "tyres": {
+       "exposedFraction": 1,
+       "sunlitFraction": 0.1,
+       "contact": {
+        "fraction": 0.1,
+        "tempC": 30
+       }
+      }
+     },
+     "emitters": {
+      "motor-vent": {
+       "motor-vent": 0,
+       "battery-plume": 1
+      },
+      "battery-plume": {
+       "motor-vent": 0,
+       "battery-plume": 1
+      }
+     }
+    },
+    "loads": [
+     {
+      "id": "occupant-a",
+      "kind": "occupant",
+      "title": {
+       "en": "First person, 90 kg",
+       "de": "Erste Person, 90 kg"
+      },
+      "anchor": "occupant-1",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "occupant-b",
+      "kind": "occupant",
+      "title": {
+       "en": "Second person, 90 kg",
+       "de": "Zweite Person, 90 kg"
+      },
+      "anchor": "occupant-2",
+      "fxN": 0,
+      "fyN": -882.6,
+      "source": "authored-estimate"
+     },
+     {
+      "id": "tool-box",
+      "kind": "equipment",
+      "title": {
+       "en": "Tool box, 40 kg (rated platform load 230 kg)",
+       "de": "Werkzeugkasten, 40 kg (Nennlast der Bühne 230 kg)"
+      },
+      "anchor": "tool-point",
+      "fxN": 0,
+      "fyN": -392.3,
+      "source": "authored-estimate"
+     }
+    ]
+   }
+  ],
+  "clips": [
+   {
+    "id": "raise-cycle",
+    "title": {
+     "en": "Raise, work and lower",
+     "de": "Heben, Arbeiten und Senken"
+    },
+    "description": {
+     "en": "A 24 s loop: the platform rises to 5.8 m in 6 s, the deck slides out and back, then the stack folds down again; motor, pump and battery follow the lift.",
+     "de": "Eine Schleife von 24 s: Die Bühne steigt in 6 s auf 5,8 m, die Verlängerung fährt aus und wieder ein, dann faltet sich das Paket wieder zusammen; Motor, Pumpe und Batterie folgen dem Hub."
+    },
+    "durationS": 24,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       }
+      }
+     },
+     {
+      "t": 11,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       },
+       "deck-ext": {
+        "dx": 0.9
+       }
+      }
+     },
+     {
+      "t": 13,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       },
+       "deck-ext": {
+        "dx": 0.9
+       }
+      }
+     },
+     {
+      "t": 14.5,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       }
+      }
+     },
+     {
+      "t": 20,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 24,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 24
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 24
+     }
+    ],
+    "phases": [
+     {
+      "id": "raise",
+      "fromS": 3,
+      "toS": 9,
+      "title": {
+       "en": "Raising",
+       "de": "Heben"
+      }
+     },
+     {
+      "id": "work",
+      "fromS": 9,
+      "toS": 14.5,
+      "title": {
+       "en": "Working with deck out",
+       "de": "Arbeiten mit ausgeschobener Bühne"
+      }
+     },
+     {
+      "id": "lower",
+      "fromS": 14.5,
+      "toS": 20,
+      "title": {
+       "en": "Lowering",
+       "de": "Senken"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 3,
+      "kind": "operating",
+      "title": {
+       "en": "Lift starts",
+       "de": "Heben beginnt"
+      },
+      "target": "lift-pump"
+     },
+     {
+      "t": 11,
+      "kind": "motion",
+      "title": {
+       "en": "Deck extension slides out",
+       "de": "Bühnenverlängerung fährt aus"
+      },
+      "target": "deck-ext"
+     },
+     {
+      "t": 14.5,
+      "kind": "motion",
+      "title": {
+       "en": "Deck extension retracts",
+       "de": "Bühnenverlängerung fährt ein"
+      },
+      "target": "deck-ext"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "operating:lift-pump",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 14.5,
+        "v": 0
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:power-draw",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0.3
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0.3
+       },
+       {
+        "t": 14.5,
+        "v": 0.3
+       },
+       {
+        "t": 15,
+        "v": 0.3
+       },
+       {
+        "t": 20,
+        "v": 0.3
+       },
+       {
+        "t": 24,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:motor-vent",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 1
+       },
+       {
+        "t": 9.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:battery-plume",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 1
+       },
+       {
+        "t": 20.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "load:occupant-a",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:occupant-b",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:tool-box",
+      "ease": "linear",
+      "keys": [
+       {
+        "t": 0,
+        "v": 1
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "start-lift-stop",
+    "title": {
+     "en": "Start, lift and shut down",
+     "de": "Anlassen, Heben und Abstellen"
+    },
+    "description": {
+     "en": "A 22 s sequence: key on at 1 s, two occupants step on, the platform rises, the deck extends, then everything lowers and the key is turned off at 21 s.",
+     "de": "Eine Folge von 22 s: Schlüssel an bei 1 s, zwei Personen steigen auf, die Bühne steigt, die Verlängerung fährt aus, dann senkt sich alles und der Schlüssel wird bei 21 s abgeschaltet."
+    },
+    "durationS": 22,
+    "fps": 30,
+    "loop": false,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 3,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 9,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       }
+      }
+     },
+     {
+      "t": 11,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       },
+       "deck-ext": {
+        "dx": 0.9
+       }
+      }
+     },
+     {
+      "t": 14,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       },
+       "deck-ext": {
+        "dx": 0.9
+       }
+      }
+     },
+     {
+      "t": 15.5,
+      "pose": "raised-working",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 34.39
+       },
+       "slide": {
+        "dx": -0.3586
+       },
+       "B1": {
+        "angleDeg": -34.39
+       },
+       "platform": {
+        "angleDeg": 34.39
+       },
+       "A2": {
+        "angleDeg": 68.7801
+       },
+       "B2": {
+        "angleDeg": -68.7801
+       },
+       "A3": {
+        "angleDeg": 68.7801
+       },
+       "B3": {
+        "angleDeg": -68.7801
+       },
+       "A4": {
+        "angleDeg": 68.7801
+       },
+       "B4": {
+        "angleDeg": -68.7801
+       },
+       "A5": {
+        "angleDeg": 68.7801
+       },
+       "B5": {
+        "angleDeg": -68.7801
+       }
+      }
+     },
+     {
+      "t": 21,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     },
+     {
+      "t": 22,
+      "pose": "stowed",
+      "ease": "smooth",
+      "bones": {
+       "A1": {
+        "angleDeg": 0.0
+       },
+       "slide": {
+        "dx": -0.0
+       },
+       "B1": {
+        "angleDeg": -0.0
+       },
+       "platform": {
+        "angleDeg": 0.0
+       },
+       "A2": {
+        "angleDeg": 0.0
+       },
+       "B2": {
+        "angleDeg": -0.0
+       },
+       "A3": {
+        "angleDeg": 0.0
+       },
+       "B3": {
+        "angleDeg": -0.0
+       },
+       "A4": {
+        "angleDeg": 0.0
+       },
+       "B4": {
+        "angleDeg": -0.0
+       },
+       "A5": {
+        "angleDeg": 0.0
+       },
+       "B5": {
+        "angleDeg": -0.0
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "contact-f",
+      "fromS": 0,
+      "toS": 22
+     },
+     {
+      "anchor": "contact-r",
+      "fromS": 0,
+      "toS": 22
+     }
+    ],
+    "phases": [
+     {
+      "id": "board",
+      "fromS": 0,
+      "toS": 3,
+      "title": {
+       "en": "Key on and boarding",
+       "de": "Zündung und Einsteigen"
+      }
+     },
+     {
+      "id": "lift",
+      "fromS": 3,
+      "toS": 11,
+      "title": {
+       "en": "Lifting",
+       "de": "Heben"
+      }
+     },
+     {
+      "id": "work",
+      "fromS": 11,
+      "toS": 15.5,
+      "title": {
+       "en": "Working",
+       "de": "Arbeiten"
+      }
+     },
+     {
+      "id": "lower",
+      "fromS": 15.5,
+      "toS": 22,
+      "title": {
+       "en": "Lowering and shutdown",
+       "de": "Senken und Abstellen"
+      }
+     }
+    ],
+    "events": [
+     {
+      "t": 1.0,
+      "kind": "ignition",
+      "title": {
+       "en": "Key on",
+       "de": "Schlüssel an"
+      },
+      "target": "motor-vent"
+     },
+     {
+      "t": 2.0,
+      "kind": "load-on",
+      "title": {
+       "en": "Occupants step on the platform",
+       "de": "Personen betreten die Bühne"
+      },
+      "target": "occupant-a"
+     },
+     {
+      "t": 21.0,
+      "kind": "shutdown",
+      "title": {
+       "en": "Key off",
+       "de": "Schlüssel aus"
+      },
+      "target": "motor-vent"
+     }
+    ],
+    "tracks": [
+     {
+      "target": "load:occupant-a",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1.8,
+        "v": 0
+       },
+       {
+        "t": 2.4,
+        "v": 1
+       },
+       {
+        "t": 21,
+        "v": 1
+       },
+       {
+        "t": 22,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:occupant-b",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2.0,
+        "v": 0
+       },
+       {
+        "t": 2.6,
+        "v": 1
+       },
+       {
+        "t": 21,
+        "v": 1
+       },
+       {
+        "t": 22,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "load:tool-box",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 2.2,
+        "v": 0
+       },
+       {
+        "t": 2.8,
+        "v": 1
+       },
+       {
+        "t": 21,
+        "v": 1
+       },
+       {
+        "t": 22,
+        "v": 1
+       }
+      ]
+     },
+     {
+      "target": "operating:power-draw",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 0.3
+       },
+       {
+        "t": 3,
+        "v": 0.3
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0.3
+       },
+       {
+        "t": 15.5,
+        "v": 0.3
+       },
+       {
+        "t": 21,
+        "v": 0.3
+       },
+       {
+        "t": 21.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "operating:lift-pump",
+      "ease": "smooth",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 0
+       },
+       {
+        "t": 4,
+        "v": 1
+       },
+       {
+        "t": 8,
+        "v": 1
+       },
+       {
+        "t": 9,
+        "v": 0
+       },
+       {
+        "t": 22,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:motor-vent",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 3,
+        "v": 1
+       },
+       {
+        "t": 9.5,
+        "v": 0
+       }
+      ]
+     },
+     {
+      "target": "emitter:battery-plume",
+      "ease": "step",
+      "keys": [
+       {
+        "t": 0,
+        "v": 0
+       },
+       {
+        "t": 1,
+        "v": 1
+       },
+       {
+        "t": 21.5,
+        "v": 0
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 8,
+    "groundTempC": 30,
+    "relativeHumidity": 0.5,
+    "windMS": 0.5,
+    "windDirectionDeg": 180,
+    "solarWM2": 400,
+    "diffuseFraction": 0.2,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "power-draw",
+     "title": {
+      "en": "Battery current",
+      "de": "Batteriestrom"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Off",
+        "de": "Aus"
+       }
+      },
+      {
+       "v": 0.3,
+       "title": {
+        "en": "Standby and lowering",
+        "de": "Bereitschaft und Senken"
+       }
+      },
+      {
+       "v": 0.6,
+       "title": {
+        "en": "Driving",
+        "de": "Fahren"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Lifting at full load",
+        "de": "Heben mit Volllast"
+       }
+      }
+     ]
+    },
+    {
+     "id": "lift-pump",
+     "title": {
+      "en": "Motor and pump",
+      "de": "Motor und Pumpe"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "Stopped",
+        "de": "Stillstand"
+       }
+      },
+      {
+       "v": 0.5,
+       "title": {
+        "en": "Raising slowly",
+        "de": "Langsames Heben"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "Raising at rated speed",
+        "de": "Heben mit Nenngeschwindigkeit"
+       }
+      }
+     ]
+    }
+   ],
+   "regions": [
+    {
+     "id": "arms",
+     "title": {
+      "en": "Scissor arms",
+      "de": "Scherenarme"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "scissor-steel",
+     "areaM2": 10,
+     "characteristicLengthM": 1.7,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "web",
+       "title": {
+        "en": "Steel plate 6 mm",
+        "de": "Stahlblech 6 mm"
+       },
+       "kind": "metal",
+       "material": "scissor-steel",
+       "thicknessM": 0.006,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 21666,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 21600,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "chassis",
+     "title": {
+      "en": "Chassis frame and covers",
+      "de": "Fahrgestellrahmen und Abdeckungen"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "chassis-paint",
+     "areaM2": 5,
+     "characteristicLengthM": 0.9,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "Steel plate 4 mm",
+        "de": "Stahlblech 4 mm"
+       },
+       "kind": "metal",
+       "material": "chassis-paint",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 14444,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 14400,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "battery-box",
+     "title": {
+      "en": "Battery compartment cover",
+      "de": "Batteriefachabdeckung"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "chassis-paint",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.45,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "cover",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "chassis-paint",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "operating": {
+      "key": "power-draw",
+      "heatW": 150
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "motor-pump",
+     "title": {
+      "en": "Motor and hydraulic pump cover",
+      "de": "Abdeckung von Motor und Hydraulikpumpe"
+     },
+     "kind": "engine",
+     "model": "operating",
+     "material": "chassis-paint",
+     "areaM2": 0.6,
+     "characteristicLengthM": 0.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.4,
+     "layers": [
+      {
+       "id": "cover",
+       "title": {
+        "en": "Steel plate 2 mm",
+        "de": "Stahlblech 2 mm"
+       },
+       "kind": "metal",
+       "material": "chassis-paint",
+       "thicknessM": 0.002,
+       "resistanceM2KW": 0.0,
+       "heatCapacityJM2K": 7222,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 7200,
+     "operating": {
+      "key": "lift-pump",
+      "heatW": 400
+     },
+     "source": "authored-estimate"
+    },
+    {
+     "id": "deck",
+     "title": {
+      "en": "Platform deck and extension",
+      "de": "Bühnenboden und Verlängerung"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "deck-steel",
+     "areaM2": 3.4,
+     "characteristicLengthM": 1.3,
+     "geometry": "horizontal-plate-up",
+     "skyViewFactor": 1.0,
+     "layers": [
+      {
+       "id": "plate",
+       "title": {
+        "en": "Steel plate 4 mm",
+        "de": "Stahlblech 4 mm"
+       },
+       "kind": "metal",
+       "material": "deck-steel",
+       "thicknessM": 0.004,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 14444,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 14400,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "rails",
+     "title": {
+      "en": "Guard rails and control box",
+      "de": "Geländer und Steuerkasten"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "rail-steel",
+     "areaM2": 2.4,
+     "characteristicLengthM": 0.05,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.9,
+     "layers": [
+      {
+       "id": "tube",
+       "title": {
+        "en": "Steel plate 3 mm",
+        "de": "Stahlblech 3 mm"
+       },
+       "kind": "metal",
+       "material": "rail-steel",
+       "thicknessM": 0.003,
+       "resistanceM2KW": 0.0001,
+       "heatCapacityJM2K": 10833,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 10800,
+     "source": "authored-estimate",
+     "reference": "ashrae-2021"
+    },
+    {
+     "id": "tyres",
+     "title": {
+      "en": "Non-marking tyres",
+      "de": "Nichtmarkierende Reifen"
+     },
+     "kind": "tyre",
+     "model": "passive",
+     "material": "rubber",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.54,
+     "geometry": "cylinder",
+     "skyViewFactor": 0.5,
+     "layers": [
+      {
+       "id": "rubber",
+       "title": {
+        "en": "Solid rubber 20 mm",
+        "de": "Vollgummi 20 mm"
+       },
+       "kind": "polymer",
+       "material": "rubber",
+       "thicknessM": 0.02,
+       "resistanceM2KW": 0.13,
+       "heatCapacityJM2K": 37400,
+       "source": "literature",
+       "reference": "incropera-2011"
+      }
+     ],
+     "heatCapacityJM2K": 37400,
+     "source": "authored-estimate",
+     "reference": "incropera-2011"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "motor-vent",
+     "kind": "vent",
+     "title": {
+      "en": "Motor cooling air at the chassis end",
+      "de": "Motorkühlluft am Fahrgestellende"
+     },
+     "anchor": "motor-outlet",
+     "directionDeg": 0,
+     "diameterM": 0.1,
+     "operatingKey": "lift-pump",
+     "volumeFlowM3S": 0.03,
+     "temperatureRiseK": 25,
+     "vapourKgPerKg": 0.0,
+     "source": "authored-estimate"
+    },
+    {
+     "id": "battery-plume",
+     "kind": "plume",
+     "title": {
+      "en": "Warm air rising above the battery compartment",
+      "de": "Warme Luft über dem Batteriefach"
+     },
+     "anchor": "battery-top",
+     "directionDeg": 90,
+     "diameterM": 0.3,
+     "region": "battery-box",
+     "source": "authored-estimate"
+    }
+   ],
+   "assumptions": [
+    {
+     "en": "24 V traction battery, 225 Ah (5.4 kWh): at full lift current (about 150 A) the internal resistance of 15 mOhm dissipates 340 W in the pack, of which 150 W leave through the visible cover; the motor and pump (2.2 kW, efficiency 82 percent) heat their cover with 400 W and a cooling fan of 0.03 m3/s carries away 25 K at full lift. Authored estimates.",
+     "de": "Traktionsbatterie 24 V, 225 Ah (5,4 kWh): Beim vollen Hubstrom (etwa 150 A) verbrennt der Innenwiderstand von 15 mOhm 340 W im Block, davon verlassen 150 W die sichtbare Abdeckung; Motor und Pumpe (2,2 kW, Wirkungsgrad 82 Prozent) heizen ihre Abdeckung mit 400 W und ein Lüfter mit 0,03 m3/s führt beim vollen Hub 25 K ab. Schätzungen."
+    },
+    {
+     "en": "There is no exhaust: the lift is battery-electric. The plume emitter marks the warm air above the battery compartment.",
+     "de": "Es gibt kein Abgas: Die Bühne ist batterieelektrisch. Der Plume-Emitter markiert die warme Luft über dem Batteriefach."
+    }
+   ]
+  },
+  "structure": {
+   "gravityMS2": 9.8066,
+   "dynamics": "quasi-static",
+   "supports": [],
+   "assumptions": [
+    {
+     "en": "Two tyre contacts carry the lift as unilateral supports; the occupants (2 x 90 kg) and the 40 kg tool box are point loads at their standing points; quasi-static. The tipping line about the front axle shows with the deck extended.",
+     "de": "Zwei Reifenkontakte tragen die Bühne als einseitige Auflager; die Personen (2 x 90 kg) und der 40-kg-Werkzeugkasten sind Einzellasten an ihren Standpunkten; quasi-statisch. Die Kipplinie um die Vorderachse zeigt sich bei ausgeschobener Bühne."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "stowed",
+   "defaultClip": "raise-cycle",
+   "defaultScale": 100,
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg",
+   "pdf",
+   "dxf",
+   "dwg",
+   "png-sequence",
+   "mp4",
+   "webm",
+   "component"
+  ],
+  "completion": "authored"
+ }
+}

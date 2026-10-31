@@ -643,6 +643,9 @@ diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/
                  resolve();
              });
          }));
+@@ -1330,1 +1341,1 @@
+-        else if (!this.isContinuousTaskNeeded(task.id)) {
++        else if (!this.isContinuousTaskNeeded(task.id) && (code === 0 || !this.initializingTaskIds.has(task.id))) {
 diff --git a/dist/src/tasks-runner/run-command.js b/dist/src/tasks-runner/run-command.js
 --- a/dist/src/tasks-runner/run-command.js
 +++ b/dist/src/tasks-runner/run-command.js
@@ -1478,7 +1481,7 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 +    return [loaded.authorizers, loaded.authorizers, loaded.authorizers];
 +}
 +function semioExcluded(path) {
-+    return semioPolicy && (semioPolicy.roots.some(root => path === root || path.startsWith(root + '/')) || path.split('/').some(part => semioPolicy.names.includes(part)));
++    return semioPolicy && (semioPolicy.roots.some(root => path === root || path.startsWith(root + '/')) || path.split('/').some(part => semioPolicy.names.includes(part) || semioPolicy.opaqueBasenames.prefixes.some(prefix => part.startsWith(prefix) && part.length === prefix.length + semioPolicy.opaqueBasenames.digestHex && /^[a-f0-9]+$/.test(part.slice(prefix.length)))));
 +}
 +function semioReceive(error, events) {
 +    if (error) semioError = error;
@@ -1596,7 +1599,7 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
      for (const event of events) {
          if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
              // If the ignore files themselves have changed we need to dynamically
-@@ -29,15 +155,31 @@
+@@ -29,15 +155,28 @@
              });
          }
      }
@@ -1606,31 +1609,30 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 +    finally { semioChangedFileHashes = undefined; }
  }
  async function watchWorkspace(server, cb) {
-     const { Watcher } = await (0, handle_import_1.handleImport)('../../native/index.js', __dirname);
+-    const { Watcher } = await (0, handle_import_1.handleImport)('../../native/index.js', __dirname);
      activeServer = server;
 +    const generation = ++semioGeneration, lifetime = new AbortController();
 +    semioLifetime = lifetime; semioJournal = undefined; semioJournalPromise = undefined; semioError = undefined; semioPending = []; semioSubscribers.clear();
      workspaceChangesCallback = cb;
 -    const watcher = new Watcher(workspace_root_1.workspaceRoot);
-+    try {
-+        const [backend, , rpc] = await loadSemioFilesystemJournalOwners();
-+        semioPolicy = await backend.repositoryFilesystemJournalPolicyV1(workspace_root_1.workspaceRoot);
-+        if (!semioToolingIdentity) throw Error('Actual immutable graph authorizer identity required');
-+    } catch (error) { semioError = error; }
-+    const globs = semioPolicy ? [...semioPolicy.roots.map(root => '!/' + root + '/**'), ...semioPolicy.names.map(name => '!**/' + name + '/**')] : undefined;
-+    const watcher = new Watcher(workspace_root_1.workspaceRoot, globs, semioPolicy ? false : undefined);
++    const [backend] = await loadSemioFilesystemJournalOwners();
++    const owned = await backend.createNxDaemonWorkspaceWatcherV1(lifetime.signal);
++    semioPolicy = owned.policy;
++    if (!semioToolingIdentity) { await owned.watcher.stop(); throw Error('Actual immutable graph authorizer identity required'); }
++    const watcher = owned.watcher;
 +    semioWatcher = watcher;
 +    const stop = watcher.stop.bind(watcher);
-+    let stopped = false;
-+    watcher.stop = async () => { if (stopped) return; stopped = true; lifetime.abort(new Error('Native filesystem journal watcher closed')); if (generation === semioGeneration) { semioReceive(new Error('Native filesystem journal watcher closed'), []); if (semioJournal) await semioJournal.close(); if (semioThread) { const owned = semioThread; semioThread = undefined; await stopSemioJournalThreadV1(owned); } } await stop(); };
++    let stopping;
++    watcher.stop = () => stopping ||= (async () => { const failures = []; lifetime.abort(new Error('Native filesystem journal watcher closed')); if (generation === semioGeneration) { semioReceive(new Error('Native filesystem journal watcher closed'), []); if (semioJournal) try { await semioJournal.close(); } catch (error) { failures.push(error); } if (semioThread) { const owned = semioThread; semioThread = undefined; try { await stopSemioJournalThreadV1(owned); } catch (error) { failures.push(error); } } } try { await stop(); } catch (error) { failures.push(error); } if (failures.length) throw failures.length === 1 ? failures[0] : new AggregateError(failures, 'Workspace journal and native stop failed'); })().catch(error => { stopping = undefined; throw error; });
      watcher.watch((err, events) => {
 +        if (generation !== semioGeneration || lifetime.signal.aborted) return;
          if (err) {
 +            semioReceive(err, []);
              return cb(err, null);
          }
-         dispatchWorkspaceChanges(events);
-@@ -52,36 +194,35 @@
+-        dispatchWorkspaceChanges(events);
++        return dispatchWorkspaceChanges(events);
+@@ -52,36 +191,35 @@
   */
  async function flushPendingWorkspaceChanges() {
      const watcher = (0, shutdown_utils_1.getWatcherInstance)();
@@ -1641,7 +1643,7 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 -        return;
 -    await dispatchWorkspaceChanges(events);
 +    if (watcher) {
-+        const events = watcher.forceFlushPending();
++        const events = await watcher.forceFlushPending();
 +        if (events.length) await dispatchWorkspaceChanges(events);
 +    }
 +    await flushSemioOutputChangesV1();

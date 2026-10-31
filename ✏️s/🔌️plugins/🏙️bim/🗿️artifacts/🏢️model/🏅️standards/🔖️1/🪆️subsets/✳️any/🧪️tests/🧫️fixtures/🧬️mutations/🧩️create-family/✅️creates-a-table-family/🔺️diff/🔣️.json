@@ -1,9 +1,11 @@
 {
   "families": {
     "fam-table": {
-      "category": "Furniture",
       "entry": "Created",
-      "name": "Table"
+      "value": {
+        "category": "Furniture",
+        "name": "Table"
+      }
     }
   }
 }

@@ -1,0 +1,2159 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "patio-heater",
+    "category": "objects",
+    "title": {
+      "en": "Propane Patio Heater",
+      "de": "Gas-Heizpilz (Propan)"
+    },
+    "summary": {
+      "en": "A free-standing 13 kW propane radiant heater, 2.25 m high with a 0.80 m dome: operating levels off, low (6 kW) and high (13 kW) heat the emitter shroud and the dome and send a hot flue plume up through the dome.",
+      "de": "Ein freistehender Propan-Heizstrahler von 13 kW, 2,25 m hoch mit 0,80 m Haube: die Betriebsstufen Aus, Klein (6 kW) und Groß (13 kW) heizen Strahlermantel und Haube und schicken eine heiße Abgasfahne durch die Haube nach oben."
+    },
+    "tags": [
+      "patio-heater",
+      "propane",
+      "radiant-heater",
+      "outdoor",
+      "burner",
+      "flue"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "turns-2012",
+          "citation": "Turns, S. R. (2012). An Introduction to Combustion: Concepts and Applications, 3rd ed., McGraw-Hill (lower heating value of propane 46.35 MJ/kg, stoichiometric air 15.7 kg per kg propane, C3H8 + 5 O2 -> 3 CO2 + 4 H2O)."
+        },
+        {
+          "id": "en-14543",
+          "citation": "EN 14543 Gas-fired patio heaters (product standard for free-standing outdoor radiant heaters; heat input classes of the product family are authored estimates)."
+        },
+        {
+          "id": "en-1442",
+          "citation": "EN 1442 Transportable refillable welded steel gas cylinders for LPG (11 kg propane steel cylinder class; tare mass is an authored estimate)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1: Actions on structures, Part 1-4: Wind actions (dynamic pressure q = 0.5 rho v^2)."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (steel, stainless steel)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties, convection, plumes)."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation of the mushroom-type heater with the 11 kg propane bottle in the base housing (mass 45 kg with a full bottle). Heat input 13 kW at high and 6 kW at low are authored estimates for the 12-14 kW patio-heater class (EN 14543 product family). The release is split into 8.2 kW at the emitter shroud and 2.2 kW at the dome, the flue gas sensible heat (0.0098 m3/s at 280 K rise = 1.9 kW) makes up the rest; the flue vapour share 0.078 kg/kg follows from C3H8 + 5 O2 -> 3 CO2 + 4 H2O (1.64 kg water per kg propane) with 21 kg flue gas per kg propane at excess air 1.3.",
+        "de": "Seitenansicht des Heizpilzes vom Pilztyp mit der 11-kg-Propanflasche im Sockelgehäuse (Masse 45 kg mit voller Flasche). Wärmebelastung 13 kW auf Groß und 6 kW auf Klein sind Schätzwerte für die Heizpilzklasse von 12-14 kW (Produktfamilie EN 14543). Die Freisetzung teilt sich in 8,2 kW am Strahlermantel und 2,2 kW an der Haube, die fühlbare Abgaswärme (0,0098 m3/s bei 280 K Anstieg = 1,9 kW) bildet den Rest; der Dampfanteil 0,078 kg/kg folgt aus C3H8 + 5 O2 -> 3 CO2 + 4 H2O (1,64 kg Wasser je kg Propan) mit 21 kg Abgas je kg Propan bei Luftüberschuss 1,3."
+      }
+    },
+    "dimensions": {
+      "heightM": 2.25,
+      "widthM": 0.8,
+      "depthM": 0.8,
+      "massKg": 45.0
+    },
+    "materials": [
+      {
+        "id": "powder-steel",
+        "title": {
+          "en": "Powder-coated steel, dark grey",
+          "de": "Pulverbeschichteter Stahl, dunkelgrau"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "stainless-brushed",
+        "title": {
+          "en": "Brushed stainless steel",
+          "de": "Edelstahl gebürstet"
+        },
+        "emissivity": 0.35,
+        "solarAbsorptivity": 0.45,
+        "densityKgM3": 7900,
+        "conductivityWmK": 17,
+        "specificHeatJKgK": 500,
+        "elasticModulusPa": 200000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "stainless-hot",
+        "title": {
+          "en": "Oxidised stainless emitter shroud",
+          "de": "Oxidierter Edelstahl-Strahlermantel"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7900,
+        "conductivityWmK": 17,
+        "specificHeatJKgK": 500,
+        "elasticModulusPa": 200000000000.0,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "alu-reflector",
+        "title": {
+          "en": "Aluminised steel reflector",
+          "de": "Aluminierter Stahlreflektor"
+        },
+        "emissivity": 0.2,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "source": "authored-estimate",
+        "reference": "incropera-2018"
+      },
+      {
+        "id": "plastic-black",
+        "title": {
+          "en": "Black thermoset knob",
+          "de": "Schwarzer Duroplastknopf"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.9,
+        "densityKgM3": 1400,
+        "conductivityWmK": 0.3,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "base",
+      "bones": [
+        {
+          "id": "base",
+          "parent": null,
+          "title": {
+            "en": "Base plate and bottle housing",
+            "de": "Bodenplatte und Flaschengehäuse"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.46,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 8.7,
+            "comX": 0.0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-14543"
+          }
+        },
+        {
+          "id": "bottle",
+          "parent": "base",
+          "title": {
+            "en": "Propane bottle inside the housing (11 kg gas)",
+            "de": "Propanflasche im Gehäuse (11 kg Gas)"
+          },
+          "x": 0.0,
+          "y": 0.03,
+          "angleDeg": 0,
+          "lengthM": 0.62,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 24.5,
+            "comX": 0.0,
+            "comY": 0.31,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "en-1442"
+          }
+        },
+        {
+          "id": "pole",
+          "parent": "base",
+          "title": {
+            "en": "Stainless pole",
+            "de": "Edelstahlmast"
+          },
+          "x": 0.0,
+          "y": 0.62,
+          "angleDeg": 0,
+          "lengthM": 1.36,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4.5,
+            "comX": 0.0,
+            "comY": 0.68,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "burner-head",
+          "parent": "pole",
+          "title": {
+            "en": "Burner head with emitter shroud",
+            "de": "Brennerkopf mit Strahlermantel"
+          },
+          "x": 0.0,
+          "y": 1.36,
+          "angleDeg": 0,
+          "lengthM": 0.14,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.5,
+            "comX": 0.0,
+            "comY": 0.06,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "reflector",
+          "parent": "burner-head",
+          "title": {
+            "en": "Dome reflector",
+            "de": "Reflektorhaube"
+          },
+          "x": 0.0,
+          "y": 0.08,
+          "angleDeg": 0,
+          "lengthM": 0.19,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 3.5,
+            "comX": 0.0,
+            "comY": 0.09,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        },
+        {
+          "id": "knob",
+          "parent": "base",
+          "title": {
+            "en": "Burner control knob",
+            "de": "Brennerregelknopf"
+          },
+          "x": 0.17,
+          "y": 0.46,
+          "angleDeg": 0,
+          "lengthM": 0.03,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 120
+          },
+          "mass": {
+            "kg": 0.3,
+            "comX": 0.0,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-contact",
+        "bone": "base",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Base plate on the ground",
+          "de": "Bodenplatte auf dem Boden"
+        },
+        "support": "contact",
+        "footprintLengthM": 0.46,
+        "footprintWidthM": 0.46,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "flue-vent",
+        "bone": "burner-head",
+        "x": 0.0,
+        "y": -1.86,
+        "kind": "emitter",
+        "title": {
+          "en": "Flue gas outlet under the dome",
+          "de": "Abgasaustritt unter der Haube"
+        }
+      },
+      {
+        "id": "reflector-top",
+        "bone": "reflector",
+        "x": 0.0,
+        "y": -1.87,
+        "kind": "emitter",
+        "title": {
+          "en": "Top of the dome",
+          "de": "Haubenscheitel"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.1 L 0.17 0.1 L 0.17 0.58 C 0.17 0.64 0.06 0.66 0.05 0.66 L -0.05 0.66 C -0.06 0.66 -0.17 0.64 -0.17 0.58 L -0.17 0.1 L -0.23 0.1 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.07,
+              "y": 0.0,
+              "w": 0.14,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": -0.02,
+              "w": 0.26,
+              "h": 0.14,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 -0.03 C -0.4 0.03 -0.22 0.19 0 0.19 C 0.22 0.19 0.4 0.03 0.4 -0.03 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "rect",
+              "x": -0.03,
+              "y": -0.06,
+              "w": 0.06,
+              "h": 0.12,
+              "region": "control",
+              "material": "plastic-black"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A mushroom sign 1.6 mm wide and 4.5 mm high: a stepped base block, a thick pole, a small head block and a solid dome.",
+            "de": "Ein Pilzzeichen, 1,6 mm breit und 4,5 mm hoch: ein gestufter Sockelblock, ein dicker Mast, ein kleiner Kopfblock und eine volle Haube."
+          },
+          "retained": {
+            "en": "Height 2.25 m and the 0.80 m dome width exactly; the base plate step, pole, emitter head, dome and the control knob.",
+            "de": "Höhe 2,25 m und die Haubenbreite 0,80 m exakt; Bodenplattenstufe, Mast, Strahlerkopf, Haube und der Regelknopf."
+          },
+          "merged": {
+            "en": "Base plate, housing and door merge into the stepped base block; the knob is a small bar on its side.",
+            "de": "Bodenplatte, Gehäuse und Tür gehen im gestuften Sockelblock auf; der Knopf ist ein kleiner Balken an dessen Seite."
+          },
+          "omitted": {
+            "en": "Door seam, vents, wheels, pole joint, flame guard rods, mesh.",
+            "de": "Türfuge, Lüftungsschlitze, Räder, Mastfuge, Flammenschutzstäbe, Gitter."
+          },
+          "thinElements": {
+            "en": "The 0.06 m pole would be 0.12 mm wide: thickened to 0.14 m (0.28 mm); the 0.03 m base plate is merged into a 0.10 m (0.2 mm) step; the dome rim hangs 0.03 m lower than real so its edge reaches the feature width.",
+            "de": "Der 0,06 m dicke Mast wäre 0,12 mm breit: auf 0,14 m (0,28 mm) verbreitert; die 0,03 m dicke Bodenplatte geht in einer 0,10-m-Stufe (0,2 mm) auf; der Haubenrand hängt 0,03 m tiefer als real, damit seine Kante die Mindestbreite erreicht."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Base 0.6, pole 0.45, hot head 0.8, dome 0.5, knob 0.2; body pen 0.13 mm, ground 0.18 mm.",
+            "de": "Sockel 0,6, Mast 0,45, heißer Kopf 0,8, Haube 0,5, Knopf 0,2; Körperstift 0,13 mm, Boden 0,18 mm."
+          },
+          "overlays": {
+            "en": "Each block carries its region; the hot head and the dome are the operating regions seen on the thermal view.",
+            "de": "Jeder Block trägt seine Region; heißer Kopf und Haube sind die Betriebsregionen der Thermalansicht."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.05 L 0.17 0.05 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.05 L -0.23 0.05 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.035,
+              "y": 0.0,
+              "w": 0.07,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0.0,
+              "w": 0.26,
+              "h": 0.12,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 -0.01 C -0.4 0.05 -0.22 0.19 0 0.19 C 0.22 0.19 0.4 0.05 0.4 -0.01 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "control",
+              "material": "plastic-black"
+            },
+            {
+              "id": "door-seam",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.08
+                ],
+                [
+                  -0.11,
+                  0.52
+                ],
+                [
+                  0.11,
+                  0.52
+                ],
+                [
+                  0.11,
+                  0.08
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A heater 4 mm wide and 11 mm high: base with housing shoulder, a 0.3 mm pole, the emitter head under a solid dome, a round knob and the door seam.",
+            "de": "Ein Heizpilz 4 mm breit und 11 mm hoch: Sockel mit Gehäuseschulter, ein 0,3 mm dicker Mast, der Strahlerkopf unter einer vollen Haube, ein runder Knopf und die Türfuge."
+          },
+          "retained": {
+            "en": "True proportions: plate, housing, pole, head, dome, knob; the door as one seam line.",
+            "de": "Wahre Proportionen: Platte, Gehäuse, Mast, Kopf, Haube, Knopf; die Tür als eine Fugenlinie."
+          },
+          "merged": {
+            "en": "Plate and housing are one base path; the pole joint merges into the pole.",
+            "de": "Platte und Gehäuse sind ein Sockelpfad; die Mastfuge geht im Mast auf."
+          },
+          "omitted": {
+            "en": "Vents, wheels, handle, flame guard, mesh.",
+            "de": "Lüftungsschlitze, Räder, Griff, Flammenschutz, Gitter."
+          },
+          "thinElements": {
+            "en": "Pole is 0.07 m = 0.35 mm wide (real 0.06 m): thickened 0.01 m; the dome rim is 0.01 m lower than real.",
+            "de": "Der Mast ist 0,07 m = 0,35 mm breit (real 0,06 m): um 0,01 m verbreitert; der Haubenrand liegt 0,01 m tiefer als real."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Base 0.6, pole 0.45, head 0.8, dome 0.5; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Sockel 0,6, Mast 0,45, Kopf 0,8, Haube 0,5; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Door seam carries base-housing; knob control.",
+            "de": "Die Türfuge trägt base-housing; der Knopf control."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.04 L 0.17 0.04 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.04 L -0.23 0.04 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "pole-joint",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.68
+                ],
+                [
+                  0.03,
+                  0.68
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0.0,
+              "w": 0.26,
+              "h": 0.12,
+              "r": 0.02,
+              "region": "emitter-head",
+              "material": "stainless-hot"
+            },
+            {
+              "id": "guard-rod-0",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.005
+                ],
+                [
+                  -0.08,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-1",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.005
+                ],
+                [
+                  0.0,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-2",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.08,
+                  0.005
+                ],
+                [
+                  0.08,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 0 C -0.4 0.06 -0.22 0.19 0 0.19 C 0.22 0.19 0.4 0.06 0.4 0 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-rim",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.4,
+                  0.02
+                ],
+                [
+                  0.4,
+                  0.02
+                ]
+              ],
+              "closed": false,
+              "region": "reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.028,
+              "ry": 0.028,
+              "region": "control",
+              "material": "plastic-black"
+            },
+            {
+              "id": "door-seam",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11,
+                  0.08
+                ],
+                [
+                  -0.11,
+                  0.52
+                ],
+                [
+                  0.11,
+                  0.52
+                ],
+                [
+                  0.11,
+                  0.08
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slots",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.08,
+                  0.57
+                ],
+                [
+                  0.08,
+                  0.57
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A heater 8 mm wide and 22.5 mm high: stepped base with door and vent line, pole with a joint, emitter head with three guard rods, dome with rim line, round knob.",
+            "de": "Ein Heizpilz 8 mm breit und 22,5 mm hoch: gestufter Sockel mit Tür und Lüftungslinie, Mast mit Fuge, Strahlerkopf mit drei Schutzstäben, Haube mit Randlinie, runder Knopf."
+          },
+          "retained": {
+            "en": "Plate, housing, door, pole, joint, head, guard rods, dome and rim, knob.",
+            "de": "Platte, Gehäuse, Tür, Mast, Fuge, Kopf, Schutzstäbe, Haube und Rand, Knopf."
+          },
+          "merged": {
+            "en": "Only six guard rods of the head are drawn as three; the housing shoulder is one curve.",
+            "de": "Von den sechs Schutzstäben des Kopfes sind nur drei gezeichnet; die Gehäuseschulter ist eine Kurve."
+          },
+          "omitted": {
+            "en": "Wheels, handle, mesh, label plate, bottle valve.",
+            "de": "Räder, Griff, Gitter, Typenschild, Flaschenventil."
+          },
+          "thinElements": {
+            "en": "The three guard rods are 0.13 mm strokes 0.08 m (0.8 mm) apart; the pole is true at 0.6 mm.",
+            "de": "Die drei Schutzstäbe sind 0,13-mm-Striche im Abstand 0,08 m (0,8 mm); der Mast ist mit 0,6 mm wahr."
+          },
+          "hatching": {
+            "en": "None; the mesh would need spacing below 0.4 mm.",
+            "de": "Keine; das Gitter bräuchte Abstände unter 0,4 mm."
+          },
+          "styles": {
+            "en": "Base 0.6, pole 0.45, head 0.8, dome 0.5; body pen 0.25 mm, detail 0.13 mm.",
+            "de": "Sockel 0,6, Mast 0,45, Kopf 0,8, Haube 0,5; Körperstift 0,25 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Lines carry the region of the part they mark; the emitter head and dome are the operating regions.",
+            "de": "Linien tragen die Region des Teils, das sie kennzeichnen; Strahlerkopf und Haube sind die Betriebsregionen."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": null,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "mesh",
+            "title": {
+              "en": "Burner mesh",
+              "de": "Brennergitter"
+            },
+            "pattern": "cross",
+            "angleDeg": 45,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "base",
+              "bone": "base",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.23 0 L 0.23 0 L 0.23 0.03 L 0.17 0.03 L 0.17 0.6 C 0.17 0.64 0.05 0.66 0.03 0.66 L -0.03 0.66 C -0.05 0.66 -0.17 0.64 -0.17 0.6 L -0.17 0.03 L -0.23 0.03 Z",
+              "region": "base-housing",
+              "material": "powder-steel"
+            },
+            {
+              "id": "wheel",
+              "bone": "base",
+              "role": "body",
+              "z": 2.8,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": -0.14,
+              "cy": 0.05,
+              "rx": 0.04,
+              "ry": 0.04,
+              "region": "base-housing",
+              "material": "plastic-black"
+            },
+            {
+              "id": "base-lip",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  0.045
+                ],
+                [
+                  0.17,
+                  0.045
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "door-seam",
+              "bone": "base",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.09
+                ],
+                [
+                  -0.12,
+                  0.52
+                ],
+                [
+                  0.12,
+                  0.52
+                ],
+                [
+                  0.12,
+                  0.09
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-0",
+              "bone": "base",
+              "role": "texture",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.55
+                ],
+                [
+                  0.07,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-1",
+              "bone": "base",
+              "role": "texture",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.58
+                ],
+                [
+                  0.07,
+                  0.58
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "vent-slot-2",
+              "bone": "base",
+              "role": "texture",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.07,
+                  0.61
+                ],
+                [
+                  0.07,
+                  0.61
+                ]
+              ],
+              "closed": false,
+              "region": "base-housing"
+            },
+            {
+              "id": "pole",
+              "bone": "pole",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "rect",
+              "x": -0.03,
+              "y": 0.0,
+              "w": 0.06,
+              "h": 1.36,
+              "region": "pole-stainless",
+              "material": "stainless-brushed"
+            },
+            {
+              "id": "pole-joint",
+              "bone": "pole",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.03,
+                  0.68
+                ],
+                [
+                  0.03,
+                  0.68
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "pole-highlight",
+              "bone": "pole",
+              "role": "texture",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.012,
+                  0.08
+                ],
+                [
+                  -0.012,
+                  1.28
+                ]
+              ],
+              "closed": false,
+              "region": "pole-stainless"
+            },
+            {
+              "id": "head",
+              "bone": "burner-head",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.13,
+              "y": 0.0,
+              "w": 0.26,
+              "h": 0.12,
+              "r": 0.02,
+              "region": "emitter-head",
+              "material": "stainless-hot",
+              "hatch": "mesh"
+            },
+            {
+              "id": "guard-rod-0",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.1,
+                  0.01
+                ],
+                [
+                  -0.1,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-1",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.05,
+                  0.01
+                ],
+                [
+                  -0.05,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-2",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.01
+                ],
+                [
+                  0.0,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-3",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.01
+                ],
+                [
+                  0.05,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "guard-rod-4",
+              "bone": "burner-head",
+              "role": "detail",
+              "z": 3.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.01
+                ],
+                [
+                  0.1,
+                  0.075
+                ]
+              ],
+              "closed": false,
+              "region": "emitter-head"
+            },
+            {
+              "id": "reflector",
+              "bone": "reflector",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.4 0 C -0.4 0.06 -0.22 0.19 0 0.19 C 0.22 0.19 0.4 0.06 0.4 0 Z",
+              "region": "reflector",
+              "material": "alu-reflector"
+            },
+            {
+              "id": "dome-bead",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.4,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.395 0.025 C -0.3 0.045 0.3 0.045 0.395 0.025",
+              "region": "reflector"
+            },
+            {
+              "id": "top-cap",
+              "bone": "reflector",
+              "role": "detail",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.175,
+              "rx": 0.03,
+              "ry": 0.012,
+              "region": "reflector"
+            },
+            {
+              "id": "knob",
+              "bone": "knob",
+              "role": "body",
+              "z": 3.5,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.0,
+              "cy": 0.0,
+              "rx": 0.03,
+              "ry": 0.03,
+              "region": "control",
+              "material": "plastic-black"
+            },
+            {
+              "id": "knob-pointer",
+              "bone": "knob",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.026,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "control"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A heater 16 mm wide and 45 mm high in construction detail: base plate with lip and wheel, housing with door seam and three vent slots, pole with joint and highlight, burner head with five guard rods over a mesh, dome with rim bead and cap, knob with pointer.",
+            "de": "Ein Heizpilz 16 mm breit und 45 mm hoch im Konstruktionsdetail: Bodenplatte mit Rand und Rad, Gehäuse mit Türfuge und drei Lüftungsschlitzen, Mast mit Fuge und Lichtkante, Brennerkopf mit fünf Schutzstäben über einem Gitter, Haube mit Randwulst und Kappe, Knopf mit Zeiger."
+          },
+          "retained": {
+            "en": "All visible construction at real size; the knob pointer turns with the knob bone.",
+            "de": "Alle sichtbare Konstruktion in realer Größe; der Knopfzeiger dreht sich mit dem Knopfknochen."
+          },
+          "merged": {
+            "en": "The far wheel is hidden behind the near one; the dome interior is not visible from the side.",
+            "de": "Das ferne Rad ist hinter dem nahen verdeckt; das Haubeninnere ist von der Seite nicht sichtbar."
+          },
+          "omitted": {
+            "en": "Label plate, bottle valve, tipping handle.",
+            "de": "Typenschild, Flaschenventil, Kippgriff."
+          },
+          "thinElements": {
+            "en": "Guard rods are 0.18 mm strokes at 1.3 mm spacing; the dome bead is a 0.18 mm line; the top cap ellipse is 1.2 x 0.5 mm.",
+            "de": "Schutzstäbe sind 0,18-mm-Striche im Abstand 1,3 mm; der Haubenwulst ist eine 0,18-mm-Linie; die Kappenellipse misst 1,2 x 0,5 mm."
+          },
+          "hatching": {
+            "en": "Fine crosshatch (0.5 mm) in the emitter head as a mesh indication.",
+            "de": "Feine Kreuzschraffur (0,5 mm) im Strahlerkopf als Gitterandeutung."
+          },
+          "styles": {
+            "en": "Base 0.6, pole 0.45, hot head 0.8, dome 0.5, knob 0.2; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm.",
+            "de": "Sockel 0,6, Mast 0,45, heißer Kopf 0,8, Haube 0,5, Knopf 0,2; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm."
+          },
+          "overlays": {
+            "en": "Wheel and lines carry base-housing, mesh and rods emitter-head: the thermal view paints the hot shroud under the dome.",
+            "de": "Rad und Linien tragen base-housing, Gitter und Stäbe emitter-head: die Thermalansicht färbt den heißen Mantel unter der Haube."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "off-afternoon",
+        "title": {
+          "en": "Off, in the afternoon sun",
+          "de": "Aus, in der Nachmittagssonne"
+        },
+        "description": {
+          "en": "Cold heater, knob at off; the sun shines on the dome and the pole.",
+          "de": "Kalter Heizpilz, Knopf auf Aus; die Sonne scheint auf Haube und Mast."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 0
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "base-housing": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "pole-stainless": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "emitter-head": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            },
+            "reflector": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "control": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            }
+          },
+          "emitters": {
+            "flue-gas": 0,
+            "dome-plume": 0
+          },
+          "operating": {
+            "burner": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "low",
+        "title": {
+          "en": "Burning on low",
+          "de": "Brennt auf kleiner Stufe"
+        },
+        "description": {
+          "en": "Knob at 60 degrees: 6.0 kW heat input, the shroud glows dull, a weak flue plume rises.",
+          "de": "Knopf auf 60 Grad: 6,0 kW Wärmebelastung, der Mantel glüht schwach, eine schwache Abgasfahne steigt auf."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 60
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "base-housing": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "pole-stainless": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "emitter-head": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "reflector": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "control": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "flue-gas": 1,
+            "dome-plume": 1
+          },
+          "operating": {
+            "burner": 0.46
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "high",
+        "title": {
+          "en": "Burning on high",
+          "de": "Brennt auf großer Stufe"
+        },
+        "description": {
+          "en": "Knob at 120 degrees: 13.0 kW heat input, the emitter shroud radiates downwards and the flue gas warms the dome.",
+          "de": "Knopf auf 120 Grad: 13,0 kW Wärmebelastung, der Strahlermantel strahlt nach unten und das Abgas erwärmt die Haube."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "base-housing": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "pole-stainless": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "emitter-head": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "reflector": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "control": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "flue-gas": 1,
+            "dome-plume": 1
+          },
+          "operating": {
+            "burner": 1
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "high-in-breeze",
+        "title": {
+          "en": "Burning on high in a breeze",
+          "de": "Brennt auf großer Stufe im Wind"
+        },
+        "description": {
+          "en": "Full output with an 8 m/s breeze (about 40 Pa) pushing on dome, pole and housing.",
+          "de": "Volle Leistung bei 8 m/s Wind (etwa 40 Pa) auf Haube, Mast und Gehäuse."
+        },
+        "bones": {
+          "knob": {
+            "angleDeg": 120
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-contact"
+        ],
+        "thermal": {
+          "regions": {
+            "base-housing": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "pole-stainless": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "emitter-head": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "reflector": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "control": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "flue-gas": 1,
+            "dome-plume": 1
+          },
+          "operating": {
+            "burner": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "wind-dome",
+            "kind": "wind",
+            "title": {
+              "en": "Breeze on the dome",
+              "de": "Wind auf die Haube"
+            },
+            "fxN": 12,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "bone": "reflector",
+            "x": 0,
+            "y": 0.1,
+            "reference": "en-1991-1-4"
+          },
+          {
+            "id": "wind-pole",
+            "kind": "wind",
+            "title": {
+              "en": "Breeze on the pole",
+              "de": "Wind auf den Mast"
+            },
+            "fxN": 8,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "bone": "pole",
+            "x": 0,
+            "y": 0.7,
+            "reference": "en-1991-1-4"
+          },
+          {
+            "id": "wind-base",
+            "kind": "wind",
+            "title": {
+              "en": "Breeze on the housing",
+              "de": "Wind auf das Gehäuse"
+            },
+            "fxN": 10,
+            "fyN": 0,
+            "source": "authored-estimate",
+            "bone": "base",
+            "x": 0,
+            "y": 0.3,
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "ignite-and-warm-up",
+        "title": {
+          "en": "Ignite and warm up",
+          "de": "Zünden und aufheizen"
+        },
+        "description": {
+          "en": "Cold start: the knob is turned to high and pressed, the burner ignites and the shroud and dome heat up over fifteen minutes.",
+          "de": "Kaltstart: der Knopf wird auf Groß gedreht und gedrückt, der Brenner zündet und Mantel und Haube heizen sich über fünfzehn Minuten auf."
+        },
+        "durationS": 900,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "off-afternoon",
+            "ease": "step"
+          },
+          {
+            "t": 5,
+            "pose": "high",
+            "ease": "step"
+          },
+          {
+            "t": 900,
+            "pose": "high",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 900
+          }
+        ],
+        "phases": [
+          {
+            "id": "cold",
+            "fromS": 0,
+            "toS": 5,
+            "title": {
+              "en": "Cold",
+              "de": "Kalt"
+            }
+          },
+          {
+            "id": "warm-up",
+            "fromS": 5,
+            "toS": 900,
+            "title": {
+              "en": "Burning, warming up",
+              "de": "Brennt, heizt auf"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 5,
+            "kind": "ignition",
+            "title": {
+              "en": "Burner ignites",
+              "de": "Brenner zündet"
+            },
+            "target": "burner"
+          },
+          {
+            "t": 60,
+            "kind": "thermal",
+            "title": {
+              "en": "Shroud reaches radiant temperature",
+              "de": "Mantel erreicht Strahlungstemperatur"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:flue-gas",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "emitter:dome-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "turn-down-and-shut-off",
+        "title": {
+          "en": "Turn down and shut off",
+          "de": "Herunterregeln und abstellen"
+        },
+        "description": {
+          "en": "After an hour on high the knob goes to low, later to off; the flame goes out and the hot parts cool for twenty minutes.",
+          "de": "Nach einer Stunde auf Groß wird der Knopf auf Klein, später auf Aus gedreht; die Flamme erlischt und die heißen Teile kühlen zwanzig Minuten ab."
+        },
+        "durationS": 1800,
+        "fps": 1,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "high",
+            "ease": "step"
+          },
+          {
+            "t": 60,
+            "pose": "low",
+            "ease": "step"
+          },
+          {
+            "t": 600,
+            "pose": "off-afternoon",
+            "ease": "step"
+          },
+          {
+            "t": 1800,
+            "pose": "off-afternoon",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-contact",
+            "fromS": 0,
+            "toS": 1800
+          }
+        ],
+        "phases": [
+          {
+            "id": "high",
+            "fromS": 0,
+            "toS": 60,
+            "title": {
+              "en": "On high",
+              "de": "Auf Groß"
+            }
+          },
+          {
+            "id": "low",
+            "fromS": 60,
+            "toS": 600,
+            "title": {
+              "en": "On low",
+              "de": "Auf Klein"
+            }
+          },
+          {
+            "id": "cool-down",
+            "fromS": 600,
+            "toS": 1800,
+            "title": {
+              "en": "Off, cooling down",
+              "de": "Aus, kühlt ab"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 60,
+            "kind": "operating",
+            "title": {
+              "en": "Turned down to low",
+              "de": "Auf Klein heruntergeregelt"
+            },
+            "target": "burner"
+          },
+          {
+            "t": 600,
+            "kind": "shutdown",
+            "title": {
+              "en": "Gas valve closed",
+              "de": "Gasventil geschlossen"
+            },
+            "target": "burner"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:burner",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 60,
+                "v": 0.46
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:flue-gas",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 600,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:dome-plume",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 900,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 8,
+        "meanRadiantTempC": 8,
+        "relativeHumidity": 0.7,
+        "windMS": 0.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 0,
+        "diffuseFraction": 0.0,
+        "pressurePa": 101325,
+        "skyTempC": -5,
+        "groundTempC": 8
+      },
+      "operating": [
+        {
+          "id": "burner",
+          "title": {
+            "en": "Propane burner",
+            "de": "Propanbrenner"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.46,
+              "title": {
+                "en": "Low (6.0 kW heat input)",
+                "de": "Klein (6,0 kW Wärmebelastung)"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "High (13.0 kW heat input)",
+                "de": "Groß (13,0 kW Wärmebelastung)"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "base-housing",
+          "title": {
+            "en": "Bottle housing and base plate",
+            "de": "Flaschengehäuse und Bodenplatte"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "powder-steel",
+          "areaM2": 0.75,
+          "characteristicLengthM": 0.6,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "shell",
+              "title": {
+                "en": "Powder-coated steel sheet 1.2 mm",
+                "de": "Pulverbeschichtetes Stahlblech 1,2 mm"
+              },
+              "kind": "metal",
+              "material": "powder-steel",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 2.4e-05,
+              "heatCapacityJM2K": 4239,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 4239,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "pole-stainless",
+          "title": {
+            "en": "Stainless pole",
+            "de": "Edelstahlmast"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless-brushed",
+          "areaM2": 0.26,
+          "characteristicLengthM": 0.06,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Stainless tube wall 1.5 mm",
+                "de": "Edelstahlrohrwand 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-brushed",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 8.8e-05,
+              "heatCapacityJM2K": 5925,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5925,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "emitter-head",
+          "title": {
+            "en": "Emitter shroud (hot head)",
+            "de": "Strahlermantel (heißer Kopf)"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "stainless-hot",
+          "areaM2": 0.2,
+          "characteristicLengthM": 0.26,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "shroud",
+              "title": {
+                "en": "Oxidised stainless shroud 1.5 mm",
+                "de": "Oxidierter Edelstahlmantel 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-hot",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 8.8e-05,
+              "heatCapacityJM2K": 5925,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5925,
+          "operating": {
+            "key": "burner",
+            "heatW": 8200
+          },
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        },
+        {
+          "id": "reflector",
+          "title": {
+            "en": "Dome reflector",
+            "de": "Reflektorhaube"
+          },
+          "kind": "heater",
+          "model": "operating",
+          "material": "alu-reflector",
+          "areaM2": 0.55,
+          "characteristicLengthM": 0.8,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.9,
+          "layers": [
+            {
+              "id": "dish",
+              "title": {
+                "en": "Aluminised steel dish 1 mm",
+                "de": "Aluminierte Stahlschale 1 mm"
+              },
+              "kind": "metal",
+              "material": "alu-reflector",
+              "thicknessM": 0.001,
+              "resistanceM2KW": 2e-05,
+              "heatCapacityJM2K": 3532,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 3532,
+          "operating": {
+            "key": "burner",
+            "heatW": 2200
+          },
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        },
+        {
+          "id": "control",
+          "title": {
+            "en": "Control knob and valve",
+            "de": "Regelknopf und Ventil"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "plastic-black",
+          "areaM2": 0.004,
+          "characteristicLengthM": 0.05,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "knob",
+              "title": {
+                "en": "Thermoset 5 mm",
+                "de": "Duroplast 5 mm"
+              },
+              "kind": "polymer",
+              "material": "plastic-black",
+              "thicknessM": 0.005,
+              "resistanceM2KW": 0.016667,
+              "heatCapacityJM2K": 9800,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 9800,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "flue-gas",
+          "kind": "flue",
+          "title": {
+            "en": "Flue gas plume under the dome",
+            "de": "Abgasfahne unter der Haube"
+          },
+          "anchor": "flue-vent",
+          "directionDeg": 90,
+          "diameterM": 0.2,
+          "operatingKey": "burner",
+          "volumeFlowM3S": 0.0098,
+          "temperatureRiseK": 280,
+          "vapourKgPerKg": 0.078,
+          "source": "authored-estimate",
+          "reference": "turns-2012"
+        },
+        {
+          "id": "dome-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Free convection above the hot dome",
+            "de": "Freie Konvektion über der heißen Haube"
+          },
+          "anchor": "reflector-top",
+          "directionDeg": 90,
+          "diameterM": 0.6,
+          "region": "reflector",
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The shroud and dome are operating regions: the stated watts at level 1 are released into them and leave by radiation and convection; the flue gas carries a further 1.9 kW as a hot plume. Heat input 13 kW = 0.28 g/s propane at 46.35 MJ/kg.",
+          "de": "Mantel und Haube sind Betriebsregionen: die genannten Watt bei Stufe 1 werden in sie freigesetzt und verlassen sie durch Strahlung und Konvektion; das Abgas trägt weitere 1,9 kW als heiße Fahne. Wärmebelastung 13 kW = 0,28 g/s Propan bei 46,35 MJ/kg."
+        },
+        {
+          "en": "The propane bottle inside the housing is not a thermal region; evaporative cooling of the bottle is neglected.",
+          "de": "Die Propanflasche im Gehäuse ist keine thermische Region; die Verdunstungskühlung der Flasche wird vernachlässigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-contact"
+      ],
+      "assumptions": [
+        {
+          "en": "A free-standing rigid body on its base plate; the plate transmits a centre-of-pressure moment up to N times half the plate width, which carries the breeze.",
+          "de": "Ein freistehender starrer Körper auf seiner Bodenplatte; die Platte überträgt ein Druckmittelpunktmoment bis N mal halbe Plattenbreite, das den Wind aufnimmt."
+        },
+        {
+          "en": "Wind pressure 0.5 rho v^2 at 8 m/s with authored drag coefficients (EN 1991-1-4 basis).",
+          "de": "Winddruck 0,5 rho v^2 bei 8 m/s mit geschätzten Widerstandsbeiwerten (Grundlage EN 1991-1-4)."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "high",
+      "defaultClip": "ignite-and-warm-up",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

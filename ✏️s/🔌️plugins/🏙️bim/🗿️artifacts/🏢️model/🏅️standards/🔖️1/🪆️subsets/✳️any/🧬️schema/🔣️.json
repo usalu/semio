@@ -1093,7 +1093,9 @@
             "Polygon": {
               "type": "object",
               "additionalProperties": false,
-              "required": [],
+              "required": [
+                "points"
+              ],
               "properties": {
                 "points": {
                   "type": "array",
@@ -1178,7 +1180,8 @@
               "type": "object",
               "additionalProperties": false,
               "required": [
-                "profile"
+                "profile",
+                "path"
               ],
               "properties": {
                 "profile": {
@@ -1395,7 +1398,9 @@
             "Lines": {
               "type": "object",
               "additionalProperties": false,
-              "required": [],
+              "required": [
+                "positions"
+              ],
               "properties": {
                 "positions": {
                   "type": "array",
@@ -1777,7 +1782,9 @@
             "Custom": {
               "type": "object",
               "additionalProperties": false,
-              "required": [],
+              "required": [
+                "outline"
+              ],
               "properties": {
                 "outline": {
                   "type": "array",
@@ -2324,7 +2331,9 @@
             "Explicit": {
               "type": "object",
               "additionalProperties": false,
-              "required": [],
+              "required": [
+                "outline"
+              ],
               "properties": {
                 "outline": {
                   "type": "array",

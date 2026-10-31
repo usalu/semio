@@ -6,15 +6,15 @@ import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️
 import {createIssuedResourceControlV1, scriptResourceProcessEnvironmentV1, type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {NATIVE_TOOLCHAINS_V1, nativeToolBinaryDirectoryV1, pythonInterpreterDirectoryV1, toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+import {NATIVE_TOOLCHAINS_V1, pythonInterpreterDirectoryV1, toolchainHostV1, type ToolchainHostV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
 import bootstrapPins from "../../../../🔩️native/🥾️bootstrap/🧬️schema/🔣️.json" with {type: "json"};
 import {repoCacheDirectory} from "../../../⚡️caching/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1, type RepositoryToolingStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {runTool} from "../../../⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
-import {provisionNativeToolsV1, withPinnedNativePathV1, type NativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
-import {systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
+import {preparedNativeToolV1, provisionNativeToolsV1, withPinnedNativePathV1, type NativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🟦️.ts";
+import {ownedNativeToolPortV1, systemNativeToolPortV1} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/🔌️port/🟦️.ts";
 import {bunDistribution, prepareBun} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🟦️.ts";
 import {binaryenDirectory, prepareBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🟦️.ts";
 import {bazelDistribution} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
@@ -45,7 +45,7 @@ export function dotnetInstallerRowV1(platform: NodeJS.Platform, architecture: st
 function provisionedLocation(root: string, toolsRoot: string, platform: NodeJS.Platform, architecture: string, host: ToolchainHostV1, locate: Extract<ToolRowV1["locate"][number], {kind: "provisioned"}>, pin: string): string | undefined {
   const suffix = executableSuffix(platform);
   try {
-    if (locate.family === "native") return join(nativeToolBinaryDirectoryV1(locate.tool as "go", host, toolsRoot), locate.executable + suffix);
+    if (locate.family === "native") return join(preparedNativeToolV1(locate.tool, host, toolsRoot), locate.executable + suffix);
     if (locate.family === "bun") {
       const musl = platform === "linux" && !(process.report?.getReport?.() as {header?: {glibcVersionRuntime?: string}} | undefined)?.header?.glibcVersionRuntime;
       return join(toolsRoot, "bun", bunDistribution(pin, platform, architecture, musl).sha256, locate.executable + suffix);
@@ -143,7 +143,7 @@ export async function runToolchainsSetupV1(root: string, invocation: ScriptInvoc
   const execute = (command: string, args: string[], env: NodeJS.ProcessEnv, signal: AbortSignal): Promise<void> => runTool(command, args, root, signal, false, env, repositoryCargoPreparationStorageV1(root)).then(() => undefined);
   const provision: ToolProvisionerV1 = async (row, pin, signal) => {
     const setup = row.setup;
-    if (setup.kind === "native") await inStore(store => provisionNativeToolsV1([setup.tool], store.root, port, signal));
+    if (setup.kind === "native") await inStore((store, actual) => provisionNativeToolsV1([setup.tool], store.root, ownedNativeToolPortV1(store.environment, actual), actual.signal));
     else if (setup.kind === "bun") await inStore((store, actual) => prepareBun(root, pin, store, actual));
     else if (setup.kind === "binaryen") await inStore(store => prepareBinaryen(root, store));
     else if (setup.kind === "script") await execute(process.execPath, [join(root, ...setup.script.split("/")), ...setup.prepare], pinned(), signal);

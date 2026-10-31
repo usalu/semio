@@ -1,6 +1,6 @@
 /** 🔎️ The business terminal clause consumes owner-qualified queries and preserves unknown discovery. */
 import {test,expect} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {compare} from 'fast-json-patch';
 import cases from './query-cases.json';
 import schema from './query.schema.json';

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/repo/move/1",
   "title": "🚚️ Repo move wire shapes",
   "description": "🚚️ The five vector files the move cases read. Every one of them records a workspace before an operation, the arguments of that operation, and the workspace, output lines and counters every implementation must produce from it. A workspace is a flat map of slash-separated relative paths, so a fixture never depends on a real filesystem.",

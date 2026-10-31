@@ -57,60 +57,6 @@
           }
         }
       }
-    },
-    "Fixture": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "project",
-        "routes",
-        "candidates",
-        "expected"
-      ],
-      "properties": {
-        "project": {
-          "type": "object"
-        },
-        "routes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Route"
-          }
-        },
-        "candidates": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "target",
-              "entry",
-              "arguments"
-            ],
-            "properties": {
-              "target": {
-                "type": "string"
-              },
-              "entry": {
-                "type": "string"
-              },
-              "arguments": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "expected": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
     }
   }
 }

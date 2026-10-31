@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { Database } from "bun:sqlite";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";

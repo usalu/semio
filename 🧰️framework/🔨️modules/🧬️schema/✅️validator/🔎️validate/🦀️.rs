@@ -24,7 +24,7 @@ pub(super) fn validate_value(scope: Scope<'_>, schema: &Value, value: &Value, pa
 fn validate_value_inner(scope: Scope<'_>, schema: &Object, value: &Value, path: &str, traversal: &mut Traversal<'_>) -> Result<(), SchemaError> {
     if let Some(reference) = schema.get("$ref").and_then(Value::as_str) {
         let (base, referenced) = resolve_reference(scope, reference).map_err(|message| SchemaError::Validation(format!("{path}.$ref: {message}")))?;
-        validate_value(Scope { base, documents: scope.documents, patterns: scope.patterns }, referenced, value, path, traversal)?;
+        validate_value(Scope { base, ..scope }, referenced, value, path, traversal)?;
     }
     if schema.get("enum").and_then(Value::as_array).is_some_and(|allowed| !allowed.iter().any(|allowed| values_equal(allowed, value))) {
         return Err(SchemaError::Validation(format!("{path}: value is not in enum")));

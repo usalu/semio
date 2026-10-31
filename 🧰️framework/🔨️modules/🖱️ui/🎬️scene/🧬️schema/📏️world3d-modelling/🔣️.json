@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semio.tech/schema/world3d/modelling",
   "title": "World3d Modelling Primitives",
   "description": "Domain-neutral world-3d scene primitives a B-Rep or mesh modelling app needs: an annotation layer, scalar field colouring with legend, a pick granularity filter, a section plane and sub-element highlight tokens. Each root property is one typed scene lane (annotations, scalarField, modellingOptions). Rust (World3dAnnotationLayer, World3dScalarField, World3dModellingOptions) and TypeScript (the same names) are pinned against this document and against the fixtures beside it.",

@@ -17,9 +17,15 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "targets": {
@@ -33,8 +39,18 @@
       "cache": true,
       "dependsOn": [],
       "outputs": [],
-      "options": { "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- repo ./📜️script.ts window-utility-check", "cwd": "🧰️framework" },
-      "metadata": { "semio": { "workspaceCommand": ["verify", "window-utility-check"] } }
+      "options": {
+        "command": "repo ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🟦️typescript -- repo ./📜️script.ts window-utility-check",
+        "cwd": "🧰️framework"
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-utility-check"
+          ]
+        }
+      }
     },
     "test-artifact-reference": {
       "executor": "repo:script",
@@ -102,7 +118,16 @@
         "reads"
       ],
       "outputs": [],
-      "dependsOn": [],
+      "dependsOn": [
+        "test-manifest-resolution",
+        {
+          "projects": [
+            "@semio-tech/framework-plugin-web"
+          ],
+          "target": "test-sqlite-snapshot-schema"
+        },
+        "test-schema-description"
+      ],
       "options": {
         "cwd": "🧰️framework/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
@@ -225,6 +250,47 @@
       "options": {
         "command": "repo ./📜️script.ts test-source-text",
         "cwd": "{projectRoot}"
+      }
+    },
+    "test-manifest-resolution": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧩️action-argument-resolution/**/*"
+      ],
+      "options": {
+        "command": "repo ./📜️script.ts test-manifest-resolution",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-schema-description": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/**/*"
+      ],
+      "options": {
+        "command": "repo ./📜️script.ts test-schema-description",
+        "cwd": "{projectRoot}"
+      },
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/🧪️tests/🟦️.ts"
+          ]
+        }
       }
     }
   }

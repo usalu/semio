@@ -2,7 +2,9 @@
   "worksets": {
     "structure": {
       "entry": "Patched",
-      "name": "Revised"
+      "value": {
+        "name": "Revised"
+      }
     }
   }
 }

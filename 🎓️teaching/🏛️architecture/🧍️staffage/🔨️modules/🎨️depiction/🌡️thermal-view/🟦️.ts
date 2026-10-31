@@ -1,140 +1,119 @@
-/** 🌡️ The thermal view: each shape filled by its region's solved quantity on a diverging ramp, plume streamlines as tapered strips and tracer parcels.
+/** 🌡️ The thermal view: every shape is painted by the solved physical quantity of its thermal region (or the area-weighted value of the regions of a merged small-scale form) on a
+ * diverging ramp, with a legend that states quantity, unit, numerical range, sign convention, environmental conditions and assumptions.
  *
- * Surface temperature is centred on the air temperature, fluxes on 0 W/m² (positive = leaving the surface); warm above, cool below. Airflow
- * parcels are dots coloured by excess temperature, water-vapour parcels are open blue-green circles whose radius grows with the vapour mass fraction.
+ * The values come from the {@link ThermalField} and exist before any colour (`ItemValue` of every item). Seven quantities: surface temperature, skin temperature (beneath clothing,
+ * fur or feathers), emitted radiant flux εσT⁴, net radiative flux (with the sky/ground/surroundings split in the inspector label), sensible heat flux, latent heat flux and moisture
+ * flux. Temperatures are centred on the air temperature, fluxes on 0 W/m² (positive = leaving the surface); `shared` ranges are the documented comparison ranges of
+ * 📏️quantities (identical for every asset, scale and time), `auto` normalises to the values present and the legend says so. Open strokes that carry a region (ruling 2) are painted
+ * as a halo of the region colour under the ink line. Air transport lives in 💨️transport-view.
  *
- * @see ../../🌡️thermal/🟦️.ts — `solveThermal`
+ * @see ../../🌡️thermal/🟦️.ts — `solveThermal`, `QUANTITY_SPECS`, `radiationSplit`
  * @see ../../🔗️contracts/🟦️.ts — {@link ThermalField}
  */
 import type { Slug, Text } from "../../../🧬️schema/🟦️.ts";
-import { plumeLegend, specificHumidity, thermalColour, vapourPressurePa } from "../../🌡️thermal/🟦️.ts";
-import type { Fill, Legend, Point, RegionField, ThermalField, ThermalQuantity } from "../../🔗️contracts/🟦️.ts";
-import { type Canvas, type Ctx } from "../🧱️canvas/🟦️.ts";
-import { overlayColours, type Scale, divergingColour, legendOf, scaleOf, toneColour, tx } from "../🖍️palette/🟦️.ts";
-import { type AnalyticView, type Prepared, type Style } from "../🧩️shapes/🟦️.ts";
-import { type Vec, arrowOutline, circleCommands, commandsOf, strip } from "../📐️geometry/🟦️.ts";
-
-const QUANTITIES: Readonly<Record<ThermalQuantity, { readonly title: Text; readonly unit: string; readonly pick: (r: RegionField) => number }>> = {
-  "surface-temperature": { title: tx("Surface temperature", "Oberflächentemperatur"), unit: "°C", pick: (r) => r.surfaceTempC },
-  "radiant-flux": { title: tx("Radiant heat flux", "Strahlungswärmestrom"), unit: "W/m²", pick: (r) => r.radiantFluxWM2 },
-  "convective-flux": { title: tx("Convective heat flux", "Konvektiver Wärmestrom"), unit: "W/m²", pick: (r) => r.convectiveFluxWM2 },
-  "latent-flux": { title: tx("Latent heat flux", "Latenter Wärmestrom"), unit: "W/m²", pick: (r) => r.latentFluxWM2 },
-  "net-flux": { title: tx("Net heat flux", "Netto-Wärmestrom"), unit: "W/m²", pick: (r) => r.netFluxWM2 },
-};
+import { QUANTITY_SPECS, radiationSplit } from "../../🌡️thermal/🟦️.ts";
+import type { Fill, Legend, ThermalField } from "../../🔗️contracts/🟦️.ts";
+import { type Ctx } from "../🧱️canvas/🟦️.ts";
+import { type Scale, divergingColour, legendOf, scaleOf, toneColour, tx } from "../🖍️palette/🟦️.ts";
+import { type AnalyticView, type Prepared, type Style, areaWeighted, outlineRuns, regionsOf } from "../🧩️shapes/🟦️.ts";
+import { commandsOf } from "../📐️geometry/🟦️.ts";
 
 const PATTERN_FRACTION = 0.35;
-const MAX_STRIP_SEGMENTS = 16;
-const NEGLIGIBLE_SPEED_MS = 0.05;
-const NEGLIGIBLE_EXCESS_K = 0.05;
+const HALO_FACTOR = 2.6;
+const MIN_HALO_MM = 0.3;
 
-const FIELD_MARGIN_HEIGHTS = 1.5;
-const FIELD_MARGIN_MAX_M = 3;
+const compass = (deg: number): string => `${Math.round(((deg % 360) + 360) % 360)}°`;
+const n = (x: number, digits = 0): string => x.toFixed(digits);
 
-function reach(streamline: ThermalField["streamlines"][number], inside: (p: Point) => boolean): number {
-  let last = 0;
-  const firstOutside = streamline.points.findIndex((p) => !inside(p));
-  streamline.points.forEach((_, i) => {
-    if (firstOutside >= 0 && i >= firstOutside) return;
-    if ((streamline.speedMS[i] ?? 0) > NEGLIGIBLE_SPEED_MS || (streamline.carries === "airflow" && Math.abs(streamline.excessK[i] ?? 0) > NEGLIGIBLE_EXCESS_K)) last = i;
-  });
-  return last + 1;
+function conditionsOf(field: ThermalField, timeS: number): Text {
+  const e = field.environment;
+  const sky = e.skyTempC == null ? "" : `, sky ${n(e.skyTempC, 1)} °C`;
+  const ground = e.groundTempC == null ? "" : `, ground ${n(e.groundTempC, 1)} °C`;
+  const skyDe = e.skyTempC == null ? "" : `, Himmel ${n(e.skyTempC, 1)} °C`;
+  const groundDe = e.groundTempC == null ? "" : `, Boden ${n(e.groundTempC, 1)} °C`;
+  return tx(
+    `Air ${n(e.airTempC, 1)} °C, mean radiant ${n(e.meanRadiantTempC, 1)} °C${sky}${ground}, RH ${n(e.relativeHumidity * 100)} %, wind ${n(e.windMS, 1)} m/s towards ${compass(e.windDirectionDeg)}, sun ${n(e.solarWM2)} W/m² (diffuse ${n(e.diffuseFraction * 100)} %), ${n(e.pressurePa / 1000, 1)} kPa, t = ${n(timeS, 1)} s.`,
+    `Luft ${n(e.airTempC, 1)} °C, mittlere Strahlungstemperatur ${n(e.meanRadiantTempC, 1)} °C${skyDe}${groundDe}, rel. Feuchte ${n(e.relativeHumidity * 100)} %, Wind ${n(e.windMS, 1)} m/s Richtung ${compass(e.windDirectionDeg)}, Sonne ${n(e.solarWM2)} W/m² (diffus ${n(e.diffuseFraction * 100)} %), ${n(e.pressurePa / 1000, 1)} kPa, t = ${n(timeS, 1)} s.`,
+  );
 }
 
-/** 🌡️ Builds the thermal view: shape styles, plume overlay and legends (surface quantity, airflow excess temperature, water vapour). */
+/** 🌡️ Builds the thermal view: shape styles, open-stroke halos and the legend of the requested quantity. */
 export function thermalView(ctx: Ctx, shapes: readonly Prepared[], field: ThermalField): AnalyticView {
-  const { options, state, colours } = ctx;
-  const meta = QUANTITIES[options.thermalQuantity];
-  const centre = options.thermalQuantity === "surface-temperature" ? field.environment.airTempC : 0;
-  const b = state.bounds;
-  const margin = Math.min(FIELD_MARGIN_MAX_M, FIELD_MARGIN_HEIGHTS * Math.max(1e-6, b.maxY - b.minY));
-  const inside = (p: Point): boolean => p.x >= b.minX - margin && p.x <= b.maxX + margin && p.y >= b.minY - margin && p.y <= b.maxY + margin;
-  const used = [...new Set(shapes.flatMap((p) => (p.shape.region && field.regions[p.shape.region] ? [p.shape.region] : [])))];
-  const scale: Scale = scaleOf(used.map((r) => meta.pick(field.regions[r]!)), centre, options.range, meta.unit === "°C" ? 1 : 10);
-  const regionTitle = (id: Slug): Text => state.asset.thermal.regions.find((r) => r.id === id)?.title ?? tx(id, id);
-  const isTemperature = options.thermalQuantity === "surface-temperature";
-  const surface: Legend = legendOf({
-    title: meta.title,
-    quantity: options.thermalQuantity,
-    unit: meta.unit,
-    scale,
-    colourAt: (v) => divergingColour(v, scale, true, ctx.theme),
-    convention: isTemperature
-      ? tx(`Diverging scale centred on the air temperature ${centre} °C (neutral grey): warm = hotter than the air, cool = colder.`, `Divergierende Skala mit der Lufttemperatur ${centre} °C als Mitte (neutrales Grau): warm = wärmer als die Luft, kühl = kälter.`)
-      : tx("Diverging scale centred on 0 W/m² (neutral grey): warm = heat leaves the surface (positive), cool = the surface gains heat (negative).", "Divergierende Skala mit 0 W/m² als Mitte (neutrales Grau): warm = Wärme verlässt die Oberfläche (positiv), kühl = Oberfläche nimmt Wärme auf (negativ)."),
-    interpretation: tx(`Steady-state estimate per thermal region at air ${field.environment.airTempC} °C, radiant ${field.environment.meanRadiantTempC} °C, wind ${field.environment.windMS} m/s; shapes without a region are grey.`, `Stationäre Schätzung je thermischer Region bei Luft ${field.environment.airTempC} °C, Strahlung ${field.environment.meanRadiantTempC} °C, Wind ${field.environment.windMS} m/s; Formen ohne Region sind grau.`),
-  });
+  const { options, state, theme } = ctx;
+  const asset = state.asset;
+  const spec = QUANTITY_SPECS[options.thermalQuantity];
+  const centre = spec.centre(field.environment);
+  const regionValue = (id: Slug): number | undefined => {
+    const f = field.regions[id];
+    if (!f) return undefined;
+    return spec.pick(f) ?? (options.thermalQuantity === "skin-temperature" ? f.surfaceTempC : undefined);
+  };
+  const valueOfShape = (p: Prepared): number | undefined => areaWeighted(asset, p.shape, regionValue);
+  const painted = shapes.filter((p) => regionsOf(p.shape).length > 0 && (p.closed ? p.shape.filled : true));
+  const values = new Map<string, number>();
+  for (const p of painted) {
+    const v = valueOfShape(p);
+    if (v !== undefined) values.set(p.shape.id, v);
+  }
+  const scale: Scale = scaleOf([...values.values()], centre, options.range, spec.quantity.endsWith("temperature") ? 1 : 10, spec.shared);
+  const mode = options.range.mode;
+  const regionTitle = (id: Slug): Text => asset.thermal.regions.find((r) => r.id === id)?.title ?? tx(id, id);
+  const isTemperature = spec.unit === "°C";
+
+  const labelOf = (p: Prepared): Text => {
+    const ids = regionsOf(p.shape);
+    if (ids.length > 1) return tx(`${ids.length} merged regions, area-weighted`, `${ids.length} zusammengefasste Regionen, flächengewichtet`);
+    const title = regionTitle(ids[0]!);
+    if (options.thermalQuantity === "net-radiative-flux") {
+      const s = radiationSplit(field, ids[0]!);
+      return tx(`${title.en}: sky ${n(s.sky)}, ground ${n(s.ground)}, surroundings ${n(s.surroundings)} W/m²`, `${title.de}: Himmel ${n(s.sky)}, Boden ${n(s.ground)}, Umgebung ${n(s.surroundings)} W/m²`);
+    }
+    if (options.thermalQuantity === "skin-temperature" && field.regions[ids[0]!]?.skinTempC === null) return tx(`${title.en} (no skin: surface temperature)`, `${title.de} (keine Haut: Oberflächentemperatur)`);
+    return title;
+  };
+  const colourOf = (v: number): string => divergingColour(v, scale, true, theme);
+  const patternOf = (v: number): Fill["pattern"] | undefined => {
+    const d = v - scale.centre;
+    const span = d > 0 ? scale.max - scale.centre : scale.centre - scale.min;
+    if (!options.patterns || !(span > 0) || Math.abs(d) / span <= PATTERN_FRACTION) return undefined;
+    return d < 0 ? "cold" : options.thermalQuantity === "latent-heat-flux" || options.thermalQuantity === "moisture-flux" ? "vapour" : "hot";
+  };
 
   const styleOf = (p: Prepared): Style => {
-    const region = p.shape.region ? field.regions[p.shape.region] : undefined;
+    const v = values.get(p.shape.id);
     const glaze = p.shape.role === "glazing";
     const outlineMm = p.weightMm * 0.5;
-    if (!region) return { fill: { color: toneColour(ctx.theme, p.shape.tone), ...(glaze ? { opacity: 0.4 } : {}) }, outlineMm };
-    const v = meta.pick(region);
-    const d = v - centre;
-    const span = d > 0 ? scale.max - centre : centre - scale.min;
-    const strong = span > 0 && Math.abs(d) / span > PATTERN_FRACTION;
-    const pattern: Fill["pattern"] | undefined = options.patterns && strong ? (d < 0 ? "cold" : options.thermalQuantity === "latent-flux" ? "vapour" : "hot") : undefined;
-    return {
-      fill: { color: divergingColour(v, scale, true, ctx.theme), ...(glaze ? { opacity: 0.6 } : {}), ...(pattern ? { pattern } : {}) },
-      value: { quantity: options.thermalQuantity, value: v, unit: meta.unit, label: regionTitle(p.shape.region!) },
-      outlineMm,
-    };
+    if (v === undefined) return { fill: { color: toneColour(theme, p.shape.tone), ...(glaze ? { opacity: 0.4 } : {}) }, outlineMm };
+    const pattern = patternOf(v);
+    return { fill: { color: colourOf(v), ...(glaze ? { opacity: 0.6 } : {}), ...(pattern ? { pattern } : {}) }, value: { quantity: options.thermalQuantity, value: v, unit: spec.unit, label: labelOf(p) }, outlineMm };
   };
 
-  const humidity = specificHumidity(vapourPressurePa(field.environment), field.environment.pressurePa);
-  const vapourExcessG = (kgPerKg: number): number => (kgPerKg - humidity) * 1000;
-  const airLegend = plumeLegend("airflow", field, options.range);
-  const vapourLegend = plumeLegend("vapour", field, options.range);
-  const hasVapour = field.streamlines.some((s) => s.carries === "vapour" && s.active > 0.01) || field.parcels.some((q) => q.carries === "vapour");
-  const hasAir = field.streamlines.some((s) => s.carries === "airflow" && s.active > 0.01) || field.parcels.some((q) => q.carries === "airflow");
-  const airColour = (excessK: number): string => (excessK >= 0 ? thermalColour(airLegend, excessK) : divergingColour(excessK, { min: -airLegend.max, centre: 0, max: airLegend.max }, true, ctx.theme));
-  const vapourColour = (kgPerKg: number): string => thermalColour(vapourLegend, Math.max(0, vapourExcessG(kgPerKg)));
-
-  const emitterTitle = (id: Slug): Text => state.asset.thermal.emitters.find((e) => e.id === id)?.title ?? tx(id, id);
-  const emitterDiameter = (id: Slug): number => state.asset.thermal.emitters.find((e) => e.id === id)?.diameterM ?? 0.05;
-
-  const overlay = (canvas: Canvas): void => {
-    for (const s of field.streamlines) {
-      const n = reach(s, inside);
-      if (s.active <= 0.01 || n < 2) continue;
-      const stride = Math.max(1, Math.ceil((n - 1) / MAX_STRIP_SEGMENTS));
-      const idx = [...Array.from({ length: Math.floor((n - 1) / stride) + 1 }, (_, i) => i * stride)];
-      if (idx[idx.length - 1] !== n - 1) idx.push(n - 1);
-      const pts: Vec[] = idx.map((i) => ctx.paper(s.points[i]!));
-      const w0 = Math.min(1.6, Math.max(0.5, emitterDiameter(s.emitter) * ctx.k)) * (0.4 + 0.6 * Math.min(1, s.active));
-      const [left, right] = strip(pts, idx.map((_, i) => w0 * (1 - 0.9 * (i / (idx.length - 1)))));
-      for (let i = 0; i + 1 < idx.length; i++) {
-        const excess = s.excessK[idx[i]!] ?? 0;
-        const color = s.carries === "airflow" ? airColour(excess) : overlayColours(ctx.theme).vapour;
-        canvas.path("field", `stream:${s.emitter}:${i}`, commandsOf([left[i]!, left[i + 1]!, right[i + 1]!, right[i]!], true), {
-          fill: { color, opacity: (s.carries === "airflow" ? 0.35 : 0.22) + 0.5 * Math.min(1, s.active) },
-          value: s.carries === "airflow" ? { quantity: "excess-temperature", value: excess, unit: "K", label: emitterTitle(s.emitter) } : { quantity: "speed", value: s.speedMS[idx[i]!] ?? 0, unit: "m/s", label: emitterTitle(s.emitter) },
-        });
-      }
-    }
-    field.parcels.forEach((q, i) => {
-      if (!inside(q.at)) return;
-      const at = ctx.paper(q.at);
-      const speed = Math.hypot(q.velocity.x, q.velocity.y);
-      if (q.carries === "vapour") {
-        if (speed <= NEGLIGIBLE_SPEED_MS) return;
-        canvas.path("field", `parcel:${q.emitter}:${i}`, circleCommands(at, 0.3 + 0.5 * Math.min(1, Math.max(0, vapourExcessG(q.vapourKgPerKg)) / vapourLegend.max)), {
-          stroke: { color: vapourColour(q.vapourKgPerKg), widthMm: 0.22, opacity: 0.95 },
-          value: { quantity: "vapour-excess", value: vapourExcessG(q.vapourKgPerKg), unit: "g/kg", label: emitterTitle(q.emitter) },
-        });
-        return;
-      }
-      if (speed <= NEGLIGIBLE_SPEED_MS && Math.abs(q.excessK) <= NEGLIGIBLE_EXCESS_K) return;
-      const color = airColour(q.excessK);
-      const dir = { x: q.velocity.x / (speed || 1), y: -q.velocity.y / (speed || 1) };
-      const tail = { x: at.x - dir.x * Math.min(2, 0.5 + speed * 0.6), y: at.y - dir.y * Math.min(2, 0.5 + speed * 0.6) };
-      canvas.path("field", `parcel:${q.emitter}:${i}`, commandsOf(arrowOutline(tail, { x: at.x + dir.x * 0.3, y: at.y + dir.y * 0.3 }, 0.12, 0.7, 0.6), true), {
-        fill: { color, opacity: 0.9 },
-        value: { quantity: "excess-temperature", value: q.excessK, unit: "K", label: emitterTitle(q.emitter) },
+  const overlay: AnalyticView["overlay"] = (canvas) => {
+    for (const { p, run, n: index } of outlineRuns(shapes, false)) {
+      const v = values.get(p.shape.id);
+      if (p.closed || v === undefined) continue;
+      canvas.path("field", `halo:${p.shape.id}:${index}`, commandsOf(run.points, run.closed), {
+        stroke: { color: colourOf(v), widthMm: Math.max(MIN_HALO_MM, p.weightMm * HALO_FACTOR), cap: "round", join: "round" },
+        value: { quantity: options.thermalQuantity, value: v, unit: spec.unit, label: labelOf(p) },
+        bone: p.shape.bone,
+        ...(p.shape.region ? { region: p.shape.region } : {}),
       });
-    });
+    }
   };
 
-  const legends: Legend[] = [surface, ...(hasAir ? [airLegend] : []), ...(hasVapour ? [vapourLegend] : [])];
-  return { styleOf, overlay, legends };
+  const convention = isTemperature
+    ? tx(
+        `${spec.title.en} in ${spec.unit}, diverging scale centred on the ${spec.centreMeaning.en} ${n(centre, 1)} ${spec.unit} (neutral grey): warm = above the centre, cool = below. ${mode === "auto" ? "AUTO range: normalised to the values present in this figure, not comparable between figures." : mode === "shared" ? `Shared comparison range ${n(scale.min)} … ${n(scale.max)} ${spec.unit}, identical for every asset, scale and time.` : `Fixed range ${n(scale.min)} … ${n(scale.max)} ${spec.unit}.`}`,
+        `${spec.title.de} in ${spec.unit}, divergierende Skala mit ${spec.centreMeaning.de} ${n(centre, 1)} ${spec.unit} als Mitte (neutrales Grau): warm = über der Mitte, kühl = darunter. ${mode === "auto" ? "AUTO-Bereich: auf die in dieser Abbildung vorhandenen Werte normiert, nicht zwischen Abbildungen vergleichbar." : mode === "shared" ? `Gemeinsamer Vergleichsbereich ${n(scale.min)} … ${n(scale.max)} ${spec.unit}, gleich für jedes Asset, jeden Maßstab und jede Zeit.` : `Fester Bereich ${n(scale.min)} … ${n(scale.max)} ${spec.unit}.`}`,
+      )
+    : tx(
+        `${spec.title.en} in ${spec.unit}, diverging scale centred on ${n(centre)} ${spec.unit} (${spec.centreMeaning.en}): warm = positive = leaving the surface, cool = negative = the surface gains. ${mode === "auto" ? "AUTO range: normalised to the values present in this figure, not comparable between figures." : mode === "shared" ? `Shared comparison range ${n(scale.min)} … ${n(scale.max)} ${spec.unit}, identical for every asset, scale and time.` : `Fixed range ${n(scale.min)} … ${n(scale.max)} ${spec.unit}.`}`,
+        `${spec.title.de} in ${spec.unit}, divergierende Skala mit ${n(centre)} ${spec.unit} als Mitte (${spec.centreMeaning.de}): warm = positiv = verlässt die Fläche, kühl = negativ = die Fläche nimmt auf. ${mode === "auto" ? "AUTO-Bereich: auf die in dieser Abbildung vorhandenen Werte normiert, nicht zwischen Abbildungen vergleichbar." : mode === "shared" ? `Gemeinsamer Vergleichsbereich ${n(scale.min)} … ${n(scale.max)} ${spec.unit}, gleich für jedes Asset, jeden Maßstab und jede Zeit.` : `Fester Bereich ${n(scale.min)} … ${n(scale.max)} ${spec.unit}.`}`,
+      );
+  const conditions = conditionsOf(field, state.timeS);
+  const halo = tx("Open strokes of a region are drawn as a halo of the region colour under the ink line: the ink stays the drawing, the colour is the analysis.", "Offene Linien einer Region sind als Halo in der Regionsfarbe unter der Tuschelinie gezeichnet: die Tusche bleibt die Zeichnung, die Farbe die Analyse.");
+  const assumptions = [field.notes[0]!, ...field.assumptions.slice(-2), halo];
+  const interpretation = tx(`${spec.meaning.en} Values are area-weighted for merged regions; shapes without a region are grey.`, `${spec.meaning.de} Bei zusammengefassten Regionen sind die Werte flächengewichtet; Formen ohne Region sind grau.`);
+  const legend: Legend = legendOf({ title: spec.title, quantity: options.thermalQuantity, unit: spec.unit, scale, colourAt: colourOf, convention, interpretation, range: mode, conditions, assumptions });
+  return { styleOf, overlay, legends: [legend] };
 }

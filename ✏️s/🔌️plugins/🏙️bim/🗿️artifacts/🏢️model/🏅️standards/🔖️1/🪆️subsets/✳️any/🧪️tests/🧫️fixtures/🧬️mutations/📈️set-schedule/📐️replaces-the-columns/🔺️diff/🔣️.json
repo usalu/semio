@@ -1,43 +1,45 @@
 {
   "schedules": {
     "sch-walls": {
-      "columns": [
-        {
-          "key": {
-            "Field": {
-              "field": "Name"
-            }
+      "entry": "Patched",
+      "value": {
+        "columns": [
+          {
+            "key": {
+              "Field": {
+                "field": "Name"
+              }
+            },
+            "total": false
           },
-          "total": false
-        },
-        {
-          "key": {
-            "Field": {
-              "field": "Type"
-            }
+          {
+            "key": {
+              "Field": {
+                "field": "Type"
+              }
+            },
+            "total": false
           },
-          "total": false
-        },
-        {
-          "heading": "Area",
-          "key": {
-            "Field": {
-              "field": "NetSideArea"
-            }
+          {
+            "heading": "Area",
+            "key": {
+              "Field": {
+                "field": "NetSideArea"
+              }
+            },
+            "total": true
           },
-          "total": true
-        },
-        {
-          "key": {
-            "Property": {
-              "name": "FireRating",
-              "set": "Pset_WallCommon"
-            }
-          },
-          "total": false
-        }
-      ],
-      "entry": "Patched"
+          {
+            "key": {
+              "Property": {
+                "name": "FireRating",
+                "set": "Pset_WallCommon"
+              }
+            },
+            "total": false
+          }
+        ]
+      }
     }
   }
 }

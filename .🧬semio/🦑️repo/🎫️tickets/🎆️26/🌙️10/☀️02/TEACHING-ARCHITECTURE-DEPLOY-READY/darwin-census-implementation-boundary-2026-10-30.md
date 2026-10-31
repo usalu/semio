@@ -1,0 +1,19 @@
+# Darwin Census Implementation Boundary
+
+Current read-only review confirms the earlier boundary; no newly available complete provider was found. No FFI call, compiler, installation or expensive job executed.
+
+| Surface | Current reusable capability | Missing acceptance capability |
+| --- | --- | --- |
+| process/artifacts/cache/descriptors/TS:37 assertNativeSelectedDescriptorCustodyV1, :76 observeNativeSelectedCensusV1; adjacent schema/selection tests | Strict bounded observation/parser/positive guards, identity/foreign rejection and classified retry | A successful complete Darwin unmounted-directory inventory provider |
+| process/artifacts/native-build/storage/cleanup/retirement/contract/TS requireNativeSuccessfulChildReadersV1 | Genuine readonly handles; before/after identities and issued cleanup control; mounted +f and inactive exact-file paths | Darwin directory false arm still modern-lsof -Q +D while stock system4.91 lacks-Q |
+| process package TypeScript/runtime/native facade runtimeNativeSystemV1 and runtimeNativeLibcV1 | Owned system-library loading/bytes/pointers without a new external runtime dependency | Complete Darwin syscall-level selected census and explicit supported ABI/version layout contract |
+| process/testing/bun/orphans/TS:35–42 | Existing proc_pidinfo symbol/count binding precedent | Best-effort count is not completeness: inaccessible/failed calls yield undefined, no PID-start/FD reuse/path/access/non-FD references, bounded growth or positiveguard proof |
+
+A neutral complete-census contract, byte decoder, selection/identity reducer, finite work/progress/cancellation and strict refusal corpus can genuinely be authored and executed on Linux against schema-first recorded kernel DATA and an independent oracle. Such tests can prove that implementation logic preserves invariants for supplied observations; they cannot establish that Darwin kernel enumeration includes all references or that its ABI/permission/race behavior is correct. Returning success from a synthetic provider would not complete Darwin custody. Linux /proc enumeration is likewise not an oracle for Darwin absence.
+
+Two genuine implementation directions remain distinct:
+
+1. Preferred pinned modern-lsof route: first author the closed buildrecipe/capability schema and negative corpus already specified in darwin-selected-census-plan. Reuse registered archive/receipt/compiler interfaces. Actual supported Darwin compiler+SDK/sysroot and nonrecursive mounted bootstrap are materially required before building/running that tool. They are not present in the currently inspected Linux-only native compiler provider.
+2. System-library provider: no compiler/tool installation is inherently required because existing Native FFI can bind provided Darwin libraries. However this is a larger new implementation, not reuse of a complete existing census. It must enumerate stable PID/start, numeric FDs and relevant cwd/root/region/fileport references, refuse inaccessible/truncated/growing/reused/unknown states, and prove real positive heldguards/foreign references on Darwin. It needs an independent physical oracle and supported ABI facts; the current orphan counter cannot supply those.
+
+Smallest safe next authored step on Linux is therefore the preferred closed capability/buildrecipe corpus (including explicit unsupported/missingSDK refusal), wired only to neutral validation tests. It does not change the retirement selector or claim Darwin readiness. If the team chooses the OS-library route instead, start with an explicit neutral observation/result port and completeness/refusal laws before any platform syscall binding. Neither direction permits dropping-Q, acceptingstatus1, a broad unbounded process scan, privilege installation or exclusion of the declared Darwin directory backend. Actual Darwin physical tests remain mandatory whichever implementation is chosen.

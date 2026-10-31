@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test";
 import {evaluateExtractedFunctionV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧩️extracted-function/🟦️.ts";
 import Ajv from "ajv";
 import { Database } from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import ts from "typescript";

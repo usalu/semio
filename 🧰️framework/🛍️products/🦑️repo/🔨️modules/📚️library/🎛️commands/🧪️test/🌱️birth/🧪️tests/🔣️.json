@@ -67,5 +67,107 @@
     ],
     "received": true,
     "expected": "received"
+  },
+  {
+    "name": "fresh schema registry verify",
+    "argv": [
+      "schema",
+      "verify"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh schema registry entries",
+    "argv": [
+      "schema",
+      "entries",
+      "--out",
+      "schema-registry"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh schema native compilation",
+    "argv": [
+      "schema",
+      "compile"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "schema check stays nonnative",
+    "argv": [
+      "schema",
+      "check"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "schema oracle stays nonnative",
+    "argv": [
+      "schema",
+      "oracle"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "schema nested name grants nothing",
+    "argv": [
+      "schema",
+      "generate",
+      "verify"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "schema unknown grants nothing",
+    "argv": [
+      "schema",
+      "unknown"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "schema help grants nothing",
+    "argv": [
+      "schema",
+      "verify",
+      "--help"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "schema missing operand",
+    "argv": [
+      "schema"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received schema verify stays Original",
+    "argv": [
+      "schema",
+      "verify"
+    ],
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "received schema compile stays Original",
+    "argv": [
+      "schema",
+      "compile"
+    ],
+    "received": true,
+    "expected": "received"
   }
 ]

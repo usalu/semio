@@ -1,12 +1,14 @@
 {
   "property_templates": {
     "pt-wall": {
-      "applies_to": [
-        "Wall",
-        "CurtainWall"
-      ],
       "entry": "Patched",
-      "name": "Pset_WallStandard"
+      "value": {
+        "applies_to": [
+          "Wall",
+          "CurtainWall"
+        ],
+        "name": "Pset_WallStandard"
+      }
     }
   }
 }

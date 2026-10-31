@@ -1,44 +1,46 @@
 {
   "roofs": {
     "rf-flat": {
-      "base_offset": 0.1,
       "entry": "Created",
-      "footprint": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 0.0
+      "value": {
+        "base_offset": 0.1,
+        "footprint": [
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 8,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 8,
+              "y": 6
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 6
+            }
           }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 6.0
-          }
-        }
-      ],
-      "name": "Flat roof",
-      "overhang": 0.0,
-      "phase": "New",
-      "roof_type": "rt-tiles",
-      "shape": "Flat",
-      "storey": "st-first"
+        ],
+        "name": "Flat roof",
+        "overhang": 0,
+        "phase": "New",
+        "roof_type": "rt-tiles",
+        "shape": "Flat",
+        "storey": "st-first"
+      }
     }
   }
 }

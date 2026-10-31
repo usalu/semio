@@ -5,10 +5,11 @@
  * @see ../🧍️figure/🟦️.tsx — the figure
  * @see ../🧭️context/🟦️.tsx — the ambient clock
  */
-import { Component, useEffect, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
 import type { Asset, EvaluationQuery, View } from "@teaching/staffage";
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
 import { useArchive } from "../🧭️context/🟦️.tsx";
+import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { Button, Notice, cn } from "../🪟️chrome/🟦️.tsx";
 import { useCatalog } from "../📚️catalog/🟦️.ts";
 import type { Row } from "../🔎️search/🟦️.ts";
@@ -89,20 +90,50 @@ export function UnavailableNotice(props: { readonly row: Row; readonly compact?:
 
 const QUIET = { dimensions: false, scaleBar: false, legend: false, labels: false, ground: true } as const;
 
-/** 🖼️ The live preview of a row, fitted to its box. */
-export function RowPreview(props: { readonly row: Row; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
-  const { row, solid, scale = 100, query, className, compact, view } = props;
+function loopedClock(clock: StaffageClock, durationS: number): StaffageClock {
+  const project = () => {
+    const state = clock.state;
+    const wrapped = ((state.timeS % durationS) + durationS) % durationS;
+    const frame = Math.floor(wrapped * state.fps + 1e-9);
+    return { ...state, timeS: frame / state.fps, frame };
+  };
+  const snapshot = () => project();
+  return new Proxy(clock, {
+    get(target, key) {
+      if (key === "state") return project();
+      if (key === "timeS") return project().timeS;
+      if (key === "getSnapshot") return snapshot;
+      return Reflect.get(target, key, target);
+    },
+  });
+}
+
+function usePreviewClock(asset: Asset, clock: StaffageClock): StaffageClock {
+  const clip = asset.clips.find((candidate) => candidate.id === asset.presentation.defaultClip);
+  const durationS = clip !== undefined && clip.loop && clip.durationS > 0 ? clip.durationS : 0;
+  return useMemo(() => (durationS > 0 ? loopedClock(clock, durationS) : clock), [clock, durationS]);
+}
+
+function ReadyPreview(props: { readonly asset: Asset; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+  const { asset, solid, scale, query, className, compact, view } = props;
   const { language, ambient } = useArchive();
   const dark = useDarkSurface();
-  if (row.status !== "ready" || row.asset === undefined) return row.status === "pending" ? <div role="status" aria-busy="true" aria-label={row.entry.title[language]} className={cn("h-full min-h-12 w-full animate-pulse bg-muted/60 motion-reduce:animate-none", className)} /> : <UnavailableNotice row={row} compact className={cn("h-full", className)} />;
-  const asset: Asset = row.asset;
+  const clock = usePreviewClock(asset, ambient);
   return (
-    <div aria-hidden="true" inert className={cn("flex h-full min-h-0 w-full items-end justify-center", className)} data-preview={asset.id}>
+    <div aria-hidden="true" inert className={cn("relative h-full min-h-0 w-full overflow-hidden", className)} data-preview={asset.id}>
       <FigureBoundary resetKey={asset} fallback={(message) => <Notice kind="error" compact title={asset.title[language]}>{compact ? null : message}</Notice>}>
-        <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={ambient} view={view ?? surfaceView(dark, solid)} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
+        <StaffageFigure asset={asset} {...(query === undefined ? {} : { query })} clock={clock} view={view ?? surfaceView(dark, solid)} scale={{ denominator: scale }} language={language} fit="contain" transparent annotations={QUIET} />
       </FigureBoundary>
     </div>
   );
+}
+
+/** 🖼️ The live preview of a row, fitted to its box. */
+export function RowPreview(props: { readonly row: Row; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+  const { row, solid, scale = 100, query, className, compact, view } = props;
+  const { language } = useArchive();
+  if (row.status !== "ready" || row.asset === undefined) return row.status === "pending" ? <div role="status" aria-busy="true" aria-label={row.entry.title[language]} className={cn("h-full min-h-12 w-full animate-pulse bg-muted/60 motion-reduce:animate-none", className)} /> : <UnavailableNotice row={row} compact className={cn("h-full", className)} />;
+  return <ReadyPreview asset={row.asset} {...(solid === undefined ? {} : { solid })} scale={scale} {...(query === undefined ? {} : { query })} {...(className === undefined ? {} : { className })} {...(compact === undefined ? {} : { compact })} {...(view === undefined ? {} : { view })} />;
 }
 
 /** 🚨️ The failure of the manifest or of a category, in words, with the way to try again; nothing while all is well. */

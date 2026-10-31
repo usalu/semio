@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {ValueError} from "../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";
 import {faultFromValueError,faultValueRefusalKind} from "../🟦️.ts";

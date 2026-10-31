@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "id": "one-member",
+      "files": {
+        "member/🐹️.go": "package sample\n"
+      },
+      "owners": {
+        "member/🐹️.go": ""
+      }
+    },
+    {
+      "id": "nested-platform-member",
+      "files": {
+        "member/🐹️.go": "package sample\n",
+        "member/native/🐹️.go": "//go:build !windows\n\npackage sample\n"
+      },
+      "owners": {
+        "member/🐹️.go": "",
+        "member/native/🐹️.go": ""
+      }
+    },
+    {
+      "id": "nested-member-test",
+      "files": {
+        "member/🐹️.go": "package sample\n",
+        "member/tests/case/🐹️.go": "package sample\n"
+      },
+      "owners": {
+        "member/🐹️.go": "",
+        "member/tests/case/🐹️.go": ""
+      }
+    },
+    {
+      "id": "independent-package",
+      "files": {
+        "independent/value.go": "package independent\n",
+        "independent/member/native/🐹️.go": "package independent\n"
+      },
+      "owners": {
+        "independent/member/native/🐹️.go": "independent"
+      },
+      "packages": [
+        "./independent"
+      ]
+    },
+    {
+      "id": "nested-module-opaque",
+      "files": {
+        "member/🐹️.go": "package sample\n",
+        "member/native/go.mod": "module other\n",
+        "member/native/🐹️.go": "package other\n"
+      },
+      "owners": {
+        "member/🐹️.go": ""
+      }
+    }
+  ]
+}

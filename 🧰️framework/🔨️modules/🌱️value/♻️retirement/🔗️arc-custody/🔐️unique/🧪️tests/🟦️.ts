@@ -4,7 +4,7 @@ import "../../../../🧬️retained-clone/🔗️source/🧪️tests/🔐️cust
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 test("unique Arc custody corpus includes original weak leases and bounded work grants",()=>{
  const fixture=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(join(import.meta.dir,"../🧬️schema/🔣️.json"),"utf8"));

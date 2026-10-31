@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "escaped definition key",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "a/b~c": {
+            "type": "integer",
+            "minimum": 2
+          }
+        },
+        "$ref": "#/$defs/a~1b~0c"
+      },
+      "instances": [
+        {
+          "value": 2,
+          "valid": true
+        },
+        {
+          "value": 1,
+          "valid": false
+        },
+        {
+          "value": "2",
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "nested definitions retain lexical pointers",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "item": {
+            "$defs": {
+              "name": {
+                "type": "string",
+                "minLength": 2
+              }
+            },
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/item/$defs/name"
+              }
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/$defs/item"
+        }
+      },
+      "instances": [
+        {
+          "value": [
+            {
+              "name": "ab"
+            }
+          ],
+          "valid": true
+        },
+        {
+          "value": [
+            {
+              "name": "a"
+            }
+          ],
+          "valid": false
+        },
+        {
+          "value": [],
+          "valid": false
+        },
+        {
+          "value": [
+            {
+              "name": "ab",
+              "extra": 1
+            }
+          ],
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "instance literals are not schema positions",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "tag": {
+            "const": {
+              "$defs": {
+                "a": 1
+              },
+              "$ref": "#/$defs/tag"
+            }
+          }
+        },
+        "$ref": "#/$defs/tag"
+      },
+      "instances": [
+        {
+          "value": {
+            "$defs": {
+              "a": 1
+            },
+            "$ref": "#/$defs/tag"
+          },
+          "valid": true
+        },
+        {
+          "value": {
+            "definitions": {
+              "a": 1
+            },
+            "$ref": "#/definitions/tag"
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "property called definitions token stays literal",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "target": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "properties": {
+          "$defs": {
+            "type": "string"
+          },
+          "copy": {
+            "$ref": "#/properties/$defs"
+          }
+        },
+        "required": [
+          "copy"
+        ]
+      },
+      "instances": [
+        {
+          "value": {
+            "copy": "text"
+          },
+          "valid": true
+        },
+        {
+          "value": {
+            "copy": 3
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "name": "public exports and private helpers are distinct",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+          "Item": {
+            "const": "public"
+          }
+        },
+        "definitions": {
+          "Item": {
+            "const": "private"
+          }
+        },
+        "type": "object",
+        "required": [
+          "published",
+          "local"
+        ],
+        "properties": {
+          "published": {
+            "$ref": "#/$defs/Item"
+          },
+          "local": {
+            "$ref": "#/definitions/Item"
+          }
+        },
+        "additionalProperties": false
+      },
+      "instances": [
+        {
+          "value": {
+            "published": "public",
+            "local": "private"
+          },
+          "valid": true
+        },
+        {
+          "value": {
+            "published": "private",
+            "local": "public"
+          },
+          "valid": false
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "name": "format policy",
+      "schema": {
+        "$defs": {
+          "item": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      }
+    },
+    {
+      "name": "new tuple vocabulary",
+      "schema": {
+        "$defs": {
+          "item": {
+            "prefixItems": [
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "external reference",
+      "schema": {
+        "$defs": {
+          "item": {
+            "$ref": "other.json#/definitions/x"
+          }
+        }
+      }
+    },
+    {
+      "name": "reference assertion siblings",
+      "schema": {
+        "$defs": {
+          "item": {
+            "$ref": "#/$defs/base",
+            "minimum": 2
+          },
+          "base": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "nested resource",
+      "schema": {
+        "$defs": {
+          "a": {
+            "$id": "nested",
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import consistencySchema from "../../../🧬️schema/🧾️owner-consistency.json" with { type: "json" };
 import registrySchema from "../../../🧬️schema/📋️owners.json" with { type: "json" };
 import { BUILD_OWNER_REGISTRY_FILE, cargoPackageName, checkBuildOwnerRegistry, findOwnerFindings, memoryOwnerTree, moveOwnerScopes, reconcileBuildOwnerRegistry, syncOwnerRegistry, type OwnerFinding, type OwnerRow, type OwnerTreePolicy } from "../🟦️.ts";

@@ -1,108 +1,112 @@
 {
   "slabs": {
     "sl-1": {
-      "boundary": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 3.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 3.0,
-            "y": 0.0
-          }
-        }
-      ],
       "entry": "Patched",
-      "holes": []
+      "value": {
+        "boundary": [
+          {
+            "bulge": 0,
+            "point": {
+              "x": 3,
+              "y": 6
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 6
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 3,
+              "y": 0
+            }
+          }
+        ],
+        "holes": []
+      }
     },
     "sl-2": {
-      "boundary": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 3.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 3.0,
-            "y": 6.0
-          }
-        }
-      ],
       "entry": "Created",
-      "holes": [
-        [
+      "value": {
+        "boundary": [
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 5.0,
-              "y": 2.0
+              "x": 3,
+              "y": 0
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 6.0,
-              "y": 2.0
+              "x": 8,
+              "y": 0
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 6.0,
-              "y": 3.0
+              "x": 8,
+              "y": 6
             }
           },
           {
-            "bulge": 0.0,
+            "bulge": 0,
             "point": {
-              "x": 5.0,
-              "y": 3.0
+              "x": 3,
+              "y": 6
             }
           }
-        ]
-      ],
-      "name": "Floor",
-      "offset": 0.0,
-      "phase": "New",
-      "slab_type": "slt-200",
-      "storey": "st-ground"
+        ],
+        "holes": [
+          [
+            {
+              "bulge": 0,
+              "point": {
+                "x": 5,
+                "y": 2
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 6,
+                "y": 2
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 6,
+                "y": 3
+              }
+            },
+            {
+              "bulge": 0,
+              "point": {
+                "x": 5,
+                "y": 3
+              }
+            }
+          ]
+        ],
+        "name": "Floor",
+        "offset": 0,
+        "phase": "New",
+        "slab_type": "slt-200",
+        "storey": "st-ground"
+      }
     }
   }
 }

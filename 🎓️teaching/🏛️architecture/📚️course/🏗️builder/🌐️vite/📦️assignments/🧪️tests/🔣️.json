@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "retained-parent",
+      "parent": "pdf-en",
+      "consumer": "pdf-en",
+      "accepted": true
+    },
+    {
+      "name": "retained-child",
+      "parent": "pdf-en",
+      "consumer": "pdf-de",
+      "accepted": true
+    },
+    {
+      "name": "retained-last",
+      "parent": "pdf-de",
+      "consumer": "consumer",
+      "accepted": true
+    },
+    {
+      "name": "sibling-entry",
+      "parent": "pdf-de",
+      "consumer": "entry",
+      "accepted": false
+    },
+    {
+      "name": "escaped-first",
+      "parent": "pdf-de",
+      "consumer": "pdf-en",
+      "accepted": false
+    }
+  ],
+  "controls": [
+    {
+      "name": "entry",
+      "parent": null
+    },
+    {
+      "name": "pdf-en",
+      "parent": "entry"
+    },
+    {
+      "name": "pdf-de",
+      "parent": "pdf-en"
+    },
+    {
+      "name": "consumer",
+      "parent": "pdf-de"
+    }
+  ],
+  "consumers": [
+    "dev-site",
+    "build",
+    "test-e2e"
+  ],
+  "producers": [
+    "@teaching/architecture-course:build-parametrization-en",
+    "@teaching/architecture-course:build-parametrization-de"
+  ],
+  "requiredTargets": [
+    "dev",
+    "dev-site",
+    "build",
+    "test-e2e"
+  ]
+}

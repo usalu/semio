@@ -2,7 +2,9 @@
   "slabs": {
     "sl-1": {
       "entry": "Patched",
-      "phase": "Temporary"
+      "value": {
+        "phase": "Temporary"
+      }
     }
   }
 }

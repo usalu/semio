@@ -1,16 +1,18 @@
 {
   "properties": {
     "w-south": {
-      "assigned": {
-        "Pset_WallCommon": {
-          "Combustible": {
-            "Boolean": {
-              "value": false
+      "entry": "Patched",
+      "value": {
+        "assigned": {
+          "Pset_WallCommon": {
+            "Combustible": {
+              "Boolean": {
+                "value": false
+              }
             }
           }
         }
-      },
-      "entry": "Patched"
+      }
     }
   }
 }

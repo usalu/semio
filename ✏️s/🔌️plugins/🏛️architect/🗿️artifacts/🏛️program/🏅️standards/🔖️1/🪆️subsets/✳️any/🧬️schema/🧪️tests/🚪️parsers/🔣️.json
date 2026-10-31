@@ -1,0 +1,697 @@
+{
+  "cases": [
+    {
+      "id": "plain-text",
+      "exported": "TextField",
+      "value": {
+        "text": "Raum"
+      },
+      "valid": true
+    },
+    {
+      "id": "formatted-text",
+      "exported": "TextField",
+      "value": {
+        "text": "Room",
+        "format": "plain"
+      },
+      "valid": true
+    },
+    {
+      "id": "text-missing",
+      "exported": "TextField",
+      "value": {},
+      "valid": false
+    },
+    {
+      "id": "text-number",
+      "exported": "TextField",
+      "value": {
+        "text": 12
+      },
+      "valid": false
+    },
+    {
+      "id": "text-extra",
+      "exported": "TextField",
+      "value": {
+        "text": "x",
+        "extra": true
+      },
+      "valid": false
+    },
+    {
+      "id": "timestamps",
+      "exported": "TimestampMeta",
+      "value": {
+        "created": "",
+        "updated": ""
+      },
+      "valid": true
+    },
+    {
+      "id": "timestamp-author",
+      "exported": "TimestampMeta",
+      "value": {
+        "created": "",
+        "updated": "",
+        "createdBy": "a"
+      },
+      "valid": true
+    },
+    {
+      "id": "timestamp-required",
+      "exported": "TimestampMeta",
+      "value": {
+        "created": ""
+      },
+      "valid": false
+    },
+    {
+      "id": "timestamp-type",
+      "exported": "TimestampMeta",
+      "value": {
+        "created": "",
+        "updated": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "mandatory-priority",
+      "exported": "Priority",
+      "value": "mandatory",
+      "valid": true
+    },
+    {
+      "id": "prohibited-priority",
+      "exported": "Priority",
+      "value": "prohibited",
+      "valid": true
+    },
+    {
+      "id": "priority-case",
+      "exported": "Priority",
+      "value": "Mandatory",
+      "valid": false
+    },
+    {
+      "id": "priority-unknown",
+      "exported": "Priority",
+      "value": "urgent",
+      "valid": false
+    },
+    {
+      "id": "priority-type",
+      "exported": "Priority",
+      "value": 1,
+      "valid": false
+    },
+    {
+      "id": "nullable-ownership",
+      "exported": "Ownership",
+      "value": {
+        "ownerId": null,
+        "authorityId": null,
+        "consultantIds": [],
+        "participantIds": []
+      },
+      "valid": true
+    },
+    {
+      "id": "owned-ownership",
+      "exported": "Ownership",
+      "value": {
+        "ownerId": "a",
+        "authorityId": null,
+        "consultantIds": [
+          "b"
+        ],
+        "participantIds": []
+      },
+      "valid": true
+    },
+    {
+      "id": "ownership-required",
+      "exported": "Ownership",
+      "value": {
+        "ownerId": null
+      },
+      "valid": false
+    },
+    {
+      "id": "ownership-array-type",
+      "exported": "Ownership",
+      "value": {
+        "ownerId": null,
+        "authorityId": null,
+        "consultantIds": [],
+        "participantIds": [
+          1
+        ]
+      },
+      "valid": false
+    },
+    {
+      "id": "ownership-null-type",
+      "exported": "Ownership",
+      "value": {
+        "ownerId": null,
+        "authorityId": false,
+        "consultantIds": [],
+        "participantIds": []
+      },
+      "valid": false
+    },
+    {
+      "id": "tagged-note",
+      "exported": "TaggedNote",
+      "value": {
+        "tag": "access",
+        "text": "Door"
+      },
+      "valid": true
+    },
+    {
+      "id": "note-required",
+      "exported": "TaggedNote",
+      "value": {
+        "tag": "access"
+      },
+      "valid": false
+    },
+    {
+      "id": "critical-influence",
+      "exported": "InfluenceLevel",
+      "value": "critical",
+      "valid": true
+    },
+    {
+      "id": "influence-unknown",
+      "exported": "InfluenceLevel",
+      "value": "extreme",
+      "valid": false
+    },
+    {
+      "id": "supportive-engagement",
+      "exported": "EngagementLevel",
+      "value": "supportive",
+      "valid": true
+    },
+    {
+      "id": "engagement-case",
+      "exported": "EngagementLevel",
+      "value": "Supportive",
+      "valid": false
+    },
+    {
+      "id": "nested-header",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": true,
+      "output": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "tags": [],
+        "notes": []
+      }
+    },
+    {
+      "id": "nested-header-priority",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "urgent",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "nested-header-extra",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "unexpected": "x"
+      },
+      "valid": false
+    },
+    {
+      "id": "program-meta-null",
+      "exported": "ProgramMeta",
+      "value": {
+        "schema": "schema://s.architect.program/ProgramMeta",
+        "documentId": "brief",
+        "title": "A",
+        "subtitle": null,
+        "purpose": {
+          "text": "Plan"
+        },
+        "terminology": [],
+        "classification": [],
+        "industrySector": "",
+        "projectType": "",
+        "locale": "de",
+        "revision": "1",
+        "authorIds": [],
+        "sourceSystem": null,
+        "exportProfile": null,
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "program-meta-source",
+      "exported": "ProgramMeta",
+      "value": {
+        "schema": "schema://s.architect.program/ProgramMeta",
+        "documentId": "brief",
+        "title": "A",
+        "subtitle": "Brief",
+        "purpose": {
+          "text": "Plan"
+        },
+        "terminology": [],
+        "classification": [],
+        "industrySector": "",
+        "projectType": "",
+        "locale": "de",
+        "revision": "1",
+        "authorIds": [
+          "author"
+        ],
+        "sourceSystem": "local",
+        "exportProfile": null,
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "program-meta-author-type",
+      "exported": "ProgramMeta",
+      "value": {
+        "schema": "schema://s.architect.program/ProgramMeta",
+        "documentId": "brief",
+        "title": "A",
+        "subtitle": null,
+        "purpose": {
+          "text": "Plan"
+        },
+        "terminology": [],
+        "classification": [],
+        "industrySector": "",
+        "projectType": "",
+        "locale": "de",
+        "revision": "1",
+        "authorIds": [
+          2
+        ],
+        "sourceSystem": null,
+        "exportProfile": null,
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "program-meta-nullable-type",
+      "exported": "ProgramMeta",
+      "value": {
+        "schema": "schema://s.architect.program/ProgramMeta",
+        "documentId": "brief",
+        "title": "A",
+        "subtitle": 2,
+        "purpose": {
+          "text": "Plan"
+        },
+        "terminology": [],
+        "classification": [],
+        "industrySector": "",
+        "projectType": "",
+        "locale": "de",
+        "revision": "1",
+        "authorIds": [],
+        "sourceSystem": null,
+        "exportProfile": null,
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "header-explicit-lists",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "tags": [
+          "access"
+        ],
+        "notes": [
+          {
+            "tag": "door",
+            "text": "wide"
+          }
+        ]
+      },
+      "valid": true
+    },
+    {
+      "id": "header-null-tags",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "tags": null
+      },
+      "valid": false
+    },
+    {
+      "id": "header-notes-type",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "notes": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "header-tag-member-type",
+      "exported": "EntityHeader",
+      "value": {
+        "id": "",
+        "name": "",
+        "status": "draft",
+        "priority": "mandatory",
+        "ownership": {
+          "ownerId": null,
+          "authorityId": null,
+          "consultantIds": [],
+          "participantIds": []
+        },
+        "timestamps": {
+          "created": "",
+          "updated": ""
+        },
+        "tags": [
+          1
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "delegations": [
+    {
+      "exported": "BenchmarkRecord",
+      "reference": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/BenchmarkRecord"
+    },
+    {
+      "exported": "KnowledgeRecord",
+      "reference": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/KnowledgeRecord"
+    }
+  ],
+  "uiCases": [
+    {
+      "path": "🧬️mutations/🧲️adjacency/🧲️connect/🧬️schema/🔣️.json",
+      "fields": {
+        "index": {
+          "step": 1
+        }
+      }
+    },
+    {
+      "path": "🧬️mutations/🧵️trace/🧵️connect/🧬️schema/🔣️.json",
+      "fields": {
+        "index": {
+          "step": 1
+        }
+      }
+    },
+    {
+      "path": "🧬️mutations/📋️register-row/🌱️create/🧬️schema/🔣️.json",
+      "fields": {
+        "row": {
+          "role": "value",
+          "widget": null
+        },
+        "index": {
+          "role": "value",
+          "widget": "stepper",
+          "step": 1
+        }
+      }
+    },
+    {
+      "path": "🧬️mutations/📋️register-row/♻️replace/🧬️schema/🔣️.json",
+      "fields": {
+        "row": {
+          "role": "value",
+          "widget": null
+        }
+      }
+    },
+    {
+      "path": "🧬️mutations/📋️register-row/🏷️rename/🧬️schema/🔣️.json",
+      "fields": {
+        "register": {
+          "role": "value",
+          "widget": "select"
+        },
+        "newName": {
+          "role": "value"
+        }
+      }
+    },
+    {
+      "path": "🧬️mutations/📋️register-row/🗑️delete/🧬️schema/🔣️.json",
+      "fields": {
+        "register": {
+          "role": "value",
+          "widget": "select"
+        }
+      }
+    }
+  ],
+  "quantityTransportCases": [
+    {
+      "id": "zero",
+      "value": {
+        "unit": "m",
+        "min": 0
+      },
+      "valid": true
+    },
+    {
+      "id": "fraction",
+      "value": {
+        "unit": "m",
+        "target": 1.5
+      },
+      "valid": true
+    },
+    {
+      "id": "negative",
+      "value": {
+        "unit": "m",
+        "current": -2
+      },
+      "valid": true
+    },
+    {
+      "id": "subnormal",
+      "value": {
+        "unit": "m",
+        "peak": 5e-324
+      },
+      "valid": true
+    },
+    {
+      "id": "maximum-finite",
+      "value": {
+        "unit": "m",
+        "max": 1.7976931348623157e+308
+      },
+      "valid": true
+    },
+    {
+      "id": "negative-zero-word",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": "8000000000000000"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "nan-word-identity",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": "7ff8000000000042"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "short-word",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": "0000"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "uppercase-word",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": "7FF8000000000042"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "word-extra-property",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": "0000000000000000",
+          "extra": true
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "numeric-string",
+      "value": {
+        "unit": "m",
+        "min": "1.5"
+      },
+      "valid": false
+    },
+    {
+      "id": "wrong-nested-type",
+      "value": {
+        "unit": "m",
+        "min": {
+          "bits": true
+        }
+      },
+      "valid": false
+    }
+  ],
+  "publications": [
+    {
+      "document": "🔺️diff/🟦️.ts",
+      "exported": "ProgramDiff",
+      "origin": "🔺️diff/🧾️program-diff/🟦️.ts"
+    }
+  ],
+  "registerChoices": {
+    "document": "📸️snapshot/🔣️.json",
+    "exported": "RegisterKey",
+    "locales": [
+      "en",
+      "de"
+    ]
+  }
+}

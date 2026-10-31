@@ -1,0 +1,155 @@
+{
+ "id": "thermal-transient",
+ "oracle": "scipy solve_ivp (LSODA) of the nonlinear lumped balance, CoolProp air properties",
+ "tolerances": {
+  "responseK": 0.25,
+  "steadyK": 0.05
+ },
+ "timesS": [
+  30,
+  120,
+  300,
+  600,
+  1200,
+  2400,
+  3600
+ ],
+ "asset": {
+  "dimensions": {
+   "heightM": 1,
+   "massKg": 0
+  },
+  "materials": [
+   {
+    "id": "m-sunlit-plate",
+    "title": {
+     "en": "sunlit-plate",
+     "de": "sunlit-plate"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.7,
+    "source": "illustrative"
+   },
+   {
+    "id": "m-heated-plate",
+    "title": {
+     "en": "heated-plate",
+     "de": "heated-plate"
+    },
+    "emissivity": 0.8,
+    "solarAbsorptivity": 0.0,
+    "source": "illustrative"
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "skyTempC": 5,
+    "groundTempC": 22,
+    "relativeHumidity": 0.5,
+    "windMS": 2,
+    "windDirectionDeg": 0,
+    "solarWM2": 800,
+    "diffuseFraction": 0.1,
+    "pressurePa": 101325
+   },
+   "passengers": [],
+   "operating": [
+    {
+     "id": "power",
+     "title": {
+      "en": "Power",
+      "de": "Leistung"
+     },
+     "levels": [
+      {
+       "v": 0,
+       "title": {
+        "en": "off",
+        "de": "aus"
+       }
+      },
+      {
+       "v": 1,
+       "title": {
+        "en": "rated",
+        "de": "Nennlast"
+       }
+      }
+     ]
+    }
+   ],
+   "emitters": [],
+   "assumptions": [],
+   "regions": [
+    {
+     "id": "sunlit-plate",
+     "title": {
+      "en": "sunlit-plate",
+      "de": "sunlit-plate"
+     },
+     "kind": "surface",
+     "model": "passive",
+     "material": "m-sunlit-plate",
+     "areaM2": 1.0,
+     "characteristicLengthM": 0.5,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.5,
+     "layers": [],
+     "heatCapacityJM2K": 8000.0,
+     "source": "illustrative"
+    },
+    {
+     "id": "heated-plate",
+     "title": {
+      "en": "heated-plate",
+      "de": "heated-plate"
+     },
+     "kind": "heater",
+     "model": "operating",
+     "material": "m-heated-plate",
+     "areaM2": 0.5,
+     "characteristicLengthM": 0.4,
+     "geometry": "vertical-plate",
+     "skyViewFactor": 0.3,
+     "layers": [],
+     "heatCapacityJM2K": 20000.0,
+     "operating": {
+      "key": "power",
+      "heatW": 400.0
+     },
+     "source": "illustrative"
+    }
+   ]
+  }
+ },
+ "expected": {
+  "sunlit-plate": {
+   "initialC": 19.607511093073803,
+   "finalSteadyC": 37.85923027486683,
+   "responseC": [
+    20.529797292976138,
+    23.039190418602594,
+    27.05578877697198,
+    31.524598746841438,
+    35.71234075882975,
+    37.61728177639533,
+    37.83209676539977
+   ]
+  },
+  "heated-plate": {
+   "initialC": 18.818278852394464,
+   "finalSteadyC": 71.17491644393307,
+   "responseC": [
+    20.006316823480557,
+    23.42989014490289,
+    29.67343577627297,
+    38.45744332935367,
+    51.090241440780346,
+    63.82809839413962,
+    68.53663291083981
+   ]
+  }
+ }
+}

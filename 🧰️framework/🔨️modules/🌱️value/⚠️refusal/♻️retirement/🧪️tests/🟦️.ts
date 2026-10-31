@@ -1,7 +1,7 @@
 /** ♻️ Independent SQLite ownership conservation for borrowed and owned refusal prose. */
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync} from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";

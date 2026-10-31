@@ -18,8 +18,7 @@ pub mod circle;
 #[path="🔲️convex/🦀️.rs"]
 pub mod convex;
 
-#[path = "🕳️rings/🦀️.rs"]
-mod rings;
+use semio_s_artifact_stdio_ifc_geometry_rings as rings;
 
 type Point = [f64; 3];
 pub const CURVE_RELATIVE_TOLERANCE: f64 = 0.001;
@@ -766,10 +765,10 @@ fn required_real<V:GeometryValue>(entity:GeometryEntity<'_,V>,index:usize)->Proj
 fn optional_real<V:GeometryValue>(entity:GeometryEntity<'_,V>,index:usize,fallback:f64)->ProjectionResult<f64>{match entity.args.get(index){None=>Ok(fallback),Some(value)if value.is_unset()=>Ok(fallback),_=>required_real(entity,index)}}
 fn index_value<V:GeometryValue>(value:&V)->ProjectionResult<usize>{let index=value.as_integer().filter(|index|*index>0).ok_or("invalid-one-based-index")?;usize::try_from(index-1).map_err(|_|"index-overflow".into())}
 fn add(a: Point, b: Point) -> Point { [a[0] + b[0], a[1] + b[1], a[2] + b[2]] }
-pub(super) fn subtract(a: Point, b: Point) -> Point { [a[0] - b[0], a[1] - b[1], a[2] - b[2]] }
+pub(crate) fn subtract(a: Point, b: Point) -> Point { [a[0] - b[0], a[1] - b[1], a[2] - b[2]] }
 fn scale(a: Point, s: f64) -> Point { [a[0] * s, a[1] * s, a[2] * s] }
-pub(super) fn dot(a: Point, b: Point) -> f64 { a[0] * b[0] + a[1] * b[1] + a[2] * b[2] }
-pub(super) fn cross(a: Point, b: Point) -> Point { [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]] }
+pub(crate) fn dot(a: Point, b: Point) -> f64 { a[0] * b[0] + a[1] * b[1] + a[2] * b[2] }
+pub(crate) fn cross(a: Point, b: Point) -> Point { [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]] }
 fn normalize(a:Point)->ProjectionResult<Point>{matrix::normalize_direction(a).ok_or_else(||"invalid-direction".into())}
 
 fn cross2(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 { (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) }
@@ -781,3 +780,7 @@ fn determinant(matrix: &Mat4) -> f64 {
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]mod tests;
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

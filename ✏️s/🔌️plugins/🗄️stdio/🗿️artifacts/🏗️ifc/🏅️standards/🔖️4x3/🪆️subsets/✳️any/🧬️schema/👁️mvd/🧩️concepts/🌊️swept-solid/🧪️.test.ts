@@ -1,6 +1,6 @@
 /** 🌊️ Closed released Body SweptSolid cases distinguish concept, schema and geometry. */
 import {test,expect} from 'bun:test';
-import Ajv from 'ajv/dist/2020';
+import Ajv from 'ajv';
 import {compare,applyPatch} from 'fast-json-patch';
 import * as api from './🟦️.ts';
 import cases from './cases.json';

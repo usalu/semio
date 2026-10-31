@@ -10,7 +10,7 @@ import storage from"../../../../../../../../../🏗️build/📥️inputs/💾�
 import protocol from"../../🧬️schema/🔣️.json"with{type:"json"};
 import cases from"./🧫️cases.json"with{type:"json"};
 
-const policy=storage.definitions.OptionalQuota.policy,sources=new URL("../../🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL));
+const policy=storage.definitions.OptionalQuota.definitions.DefaultPolicy.const,sources=new URL("../../🟦️.ts",physicalSourceOriginV1(import.meta.url,(import.meta as ImportMeta&{semioPhysicalSourceURL?:string}).semioPhysicalSourceURL));
 
 test("the retirement window is a required, finite policy key and the corpus uses the declared value",()=>{
  expect(policy.retirementWindowMilliseconds).toBe(cases.windowMilliseconds);

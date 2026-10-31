@@ -49,7 +49,9 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧵️shards/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🧵️shards/🔣️.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json"
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🧬️schema/🔣️.json"
       ],
       "outputs": [],
       "options": {
@@ -81,7 +83,9 @@
             "resources": [
               "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🧵️shards/🔣️.json",
               "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
-              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json"
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/💾️streaming/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🧬️schema/🔣️.json"
             ]
           }
         }

@@ -2,10 +2,12 @@
   "columns": {
     "c-a1": {
       "entry": "Patched",
-      "top": {
-        "Storey": {
-          "offset": 0.2,
-          "storey": "st-first"
+      "value": {
+        "top": {
+          "Storey": {
+            "offset": 0.2,
+            "storey": "st-first"
+          }
         }
       }
     }

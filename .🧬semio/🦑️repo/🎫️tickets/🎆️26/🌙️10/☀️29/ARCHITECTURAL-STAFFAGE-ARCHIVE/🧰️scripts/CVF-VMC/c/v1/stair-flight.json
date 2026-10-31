@@ -1,0 +1,1369 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "stair-flight",
+    "category": "components",
+    "title": {
+      "en": "Stair Flight",
+      "de": "Treppenlauf"
+    },
+    "summary": {
+      "en": "A 12-step steel stringer flight, pinned at the bottom landing and on a roller at the top, with timber treads.",
+      "de": "Ein Treppenlauf mit 12 Stufen auf einer Stahlwange, unten Festlager, oben Rollenlager, mit Holzstufen."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "stair",
+      "stringer",
+      "steel",
+      "timber"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10365",
+          "citation": "EN 10365:2017 Hot rolled steel channels, I and H sections: HEA 160 A = 38.8 cm2, I_y = 1673 cm4, W_el = 220 cm3."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (density 7850 kg/m3)."
+        },
+        {
+          "id": "en-338",
+          "citation": "EN 338:2016 Structural timber, strength classes: C24 mean density 420 kg/m3, E0,mean = 11 GPa."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1: imposed loads for stairs (3.0 kN/m2, an authored value; the actual value depends on the use category) and a concentrated person load of 0.8 kN split between two stringers."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "One stringer of a pair; the tributary width of 0.6 m is half of a 1.2 m flight. Treads are added to the stringer as a uniform share.",
+        "de": "Eine Wange eines Paares; die Einzugsbreite 0,6 m ist die Hälfte eines 1,2 m breiten Laufs. Die Stufen sind als gleichmäßiger Anteil zur Wange gerechnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 3.02,
+      "widthM": 3.65,
+      "depthM": 1.2,
+      "massKg": 166.2
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      },
+      {
+        "id": "timber",
+        "title": {
+          "en": "Timber C24 tread",
+          "de": "Holzstufe C24"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 420,
+        "elasticModulusPa": 11000000000,
+        "source": "literature",
+        "reference": "en-338"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "stringer",
+      "bones": [
+        {
+          "id": "stringer",
+          "parent": null,
+          "title": {
+            "en": "Stringer",
+            "de": "Wange"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 38.853374,
+          "lengthM": 4.62277,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 166.2,
+            "comX": 2.31,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10365"
+          },
+          "section": {
+            "areaM2": 0.00388,
+            "secondMomentM4": 1.673e-05,
+            "extremeFibreM": 0.08,
+            "material": "steel",
+            "title": {
+              "en": "HEA 160",
+              "de": "HEA 160"
+            }
+          }
+        },
+        {
+          "id": "walker-carrier",
+          "parent": "stringer",
+          "title": {
+            "en": "Walker load carrier (massless)",
+            "de": "Lastträger Person (masselos)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 4.62277
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-pin",
+        "bone": "stringer",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Bottom landing, pin",
+          "de": "Unterer Podest, Festlager"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "landing-roller",
+        "bone": "stringer",
+        "x": 4.62277,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Top landing, roller",
+          "de": "Oberer Podest, Rollenlager"
+        },
+        "support": "roller",
+        "normalDeg": 90
+      },
+      {
+        "id": "walker-point",
+        "bone": "walker-carrier",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Person on the flight",
+          "de": "Person auf dem Lauf"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "stringer-body",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 0,
+          "z": 6,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "poly",
+          "points": [
+            [
+              0.03893,
+              -0.03136
+            ],
+            [
+              0.23755,
+              -0.19136
+            ],
+            [
+              4.79656,
+              -0.19136
+            ],
+            [
+              4.59794,
+              -0.03136
+            ]
+          ],
+          "closed": true,
+          "region": "stringer-steel",
+          "material": "steel"
+        },
+        {
+          "id": "tread-profile",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4,
+          "filled": false,
+          "tone": 0.6,
+          "kind": "poly",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              0.1515,
+              0.1883
+            ],
+            [
+              0.3852,
+              0
+            ],
+            [
+              0.5368,
+              0.1883
+            ],
+            [
+              0.7705,
+              0
+            ],
+            [
+              0.9221,
+              0.1883
+            ],
+            [
+              1.1557,
+              0
+            ],
+            [
+              1.3073,
+              0.1883
+            ],
+            [
+              1.5409,
+              0
+            ],
+            [
+              1.6925,
+              0.1883
+            ],
+            [
+              1.9262,
+              0
+            ],
+            [
+              2.0778,
+              0.1883
+            ],
+            [
+              2.3114,
+              0
+            ],
+            [
+              2.463,
+              0.1883
+            ],
+            [
+              2.6966,
+              0
+            ],
+            [
+              2.8482,
+              0.1883
+            ],
+            [
+              3.0818,
+              0
+            ],
+            [
+              3.2335,
+              0.1883
+            ],
+            [
+              3.4671,
+              0
+            ],
+            [
+              3.6187,
+              0.1883
+            ],
+            [
+              3.8523,
+              0
+            ],
+            [
+              4.0039,
+              0.1883
+            ],
+            [
+              4.2375,
+              0
+            ],
+            [
+              4.3891,
+              0.1883
+            ],
+            [
+              4.6228,
+              0
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "stringer-web-line",
+          "bone": "stringer",
+          "role": "detail",
+          "lod": 1,
+          "z": 6.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.45705,
+              -0.11136
+            ],
+            [
+              4.4422,
+              -0.11136
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "stringer-flange-a",
+          "bone": "stringer",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.37326,
+              -0.04386
+            ],
+            [
+              4.35841,
+              -0.04386
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "stringer-flange-b",
+          "bone": "stringer",
+          "role": "detail",
+          "lod": 2,
+          "z": 6.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.77996,
+              -0.17886
+            ],
+            [
+              4.52599,
+              -0.17886
+            ]
+          ],
+          "closed": false
+        },
+        {
+          "id": "tread-0",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              0.1283,
+              0.2071
+            ],
+            [
+              0.38529,
+              8e-05
+            ],
+            [
+              0.3602,
+              -0.03107
+            ],
+            [
+              0.10321,
+              0.17595
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-0-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.13912,
+              0.1727
+            ],
+            [
+              0.34938,
+              0.00332
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-1",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              0.5136,
+              0.20717
+            ],
+            [
+              0.77059,
+              0.00015
+            ],
+            [
+              0.74549,
+              -0.031
+            ],
+            [
+              0.4885,
+              0.17602
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-1-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.52441,
+              0.17278
+            ],
+            [
+              0.73468,
+              0.0034
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-2",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              0.89889,
+              0.20725
+            ],
+            [
+              1.15588,
+              0.00023
+            ],
+            [
+              1.13079,
+              -0.03092
+            ],
+            [
+              0.8738,
+              0.1761
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-2-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.90971,
+              0.17286
+            ],
+            [
+              1.11997,
+              0.00348
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-3",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              1.28418,
+              0.20733
+            ],
+            [
+              1.54117,
+              0.00031
+            ],
+            [
+              1.51608,
+              -0.03084
+            ],
+            [
+              1.25909,
+              0.17618
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-3-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              1.295,
+              0.17293
+            ],
+            [
+              1.50526,
+              0.00355
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-4",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              1.66948,
+              0.20741
+            ],
+            [
+              1.92647,
+              0.00039
+            ],
+            [
+              1.90137,
+              -0.03076
+            ],
+            [
+              1.64438,
+              0.17626
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-4-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              1.68029,
+              0.17301
+            ],
+            [
+              1.89056,
+              0.00363
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-5",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              2.05477,
+              0.20748
+            ],
+            [
+              2.31176,
+              0.00046
+            ],
+            [
+              2.28667,
+              -0.03069
+            ],
+            [
+              2.02968,
+              0.17633
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-5-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              2.06559,
+              0.17309
+            ],
+            [
+              2.27585,
+              0.00371
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-6",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              2.44006,
+              0.20756
+            ],
+            [
+              2.69705,
+              0.00054
+            ],
+            [
+              2.67196,
+              -0.03061
+            ],
+            [
+              2.41497,
+              0.17641
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-6-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              2.45088,
+              0.17317
+            ],
+            [
+              2.66114,
+              0.00379
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-7",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              2.82536,
+              0.20764
+            ],
+            [
+              3.08235,
+              0.00062
+            ],
+            [
+              3.05725,
+              -0.03053
+            ],
+            [
+              2.80026,
+              0.17649
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-7-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              2.83617,
+              0.17324
+            ],
+            [
+              3.04644,
+              0.00386
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-8",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              3.21065,
+              0.20771
+            ],
+            [
+              3.46764,
+              0.0007
+            ],
+            [
+              3.44254,
+              -0.03045
+            ],
+            [
+              3.18556,
+              0.17656
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-8-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              3.22147,
+              0.17332
+            ],
+            [
+              3.43173,
+              0.00394
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-9",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              3.59594,
+              0.20779
+            ],
+            [
+              3.85293,
+              0.00077
+            ],
+            [
+              3.82784,
+              -0.03038
+            ],
+            [
+              3.57085,
+              0.17664
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-9-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              3.60676,
+              0.1734
+            ],
+            [
+              3.81702,
+              0.00402
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-10",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              3.98124,
+              0.20787
+            ],
+            [
+              4.23822,
+              0.00085
+            ],
+            [
+              4.21313,
+              -0.0303
+            ],
+            [
+              3.95614,
+              0.17672
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-10-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              3.99205,
+              0.17347
+            ],
+            [
+              4.20232,
+              0.0041
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-11",
+          "bone": "stringer",
+          "role": "body",
+          "lod": 1,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.7,
+          "kind": "poly",
+          "points": [
+            [
+              4.36653,
+              0.20795
+            ],
+            [
+              4.62352,
+              0.00093
+            ],
+            [
+              4.59842,
+              -0.03022
+            ],
+            [
+              4.34144,
+              0.1768
+            ]
+          ],
+          "closed": true,
+          "region": "tread-top",
+          "material": "timber"
+        },
+        {
+          "id": "tread-11-grain",
+          "bone": "stringer",
+          "role": "texture",
+          "lod": 3,
+          "z": 4.6,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              4.37734,
+              0.17355
+            ],
+            [
+              4.58761,
+              0.00417
+            ]
+          ],
+          "closed": false,
+          "region": "tread-top",
+          "material": "timber"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Empty flight",
+          "de": "Leerer Lauf"
+        },
+        "description": {
+          "en": "Stringer and treads under their own weight.",
+          "de": "Wange und Stufen unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "crowd-live-load",
+        "title": {
+          "en": "Full stair load",
+          "de": "Volle Treppenlast"
+        },
+        "description": {
+          "en": "Imposed load of 3 kN/m2 over a 0.6 m tributary width, 1.80 kN/m per horizontal metre, 1.402 kN/m per metre of slope.",
+          "de": "Nutzlast 3 kN/m² über 0,6 m Einzugsbreite, 1,80 kN/m je horizontalem Meter, 1,402 kN/m je Meter Lauflänge."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "crowd-live-load",
+            "kind": "imposed",
+            "title": {
+              "en": "Stair imposed load 3 kN/m2",
+              "de": "Treppennutzlast 3 kN/m²"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "stringer",
+              "fromM": 0,
+              "toM": 4.62277,
+              "wxNPerM": 0,
+              "wyNPerM": -1401.9
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "point-load-tread",
+        "title": {
+          "en": "Person mid-flight",
+          "de": "Person in Lauf-Mitte"
+        },
+        "description": {
+          "en": "A person's 400 N share on this stringer at mid-flight.",
+          "de": "Ein Personenanteil von 400 N auf dieser Wange in Laufmitte."
+        },
+        "bones": {
+          "walker-carrier": {
+            "dx": 2.31139
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "walker",
+            "kind": "occupant",
+            "title": {
+              "en": "Person 400 N on the stringer",
+              "de": "Person 400 N auf der Wange"
+            },
+            "anchor": "walker-point",
+            "fxN": 0,
+            "fyN": -400,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "The crowd load rises smoothly to its full value.",
+          "de": "Die Personenlast steigt weich auf ihren vollen Wert."
+        },
+        "durationS": 5,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 5,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 5,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Stair load at full value",
+              "de": "Treppenlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:crowd-live-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 5,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "moving-point-load",
+        "title": {
+          "en": "Person walking up",
+          "de": "Person geht hinauf"
+        },
+        "description": {
+          "en": "The person walks from the bottom to the top of the flight.",
+          "de": "Die Person geht vom unteren zum oberen Ende des Laufs."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "point-load-tread",
+            "ease": "smooth",
+            "bones": {
+              "walker-carrier": {
+                "dx": 0.3
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "point-load-tread",
+            "ease": "smooth",
+            "bones": {
+              "walker-carrier": {
+                "dx": 4.32277
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "climb",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Climb",
+              "de": "Aufstieg"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Person at the bottom",
+              "de": "Person am unteren Ende"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "stringer-steel",
+          "title": {
+            "en": "Stringer steel surface",
+            "de": "Wangenoberfläche Stahl"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 4.2,
+          "characteristicLengthM": 4.6,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "tread-top",
+          "title": {
+            "en": "Tread surfaces",
+            "de": "Stufenoberflächen"
+          },
+          "kind": "surface",
+          "material": "timber",
+          "model": "passive",
+          "areaM2": 2.16,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Treads are timber surfaces of one stringer's share; the stringer is painted steel.",
+          "de": "Stufen sind Holzoberflächen des Anteils einer Wange; die Wange ist gestrichener Stahl."
+        },
+        {
+          "en": "Exposed areas of an open flight; no shading by balustrades.",
+          "de": "Freiliegende Flächen eines offenen Laufs; keine Verschattung durch Geländer."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-pin",
+        "landing-roller"
+      ],
+      "assumptions": [
+        {
+          "en": "Inclined simply supported stringer: pin at the lower landing, vertical roller at the upper landing; slope 38.85 deg, horizontal run 3.6 m, rise 2.9 m.",
+          "de": "Geneigte, frei aufliegende Wange: Festlager am unteren Podest, senkrechtes Rollenlager am oberen Podest; Neigung 38,85 Grad, Lauflänge 3,6 m, Steigung 2,9 m."
+        },
+        {
+          "en": "Vertical loads are converted to per-metre-of-slope line loads; the stringer is one of a pair and the 0.6 m tributary width is half of the flight.",
+          "de": "Vertikale Lasten sind in Linienlasten je Meter Lauflänge umgerechnet; die Wange ist eine von zwei, die 0,6 m Einzugsbreite ist die Hälfte des Laufs."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "crowd-live-load",
+      "defaultClip": "loading-ramp",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

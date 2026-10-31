@@ -1,0 +1,11 @@
+# Linux Kernel Process Census Review
+
+Read-only review of watchdog/Linux Source, protocol, neutral SQLite/Ajv tests and actual dispatcher extraction test. No kernel census, tests, compilers or Native jobs launched by this reviewer.
+
+No concrete blocker found. Stat parsing uses the final closing parenthesis, so spaces and parentheses in comm do not shift fields; ppid,utime,stime,starttime offsets match the proc stat layout. Root identity and parent are checked before, inside and after the table read. Returned PID arrays retain their observed start epochs in a WeakMap; subsequent CPU reads reject PID reuse. Observer PID exclusion does not prune its descendants, preserving the existing traversal meaning. Arrays and returned ordering are immutable/deterministic.
+
+Fresh numeric proc table discovery preserves the prior whole-process-table semantics; it does not substitute the incomplete per-task children facility. Vanished nonroot ENOENT/ESRCH rows are skipped, while malformed rows, denied reads, root changes, cycles in traversed ancestry, excessive depth/roster and invalid counters return unknown. Callers already map unknown to conservative activity, so observation failure is not evidence of an idle tree. The table still has a bounded16384process admission and64depth limit.
+
+CPU conversion uses kernel AT_CLKTCK tag17 from the actual auxiliary vector, with4/8-byte little/big-endian decoding. Missing,duplicate,zero,unrepresentable rate and malformed terminator return unknown. Per-stat reads and auxv reads are bounded4096bytes, use a one-byte overflow sentinel and no-follow final opens. Counter sums remain BigInt until a checked safe-number conversion. Cached clock rate is process-local and not a process-table cache.
+
+Only Linux dispatch changes. The imported helper has no eager proc I/O; Windows PowerShell and macOS ps routes remain in their prior branches. Public ports use owned interfaces and built-in primitive types. The independent SQLite recursive table oracle and actual watchdog dispatcher test exercise the intended boundary; actual Linux kernel and Node/Bun proof remain the owner’s additional acceptance gates. No cadence, admission, lease, timeout or process-signal rule was changed in the reviewed delta.

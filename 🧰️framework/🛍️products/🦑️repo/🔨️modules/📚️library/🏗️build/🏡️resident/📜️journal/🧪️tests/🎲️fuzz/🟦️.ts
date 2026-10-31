@@ -1,32 +1,30 @@
+import {residentWatcherV1} from "../../../🧪️tests/🟦️.ts";
+import {createWatchSupervisorV1} from "../../../🔭️watch/🟨️.mjs";
+import {POLICY_V1} from "../../../📨️protocol/🎚️policy/🟨️.mjs";
 import {afterAll,beforeAll,expect,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,realpathSync,rmSync,writeFileSync} from "node:fs";
 import {execFile} from "node:child_process";
 import {tmpdir} from "node:os";
-import {dirname,join} from "node:path";
-import {fileURLToPath,pathToFileURL} from "node:url";
+import {join} from "node:path";
+import {fileURLToPath} from "node:url";
 import {CHANGE_JOURNAL_POLICY_V1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🟦️.ts";
 import {createChangeJournalClientV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🧭️client/🟦️.ts";
 import {applyChangeRowsV1,diffTreeStampsV1,walkTreeStampsV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📜️changes/🌳️tree/🟦️.ts";
 import {runChangeJournalServiceV1} from "../../🟦️.ts";
 
-const here=dirname(fileURLToPath(import.meta.url));
-const repository=process.env.SEMIO_FUZZ_REPOSITORY??(()=>{let at=here;while(at!==dirname(at)&&!existsSync(join(at,"AGENTS.md")))at=dirname(at);return at;})();
-const peer=join(repository,"🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🐍️.py"),script=join(here,"🐍️.py");
-const binary=process.env.SEMIO_REPO_WATCH_BINARY??"";
-const supervisorModule=join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🔭️watch/🟨️.mjs"),policyModule=join(repository,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/📨️protocol/🎚️policy/🟨️.mjs");
+const peer=fileURLToPath(new URL("../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🧪️tests/🎲️fuzz/🐍️.py",import.meta.url)),script=fileURLToPath(new URL("./🐍️.py",import.meta.url));
+const binary=await residentWatcherV1();
 const seeds=Number(process.env.SEMIO_FUZZ_SEEDS??"12");
 let sandbox="",service:Awaited<ReturnType<typeof runChangeJournalServiceV1>>|undefined;
 const python=(...args:string[])=>new Promise<string>((accept,reject)=>execFile("python3",["-I",script,...args],{encoding:"utf8"},(error,stdout,stderr)=>error?reject(Error(stderr||String(error))):accept(stdout)));
 
 beforeAll(async()=>{
- if(!binary)return;
  sandbox=realpathSync(mkdtempSync(join(tmpdir(),"journal-fuzz-")));
- const{createWatchSupervisorV1}=await import(pathToFileURL(supervisorModule).href),{POLICY_V1}=await import(pathToFileURL(policyModule).href);
  service=await runChangeJournalServiceV1({root:sandbox,directory:join(sandbox,".journal"),fence:".fence",exclude:{rooted:[".journal"],names:[]},binary,watcherPolicy:POLICY_V1,createSupervisor:createWatchSupervisorV1,residentBytes:()=>0});
 });
 afterAll(async()=>{await service?.stop("test");if(sandbox)rmSync(sandbox,{recursive:true,force:true});});
 
-test.skipIf(!binary)("the change set derived from the journal equals a complete walk on a fuzz corpus of renames, deletes, tears, swaps, replacements and moves (Python peer, Python delta oracle)",async()=>{
+test("the change set derived from the journal equals a complete walk on a fuzz corpus of renames, deletes, tears, swaps, replacements and moves (Python peer, Python delta oracle)",async()=>{
  const client=createChangeJournalClientV1({directory:join(sandbox,".journal"),root:sandbox,insensitive:process.platform==="darwin"||process.platform==="win32"});
  const tally={checked:0,files:0,kinds:new Set<string>()};
  for(let seed=0;seed<seeds;seed++){
@@ -54,7 +52,7 @@ test.skipIf(!binary)("the change set derived from the journal equals a complete 
  expect(tally.files).toBeGreaterThan(0);
 },180000);
 
-test.skipIf(!binary)("a quiet tree costs no rows and a root outside the changed area gets none",async()=>{
+test("a quiet tree costs no rows and a root outside the changed area gets none",async()=>{
  const client=createChangeJournalClientV1({directory:join(sandbox,".journal"),root:sandbox,insensitive:process.platform==="darwin"||process.platform==="win32"});
  mkdirSync(join(sandbox,"quiet/a"),{recursive:true});mkdirSync(join(sandbox,"busy"),{recursive:true});
  const cursor=await client.cursor() as {epoch:string;seq:number};
@@ -66,7 +64,7 @@ test.skipIf(!binary)("a quiet tree costs no rows and a root outside the changed 
  expect(CHANGE_JOURNAL_POLICY_V1.fenceTimeoutMilliseconds).toBeGreaterThan(0);
 });
 
-test.skipIf(!binary)("negative control: a journal that loses every directory row is caught by the same corpus",async()=>{
+test("negative control: a journal that loses every directory row is caught by the same corpus",async()=>{
  const client=createChangeJournalClientV1({directory:join(sandbox,".journal"),root:sandbox,insensitive:process.platform==="darwin"||process.platform==="win32"});
  let wrong=0;
  for(let seed=100;seed<100+seeds;seed++){

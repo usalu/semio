@@ -1,15 +1,17 @@
 {
   "views": {
     "v-first": {
-      "building": "bldg-1",
-      "depth": 100.0,
-      "detail": "Medium",
       "entry": "Created",
-      "hidden": [],
-      "kind": "Plan",
-      "name": "First plan",
-      "scale": 100,
-      "storey": "st-first"
+      "value": {
+        "building": "bldg-1",
+        "depth": 100,
+        "detail": "Medium",
+        "hidden": [],
+        "kind": "Plan",
+        "name": "First plan",
+        "scale": 100,
+        "storey": "st-first"
+      }
     }
   }
 }

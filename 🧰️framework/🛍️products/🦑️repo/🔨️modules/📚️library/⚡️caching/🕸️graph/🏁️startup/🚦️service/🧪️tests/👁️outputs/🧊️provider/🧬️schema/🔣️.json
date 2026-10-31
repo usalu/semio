@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/cache/daemon-provider-scope/schema.json",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "required": [
+        "name",
+        "fail",
+        "expected",
+        "owner"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fail": {
+          "type": "boolean"
+        },
+        "expected": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ordinary",
+              "settlement"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "owner": {
+          "enum": [
+            "infrastructure",
+            "bootstrap",
+            "service"
+          ]
+        }
+      }
+    },
+    "ClientProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "expected"
+      ],
+      "properties": {
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "fenceMilliseconds": 20,
+  "cases": [
+    { "name": "enrollment exceeds fence clock", "remaining": 300, "ready": 120, "abort": null, "accepted": true, "launched": true },
+    { "name": "funding expires", "remaining": 50, "ready": 70, "abort": null, "accepted": false, "launched": true },
+    { "name": "owner cancels", "remaining": 300, "ready": 60, "abort": 20, "accepted": false, "launched": true },
+    { "name": "owner already cancelled", "remaining": 300, "ready": 120, "abort": 0, "accepted": false, "launched": false },
+    { "name": "owner expired", "remaining": 0, "ready": 120, "abort": null, "accepted": false, "launched": false },
+    { "name": "owner has no finite startup grant", "remaining": null, "ready": 120, "abort": null, "accepted": false, "launched": false }
+  ],
+  "lifecycle": { "fence": 50, "firstReady": 20, "firstExit": 150, "secondReady": 120, "staleReady": 220, "checkpoint": 240, "settled": 420 }
+}

@@ -1,3 +1,4 @@
+import { constants } from "node:os";
 import { createToolAdmissionV1, findToolV1, resolveRegisteredToolV1, runToolV1, setDefaultToolAdmissionV1, toolLanguageV1, toolForCommandV1, toolMessageV1, toolRootV1, ToolErrorV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolResolutionV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { BUILD_HOST_CAPACITY_POLICY_V1 } from "../../🌡️host-capacity/🟦️.ts";
 
@@ -10,6 +11,13 @@ const flag = (head: readonly string[], name: string): string | undefined => {
 };
 
 const describe = (entry: ToolEntryV1, resolution: ToolResolutionV1): string => `${entry.id.padEnd(11)} ${(resolution.pin.version ?? resolution.pin.minimum ?? entry.pin.state).padEnd(26)} ${resolution.source.padEnd(15)} ${resolution.command === null ? "-" : [resolution.command, ...resolution.prefix].join(" ")}`;
+
+/** 🧯️ Preserves a tool status or translates its terminating host signal into a shell exit status. */
+export function toolCommandExitStatusV1(status: number | null, signal: string | null, signals: Readonly<Record<string, number>>): number {
+  if (status !== null) return status;
+  const signalNumber = signal === null ? undefined : Object.entries(signals).find(([name]) => name === signal)?.[1];
+  return signalNumber === undefined ? 1 : 128 + signalNumber;
+}
 
 /** 📋️ Prints the registered tools with their pin, where each was found on this host and the command that runs it. */
 function list(head: readonly string[], context: ToolsCommandContextV1, root: string): number {
@@ -32,7 +40,7 @@ async function exec(head: readonly string[], tail: readonly string[], context: T
   setDefaultToolAdmissionV1(createToolAdmissionV1(BUILD_HOST_CAPACITY_POLICY_V1, { environment: context.environment, write: line => process.stderr.write(line + "\n") }));
   try {
     const result = await runToolV1(entry.id, tail, { root, cwd, command: entry.id === id ? undefined : id, env: context.environment, signal: controller.signal, check: false, heavy: !head.includes("--light"), stdout: "inherit", trusted: true, onProgress: event => { if (event.phase === "admitting") process.stderr.write(toolMessageV1("admitting", { tool: event.tool }, language) + "\n"); } });
-    return result.status ?? (result.signal === null ? 1 : 128 + (result.signal === "SIGINT" ? 2 : 15));
+    return toolCommandExitStatusV1(result.status, result.signal, constants.signals);
   } finally {
     process.removeListener("SIGINT", stop);
     process.removeListener("SIGTERM", stop);

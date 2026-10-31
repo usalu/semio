@@ -1,0 +1,67 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "format",
+    "sourceRoot",
+    "rasterization",
+    "resources"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "format": {
+      "const": "svg-to-raster-png"
+    },
+    "sourceRoot": {
+      "const": "workspace"
+    },
+    "rasterization": {
+      "const": {
+        "maximumWidthMillimeters": 22,
+        "maximumHeightMillimeters": 11,
+        "minimumDotsPerInch": 600,
+        "aspectRatio": "preserve-full-viewbox",
+        "pixelAlignment": 16
+      }
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "output",
+          "sha256",
+          "width"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "output": {
+            "type": "string",
+            "pattern": "^resources/[^/]+\\.png$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 16,
+            "maximum": 528,
+            "multipleOf": 16
+          }
+        }
+      }
+    }
+  }
+}

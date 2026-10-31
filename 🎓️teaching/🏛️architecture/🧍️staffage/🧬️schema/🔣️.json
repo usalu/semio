@@ -1,14 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "semio.staffage/v1",
+  "$id": "semio.staffage/v2",
   "title": "Staffage",
-  "description": "Handcrafted architectural staffage with real dimensions, rigs, poses, clips, thermal and structural models. A document is a category file or the manifest.",
+  "description": "Handcrafted architectural staffage with real dimensions, rigs, poses, clips, individually authored drawing-scale representations, layered thermal models, respiration and structural models. A document is an asset file, the manifest, the print profile document or the environment document.",
   "oneOf": [
     {
-      "$ref": "#/$defs/CategoryDocument"
+      "$ref": "#/$defs/AssetDocument"
     },
     {
       "$ref": "#/$defs/Manifest"
+    },
+    {
+      "$ref": "#/$defs/PrintProfileDocument"
+    },
+    {
+      "$ref": "#/$defs/EnvironmentDocument"
     }
   ],
   "$defs": {
@@ -38,14 +44,16 @@
         }
       }
     },
-    "Category": {
-      "description": "One of the six archive categories.",
+    "CategoryId": {
+      "description": "One of the eight archive categories.",
       "enum": [
         "humans",
-        "vegetation",
         "animals",
+        "vegetation",
+        "furniture",
         "objects",
         "vehicles",
+        "machinery",
         "components"
       ]
     },
@@ -54,6 +62,7 @@
       "enum": [
         "measured",
         "literature",
+        "calibrated",
         "authored-estimate",
         "illustrative"
       ]
@@ -173,6 +182,10 @@
           "exclusiveMinimum": 0
         },
         "conductivityWmK": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "specificHeatJKgK": {
           "type": "number",
           "exclusiveMinimum": 0
         },
@@ -460,16 +473,6 @@
         "ground"
       ]
     },
-    "Lod": {
-      "description": "The level of detail a shape needs.",
-      "type": "integer",
-      "enum": [
-        0,
-        1,
-        2,
-        3
-      ]
-    },
     "CapsuleShape": {
       "description": "A stadium between two local points with radii r0 and r1 (tangent hull of two circles).",
       "type": "object",
@@ -609,7 +612,7 @@
       }
     },
     "PathShape": {
-      "description": "An SVG-style path (M L H V C S Q T A Z, absolute or relative) in local metres, y up.",
+      "description": "An SVG-style path (M L H V C Q A Z, absolute or relative) in local metres, y up.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -647,7 +650,7 @@
       ]
     },
     "Shape": {
-      "description": "An authored shape bound to a bone: one geometry plus the common fields.",
+      "description": "An authored shape of one representation, bound to a bone: one geometry plus the common fields. region binds one thermal region, regions a merged form; hatch names a hatch of the representation; penMm overrides the pen of the role.",
       "oneOf": [
         {
           "type": "object",
@@ -657,7 +660,6 @@
             "id",
             "bone",
             "role",
-            "lod",
             "z",
             "filled",
             "tone",
@@ -681,9 +683,6 @@
             "role": {
               "$ref": "#/$defs/ShapeRole"
             },
-            "lod": {
-              "$ref": "#/$defs/Lod"
-            },
             "z": {
               "type": "number"
             },
@@ -698,8 +697,22 @@
             "region": {
               "$ref": "#/$defs/Slug"
             },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
             "material": {
               "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "x0": {
               "type": "number"
@@ -731,7 +744,6 @@
             "id",
             "bone",
             "role",
-            "lod",
             "z",
             "filled",
             "tone",
@@ -753,9 +765,6 @@
             "role": {
               "$ref": "#/$defs/ShapeRole"
             },
-            "lod": {
-              "$ref": "#/$defs/Lod"
-            },
             "z": {
               "type": "number"
             },
@@ -770,8 +779,22 @@
             "region": {
               "$ref": "#/$defs/Slug"
             },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
             "material": {
               "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "cx": {
               "type": "number"
@@ -800,7 +823,6 @@
             "id",
             "bone",
             "role",
-            "lod",
             "z",
             "filled",
             "tone",
@@ -822,9 +844,6 @@
             "role": {
               "$ref": "#/$defs/ShapeRole"
             },
-            "lod": {
-              "$ref": "#/$defs/Lod"
-            },
             "z": {
               "type": "number"
             },
@@ -839,8 +858,22 @@
             "region": {
               "$ref": "#/$defs/Slug"
             },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
             "material": {
               "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "x": {
               "type": "number"
@@ -870,7 +903,6 @@
             "id",
             "bone",
             "role",
-            "lod",
             "z",
             "filled",
             "tone",
@@ -890,9 +922,6 @@
             "role": {
               "$ref": "#/$defs/ShapeRole"
             },
-            "lod": {
-              "$ref": "#/$defs/Lod"
-            },
             "z": {
               "type": "number"
             },
@@ -907,8 +936,22 @@
             "region": {
               "$ref": "#/$defs/Slug"
             },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
             "material": {
               "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "points": {
               "type": "array",
@@ -935,7 +978,6 @@
             "id",
             "bone",
             "role",
-            "lod",
             "z",
             "filled",
             "tone",
@@ -954,9 +996,6 @@
             "role": {
               "$ref": "#/$defs/ShapeRole"
             },
-            "lod": {
-              "$ref": "#/$defs/Lod"
-            },
             "z": {
               "type": "number"
             },
@@ -971,8 +1010,22 @@
             "region": {
               "$ref": "#/$defs/Slug"
             },
+            "regions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Slug"
+              },
+              "minItems": 1
+            },
             "material": {
               "$ref": "#/$defs/Slug"
+            },
+            "hatch": {
+              "$ref": "#/$defs/Slug"
+            },
+            "penMm": {
+              "type": "number",
+              "exclusiveMinimum": 0
             },
             "d": {
               "type": "string",
@@ -981,6 +1034,493 @@
           }
         }
       ]
+    },
+    "ScaleDenominator": {
+      "description": "A preset drawing-scale denominator.",
+      "enum": [
+        500,
+        200,
+        100,
+        50
+      ]
+    },
+    "PenSet": {
+      "description": "The pens of a representation per role in paper millimetres; null means the role is not drawn.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "body",
+        "detail",
+        "texture",
+        "glazing",
+        "ground"
+      ],
+      "properties": {
+        "body": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "detail": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "texture": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "glazing": {
+          "oneOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ground": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "Hatch": {
+      "description": "A hatch drawn inside shapes that name it: spacing and pen in paper millimetres.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "pattern",
+        "angleDeg",
+        "spacingMm",
+        "penMm"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "pattern": {
+          "enum": [
+            "lines",
+            "cross",
+            "dots",
+            "stipple"
+          ]
+        },
+        "angleDeg": {
+          "type": "number"
+        },
+        "spacingMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "penMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "RepresentationDecisions": {
+      "description": "The authored design decisions of one representation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "silhouette",
+        "retained",
+        "merged",
+        "omitted",
+        "thinElements",
+        "hatching",
+        "styles",
+        "overlays"
+      ],
+      "properties": {
+        "silhouette": {
+          "$ref": "#/$defs/Text"
+        },
+        "retained": {
+          "$ref": "#/$defs/Text"
+        },
+        "merged": {
+          "$ref": "#/$defs/Text"
+        },
+        "omitted": {
+          "$ref": "#/$defs/Text"
+        },
+        "thinElements": {
+          "$ref": "#/$defs/Text"
+        },
+        "hatching": {
+          "$ref": "#/$defs/Text"
+        },
+        "styles": {
+          "$ref": "#/$defs/Text"
+        },
+        "overlays": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "AuthoredRepresentation": {
+      "description": "A representation individually authored for one preset scale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "denominator",
+        "validRange",
+        "pens",
+        "hatches",
+        "geometry",
+        "decisions"
+      ],
+      "properties": {
+        "status": {
+          "const": "authored"
+        },
+        "denominator": {
+          "$ref": "#/$defs/ScaleDenominator"
+        },
+        "validRange": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "minDenominator",
+            "maxDenominator"
+          ],
+          "properties": {
+            "minDenominator": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "maxDenominator": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "pens": {
+          "$ref": "#/$defs/PenSet"
+        },
+        "hatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Hatch"
+          }
+        },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elevation"
+          ],
+          "properties": {
+            "elevation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              },
+              "minItems": 1
+            },
+            "plan": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              }
+            }
+          }
+        },
+        "decisions": {
+          "$ref": "#/$defs/RepresentationDecisions"
+        }
+      }
+    },
+    "Alternative": {
+      "description": "What to offer instead of an unavailable representation.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "denominator"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scale"
+            },
+            "denominator": {
+              "$ref": "#/$defs/ScaleDenominator"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "symbol"
+          ],
+          "properties": {
+            "kind": {
+              "const": "symbol"
+            },
+            "symbol": {
+              "$ref": "#/$defs/Slug"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "asset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "asset"
+            },
+            "asset": {
+              "$ref": "#/$defs/Slug"
+            }
+          }
+        }
+      ]
+    },
+    "UnavailableRepresentation": {
+      "description": "An explicit decision that the asset cannot be meaningfully drawn at this scale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "denominator",
+        "reason",
+        "limitingFeature",
+        "limitingSizeM",
+        "alternatives"
+      ],
+      "properties": {
+        "status": {
+          "const": "unavailable"
+        },
+        "denominator": {
+          "$ref": "#/$defs/ScaleDenominator"
+        },
+        "reason": {
+          "$ref": "#/$defs/Text"
+        },
+        "limitingFeature": {
+          "$ref": "#/$defs/Text"
+        },
+        "limitingSizeM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Alternative"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "Representation": {
+      "description": "The decision for one preset scale.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AuthoredRepresentation"
+        },
+        {
+          "$ref": "#/$defs/UnavailableRepresentation"
+        }
+      ]
+    },
+    "SymbolRepresentation": {
+      "description": "A conventional symbol, separately identified from the pictorial representations.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "semantics",
+        "units",
+        "denominators",
+        "pens",
+        "hatches",
+        "geometry",
+        "dimensionalNote"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "semantics": {
+          "enum": [
+            "true-extent",
+            "true-position",
+            "nominal"
+          ]
+        },
+        "units": {
+          "enum": [
+            "model-m",
+            "paper-mm"
+          ]
+        },
+        "denominators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScaleDenominator"
+          },
+          "minItems": 1
+        },
+        "pens": {
+          "$ref": "#/$defs/PenSet"
+        },
+        "hatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Hatch"
+          }
+        },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elevation"
+          ],
+          "properties": {
+            "elevation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              },
+              "minItems": 1
+            },
+            "plan": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              }
+            }
+          }
+        },
+        "dimensionalNote": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "PrintProfile": {
+      "description": "A print profile: smallest stroke, gap, feature width and hatch spacing that reliably print.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "minStrokeMm",
+        "minGapMm",
+        "minFeatureMm",
+        "minHatchSpacingMm",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "minStrokeMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minGapMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minFeatureMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minHatchSpacingMm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "PrintProfileDocument": {
+      "description": "The print profile document.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "version",
+        "defaultProfile",
+        "profiles",
+        "references"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "const": "semio.staffage/v2"
+        },
+        "defaultProfile": {
+          "$ref": "#/$defs/Slug"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PrintProfile"
+          },
+          "minItems": 1
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        }
+      }
     },
     "BoneOffset": {
       "description": "An offset from rest for one bone.",
@@ -1086,15 +1626,87 @@
         }
       }
     },
-    "ThermalBinding": {
-      "description": "The thermal state a pose binds.",
+    "RegionBinding": {
+      "description": "The region state a pose binds.",
       "type": "object",
       "additionalProperties": false,
-      "required": [],
+      "required": [
+        "exposedFraction",
+        "sunlitFraction"
+      ],
       "properties": {
+        "exposedFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sunlitFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "wettedness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "contact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fraction",
+            "tempC"
+          ],
+          "properties": {
+            "fraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "tempC": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "ThermalBinding": {
+      "description": "The thermal and respiratory state a pose or clip key binds explicitly.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regions",
+        "emitters"
+      ],
+      "properties": {
+        "passengers": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "activityMet"
+            ],
+            "properties": {
+              "activityMet": {
+                "type": "number",
+                "minimum": 0
+              },
+              "breathing": {
+                "$ref": "#/$defs/Slug"
+              }
+            }
+          }
+        },
         "activityMet": {
           "type": "number",
           "minimum": 0
+        },
+        "externalWorkW": {
+          "type": "number"
         },
         "operating": {
           "type": "object",
@@ -1105,33 +1717,16 @@
             "type": "number"
           }
         },
+        "breathing": {
+          "$ref": "#/$defs/Slug"
+        },
         "regions": {
           "type": "object",
           "propertyNames": {
             "$ref": "#/$defs/Slug"
           },
           "additionalProperties": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [],
-            "properties": {
-              "exposedFraction": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              },
-              "surfaceTempC": {
-                "type": "number"
-              },
-              "coreTempC": {
-                "type": "number"
-              },
-              "wettedness": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              }
-            }
+            "$ref": "#/$defs/RegionBinding"
           }
         },
         "emitters": {
@@ -1146,7 +1741,7 @@
       }
     },
     "Pose": {
-      "description": "A named configuration.",
+      "description": "A named configuration or an in-between key pose of a clip.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1170,8 +1765,7 @@
           "$ref": "#/$defs/Text"
         },
         "key": {
-          "type": "boolean",
-          "description": "In-between key pose of a clip: evaluable and validated like any pose, but not offered as a named pose. Named poses (key absent or false) must number at least three."
+          "type": "boolean"
         },
         "bones": {
           "type": "object",
@@ -1311,8 +1905,7 @@
           "$ref": "#/$defs/Text"
         },
         "ballistic": {
-          "type": "boolean",
-          "description": "The body is airborne during this phase (running flight, jump, take-off): instants without any active contact are legitimate and structurally unsupported (ballistic)."
+          "type": "boolean"
         }
       }
     },
@@ -1334,14 +1927,13 @@
           "enum": [
             "contact-on",
             "contact-off",
-            "inhale",
-            "exhale",
             "ignition",
             "shutdown",
             "load-on",
             "load-off",
             "thermal",
-            "motion"
+            "motion",
+            "operating"
           ]
         },
         "title": {
@@ -1364,7 +1956,7 @@
       "properties": {
         "target": {
           "type": "string",
-          "pattern": "^(activityMet|emitter:[a-z0-9-]+|operating:[a-z0-9-]+|load:[a-z0-9-]+|region:[a-z0-9-]+:(exposedFraction|surfaceTempC|coreTempC|wettedness))$"
+          "pattern": "^(activityMet|externalWorkW|breathing|emitter:[a-z0-9-]+|operating:[a-z0-9-]+|load:[a-z0-9-]+|region:[a-z0-9-]+:(exposedFraction|sunlitFraction|wettedness))$"
         },
         "ease": {
           "$ref": "#/$defs/Ease"
@@ -1484,6 +2076,7 @@
         "windMS",
         "windDirectionDeg",
         "solarWM2",
+        "diffuseFraction",
         "pressurePa"
       ],
       "properties": {
@@ -1491,6 +2084,12 @@
           "type": "number"
         },
         "meanRadiantTempC": {
+          "type": "number"
+        },
+        "skyTempC": {
+          "type": "number"
+        },
+        "groundTempC": {
           "type": "number"
         },
         "relativeHumidity": {
@@ -1509,24 +2108,94 @@
           "type": "number",
           "minimum": 0
         },
+        "diffuseFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
         "pressurePa": {
           "type": "number",
           "exclusiveMinimum": 0
         }
       }
     },
+    "EnvironmentPreset": {
+      "description": "A named environment preset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "environment",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "EnvironmentDocument": {
+      "description": "The environment preset document.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "version",
+        "presets",
+        "references"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "const": "semio.staffage/v2"
+        },
+        "presets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EnvironmentPreset"
+          },
+          "minItems": 1
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        }
+      }
+    },
     "ThermalModelKind": {
       "description": "How a region's surface temperature is obtained.",
       "enum": [
-        "fixed",
-        "core-resistance",
+        "body",
         "leaf",
         "passive",
-        "operating"
+        "operating",
+        "conditioned",
+        "fixed"
       ]
     },
-    "ThermalRegion": {
-      "description": "A thermal region: one surface patch with its material, area and model parameters.",
+    "ThermalLayer": {
+      "description": "One layer of a region, innermost first.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1534,9 +2203,76 @@
         "title",
         "kind",
         "material",
+        "resistanceM2KW",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "kind": {
+          "enum": [
+            "tissue",
+            "clothing",
+            "fur",
+            "feather",
+            "hair",
+            "air-gap",
+            "shell",
+            "insulation",
+            "glass",
+            "masonry",
+            "timber",
+            "metal",
+            "polymer"
+          ]
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "thicknessM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "resistanceM2KW": {
+          "type": "number",
+          "minimum": 0
+        },
+        "vapourResistanceM2PaW": {
+          "type": "number",
+          "minimum": 0
+        },
+        "heatCapacityJM2K": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "ThermalRegion": {
+      "description": "A thermal region: one surface patch with its layers and model parameters.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "kind",
         "model",
+        "material",
         "areaM2",
         "characteristicLengthM",
+        "geometry",
+        "skyViewFactor",
+        "layers",
+        "heatCapacityJM2K",
         "source"
       ],
       "properties": {
@@ -1555,19 +2291,23 @@
             "feather",
             "foliage",
             "bark",
+            "stem",
             "surface",
             "engine",
             "exhaust",
             "glazing",
             "tyre",
-            "wall"
+            "wall",
+            "heater",
+            "lamp",
+            "water"
           ]
-        },
-        "material": {
-          "$ref": "#/$defs/Slug"
         },
         "model": {
           "$ref": "#/$defs/ThermalModelKind"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
         },
         "areaM2": {
           "type": "number",
@@ -1577,35 +2317,352 @@
           "type": "number",
           "exclusiveMinimum": 0
         },
-        "surfaceTempC": {
-          "type": "number"
+        "geometry": {
+          "enum": [
+            "cylinder",
+            "sphere",
+            "vertical-plate",
+            "horizontal-plate-up",
+            "horizontal-plate-down"
+          ]
         },
-        "coreTempC": {
-          "type": "number"
-        },
-        "insulationM2KW": {
-          "type": "number",
-          "minimum": 0
-        },
-        "wettedness": {
+        "skyViewFactor": {
           "type": "number",
           "minimum": 0,
           "maximum": 1
         },
-        "stomatalConductanceMS": {
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ThermalLayer"
+          }
+        },
+        "heatCapacityJM2K": {
           "type": "number",
           "minimum": 0
         },
-        "operatingKey": {
+        "body": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "segment",
+            "metabolicShare",
+            "skinFraction"
+          ],
+          "properties": {
+            "subject": {
+              "$ref": "#/$defs/Slug"
+            },
+            "segment": {
+              "enum": [
+                "head",
+                "trunk",
+                "arm",
+                "hand",
+                "leg",
+                "foot",
+                "tail",
+                "wing"
+              ]
+            },
+            "metabolicShare": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "skinFraction": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "leaf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "stomatalConductanceMaxMS",
+            "leafAreaIndex",
+            "photosynthesis"
+          ],
+          "properties": {
+            "stomatalConductanceMaxMS": {
+              "type": "number",
+              "minimum": 0
+            },
+            "leafAreaIndex": {
+              "type": "number",
+              "minimum": 0
+            },
+            "photosynthesis": {
+              "enum": [
+                "c3",
+                "c4",
+                "cam"
+              ]
+            }
+          }
+        },
+        "hidden": {
+          "$ref": "#/$defs/Text"
+        },
+        "operating": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "key",
+            "heatW"
+          ],
+          "properties": {
+            "key": {
+              "$ref": "#/$defs/Slug"
+            },
+            "heatW": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "conditioned": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "interiorTempC",
+            "interiorFilmM2KW"
+          ],
+          "properties": {
+            "interiorTempC": {
+              "type": "number"
+            },
+            "interiorFilmM2KW": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "fixed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "surfaceTempC"
+          ],
+          "properties": {
+            "surfaceTempC": {
+              "type": "number"
+            }
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "BodyPhysiology": {
+      "description": "The whole-body thermal physiology of a human or animal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "species",
+        "massKg",
+        "skinAreaM2",
+        "basalMetabolismW",
+        "metWM2",
+        "coreSetPointC",
+        "skinSetPointC",
+        "sweating",
+        "panting",
+        "maxSkinBloodFlowLM2H",
+        "minSkinBloodFlowLM2H",
+        "source"
+      ],
+      "properties": {
+        "species": {
+          "enum": [
+            "human",
+            "dog",
+            "cat",
+            "horse",
+            "cow",
+            "deer",
+            "bird",
+            "sheep",
+            "goat",
+            "pig",
+            "fox",
+            "squirrel",
+            "hedgehog",
+            "duck",
+            "gull"
+          ]
+        },
+        "massKg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "skinAreaM2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "basalMetabolismW": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "metWM2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "coreSetPointC": {
+          "type": "number"
+        },
+        "skinSetPointC": {
+          "type": "number"
+        },
+        "sweating": {
+          "type": "boolean"
+        },
+        "panting": {
+          "type": "boolean"
+        },
+        "maxSkinBloodFlowLM2H": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minSkinBloodFlowLM2H": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "BreathingPattern": {
+      "description": "A breathing pattern: frequency, tidal volume and the split of one cycle into four phases.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "rateBpm",
+        "tidalVolumeL",
+        "inhaleFraction",
+        "pauseAfterInhaleFraction",
+        "exhaleFraction",
+        "pauseAfterExhaleFraction",
+        "route",
+        "source"
+      ],
+      "properties": {
+        "id": {
           "$ref": "#/$defs/Slug"
         },
-        "riseK": {
-          "type": "number"
+        "title": {
+          "$ref": "#/$defs/Text"
         },
-        "metabolicShare": {
+        "rateBpm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tidalVolumeL": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inhaleFraction": {
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "pauseAfterInhaleFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "exhaleFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "pauseAfterExhaleFraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "route": {
+          "enum": [
+            "nose",
+            "mouth",
+            "nose-and-mouth"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "Respiration": {
+      "description": "Respiration of a body.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exhaledTempC",
+        "exhaledRelativeHumidity",
+        "patterns",
+        "motion",
+        "source"
+      ],
+      "properties": {
+        "noseEmitter": {
+          "$ref": "#/$defs/Slug"
+        },
+        "mouthEmitter": {
+          "$ref": "#/$defs/Slug"
+        },
+        "exhaledTempC": {
+          "type": "number"
+        },
+        "exhaledRelativeHumidity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "patterns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BreathingPattern"
+          },
+          "minItems": 1
+        },
+        "motion": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bone",
+              "angleDeg",
+              "dy"
+            ],
+            "properties": {
+              "bone": {
+                "$ref": "#/$defs/Slug"
+              },
+              "angleDeg": {
+                "type": "number"
+              },
+              "dy": {
+                "type": "number"
+              }
+            }
+          }
         },
         "source": {
           "$ref": "#/$defs/ParameterSource"
@@ -1625,9 +2682,6 @@
         "title",
         "anchor",
         "directionDeg",
-        "carries",
-        "temperatureC",
-        "velocityMS",
         "diameterM",
         "source"
       ],
@@ -1639,8 +2693,10 @@
           "enum": [
             "breath",
             "exhaust",
-            "transpiration",
             "vent",
+            "flue",
+            "fan",
+            "transpiration",
             "plume"
           ]
         },
@@ -1650,43 +2706,35 @@
         "anchor": {
           "$ref": "#/$defs/Slug"
         },
+        "anchors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
         "directionDeg": {
           "type": "number"
-        },
-        "carries": {
-          "enum": [
-            "airflow",
-            "vapour"
-          ]
-        },
-        "temperatureC": {
-          "type": "number"
-        },
-        "velocityMS": {
-          "type": "number",
-          "minimum": 0
         },
         "diameterM": {
           "type": "number",
           "exclusiveMinimum": 0
         },
+        "operatingKey": {
+          "$ref": "#/$defs/Slug"
+        },
+        "volumeFlowM3S": {
+          "type": "number",
+          "minimum": 0
+        },
+        "temperatureRiseK": {
+          "type": "number"
+        },
         "vapourKgPerKg": {
           "type": "number",
           "minimum": 0
         },
-        "periodS": {
-          "type": "number",
-          "exclusiveMinimum": 0
-        },
-        "dutyFrom": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "dutyTo": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
+        "region": {
+          "$ref": "#/$defs/Slug"
         },
         "source": {
           "$ref": "#/$defs/ParameterSource"
@@ -1696,12 +2744,76 @@
         }
       }
     },
+    "Passenger": {
+      "description": "A second living body carried by the asset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "physiology"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "physiology": {
+          "$ref": "#/$defs/BodyPhysiology"
+        },
+        "respiration": {
+          "$ref": "#/$defs/Respiration"
+        }
+      }
+    },
+    "OperatingKey": {
+      "description": "An operating state family of a machine.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "levels"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "v",
+              "title"
+            ],
+            "properties": {
+              "v": {
+                "type": "number"
+              },
+              "title": {
+                "$ref": "#/$defs/Text"
+              }
+            }
+          },
+          "minItems": 1
+        }
+      }
+    },
     "ThermalModel": {
       "description": "The thermal model of an asset.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "environment",
+        "passengers",
+        "operating",
         "regions",
         "emitters",
         "assumptions"
@@ -1713,6 +2825,24 @@
         "baseMet": {
           "type": "number",
           "minimum": 0
+        },
+        "body": {
+          "$ref": "#/$defs/BodyPhysiology"
+        },
+        "respiration": {
+          "$ref": "#/$defs/Respiration"
+        },
+        "passengers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Passenger"
+          }
+        },
+        "operating": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OperatingKey"
+          }
         },
         "regions": {
           "type": "array",
@@ -1809,6 +2939,7 @@
       "required": [
         "defaultPose",
         "defaultClip",
+        "defaultScale",
         "viewpoints"
       ],
       "properties": {
@@ -1817,6 +2948,9 @@
         },
         "defaultClip": {
           "$ref": "#/$defs/Slug"
+        },
+        "defaultScale": {
+          "$ref": "#/$defs/ScaleDenominator"
         },
         "viewpoints": {
           "type": "array",
@@ -1828,7 +2962,7 @@
       }
     },
     "Asset": {
-      "description": "One handcrafted staffage asset.",
+      "description": "One handcrafted staffage asset; representations decides every preset scale.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -1842,7 +2976,8 @@
         "materials",
         "rig",
         "anchors",
-        "geometry",
+        "representations",
+        "symbols",
         "poses",
         "clips",
         "thermal",
@@ -1856,7 +2991,7 @@
           "$ref": "#/$defs/Slug"
         },
         "category": {
-          "$ref": "#/$defs/Category"
+          "$ref": "#/$defs/CategoryId"
         },
         "title": {
           "$ref": "#/$defs/Text"
@@ -1891,26 +3026,34 @@
             "$ref": "#/$defs/Anchor"
           }
         },
-        "geometry": {
+        "representations": {
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "elevation"
+            "50",
+            "100",
+            "200",
+            "500"
           ],
           "properties": {
-            "elevation": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Shape"
-              },
-              "minItems": 1
+            "50": {
+              "$ref": "#/$defs/Representation"
             },
-            "plan": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Shape"
-              }
+            "100": {
+              "$ref": "#/$defs/Representation"
+            },
+            "200": {
+              "$ref": "#/$defs/Representation"
+            },
+            "500": {
+              "$ref": "#/$defs/Representation"
             }
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SymbolRepresentation"
           }
         },
         "poses": {
@@ -1947,31 +3090,24 @@
         }
       }
     },
-    "CategoryDocument": {
-      "description": "One category file.",
+    "AssetDocument": {
+      "description": "One asset file.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "$schema",
         "version",
-        "category",
-        "assets"
+        "asset"
       ],
       "properties": {
         "$schema": {
           "type": "string"
         },
         "version": {
-          "const": "semio.staffage/v1"
+          "const": "semio.staffage/v2"
         },
-        "category": {
-          "$ref": "#/$defs/Category"
-        },
-        "assets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Asset"
-          }
+        "asset": {
+          "$ref": "#/$defs/Asset"
         }
       }
     },
@@ -1987,6 +3123,8 @@
         "widthM",
         "poses",
         "clips",
+        "representations",
+        "symbols",
         "analytics",
         "viewpoints",
         "exports",
@@ -1998,7 +3136,7 @@
           "$ref": "#/$defs/Slug"
         },
         "category": {
-          "$ref": "#/$defs/Category"
+          "$ref": "#/$defs/CategoryId"
         },
         "title": {
           "$ref": "#/$defs/Text"
@@ -2023,11 +3161,54 @@
             "$ref": "#/$defs/Slug"
           }
         },
+        "representations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "50",
+            "100",
+            "200",
+            "500"
+          ],
+          "properties": {
+            "50": {
+              "enum": [
+                "authored",
+                "unavailable"
+              ]
+            },
+            "100": {
+              "enum": [
+                "authored",
+                "unavailable"
+              ]
+            },
+            "200": {
+              "enum": [
+                "authored",
+                "unavailable"
+              ]
+            },
+            "500": {
+              "enum": [
+                "authored",
+                "unavailable"
+              ]
+            }
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
         "analytics": {
           "type": "array",
           "items": {
             "enum": [
               "thermal",
+              "transport",
               "structural"
             ]
           }
@@ -2053,7 +3234,7 @@
       }
     },
     "CategoryEntry": {
-      "description": "A category of the archive with its file.",
+      "description": "A category of the archive with its folder of asset folders.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -2061,11 +3242,11 @@
         "emoji",
         "title",
         "description",
-        "file"
+        "folder"
       ],
       "properties": {
         "id": {
-          "$ref": "#/$defs/Category"
+          "$ref": "#/$defs/CategoryId"
         },
         "emoji": {
           "type": "string",
@@ -2077,7 +3258,7 @@
         "description": {
           "$ref": "#/$defs/Text"
         },
-        "file": {
+        "folder": {
           "type": "string",
           "minLength": 1
         }
@@ -2099,7 +3280,7 @@
           "type": "string"
         },
         "version": {
-          "const": "semio.staffage/v1"
+          "const": "semio.staffage/v2"
         },
         "categories": {
           "type": "array",

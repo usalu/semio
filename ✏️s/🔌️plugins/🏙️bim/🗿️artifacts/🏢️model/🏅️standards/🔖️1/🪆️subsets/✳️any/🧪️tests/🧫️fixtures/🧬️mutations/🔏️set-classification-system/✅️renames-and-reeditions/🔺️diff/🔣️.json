@@ -1,9 +1,11 @@
 {
   "classification_systems": {
     "cs-din": {
-      "edition": "2018-12 (rev.)",
       "entry": "Patched",
-      "name": "DIN 276-1"
+      "value": {
+        "edition": "2018-12 (rev.)",
+        "name": "DIN 276-1"
+      }
     }
   }
 }

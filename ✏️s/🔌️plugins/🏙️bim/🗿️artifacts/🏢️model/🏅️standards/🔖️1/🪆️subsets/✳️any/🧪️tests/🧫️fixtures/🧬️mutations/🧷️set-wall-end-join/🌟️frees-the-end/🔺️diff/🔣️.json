@@ -2,8 +2,10 @@
   "walls": {
     "w-east": {
       "entry": "Patched",
-      "start_join": {
-        "value": "None"
+      "value": {
+        "start_join": {
+          "value": "None"
+        }
       }
     }
   }

@@ -2,36 +2,38 @@
   "roofs": {
     "rf-main": {
       "entry": "Patched",
-      "footprint": [
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 0.0
+      "value": {
+        "footprint": [
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0.3,
+            "point": {
+              "x": 8,
+              "y": 0
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 8,
+              "y": 6
+            }
+          },
+          {
+            "bulge": 0,
+            "point": {
+              "x": 0,
+              "y": 6
+            }
           }
-        },
-        {
-          "bulge": 0.3,
-          "point": {
-            "x": 8.0,
-            "y": 0.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 8.0,
-            "y": 6.0
-          }
-        },
-        {
-          "bulge": 0.0,
-          "point": {
-            "x": 0.0,
-            "y": 6.0
-          }
-        }
-      ]
+        ]
+      }
     }
   }
 }

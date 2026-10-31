@@ -2,7 +2,7 @@
   "version": 1,
   "files": {
     "package.json": "{\"packageManager\": \"bun@9.8.7\", \"devDependencies\": {\"playwright\": \"^1.0.0\"}}",
-    "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json": "{\"go\": {\"tool\": {\"version\": \"9.9.9\"}}, \"python\": {\"tool\": {\"version\": \"8.8.8\"}, \"interpreters\": {\"main\": {\"series\": \"7.7\"}, \"oracle\": {\"series\": \"6.6\"}}}, \"dotnet\": {\"sdk\": \"5.5.5\"}, \"cmake\": {\"cmake\": {\"version\": \"4.4.4\"}, \"ninja\": {\"version\": \"3.3.3\"}}}",
+    "🧰️framework/🔨️modules/🏃️process/🏗️build/🧰️toolchains/🔣️.json": "{\"go\":{\"tool\":{\"version\":\"9.9.9\"}},\"python\":{\"tool\":{\"version\":\"8.8.8\"},\"interpreters\":{\"main\":{\"series\":\"7.7\"},\"oracle\":{\"series\":\"6.6\"}}},\"dotnet\":{\"sdk\":\"5.5.5\"},\"cmake\":{\"cmake\":{\"version\":\"4.4.4\"},\"ninja\":{\"version\":\"3.3.3\"}},\"cargo\":{\"cargo-nextest\":{\"version\":\"2.3.4\"},\"cargo-llvm-cov\":{\"version\":\"1.2.9\"}}}",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json": "{\"definitions\": {\"Pins\": {\"const\": {\"assets\": [{\"tool\": \"go\", \"version\": \"9.9.9\"}, {\"tool\": \"node\", \"version\": \"11.1.1\", \"platform\": \"darwin\"}, {\"tool\": \"node\", \"version\": \"11.1.1\", \"platform\": \"linux\"}, {\"tool\": \"rustup\", \"version\": \"2.2.2\"}]}}}}",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/🧬️schema/🔣️.json": "{\"definitions\": {\"Release\": {\"const\": {\"version\": \"1.2.3\"}}}}",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧬️schema/🔣️.json": "{\"definitions\": {\"Release\": {\"const\": {\"version\": \"77\"}}}}",
@@ -18,8 +18,8 @@
   "expected": {
     "bazel": "1.2.3",
     "bun": "9.8.7",
-    "cargo-llvm-cov": "0.8.7",
-    "cargo-nextest": "0.9.140",
+    "cargo-llvm-cov": "1.2.9",
+    "cargo-nextest": "2.3.4",
     "chromium": "4242",
     "cmake": "4.4.4",
     "dotnet": "5.5.5",

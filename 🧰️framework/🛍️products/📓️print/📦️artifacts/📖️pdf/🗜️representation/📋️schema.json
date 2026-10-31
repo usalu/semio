@@ -1,0 +1,80 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policy",
+    "cases",
+    "alphaMasks",
+    "cancelPhases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policy": {
+      "const": {
+        "maximumPdfBytes": 67108864,
+        "maximumDecodedBytes": 16777216,
+        "maximumTotalPixels": 67108864,
+        "maximumObjects": 2097152,
+        "deflateLevel": 9
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "width",
+          "height",
+          "alpha"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 512
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 512
+          },
+          "alpha": {
+            "enum": [
+              255,
+              128
+            ]
+          }
+        }
+      }
+    },
+    "alphaMasks": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "integer",
+        "enum": [
+          128,
+          255,
+          -1
+        ]
+      }
+    },
+    "cancelPhases": {
+      "const": [
+        "parse",
+        "images",
+        "rewrite"
+      ]
+    }
+  }
+}

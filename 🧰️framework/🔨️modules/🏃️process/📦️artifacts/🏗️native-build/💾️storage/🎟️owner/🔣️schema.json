@@ -1,0 +1,32 @@
+{
+  "$id": "schema://process/native-storage/owner-request/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "kind",
+    "bytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "kind": {
+      "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Allocation/properties/kind"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "expectedAllocation": {
+      "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Allocation/properties/id"
+    }
+  }
+}

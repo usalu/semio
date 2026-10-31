@@ -5,7 +5,7 @@ import { join, relative, resolve } from "node:path";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🗣️ The summary texts of the closed schema, one entry per supported language (EN first, DE second; no default language). */
-export const collectTextsV1 = Object.freeze(schema.texts);
+export const collectTextsV1 = Object.freeze(schema["x-semio-texts"]);
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "collect-errors";

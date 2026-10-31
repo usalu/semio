@@ -25,6 +25,7 @@ writer = re.search(r"\b" + fixture["port"]["property"] + r"\s*:\s*(?:<[^>]*>)?\(
 span = call_span(capture, fixture["consumer"]["enter"])
 lease, captured = build.find(fixture["consumer"]["lease"] + "("), build.find(fixture["consumer"]["capture"] + "(")
 print(json.dumps({
+ "portOffersStepAdmission": bool(re.search(r"\b" + fixture["port"]["stepAdmission"] + r"\(selected\.configuration,", port)),
  "portOffersWriter": bool(writer) and port.count(fixture["port"]["writer"] + "(") == 1,
  "leaseBeforeCompile": 0 <= lease < captured and "actual." + fixture["consumer"]["enter"] in build[captured:],
  "insideWriter": bool(span) and all(re.search(r"\b" + n + r"\(", capture[span[0]:span[1]]) for n in fixture["consumer"]["insideWriter"]),

@@ -9,6 +9,8 @@
 package client
 
 import (
+ "errors"
+ search "github.com/usalu/semio/repo/search"
 	"context"
 	"encoding/json"
 	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
@@ -454,4 +456,38 @@ func TestClientCachedTreeRefreshesPersistentDomainRecordsWithoutSourceChanges(t 
 	if label(indexed) != secondTitle {
 		t.Fatalf("warm index retained stale domain value %q", label(indexed))
 	}
+}
+
+func TestClientCachedSearchCapturesOneSourceIdentityPerOperation(t *testing.T) {
+ root := initTestGitRepo(t,"main")
+ previous := GetRootDir(); SetRootDir(root); t.Cleanup(func(){SetRootDir(previous)})
+ raw,err := os.ReadFile(sandbox.OriginPath("..","..","🔎️search","🧪️tests","🧫️fixtures","🌲️snapshot","💾️streaming","🔣️.json"))
+ if err != nil {t.Fatal(err)}
+ var fixture struct{ QueryCapture struct{ SourceCaptures int; Query string; Cases []struct{Title string; Source string; Reuse bool} } }
+ if err=json.Unmarshal(raw,&fixture);err!=nil{t.Fatal(err)}
+ var before os.FileInfo
+ for _,row:=range fixture.QueryCapture.Cases{
+  if err=os.WriteFile(filepath.Join(root,"capture.go"),[]byte(row.Source),0600);err!=nil{t.Fatal(err)}
+  goal:=filepath.Join(GetRepoGoalsDir(),"capture","🎯️goal.json");if err=os.MkdirAll(filepath.Dir(goal),0755);err!=nil{t.Fatal(err)}
+  body,_:=json.Marshal(map[string]string{"title":row.Title,"status":"open"});if err=os.WriteFile(goal,body,0600);err!=nil{t.Fatal(err)}
+  captures:=0
+  progress:=func(value search.Progress){if value.Step=="fingerprinting"{captures++}}
+  tree,err:=SearchMonorepoTreeCachedWithOptions(context.Background(),fixture.QueryCapture.Query,TreeBuildOptions{Progress:progress},TreeSearchOptions{Limit:4,Progress:progress})
+  if err!=nil{t.Fatal(err)}
+  if captures!=fixture.QueryCapture.SourceCaptures{t.Fatalf("source captures=%d expected=%d",captures,fixture.QueryCapture.SourceCaptures)}
+  var find func(*TreeNode) bool
+  find=func(node *TreeNode)bool{if node.Kind==TreeNodeGoal&&node.Label==row.Title{return true};for _,child:=range node.Children{if find(child){return true}};return false}
+  if !find(tree){t.Fatalf("fresh domain record missing: %q",row.Title)}
+  after,err:=os.Stat(filepath.Join(getCacheDir(),"tree","snapshot","payload.json.gz"));if err!=nil{t.Fatal(err)}
+  if before!=nil&&os.SameFile(before,after)!=row.Reuse{t.Fatalf("authored snapshot reuse=%v expected=%v",os.SameFile(before,after),row.Reuse)}
+  before=after
+ }
+}
+
+func TestClientCachedSearchRefusesRootChangesDuringCapture(t *testing.T) {
+ first, second := initTestGitRepo(t,"main"),initTestGitRepo(t,"main")
+ previous:=GetRootDir();SetRootDir(first);t.Cleanup(func(){SetRootDir(previous)})
+ progress:=func(value search.Progress){if value.Step=="fingerprinting"{SetRootDir(second)}}
+ _,err:=SearchMonorepoTreeCachedWithOptions(context.Background(),"capture",TreeBuildOptions{Progress:progress},TreeSearchOptions{Limit:4})
+ if !errors.Is(err,search.ErrCorrupt){t.Fatalf("changed Source root accepted: %v",err)}
 }

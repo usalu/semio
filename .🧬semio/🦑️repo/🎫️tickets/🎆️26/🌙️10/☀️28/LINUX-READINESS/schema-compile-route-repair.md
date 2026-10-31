@@ -1,0 +1,27 @@
+# Genuine Public Schema Compile Route
+
+The actual public schema compile request failed terminal1 before native/test execution: its synchronous rustReport route called the receiving Cargo relay without forwarding the real Original envelope. The strict receiver correctly refused Original parent Script process invocation required. Durable wrapper log binds PID1644266, exact args, status1 and signalnull.
+
+Repair the public compile route using the existing successful productionEntries authority pattern: asynchronous runOwnedCommand of the same receiving relay, exact Original environment/control/signal/budget, selected compiler mode, locked real module manifest, diagnostics Store-owned scratch, and owned report publication. Remove obsolete synchronous helper and system tmp output. `--out` uses the existing owned report name contract, as entries already does; no legacy path compatibility branch. Neutral Source wiring laws with existing TypeScript AST and SQLite oracle are written before the edit. They prove wiring only; the final real public route must separately prove genuine runtime authority.
+
+## Source Wiring Checkpoint
+
+The neutral Source route corpus first failed all9 laws while all7 existing mode cases passed (7pass/9fail/30assertions). The production compile method is now async, forwards the actual incoming invocation through scriptInvocationEnvironment, uses its actual cancellation signal and deadline, applies existing compiler mode selection, enters the genuine diagnostics Store phase, writes Native output only in owned scratch, and publishes through the existing named report owner. The obsolete synchronous rustReport helper and system tmp default were removed. The same16case combined suite now passes30assertions0failures; Ajv admits the neutral route corpus, TypeScript AST observes actual method calls, and independent SQLite checks the required wiring edges. This is Source-level proof, not a claim of constructed or executed Native authority in the tests.
+
+A genuine new public compile request is now running with --out schema-compile-current under the existing report-name contract. Its actual Native/Rust/compile-report results remain pending. The old Rust report producer's test currently asserts absence of Draft07 keyword gaps, while recording other failures; an eventual native exit0 must not be described as every module compiling. The new CLI message therefore reports a produced native report, with full schema readiness still requiring all recorded authoring/compile findings to settle.
+
+## Default Registration And Report Name Proof
+
+The first issued retry correctly refused an extensionless report name before Store entry. Added a neutral default-name regression with the actual owned report-name schema:16passed/1failed, then fixed the default to schema-module-compile.json. Actual `.json` public retry now passes the prior Original and mode boundaries and is running the genuine Cargo relay under unchanged resource admission. Current combined mode/wiring/default suite:17tests31assertions0failures.
+
+Registered that test in existing C law-coverage without new suite/aggregate row:20files and20explicit runtime Source entries retain all19existing tests, plus the schema test. Main SchemaScript is explicit closure.resources DATA; owner subtree is a freshness input. Actual whole C Project validates with central Project schema through Ajv; aggregate stays187. Canonical generate config and --check both terminal0. Existing selector49 was not edited. Source metadata updates were reread before scoped writes and other watcher-owned target keys were preserved.
+
+Actual native report still pending; the Source proof and registration are not a compiler pass. Named report output is a compact .json name, consistent with existing registry entries route; obsolete arbitrary path fallback is not retained.
+
+## Actual Native Compilation And Localized Annotation
+
+The genuine public route reached the real registered Rust test and settled1/signalnull after native test failure101. It inspected5757modules:5266compiled,473Draft07failures(468unresolved references,4metaschema violations,1unsupported texts annotation),18other-dialect failures and157colliding IDs. This is real compilation evidence, not a routing refusal. The native test gates Draft07 keyword gaps, so its eventual exit0 must still be separated from recorded module authoring failures.
+
+The sole reported keyword gap was not a missing Draft07 feature: collect-errors schema stored localized metadata in bare texts. Renamed that extension to x-semio-texts and updated the exact actual mjs reader, retaining every EN/DE string and the public collectTextsV1 API. A new neutral schema/consumer test failed before the edit, then owned validator+Ajv agree on4Row cases. The complete existing collection/locale/cancellation suite now passes5tests38assertions0failures; its temporary directories were directed under this ticket generated via explicit TMPDIR. No validator keyword policy was relaxed. Source files: collect-errors schema JSON, mjs consumer, existing TS test and its neutral 📥️schema.json corpus.
+
+One justified fresh actual public compile after this causal Source repair is retained as schema-public-compile-annotation.log, with durable wrapper status. The separate exact RootCargo surface check remains the existing normal job65938. No Rust surface/compiler success is inferred from the annotation tests.

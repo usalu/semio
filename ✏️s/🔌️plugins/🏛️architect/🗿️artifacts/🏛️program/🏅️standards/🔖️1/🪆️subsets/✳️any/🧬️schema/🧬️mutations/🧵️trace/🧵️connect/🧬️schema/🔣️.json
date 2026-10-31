@@ -235,7 +235,8 @@
           "de": "Position des neuen Eintrags in der Liste; ohne Angabe wird am Ende angehängt."
         },
         "group": "record",
-        "order": 20
+        "order": 20,
+        "step": 1
       }
     }
   }

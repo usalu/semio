@@ -1,4 +1,4 @@
-use super::fixtures::{answer, bus, command_id, play, submit};
+use super::fixtures::{bus, command_id, play, submit};
 use super::*;
 use crate::actors::fixtures::{id, perfect, ADA, BOB, TENANT};
 use crate::actors::{handle_key, learner_key};

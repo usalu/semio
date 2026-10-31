@@ -1,26 +1,28 @@
 {
   "dimensions": {
     "dim-south": {
-      "anchors": [
-        {
-          "WallEnd": {
-            "end": "Start",
-            "wall": "w-south"
-          }
-        },
-        {
-          "WallEnd": {
-            "end": "End",
-            "wall": "w-south"
-          }
-        }
-      ],
-      "angle": 0.0,
       "entry": "Created",
-      "name": "South length",
-      "offset": -1.0,
-      "storey": "st-ground",
-      "style": "as-plan"
+      "value": {
+        "anchors": [
+          {
+            "WallEnd": {
+              "end": "Start",
+              "wall": "w-south"
+            }
+          },
+          {
+            "WallEnd": {
+              "end": "End",
+              "wall": "w-south"
+            }
+          }
+        ],
+        "angle": 0,
+        "name": "South length",
+        "offset": -1,
+        "storey": "st-ground",
+        "style": "as-plan"
+      }
     }
   }
 }

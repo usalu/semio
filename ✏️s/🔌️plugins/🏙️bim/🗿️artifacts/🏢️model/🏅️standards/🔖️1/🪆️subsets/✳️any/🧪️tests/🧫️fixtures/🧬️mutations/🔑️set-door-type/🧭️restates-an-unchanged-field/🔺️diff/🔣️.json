@@ -2,7 +2,9 @@
   "door_types": {
     "door-1": {
       "entry": "Patched",
-      "width": 1.1
+      "value": {
+        "width": 1.1
+      }
     }
   }
 }

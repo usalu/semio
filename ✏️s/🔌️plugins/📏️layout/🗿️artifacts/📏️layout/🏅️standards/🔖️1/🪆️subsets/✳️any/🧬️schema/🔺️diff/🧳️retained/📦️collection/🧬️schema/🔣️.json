@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Retained Layout Sparse Collection",
   "description": "Borrowed live-post keyed preflight precedes genuine grant-driven copying of the authored sparse delta. Root snapshots and existing rows are never cloned. After typed header reservation, central capability commit captures actual originals and authored insertions. Owned sparse patches retain displaced values and every partial source/row/cursor remains funded-closeable.",
   "type": "object",

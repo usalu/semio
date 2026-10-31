@@ -85,3 +85,27 @@ Deployment config names site architektur-und-technologie.de, proctor semio.iek.u
 Existing capability/config names only: Actions variable ARCHITECTURE_COURSE_RUNNER; workflow contents:read, pages:write/id-token:write and packages:write via GITHUB_TOKEN; optional registry read:packages for private-image pulls. No secret values or credential files read, no current access inferred.
 
 Available tool metadata was searched for host/SSH/service/deployment access. No callable connector for this university host, SSH session or Docker service was found. Sites tools concern their own hosted service and confer no university deployment access. No plugin installation, login, deploy, DNS/service mutation or local browser/build occurred.
+
+## Fresh Public Observation
+
+{"url":"https://architektur-und-technologie.de/","at":"2026-10-29T13:09:22.551Z","status":200,"bytes":5706}
+
+{"url":"https://semio.iek.uni-hannover.de/instance","at":"2026-10-29T13:09:22.593Z","error":"The operation was aborted due to timeout"}
+
+Public reachability is separate from the locally live proctor8791. No remote mutation was performed.
+
+## Current Local And Public Reachability
+
+{"url":"http://127.0.0.1:6061/","status":200,"at":"2026-10-29T16:04:50.925Z"}
+
+{"url":"http://127.0.0.1:8791/instance","status":200,"at":"2026-10-29T16:04:50.913Z"}
+
+{"url":"https://architektur-und-technologie.de/","status":200,"at":"2026-10-29T16:04:51.629Z"}
+
+{"url":"https://semio.iek.uni-hannover.de/instance","error":"The operation was aborted due to timeout","at":"2026-10-29T16:05:00.900Z"}
+
+## Public Endpoint Recheck — 2026-10-29 17:27 UTC
+
+A bounded Node HTTP probe through the repo tool interface completed with outer status0. The public frontend https://architektur-und-technologie.de/ returned200 in292ms with HTML. The public proctor https://semio.iek.uni-hannover.de/instance timed out after10001ms. Each request had its own10000ms abort deadline. No remote mutation or deployment was attempted.
+
+The independent web tool could not access either URL, so it provides no additional availability conclusion. The direct network observation remains specific to this machine and time; a public backend response is still unverified. Local service evidence does not resolve this deployment gap.

@@ -2,7 +2,7 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import { build } from "esbuild";
 import ts from "typescript";
@@ -11,13 +11,15 @@ import { cacheInternals, createScriptInputCache } from "../../🟨️.mjs";
 import { closureApiV1, closureHandleOfV1 } from "../../🧭️script-inputs/🟨️.mjs";
 import repositoryDesignation from "../../../../../🏃️process/🔌️providers/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
-import corpusSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { buildSchedulingPrefixesV1 } from "../../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 
 const workspace = findWorkspaceRoot(import.meta.dir);
 const library = resolve(import.meta.dir, "../../../../..");
 const designationPath = join(library, "🏃️process/🔌️providers/🔣️.json");
 const schemaPath = join(library, "🏃️process/🔌️providers/🧬️schema/🔣️.json");
+const designationSchema=JSON.parse(readFileSync(schemaPath,"utf8"));
+if(typeof designationSchema.$id!=="string"||!designationSchema.$id)throw Error("Provider domain schema identity required");
+const designationReference={$schema:designationSchema.$schema,$ref:designationSchema.$id};
 const loaderPath = resolve(library, "../../../../🔨️modules/🏃️process/🔌️providers/🟦️.ts");
 const prefix = "{workspaceRoot}/";
 const presentation = new Set<string>(JSON.parse(readFileSync(join(library, "🏗️build/🔣️policy.json"), "utf8")).presentationResources);
@@ -51,14 +53,17 @@ const hashOf = (inputs: readonly string[]): string => {
   return hash.digest("hex");
 };
 
-test("the provider input corpus satisfies its schema", () => {
-  const validate = new Ajv({ strict: false }).compile(corpusSchema);
-  expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+test("provider input examples use the actual provider designation authority", () => {
+  const validate=new Ajv({strict:true}).addSchema(designationSchema).compile(designationReference);
+  for(const value of [corpus.designation,...corpus.edits.flatMap(row=>"designation" in row?[row.designation]:[])])expect(validate(value),JSON.stringify(validate.errors)).toBe(true);
 });
 
 test("editing a designated provider module changes the input hash of exactly the commands that load providers", async () => {
-  const scratch = process.env.SEMIO_TEST_SCRATCH_DIR, base = scratch && !relative(workspace, scratch).startsWith("..") ? scratch : workspace;
+  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Provider input fixtures require owned test artifacts");
+  const base=resolve(artifacts),placement=relative(workspace,base);
+  if(!placement||placement===".."||placement.startsWith(".."+sep)||isAbsolute(placement))throw Error("Provider input fixtures require checkout-scoped test artifacts");
   const root = mkdtempSync(join(base, "provider-inputs-")), relativeRoot = relative(workspace, root);
+  expect(dirname(root)).toBe(base);
   const write = (name: string, content: string) => { mkdirSync(dirname(join(root, name)), { recursive: true }); writeFileSync(join(root, name), content); };
   const designation = (value: unknown) => write("designation.json", JSON.stringify(value));
   const cache = () => createScriptInputCache({ scriptProviderDesignation: join(root, "designation.json") });
@@ -68,7 +73,7 @@ test("editing a designated provider module changes the input hash of exactly the
     for (const [name, content] of Object.entries(corpus.files)) write(name, content.replace("{loader}", specifier));
     designation(corpus.designation);
     write("📋️project.json", JSON.stringify({ name: "@fixture/provider-inputs", metadata: { semio: { scriptProviders: "designation.json" } }, targets: {} }));
-    write("🧬️schema/🔣️.json", readFileSync(schemaPath, "utf8"));
+    write("🧬️schema/🔣️.json", JSON.stringify(designationReference));
     const baseline = await measure(), baselineHashes = Object.fromEntries(Object.entries(baseline).map(([id, inputs]) => [id, hashOf(inputs)]));
     for (const row of corpus.cases) {
       const inputs = baseline[row.id]!;

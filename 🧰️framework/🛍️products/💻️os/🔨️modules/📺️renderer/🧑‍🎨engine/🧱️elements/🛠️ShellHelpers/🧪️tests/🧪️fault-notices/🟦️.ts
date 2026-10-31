@@ -8,7 +8,7 @@
 
 // #region 🔌️Adapters
 import { afterAll, describe, expect, it } from "vitest";
-import Ajv2020 from "ajv/dist/2020.js";
+import Ajv2020 from "ajv";
 import type { FaultNoticeDefinition } from "@semio-tech/framework";
 import { appFaultNoticeV1, historyInputDraftDispositionV1 } from "../../🛣️route-and-chrome/🟦️.tsx";
 import { syncShellLabelLocale } from "../../🏷️labels/🟦️.tsx";

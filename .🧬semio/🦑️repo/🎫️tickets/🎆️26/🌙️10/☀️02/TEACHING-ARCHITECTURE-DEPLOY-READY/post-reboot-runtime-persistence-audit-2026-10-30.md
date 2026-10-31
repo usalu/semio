@@ -1,0 +1,11 @@
+# Post-Reboot Managed Readiness and Persistence Audit
+
+Reviewed retained receipts on 2026-10-30 after the owner-reported authoritative HTTP recovery exit 0; this audit made no network requests or process changes.
+
+| Requirement | Actual retained evidence | Scope and remaining work |
+|---|---|---|
+| Current managed pair | generated/managed-host-reboot-readiness.json observed 00:17:54.519Z binds handle87807 to boot11220615-7932-4930-ae1a-7d7fd56ccf52 and issuer10950/start34078, dev66127, proctor66247, dev-site66263 and Vite66936. Whitelisted environment preserves authored course, standard proctor-dev, ports6061/8791. | Actual owned normal prototype runtime, rather than pre-reboot owner continuity. Receipt records frontend HTTP200 bilingual HTML title and backend HTTP200 teaching-proctor/version0.1.0. It does not prove rendered browser behavior. |
+| Persisted learning authority | generated/proctor-http-host-reboot-restarted-2026-10-30.json at00:17:51.019Z and matching log identify current managed87807 and retain baseline13:34:05.676Z. Backend independently confirmed authoritative exit0. | Exact40 run IDs/full summary roster and run/learner/quiz/sheet/result identities;10 quizzes×4 levels;42 queries;112 answer count;4000 points;13 badges; own leaderboard. No commands/registrations or direct DB reads. |
+| Receipt integrity and limits | Reviewed script SHA9f34b9d76ec2fa99c47df4dcd3aafbbc42b0a217210307d48ebda0e8cedf5dc5 still writes mandatory distinct basename with flag wx. Actual receipt explicitly says answerBodyEquality:false. | Successful creation is distinct evidence, not overwriting the old receipt. Persisted counts, identities and summaries are proved; individual submitted answer-body equality is not. Physical DB continuity was recorded separately and is not a DB integrity assertion. |
+
+No concrete receipt defect found. This supersedes the pending87807/42-read readiness status only. Records interaction diagnostic, normal React/teaching suites and TSC, complete unfiltered BOTH browser gate, cold caller and the other original completion obligations remain separate. Historical interrupted pre-reboot owners keep unrecovered outer exits; this receipt does not turn them into passes.

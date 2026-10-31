@@ -2,8 +2,10 @@
   "spaces": {
     "sp-1": {
       "entry": "Patched",
-      "zone": {
-        "value": null
+      "value": {
+        "zone": {
+          "value": null
+        }
       }
     }
   }

@@ -43,7 +43,7 @@ const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 export class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    if(rest[0]==="cache"){const{readCachingTestTableV1}=await import("../../⚡️caching/🗂️suites/🟦️.ts");if(rest.length!==2||!readCachingTestTableV1().codeSuites.includes(rest[1]!))throw Error("One declared caching infrastructure suite required");const{TestScript}=await import("../../⚡️caching/🧪️tests/🔬️script-commands/🟦️.ts");await new TestScript(join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"),this.root,this.invocation).run(rest.slice(1));return;}
+    if(rest[0]==="cache"){if(rest.length!==2)throw Error("One declared caching infrastructure suite required");const{CacheTestScript}=await import("../../⚡️caching/📜️script.ts");await new CacheTestScript(join(this.root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"),this.root,this.invocation).run(rest.slice(1));return;}
     if (rest[0] === "canvas") {
       if (rest[1] !== "native" && rest[1] !== "react") throw Error("Expected test canvas native|react [arguments]");
       const native = rest[1] === "native", cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas", native ? "📦️packages/🦀️rust" : "🎨️react-renderer/📦️packages/🟦️typescript");

@@ -7,11 +7,11 @@
  */
 import { useEffect, useId, useMemo, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, CSS_PX_PER_MM } from "@teaching/staffage";
-import type { CategoryId } from "@teaching/staffage";
+import type { Asset, CategoryId } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { ArchiveCard, CardButton, Icon, Notice, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
-import { Level, PointerProvider, rowMajorCells, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
+import { Level, PointerProvider, tracks, useBreakpoint, useSize, type LevelPage, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { RowPreview, surfaceView, useDarkSurface } from "../🖼️previews/🟦️.tsx";
 import { PlacedFigure } from "../📍️placed/🟦️.tsx";
 import { defaultQuery, evaluateState } from "../🧮️pipeline/🟦️.ts";
@@ -38,6 +38,16 @@ export function routeOfRootPage(id: string): Route {
   return { page: "overview" };
 }
 
+/** 📏 The drawn width at 1:100, or the nominal width when that representation cannot be drawn. */
+function drawnSpan(asset: Asset): { minX: number; maxX: number } {
+  try {
+    return evaluateState(asset, defaultQuery(asset, null), { kind: "scale", scale: { denominator: 100 } }).bounds;
+  } catch {
+    const half = Math.max(asset.dimensions.widthM, 0.1) / 2;
+    return { minX: -half, maxX: half };
+  }
+}
+
 const GAP_M = 0.7;
 const LANE_CYCLES = 2;
 
@@ -56,7 +66,7 @@ export function Frieze(props: { readonly rows: readonly Row[]; readonly label: s
       if (asset === undefined) return [];
       const clip = asset.clips.find((candidate) => candidate.id === asset.presentation.defaultClip);
       const walks = travel && clip?.rootMotion === "plant" && clip.advanceM !== undefined;
-      const { minX, maxX } = evaluateState(asset, defaultQuery(asset, null)).bounds;
+      const { minX, maxX } = drawnSpan(asset);
       const width = Math.max(maxX - minX, 0.1);
       const lane = walks ? Math.max(clip!.advanceM! * LANE_CYCLES, width) : null;
       const item = { row, x: cursor + (lane === null ? width / 2 - (minX + maxX) / 2 : -minX), lane, width };
@@ -101,7 +111,7 @@ function useCategoryRows(category: CategoryId): readonly Row[] {
   return useMemo(() => rows.filter((row) => row.entry.category === category), [rows, category]);
 }
 
-const CATEGORY_ICONS: Readonly<Record<CategoryId, IconName>> = { humans: "user", vegetation: "sparkles", animals: "hand", objects: "box", vehicles: "wrench", components: "building" };
+const CATEGORY_ICONS: Readonly<Record<CategoryId, IconName>> = { humans: "user", vegetation: "sparkles", animals: "hand", furniture: "layout", objects: "box", vehicles: "wrench", machinery: "cpu", components: "building" };
 
 /** 🗂️ The card of a category: its description, how many assets it holds and a live frieze of the first of them. */
 function CategoryCard(props: { readonly category: CategoryId; readonly card: { readonly revealed: boolean; readonly open: () => void }; readonly compact: boolean }): ReactElement {
@@ -111,21 +121,23 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
   const rows = useCategoryRows(category);
   const id = useId();
   useEffect(() => {
+    if (compact && !card.revealed) return;
     const controller = new AbortController();
-    const timer = setTimeout(() => void catalog.loadCategory(category, { signal: controller.signal }), 400 + CATEGORIES.indexOf(category) * 350);
+    const index = CATEGORIES.indexOf(category);
+    const timer = setTimeout(() => void catalog.loadCategory(category, { signal: controller.signal }), compact ? 1200 + index * 800 : 400 + index * 350);
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [catalog, category]);
+  }, [catalog, category, compact, card.revealed]);
   const entry = manifest?.categories.find((candidate) => candidate.id === category);
   const progress = categories[category];
   const ready = rows.filter((row) => row.status === "ready");
   const preview = useMemo(() => {
     const heights = ready.map((row) => row.asset!.dimensions.heightM).sort((a, b) => a - b);
     const cap = Math.max(4, 2.5 * (heights[Math.floor(heights.length / 2)] ?? 0));
-    return ready.filter((row) => row.asset!.dimensions.heightM <= cap).slice(0, 4);
-  }, [ready.length, rows]);
+    return ready.filter((row) => row.asset!.dimensions.heightM <= cap).slice(0, compact ? 2 : 4);
+  }, [ready.length, rows, compact]);
   return (
     <ArchiveCard
       id={id}
@@ -143,7 +155,7 @@ function CategoryCard(props: { readonly category: CategoryId; readonly card: { r
       <div className="min-h-0 flex-1">
         {progress.state === "idle" ? (
           <div className="flex h-full min-h-12 items-center">
-            <button type="button" onClick={() => void catalog.loadCategory(category)} className="text-xs text-muted-foreground underline">{t("category.load")}</button>
+            <button type="button" onClick={() => void catalog.loadCategory(category)} className="text-xs text-primary">{t("category.load")}</button>
           </div>
         ) : progress.state === "failed" ? (
           <Notice kind="error" compact title={t("state.categoryFailed.title")}>{progress.failure?.[language]}</Notice>
@@ -239,8 +251,8 @@ function CompareCard(props: { readonly card: { readonly revealed: boolean; reado
       <div className="grid min-h-0 flex-1 grid-cols-2 gap-double">
         {row === undefined ? (rows.some((candidate) => candidate.status === "pending") ? <div role="status" aria-busy="true" aria-label={t("state.loading.title")} className="col-span-2 h-full min-h-12 animate-pulse bg-muted/60 motion-reduce:animate-none" /> : <p className="col-span-2 m-0 text-xs text-muted-foreground">{t("compare.lede")}</p>) : (
           <>
-            <RowPreview row={row} view={surfaceView(dark)} compact />
-            <RowPreview row={row} view="thermal" compact />
+            <RowPreview row={row} view={surfaceView(dark)} compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
+            <RowPreview row={row} view="thermal" compact {...(row.asset === undefined ? {} : { query: { kind: "pose", pose: row.asset.presentation.defaultPose } })} />
           </>
         )}
       </div>
@@ -303,12 +315,11 @@ export function RootLevel(): ReactElement {
   const depth = route.page === "category" || route.page === "asset" ? 1 : 0;
   const columns = COLUMNS[breakpoint];
   const weights = ROW_WEIGHTS[breakpoint];
-  const needed = weights.reduce((sum, weight) => sum + weight, 0) * ROW_MIN_PX;
-  const mode = breakpoint === "mobile" || size.height < needed ? "swipe" : "strip";
+  const mode = breakpoint === "mobile" ? "swipe" : "strip";
   const compact = size.height < 760;
   const labels = useMemo(() => Object.fromEntries([["all", t("all.title")], ["collections", t("collections.title")], ["compare", t("compare.title")], ["playground", t("playground.title")], ...(manifest?.categories ?? []).map((category) => [category.id, category.title[language]])]) as Readonly<Record<string, string>>, [t, language, manifest]);
   const pages: readonly LevelPage[] = useMemo(() => ROOT_PAGES.map((id): LevelPage => ({ id, label: labels[id] ?? id, render: (view) => <RootPageContent id={id} view={view} /> })), [labels]);
-  const cells = useMemo(() => rowMajorCells(ROOT_PAGES, 3), []);
+  const cells = useMemo(() => Object.fromEntries(ROOT_PAGES.map((id) => { const p = placementOf(id, columns); return [id, { column: p.column - 1, row: p.row - 1 }]; })), [columns]);
   const renderCard = (page: LevelPage, card: { readonly revealed: boolean; readonly opened: boolean; readonly open: () => void }): ReactNode => {
     const content: ReactNode = isCategory(page.id) ? <CategoryCard category={page.id} card={card} compact={compact || mode === "swipe" ? compact : false} /> : page.id === "all" ? <HeroCard card={card} /> : page.id === "collections" ? <CollectionsCard card={card} /> : page.id === "compare" ? <CompareCard card={card} /> : <PlaygroundCard card={card} />;
     const place = placementOf(page.id, columns);
@@ -323,7 +334,7 @@ export function RootLevel(): ReactElement {
   return (
     <div ref={attach} className="relative h-full min-h-0 w-full">
       <PointerProvider>
-        <Level label={t("overview.label")} pages={pages} cells={cells} openedId={chain[0] ?? null} interactive={depth === 0} mode={mode} onOpen={(id) => navigate(id === null ? { page: "overview" } : routeOfRootPage(id))} renderCard={renderCard} columns={tracks(Array.from({ length: columns }, () => 1))} rows={tracks(weights)} budget={5} />
+        <Level label={t("overview.label")} pages={pages} cells={cells} openedId={chain[0] ?? null} interactive={depth === 0} mode={mode} onOpen={(id) => navigate(id === null ? { page: "overview" } : routeOfRootPage(id))} renderCard={renderCard} columns={tracks(Array.from({ length: columns }, () => 1))} rows={tracks(weights, ROW_MIN_PX)} budget={breakpoint === "mobile" ? 1 : 5} />
       </PointerProvider>
     </div>
   );

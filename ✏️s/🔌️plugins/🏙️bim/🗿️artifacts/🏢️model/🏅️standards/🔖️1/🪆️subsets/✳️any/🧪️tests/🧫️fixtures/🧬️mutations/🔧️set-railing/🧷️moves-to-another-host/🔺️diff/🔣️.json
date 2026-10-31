@@ -2,12 +2,14 @@
   "railings": {
     "rl-1": {
       "entry": "Patched",
-      "host": {
-        "value": {
-          "edge": 0,
-          "element": "s-host",
-          "inset": 0.1,
-          "side": "Right"
+      "value": {
+        "host": {
+          "value": {
+            "edge": 0,
+            "element": "s-host",
+            "inset": 0.1,
+            "side": "Right"
+          }
         }
       }
     }

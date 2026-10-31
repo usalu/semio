@@ -1,6 +1,12 @@
 /** 🧪️ TS reducer, id minting and runner against the transaction-law fixture; oracles: ajv (schema), JS `Map` (keyed first-insertion order), xstate (each fixture chart as an xstate machine), fast-check (random yield sequences for reducer vs `Map`; random events, host aborts and resets for runner vs xstate). */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
+import ts from "typescript";
+import { readFileSync, existsSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import testScopeFixture from "../🧫️fixtures/🧫️test-scope/🔣️.json";
+import testScopeSchema from "../🧫️fixtures/🧫️test-scope/📐️.json";
+import Ajv2020 from "ajv/dist/2020";
 import fc from "fast-check";
 import { assign, initialTransition, setup, transition, type AnyMachineSnapshot } from "xstate";
 import { ActionId, EventId, InvokeId, NodeId, ROOT, TestHost, TimerId, type ActionFn, type Machine, type MachineSpec, type NodeDef, type StatechartEvent, type TransitionDef } from "@semio-tech/machine";
@@ -8,6 +14,47 @@ import { mintTransactionRef, type TransactionRef } from "@semio-tech/framework-r
 import fixture from "../🧫️fixtures/🧫️transaction-law/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import * as T from "../../🟦️.ts";
+
+test("the canonical Cargo test recipe includes production unit and companion laws", () => {
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(testScopeSchema);
+  expect(validate(testScopeFixture), JSON.stringify(validate.errors)).toBe(true);
+  const owner = resolve(import.meta.dir, "../.."), script = resolve(owner, "📦️packages/🦀️rust/📜️script.ts"), tree = ts.createSourceFile(script, readFileSync(script, "utf8"), ts.ScriptTarget.Latest, true), constants = new Map<string, string>();
+  for (const statement of tree.statements) if (ts.isVariableStatement(statement)) for (const row of statement.declarationList.declarations) if (ts.isIdentifier(row.name) && row.initializer && ts.isStringLiteral(row.initializer)) constants.set(row.name.text, row.initializer.text);
+  const selected: string[][] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "runCargoTestsV1") {
+      const request = node.arguments[0];
+      if (request && ts.isObjectLiteralExpression(request)) for (const property of request.properties) if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && property.name.text === "packages" && ts.isArrayLiteralExpression(property.initializer)) selected.push(property.initializer.elements.map((item) => ts.isIdentifier(item) ? constants.get(item.text)! : ts.isStringLiteral(item) ? item.text : ""));
+    }
+    ts.forEachChild(node, visit);
+  };
+  const entry = tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
+  expect(entry).toBeDefined();
+  visit(entry!);
+  expect(selected).toEqual([testScopeFixture.packages.map((row) => row.name)]);
+  const checks: { package: string; target: string; unitTests: boolean }[] = [];
+  const checkEntry = tree.statements.find((node) => ts.isClassDeclaration(node) && node.name?.text === "CheckScript");
+  expect(checkEntry).toBeDefined();
+  const inspectCheck = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "runAdmittedCargoCommandV1") {
+      const argument = node.arguments[3];
+      if (argument && ts.isArrayLiteralExpression(argument)) {
+        const words = argument.elements.flatMap((item) => ts.isStringLiteral(item) ? [item.text] : ts.isIdentifier(item) && constants.has(item.text) ? [constants.get(item.text)!] : []);
+        checks.push({ package: words[words.indexOf("-p") + 1]!, target: words.includes("--target") ? words[words.indexOf("--target") + 1]! : "native", unitTests: words.includes("--tests") });
+      }
+    }
+    ts.forEachChild(node, inspectCheck);
+  };
+  inspectCheck(checkEntry!);
+  expect(checks).toEqual(testScopeFixture.checks);
+
+  for (const row of testScopeFixture.packages) {
+    const manifest = resolve(owner, row.manifest), cargo = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { package: { name: string }; lib?: { test?: boolean; path?: string } };
+    expect(cargo.package.name).toBe(row.name);
+    expect(cargo.lib?.test !== false).toBe(row.unitTests);
+    expect(existsSync(resolve(dirname(manifest), cargo.lib?.path ?? "src/lib.rs"))).toBe(true);
+  }
+});
 
 const law = fixture as any;
 type Json = any;
@@ -680,6 +727,8 @@ describe("scrub machine", () => {
 
 //#region 🔖️Typing
 import typingFixture from "../🧫️fixtures/🧫️typing-law/🔣️.json";
+import originalTypingFixture from "../../⌨️typing/✍️edit/🧪️tests/🔣️.json";
+import originalTypingSchema from "../../⌨️typing/✍️edit/🧪️tests/📐️.json";
 
 const typingLaw = typingFixture as any;
 type Run = { readonly at: number; readonly text: string } | { readonly text: string };
@@ -703,7 +752,7 @@ function typingStepJson(ledger: T.TypingLedger<Json>, window: string, step: T.To
 function typingOpenJson(ledger: T.TypingLedger<Json>): Json {
   return Object.fromEntries(ledger.windows().map((window) => {
     const state = ledger.open(window)!;
-    return [window, { buffer: state.buffer, tool: state.tool, deadline: state.deadlineMs, transaction: state.transaction, entries: entriesJson(state.entries) }];
+    return [window, { buffer: state.buffer, tool: state.tool, deadline: state.deadlineMs, transaction: state.transaction, net: [...state.net] }];
   }));
 }
 
@@ -791,7 +840,7 @@ describe("typing machine", () => {
     expect(validator("TypingPhase")({ kind: "commit", buffer: "s", reason: "paste" })).toBe(false);
     expect(validator("TypingPhase")({ kind: "edit", buffer: "" })).toBe(false);
     expect(validator("TypingInput")({ kind: "edit", buffer: "s" })).toBe(false);
-    expect(validator("TypingOpen")({ buffer: "s", tool: "a#b", transaction: { id: "tx-0000000000000000", tool: "a#b" }, entries: [] })).toBe(false);
+    expect(validator("TypingOpen")({ buffer: "s", tool: "a#b", transaction: { id: "tx-0000000000000000", tool: "a#b" }, net: [] })).toBe(false);
   });
 
   test("the protocol arguments and reasons parse like the fixture", () => {
@@ -842,6 +891,29 @@ describe("typing machine", () => {
         expect(ledger.provisional(), label).toEqual(row.expect.provisional);
       });
     }
+  });
+
+  test("the resident growth corpus preserves net order against independent xstate runs", () => {
+    const validate = new Ajv2020({ strict: false }).compile(originalTypingSchema);
+    expect(validate(originalTypingFixture), JSON.stringify(validate.errors)).toBe(true);
+    const shape = originalTypingFixture.resident;
+    const ledger = new T.TypingLedger<string>();
+    const rows = [[shape.readerWindow, Array.from({ length: shape.readerLeaves }, (_, index) => String(index)), "reader-author"], ...Array.from({ length: shape.prefixWindows }, (_, index) => [`a-${String(index).padStart(5, "0")}`, [String(index)], "prefix-author"])] as const;
+    let source: readonly string[] | undefined;
+    rows.forEach(([window, leaves, actor], index) => {
+      const input = { kind: "edit" as const, buffer: "text", leaves: leaves as string[] };
+      const clock = typingClock(10 + index);
+      const result = ledger.send(window as string, "app#type", actor as string, input, (_, next) => ({ kind: "net", leaves: next }), clock);
+      if (!result.ok) throw new Error(result.refusal);
+      const oracle = new TypingOracle("app#type", actor as string);
+      const state = ledger.open(window as string)!;
+      expect(result.steps.map((step) => step.kind === "open" ? { kind: "open", transaction: state.transaction, entries: entriesJson(state.net.map((leaf, ordinal) => [String(ordinal), leaf] as const)) } : step)).toEqual(oracle.send(input, clock));
+      if (source === undefined) source = state.net;
+      expect(ledger.open(shape.readerWindow)!.net).toBe(source);
+      expect(ledger.windows()).toEqual(rows.slice(0, index + 1).map(([name]) => name).sort());
+    });
+    expect(ledger.windows().at(-1) === shape.readerWindow).toBe(shape.sourceLast);
+    expect(ledger.open(shape.readerWindow)!.net).toEqual(rows[0]![1]);
   });
 
   test("random typing with pauses, jumps, buffers, commits, aborts and resumes: the run and the xstate oracle agree on steps, entries and ids", () => {

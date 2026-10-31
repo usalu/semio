@@ -1,0 +1,710 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "glass-balustrade",
+    "category": "components",
+    "title": {
+      "en": "Glass Balustrade",
+      "de": "Glasgeländer"
+    },
+    "summary": {
+      "en": "A 1.1 m laminated glass infill cantilevered from a floor clamp, shown in section, loaded by a handrail line load, a crowd impact and wind.",
+      "de": "Eine 1,1 m hohe Verbundglasfüllung, am Bodenklemmteil eingespannt, im Schnitt gezeigt und durch Handlaufliniennlast, Menschenanprall und Wind belastet."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "glass",
+      "balustrade",
+      "barrier"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-572",
+          "citation": "EN 572-1:2012 Glass in building, basic soda lime silicate glass products (E = 70 GPa)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, Part 1-1, clause 6.3.2 barriers: horizontal line load at handrail height (1.0 kN/m, an authored value; the actual value depends on the use category), Table A.1 glass density 25 kN/m3."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind pressure on a vertical infill (0.8 kN/m2 estimate per metre width)."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S235 (clamp and handrail)."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties (typical emissivity of glass and steel; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "Shown in section: the glass is a one-metre strip, cantilevered from a fixed clamp, and its normal load acts in the section plane. The manifest width 2.0 m is the panel length, not drawn.",
+        "de": "Im Schnitt gezeigt: das Glas ist ein ein Meter breiter Streifen, am festen Klemmteil eingespannt; seine Normallast wirkt in der Schnittebene. Die Manifestbreite 2,0 m ist die Feldlänge und wird nicht gezeichnet."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.1,
+      "widthM": 0.3,
+      "depthM": 2.0,
+      "massKg": 59.1
+    },
+    "materials": [
+      {
+        "id": "glass",
+        "title": {
+          "en": "Laminated glass 2 x 10 mm",
+          "de": "Verbundglas 2 x 10 mm"
+        },
+        "emissivity": 0.84,
+        "solarAbsorptivity": 0.08,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 70000000000,
+        "strengthPa": 45000000,
+        "source": "literature",
+        "reference": "en-572"
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Painted steel S235",
+          "de": "Gestrichener Stahl S235"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 235000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "panel",
+      "bones": [
+        {
+          "id": "panel",
+          "parent": null,
+          "title": {
+            "en": "Glass panel (rigid root in the clamp)",
+            "de": "Glasfeld (starre Wurzel im Klemmteil)"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 90,
+          "lengthM": 1.1,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 59.13,
+            "comX": 0.55,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.0215,
+            "secondMomentM4": 8.28198e-07,
+            "extremeFibreM": 0.01075,
+            "material": "glass",
+            "title": {
+              "en": "1 m strip, 21.5 mm laminate",
+              "de": "1 m Streifen, 21,5 mm Verbundglas"
+            }
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-clamp",
+        "bone": "panel",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Floor clamp, fixed",
+          "de": "Bodenklemmteil, eingespannt"
+        },
+        "support": "fixed"
+      },
+      {
+        "id": "impact-point",
+        "bone": "panel",
+        "x": 0.9,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Crowd impact point",
+          "de": "Anprallpunkt der Personen"
+        }
+      },
+      {
+        "id": "handrail-top",
+        "bone": "panel",
+        "x": 1.1,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Handrail height",
+          "de": "Handlaufhöhe"
+        }
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "glass-panel",
+          "bone": "panel",
+          "role": "glazing",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "rect",
+          "x": 0.0,
+          "y": -0.01075,
+          "w": 1.08,
+          "h": 0.0215,
+          "region": "panel-glass",
+          "material": "glass"
+        },
+        {
+          "id": "base-clamp-block",
+          "bone": "panel",
+          "role": "body",
+          "lod": 0,
+          "z": 4,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.15,
+          "w": 0.1,
+          "h": 0.3,
+          "region": "clamp-steel",
+          "material": "steel"
+        },
+        {
+          "id": "handrail",
+          "bone": "panel",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.35,
+          "kind": "ellipse",
+          "cx": 1.079,
+          "cy": 0,
+          "rx": 0.0212,
+          "ry": 0.0212,
+          "region": "handrail-steel",
+          "material": "steel"
+        },
+        {
+          "id": "handrail-cap",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.1,
+          "filled": false,
+          "tone": 0.2,
+          "kind": "path",
+          "d": "M 1.06 -0.02 C 1.07 -0.012 1.07 0.012 1.06 0.02",
+          "region": "handrail-steel",
+          "material": "steel"
+        },
+        {
+          "id": "laminate-line-a",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1,
+              -0.00425
+            ],
+            [
+              1.06,
+              -0.00425
+            ]
+          ],
+          "closed": false,
+          "region": "panel-glass",
+          "material": "glass"
+        },
+        {
+          "id": "laminate-line-b",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 2,
+          "z": 3.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.1,
+              0.00425
+            ],
+            [
+              1.06,
+              0.00425
+            ]
+          ],
+          "closed": false,
+          "region": "panel-glass",
+          "material": "glass"
+        },
+        {
+          "id": "clamp-bolt-0",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.05,
+          "cy": -0.11,
+          "rx": 0.007,
+          "ry": 0.007,
+          "region": "clamp-steel",
+          "material": "steel"
+        },
+        {
+          "id": "clamp-bolt-1",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 3,
+          "z": 4.5,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.05,
+          "cy": 0.11,
+          "rx": 0.007,
+          "ry": 0.007,
+          "region": "clamp-steel",
+          "material": "steel"
+        },
+        {
+          "id": "clamp-gasket",
+          "bone": "panel",
+          "role": "detail",
+          "lod": 2,
+          "z": 4.4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0.0,
+          "y": -0.02,
+          "w": 0.1,
+          "h": 0.04,
+          "region": "clamp-steel",
+          "material": "steel"
+        },
+        {
+          "id": "clamp-hatch",
+          "bone": "panel",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0000 -0.0650 L 0.0400 -0.0250 M 0.0000 -0.1050 L 0.0800 -0.0250 M 0.0000 -0.1450 L 0.1000 -0.0450 M 0.0350 -0.1500 L 0.1000 -0.0850 M 0.0750 -0.1500 L 0.1000 -0.1250"
+        },
+        {
+          "id": "clamp-hatch-b",
+          "bone": "panel",
+          "role": "texture",
+          "lod": 2,
+          "z": 4.5,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M 0.0000 0.1100 L 0.0400 0.1500 M 0.0000 0.0700 L 0.0800 0.1500 M 0.0000 0.0300 L 0.1000 0.1300 M 0.0350 0.0250 L 0.1000 0.0900 M 0.0750 0.0250 L 0.1000 0.0500"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "self-weight-unloaded",
+        "title": {
+          "en": "Self-weight only",
+          "de": "Nur Eigengewicht"
+        },
+        "description": {
+          "en": "Glass panel and clamp under their own weight.",
+          "de": "Glasfeld und Klemmteil unter Eigengewicht."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "handrail-line-load",
+        "title": {
+          "en": "Handrail line load",
+          "de": "Handlauf-Linienlast"
+        },
+        "description": {
+          "en": "A horizontal line load of 1.0 kN/m at handrail height, taken as 1.0 kN over a one-metre strip.",
+          "de": "Horizontale Linienlast 1,0 kN/m in Handlaufhöhe, als 1,0 kN über einen Meter Streifen."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "handrail-line",
+            "kind": "live",
+            "title": {
+              "en": "Handrail line load 1.0 kN/m",
+              "de": "Handlauf-Linienlast 1,0 kN/m"
+            },
+            "anchor": "handrail-top",
+            "fxN": 1000,
+            "fyN": 0,
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "crowd-impact-point",
+        "title": {
+          "en": "Crowd impact",
+          "de": "Menschenanprall"
+        },
+        "description": {
+          "en": "A 1.0 kN crowd impact at 0.9 m height.",
+          "de": "Menschenanprall 1,0 kN in 0,9 m Höhe."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "crowd-impact",
+            "kind": "occupant",
+            "title": {
+              "en": "Crowd impact 1.0 kN",
+              "de": "Menschenanprall 1,0 kN"
+            },
+            "anchor": "impact-point",
+            "fxN": 1000,
+            "fyN": 0,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "wind-pressure",
+        "title": {
+          "en": "Wind pressure",
+          "de": "Winddruck"
+        },
+        "description": {
+          "en": "Wind pressure of 0.8 kN/m2 over the 1.1 m height, pushing outward.",
+          "de": "Winddruck 0,8 kN/m² über 1,1 m Höhe, nach außen wirkend."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "wind-panel",
+            "kind": "wind",
+            "title": {
+              "en": "Wind pressure 800 N/m",
+              "de": "Winddruck 800 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "panel",
+              "fromM": 0,
+              "toM": 1.1,
+              "wxNPerM": 800,
+              "wyNPerM": 0
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "handrail-push",
+        "title": {
+          "en": "Handrail push",
+          "de": "Handlaufschub"
+        },
+        "description": {
+          "en": "The handrail line load rises to 1.0 kN/m and holds.",
+          "de": "Die Handlauf-Linienlast steigt auf 1,0 kN/m und hält."
+        },
+        "durationS": 3,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "handrail-line-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 3,
+            "pose": "handrail-line-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "push",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Push",
+              "de": "Schub"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "load-on",
+            "title": {
+              "en": "Full line load",
+              "de": "Volle Linienlast"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:handrail-line",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "impact-pulse",
+        "title": {
+          "en": "Impact pulse",
+          "de": "Anprallimpuls"
+        },
+        "description": {
+          "en": "A crowd impact pulse peaks at 0.4 s and returns to zero.",
+          "de": "Ein Anprallimpuls erreicht bei 0,4 s sein Maximum und fällt auf null."
+        },
+        "durationS": 2,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crowd-impact-point",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "crowd-impact-point",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "impact",
+            "fromS": 0,
+            "toS": 2,
+            "title": {
+              "en": "Impact",
+              "de": "Anprall"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.4,
+            "kind": "load-on",
+            "title": {
+              "en": "Impact peak",
+              "de": "Anprallspitze"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:crowd-impact",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 0.4,
+                "v": 1
+              },
+              {
+                "t": 1.2,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "panel-glass",
+          "title": {
+            "en": "Glass panel faces",
+            "de": "Glasfeldflächen"
+          },
+          "kind": "glazing",
+          "material": "glass",
+          "model": "passive",
+          "areaM2": 2.2,
+          "characteristicLengthM": 1.1,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "clamp-steel",
+          "title": {
+            "en": "Clamp steel",
+            "de": "Klemmteil Stahl"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.3,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "handrail-steel",
+          "title": {
+            "en": "Handrail steel",
+            "de": "Handlauf Stahl"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 0.1,
+          "characteristicLengthM": 0.04,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Glass faces are passive glazing exposed to both sides of the barrier; clamp and handrail are painted steel.",
+          "de": "Glasflächen sind passive Verglasung beidseitig des Geländers; Klemmteil und Handlauf sind gestrichener Stahl."
+        },
+        {
+          "en": "Areas refer to the one-metre strip plus the clamp and handrail.",
+          "de": "Flächen beziehen sich auf den einen Meter breiten Streifen sowie Klemmteil und Handlauf."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-clamp"
+      ],
+      "assumptions": [
+        {
+          "en": "Laminated glass cantilever, E = 70 GPa, section 21.5 mm by 1 m, fixed at the floor clamp; the handrail load is a point load at 1.1 m.",
+          "de": "Verbundglas-Kragarm, E = 70 GPa, Querschnitt 21,5 mm mal 1 m, am Bodenklemmteil eingespannt; die Handlauflast ist eine Einzellast in 1,1 m Höhe."
+        },
+        {
+          "en": "Laminate effective thickness is simplified to the sum of the two lites; PVB stiffness, load duration and glass strength factors are not modelled.",
+          "de": "Die wirksame Dicke des Verbunds ist vereinfacht als Summe der beiden Scheiben angesetzt; PVB-Steifigkeit, Lastdauer und Festigkeitsbeiwerte sind nicht modelliert."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "handrail-line-load",
+      "defaultClip": "handrail-push",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

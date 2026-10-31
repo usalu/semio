@@ -9,10 +9,11 @@ import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
 import type { Asset, Ease } from "../../🧬️schema/🟦️.ts";
 import { clipOf, contactsAt, ease, frameAt, phaseAt, sampleClip, wrapTime } from "../../🔨️modules/🎞️animation/🟦️.ts";
+import { samplingAsset } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🎞️clip-sampling/🔣️.json", import.meta.url), "utf8"));
-const asset = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🚶️reference-walker/🔣️.json", import.meta.url), "utf8")) as Asset;
+const asset = samplingAsset((JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as { asset: Asset }).asset);
 
 describe("🎞️ clip sampling", () => {
   it("evaluates the ease curves", () => {
@@ -66,6 +67,22 @@ describe("🎞️ clip sampling", () => {
     expect(at(5).bones.torso!.offset.angleDeg).toBe(-3);
     expect(at(5).timeS).toBe(durationS);
     expect(clampedAfter).toBe(1);
+  });
+
+  it("blends passenger bindings like the carrier: activity linearly by the eased weight, breathing as a step at the half", () => {
+    const child = { id: "child", title: { en: "Child", de: "Kind" }, physiology: asset.thermal.body! };
+    const bind = (activityMet: number, breathing: string) => ({ passengers: { child: { activityMet, breathing } } });
+    const withPassenger: Asset = {
+      ...asset,
+      thermal: { ...asset.thermal, passengers: [child] },
+      poses: asset.poses.map((pose) => (pose.id === "stand" ? { ...pose, thermal: { ...pose.thermal, ...bind(1, "rest") } } : pose.id === "carry-bag" ? { ...pose, thermal: { ...pose.thermal, ...bind(3, "run") } } : pose)),
+    };
+    const at = (timeS: number) => evaluate(withPassenger, { kind: "transition", from: "stand", to: "carry-bag", durationS: 1, timeS }).thermal.passengers.child!;
+    expect(at(0).activityMet).toBeCloseTo(1, 12);
+    expect(at(0.5).activityMet).toBeCloseTo(2, 12);
+    expect(at(1).activityMet).toBeCloseTo(3, 12);
+    expect([at(0.25).breathing, at(0.75).breathing]).toEqual(["rest", "run"]);
+    expect(evaluate(asset, { kind: "pose", pose: "stand" }).thermal.passengers).toEqual({});
   });
 
   it("looks up phases and contacts", () => {

@@ -2,8 +2,10 @@
   "door_types": {
     "door-1": {
       "entry": "Patched",
-      "leaves": "Double",
-      "swing": "Right"
+      "value": {
+        "leaves": "Double",
+        "swing": "Right"
+      }
     }
   }
 }

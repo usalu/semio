@@ -26,7 +26,7 @@ import schema from "../../../🧬️schema/🔣️.json";
 import {readBuildGraphV1,neutralBuildTargetV1} from "../../../🕸️graph/🟦️.ts";
 import {datasetSchema,nxOracleRequireV1,independentGlobV1,graph} from "../🧰️support/🟦️.ts";
 
-const require=createRequire(import.meta.url),Ajv=require("ajv/dist/2020").default;
+const require=createRequire(import.meta.url),Ajv=require("ajv").default;
 test("portable source glob matching agrees with the installed Nx implementation",()=>{
   const {paths,patterns}=fixture.globCases;
   for(const pattern of patterns)expect(paths.map(path=>buildInputPathMatchesV1(path,pattern))).toEqual(require("nx/src/native").matchGlobPaths([pattern],paths));

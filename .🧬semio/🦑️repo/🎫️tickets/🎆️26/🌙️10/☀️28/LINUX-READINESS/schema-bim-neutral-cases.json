@@ -1,0 +1,288 @@
+{
+  "cases": [
+    {
+      "id": "anchor-start",
+      "exported": "AnchorEnd",
+      "value": "Start",
+      "valid": true
+    },
+    {
+      "id": "anchor-end",
+      "exported": "AnchorEnd",
+      "value": "End",
+      "valid": true
+    },
+    {
+      "id": "anchor-wrong-case",
+      "exported": "AnchorEnd",
+      "value": "start",
+      "valid": false
+    },
+    {
+      "id": "phase-temporary",
+      "exported": "Phase",
+      "value": "Temporary",
+      "valid": true
+    },
+    {
+      "id": "phase-unknown",
+      "exported": "Phase",
+      "value": "Proposed",
+      "valid": false
+    },
+    {
+      "id": "point-finite",
+      "exported": "Point2",
+      "value": {
+        "x": 0,
+        "y": -2.5
+      },
+      "valid": true
+    },
+    {
+      "id": "point-missing-y",
+      "exported": "Point2",
+      "value": {
+        "x": 0
+      },
+      "valid": false
+    },
+    {
+      "id": "point-extra-z",
+      "exported": "Point2",
+      "value": {
+        "x": 0,
+        "y": 1,
+        "z": 2
+      },
+      "valid": false
+    },
+    {
+      "id": "point-wrong-coordinate",
+      "exported": "Point2",
+      "value": {
+        "x": "0",
+        "y": 1
+      },
+      "valid": false
+    },
+    {
+      "id": "axis-line",
+      "exported": "Axis",
+      "value": {
+        "Line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "axis-arc",
+      "exported": "Axis",
+      "value": {
+        "Arc": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          },
+          "bulge": 0.25
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "axis-wrong-case",
+      "exported": "Axis",
+      "value": {
+        "line": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "axis-missing-arc-bulge",
+      "exported": "Axis",
+      "value": {
+        "Arc": {
+          "start": {
+            "x": 0,
+            "y": 0
+          },
+          "end": {
+            "x": 4,
+            "y": 0
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "annotation-point",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "Point": {
+          "point": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "annotation-wall-end",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "WallEnd": {
+          "wall": "wall-1",
+          "end": "Start"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "annotation-wrong-end",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "WallEnd": {
+          "wall": "wall-1",
+          "end": "start"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "annotation-multiple-variants",
+      "exported": "AnnotationAnchor",
+      "value": {
+        "Point": {
+          "point": {
+            "x": 1,
+            "y": 2
+          }
+        },
+        "Grid": {
+          "grid": "grid-1"
+        }
+      },
+      "valid": false
+    },
+    {
+      "id": "beam-level",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam"
+      },
+      "valid": true
+    },
+    {
+      "id": "beam-inclined",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam",
+        "end_top_offset": -1
+      },
+      "valid": true
+    },
+    {
+      "id": "beam-invalid-phase",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "Proposed",
+        "name": "Beam"
+      },
+      "valid": false
+    },
+    {
+      "id": "beam-extra-field",
+      "exported": "Beam",
+      "value": {
+        "storey": "storey-1",
+        "beam_type": "beam-type-1",
+        "axis": {
+          "Line": {
+            "start": {
+              "x": 0,
+              "y": 0
+            },
+            "end": {
+              "x": 4,
+              "y": 0
+            }
+          }
+        },
+        "top_offset": 0,
+        "phase": "New",
+        "name": "Beam",
+        "unknown": true
+      },
+      "valid": false
+    }
+  ]
+}

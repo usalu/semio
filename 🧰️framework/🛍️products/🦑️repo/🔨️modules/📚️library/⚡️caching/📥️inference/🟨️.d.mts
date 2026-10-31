@@ -2,6 +2,10 @@
 export const sourceHash: string;
 /** 🔗️ Projects canonical runtime module facts onto relative command source imports. */
 export function commandSourceImports(path: string, source: string): string[];
+/** 🧭️ Literal module requests grouped by the syntax-selected resolution mode. */
+export interface ModuleSourceReferences { readonly version: 1; readonly imports: readonly string[]; readonly requires: readonly string[]; }
+/** 🧭️ Retains import and require modes without exposing compiler types. */
+export function runtimeModuleSourceReferences(path: string, source: string): ModuleSourceReferences;
 /** 🚀️ Retains runtime package and relative imports without erased declaration dependencies. */
 export function runtimeModuleSourceImports(path: string, source: string): string[];
 /** 🔗️ Projects runtime and optional test module facts for project dependency ownership. */

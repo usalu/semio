@@ -1,0 +1,42 @@
+[
+  {
+    "path": ".p0123abcd",
+    "excluded": true
+  },
+  {
+    "path": "source/.dabcdef01/p/RS",
+    "excluded": true
+  },
+  {
+    "path": "source\\.p0123abcd\\TS",
+    "excluded": true
+  },
+  {
+    "path": ".prettierrc.json",
+    "excluded": false
+  },
+  {
+    "path": ".prettierignore",
+    "excluded": false
+  },
+  {
+    "path": ".package-cache",
+    "excluded": false
+  },
+  {
+    "path": ".p0123abc/p",
+    "excluded": false
+  },
+  {
+    "path": ".p0123abcde/p",
+    "excluded": false
+  },
+  {
+    "path": ".pABCDEF01/p",
+    "excluded": false
+  },
+  {
+    "path": ".p0123abcd.txt/p",
+    "excluded": false
+  }
+]

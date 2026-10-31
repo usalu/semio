@@ -2,16 +2,18 @@
   "schedules": {
     "sch-walls": {
       "entry": "Patched",
-      "group": [
-        {
-          "key": {
-            "Field": {
-              "field": "Type"
+      "value": {
+        "group": [
+          {
+            "key": {
+              "Field": {
+                "field": "Type"
+              }
             }
           }
-        }
-      ],
-      "itemize": false
+        ],
+        "itemize": false
+      }
     }
   }
 }

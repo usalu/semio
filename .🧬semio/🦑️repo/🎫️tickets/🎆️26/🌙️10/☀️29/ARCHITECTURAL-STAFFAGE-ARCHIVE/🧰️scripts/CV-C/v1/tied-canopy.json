@@ -1,0 +1,744 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "tied-canopy",
+    "category": "components",
+    "title": {
+      "en": "Tied Canopy",
+      "de": "Abgespanntes Vordach"
+    },
+    "summary": {
+      "en": "A 5.5 m steel canopy beam pinned at the wall and held by a tube strut hinged at both ends rising to the wall above; it carries snow in tension and wind uplift in compression.",
+      "de": "Ein 5,5 m langer Stahlträger des Vordachs, an der Wand gelenkig gelagert und durch einen beidseitig gelenkig angeschlossenen Rohrstab zur Wand darüber gehalten; er trägt Schnee auf Zug und Windsog auf Druck."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "canopy",
+      "tie",
+      "steel"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-10365",
+          "citation": "EN 10365:2017 Hot rolled steel channels, I and H sections: IPE 160 A = 20.1 cm2, I_y = 869 cm4, W_el = 109 cm3."
+        },
+        {
+          "id": "en-10025-2",
+          "citation": "EN 10025-2:2019 Hot rolled products of structural steels, S355 (density 7850 kg/m3)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3, Part 1-1: E = 210 GPa."
+        },
+        {
+          "id": "en-1991-1-3",
+          "citation": "EN 1991-1-3:2003 Eurocode 1, Part 1-3: snow loads on roofs; characteristic 0.75 kN/m2 per metre of canopy width (authored estimate; site and shape coefficients are not modelled)."
+        },
+        {
+          "id": "en-1991-1-4",
+          "citation": "EN 1991-1-4:2005 Eurocode 1, Part 1-4: wind uplift on a canopy, 0.5 kN/m2 per metre of canopy width (authored estimate)."
+        },
+        {
+          "id": "en-1992-1-1",
+          "citation": "EN 1992-1-1:2004 Eurocode 2, Part 1-1: concrete wall stub, typical C30/37 properties."
+        },
+        {
+          "id": "emissivity-literature",
+          "citation": "ASHRAE Handbook Fundamentals (2021), thermal radiation properties of building materials (typical emissivity and solar absorptance; typical rounded values guided by this chapter, not table look-ups)."
+        }
+      ],
+      "notes": {
+        "en": "The tie is a tube strut hinged at both ends: a bilateral roller along the rod, so uplift is carried in compression. Beam spacing 1.0 m sets the line loads. The wall stub is drawn for context.",
+        "de": "Der Zugstab ist ein beidseitig gelenkig angeschlossenes Rohr: eine beidseitige Rolle entlang des Stabs, sodass Windsog auf Druck abgetragen wird. Trägerabstand 1,0 m legt die Linienlasten fest. Das Wandstück dient der Darstellung."
+      }
+    },
+    "dimensions": {
+      "heightM": 3.1,
+      "widthM": 6,
+      "depthM": 1,
+      "massKg": 86.8
+    },
+    "materials": [
+      {
+        "id": "steel",
+        "title": {
+          "en": "Steel S355",
+          "de": "Stahl S355"
+        },
+        "emissivity": 0.8,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7850,
+        "elasticModulusPa": 210000000000,
+        "strengthPa": 355000000,
+        "source": "literature",
+        "reference": "en-10025-2"
+      },
+      {
+        "id": "concrete",
+        "title": {
+          "en": "Concrete wall C30/37",
+          "de": "Betonwand C30/37"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 2500,
+        "elasticModulusPa": 33000000000,
+        "source": "literature",
+        "reference": "en-1992-1-1"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "canopy",
+      "bones": [
+        {
+          "id": "canopy",
+          "parent": null,
+          "title": {
+            "en": "Canopy beam (rigid root at the wall)",
+            "de": "Vordachträger (starre Wurzel an der Wand)"
+          },
+          "x": 0,
+          "y": 0.12,
+          "angleDeg": 0,
+          "lengthM": 5.5,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 86.78,
+            "comX": 2.75,
+            "comY": 0,
+            "distribution": "uniform",
+            "source": "literature",
+            "reference": "en-10365"
+          },
+          "section": {
+            "areaM2": 0.00201,
+            "secondMomentM4": 8.693e-06,
+            "extremeFibreM": 0.08,
+            "material": "steel",
+            "title": {
+              "en": "IPE 160",
+              "de": "IPE 160"
+            }
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "wall-pin",
+        "bone": "canopy",
+        "x": 0,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Wall pin",
+          "de": "Wandgelenk"
+        },
+        "support": "pin"
+      },
+      {
+        "id": "tie-rod",
+        "bone": "canopy",
+        "x": 4,
+        "y": 0,
+        "kind": "support",
+        "title": {
+          "en": "Tube strut connection (bilateral, along the rod)",
+          "de": "Anschluss des Rohrstabs (beidseitig, entlang des Stabs)"
+        },
+        "support": "roller",
+        "normalDeg": 144.246113
+      }
+    ],
+    "geometry": {
+      "elevation": [
+        {
+          "id": "wall-stub",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 0,
+          "z": 1,
+          "filled": true,
+          "tone": 0.6,
+          "kind": "rect",
+          "x": -0.5,
+          "y": -0.12,
+          "w": 0.5,
+          "h": 3.14,
+          "region": "wall-face",
+          "material": "concrete"
+        },
+        {
+          "id": "canopy-beam",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 0,
+          "z": 3,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "rect",
+          "x": 0,
+          "y": -0.08,
+          "w": 5.5,
+          "h": 0.16,
+          "region": "canopy-steel",
+          "material": "steel"
+        },
+        {
+          "id": "canopy-flange-line",
+          "bone": "canopy",
+          "role": "detail",
+          "lod": 1,
+          "z": 4,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 0,
+          "y": 0.07,
+          "w": 5.5,
+          "h": 0.01,
+          "region": "canopy-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-tube",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 0,
+          "z": 5,
+          "filled": true,
+          "tone": 0.45,
+          "kind": "capsule",
+          "x0": 4.0,
+          "y0": 0,
+          "x1": 0.0,
+          "y1": 2.88,
+          "r0": 0.03,
+          "r1": 0.03,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-axis",
+          "bone": "canopy",
+          "role": "detail",
+          "lod": 2,
+          "z": 5.1,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              3.9,
+              0.072
+            ],
+            [
+              0.1,
+              2.808
+            ]
+          ],
+          "closed": false,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-clevis-beam",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": 3.94,
+          "y": -0.12,
+          "w": 0.12,
+          "h": 0.24,
+          "r": 0.01,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-clevis-wall",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 1,
+          "z": 5.2,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": -0.04,
+          "y": 2.76,
+          "w": 0.08,
+          "h": 0.24,
+          "r": 0.01,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-pin-beam",
+          "bone": "canopy",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.3,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 4.0,
+          "cy": 0,
+          "rx": 0.012,
+          "ry": 0.012,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "strut-pin-wall",
+          "bone": "canopy",
+          "role": "detail",
+          "lod": 3,
+          "z": 5.3,
+          "filled": true,
+          "tone": 0.1,
+          "kind": "ellipse",
+          "cx": 0.0,
+          "cy": 2.88,
+          "rx": 0.012,
+          "ry": 0.012,
+          "region": "rod-steel",
+          "material": "steel"
+        },
+        {
+          "id": "beam-flange-bottom",
+          "bone": "canopy",
+          "role": "detail",
+          "lod": 1,
+          "z": 4,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "poly",
+          "points": [
+            [
+              0.0,
+              -0.065
+            ],
+            [
+              5.5,
+              -0.065
+            ]
+          ],
+          "closed": false,
+          "region": "canopy-steel",
+          "material": "steel"
+        },
+        {
+          "id": "beam-glass",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 1,
+          "z": 3.5,
+          "filled": true,
+          "tone": 0.8,
+          "kind": "rect",
+          "x": 0.1,
+          "y": 0.08,
+          "w": 5.3,
+          "h": 0.02
+        },
+        {
+          "id": "beam-wall-plate",
+          "bone": "canopy",
+          "role": "body",
+          "lod": 1,
+          "z": 3.6,
+          "filled": true,
+          "tone": 0.3,
+          "kind": "rect",
+          "x": -0.02,
+          "y": -0.12,
+          "w": 0.02,
+          "h": 0.24,
+          "region": "canopy-steel",
+          "material": "steel"
+        },
+        {
+          "id": "wall-hatch",
+          "bone": "canopy",
+          "role": "texture",
+          "lod": 2,
+          "z": 1.2,
+          "filled": false,
+          "tone": 0.3,
+          "kind": "path",
+          "d": "M -0.5000 2.8700 L -0.3500 3.0200 M -0.5000 2.7200 L -0.2000 3.0200 M -0.5000 2.5700 L -0.0500 3.0200 M -0.5000 2.4200 L 0.0000 2.9200 M -0.5000 2.2700 L 0.0000 2.7700 M -0.5000 2.1200 L 0.0000 2.6200 M -0.5000 1.9700 L 0.0000 2.4700 M -0.5000 1.8200 L 0.0000 2.3200 M -0.5000 1.6700 L 0.0000 2.1700 M -0.5000 1.5200 L 0.0000 2.0200 M -0.5000 1.3700 L 0.0000 1.8700 M -0.5000 1.2200 L 0.0000 1.7200 M -0.5000 1.0700 L 0.0000 1.5700 M -0.5000 0.9200 L 0.0000 1.4200 M -0.5000 0.7700 L 0.0000 1.2700 M -0.5000 0.6200 L 0.0000 1.1200 M -0.5000 0.4700 L 0.0000 0.9700 M -0.5000 0.3200 L 0.0000 0.8200 M -0.5000 0.1700 L 0.0000 0.6700 M -0.5000 0.0200 L 0.0000 0.5200 M -0.4900 -0.1200 L 0.0000 0.3700 M -0.3400 -0.1200 L 0.0000 0.2200 M -0.1900 -0.1200 L 0.0000 0.0700 M -0.0400 -0.1200 L 0.0000 -0.0800"
+        }
+      ]
+    },
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Self-weight",
+          "de": "Eigengewicht"
+        },
+        "description": {
+          "en": "Canopy under its own weight, tube strut in tension.",
+          "de": "Vordach unter Eigengewicht, Rohrstab auf Zug."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "snow-load",
+        "title": {
+          "en": "Snow load",
+          "de": "Schneelast"
+        },
+        "description": {
+          "en": "Snow of 0.75 kN/m2 over 1.0 m beam spacing, 0.75 kN/m along the canopy.",
+          "de": "Schnee 0,75 kN/m² bei 1,0 m Trägerabstand, 0,75 kN/m entlang des Vordachs."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "snow-load",
+            "kind": "snow",
+            "title": {
+              "en": "Snow load 750 N/m",
+              "de": "Schneelast 750 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 0,
+              "toM": 5.5,
+              "wxNPerM": 0,
+              "wyNPerM": -750
+            },
+            "source": "authored-estimate",
+            "reference": "en-1991-1-3"
+          }
+        ]
+      },
+      {
+        "id": "wind-uplift",
+        "title": {
+          "en": "Wind uplift",
+          "de": "Windsog"
+        },
+        "description": {
+          "en": "Wind uplift of 0.5 kN/m2 over 1.0 m spacing; the tube strut carries the net uplift in compression.",
+          "de": "Windsog von 0,5 kN/m² bei 1,0 m Abstand; der Rohrstab trägt den Netto-Sog auf Druck."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "emitters": {},
+          "operating": {}
+        },
+        "loads": [
+          {
+            "id": "wind-uplift",
+            "kind": "wind",
+            "title": {
+              "en": "Wind uplift 500 N/m",
+              "de": "Windsog 500 N/m"
+            },
+            "fxN": 0,
+            "fyN": 0,
+            "distributed": {
+              "bone": "canopy",
+              "fromM": 0,
+              "toM": 5.5,
+              "wxNPerM": 0,
+              "wyNPerM": 500
+            },
+            "source": "literature",
+            "reference": "en-1991-1-4"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "loading-ramp",
+        "title": {
+          "en": "Loading ramp",
+          "de": "Lastaufbau"
+        },
+        "description": {
+          "en": "Snow rises smoothly from zero to its full value; the tube strut is in tension.",
+          "de": "Schnee steigt gleichmäßig von null auf den vollen Wert; der Rohrstab ist auf Zug beansprucht."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "snow-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 4,
+            "pose": "snow-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          }
+        ],
+        "events": [],
+        "tracks": [
+          {
+            "target": "load:snow-load",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "wind-gust",
+        "title": {
+          "en": "Wind gust",
+          "de": "Windböe"
+        },
+        "description": {
+          "en": "An uplift gust rises and falls; the strut changes from tension to compression when net uplift exceeds the self-weight.",
+          "de": "Eine Sogböe steigt und fällt; der Stab wechselt von Zug zu Druck, sobald der Netto-Sog das Eigengewicht übersteigt."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "wind-uplift",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "wind-uplift",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "gust",
+            "fromS": 0,
+            "toS": 6,
+            "title": {
+              "en": "Gust",
+              "de": "Böe"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Strut switches to compression",
+              "de": "Stab wechselt auf Druck"
+            }
+          },
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Strut switches to compression",
+              "de": "Stab wechselt auf Druck"
+            }
+          },
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Strut switches to compression",
+              "de": "Stab wechselt auf Druck"
+            }
+          },
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Strut switches to compression",
+              "de": "Stab wechselt auf Druck"
+            }
+          },
+          {
+            "t": 2.0,
+            "kind": "motion",
+            "title": {
+              "en": "Strut switches to compression",
+              "de": "Stab wechselt auf Druck"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:wind-uplift",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1,
+        "windDirectionDeg": 0,
+        "solarWM2": 500,
+        "pressurePa": 101325
+      },
+      "regions": [
+        {
+          "id": "canopy-steel",
+          "title": {
+            "en": "Canopy steel surface",
+            "de": "Vordach Stahloberfläche"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 3.9,
+          "characteristicLengthM": 5.5,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "rod-steel",
+          "title": {
+            "en": "Tie rod surface",
+            "de": "Zugstab Oberfläche"
+          },
+          "kind": "surface",
+          "material": "steel",
+          "model": "passive",
+          "areaM2": 0.4,
+          "characteristicLengthM": 0.02,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "wall-face",
+          "title": {
+            "en": "Wall face",
+            "de": "Wandfläche"
+          },
+          "kind": "wall",
+          "material": "concrete",
+          "model": "passive",
+          "areaM2": 3,
+          "characteristicLengthM": 3,
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Steel canopy and tie rod are passive surfaces under the reference solar load.",
+          "de": "Stahlvordach und Zugstab sind passive Oberflächen unter der Referenz-Sonnenlast."
+        },
+        {
+          "en": "Areas are the exposed surfaces of the IPE 160 beam and a 20 mm tie rod.",
+          "de": "Flächen sind die freiliegenden Oberflächen des IPE 160 und eines Zugstabs 20 mm."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "wall-pin",
+        "tie-rod"
+      ],
+      "assumptions": [
+        {
+          "en": "Canopy pinned at the wall; the tie is a circular hollow section strut hinged at both ends and modelled as a bilateral roller acting along the rod direction (144.04 deg from the beam point to the wall above), so it carries tension under snow and compression under net wind uplift.",
+          "de": "Vordach am Wandgelenk; der Rohrstab ist ein beidseitig gelenkig angeschlossenes Kreishohlprofil und als beidseitige Rolle in Stabrichtung (144,04 Grad vom Trägerpunkt zur Wand darüber) modelliert; er trägt Zug unter Schnee und Druck unter Netto-Windsog."
+        },
+        {
+          "en": "Buckling of the strut under uplift compression is not checked; its axial stiffness is not measured.",
+          "de": "Knicken des Stabs unter Druck bei Windsog ist nicht nachgewiesen; seine Dehnsteifigkeit ist nicht gemessen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "snow-load",
+      "defaultClip": "loading-ramp",
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

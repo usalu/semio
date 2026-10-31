@@ -1,0 +1,3 @@
+const fs=require("node:fs"),path=require("node:path"),assert=require("node:assert/strict"),vectors=JSON.parse(fs.readFileSync(path.join(__dirname,"schema-metadata-vectors.json"),"utf8")),failures=[];
+for(const row of vectors.cases){const source=JSON.parse(fs.readFileSync(row.path,"utf8"));let actual=source;for(const key of row.pointer.slice(1).split("/"))actual=actual?.[key.replaceAll("~1","/").replaceAll("~0","~")];try{assert.deepEqual(actual,row.expected,row.name);}catch{failures.push({name:row.name,path:row.path,pointer:row.pointer,actual:actual??null,expected:row.expected});}}
+console.log(JSON.stringify({cases:vectors.cases.length,failures}));assert.equal(failures.length,0,"Canonical owned metadata locations required");

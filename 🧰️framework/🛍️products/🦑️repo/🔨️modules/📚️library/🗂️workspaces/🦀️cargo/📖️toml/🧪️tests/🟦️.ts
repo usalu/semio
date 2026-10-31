@@ -1,5 +1,5 @@
 import {test,expect} from "bun:test";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import {CargoTomlWorkspace,parseCargoToml} from "../🟦️.ts";
 import {CargoDiscoveryWorkspace} from "../../📁️physical/🟦️.ts";

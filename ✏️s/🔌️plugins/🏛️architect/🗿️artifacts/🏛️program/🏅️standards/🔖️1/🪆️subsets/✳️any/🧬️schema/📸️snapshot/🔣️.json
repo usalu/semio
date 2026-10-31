@@ -997,13 +997,15 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "notes": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/TaggedNote"
-          }
+          },
+          "default": []
         },
         "timestamps": {
           "$ref": "#/$defs/TimestampMeta"
@@ -15316,7 +15318,267 @@
         "flexibilityRequirement",
         "wayfindingRequirement",
         "programElement"
-      ]
+      ],
+      "x-semio-ui": {
+        "options": {
+          "informationRequirement": {
+            "en": "information requirement",
+            "de": "Informationsanforderung"
+          },
+          "sustainabilityRequirement": {
+            "en": "sustainability requirement",
+            "de": "Nachhaltigkeitsanforderung"
+          },
+          "accessibilityRequirement": {
+            "en": "accessibility requirement",
+            "de": "Barrierefreiheitsanforderung"
+          },
+          "conflict": {
+            "en": "conflict",
+            "de": "Konflikt"
+          },
+          "optionEvaluation": {
+            "en": "option evaluation",
+            "de": "Optionsbewertung"
+          },
+          "function": {
+            "en": "function",
+            "de": "Funktion"
+          },
+          "risk": {
+            "en": "risk",
+            "de": "Risiko"
+          },
+          "decision": {
+            "en": "decision",
+            "de": "Entscheidung"
+          },
+          "validationRecord": {
+            "en": "validation record",
+            "de": "Validierungsdatensatz"
+          },
+          "priorityRecord": {
+            "en": "priority record",
+            "de": "Prioritätsdatensatz"
+          },
+          "flowRequirement": {
+            "en": "flow requirement",
+            "de": "Flussanforderung"
+          },
+          "environmentalRequirement": {
+            "en": "environmental requirement",
+            "de": "Umweltanforderung"
+          },
+          "workshop": {
+            "en": "workshop",
+            "de": "Workshop"
+          },
+          "scenario": {
+            "en": "scenario",
+            "de": "Szenario"
+          },
+          "benchmarkRecord": {
+            "en": "benchmark record",
+            "de": "Benchmark-Datensatz"
+          },
+          "activity": {
+            "en": "activity",
+            "de": "Aktivität"
+          },
+          "infrastructureRequirement": {
+            "en": "infrastructure requirement",
+            "de": "Infrastrukturanforderung"
+          },
+          "organizationalRequirement": {
+            "en": "organizational requirement",
+            "de": "Organisationsanforderung"
+          },
+          "issue": {
+            "en": "issue",
+            "de": "Vorgang"
+          },
+          "approvalRecord": {
+            "en": "approval record",
+            "de": "Freigabedatensatz"
+          },
+          "stakeholder": {
+            "en": "stakeholder",
+            "de": "Beteiligter"
+          },
+          "qualityRecord": {
+            "en": "quality record",
+            "de": "Qualitätsdatensatz"
+          },
+          "resilienceRequirement": {
+            "en": "resilience requirement",
+            "de": "Resilienzanforderung"
+          },
+          "assumption": {
+            "en": "assumption",
+            "de": "Annahme"
+          },
+          "costRequirement": {
+            "en": "cost requirement",
+            "de": "Kostenanforderung"
+          },
+          "document": {
+            "en": "document",
+            "de": "Dokument"
+          },
+          "scheduleRequirement": {
+            "en": "schedule requirement",
+            "de": "Terminanforderung"
+          },
+          "growthPlan": {
+            "en": "growth plan",
+            "de": "Wachstumsplan"
+          },
+          "performanceCriterion": {
+            "en": "performance criterion",
+            "de": "Leistungskriterium"
+          },
+          "operationalRequirement": {
+            "en": "operational requirement",
+            "de": "Betriebsanforderung"
+          },
+          "requirement": {
+            "en": "requirement",
+            "de": "Anforderung"
+          },
+          "siteContext": {
+            "en": "site context",
+            "de": "Standortkontext"
+          },
+          "templateRecord": {
+            "en": "template record",
+            "de": "Vorlagendatensatz"
+          },
+          "reportRecord": {
+            "en": "report record",
+            "de": "Berichtsdatensatz"
+          },
+          "auditEvent": {
+            "en": "audit event",
+            "de": "Audit-Ereignis"
+          },
+          "knowledgeRecord": {
+            "en": "knowledge record",
+            "de": "Wissensdatensatz"
+          },
+          "regulatoryRequirement": {
+            "en": "regulatory requirement",
+            "de": "Regulatorische Anforderung"
+          },
+          "communicationRequirement": {
+            "en": "communication requirement",
+            "de": "Kommunikationsanforderung"
+          },
+          "resource": {
+            "en": "resource",
+            "de": "Ressource"
+          },
+          "statusRecord": {
+            "en": "status record",
+            "de": "Statusdatensatz"
+          },
+          "changeRecord": {
+            "en": "change record",
+            "de": "Änderungsdatensatz"
+          },
+          "process": {
+            "en": "process",
+            "de": "Prozess"
+          },
+          "searchFilter": {
+            "en": "search filter",
+            "de": "Suchfilter"
+          },
+          "accessRule": {
+            "en": "access rule",
+            "de": "Zugangsregel"
+          },
+          "privacyRequirement": {
+            "en": "privacy requirement",
+            "de": "Datenschutzanforderung"
+          },
+          "quantityRequirement": {
+            "en": "quantity requirement",
+            "de": "Mengenanforderung"
+          },
+          "analysisRecord": {
+            "en": "analysis record",
+            "de": "Analysedatensatz"
+          },
+          "relationship": {
+            "en": "relationship",
+            "de": "Beziehung"
+          },
+          "storageRequirement": {
+            "en": "storage requirement",
+            "de": "Stauraumanforderung"
+          },
+          "meetingRecord": {
+            "en": "meeting record",
+            "de": "Besprechungsdatensatz"
+          },
+          "survey": {
+            "en": "survey",
+            "de": "Erhebung"
+          },
+          "deliveryConstraint": {
+            "en": "delivery constraint",
+            "de": "Lieferrandbedingung"
+          },
+          "constraintRecord": {
+            "en": "constraint record",
+            "de": "Randbedingungsdatensatz"
+          },
+          "complianceRecord": {
+            "en": "compliance record",
+            "de": "Konformitätsdatensatz"
+          },
+          "serviceRequirement": {
+            "en": "service requirement",
+            "de": "Dienstanforderung"
+          },
+          "equipment": {
+            "en": "equipment",
+            "de": "Ausstattung"
+          },
+          "securityRequirement": {
+            "en": "security requirement",
+            "de": "Schutzanforderung"
+          },
+          "collaborationRecord": {
+            "en": "collaboration record",
+            "de": "Zusammenarbeitsdatensatz"
+          },
+          "safetyRequirement": {
+            "en": "safety requirement",
+            "de": "Sicherheitsanforderung"
+          },
+          "userProfile": {
+            "en": "user profile",
+            "de": "Benutzerprofil"
+          },
+          "humanFactorRequirement": {
+            "en": "human factor requirement",
+            "de": "Ergonomieanforderung"
+          },
+          "flexibilityRequirement": {
+            "en": "flexibility requirement",
+            "de": "Flexibilitätsanforderung"
+          },
+          "wayfindingRequirement": {
+            "en": "wayfinding requirement",
+            "de": "Wegeführungsanforderung"
+          },
+          "programElement": {
+            "en": "program element",
+            "de": "Programmelement"
+          }
+        }
+      }
     },
     "RegisterRow": {
       "title": "RegisterRow",

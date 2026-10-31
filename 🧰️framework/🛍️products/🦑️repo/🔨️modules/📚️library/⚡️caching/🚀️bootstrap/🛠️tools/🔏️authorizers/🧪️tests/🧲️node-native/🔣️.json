@@ -1,0 +1,99 @@
+{
+  "cases": [
+    {
+      "name": "built-in-static-dependencies",
+      "provider": false,
+      "pointer": "42"
+    },
+    {
+      "name": "explicit-external-provider",
+      "provider": true,
+      "pointer": "73"
+    }
+  ],
+  "resource": {
+    "first": "opaque Rust resource a { not TypeScript",
+    "second": "opaque Rust resource b { not TypeScript"
+  },
+  "linkers": [
+    {
+      "name": "registered-sdk",
+      "source": "native-compiler",
+      "prefix": [],
+      "suffix": [
+        "-B/usr/bin",
+        "-L/usr/lib",
+        "-isystem/sdk/include"
+      ],
+      "environment": {},
+      "project": true
+    },
+    {
+      "name": "ordinary-system",
+      "source": "path",
+      "prefix": [],
+      "suffix": [],
+      "environment": {},
+      "project": false
+    },
+    {
+      "name": "msvc-choice",
+      "source": "path",
+      "prefix": [],
+      "suffix": [],
+      "environment": {
+        "CC": "cl.exe"
+      },
+      "project": false
+    },
+    {
+      "name": "external-provider",
+      "source": "native-compiler",
+      "prefix": [],
+      "suffix": [],
+      "environment": {
+        "SEMIO_RUNTIME_NATIVE_PROVIDER": "/provider.cjs"
+      },
+      "project": false
+    },
+    {
+      "name": "explicit-addon",
+      "source": "native-compiler",
+      "prefix": [],
+      "suffix": [],
+      "environment": {
+        "SEMIO_RUNTIME_NATIVE_ADDON": "/prebuilt.node"
+      },
+      "project": false
+    },
+    {
+      "name": "unsupported-prefix",
+      "source": "native-compiler",
+      "prefix": [
+        "--wrapper"
+      ],
+      "suffix": [],
+      "environment": {},
+      "refuse": true
+    },
+    {
+      "name": "missing-driver",
+      "source": "native-compiler",
+      "prefix": [],
+      "suffix": [],
+      "environment": {},
+      "missing": true,
+      "refuse": true
+    },
+    {
+      "name": "explicit-linker",
+      "source": "native-compiler",
+      "prefix": [],
+      "suffix": [],
+      "environment": {
+        "SEMIO_RUNTIME_NATIVE_LINKER": "{\"version\":1,\"command\":\"/explicit cc\",\"arguments\":[]}"
+      },
+      "project": false
+    }
+  ]
+}

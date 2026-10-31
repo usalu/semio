@@ -1,0 +1,1698 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "drinking-fountain",
+    "category": "objects",
+    "title": {
+      "en": "Cast Drinking Fountain",
+      "de": "Guss-Trinkbrunnen"
+    },
+    "summary": {
+      "en": "A 1.0 m cast-iron pedestal drinking fountain with a stainless basin and a goose-neck bubbler: a push button opens the tap, the water jet arcs into the basin as a cool, wet source of moisture, and the pedestal warms in the sun.",
+      "de": "Ein 1,0 m hoher Trinkbrunnen mit Gusssockel, Edelstahlbecken und Schwanenhals-Sprudler: ein Drucktaster öffnet den Hahn, der Wasserstrahl bogt als kühle, feuchte Feuchtequelle ins Becken und der Sockel erwärmt sich in der Sonne."
+    },
+    "tags": [
+      "drinking-fountain",
+      "water",
+      "cast-iron",
+      "pedestal",
+      "moisture-source",
+      "public-space"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-O)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "en-1717",
+          "citation": "EN 1717:2000 Protection against pollution of potable water installations (free outlet above the basin rim, air gap) - rationale for the free-falling jet over an open basin."
+        },
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values (cast iron, steel, brass)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (radiative properties, convective mass transfer from a wetted surface)."
+        },
+        {
+          "id": "din-1988-200",
+          "citation": "DIN 1988-200 / DVGW W 551 Technical rules for drinking water installations: supply water temperature below 25 degC; the 12 degC mains temperature used here is an authored estimate for a buried supply line."
+        },
+        {
+          "id": "fountain-class",
+          "citation": "Typical cast-iron pedestal drinking fountains (bubbler flow about 2-4 L/min, mass 50-90 kg) from manufacturer datasheets of the product class; authored-estimate summary, no single datasheet."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation, mass 68 kg and a flow of 3 L/min are class values (authored estimates). The jet is a bone that retracts 0.25 m behind the basin when the tap is off, so it is not drawn as running water in the idle poses. The jet emitter releases air saturated at the 12 degC supply temperature (humidity ratio 0.0087 kg/kg, 14 K below the 26 degC ambient of the reference case, here applied as a 4 K cooling of the entrained air) at 0.0003 m3/s: an authored estimate of the entrained boundary-layer air of a 0.012 m jet (evaporating surface about 0.006 m2).",
+        "de": "Seitenansicht, Masse 68 kg und ein Durchfluss von 3 L/min sind Klassenwerte (Schätzwerte). Der Strahl ist ein Knochen, der sich bei geschlossenem Hahn 0,25 m hinter dem Becken zurückzieht, damit er in den Ruheposen nicht als fließendes Wasser gezeichnet wird. Der Strahl-Emitter gibt bei 0,0003 m3/s Luft ab, die bei der Zulauftemperatur von 12 degC gesättigt ist (Feuchtegrad 0,0087 kg/kg): eine Schätzung der mitgerissenen Grenzschichtluft eines 0,012 m dicken Strahls (verdunstende Fläche etwa 0,006 m2)."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.0,
+      "widthM": 0.4,
+      "depthM": 0.4,
+      "massKg": 68.0
+    },
+    "materials": [
+      {
+        "id": "cast-iron",
+        "title": {
+          "en": "Painted cast iron",
+          "de": "Lackiertes Gusseisen"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.8,
+        "densityKgM3": 7200,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 500,
+        "elasticModulusPa": 100000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "stainless-basin",
+        "title": {
+          "en": "Brushed stainless steel basin",
+          "de": "Edelstahlbecken gebürstet"
+        },
+        "emissivity": 0.35,
+        "solarAbsorptivity": 0.45,
+        "densityKgM3": 7900,
+        "conductivityWmK": 17,
+        "specificHeatJKgK": 500,
+        "elasticModulusPa": 200000000000.0,
+        "source": "literature",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "chrome-brass",
+        "title": {
+          "en": "Chrome-plated brass",
+          "de": "Verchromtes Messing"
+        },
+        "emissivity": 0.1,
+        "solarAbsorptivity": 0.35,
+        "densityKgM3": 8500,
+        "conductivityWmK": 110,
+        "specificHeatJKgK": 380,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "water",
+        "title": {
+          "en": "Drinking water",
+          "de": "Trinkwasser"
+        },
+        "emissivity": 0.96,
+        "solarAbsorptivity": 0.05,
+        "densityKgM3": 1000,
+        "conductivityWmK": 0.6,
+        "specificHeatJKgK": 4180,
+        "source": "literature",
+        "reference": "incropera-2018"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "pedestal",
+      "bones": [
+        {
+          "id": "pedestal",
+          "parent": null,
+          "title": {
+            "en": "Cast pedestal with base flange",
+            "de": "Gusssockel mit Fußflansch"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0,
+          "lengthM": 0.74,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 62.3,
+            "comX": 0.0,
+            "comY": 0.3,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "fountain-class"
+          }
+        },
+        {
+          "id": "basin",
+          "parent": "pedestal",
+          "title": {
+            "en": "Stainless basin",
+            "de": "Edelstahlbecken"
+          },
+          "x": 0.0,
+          "y": 0.74,
+          "angleDeg": 0,
+          "lengthM": 0.12,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 4.5,
+            "comX": 0.0,
+            "comY": 0.06,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "fountain-class"
+          }
+        },
+        {
+          "id": "bubbler",
+          "parent": "basin",
+          "title": {
+            "en": "Goose-neck bubbler",
+            "de": "Schwanenhals-Sprudler"
+          },
+          "x": -0.15,
+          "y": 0.12,
+          "angleDeg": 0,
+          "lengthM": 0.14,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 1.0,
+            "comX": 0.03,
+            "comY": 0.09,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "fountain-class"
+          }
+        },
+        {
+          "id": "button",
+          "parent": "pedestal",
+          "title": {
+            "en": "Push button",
+            "de": "Drucktaster"
+          },
+          "x": 0.102,
+          "y": 0.66,
+          "angleDeg": 0,
+          "lengthM": 0.02,
+          "joint": {
+            "type": "prismatic",
+            "minM": 0,
+            "maxM": 0.01,
+            "axisDeg": 180
+          },
+          "mass": {
+            "kg": 0.2,
+            "comX": 0.006,
+            "comY": 0.0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "fountain-class"
+          }
+        },
+        {
+          "id": "jet",
+          "parent": "bubbler",
+          "title": {
+            "en": "Water jet (sinks into the basin when off)",
+            "de": "Wasserstrahl (versinkt im Becken, wenn aus)"
+          },
+          "x": 0.105,
+          "y": 0.095,
+          "angleDeg": 0,
+          "lengthM": 0.12,
+          "joint": {
+            "type": "prismatic",
+            "minM": -0.25,
+            "maxM": 0,
+            "axisDeg": 90
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "base-fixed",
+        "bone": "pedestal",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Base flange bolted to the footing",
+          "de": "Fußflansch am Fundament verschraubt"
+        },
+        "support": "fixed",
+        "footprintLengthM": 0.4,
+        "footprintWidthM": 0.4
+      },
+      {
+        "id": "nozzle",
+        "bone": "bubbler",
+        "x": 0.105,
+        "y": 0.095,
+        "kind": "emitter",
+        "title": {
+          "en": "Bubbler nozzle",
+          "de": "Sprudlerdüse"
+        }
+      },
+      {
+        "id": "lean-point",
+        "bone": "basin",
+        "x": 0.0,
+        "y": 0.125,
+        "kind": "load",
+        "title": {
+          "en": "Hands and chest at the basin rim",
+          "de": "Hände und Brust am Beckenrand"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.12 L 0.14 0.12 L 0.1 0.72 L -0.1 0.72 L -0.14 0.12 L -0.2 0.12 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.125 C -0.2 0.04 -0.12 -0.02 0 -0.02 C 0.12 -0.02 0.2 0.04 0.2 0.125 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "rect",
+              "x": -0.04,
+              "y": 0.0,
+              "w": 0.15,
+              "h": 0.14,
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.012,
+              "y": -0.04,
+              "w": 0.025,
+              "h": 0.08,
+              "region": "bubbler-brass"
+            ,
+              "penMm": 0.138
+             },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 C 0.025 0.045 0.095 0.045 0.13 -0.085",
+              "region": "water-jet",
+              "penMm": 0.13
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fountain sign 0.8 mm wide and 2 mm high: a flared pedestal with a basin disc and a bubbler block rising at the left.",
+            "de": "Ein Brunnenzeichen, 0,8 mm breit und 2 mm hoch: ein ausgestellter Sockel mit Beckenscheibe und ein links aufsteigender Sprudlerblock."
+          },
+          "retained": {
+            "en": "Height 1.0 m and basin width 0.40 m exactly; pedestal flare, basin, bubbler and the jet hairline.",
+            "de": "Höhe 1,0 m und Beckenbreite 0,40 m exakt; Sockelausstellung, Becken, Sprudler und die Strahl-Haarlinie."
+          },
+          "merged": {
+            "en": "Base flange and column are one flared path; the goose neck and its head are one block; the button is a small bar.",
+            "de": "Fußflansch und Säule sind ein ausgestellter Pfad; Schwanenhals und Kopf sind ein Block; der Taster ist ein kleiner Balken."
+          },
+          "omitted": {
+            "en": "Column mouldings, rim bead, nozzle, drain.",
+            "de": "Säulenprofile, Randwulst, Düse, Ablauf."
+          },
+          "thinElements": {
+            "en": "The 0.03 m neck would be 0.06 mm: widened to a 0.15 m (0.3 mm) block; the 0.012 m jet is a 0.13 mm hairline (inflation 11 times); the basin is 0.02 m lower than real.",
+            "de": "Der 0,03 m dicke Hals wäre 0,06 mm: auf einen Block von 0,15 m (0,3 mm) verbreitert; der 0,012 m dicke Strahl ist eine 0,13-mm-Haarlinie (Aufblähung 11-fach); das Becken liegt 0,02 m tiefer als real."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Pedestal 0.6, basin 0.5, bubbler 0.7; body pen 0.13 mm, ground 0.18 mm.",
+            "de": "Sockel 0,6, Becken 0,5, Sprudler 0,7; Körperstift 0,13 mm, Boden 0,18 mm."
+          },
+          "overlays": {
+            "en": "Pedestal, basin and bubbler block carry their regions; the jet hairline carries water-jet and sinks behind the basin when the tap is off.",
+            "de": "Sockel, Becken und Sprudlerblock tragen ihre Regionen; die Strahl-Haarlinie trägt water-jet und versinkt hinter dem Becken, wenn der Hahn aus ist."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.07 L 0.15 0.07 L 0.1 0.7 L 0.09 0.745 L -0.09 0.745 L -0.1 0.7 L -0.15 0.07 L -0.2 0.07 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.125 C -0.2 0.05 -0.12 0 0 0 C 0.12 0 0.2 0.05 0.2 0.125 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.02 -0.005 L -0.02 0.11 C -0.02 0.14 0.01 0.14 0.03 0.14 C 0.07 0.14 0.1 0.13 0.11 0.1 L 0.085 0.095 C 0.08 0.11 0.06 0.115 0.03 0.112 L 0.025 0.112 L 0.025 -0.005 Z",
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "rect",
+              "x": -0.012,
+              "y": -0.02,
+              "w": 0.025,
+              "h": 0.04,
+              "region": "bubbler-brass"
+            },
+            {
+              "id": "collar",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.115,
+                  0.55
+                ],
+                [
+                  0.115,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 C 0.025 0.045 0.095 0.045 0.13 -0.085",
+              "region": "water-jet",
+              "penMm": 0.13
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fountain 2 mm wide and 5 mm high: a baluster pedestal with a flange, a basin and a hooked bubbler neck with a jet arc.",
+            "de": "Ein Brunnen 2 mm breit und 5 mm hoch: ein Baluster-Sockel mit Flansch, ein Becken und ein gekrümmter Sprudlerhals mit Strahlbogen."
+          },
+          "retained": {
+            "en": "Flange, baluster profile, collar line, basin, hooked neck, button, jet.",
+            "de": "Flansch, Balusterprofil, Kragenlinie, Becken, gekrümmter Hals, Taster, Strahl."
+          },
+          "merged": {
+            "en": "The pedestal mouldings merge into the baluster outline.",
+            "de": "Die Sockelprofile gehen in der Balusterkontur auf."
+          },
+          "omitted": {
+            "en": "Nozzle detail, rim bead, bolt holes, drain.",
+            "de": "Düsendetail, Randwulst, Schraublöcher, Ablauf."
+          },
+          "thinElements": {
+            "en": "The neck is 0.05 m (0.25 mm) wide, real 0.03 m; the jet is a 0.13 mm hairline for a 0.012 m stream.",
+            "de": "Der Hals ist 0,05 m (0,25 mm) breit, real 0,03 m; der Strahl ist eine 0,13-mm-Haarlinie für einen 0,012 m dicken Strahl."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Pedestal 0.6, basin 0.5, bubbler 0.7; body pen 0.18 mm, detail 0.13 mm.",
+            "de": "Sockel 0,6, Becken 0,5, Sprudler 0,7; Körperstift 0,18 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "The collar line carries pedestal-cast; the jet water-jet.",
+            "de": "Die Kragenlinie trägt pedestal-cast; der Strahl water-jet."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.05 L 0.17 0.06 L 0.15 0.08 L 0.1 0.7 L 0.09 0.745 L -0.09 0.745 L -0.1 0.7 L -0.15 0.08 L -0.17 0.06 L -0.2 0.05 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.125 C -0.2 0.05 -0.12 0 0 0 C 0.12 0 0.2 0.05 0.2 0.125 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.1
+                ],
+                [
+                  0.19,
+                  0.1
+                ]
+              ],
+              "closed": false,
+              "region": "basin-steel"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.03 -0.005 L -0.03 0.11 C -0.03 0.14 0.01 0.14 0.03 0.14 C 0.07 0.14 0.1 0.13 0.11 0.1 L 0.085 0.095 C 0.08 0.11 0.06 0.115 0.03 0.112 L 0.02 0.112 L 0.02 -0.005 Z",
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0.006,
+              "cy": 0.0,
+              "rx": 0.02,
+              "ry": 0.025,
+              "region": "bubbler-brass"
+            },
+            {
+              "id": "collar-0",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.3
+                ],
+                [
+                  0.12,
+                  0.3
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "collar-1",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.12,
+                  0.55
+                ],
+                [
+                  0.12,
+                  0.55
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 C 0.025 0.045 0.095 0.045 0.13 -0.085",
+              "region": "water-jet",
+              "penMm": 0.18
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fountain 4 mm wide and 10 mm high: a flanged baluster pedestal with two collar lines, a basin with rim line, a goose-neck bubbler with a round button.",
+            "de": "Ein Brunnen 4 mm breit und 10 mm hoch: ein Baluster-Sockel mit Flansch und zwei Kragenlinien, ein Becken mit Randlinie, ein Schwanenhals-Sprudler mit rundem Taster."
+          },
+          "retained": {
+            "en": "Stepped flange, baluster, collars, basin and rim, neck with head, button, jet arc.",
+            "de": "Gestufter Flansch, Baluster, Kragen, Becken und Rand, Hals mit Kopf, Taster, Strahlbogen."
+          },
+          "merged": {
+            "en": "The cast mouldings of the column are drawn as two collars.",
+            "de": "Die gegossenen Profile der Säule sind als zwei Kragen gezeichnet."
+          },
+          "omitted": {
+            "en": "Nozzle detail, drain, flutes, bolt holes.",
+            "de": "Düsendetail, Ablauf, Kannelüren, Schraublöcher."
+          },
+          "thinElements": {
+            "en": "The neck is the real 0.03 m (0.3 mm) plus 0.015 m; the jet is a 0.18 mm line for a 0.012 m stream.",
+            "de": "Der Hals ist die reale 0,03 m (0,3 mm) plus 0,015 m; der Strahl ist eine 0,18-mm-Linie für einen 0,012 m dicken Strahl."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Pedestal 0.6, basin 0.5, bubbler 0.7; body pen 0.25 mm, detail 0.13 mm.",
+            "de": "Sockel 0,6, Becken 0,5, Sprudler 0,7; Körperstift 0,25 mm, Detail 0,13 mm."
+          },
+          "overlays": {
+            "en": "Collars carry pedestal-cast, the rim line basin-steel, the button bubbler-brass, the jet water-jet.",
+            "de": "Kragen tragen pedestal-cast, die Randlinie basin-steel, der Taster bubbler-brass, der Strahl water-jet."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": null,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "flutes",
+            "title": {
+              "en": "Column flutes",
+              "de": "Säulenkannelüren"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.5,
+            "penMm": 0.13
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "pedestal",
+              "bone": "pedestal",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.2 0 L 0.2 0 L 0.2 0.04 L 0.17 0.055 L 0.16 0.075 L 0.15 0.08 L 0.1 0.7 L 0.11 0.72 L 0.09 0.745 L -0.09 0.745 L -0.11 0.72 L -0.1 0.7 L -0.15 0.08 L -0.16 0.075 L -0.17 0.055 L -0.2 0.04 Z",
+              "region": "pedestal-cast",
+              "material": "cast-iron",
+              "hatch": "flutes"
+            },
+            {
+              "id": "collar-0",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.132258,
+                  0.2
+                ],
+                [
+                  0.132258,
+                  0.2
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "collar-1",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.118065,
+                  0.42
+                ],
+                [
+                  0.118065,
+                  0.42
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "collar-2",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.105161,
+                  0.62
+                ],
+                [
+                  0.105161,
+                  0.62
+                ]
+              ],
+              "closed": false,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "bolt-0",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": -0.1792,
+              "cy": 0.02,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "bolt-1",
+              "bone": "pedestal",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.1792,
+              "cy": 0.02,
+              "rx": 0.008,
+              "ry": 0.008,
+              "region": "pedestal-cast"
+            },
+            {
+              "id": "basin",
+              "bone": "basin",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.2 0.125 C -0.2 0.05 -0.12 0 0 0 C 0.12 0 0.2 0.05 0.2 0.125 Z",
+              "region": "basin-steel",
+              "material": "stainless-basin"
+            },
+            {
+              "id": "rim",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.5,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.19,
+                  0.1
+                ],
+                [
+                  0.19,
+                  0.1
+                ]
+              ],
+              "closed": false,
+              "region": "basin-steel"
+            },
+            {
+              "id": "rim-bead",
+              "bone": "basin",
+              "role": "detail",
+              "z": 3.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.205 0.125 C -0.2 0.132 0.2 0.132 0.205 0.125",
+              "region": "basin-steel"
+            },
+            {
+              "id": "bubbler",
+              "bone": "bubbler",
+              "role": "body",
+              "z": 3.3,
+              "filled": true,
+              "tone": 0.7,
+              "kind": "path",
+              "d": "M -0.03 -0.005 L -0.03 0.11 C -0.03 0.14 0.01 0.14 0.03 0.14 C 0.07 0.14 0.1 0.13 0.11 0.1 L 0.085 0.095 C 0.08 0.11 0.06 0.115 0.03 0.112 L 0.02 0.112 L 0.02 -0.005 Z",
+              "region": "bubbler-brass",
+              "material": "chrome-brass"
+            },
+            {
+              "id": "nozzle-ring",
+              "bone": "bubbler",
+              "role": "detail",
+              "z": 3.6,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.1,
+              "cy": 0.098,
+              "rx": 0.014,
+              "ry": 0.014,
+              "region": "bubbler-brass"
+            },
+            {
+              "id": "button",
+              "bone": "button",
+              "role": "body",
+              "z": 3.4,
+              "filled": true,
+              "tone": 0.8,
+              "kind": "ellipse",
+              "cx": 0.006,
+              "cy": 0.0,
+              "rx": 0.02,
+              "ry": 0.025,
+              "region": "bubbler-brass"
+            },
+            {
+              "id": "jet",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.6,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0 0 C 0.025 0.045 0.095 0.045 0.13 -0.085",
+              "region": "water-jet",
+              "penMm": 0.25
+            },
+            {
+              "id": "drop-0",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.115,
+              "cy": -0.04,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "water-jet"
+            },
+            {
+              "id": "drop-1",
+              "bone": "jet",
+              "role": "detail",
+              "z": 2.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.14,
+              "cy": -0.07,
+              "rx": 0.007,
+              "ry": 0.007,
+              "region": "water-jet"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A fountain 8 mm wide and 20 mm high with cast detail: stepped flange with bolt heads, fluted baluster with three collars, basin with rim bead, goose-neck bubbler with a nozzle ring, push button and the jet arc with two drops.",
+            "de": "Ein Brunnen 8 mm breit und 20 mm hoch mit Gussdetail: gestufter Flansch mit Schraubenköpfen, kannelierter Baluster mit drei Kragen, Becken mit Randwulst, Schwanenhals-Sprudler mit Düsenring, Drucktaster und der Strahlbogen mit zwei Tropfen."
+          },
+          "retained": {
+            "en": "All visible parts at real size; the button moves 10 mm in with the button bone, the jet sinks with the jet bone.",
+            "de": "Alle sichtbaren Teile in realer Größe; der Taster fährt 10 mm mit dem Tasterknochen ein, der Strahl versinkt mit dem Strahlknochen."
+          },
+          "merged": {
+            "en": "The far bolt head is hidden by the near flange.",
+            "de": "Der ferne Schraubenkopf ist vom nahen Flansch verdeckt."
+          },
+          "omitted": {
+            "en": "Maker plate, drain grid, cast ornament.",
+            "de": "Typenschild, Ablaufgitter, Gussornament."
+          },
+          "thinElements": {
+            "en": "The jet is a 0.25 mm line for the 0.012 m stream (0.24 mm real); drops are 0.014 m (0.28 mm) circles; the nozzle ring is 0.56 mm.",
+            "de": "Der Strahl ist eine 0,25-mm-Linie für den 0,012 m (0,24 mm) dicken Strahl; Tropfen sind Kreise von 0,014 m (0,28 mm); der Düsenring misst 0,56 mm."
+          },
+          "hatching": {
+            "en": "Flutes as vertical lines at 0.5 mm spacing inside the column.",
+            "de": "Kannelüren als senkrechte Linien im Abstand 0,5 mm in der Säule."
+          },
+          "styles": {
+            "en": "Pedestal 0.6, basin 0.5, bubbler 0.7; body pen 0.35 mm, detail 0.18 mm, texture 0.13 mm.",
+            "de": "Sockel 0,6, Becken 0,5, Sprudler 0,7; Körperstift 0,35 mm, Detail 0,18 mm, Textur 0,13 mm."
+          },
+          "overlays": {
+            "en": "Jet and drops carry water-jet: the thermal view paints the 12 degC water against the warm basin.",
+            "de": "Strahl und Tropfen tragen water-jet: die Thermalansicht färbt das 12-grädige Wasser gegen das warme Becken."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "idle-sun",
+        "title": {
+          "en": "Idle in the sun",
+          "de": "Ruhend in der Sonne"
+        },
+        "description": {
+          "en": "Tap off, the jet sunk into the basin, sun on the basin and the neck.",
+          "de": "Hahn aus, der Strahl im Becken versunken, Sonne auf Becken und Hals."
+        },
+        "bones": {
+          "jet": {
+            "dy": -0.25
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-fixed"
+        ],
+        "thermal": {
+          "regions": {
+            "pedestal-cast": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "basin-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "bubbler-brass": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "water-jet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "jet-spray": 0
+          },
+          "operating": {
+            "tap": 0
+          }
+        },
+        "loads": []
+      },
+      {
+        "id": "drinking",
+        "title": {
+          "en": "Running",
+          "de": "Läuft"
+        },
+        "description": {
+          "en": "Button pressed 10 mm, the jet arcs from the nozzle into the basin and a person leans on the rim with 200 N.",
+          "de": "Taster 10 mm gedrückt, der Strahl bogt von der Düse ins Becken und eine Person stützt sich mit 200 N auf den Rand."
+        },
+        "bones": {
+          "jet": {
+            "dy": 0
+          },
+          "button": {
+            "dx": -0.01
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-fixed"
+        ],
+        "thermal": {
+          "regions": {
+            "pedestal-cast": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "basin-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0,
+              "wettedness": 0.5
+            },
+            "bubbler-brass": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "water-jet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0,
+              "wettedness": 1.0,
+              "contact": {
+                "fraction": 0.8,
+                "tempC": 12
+              }
+            }
+          },
+          "emitters": {
+            "jet-spray": 1
+          },
+          "operating": {
+            "tap": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "basin-lean",
+            "kind": "imposed",
+            "title": {
+              "en": "Person bending over the basin",
+              "de": "Person über das Becken gebeugt"
+            },
+            "fxN": 30,
+            "fyN": -200,
+            "source": "authored-estimate",
+            "anchor": "lean-point",
+            "reference": "fountain-class"
+          }
+        ]
+      },
+      {
+        "id": "idle-shade",
+        "title": {
+          "en": "Idle in shade",
+          "de": "Ruhend im Schatten"
+        },
+        "description": {
+          "en": "Tap off in the shade of a tree; the cast pedestal stays cool.",
+          "de": "Hahn aus im Baumschatten; der Gusssockel bleibt kühl."
+        },
+        "bones": {
+          "jet": {
+            "dy": -0.25
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "base-fixed"
+        ],
+        "thermal": {
+          "regions": {
+            "pedestal-cast": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "basin-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "bubbler-brass": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            },
+            "water-jet": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.0
+            }
+          },
+          "emitters": {
+            "jet-spray": 0
+          },
+          "operating": {
+            "tap": 0
+          }
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "press-and-drink",
+        "title": {
+          "en": "Press and drink",
+          "de": "Drücken und trinken"
+        },
+        "description": {
+          "en": "The button is pressed, the jet rises over two seconds, runs for eight seconds and sinks when the button is released.",
+          "de": "Der Taster wird gedrückt, der Strahl steigt in zwei Sekunden, läuft acht Sekunden und versinkt beim Loslassen."
+        },
+        "durationS": 14,
+        "fps": 12,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle-sun",
+            "ease": "smooth"
+          },
+          {
+            "t": 2,
+            "pose": "drinking",
+            "ease": "smooth"
+          },
+          {
+            "t": 11,
+            "pose": "drinking",
+            "ease": "smooth"
+          },
+          {
+            "t": 13,
+            "pose": "idle-sun",
+            "ease": "smooth"
+          },
+          {
+            "t": 14,
+            "pose": "idle-sun",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-fixed",
+            "fromS": 0,
+            "toS": 14
+          }
+        ],
+        "phases": [
+          {
+            "id": "rest",
+            "fromS": 0,
+            "toS": 1,
+            "title": {
+              "en": "At rest",
+              "de": "In Ruhe"
+            }
+          },
+          {
+            "id": "flow",
+            "fromS": 1,
+            "toS": 12,
+            "title": {
+              "en": "Water flows",
+              "de": "Wasser fließt"
+            }
+          },
+          {
+            "id": "stop",
+            "fromS": 12,
+            "toS": 14,
+            "title": {
+              "en": "Stopped",
+              "de": "Gestoppt"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1,
+            "kind": "ignition",
+            "title": {
+              "en": "Button pressed, tap opens",
+              "de": "Taster gedrückt, Hahn öffnet"
+            },
+            "target": "tap"
+          },
+          {
+            "t": 12,
+            "kind": "shutdown",
+            "title": {
+              "en": "Button released, tap closes",
+              "de": "Taster losgelassen, Hahn schließt"
+            },
+            "target": "tap"
+          },
+          {
+            "t": 3,
+            "kind": "load-on",
+            "title": {
+              "en": "Person leans over the basin",
+              "de": "Person beugt sich über das Becken"
+            },
+            "target": "basin-lean"
+          },
+          {
+            "t": 10,
+            "kind": "load-off",
+            "title": {
+              "en": "Person straightens up",
+              "de": "Person richtet sich auf"
+            },
+            "target": "basin-lean"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "operating:tap",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 1
+              },
+              {
+                "t": 11,
+                "v": 1
+              },
+              {
+                "t": 12,
+                "v": 0
+              },
+              {
+                "t": 14,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "emitter:jet-spray",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1,
+                "v": 0
+              },
+              {
+                "t": 2,
+                "v": 1
+              },
+              {
+                "t": 11,
+                "v": 1
+              },
+              {
+                "t": 12,
+                "v": 0
+              },
+              {
+                "t": 14,
+                "v": 0
+              }
+            ]
+          },
+          {
+            "target": "load:basin-lean",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 9,
+                "v": 1
+              },
+              {
+                "t": 10,
+                "v": 0
+              },
+              {
+                "t": 14,
+                "v": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "shade-to-sun",
+        "title": {
+          "en": "Shade to sun over two hours",
+          "de": "Schatten zur Sonne in zwei Stunden"
+        },
+        "description": {
+          "en": "A tree shadow leaves the fountain and the pedestal and basin warm up in the sun over two hours.",
+          "de": "Ein Baumschatten verlässt den Brunnen, Sockel und Becken wärmen sich in der Sonne über zwei Stunden auf."
+        },
+        "durationS": 7200,
+        "fps": 0.01,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "idle-shade",
+            "ease": "step"
+          },
+          {
+            "t": 1200,
+            "pose": "idle-sun",
+            "ease": "step"
+          },
+          {
+            "t": 7200,
+            "pose": "idle-sun",
+            "ease": "step"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "base-fixed",
+            "fromS": 0,
+            "toS": 7200
+          }
+        ],
+        "phases": [
+          {
+            "id": "shade",
+            "fromS": 0,
+            "toS": 1200,
+            "title": {
+              "en": "In shade",
+              "de": "Im Schatten"
+            }
+          },
+          {
+            "id": "sun",
+            "fromS": 1200,
+            "toS": 7200,
+            "title": {
+              "en": "In the sun",
+              "de": "In der Sonne"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1200,
+            "kind": "thermal",
+            "title": {
+              "en": "The shadow leaves",
+              "de": "Der Schatten verlässt den Brunnen"
+            }
+          }
+        ],
+        "tracks": []
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 26,
+        "meanRadiantTempC": 32,
+        "relativeHumidity": 0.45,
+        "windMS": 0.5,
+        "windDirectionDeg": 0,
+        "solarWM2": 800,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325,
+        "skyTempC": 12,
+        "groundTempC": 36
+      },
+      "operating": [
+        {
+          "id": "tap",
+          "title": {
+            "en": "Bubbler tap",
+            "de": "Sprudlerhahn"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Running (3 L/min)",
+                "de": "Läuft (3 L/min)"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "pedestal-cast",
+          "title": {
+            "en": "Cast pedestal",
+            "de": "Gusssockel"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "cast-iron",
+          "areaM2": 0.65,
+          "characteristicLengthM": 0.25,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "casting",
+              "title": {
+                "en": "Cast iron 12 mm",
+                "de": "Gusseisen 12 mm"
+              },
+              "kind": "metal",
+              "material": "cast-iron",
+              "thicknessM": 0.012,
+              "resistanceM2KW": 0.00024,
+              "heatCapacityJM2K": 43200,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 43200,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "basin-steel",
+          "title": {
+            "en": "Stainless basin",
+            "de": "Edelstahlbecken"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "stainless-basin",
+          "areaM2": 0.35,
+          "characteristicLengthM": 0.4,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "sheet",
+              "title": {
+                "en": "Stainless steel 1.5 mm",
+                "de": "Edelstahl 1,5 mm"
+              },
+              "kind": "metal",
+              "material": "stainless-basin",
+              "thicknessM": 0.0015,
+              "resistanceM2KW": 8.8e-05,
+              "heatCapacityJM2K": 5925,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 5925,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "bubbler-brass",
+          "title": {
+            "en": "Bubbler neck and button",
+            "de": "Sprudlerhals und Taster"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "chrome-brass",
+          "areaM2": 0.04,
+          "characteristicLengthM": 0.03,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "tube",
+              "title": {
+                "en": "Chrome-plated brass tube 2 mm",
+                "de": "Verchromtes Messingrohr 2 mm"
+              },
+              "kind": "metal",
+              "material": "chrome-brass",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 1.8e-05,
+              "heatCapacityJM2K": 6460,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 6460,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        },
+        {
+          "id": "water-jet",
+          "title": {
+            "en": "Water jet",
+            "de": "Wasserstrahl"
+          },
+          "kind": "water",
+          "model": "passive",
+          "material": "water",
+          "areaM2": 0.0057,
+          "characteristicLengthM": 0.012,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "stream",
+              "title": {
+                "en": "Water stream 6 mm (jet radius)",
+                "de": "Wasserstrahl 6 mm (Strahlradius)"
+              },
+              "kind": "polymer",
+              "material": "water",
+              "thicknessM": 0.006,
+              "resistanceM2KW": 0.01,
+              "heatCapacityJM2K": 25080,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 25080,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "jet-spray",
+          "kind": "vent",
+          "title": {
+            "en": "Moisture of the water jet",
+            "de": "Feuchte des Wasserstrahls"
+          },
+          "anchor": "nozzle",
+          "directionDeg": 60,
+          "diameterM": 0.012,
+          "operatingKey": "tap",
+          "volumeFlowM3S": 0.0003,
+          "temperatureRiseK": -4,
+          "vapourKgPerKg": 0.0087,
+          "source": "authored-estimate",
+          "reference": "incropera-2018"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "The water jet is a passive water region held toward the 12 degC mains temperature by a conductive contact (fraction 0.8) while the tap runs; its wettedness is 1 and the basin 0.5.",
+          "de": "Der Wasserstrahl ist eine passive Wasserregion, die bei laufendem Hahn durch einen Leitungskontakt (Anteil 0,8) zur Netztemperatur von 12 degC gezogen wird; seine Benetzung ist 1, die des Beckens 0,5."
+        },
+        {
+          "en": "The cooling of the basin by the running water is carried by the wetted region only; the drain heat flow is neglected.",
+          "de": "Die Kühlung des Beckens durch das laufende Wasser wird nur über die benetzte Region getragen; der Wärmestrom im Ablauf wird vernachlässigt."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "base-fixed"
+      ],
+      "assumptions": [
+        {
+          "en": "A rigid cast pedestal fixed at its flange; a person leaning on the basin adds 200 N down and 30 N sideways (authored estimate).",
+          "de": "Ein starrer Gusssockel, am Flansch eingespannt; eine sich aufstützende Person fügt 200 N nach unten und 30 N seitlich hinzu (Schätzung)."
+        },
+        {
+          "en": "The jet and the button are posed bones; the water mass of the jet is neglected.",
+          "de": "Strahl und Taster sind gestellte Knochen; die Wassermasse des Strahls wird vernachlässigt."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "drinking",
+      "defaultClip": "press-and-drink",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -1,0 +1,1869 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "folding-deck-chair",
+    "category": "furniture",
+    "title": {
+      "en": "Folding deck chair with canvas sling",
+      "de": "Klapp-Liegestuhl mit Segeltuch"
+    },
+    "summary": {
+      "en": "A beech deck chair of three hinged frames and a hanging canvas sling that folds flat: the scissor frames slide and turn, the sling hangs as two inextensible canvas bones solved for every pose.",
+      "de": "Ein Buchen-Liegestuhl aus drei gelenkigen Rahmen und einem hängenden Segeltuchsack, der flach zusammenklappt: die Scherenrahmen gleiten und drehen sich, das Segeltuch hängt als zwei undehnbare Knochen, die für jede Pose berechnet werden."
+    },
+    "tags": [
+      "deck-chair",
+      "folding",
+      "sling",
+      "canvas",
+      "outdoor",
+      "seating"
+    ],
+    "provenance": {
+      "author": "Semio staffage content (NW-F)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "iso-10456-2007",
+          "citation": "ISO 10456:2007 Building materials and products - Hygrothermal properties - Tabulated design values and procedures for determining declared and design thermal values (conductivity, specific heat capacity, density of timber, wood-based boards, steel, aluminium, flexible polyurethane foam, rubber)."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1: Actions on structures, Part 1-1: General actions - densities, self-weight, imposed loads for buildings (Table 6.2 category A floors 1.5-2.0 kN/m2, category C tables 3.0 kN/m2, Table 6.7/6.8 storage, Annex A densities of stored materials)."
+        },
+        {
+          "id": "en-581-1",
+          "citation": "EN 581-1:2017 Outdoor furniture - Seating and tables for camping, domestic and contract use - Part 1: General safety requirements (stability, folding mechanisms)."
+        },
+        {
+          "id": "en-581-2",
+          "citation": "EN 581-2:2015 Outdoor furniture - Seating and tables for camping, domestic and contract use - Part 2: Mechanical safety requirements and test methods for seating (static seat load test)."
+        },
+        {
+          "id": "en-1993-1-1",
+          "citation": "EN 1993-1-1:2005 Eurocode 3: Design of steel structures, Part 1-1 (E = 210 GPa, density 7850 kg/m3)."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment - Analytical determination and interpretation of thermal comfort (outer clothing surface temperatures of seated persons around 28-32 degC in comfort conditions; 30 degC used for the contact surface)."
+        },
+        {
+          "id": "wood-handbook-2021",
+          "citation": "Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service (density and elastic modulus of oak, beech and pine; air-dry rounded values)."
+        },
+        {
+          "id": "incropera-2018",
+          "citation": "Incropera, F. P., DeWitt, D. P., Bergman, T. L., Lavine, A. S. (2018). Fundamentals of Heat and Mass Transfer, 8th ed., Wiley (surface radiative properties, convection correlations, thermal penetration depth)."
+        },
+        {
+          "id": "semio-nwf",
+          "citation": "Semio staffage content NW-F: dimensions and masses are authored from typical market products (see provenance notes); parameters tagged authored-estimate are not taken from a datasheet."
+        }
+      ],
+      "notes": {
+        "en": "Side elevation, 0.78 x 0.93 m unfolded, width across 0.58 m. Joint geometry: rear frame 1.045 m at 62 degrees, front frame and seat pivot at 0.726 m, seat frame 0.495 m, canvas 0.60 + 0.45 m. Canvas poses are computed by a scratch script (circle intersection) and stored as bone offsets.",
+        "de": "Seitenansicht, 0,78 x 0,93 m aufgeklappt, Breite quer 0,58 m. Gelenkgeometrie: Hinterrahmen 1,045 m bei 62 Grad, Vorderrahmen und Sitzgelenk bei 0,726 m, Sitzrahmen 0,495 m, Segeltuch 0,60 + 0,45 m. Segeltuchposen werden von einem Hilfsskript (Kreisschnitt) berechnet und als Knochen-Offsets gespeichert."
+      }
+    },
+    "dimensions": {
+      "heightM": 0.93,
+      "widthM": 0.78,
+      "depthM": 0.58,
+      "massKg": 5.95
+    },
+    "materials": [
+      {
+        "id": "beech-timber",
+        "title": {
+          "en": "Beech timber, varnished",
+          "de": "Buchenholz, lackiert"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.6,
+        "densityKgM3": 720,
+        "conductivityWmK": 0.18,
+        "specificHeatJKgK": 1600,
+        "elasticModulusPa": 12000000000.0,
+        "strengthPa": 100000000.0,
+        "source": "literature",
+        "reference": "wood-handbook-2021"
+      },
+      {
+        "id": "cotton-canvas",
+        "title": {
+          "en": "Cotton canvas, striped",
+          "de": "Baumwollsegeltuch, gestreift"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 640,
+        "conductivityWmK": 0.06,
+        "specificHeatJKgK": 1300,
+        "elasticModulusPa": 300000000.0,
+        "strengthPa": 30000000.0,
+        "source": "authored-estimate",
+        "reference": "iso-10456-2007"
+      },
+      {
+        "id": "steel-hardware",
+        "title": {
+          "en": "Zinc-plated steel pivots",
+          "de": "Verzinkte Stahlgelenke"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.5,
+        "densityKgM3": 7800,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "strengthPa": 355000000.0,
+        "source": "literature",
+        "reference": "en-1993-1-1"
+      }
+    ],
+    "rig": {
+      "kind": "mechanical",
+      "root": "ground",
+      "bones": [
+        {
+          "id": "ground",
+          "parent": null,
+          "title": {
+            "en": "Ground reference",
+            "de": "Bodenbezug"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.8,
+          "joint": {
+            "type": "fixed"
+          }
+        },
+        {
+          "id": "rear",
+          "parent": "ground",
+          "title": {
+            "en": "Rear frame with top rail",
+            "de": "Hinterer Rahmen mit Kopfleiste"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 62.0,
+          "lengthM": 1.045,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -10,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 2.5,
+            "comX": 0.5225,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "front-slide",
+          "parent": "ground",
+          "title": {
+            "en": "Sliding front foot",
+            "de": "Gleitender Vorderfuß"
+          },
+          "x": 0.6817,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": -0.6,
+            "maxM": 0.2
+          }
+        },
+        {
+          "id": "front",
+          "parent": "front-slide",
+          "title": {
+            "en": "Front frame with armrests",
+            "de": "Vorderrahmen mit Armlehnen"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 118.0,
+          "lengthM": 0.726,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 10
+          },
+          "mass": {
+            "kg": 1.9,
+            "comX": 0.363,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "seat",
+          "parent": "rear",
+          "title": {
+            "en": "Seat frame with front rail",
+            "de": "Sitzrahmen mit Vorderleiste"
+          },
+          "x": 0.726,
+          "y": 0,
+          "angleDeg": -91.8,
+          "lengthM": 0.495,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -100,
+            "maxDeg": 15
+          },
+          "mass": {
+            "kg": 1.3,
+            "comX": 0.2475,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "wood-handbook-2021"
+          }
+        },
+        {
+          "id": "canvas-a",
+          "parent": "rear",
+          "title": {
+            "en": "Back canvas (top rail to the sag)",
+            "de": "Rückenbahn (Kopfleiste bis zum Durchhang)"
+          },
+          "x": 1.045,
+          "y": 0,
+          "angleDeg": -168.2205,
+          "lengthM": 0.6,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 0.14,
+            "comX": 0.3,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "semio-nwf"
+          }
+        },
+        {
+          "id": "canvas-b",
+          "parent": "seat",
+          "title": {
+            "en": "Seat canvas (sag to the front rail)",
+            "de": "Sitzbahn (Durchhang bis zur Vorderleiste)"
+          },
+          "x": 0.495,
+          "y": 0,
+          "angleDeg": -144.0187,
+          "lengthM": 0.45,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -180,
+            "maxDeg": 180
+          },
+          "mass": {
+            "kg": 0.11,
+            "comX": 0.225,
+            "comY": 0.0,
+            "distribution": "uniform",
+            "source": "authored-estimate",
+            "reference": "semio-nwf"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "foot-rear",
+        "bone": "rear",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "contact",
+        "title": {
+          "en": "Rear feet",
+          "de": "Hintere Füße"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.58,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "foot-front",
+        "bone": "front",
+        "x": 0.320039,
+        "y": 0.601905,
+        "kind": "contact",
+        "title": {
+          "en": "Front feet",
+          "de": "Vordere Füße"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.05,
+        "footprintWidthM": 0.58,
+        "frictionCoefficient": 0.5
+      },
+      {
+        "id": "sling",
+        "bone": "canvas-a",
+        "x": 0.6,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Sitting point in the sling",
+          "de": "Sitzpunkt im Segeltuch"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 351,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rear",
+              "bone": "rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.18
+            },
+            {
+              "id": "front",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  1.3e-05,
+                  2.4e-05
+                ],
+                [
+                  0.726013,
+                  2.4e-05
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.18
+            },
+            {
+              "id": "seat",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas",
+              "bone": "canvas-a",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -1e-06
+                ]
+              ],
+              "closed": false,
+              "penMm": 0.13,
+              "regions": [
+                "canvas-back",
+                "canvas-seat"
+              ]
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Chair sign 1.6 x 1.9 mm: the scissor frames and the seat frame as three strokes with the sling as one stroke.",
+            "de": "Stuhlzeichen 1,6 x 1,9 mm: die Scherenrahmen und der Sitzrahmen als drei Striche mit dem Segeltuch als einem Strich."
+          },
+          "retained": {
+            "en": "The crossing A of rear and front frame, the seat frame and the hanging back canvas.",
+            "de": "Das Kreuz aus Hinter- und Vorderrahmen, der Sitzrahmen und die hängende Rückenbahn."
+          },
+          "merged": {
+            "en": "The sling stroke lists back and seat canvas as merged.",
+            "de": "Der Segeltuchstrich führt Rücken- und Sitzbahn zusammen."
+          },
+          "omitted": {
+            "en": "The seat canvas from the sag to the front rail (it would run closer than the 0.15 m minimum gap to the rear frame), crossbars, pivots.",
+            "de": "Die Sitzbahn vom Durchhang zur Vorderleiste (sie läge näher als der Mindestabstand 0,15 m am Hinterrahmen), Querleisten, Gelenke."
+          },
+          "thinElements": {
+            "en": "Rails (0.045 m) are 0.25 mm strokes = 0.125 m real; the canvas is a 0.13 mm stroke.",
+            "de": "Leisten (0,045 m) sind 0,25-mm-Striche = 0,125 m real; das Segeltuch ist ein 0,13-mm-Strich."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Strokes black.",
+            "de": "Striche schwarz."
+          },
+          "overlays": {
+            "en": "Frame strokes carry frame-timber, the sling stroke both canvas regions.",
+            "de": "Rahmenstriche tragen frame-timber, der Segeltuchstrich beide Segeltuchregionen."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 151,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": 0.13,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rear",
+              "bone": "rear",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.045,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "front",
+              "bone": "front",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  1.3e-05,
+                  2.4e-05
+                ],
+                [
+                  0.726013,
+                  2.4e-05
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "seat",
+              "bone": "seat",
+              "role": "body",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.495,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "frame-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -1e-06
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-back",
+              "penMm": 0.13
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-seat",
+              "penMm": 0.13
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Chair 3.6 x 4.7 mm: three frame strokes and two canvas strokes meeting at the sag.",
+            "de": "Stuhl 3,6 x 4,7 mm: drei Rahmenstriche und zwei Segeltuchstriche, die sich im Durchhang treffen."
+          },
+          "retained": {
+            "en": "Scissor, seat frame, both canvas halves with the sag.",
+            "de": "Schere, Sitzrahmen, beide Segeltuchhälften mit dem Durchhang."
+          },
+          "merged": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "omitted": {
+            "en": "Crossbars, pivots, ratchet.",
+            "de": "Querleisten, Gelenke, Raste."
+          },
+          "thinElements": {
+            "en": "Rails are 0.25 mm strokes; canvas 0.13 mm detail strokes.",
+            "de": "Leisten sind 0,25-mm-Striche; Segeltuch 0,13-mm-Detailstriche."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Strokes black.",
+            "de": "Striche schwarz."
+          },
+          "overlays": {
+            "en": "One stroke per member and canvas half.",
+            "de": "Ein Strich je Leiste und Segeltuchhälfte."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 76,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
+          "glazing": 0.13,
+          "ground": 0.5
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rear",
+              "bone": "rear",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 1.0225,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "front",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "capsule",
+              "x0": 0.022513,
+              "y0": 2.4e-05,
+              "x1": 0.703513,
+              "y1": 2.4e-05,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "seat",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "capsule",
+              "x0": 0.0225,
+              "y0": 0.0,
+              "x1": 0.4725,
+              "y1": 0.0,
+              "r0": 0.0225,
+              "r1": 0.0225,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -1e-06
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-back",
+              "penMm": 0.18
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-seat",
+              "penMm": 0.18
+            },
+            {
+              "id": "bolt",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "penMm": 0.13
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Chair 7.8 x 9.3 mm: three tubes as filled capsules, two canvas strokes and the pivot bolt.",
+            "de": "Stuhl 7,8 x 9,3 mm: drei Leisten als gefüllte Kapseln, zwei Segeltuchstriche und der Gelenkbolzen."
+          },
+          "retained": {
+            "en": "Real rail depth 45 mm, the pivot, the canvas sling.",
+            "de": "Echte Leistentiefe 45 mm, das Gelenk, das Segeltuchsack."
+          },
+          "merged": {
+            "en": "Left and right rails coincide.",
+            "de": "Linke und rechte Leisten fallen zusammen."
+          },
+          "omitted": {
+            "en": "Crossbars, ratchet.",
+            "de": "Querleisten, Raste."
+          },
+          "thinElements": {
+            "en": "Canvas is a 0.18 mm stroke (0.0018 m thick on paper only).",
+            "de": "Das Segeltuch ist ein 0,18-mm-Strich."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rails 0.55, bolt 0.2.",
+            "de": "Leisten 0,55, Bolzen 0,2."
+          },
+          "overlays": {
+            "en": "One shape per member.",
+            "de": "Eine Form je Bauteil."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.5,
+          "detail": 0.25,
+          "texture": 0.13,
+          "glazing": 0.18,
+          "ground": 0.7
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "rear",
+              "bone": "rear",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.025053,
+                  0.022233
+                ],
+                [
+                  1.044994,
+                  0.0225
+                ],
+                [
+                  1.045006,
+                  -0.0225
+                ],
+                [
+                  0.025064,
+                  -0.022767
+                ]
+              ],
+              "closed": true,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "front",
+              "bone": "front",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02508,
+                  0.022791
+                ],
+                [
+                  0.726021,
+                  0.022524
+                ],
+                [
+                  0.726004,
+                  -0.022476
+                ],
+                [
+                  0.025063,
+                  -0.022209
+                ]
+              ],
+              "closed": true,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "seat",
+              "bone": "seat",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.55,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  0.0225
+                ],
+                [
+                  0.495,
+                  -0.0225
+                ],
+                [
+                  0.0,
+                  -0.0225
+                ]
+              ],
+              "closed": true,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-a",
+              "bone": "canvas-a",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  0.6,
+                  -1e-06
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-back",
+              "penMm": 0.25
+            },
+            {
+              "id": "canvas-b",
+              "bone": "canvas-b",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.45,
+                  0.0
+                ],
+                [
+                  0.0,
+                  0.0
+                ]
+              ],
+              "closed": false,
+              "region": "canvas-seat",
+              "penMm": 0.25
+            },
+            {
+              "id": "bolt",
+              "bone": "rear",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.2,
+              "kind": "ellipse",
+              "cx": 0.726,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "region": "frame-timber",
+              "material": "steel-hardware",
+              "penMm": 0.13
+            },
+            {
+              "id": "top-rail",
+              "bone": "rear",
+              "role": "body",
+              "z": 2.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 1.045,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.13
+            },
+            {
+              "id": "front-rail",
+              "bone": "seat",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "ellipse",
+              "cx": 0.495,
+              "cy": 0.0,
+              "rx": 0.0125,
+              "ry": 0.0125,
+              "region": "frame-timber",
+              "material": "beech-timber",
+              "penMm": 0.13
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Chair 15.6 x 18.6 mm: rails as capsules, top rail and front rail dowels in section, pivot bolt and canvas strokes.",
+            "de": "Stuhl 15,6 x 18,6 mm: Leisten als Kapseln, Kopf- und Vorderleiste als Rundholzschnitt, Gelenkbolzen und Segeltuchstriche."
+          },
+          "retained": {
+            "en": "Dowels that hold the canvas, bolt, real rail depth.",
+            "de": "Rundhölzer, die das Segeltuch halten, Bolzen, echte Leistentiefe."
+          },
+          "merged": {
+            "en": "Left and right rails coincide.",
+            "de": "Linke und rechte Leisten fallen zusammen."
+          },
+          "omitted": {
+            "en": "Ratchet teeth, canvas stripes, hem.",
+            "de": "Rastzähne, Segeltuchstreifen, Saum."
+          },
+          "thinElements": {
+            "en": "Canvas is a 0.25 mm stroke.",
+            "de": "Das Segeltuch ist ein 0,25-mm-Strich."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Rails 0.55.",
+            "de": "Leisten 0,55."
+          },
+          "overlays": {
+            "en": "One shape per member.",
+            "de": "Eine Form je Bauteil."
+          }
+        }
+      }
+    },
+    "symbols": [
+      {
+        "id": "chair-plan",
+        "title": {
+          "en": "Deck chair plan symbol",
+          "de": "Liegestuhl-Grundrisssymbol"
+        },
+        "description": {
+          "en": "Plan sign of the unfolded chair: footprint 0.78 x 0.58 m with the canvas strip.",
+          "de": "Grundrisszeichen des aufgeklappten Stuhls: Grundfläche 0,78 x 0,58 m mit dem Segeltuchstreifen."
+        },
+        "semantics": "true-extent",
+        "units": "model-m",
+        "denominators": [
+          200,
+          100,
+          50
+        ],
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [],
+          "plan": [
+            {
+              "id": "plan-frame",
+              "bone": "ground",
+              "role": "body",
+              "z": 1,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.78,
+                  0
+                ],
+                [
+                  0.78,
+                  0.58
+                ],
+                [
+                  0,
+                  0.58
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "plan-canvas",
+              "bone": "ground",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.05,
+                  0.04
+                ],
+                [
+                  0.73,
+                  0.04
+                ],
+                [
+                  0.73,
+                  0.54
+                ],
+                [
+                  0.05,
+                  0.54
+                ]
+              ],
+              "closed": true
+            }
+          ]
+        },
+        "dimensionalNote": {
+          "en": "Model metres at real size: x along the chair 0 to 0.78 m, y across 0 to 0.58 m, unfolded.",
+          "de": "Modellmeter in Originalgröße: x entlang 0 bis 0,78 m, y quer 0 bis 0,58 m, aufgeklappt."
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "unfolded",
+        "title": {
+          "en": "Unfolded",
+          "de": "Aufgeklappt"
+        },
+        "description": {
+          "en": "Frames at 62 degrees, the canvas hangs as a sling between the top rail and the front rail; in full sun.",
+          "de": "Rahmen bei 62 Grad, das Segeltuch hängt als Sack zwischen Kopfleiste und Vorderleiste; in voller Sonne."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-rear",
+          "foot-front"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-timber": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "canvas-back": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "canvas-seat": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "folded",
+        "title": {
+          "en": "Folded flat",
+          "de": "Zusammengeklappt"
+        },
+        "description": {
+          "en": "The scissor frames close to 84 degrees and stand almost parallel; the canvas hangs between them.",
+          "de": "Die Scherenrahmen schließen sich auf 84 Grad und stehen fast parallel; das Segeltuch hängt dazwischen."
+        },
+        "bones": {
+          "rear": {
+            "angleDeg": 22.0
+          },
+          "front-slide": {
+            "dx": -0.5299
+          },
+          "front": {
+            "angleDeg": -22.0
+          },
+          "seat": {
+            "angleDeg": -88.2
+          },
+          "canvas-a": {
+            "angleDeg": -44.6843
+          },
+          "canvas-b": {
+            "angleDeg": 10.4316
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-rear",
+          "foot-front"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-timber": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.4
+            },
+            "canvas-back": {
+              "exposedFraction": 0.5,
+              "sunlitFraction": 0.3
+            },
+            "canvas-seat": {
+              "exposedFraction": 0.4,
+              "sunlitFraction": 0.2
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "reclined-seated",
+        "title": {
+          "en": "Reclined and seated",
+          "de": "Zurückgelehnt, besetzt"
+        },
+        "description": {
+          "en": "Second notch (56 degrees): the front feet slide forward, an adult lies back in the sling.",
+          "de": "Zweite Raste (56 Grad): die Vorderfüße gleiten nach vorn, eine erwachsene Person liegt im Segeltuch."
+        },
+        "bones": {
+          "rear": {
+            "angleDeg": -6.0
+          },
+          "front-slide": {
+            "dx": 0.13028
+          },
+          "front": {
+            "angleDeg": 6.0
+          },
+          "seat": {
+            "angleDeg": 9.8
+          },
+          "canvas-a": {
+            "angleDeg": 5.3822
+          },
+          "canvas-b": {
+            "angleDeg": 1.9222
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-rear",
+          "foot-front"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-timber": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "canvas-back": {
+              "exposedFraction": 0.2,
+              "sunlitFraction": 0.35,
+              "contact": {
+                "fraction": 0.4,
+                "tempC": 30
+              }
+            },
+            "canvas-seat": {
+              "exposedFraction": 0.15,
+              "sunlitFraction": 0.3,
+              "contact": {
+                "fraction": 0.45,
+                "tempC": 30
+              }
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "occupant-sling",
+            "kind": "occupant",
+            "title": {
+              "en": "Seated adult in the sling (75 kg)",
+              "de": "Sitzende Person im Segeltuch (75 kg)"
+            },
+            "anchor": "sling",
+            "fxN": 0.0,
+            "fyN": -735.5,
+            "source": "authored-estimate",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "sling-proof-load",
+        "title": {
+          "en": "Seat proof load",
+          "de": "Sitz-Prüflast"
+        },
+        "description": {
+          "en": "Static seat test load 1600 N in the sling of the unfolded chair.",
+          "de": "Statische Sitz-Prüflast 1600 N im Segeltuch des aufgeklappten Stuhls."
+        },
+        "bones": {},
+        "ground": "auto",
+        "contacts": [
+          "foot-rear",
+          "foot-front"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-timber": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "canvas-back": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.8
+            },
+            "canvas-seat": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "proof-sling",
+            "kind": "imposed",
+            "title": {
+              "en": "Static seat test load (1600 N)",
+              "de": "Statische Sitzprüflast (1600 N)"
+            },
+            "anchor": "sling",
+            "fxN": 0.0,
+            "fyN": -1600,
+            "source": "authored-estimate",
+            "reference": "en-581-2"
+          }
+        ]
+      },
+      {
+        "id": "half-folded-key",
+        "title": {
+          "en": "Half folded (key)",
+          "de": "Halb zusammengeklappt (Schlüssel)"
+        },
+        "description": {
+          "en": "Frames at 73 degrees.",
+          "de": "Rahmen bei 73 Grad."
+        },
+        "key": true,
+        "bones": {
+          "rear": {
+            "angleDeg": 11.0
+          },
+          "front-slide": {
+            "dx": -0.25715
+          },
+          "front": {
+            "angleDeg": -11.0
+          },
+          "seat": {
+            "angleDeg": -41.2
+          },
+          "canvas-a": {
+            "angleDeg": -19.7913
+          },
+          "canvas-b": {
+            "angleDeg": -0.9579
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "foot-rear",
+          "foot-front"
+        ],
+        "thermal": {
+          "regions": {
+            "frame-timber": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.5
+            },
+            "canvas-back": {
+              "exposedFraction": 0.8,
+              "sunlitFraction": 0.5
+            },
+            "canvas-seat": {
+              "exposedFraction": 0.7,
+              "sunlitFraction": 0.45
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      }
+    ],
+    "clips": [
+      {
+        "id": "fold-chair",
+        "title": {
+          "en": "Fold the chair",
+          "de": "Stuhl zusammenklappen"
+        },
+        "description": {
+          "en": "The front feet slide back, the scissor frames close and the sling collapses between them (4 s).",
+          "de": "Die Vorderfüße gleiten zurück, die Scherenrahmen schließen sich und das Segeltuch fällt dazwischen zusammen (4 s)."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "unfolded",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.0,
+            "pose": "half-folded-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "folded",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-rear",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "close",
+            "fromS": 0,
+            "toS": 4.0,
+            "title": {
+              "en": "Closing",
+              "de": "Schließen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4.0,
+            "kind": "motion",
+            "title": {
+              "en": "Chair is flat",
+              "de": "Stuhl liegt flach"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:canvas-back:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.8
+              },
+              {
+                "t": 4.0,
+                "v": 0.3
+              }
+            ]
+          },
+          {
+            "target": "region:canvas-seat:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 4.0,
+                "v": 0.2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "unfold-chair",
+        "title": {
+          "en": "Unfold the chair",
+          "de": "Stuhl aufklappen"
+        },
+        "description": {
+          "en": "The frames open until the seat frame locks on the ratchet at 62 degrees.",
+          "de": "Die Rahmen öffnen sich, bis der Sitzrahmen bei 62 Grad in der Raste einrastet."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "folded",
+            "ease": "smooth"
+          },
+          {
+            "t": 2.0,
+            "pose": "half-folded-key",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "unfolded",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-rear",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "open",
+            "fromS": 0,
+            "toS": 4.0,
+            "title": {
+              "en": "Opening",
+              "de": "Öffnen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4.0,
+            "kind": "motion",
+            "title": {
+              "en": "Frame locks on the ratchet",
+              "de": "Rahmen rastet ein"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "sit-and-recline",
+        "title": {
+          "en": "Sit and recline",
+          "de": "Hinsetzen und zurücklehnen"
+        },
+        "description": {
+          "en": "An adult sits in the open chair and the frame slides into the second notch while the sling takes the load.",
+          "de": "Eine erwachsene Person setzt sich in den geöffneten Stuhl, der Rahmen gleitet in die zweite Raste, während das Segeltuch die Last aufnimmt."
+        },
+        "durationS": 4.0,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "unfolded",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "unfolded",
+            "ease": "smooth"
+          },
+          {
+            "t": 3.5,
+            "pose": "reclined-seated",
+            "ease": "smooth"
+          },
+          {
+            "t": 4.0,
+            "pose": "reclined-seated",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "foot-rear",
+            "fromS": 0,
+            "toS": 4.0
+          },
+          {
+            "anchor": "foot-front",
+            "fromS": 0,
+            "toS": 4.0
+          }
+        ],
+        "phases": [
+          {
+            "id": "sit",
+            "fromS": 0,
+            "toS": 1.5,
+            "title": {
+              "en": "Sit down",
+              "de": "Hinsetzen"
+            }
+          },
+          {
+            "id": "recline",
+            "fromS": 1.5,
+            "toS": 4.0,
+            "title": {
+              "en": "Recline",
+              "de": "Zurücklehnen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 1.5,
+            "kind": "load-on",
+            "title": {
+              "en": "Occupant sits in the sling",
+              "de": "Person sitzt im Segeltuch"
+            },
+            "target": "occupant-sling"
+          },
+          {
+            "t": 1.5,
+            "kind": "thermal",
+            "title": {
+              "en": "Canvas starts taking 30 degC contact heat",
+              "de": "Segeltuch nimmt 30-degC-Kontaktwärme auf"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:occupant-sling",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 1.0,
+                "v": 0
+              },
+              {
+                "t": 1.5,
+                "v": 1
+              },
+              {
+                "t": 4.0,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 20,
+        "meanRadiantTempC": 20,
+        "relativeHumidity": 0.5,
+        "windMS": 1.0,
+        "windDirectionDeg": 180,
+        "solarWM2": 600,
+        "diffuseFraction": 0.15,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "frame-timber",
+          "title": {
+            "en": "Beech frame members",
+            "de": "Buchenrahmen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "beech-timber",
+          "areaM2": 0.88,
+          "characteristicLengthM": 0.04,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "beech-member",
+              "title": {
+                "en": "Beech 25 x 45 mm, half thickness",
+                "de": "Buche 25 x 45 mm, halbe Dicke"
+              },
+              "kind": "timber",
+              "material": "beech-timber",
+              "thicknessM": 0.0125,
+              "resistanceM2KW": 0.069444,
+              "heatCapacityJM2K": 14400,
+              "source": "literature",
+              "reference": "wood-handbook-2021"
+            }
+          ],
+          "heatCapacityJM2K": 14400,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "canvas-back",
+          "title": {
+            "en": "Back canvas",
+            "de": "Rückenbahn"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "cotton-canvas",
+          "areaM2": 0.3,
+          "characteristicLengthM": 0.5,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.6,
+          "layers": [
+            {
+              "id": "canvas-back",
+              "title": {
+                "en": "Canvas 0.7 mm",
+                "de": "Segeltuch 0,7 mm"
+              },
+              "kind": "clothing",
+              "material": "cotton-canvas",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.011667,
+              "heatCapacityJM2K": 582,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 582,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        },
+        {
+          "id": "canvas-seat",
+          "title": {
+            "en": "Seat canvas",
+            "de": "Sitzbahn"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "cotton-canvas",
+          "areaM2": 0.23,
+          "characteristicLengthM": 0.45,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "canvas-seat",
+              "title": {
+                "en": "Canvas 0.7 mm",
+                "de": "Segeltuch 0,7 mm"
+              },
+              "kind": "clothing",
+              "material": "cotton-canvas",
+              "thicknessM": 0.0007,
+              "resistanceM2KW": 0.011667,
+              "heatCapacityJM2K": 582,
+              "source": "authored-estimate",
+              "reference": "iso-10456-2007"
+            }
+          ],
+          "heatCapacityJM2K": 582,
+          "source": "authored-estimate",
+          "reference": "iso-10456-2007"
+        }
+      ],
+      "emitters": [],
+      "assumptions": [
+        {
+          "en": "Cotton canvas (0.7 mm, 640 kg/m3 effective, 0.06 W/mK, 1300 J/kgK; authored-estimate) has a heat capacity of only 0.6 kJ/m2K: it follows sun and air within seconds and takes up contact warmth almost at once.",
+          "de": "Baumwollsegeltuch (0,7 mm, 640 kg/m3 effektiv, 0,06 W/mK, 1300 J/kgK; Schätzwert) hat nur 0,6 kJ/m2K Wärmekapazität: es folgt Sonne und Luft binnen Sekunden und nimmt Kontaktwärme fast sofort auf."
+        },
+        {
+          "en": "Beech members 25 x 45 mm after ISO 10456 / Wood Handbook; half thickness 12.5 mm is the heat-storing layer.",
+          "de": "Buchenhölzer 25 x 45 mm nach ISO 10456 / Wood Handbook; die halbe Dicke 12,5 mm ist die wärmespeichernde Schicht."
+        },
+        {
+          "en": "The seated pose covers 40 % of the back canvas and 45 % of the seat canvas with a clothed body at 30 degC (ISO 7730 clothing surface) and shades them partly.",
+          "de": "Die besetzte Pose bedeckt 40 % der Rückenbahn und 45 % der Sitzbahn mit einem bekleideten Körper bei 30 degC (Bekleidungsoberfläche nach ISO 7730) und beschattet sie teilweise."
+        },
+        {
+          "en": "Reference case: 600 W/m2 sun, 20 degC air, 1 m/s breeze; the folded chair is partly shaded by its own frames.",
+          "de": "Referenzfall: 600 W/m2 Sonne, 20 degC Luft, 1 m/s Wind; der zusammengeklappte Stuhl wird von den eigenen Rahmen teilweise beschattet."
+        }
+      ],
+      "passengers": []
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "quasi-static",
+      "supports": [
+        "foot-rear",
+        "foot-front"
+      ],
+      "assumptions": [
+        {
+          "en": "The chair is a scissor mechanism: the front frame tip coincides with the rear frame at 0.726 m for every angle, so the front foot slides by x = 1.452 m cos(alpha) (prismatic joint) while the rear foot turns on the ground; the seat frame pivots at the scissor joint.",
+          "de": "Der Stuhl ist ein Scherenmechanismus: die Vorderrahmenspitze fällt bei jedem Winkel mit dem Hinterrahmen bei 0,726 m zusammen, der Vorderfuß gleitet daher um x = 1,452 m cos(alpha) (Schiebegelenk), während sich der Hinterfuß am Boden dreht; der Sitzrahmen dreht am Scherengelenk."
+        },
+        {
+          "en": "The canvas is two bones (0.60 m and 0.45 m, together 1.05 m, inextensible): their joint is solved for every pose as the lower intersection of the two circles around the top rail and the front rail (IK), hence the hanging sling.",
+          "de": "Das Segeltuch besteht aus zwei Knochen (0,60 m und 0,45 m, zusammen 1,05 m, undehnbar): ihr Gelenk wird für jede Pose als untere Schnittstelle der beiden Kreise um Kopfleiste und Vorderleiste berechnet (IK), daher der hängende Sack."
+        },
+        {
+          "en": "The seat proof load 1600 N follows the order of the static seat test of EN 581-2 (outdoor seating); an authored-estimate to be verified against the standard text.",
+          "de": "Die Sitz-Prüflast 1600 N folgt der Größenordnung des statischen Sitztests nach EN 581-2 (Gartensitzmöbel); ein Schätzwert, am Normtext zu prüfen."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "unfolded",
+      "defaultClip": "fold-chair",
+      "defaultScale": 50,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

@@ -33,25 +33,44 @@ function witnesses(node,root,depth=0){
  }
  if(!types[0])values.push(null,{},[],0,'a');return [...alternatives,...conjunction,...values].slice(0,64);
 }
+const ownerWitnesses={results:['schema-dialect-owner-witnesses.json','schema-dialect-extra-witnesses.json'].flatMap(name=>JSON.parse(fs.readFileSync(path.join(directory,'🗑️generated',name),'utf8')).results)};
+const remainingReferences=JSON.parse(fs.readFileSync(path.join(directory,'🗑️generated/schema-root-authored-carriers.json'),'utf8')).references;
+function authoredWitnesses(candidate,target){
+ const extra=remainingReferences.filter(row=>row.schema===candidate.path&&row.schemaSha256===candidate.sha256&&(row.target??'')===target.pointer).flatMap(row=>{
+  const status=fs.lstatSync(row.fixture);assert.equal(status.isFile()&&!status.isSymbolicLink()&&status.nlink===1&&status.size<=4*1024*1024,true);
+  const bytes=fs.readFileSync(row.fixture);assert.equal(hash(bytes),row.fixtureSha256);const document=JSON.parse(bytes);let value=row.pointer===''?document:pointer(document,'#'+row.pointer);
+  if(row.decode==='json-text'){assert.equal(typeof value,'string');value=JSON.parse(value);}else assert.equal(row.decode,'value');
+  return [value];
+ });
+ const found=ownerWitnesses.results.filter(row=>row.schema===candidate.path&&row.sha256===candidate.sha256).flatMap(row=>row.targets).find(row=>row.pointer===target.pointer&&row.found)?.found;
+ if(!found)return extra;
+ const status=fs.lstatSync(found.fixture);assert.equal(status.isFile()&&!status.isSymbolicLink()&&status.nlink===1&&status.size<=4*1024*1024,true,'Bounded ordinary fixture required');
+ const bytes=fs.readFileSync(found.fixture);assert.equal(hash(bytes),found.fixtureSha256,'Current exact authored fixture required');
+ const value=JSON.parse(bytes);return [...extra,found.pointer===''?value:pointer(value,'#'+found.pointer)];
+}
+const mode=process.argv[2],remaining=mode==='--remaining-authored'||mode==='--verify-remaining-authored',verifyCurrent=mode==='--verify-current-headers'||mode==='--verify-remaining-authored';if(process.argv.length>(mode?3:2)||(mode&&!['--verify-current-headers','--remaining-authored','--verify-remaining-authored'].includes(mode)))throw Error('Closed proof invocation required');
+const changes=verifyCurrent?JSON.parse(fs.readFileSync(path.join(directory,remaining?'🗑️generated/schema-remaining-header-changes.json':'🗑️generated/schema-dialect-header-changes.json'),'utf8')).changes:[];
+const remainingOwned=remaining?require(path.resolve('🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts')).compileJsonSchemaSubset:undefined;
 const results=[];
-for(const candidate of cohort.candidates){
+for(const candidate of cohort.candidates.filter(row=>!remaining||remainingReferences.some(reference=>reference.schema===row.path))){
  const result={path:candidate.path,sha256:candidate.sha256,eligible:false};
  try{
-  const bytes=fs.readFileSync(candidate.path);assert.equal(hash(bytes),candidate.sha256,'Current exact schema bytes required');const source=JSON.parse(bytes),next={...source,$schema:dialect};closedVocabulary(source);result.sharedVocabulary=true;assert.equal(source.$schema,'https://json-schema.org/draft/2020-12/schema');
+  let bytes=fs.readFileSync(candidate.path);const change=changes.find(row=>row.path===candidate.path);if(change){assert.equal(hash(bytes),change.after,'Current corrected schema bytes required');assert.equal(JSON.parse(bytes).$schema,dialect);bytes=Buffer.from(bytes.toString('utf8').replace(JSON.stringify(dialect),JSON.stringify('https://json-schema.org/draft/2020-12/schema')));}
+  assert.equal(hash(bytes),candidate.sha256,'Current exact schema bytes required');const source=JSON.parse(bytes),next={...source,$schema:dialect};closedVocabulary(source);result.sharedVocabulary=true;assert.equal(source.$schema,'https://json-schema.org/draft/2020-12/schema');
   const text=bytes.toString('utf8').replace(JSON.stringify(source.$schema),JSON.stringify(dialect));assert.deepEqual(JSON.parse(text),next,'Only the root dialect declaration may change');
   const oldValidator=new Ajv2020(options),newValidator=new Ajv07(options);assert.equal(oldValidator.validateSchema(source),true,JSON.stringify(oldValidator.errors));assert.equal(newValidator.validateSchema(next),true,JSON.stringify(newValidator.errors));oldValidator.addSchema(source,'proof');newValidator.addSchema(next,'proof');
   const targets=[{pointer:'',schema:source},...Object.entries(source.definitions??{}).map(([name,schema])=>({pointer:'/definitions/'+name.replaceAll('~','~0').replaceAll('/','~1'),schema}))],coverage=[];
   for(const target of targets){
-   const old=oldValidator.getSchema('proof#'+target.pointer),current=newValidator.getSchema('proof#'+target.pointer);assert.equal(typeof old,'function');assert.equal(typeof current,'function');
-   const samples=[...vectors.values,...witnesses(target.schema,source)],seen=new Set();let valid=0,invalid=0;
+   const old=oldValidator.getSchema('proof#'+target.pointer),current=newValidator.getSchema('proof#'+target.pointer);assert.equal(typeof old,'function');assert.equal(typeof current,'function');const owned=remainingOwned?.(target.schema,source);
+   const authored=authoredWitnesses(candidate,target),samples=[...vectors.values,...witnesses(target.schema,source),...authored],seen=new Set();let valid=0,invalid=0;for(const value of authored){assert.equal(old(value),true,'Authored current-dialect witness required');assert.equal(current(value),true,'Authored target-dialect witness required');}
    for(const value of [...samples])if(value&&typeof value==='object'&&!Array.isArray(value)){samples.push({...value,__unexpected__:true});for(const key of Object.keys(value)){const missing={...value};delete missing[key];samples.push(missing,{...value,[key]:null},{...value,[key]:[]});}}
-   for(const value of samples){const key=JSON.stringify(value);if(seen.has(key))continue;seen.add(key);const before=old(value),after=current(value);assert.equal(after,before,'Dialect validators disagree on '+target.pointer+' witness '+hash(key));if(before)valid++;else invalid++;}
+   for(const value of samples){const key=JSON.stringify(value);if(seen.has(key))continue;seen.add(key);const before=old(value),after=current(value);assert.equal(after,before,'Dialect validators disagree on '+target.pointer+' witness '+hash(key));if(owned)assert.equal(owned.validate(value).length===0,before,'Owned validator disagreement at '+target.pointer+' witness '+hash(key));if(before)valid++;else invalid++;}
    const unconstrained=target.schema===true||target.schema&&typeof target.schema==='object'&&Object.keys(target.schema).every(key=>annotations.has(key)||key==='definitions'||key.startsWith('x-'));
-   coverage.push({pointer:target.pointer,valid,invalid,samples:seen.size,unconstrained:!!unconstrained,nonvacuous:valid>0&&(invalid>0||unconstrained)});
+   coverage.push({pointer:target.pointer,authored:authored.length,valid,invalid,samples:seen.size,unconstrained:!!unconstrained,nonvacuous:valid>0&&(invalid>0||unconstrained)});
   }
   Object.assign(result,{valid:coverage.reduce((sum,row)=>sum+row.valid,0),invalid:coverage.reduce((sum,row)=>sum+row.invalid,0),samples:coverage.reduce((sum,row)=>sum+row.samples,0),coverage,sampleAgreement:true,nextSha256:hash(text),eligible:coverage.every(row=>row.nonvacuous)});if(!result.eligible)result.reason='Positive and constraint-negative witnesses required for every constrained root or named definition';
  }catch(error){result.reason=String(error.message).slice(0,1200);}
  results.push(result);
 }
 const summary={version:1,candidates:results.length,eligible:results.filter(row=>row.eligible).length,excluded:results.filter(row=>!row.eligible).length,samples:results.reduce((sum,row)=>sum+(row.samples??0),0),results};
-fs.writeFileSync(path.join(directory,'🗑️generated/schema-dialect-proof.json'),JSON.stringify(summary,null,2)+'\n');console.log(JSON.stringify({candidates:summary.candidates,eligible:summary.eligible,excluded:summary.excluded,samples:summary.samples,reasons:results.filter(row=>!row.eligible).slice(0,8)}));
+fs.writeFileSync(path.join(directory,'🗑️generated',remaining?(verifyCurrent?'schema-remaining-proof-post-header.json':'schema-remaining-proof.json'):(verifyCurrent?'schema-dialect-proof-post-header.json':'schema-dialect-proof.json')),JSON.stringify(summary,null,2)+'\n');console.log(JSON.stringify({candidates:summary.candidates,eligible:summary.eligible,excluded:summary.excluded,samples:summary.samples,reasons:results.filter(row=>!row.eligible).slice(0,8)}));

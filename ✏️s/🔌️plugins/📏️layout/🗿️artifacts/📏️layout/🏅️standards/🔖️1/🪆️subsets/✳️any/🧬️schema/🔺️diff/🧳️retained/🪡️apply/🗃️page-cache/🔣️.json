@@ -43,6 +43,6 @@
       }
     }
   },
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$comment": "The same original-funded cache owners install into a live Page under ApplyCapability or an unpublished prepared ParentPage under its owning mutation preparation."
 }

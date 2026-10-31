@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 import { dirname, join, resolve } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import * as SmolToml from "smol-toml";
 import { AGENT_CLIENTS, AGENT_CLIENT_DECLARATION_MANIFEST, agentClientLauncher, checkAgentClients, deriveAgentClientFiles, mcpServersOf, readDeclaredTools, writeAgentClients, type DeclaredTool, type McpServer } from "../../🤖️agent-clients/🟦️.ts";

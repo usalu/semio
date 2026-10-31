@@ -1,3 +1,4 @@
+import AjvDraft07 from "ajv";
 import { expect, test } from "bun:test";
 import Ajv from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
@@ -16,7 +17,7 @@ type NestedObservation = typeof fixture.nestedJobs[number]["observation"];
 interface MountedNestedJobOracleV1 { valid(value:unknown):boolean; receipt(value:unknown):boolean; verdict(value:NestedObservation):string }
 /** 🔮️ Independent schema and bounded scheduling output checks stay behind a first-party test oracle. */
 function createMountedNestedJobOracleV1():MountedNestedJobOracleV1 {
- const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(schema);
+ const ajv=new AjvDraft07({strict:true,allErrors:true});ajv.addSchema(schema);
  const validate=ajv.getSchema(schema.$id+"#/$defs/MountedOwnerNestedJobObservationV1"),receipt=ajv.getSchema(schema.$id+"#/$defs/MountedOwnerJobReceiptV1");
  if(!validate||!receipt)throw Error("Nested mounted scheduling schema is unresolved");
  return {valid:value=>validate(value)===true,receipt:value=>receipt(value)===true,verdict:value=>{
@@ -27,7 +28,7 @@ function createMountedNestedJobOracleV1():MountedNestedJobOracleV1 {
 }
 /** 🔮️ Strict independent schema bounds reproduce admitted ownership verdicts behind a first-party oracle. */
 function createMountedOwnerOracleV1():MountedOwnerOracleV1 {
- const ajv=new Ajv({strict:true,allErrors:true}),validate=ajv.compile(schema),validatePolicy=ajv.getSchema(schema.$id+"#/$defs/MountedOwnerPolicyV1");
+ const ajv=new AjvDraft07({strict:true,allErrors:true}),validate=ajv.compile(schema),validatePolicy=ajv.getSchema(schema.$id+"#/$defs/MountedOwnerPolicyV1");
  if(!validatePolicy)throw new Error("Mounted owner policy schema is unresolved");
  const bounded=(properties:Record<string,unknown>,value:unknown)=>ajv.compile({type:"object",properties,required:Object.keys(properties)})(value)===true;
  return {valid:value=>validate(value)===true,policy:value=>validatePolicy(value)===true,verdict:value=>{
@@ -97,7 +98,7 @@ test("actual runtime mounted receivers require caller policy and typed schedulin
 });
 
 function mountedContextOracle() {
- const ajv=new Ajv({strict:true,allErrors:true});expect(ajv.compile(contextSchema)(contextFixture)).toBe(true);expect(validateJsonSchemaSubset(contextSchema,contextFixture)).toEqual([]);
+ const ajv=new AjvDraft07({strict:true,allErrors:true});expect(ajv.compile(contextSchema)(contextFixture)).toBe(true);expect(validateJsonSchemaSubset(contextSchema,contextFixture)).toEqual([]);
  const db=new Database(":memory:");try{
   db.run("CREATE TABLE original(id TEXT,axis TEXT,policy INTEGER,caller INTEGER,already INTEGER,receipt INTEGER)");
   const axes=[["maximumItems","copiedItems"],["maximumCopyBytes","copiedBytes"],["maximumCapacityBytes","retainedCapacityBytes"],["maximumReleaseBytes","releasedBytes"],["maximumDepth",null]] as const;
@@ -119,7 +120,7 @@ test("actual native verdicts preserve the original context recipient and reject 
 });
 
 test("portable mounted ownership consumes the original context memory wallet once",()=>{
- const law=fixture.contextReceipt,oracle=new Ajv({strict:true});oracle.addSchema(schema);const valid=oracle.getSchema(schema.$id+"#/$defs/RetainedCloneGrantV1");if(!valid)throw Error("Canonical mounted grant schema missing");expect(valid(law.grant)).toBe(true);expect(Buffer.byteLength(law.source)).toBe(law.grant.maximumCopyBytes);expect(law.childFuel).toBeGreaterThan(law.grant.maximumItems);
+ const law=fixture.contextReceipt,oracle=new AjvDraft07({strict:true});oracle.addSchema(schema);const valid=oracle.getSchema(schema.$id+"#/$defs/RetainedCloneGrantV1");if(!valid)throw Error("Canonical mounted grant schema missing");expect(valid(law.grant)).toBe(true);expect(Buffer.byteLength(law.source)).toBe(law.grant.maximumCopyBytes);expect(law.childFuel).toBeGreaterThan(law.grant.maximumItems);
  const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));expect(source.includes("self.context.consume_retained(receipt)?;")).toBe(true);expect(source.includes("let original=context.retained_grant();")).toBe(true);expect(source.includes("min(self.context.fuel_remaining())")).toBe(false);
 });
 
@@ -135,7 +136,7 @@ test("actual native verdicts preserve original mounted actor capture and full ph
  test("runtime policy records the actual failed producer before refusing its mounted turn",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
- expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ expect(new AjvDraft07({strict:true}).compile(schema)(law)).toBe(true);
  const producer=Buffer.alloc(law.producerCapacity);const db=new Database(":memory:");
  try{const row=db.query("SELECT ? AS external,? AS turn,max(0,?-?) AS remaining,7-1 AS fuel").get(producer.byteLength,producer.byteLength,law.policyCapacity,producer.byteLength)as{external:number;turn:number;remaining:number;fuel:number};expect(row).toEqual({external:law.externalCapacity,turn:law.turnCapacity,remaining:law.remainingCapacity,fuel:law.fuel});}finally{db.close();}
  const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const record=source.slice(source.indexOf("pub fn record("),source.indexOf("pub fn advance_job("));
@@ -151,14 +152,14 @@ test("runtime policy receives the original child failure before propagation",()=
 
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
- const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
+ const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));expect(new AjvDraft07({strict:true}).compile(schema)(law)).toBe(true);
  const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn progress("));
  expect(method.includes("let result = job(self.context, grant);")).toBe(true);expect(method.includes("self.progress = self.progress.checked_add(actual)")).toBe(true);expect(method.includes("let receipt = result?")).toBe(true);expect(method.indexOf("self.progress = self.progress.checked_add(actual)")).toBeLessThan(method.indexOf("let receipt = result?"));expect(method.includes("consume_retained(")).toBe(false);
  const db=new Database(":memory:");try{expect(db.query("SELECT 64-0 AS actual,64 AS external,64 AS turn,7-1 AS fuel").get()).toEqual({actual:64,external:64,turn:64,fuel:6});}finally{db.close();}
 });
 
 test("runtime policy alias custody keeps final Arc payload and shell distinct",()=>{
- const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔗️alias/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔗️alias/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
+ const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔗️alias/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔗️alias/🔣️.json",import.meta.url),"utf8"));expect(new AjvDraft07({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
  const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));expect(source.includes("pub mod alias_retirement;")).toBe(true);const alias=readFileSync(new URL("../🔗️alias/🦀️.rs",import.meta.url),"utf8");expect(alias.includes("pub struct MountedOwnerCellV1")).toBe(true);expect(alias.includes("Mutex<Box<T>>")).toBe(false);
  const db=new Database(":memory:");try{db.run("CREATE TABLE phase(phase TEXT,release INTEGER)");for(const[phase,release]of [["arc-backing",32],["payload",64],["box-shell",24]])db.query("INSERT INTO phase VALUES(?,?)").run(phase,release);expect(db.query("SELECT sum(release) AS release,count(*) AS phases FROM phase").get()).toEqual({release:120,phases:3});expect(db.query("SELECT phase FROM phase ORDER BY rowid").all()).toEqual(law.finalPhases.map((phase:string)=>({phase})));}finally{db.close();}
 });

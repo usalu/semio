@@ -2,15 +2,16 @@
  * agree with an in-memory model, every published index satisfies `../🧬️schema/🔣️.json` (Ajv), and the packs on disk are exactly the
  * indexed ones (fast-glob). Damaged bytes must read as a miss, never as a wrong value. */
 import { expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import fg from "fast-glob";
-import { moduleSourceClosureDigest, openRecordStore, RECORD_STORE_PACK_LIMIT, recordKey, type RecordStore } from "../🟦️.ts";
+import {Database} from "bun:sqlite";
+import { moduleSourceClosureDigest, openRecordStore, RECORD_STORE_PACK_LIMIT, recordKey, openRecordStoreDescriptorCount, RECORD_STORE_DESCRIPTOR_LIMIT, type RecordStore } from "../🟦️.ts";
 
 type Operation = { op: "put" | "get" | "flush" | "reopen" | "crash" | "corrupt" | "retain" | "compact"; store: string; key?: string; value?: string; expect?: string | null };
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "./🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; scenarios: { id: string; operations: Operation[] }[] };
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "./🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; scenarios: { id: string; operations: Operation[] }[];retirementCases:readonly {id:string;attempts:number;commits:number;outcome:string}[] };
 const validate = new Ajv({ strict: false, allErrors: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8")));
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
 mkdirSync(artifacts, { recursive: true });
@@ -160,4 +161,49 @@ test("record keys separate inputs by length and closure digests track every impo
     writeFileSync(join(directory, "lib", "b.ts"), "export const b = 1;\n");
     expect(moduleSourceClosureDigest(join(directory, "entry.ts"))).toBe(before);
   } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
+
+test("stale compaction preserves independently projected immutable events",()=>{
+  const oracle=new Database(":memory:");oracle.exec("CREATE TABLE events(sequence INTEGER, name TEXT, value TEXT)");
+  try{for(const scenario of fixture.scenarios.filter(row=>row.id.startsWith("stale-"))){
+    const directory=mkdtempSync(join(artifacts,"record-event-oracle-"));oracle.exec("DELETE FROM events");
+    try{scenario.operations.forEach((row,index)=>{if(row.op==="put")oracle.query("INSERT INTO events VALUES(?,?,?)").run(index,row.key!,row.value!);});replay(directory,scenario.operations,(row,actual)=>expect(actual).toBe(row.expect??null));
+      const expected=oracle.query("SELECT name,value FROM (SELECT name,value,row_number() OVER(PARTITION BY name ORDER BY sequence) position FROM events) WHERE position=1 ORDER BY name").all() as {name:string;value:string}[],store=openRecordStore(directory);
+      try{expect(expected.map(row=>({name:row.name,value:Buffer.from(store.get(recordKey("record-store-law",row.name))!).toString("utf8")}))).toEqual(expected);}finally{store.close();}
+    }finally{rmSync(directory,{recursive:true,force:true});}
+  }}finally{oracle.close();}
+});
+
+test("each same-pack reader occupies its own bounded descriptor slot",()=>{
+  const directory=mkdtempSync(join(artifacts,"record-shared-descriptors-")),readers:RecordStore[]=[],key=recordKey("shared-pack"),baseline=openRecordStoreDescriptorCount();
+  try{const writer=openRecordStore(directory);writer.put(key,Buffer.from("one"));writer.close();
+    for(let index=0;index<RECORD_STORE_DESCRIPTOR_LIMIT+8;index++){const reader=openRecordStore(directory);readers.push(reader);expect(Buffer.from(reader.get(key)!).toString()).toBe("one");expect(openRecordStoreDescriptorCount()).toBe(Math.min(baseline+index+1,RECORD_STORE_DESCRIPTOR_LIMIT));if(existsSync("/proc/self/fd")){const physical=readdirSync("/proc/self/fd").filter(name=>{try{return readlinkSync("/proc/self/fd/"+name).startsWith(directory+"/");}catch{return false;}}).length;expect(physical).toBe(Math.min(index+1,RECORD_STORE_DESCRIPTOR_LIMIT));}}
+  }finally{for(const reader of readers)reader.close();rmSync(directory,{recursive:true,force:true});}
+  expect(openRecordStoreDescriptorCount()).toBe(0);
+});
+
+
+test("retirement reconciles before publication and charges only physically committed changes",()=>{
+  for(const row of fixture.retirementCases){
+    const directory=mkdtempSync(join(artifacts,"record-retirement-")),key=recordKey("retirement-law");let late:RecordStore|undefined,peer:RecordStore|undefined;
+    try{
+      const initial=openRecordStore(directory);initial.put(key,Buffer.from("alpha"));initial.close();
+      const names=fg.sync("*.{idx,pack}",{cwd:directory}),originals=names.map(name=>({name,bytes:readFileSync(join(directory,name))})),size=()=>fg.sync("*.{idx,pack}",{cwd:directory}).reduce((sum,name)=>sum+statSync(join(directory,name)).size,0);let attempts=0,commits=0,physicalBefore=0,delta=0;
+      peer=openRecordStore(directory);
+      late=openRecordStore(directory,{publication:(plan,write)=>{
+        attempts++;
+        if(row.id==="decline")return false;
+        if(row.id==="peer-compact"&&attempts===1)peer!.compact();
+        if(row.id==="continuous")for(const file of originals){const path=join(directory,file.name);if(attempts%2)rmSync(path,{force:true});else writeFileSync(path,file.bytes);}
+        physicalBefore=size();write();commits++;delta+=plan.retainedDeltaBytes;expect(size()-physicalBefore).toBe(plan.retainedDeltaBytes);return true;
+      }});
+      if(row.id==="nonfile"){const path=join(directory,names.find(name=>name.endsWith(".idx"))!);rmSync(path);mkdirSync(path);expect(()=>late!.compact()).toThrow("Ordinary finite record retirement leaf required");expect(statSync(path).isDirectory()).toBe(true);}
+      else if(row.outcome==="unstable")expect(()=>late!.compact()).toThrow("Record retirement snapshot did not stabilize");
+      else{late.compact();expect(Buffer.from(late.get(key)!).toString()).toBe("alpha");}
+      expect(attempts,row.id).toBe(row.attempts);expect(commits,row.id).toBe(row.commits);if(!commits)expect(delta).toBe(0);
+      if(row.id==="continuous")expect(fg.sync("*.{idx,pack}",{cwd:directory})).toEqual([]);
+      if(row.id==="decline")expect(fg.sync("*.{idx,pack}",{cwd:directory}).sort()).toEqual(names.sort());
+    }finally{late?.close();peer?.close();rmSync(directory,{recursive:true,force:true});}
+  }
 });

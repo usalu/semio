@@ -2,7 +2,9 @@
   "ramps": {
     "rp-1": {
       "entry": "Patched",
-      "name": "Service Ramp"
+      "value": {
+        "name": "Service Ramp"
+      }
     }
   }
 }

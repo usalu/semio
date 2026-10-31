@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {readFileSync} from "node:fs";
 const law=JSON.parse(readFileSync(new URL("🔣️.json",import.meta.url),"utf8"));
 test("original Report supersession and withdrawal agree with independent event SQL",()=>{expect(new Ajv2020({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")))(law)).toBe(true);const db=new Database(":memory:");db.exec("CREATE TABLE history (ordinal INTEGER PRIMARY KEY, operation TEXT, zoom REAL); CREATE TABLE replacements (operation TEXT PRIMARY KEY, zoom REAL, withdrawn INTEGER)");db.query("INSERT INTO history VALUES (0, 'original-report-op', ?)").run(law.authoredZoom);db.query("INSERT INTO replacements VALUES ('original-report-op', ?, 0)").run(law.replacementZoom);const select=db.query("SELECT CASE WHEN replacement.withdrawn = 1 THEN ? ELSE COALESCE(replacement.zoom, history.zoom) END AS zoom FROM history LEFT JOIN replacements replacement ON replacement.operation = history.operation ORDER BY history.ordinal");expect((select.get(law.genesisZoom)as{zoom:number}).zoom).toBe(law.replacementZoom);db.exec("UPDATE replacements SET withdrawn = 1");expect((select.get(law.genesisZoom)as{zoom:number}).zoom).toBe(law.genesisZoom);db.close();});

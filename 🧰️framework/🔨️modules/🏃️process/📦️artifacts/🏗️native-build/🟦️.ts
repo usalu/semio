@@ -1,7 +1,9 @@
+import type {ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
+import {captureCargoArtifactPlanFactsV1,cargoArtifactPlanIdentityV1,type CargoArtifactPlanFactsV1} from "./📋️plan/🟦️.ts";
 import {CargoCompilationSnapshotPoolV1,type CargoCompilationRetentionContextV1,type PendingCargoCompilationSnapshotV1,type CompletedCargoCompilationViewV1} from "./🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
 import { ensureCargoLockCurrentV1 } from "../../🦀️cargo-workspace/🟦️.ts";
 import {completedCargoOutputClaimsV1} from "./🧾️receipt/📦️retention/📋️inventory/🟦️.ts";
-import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"./📥️inputs/🟦️.ts";
+import{withCargoArtifactPlanInputsV1,type CargoCompilerInputsPortV1}from"./📥️inputs/🟦️.ts";
 import {withIssuedResourceOperationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {observePhysicalFileV1,readPhysicalFileV1} from "../../../📁️filesystem/🧾️observation/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../📤️publication/📥️sources/🟦️.ts";
@@ -269,8 +271,14 @@ async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[
  return{recipe:{version:1,cwd:policy.cwd,manifest,command:port?.command??"cargo",args:[...(port?.args??[]),options.command??"build","--locked","--manifest-path",manifest,...args],buildDirectory:policy.buildDirectory,compilerIdentity:compilerIdentity.trim(),toolchainIdentity:toolchainIdentity.trim(),inputs,environment:declared},recheck:()=>physical.recheck()};
 }
 
+/** 🔐️ Only this live compiler/input scope can execute or recheck its captured plan. */
+export type CargoArtifactPlanV1=Readonly<{facts:CargoArtifactPlanFactsV1;identity:string;execution:Readonly<Pick<CargoTargetRecipeV1,"manifest"|"buildDirectory">>;recheck:()=>Promise<void>;produce:()=>Promise<void>}>;
+
 /** 🚦️ Retains exact recipe target and shared store custody through invocation capture and provenance under the original control; the input port's compiler writer is entered only around the compile itself, after the recipe lease and before publication. */
-export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
+export async function buildCargoArtifacts(manifest:string,args:string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1):Promise<void>{return withCargoArtifactPlanV1(manifest,args,policy,options,plan=>plan.produce());}
+
+/** 📋️ Owns captured planning and bounded Source for exactly one received compiler operation. */
+export async function withCargoArtifactPlanV1<T>(manifest:string,args:string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1,body:(plan:CargoArtifactPlanV1,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
   const storage=requireNativeStorageReservationV1(options.storage,options.control);requireIssuedResourceControlV1(options.control);if(typeof options.consume!=="function"||!Number.isSafeInteger(options.maximumObservationBytes)||options.maximumObservationBytes<1||options.maximumObservationBytes>CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1)throw Error("Required finite completed Cargo consumer");if(storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await storage.recheck();
   if(options.retainCompilationBytes!==undefined&&(!Number.isSafeInteger(options.retainCompilationBytes)||options.retainCompilationBytes<1||options.retainCompilationBytes>captureSourceSchema.properties.maximumRetainedCompilationBytes.const||options.retainCompilationBytes>storage.allocation.bytes))throw Error("Finite actual Native retained compilation extent required");
   policy = admitArtifactPolicy(policy);
@@ -285,20 +293,40 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   if(!environment.CARGO_HOME)throw Error("Original bounded Cargo dependency storage required");requireNativeStoragePathV1(storage.backing.root,environment.CARGO_HOME);
   const temporary=requireNativeStoragePathV1(storage.backing.root,join(storage.backing.root,"tmp"));await storage.recheck();mkdirSync(temporary,{recursive:true});options={...options,environment:{...environment,TMPDIR:temporary,TMP:temporary,TEMP:temporary}};
   if (!cargoBuildOwnerAliveV1(options.environment ?? process.env)) throw Error("Original Cargo build owner exited");
-  const prefix=[options.command??"build","--locked","--manifest-path",manifest];return withCargoCompilerInputsV1({manifest,cwd:policy.cwd,arguments:[...prefix,...args],environment:options.environment??process.env,control},options.withCargoInputs,async actual=>{
+  const prefix=[options.command??"build","--locked","--manifest-path",manifest];return withCargoArtifactPlanInputsV1({manifest,cwd:policy.cwd,arguments:[...prefix,...args],environment:options.environment??process.env,control},options.withCargoInputs,async actual=>{
   if(JSON.stringify(actual.arguments.slice(0,prefix.length))!==JSON.stringify(prefix))throw Error("Exact actual Cargo compiler command and manifest required");args=[...actual.arguments.slice(prefix.length)];options={...options,environment:actual.environment,control:actual.control};const control=actual.control;
   return retryOnConcurrentEditV1("build",async()=>{
-  let lease:CargoTargetRecipeLeaseV1|undefined;
-  try {
-    options = { ...options, control };
     const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());
     await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));await storage.recheck();
     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
-    lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
-    requireNativeStoragePathV1(storage.backing.root,lease.targetDirectory);await storage.recheck();
-    await recipe.recheck();
-    await captureCargoArtifacts(manifest,args,policy,options,lease.targetDirectory,actual.withWriter);
-  }finally{lease?.release();}
+    const facts=await captureCargoArtifactPlanFactsV1(planning,recipe.recipe,policy.mode,process.platform as CargoArtifactPlanFactsV1["platform"],control,options.maximumObservationBytes),identity=cargoArtifactPlanIdentityV1(facts);let live=true,accepting=true,produced=false;
+    const pending=new Set<Promise<unknown>>(),failures:unknown[]=[];
+    const check=()=>{if(!live)throw Error("Cargo artifact plan scope already settled");checkResourceLeaseControl(control);requireNativeStorageReservationV1(storage,control);};
+    const track=<R>(operation:()=>Promise<R>):Promise<R>=>{
+      const admitted=live&&accepting&&pending.size<captureSourceSchema.properties.maximumPendingOperations.const;
+      const task=withIssuedResourceOperationV1(control,async()=>{await Promise.resolve();if(!admitted)throw Error("Live bounded Cargo artifact plan task required");check();return operation();});
+      if(admitted){pending.add(task);void task.then(()=>pending.delete(task),error=>{pending.delete(task);failures.push(error);});}return task;
+    };
+    const recheck=async()=>{check();await recipe.recheck();const current=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:134217728},control,options.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(current,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd,storage));const observed=await captureCargoArtifactPlanFactsV1(current,recipe.recipe,policy.mode,facts.platform,control,options.maximumObservationBytes);if(cargoArtifactPlanIdentityV1(observed)!==identity)throw Error("Admitted Cargo artifact plan Source changed");check();};
+    const plan:CargoArtifactPlanV1=Object.freeze({facts,identity,execution:Object.freeze({manifest:recipe.recipe.manifest,buildDirectory:recipe.recipe.buildDirectory}),recheck:()=>track(recheck),produce:()=>{
+      if(produced)return track(async()=>{throw Error("Cargo artifact plan producer already consumed");});produced=true;
+      return track(async()=>{actual.requireProduction();let lease:CargoTargetRecipeLeaseV1|undefined;try{
+        await recheck();lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
+        requireNativeStoragePathV1(storage.backing.root,lease.targetDirectory);await storage.recheck();await recheck();
+        const consume=options.consume;
+        await captureCargoArtifacts(manifest,args,policy,{...options,consume:async capture=>{
+          await withCapturedCargoArtifactsTaskV1(capture,async view=>{
+            const observation=decodeCargoProvenanceV1(view.observation),observed=new Map<string,string|null>();
+            for(const unit of observation.units)for(const input of unit.inputs){check();if(input.kind==="file"){const previous=observed.get(input.path);if(previous!==undefined&&previous!==input.sha256)throw Error("Conflicting completed Cargo Source observations");observed.set(input.path,input.sha256);}}
+            let checked=0;for(const unit of planning.units.filter(unit=>unit.provenance.kind==="workspace"))for(const input of unit.sourceInputs){check();if(observed.get(input.path)!==input.digest)throw Error("Completed Cargo Source differs from admitted artifact plan: "+input.path);if(++checked%32===0){await control.publish({resource:"cargo:artifact-plan-receipt",mode:"shared",elapsedMs:0});await control.yieldContinuation();}}
+            await recheck();
+          });
+          await consume(capture);
+        }},lease.targetDirectory,actual.withWriter);await recheck();
+      }finally{lease?.release();}});
+    }});
+    let failed=false,failure:unknown,result:T|undefined;
+    try{try{result=await body(plan,control);}catch(error){failed=true;failure=error;}accepting=false;while(pending.size)await Promise.allSettled([...pending]);if(failed)throw failure;if(failures.length)throw failures[0];return result as T;}finally{accepting=false;live=false;}
   },{signal:control.signal});
   });
 }

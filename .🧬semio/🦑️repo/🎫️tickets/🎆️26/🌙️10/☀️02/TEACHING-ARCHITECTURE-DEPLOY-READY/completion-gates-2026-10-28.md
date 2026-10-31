@@ -1,4 +1,40 @@
-# Current Course Completion Ledger — 2026-10-28
+# Current Acceptance And Retained Requirements
+
+The goal remains active and incomplete. Current outcomes and owner custody are maintained in [Current Runtime Status](current-status-2026-10-29.md) and the [gate ledger](completion-gates-2026-10-28.json), with [chronological evidence](repair-checkpoint-2026-10-30.md). The older statuses below are historical and do not establish acceptance of later Source changes.
+
+Every original requirement remains binding: genuine frontend/proctor, complete unfiltered170-case BOTH across all9projects/16specs/waves, fresh full units/semantics, unchanged PDF/content/DPI/site budget, persistent/reconnecting multi-user behavior, full cold-caller laws, selected continuous CLI failure, exhaustive Go/Rust aliases, Energy retained-post laws, Darwin census, Native/MCP lifetime/coalescing, public deployment, documented fixture-recovery limits and final audit/cleanup. No scoped diagnostic or historical pass substitutes for those gates.
+
+<details>
+<summary>Earlier evidence and status history; retained requirements remain binding</summary>
+
+# Current Course Completion Ledger
+
+Updated 2026-10-29T21:44:57.892Z. This opening ledger supersedes all older current/pending text preserved below. Completion is not proved.
+
+| Requirement | Current Evidence | Remaining Acceptance |
+| --- | --- | --- |
+| Real managed frontend/backend | Old owned pair was deliberately settled for publication; same DB identity retained. Standard4262 is live/queued. | Actual new6061/8791 identities,42read persistence recovery and final live-owner revalidation. |
+| Qualified release product |44967 authoritative0; qualified Source/dep-info receipt and historical real smoke/gameplay passed. | Actual after-repair release rehearsal through the normal product. |
+| Current unit and semantic checks | Registered93164 passed43/43 after9actual regressions; full React73624 and teaching28199 live/queued. Earlier821/19 and71642TSC0 are historical checkpoints. | Both complete owning suites and current React/teaching typechecks. |
+| Complete browser behavior |48540 partial shared59pass12fail, boot1pass, deliberately canceled130; ladder/exclusive/dev unverified. Repairs applied. | Complete unfiltered BOTH release/serial gate, all9projects/16specfiles. Records diagnostic is additional evidence only. |
+| PDF quality and site budget | Independent91822 EN/DE all-page equality; actual48540 normalized PDFs match hashes and prior site4,981,501<5,000,000. | Fresh actual producer/site cap and full browser acceptance after UI changes, with unchanged content/DPI/cap. |
+| Managed watcher/cold Node | Original full caller54413 failed before target; earlier1293 measured20.926s pre-birth gap. Peer watcher toolchain projection repaired in Source. | Actual full normal caller laws with NX_DAEMON unset and unchanged deadlines/cold conditions. |
+| Selected continuous failure | Pure canonical exit patch laws passed; prior CLI failed prerequisites, so selected-task proof is absent. | Actual invalid-port0 dev-site release reaches selected listener refusal and nonzero outer result; then runtime healthy. |
+| Owning repair laws | Native/DSL/wire and six additional Rust check scopes have recorded successes with exact limits in JSON. | Two genuine Energy snapshot retained-post laws remain unexecuted; no schema-owner/helper substitution. |
+| Other retained obligations | Signal focused corpus/realCLI proof exists; default test discovery/bunx interface and Darwin census gaps remain open. | Complete exact ordinary discovery/declared multi-implementation alias and Darwin guard-preserving proof. |
+| Public readiness |20:50UTC public frontend200; public proctor timed out10s; no configured university deployment connection proved. | Independent actual public backend availability and authorized deployment path; local results do not prove remote readiness. |
+| Fixture recovery | Pre-overwrite unstaged bytes remain uncertain. | Preserve limitation; current/INDEX/HEAD equality does not prove recovery. |
+
+## Active Owners And Required Sequence
+
+Root owns full normal React73624; backend owns full normal teaching28199; frontend owns standard restart4262 and the future full React then teaching typechecks. After actual readiness, backend performs the prepared42read persistence check and frontend runs the real Records transition diagnostic. Complete unfiltered BOTH and remaining caller/continuous/cross-platform/repair-law obligations stay required. Exact commands and scope boundaries are retained in the JSON and current gap matrix. No new execution is implied by this ledger.
+
+## Historical Ledger Snapshot
+
+<details>
+<summary>Superseded chronological ledger; not current readiness or completion</summary>
+
+
 
 Current operational status refreshed at 21:57 UTC. Capacity and actual gate phases are distinguished from historical graph samples. Exact token arrays, working directories, environment, logs and pending owning-test commands are retained in completion-gates-2026-10-28.json. Clips remain outside scope.
 
@@ -202,3 +238,7 @@ Root18221 is authoritative terminal1 before compiler. Exact owning schema full -
 ## Drive-aware helper-origin fixtures, 2026-10-29
 
 The final test-only follow-up exited0:2 tests/57 assertions, including13 portable relative-origin cases anchored with the actual platform's resolve/pathToFileURL and independent fast-uri/Ajv checks. Negative origin, escape and bound cases remain actual refusals; the exact256-unit path passes. Production helper/loader/Original guards remain frozen and unchanged, retaining prior actual relocated1/25 proof. This Linux execution does not establish Windows runtime. Source ledger now lists16 files, including the new test-only schema. See directory-helper-capture-2026-10-29.md.
+
+</details>
+
+</details>

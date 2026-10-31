@@ -355,7 +355,7 @@ export function floorSpot(question: { readonly parts: string; readonly controls:
 }
 
 /** 🤲️ Picks up the pet whose body is `body` at its middle (looked up again on every try, for at most {@link ANSWER_MS} of the pets' time: a pet that walked on while the harness was busy is followed) and carries it to `to` along a straight line, a frame per step, then holds it still there for ten frames, so that its last samples say it does not move; the button stays down. */
-export async function carry(page: Page, body: Body, to: { readonly x: number; readonly y: number }): Promise<void> {
+export async function carry(page: Page, body: Body, to: { readonly x: number; readonly y: number }, transport: "paced" | "continuous" = "paced"): Promise<void> {
   let from = middleOf(body);
   await eventually(
     page,
@@ -369,6 +369,12 @@ export async function carry(page: Page, body: Body, to: { readonly x: number; re
     { stageMs: ANSWER_MS, message: `${body.id} can be picked up where the hand is` },
   );
   await page.mouse.down();
+  if (transport === "continuous") {
+    await page.mouse.move(to.x, to.y, { steps: 24 });
+    await page.evaluate(framesPass, 10);
+    await page.mouse.move(to.x, to.y);
+    return;
+  }
   for (let step = 1; step <= 24; step++) {
     await page.mouse.move(from.x + ((to.x - from.x) * step) / 24, from.y + ((to.y - from.y) * step) / 24);
     await page.evaluate(framesPass, 1);

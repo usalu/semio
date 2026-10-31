@@ -2,9 +2,11 @@
   "curtain_wall_types": {
     "cwt-1": {
       "entry": "Patched",
-      "panel": {
-        "Window": {
-          "window_type": "win-1"
+      "value": {
+        "panel": {
+          "Window": {
+            "window_type": "win-1"
+          }
         }
       }
     }

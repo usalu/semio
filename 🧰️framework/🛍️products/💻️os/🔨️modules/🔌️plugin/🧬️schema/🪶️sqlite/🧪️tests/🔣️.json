@@ -1,0 +1,16 @@
+{
+  "nativeAxes": [
+    "maximum_items",
+    "maximum_copy_bytes",
+    "maximum_capacity_bytes",
+    "maximum_release_bytes",
+    "maximum_depth"
+  ],
+  "invalidAxisValues": [
+    null,
+    -1,
+    0.5,
+    "1",
+    9007199254740992
+  ]
+}

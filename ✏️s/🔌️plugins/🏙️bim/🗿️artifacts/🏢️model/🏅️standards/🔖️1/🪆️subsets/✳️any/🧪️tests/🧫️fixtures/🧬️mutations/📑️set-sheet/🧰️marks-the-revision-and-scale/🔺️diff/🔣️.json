@@ -2,8 +2,10 @@
   "sheets": {
     "sh-1": {
       "entry": "Patched",
-      "revision": "B",
-      "scale_label": "1:100 / 1:50"
+      "value": {
+        "revision": "B",
+        "scale_label": "1:100 / 1:50"
+      }
     }
   }
 }

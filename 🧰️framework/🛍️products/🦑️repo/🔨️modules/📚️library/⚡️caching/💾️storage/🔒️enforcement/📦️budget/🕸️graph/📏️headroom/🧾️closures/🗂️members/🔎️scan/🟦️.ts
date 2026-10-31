@@ -281,7 +281,7 @@ export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<Membe
 /** 📉️ What one least-recently-used pass over the optional graph cache did: its bytes before and after (the logical size of every optional leaf, the measure of the optional ledger) against the ledger's fixed limit and the pass's target, and how many groups were retired, busy (their writer is taken), in use (an optional leaf written within the protected idle time) or excluded (the caller's own namespace). */
 export type OptionalLruReportV1=Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;groups:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;excluded:number;cancelled:boolean}>;
 type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number}>;
-const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.optionalPath,"u");
+const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.definitions.OptionalPath.const,"u");
 const optionalDirectoryOfV1=(root:string,group:string)=>join(root,"inference",...(group==="canonical"?[]:group.split("/")));
 
 /** 🗃️ Lists the optional leaves of one group (index files, receipts and publications never match the optional pattern), records before the packs they index and observation blocks last, so a pass cut short never leaves a record naming a removed block. */
@@ -302,7 +302,7 @@ function optionalLeavesOfV1(root:string,group:string):{leaves:OptionalLeafV1[];n
 }
 
 /** ♻️ Retires optional graph cache groups least recently written first until the optional bytes are at most `targetBytes` (the ledger's low-water mark unless given), so an insertion into a full cache stores its records instead of being declined. Optional leaves are recomputable accelerators that no generation, pin or mandatory publication names; a group is retired only under its non-blocking writer lease (every reader and writer of a namespace holds it, so a busy group is skipped, never waited for), never when it is the caller's own (`exclude`) and never while an optional leaf of it is younger than the protected idle time. Its member index is compacted to the leaves that remain. Reports progress per group and stops at the next group when cancelled; `dryRun` only plans. */
-export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.policy.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number}>):Promise<OptionalLruReportV1>{
+export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number}>):Promise<OptionalLruReportV1>{
  if(!Number.isSafeInteger(targetBytes)||targetBytes<0)throw Error("exact-optional-graph-target-bytes-required");
  const groups=["canonical",...listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"))].map(group=>{const{leaves,newest}=optionalLeavesOfV1(root,group);return{group,newest,bytes:leaves.reduce((sum,leaf)=>sum+leaf.bytes,0)};}).filter(row=>row.bytes>0).sort((left,right)=>left.newest-right.newest||(left.group<right.group?-1:left.group>right.group?1:0));
  const usedBytes=groups.reduce((sum,row)=>sum+row.bytes,0);let remaining=usedBytes,retiredGroups=0,retiredFiles=0,retiredBytes=0,busy=0,protectedGroups=0,excluded=0,cancelled=false;
@@ -323,7 +323,7 @@ export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick
    retiredGroups++;retiredBytes+=bytes;remaining-=row.bytes;
   }finally{lease.release();}
  }
- return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.policy.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,cancelled});
+ return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,cancelled});
 }
 
 /** 🧒️ Binds the closure read child: the captured worker, heap and wire bounds the closure proof uses, one cohort of requests per child under the caller's lease control, each leaf its own request so that its answer is its own. */

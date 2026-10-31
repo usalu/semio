@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumPathUnits": 256,
+        "maximumPendingEvents": 200000,
+        "maximumStartupMilliseconds": 60000,
+        "privateMarkerDepth": 1,
+        "sourcePolicy": "closed-root-and-name",
+        "privateScope": "excluded-source",
+        "readiness": "physical-subscription-and-canary",
+        "failure": "terminal",
+        "custody": "original-service-until-process-exit"
+      }
+    }
+  }
+}

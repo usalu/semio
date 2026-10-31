@@ -1,39 +1,43 @@
 {
   "beams": {
     "b-1": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 2.0,
-            "y": 3.0
-          },
-          "start": {
-            "x": 0.0,
-            "y": 3.0
+      "entry": "Patched",
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 2,
+              "y": 3
+            },
+            "start": {
+              "x": 0,
+              "y": 3
+            }
           }
         }
-      },
-      "entry": "Patched"
+      }
     },
     "b-2": {
-      "axis": {
-        "Line": {
-          "end": {
-            "x": 8.0,
-            "y": 3.0
-          },
-          "start": {
-            "x": 2.0,
-            "y": 3.0
-          }
-        }
-      },
-      "beam_type": "bt-30x50",
       "entry": "Created",
-      "name": "B1",
-      "phase": "New",
-      "storey": "st-ground",
-      "top_offset": -0.1
+      "value": {
+        "axis": {
+          "Line": {
+            "end": {
+              "x": 8,
+              "y": 3
+            },
+            "start": {
+              "x": 2,
+              "y": 3
+            }
+          }
+        },
+        "beam_type": "bt-30x50",
+        "name": "B1",
+        "phase": "New",
+        "storey": "st-ground",
+        "top_offset": -0.1
+      }
     }
   }
 }

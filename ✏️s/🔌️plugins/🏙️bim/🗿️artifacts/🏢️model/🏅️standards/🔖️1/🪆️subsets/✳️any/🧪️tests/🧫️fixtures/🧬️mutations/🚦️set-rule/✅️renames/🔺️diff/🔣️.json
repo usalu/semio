@@ -2,7 +2,9 @@
   "rules": {
     "r-1": {
       "entry": "Patched",
-      "name": "Maximum riser height"
+      "value": {
+        "name": "Maximum riser height"
+      }
     }
   }
 }

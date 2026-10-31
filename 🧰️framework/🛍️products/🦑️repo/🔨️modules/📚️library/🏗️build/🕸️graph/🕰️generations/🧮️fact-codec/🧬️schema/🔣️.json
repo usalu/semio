@@ -1,5 +1,5 @@
 {
- "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$schema": "http://json-schema.org/draft-07/schema#",
  "title": "Binary fact index document",
  "description": "The stored form of the inverted fact index of a graph generation. Document := magic, counts (varint), strings, kinds, owners, facts, rows, classes. Every integer is an unsigned LEB128 varint (at most 9 bytes, at most 2^53-1). strings: stringCount rows of (lcp, suffixLength, suffix bytes), front coded against the previous string, strictly ascending in UTF-8 byte order (= code point order), the first string has lcp 0. kinds and owners: string ids. facts: factCount tagged values. rows: rowCount rows of (kind index, path string id, fact id). classes: classCount rows of (rCount, rCount zigzag deltas, oCount, oCount zigzag deltas), every delta against the previous value of the same list (the first against 0). Value := tag byte followed by its payload; objects list strictly ascending key string ids (canonical key order), a hex tag carries a lowercase 64 digit digest as 32 raw bytes.",
  "definitions": {

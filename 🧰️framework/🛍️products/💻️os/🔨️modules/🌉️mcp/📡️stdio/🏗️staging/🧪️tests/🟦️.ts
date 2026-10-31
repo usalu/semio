@@ -1,10 +1,12 @@
+import "./🧾️publication/🟦️.ts";
+import {CARGO_BUILD_OWNER_PID_ENV} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { EventEmitter } from "node:events";
 import { PassThrough } from "node:stream";
 import { createInterface } from "node:readline";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv/dist/2020";
+import Ajv from "ajv";
 import ts from "typescript";
 
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -33,17 +35,17 @@ for (const row of fixture.cases) test(`native staging actual ports retain argv, 
   expect(declarations.length).toBe(3);
   const calls: Array<{ command: string; args: string[]; options: Record<string, unknown> }> = [];
   const processPort = { env: { SEMIO_SENTINEL: "opaque", SEMIO_SCRIPT_INVOKE: "original-envelope", CARGO_INCREMENTAL: "1" }, pid: 99 };
-  const spawn = (command: string, args: string[], options: Record<string, unknown>) => {
+  const startToolV1 = (command: string, args: string[], options: Record<string, unknown>) => {
     calls.push({ command, args, options });
     const child = Object.assign(new EventEmitter(), { stdout: new PassThrough(), stderr: new PassThrough() });
     setTimeout(() => { child.stdout.end("child-output\n"); child.stderr.end("child-diagnostic\n"); child.emit("close", 0); }, 0);
     return child;
   };
-  const spawnSync = (command: string, args: string[], options: Record<string, unknown>) => {
+  const runToolSyncV1 = (command: string, args: string[], options: Record<string, unknown>) => {
     calls.push({ command, args, options });
     return { stdout: "child-output\n", stderr: "child-diagnostic\n", status: 0 };
   };
-  const ports = new Function("spawn", "spawnSync", "createInterface", "process", "CARGO_BUILD_OWNER_PID_ENV", "MCP_BINARY_TARGET", `${code}; return { stageMcpBinaryAsync, nativeMcpBinaryStagingFor };`)(spawn, spawnSync, createInterface, processPort, "SEMIO_CARGO_BUILD_OWNER_PID", row.arguments[1]);
+  const ports = new Function("startToolV1", "runToolSyncV1", "createInterface", "process", "CARGO_BUILD_OWNER_PID_ENV", "MCP_BINARY_TARGET", `${code}; return { stageMcpBinaryAsync, nativeMcpBinaryStagingFor };`)(startToolV1, runToolSyncV1, createInterface, processPort, CARGO_BUILD_OWNER_PID_ENV, row.arguments[1]);
   const controller = new AbortController(), progress: string[] = [];
   expect(await ports.stageMcpBinaryAsync("owned-root", (line: string) => progress.push(line), controller.signal)).toBe(0);
   expect(ports.nativeMcpBinaryStagingFor("owned-root").stage((line: string) => progress.push(line))).toBe(0);
@@ -52,7 +54,7 @@ for (const row of fixture.cases) test(`native staging actual ports retain argv, 
     expect(call.args).toEqual(row.arguments);
     expect(call.options.cwd).toBe("owned-root");
     expect(call.options.shell).toBe(false);
-    expect(call.options.env).toEqual({ ...processPort.env, SEMIO_CARGO_BUILD_OWNER_PID: "99" });
+    expect(call.options.env).toEqual({ ...processPort.env, [CARGO_BUILD_OWNER_PID_ENV]: "99" });
   }
   expect(calls.length).toBe(2);
   expect(calls[0].options.signal).toBe(controller.signal);

@@ -1,3 +1,4 @@
+import{SOURCE_OPACITY_PROTOCOL_V1,isOpaqueSourcePathV1}from"../../../../🔍️discovery/📂️source/🟦️.ts";
 import { lstat, readFile, readdir } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
 import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1, type FilesystemJournalControlV1, type FilesystemJournalScopeV1, type LiveFilesystemJournalV1 } from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
@@ -24,20 +25,20 @@ async function checkpoint(control: FilesystemJournalControlV1, phase: string): P
 }
 
 /** 🗺️ Static output exclusions match source census while leaving ignored structural inputs visible. */
-export async function repositoryFilesystemJournalPolicyV1(root: string): Promise<Readonly<{ roots: readonly string[]; names: readonly string[] }>> {
+export async function repositoryFilesystemJournalPolicyV1(root: string): Promise<Readonly<{ roots: readonly string[]; names: readonly string[]; opaqueBasenames:typeof SOURCE_OPACITY_PROTOCOL_V1 }>> {
  const roots = [".🧬semio"], names = new Set<string>(cachePolicy.generatedDirectories);
  let ignored = ""; try { ignored = await readFile(join(root, ".nxignore"), "utf8"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
  for (const line of ignored.split(/\r?\n/u)) {
   const anchored = line.trim().match(/^\/([^*?[\]!#]+)\/\*\*$/u), name = line.trim().match(/^\*\*\/([^/*?[\]!#]+)\/\*\*$/u);
   if (anchored) roots.push(anchored[1]!); else if (name) names.add(name[1]!);
  }
- return Object.freeze({ roots: Object.freeze([...new Set(roots)]), names: Object.freeze([...names]) });
+ return Object.freeze({ roots: Object.freeze([...new Set(roots)]), names: Object.freeze([...names]), opaqueBasenames:SOURCE_OPACITY_PROTOCOL_V1 });
 }
 
 /** 👁️ Joins the daemon's live watcher to the same admitted source membership and no-follow filesystem rules. */
 export async function createRepositoryFilesystemJournalV1(root: string, observation: RepositoryFilesystemJournalObservationV1, control: FilesystemJournalControlV1): Promise<LiveFilesystemJournalV1> {
  const workspace = resolve(root), policy = await repositoryFilesystemJournalPolicyV1(workspace);
- const excluded = (path: string): boolean => policy.roots.some(prefix => path === prefix || path.startsWith(prefix + "/")) || path.split("/").some(part => policy.names.includes(part));
+ const excluded = (path: string): boolean => isOpaqueSourcePathV1(path) || policy.roots.some(prefix => path === prefix || path.startsWith(prefix + "/")) || path.split("/").some(part => policy.names.includes(part));
  const admit = async (path: string, current: FilesystemJournalControlV1, expected?: "file" | "directory"): Promise<Awaited<ReturnType<typeof lstat>> | undefined> => {
   check(current);
   if (isAbsolute(path) || !path || path.split("/").some(part => !part || part === "." || part === "..") || /[:\\\0]/u.test(path)) throw Error("Repository journal relative ancestry required");

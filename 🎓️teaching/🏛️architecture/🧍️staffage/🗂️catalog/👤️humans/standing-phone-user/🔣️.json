@@ -1,0 +1,4215 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "standing-phone-user",
+    "category": "humans",
+    "title": {
+      "en": "Standing Phone User",
+      "de": "Stehende Smartphone-Nutzerin"
+    },
+    "summary": {
+      "en": "A 24-year-old woman of 1.69 m in a hooded sweatshirt, slim jeans and canvas sneakers, standing at a bus stop with her head bowed over a smartphone; over-ear headphones around the neck, a ponytail, weight on one leg. Poses for texting, a call at the ear and a photo.",
+      "de": "Eine 24-jährige Frau von 1,69 m in Kapuzenpullover, enger Jeans und Stoffsneakern, die an einer Bushaltestelle mit gesenktem Kopf auf ein Smartphone schaut; Kopfhörer um den Hals, Pferdeschwanz, Gewicht auf einem Bein. Posen für Tippen, Telefonat am Ohr und Foto."
+    },
+    "tags": [
+      "human",
+      "adult",
+      "woman",
+      "standing",
+      "smartphone",
+      "headphones",
+      "text-neck",
+      "waiting"
+    ],
+    "provenance": {
+      "author": "Semio staffage content worker NW-H3",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "de-leva-1996",
+          "citation": "de Leva, P. (1996). Adjustments to Zatsiorsky-Seluyanov's segment inertia parameters. Journal of Biomechanics 29(9), 1223-1230. Tables 4 (male) and 5 (female), segment mass fractions and centre-of-mass positions."
+        },
+        {
+          "id": "winter-2009",
+          "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, anthropometric segment data."
+        },
+        {
+          "id": "drillis-contini-1966",
+          "citation": "Drillis, R., Contini, R. and Bluestein, M. (1964/1966). Body segment parameters: a survey of measurement techniques. Artificial Limbs 8(1), 44-66; segment lengths as fractions of stature."
+        },
+        {
+          "id": "dubois-1916",
+          "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+        },
+        {
+          "id": "iso-9920-2007",
+          "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+        },
+        {
+          "id": "iso-7730-2005",
+          "citation": "ISO 7730:2005 Ergonomics of the thermal environment, analytical determination of thermal comfort; Annex A metabolic rates."
+        },
+        {
+          "id": "ashrae-2021",
+          "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort; Chapter 18 Nonresidential cooling and heating load calculations for emissivities and metabolic data."
+        },
+        {
+          "id": "gupta-2010",
+          "citation": "Gupta, J. K., Lin, C.-H. and Chen, Q. (2010). Characterizing exhaled airflow from breathing and talking. Indoor Air 20(1), 31-39."
+        },
+        {
+          "id": "gagge-1971",
+          "citation": "Gagge, A. P., Stolwijk, J. A. J. and Nishi, Y. (1971). An effective temperature scale based on a simple model of human physiological regulatory response. ASHRAE Transactions 77(1), 247-262."
+        },
+        {
+          "id": "mifflin-1990",
+          "citation": "Mifflin, M. D., St Jeor, S. T. et al. (1990). A new predictive equation for resting energy expenditure in healthy individuals. American Journal of Clinical Nutrition 51(2), 241-247."
+        },
+        {
+          "id": "icrp-66-1994",
+          "citation": "ICRP (1994). Human respiratory tract model for radiological protection. ICRP Publication 66, Annals of the ICRP 24(1-3); reference ventilation rates by activity and age (used as guidance, values authored)."
+        }
+      ],
+      "notes": {
+        "en": "Rig scaled from the archive's human template to 1.69 m (de Leva female segment fractions); outlines, clothing, poses and clips handcrafted. The head-down posture follows the sagittal profile of a person looking at a hand-held phone; all thermal and respiratory parameters other than the cited equations are authored estimates.",
+        "de": "Skelett aus der Menschenvorlage des Archivs auf 1,69 m skaliert (de Leva, weibliche Segmentanteile); Umrisse, Kleidung, Posen und Clips von Hand gezeichnet. Die Kopf-nach-unten-Haltung folgt dem Seitenprofil einer Person, die auf ein Handy schaut; alle thermischen und respiratorischen Parameter außer den zitierten Gleichungen sind Schätzwerte."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.67,
+      "widthM": 0.64,
+      "depthM": 0.4,
+      "massKg": 59.4
+    },
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.6,
+        "source": "literature",
+        "reference": "ashrae-2021"
+      },
+      {
+        "id": "hair",
+        "title": {
+          "en": "Hair",
+          "de": "Haar"
+        },
+        "emissivity": 0.98,
+        "solarAbsorptivity": 0.85,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "cotton-underwear",
+        "title": {
+          "en": "Cotton undershirt and briefs",
+          "de": "Baumwollunterwäsche"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.5,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "cotton-sock",
+        "title": {
+          "en": "Cotton socks",
+          "de": "Baumwollsocken"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.6,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "fleece-sweatshirt",
+        "title": {
+          "en": "Cotton-polyester fleece sweatshirt",
+          "de": "Sweatshirt aus Baumwoll-Polyester-Fleece"
+        },
+        "emissivity": 0.93,
+        "solarAbsorptivity": 0.6,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "denim",
+        "title": {
+          "en": "Denim",
+          "de": "Denim"
+        },
+        "emissivity": 0.92,
+        "solarAbsorptivity": 0.75,
+        "specificHeatJKgK": 1300,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "canvas-sneaker",
+        "title": {
+          "en": "Canvas sneaker with rubber sole",
+          "de": "Stoffsneaker mit Gummisohle"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.5,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "headphone-polymer",
+        "title": {
+          "en": "Polymer and imitation-leather headphones",
+          "de": "Kopfhörer aus Polymer und Kunstleder"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.7,
+        "specificHeatJKgK": 1400,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "phone-glass-metal",
+        "title": {
+          "en": "Glass and aluminium smartphone",
+          "de": "Smartphone aus Glas und Aluminium"
+        },
+        "emissivity": 0.85,
+        "solarAbsorptivity": 0.7,
+        "specificHeatJKgK": 800,
+        "source": "authored-estimate"
+      }
+    ],
+    "rig": {
+      "kind": "anatomical",
+      "root": "pelvis",
+      "bones": [
+        {
+          "id": "pelvis",
+          "parent": null,
+          "title": {
+            "en": "Pelvis",
+            "de": "Becken"
+          },
+          "x": 0,
+          "y": 0.883,
+          "angleDeg": 90,
+          "lengthM": 0.0951,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -15,
+            "maxDeg": 15
+          },
+          "mass": {
+            "kg": 7.359,
+            "comX": 0.0571,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "torso",
+          "parent": "pelvis",
+          "title": {
+            "en": "Torso with coat",
+            "de": "Rumpf mit Mantel"
+          },
+          "x": 0.0951,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.4422,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -40,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 17.747,
+            "comX": 0.2043,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "neck",
+          "parent": "torso",
+          "title": {
+            "en": "Neck",
+            "de": "Hals"
+          },
+          "x": 0.4422,
+          "y": 0,
+          "angleDeg": -8,
+          "lengthM": 0.0951,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -35,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.801,
+            "comX": 0.0476,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "head",
+          "parent": "neck",
+          "title": {
+            "en": "Head",
+            "de": "Kopf"
+          },
+          "x": 0.0951,
+          "y": 0,
+          "angleDeg": 8,
+          "lengthM": 0.1746,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 25
+          },
+          "mass": {
+            "kg": 3.387,
+            "comX": 0.0728,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-l",
+          "parent": "torso",
+          "title": {
+            "en": "Left upper arm",
+            "de": "Linker Oberarm"
+          },
+          "x": 0.39941,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.3135,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 1.503,
+            "comX": 0.1804,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-l",
+          "parent": "arm-l",
+          "title": {
+            "en": "Left forearm",
+            "de": "Linker Unterarm"
+          },
+          "x": 0.3135,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.247,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.814,
+            "comX": 0.1126,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-l",
+          "parent": "forearm-l",
+          "title": {
+            "en": "Left hand",
+            "de": "Linker Hand"
+          },
+          "x": 0.247,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1805,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.33,
+            "comX": 0.1349,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-l",
+          "parent": "pelvis",
+          "title": {
+            "en": "Left thigh",
+            "de": "Linker Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.41325,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 8.714,
+            "comX": 0.1493,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-l",
+          "parent": "thigh-l",
+          "title": {
+            "en": "Left shank",
+            "de": "Linker Unterschenkel"
+          },
+          "x": 0.41325,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.40375,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 2.836,
+            "comX": 0.1757,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-l",
+          "parent": "shank-l",
+          "title": {
+            "en": "Left foot and shoe",
+            "de": "Linker Fuß mit Schuh"
+          },
+          "x": 0.40375,
+          "y": 0,
+          "angleDeg": 66.193,
+          "lengthM": 0.1635,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0.0703,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-l",
+          "parent": "foot-l",
+          "title": {
+            "en": "Left forefoot",
+            "de": "Linker Vorfuß"
+          },
+          "x": 0.1635,
+          "y": 0,
+          "angleDeg": 23.807,
+          "lengthM": 0.0572,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.061,
+            "comX": 0.0263,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "arm-r",
+          "parent": "torso",
+          "title": {
+            "en": "Right upper arm",
+            "de": "Rechter Oberarm"
+          },
+          "x": 0.39941,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.3135,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 170
+          },
+          "mass": {
+            "kg": 1.503,
+            "comX": 0.1804,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "forearm-r",
+          "parent": "arm-r",
+          "title": {
+            "en": "Right forearm",
+            "de": "Rechter Unterarm"
+          },
+          "x": 0.3135,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.247,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 150
+          },
+          "mass": {
+            "kg": 0.814,
+            "comX": 0.1126,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "hand-r",
+          "parent": "forearm-r",
+          "title": {
+            "en": "Right hand",
+            "de": "Rechter Hand"
+          },
+          "x": 0.247,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.1805,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 60
+          },
+          "mass": {
+            "kg": 0.33,
+            "comX": 0.1349,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "winter-2009"
+          }
+        },
+        {
+          "id": "thigh-r",
+          "parent": "pelvis",
+          "title": {
+            "en": "Right thigh",
+            "de": "Rechter Oberschenkel"
+          },
+          "x": 0,
+          "y": 0,
+          "angleDeg": 180,
+          "lengthM": 0.41325,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -30,
+            "maxDeg": 110
+          },
+          "mass": {
+            "kg": 8.714,
+            "comX": 0.1493,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "shank-r",
+          "parent": "thigh-r",
+          "title": {
+            "en": "Right shank",
+            "de": "Rechter Unterschenkel"
+          },
+          "x": 0.41325,
+          "y": 0,
+          "angleDeg": 0,
+          "lengthM": 0.40375,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -150,
+            "maxDeg": 0
+          },
+          "mass": {
+            "kg": 2.836,
+            "comX": 0.1757,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "foot-r",
+          "parent": "shank-r",
+          "title": {
+            "en": "Right foot and shoe",
+            "de": "Rechter Fuß mit Schuh"
+          },
+          "x": 0.40375,
+          "y": 0,
+          "angleDeg": 66.193,
+          "lengthM": 0.1635,
+          "joint": {
+            "type": "revolute",
+            "minDeg": -60,
+            "maxDeg": 30
+          },
+          "mass": {
+            "kg": 0.7,
+            "comX": 0.0703,
+            "comY": 0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "toe-r",
+          "parent": "foot-r",
+          "title": {
+            "en": "Right forefoot",
+            "de": "Rechter Vorfuß"
+          },
+          "x": 0.1635,
+          "y": 0,
+          "angleDeg": 23.807,
+          "lengthM": 0.0572,
+          "joint": {
+            "type": "revolute",
+            "minDeg": 0,
+            "maxDeg": 65
+          },
+          "mass": {
+            "kg": 0.061,
+            "comX": 0.0263,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate",
+            "reference": "de-leva-1996"
+          }
+        },
+        {
+          "id": "phone",
+          "parent": "hand-r",
+          "title": {
+            "en": "Smartphone in case",
+            "de": "Smartphone mit Hülle"
+          },
+          "x": 0.0807,
+          "y": 0.022,
+          "angleDeg": 18,
+          "lengthM": 0.148,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 0.19,
+            "comX": 0,
+            "comY": 0,
+            "distribution": "point",
+            "source": "authored-estimate"
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "heel-l",
+        "bone": "foot-l",
+        "x": -0.0096,
+        "y": -0.0764,
+        "kind": "contact",
+        "title": {
+          "en": "Left heel",
+          "de": "Linker Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0616,
+        "footprintWidthM": 0.0585,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-l",
+        "bone": "foot-l",
+        "x": 0.1635,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Left ball of foot",
+          "de": "Linker Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.088,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "heel-r",
+        "bone": "foot-r",
+        "x": -0.0096,
+        "y": -0.0764,
+        "kind": "contact",
+        "title": {
+          "en": "Right heel",
+          "de": "Rechter Ferse"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.0616,
+        "footprintWidthM": 0.0585,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "ball-r",
+        "bone": "foot-r",
+        "x": 0.1635,
+        "y": 0,
+        "kind": "contact",
+        "title": {
+          "en": "Right ball of foot",
+          "de": "Rechter Fußballen"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 0.088,
+        "footprintWidthM": 0.09,
+        "frictionCoefficient": 0.9
+      },
+      {
+        "id": "mouth",
+        "bone": "head",
+        "x": -0.0049,
+        "y": -0.0777,
+        "kind": "emitter",
+        "title": {
+          "en": "Mouth opening",
+          "de": "Mundöffnung"
+        }
+      },
+      {
+        "id": "nostrils",
+        "bone": "head",
+        "x": 0.0291,
+        "y": -0.1009,
+        "kind": "emitter",
+        "title": {
+          "en": "Nostrils",
+          "de": "Nasenöffnungen"
+        }
+      },
+      {
+        "id": "crown",
+        "bone": "head",
+        "x": 0.1697,
+        "y": 0,
+        "kind": "emitter",
+        "title": {
+          "en": "Crown of the head",
+          "de": "Scheitel"
+        }
+      },
+      {
+        "id": "phone-cog",
+        "bone": "phone",
+        "x": 0,
+        "y": 0,
+        "kind": "load",
+        "title": {
+          "en": "Phone centre of gravity",
+          "de": "Schwerpunkt des Telefons"
+        }
+      },
+      {
+        "id": "grip-l",
+        "bone": "hand-l",
+        "x": 0.09,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Left thumb on the screen",
+          "de": "Linker Daumen auf dem Bildschirm"
+        }
+      },
+      {
+        "id": "ear",
+        "bone": "head",
+        "x": 0.045,
+        "y": 0,
+        "kind": "attachment",
+        "title": {
+          "en": "Ear (phone call)",
+          "de": "Ohr (Telefonat)"
+        }
+      }
+    ],
+    "representations": {
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.3
+        },
+        "hatches": [
+          {
+            "id": "denim",
+            "title": {
+              "en": "Denim twill lines",
+              "de": "Denim-Köperlinien"
+            },
+            "pattern": "lines",
+            "angleDeg": 62,
+            "spacingMm": 0.5,
+            "penMm": 0.1
+          },
+          {
+            "id": "knit",
+            "title": {
+              "en": "Fleece knit lines",
+              "de": "Fleece-Strickstriche"
+            },
+            "pattern": "lines",
+            "angleDeg": 90,
+            "spacingMm": 0.6,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sleeve-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.03 0.058 C -0.005 0.07783 0.07333 0.05833 0.12 0.057 C 0.1667 0.05567 0.2177 0.05167 0.25 0.05 C 0.2823 0.04833 0.2993 0.04783 0.3135 0.047 C 0.3277 0.04617 0.3314 0.06033 0.335 0.045 C 0.3386 0.02967 0.3386 -0.02967 0.335 -0.045 C 0.3314 -0.06033 0.3277 -0.04617 0.3135 -0.047 C 0.2993 -0.04783 0.2823 -0.04817 0.25 -0.05 C 0.2177 -0.05183 0.1667 -0.056 0.12 -0.058 C 0.07333 -0.06 -0.005 -0.08133 -0.03 -0.062 C -0.055 -0.04267 -0.055 0.03817 -0.03 0.058 Z",
+              "region": "hoodie",
+              "hatch": "knit"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "hatch": "knit",
+              "kind": "path",
+              "d": "M-0.03500 -0.04600 L-0.02253 -0.05035 L0.01507 -0.05257 L0.12000 -0.04500 L0.26500 -0.04000 L0.26500 0.03200 L0.26745 0.03939 L0.26397 0.04502 L0.22459 0.03936 L0.21880 0.03560 L0.20714 0.04114 L0.01507 0.05257 L-0.02943 0.04850 L-0.03954 0.04263 L-0.04953 0.02736 L-0.05437 0.00000 L-0.04953 -0.02736 Z"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 0.7,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.01420 -0.02850 L-0.00604 -0.03723 L0.00538 -0.03423 L0.00709 -0.04131 L0.02919 -0.03417 L0.14250 -0.02850 L0.17041 -0.01612 L0.17945 -0.00665 L0.18165 0.00321 L0.16430 0.02338 L0.16971 0.02511 L0.16532 0.02434 L0.15541 0.03556 L0.12132 0.03412 L-0.00103 0.04211 L-0.01420 0.03510 L-0.02296 0.01307 L-0.02154 -0.01538 Z"
+            },
+            {
+              "id": "thumb-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 0.72,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.00380 0.02280 L0.01760 0.03345 L0.01152 0.04209 L0.03800 0.04270 L0.09310 0.07790 L0.10007 0.07937 L0.10618 0.07427 L0.10494 0.06576 L0.09630 0.05382 L0.07401 0.03528 L0.05590 0.02564 L0.02986 0.01895 Z"
+            },
+            {
+              "id": "sleeve-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "hatch": "knit",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L-0.01829 0.06370 L0.01614 0.06675 L0.10118 0.05824 L0.25000 0.05000 L0.31350 0.04700 L0.33212 0.05166 L0.33702 0.02663 L0.33500 -0.04500 L0.33036 -0.05215 L0.31350 -0.04700 L0.12000 -0.05800 L0.01614 -0.06976 L-0.01829 -0.06746 L-0.03000 -0.06200 L-0.03820 -0.05211 L-0.04758 -0.02077 L-0.04661 0.02583 L-0.05118 0.03513 L-0.04234 0.03970 Z"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "hatch": "knit",
+              "kind": "path",
+              "d": "M-0.03500 -0.04600 L-0.02253 -0.05035 L0.01507 -0.05257 L0.12000 -0.04500 L0.26500 -0.04000 L0.26500 0.04000 L0.26200 0.04660 L0.21900 0.03547 L0.20727 0.04109 L0.01507 0.05257 L-0.02943 0.04850 L-0.03954 0.04263 L-0.04953 0.02736 L-0.05437 0.00000 L-0.04953 -0.02736 Z"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.01420 -0.02850 L0.01036 -0.03464 L0.14250 -0.02850 L0.17041 -0.01612 L0.17945 -0.00665 L0.18165 0.00321 L0.17683 0.01139 L0.16150 0.02090 L0.16933 0.02938 L0.16720 0.03140 L0.14310 0.03755 L0.11400 0.03420 L-0.01784 0.04075 L-0.02296 0.01307 L-0.02154 -0.01538 Z"
+            },
+            {
+              "id": "thumb-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.00380 0.02280 L0.01760 0.03345 L0.01667 0.03962 L0.03800 0.04270 L0.09310 0.07790 L0.10007 0.07937 L0.10618 0.07427 L0.10494 0.06576 L0.09630 0.05382 L0.07401 0.03528 L0.05590 0.02564 L0.02986 0.01895 Z"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "hatch": "denim",
+              "kind": "path",
+              "d": "M-0.03000 0.07800 L-0.01410 0.08875 L0.00791 0.09146 L0.08143 0.08164 L0.41330 0.05200 L0.44076 0.05565 L0.44500 0.04800 L0.44798 0.02872 L0.44798 -0.02672 L0.44500 -0.04600 L0.44076 -0.05356 L0.41330 -0.05000 L0.26000 -0.06600 L0.02500 -0.09976 L-0.01410 -0.09860 L-0.02550 -0.09261 L-0.03381 -0.08188 L-0.04219 -0.05433 L-0.04524 -0.03070 L-0.04524 0.02047 L-0.04219 0.04414 Z"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.035 0.052 C -0.009167 0.07017 0.0675 0.05617 0.12 0.055 C 0.1725 0.05383 0.2327 0.0475 0.28 0.045 C 0.3273 0.0425 0.4038 0.04 0.4038 0.04 C 0.4038 0.04 0.425 0.038 0.425 0.038 C 0.425 0.038 0.4285 -0.025 0.425 -0.038 C 0.4215 -0.051 0.428 -0.03867 0.4038 -0.04 C 0.3796 -0.04133 0.3273 -0.042 0.28 -0.046 C 0.2327 -0.05 0.1725 -0.06267 0.12 -0.064 C 0.0675 -0.06533 -0.009167 -0.07333 -0.035 -0.054 C -0.06083 -0.03467 -0.06083 0.03383 -0.035 0.052 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "hatch": "denim",
+              "kind": "path",
+              "d": "M-0.03000 0.07800 L-0.01410 0.08875 L0.00791 0.09146 L0.08143 0.08164 L0.41330 0.05200 L0.44076 0.05565 L0.44500 0.04800 L0.44798 0.02872 L0.44798 -0.02672 L0.44500 -0.04600 L0.44076 -0.05356 L0.41330 -0.05000 L0.26000 -0.06600 L0.02500 -0.09976 L-0.01410 -0.09860 L-0.02550 -0.09261 L-0.03381 -0.08188 L-0.04219 -0.05433 L-0.04524 -0.03070 L-0.04524 0.02047 L-0.04219 0.04414 Z"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.035 0.052 C -0.009167 0.07017 0.0675 0.05617 0.12 0.055 C 0.1725 0.05383 0.2327 0.0475 0.28 0.045 C 0.3273 0.0425 0.4038 0.04 0.4038 0.04 C 0.4038 0.04 0.425 0.038 0.425 0.038 C 0.425 0.038 0.4285 -0.025 0.425 -0.038 C 0.4215 -0.051 0.428 -0.03867 0.4038 -0.04 C 0.3796 -0.04133 0.3273 -0.042 0.28 -0.046 C 0.2327 -0.05 0.1725 -0.06267 0.12 -0.064 C 0.0675 -0.06533 -0.009167 -0.07333 -0.035 -0.054 C -0.06083 -0.03467 -0.06083 0.03383 -0.035 0.052 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.02 -0.05 C -0.0008333 -0.06567 0.07583 -0.05533 0.095 -0.04 C 0.1142 -0.02467 0.1142 0.02633 0.095 0.042 C 0.07583 0.05767 -0.0008333 0.06933 -0.02 0.054 C -0.03917 0.03867 -0.03917 -0.03433 -0.02 -0.05 Z",
+              "region": "face-skin"
+            },
+            {
+              "id": "hoodie",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "hatch": "knit",
+              "kind": "path",
+              "d": "M-0.17000 -0.08800 L-0.06000 -0.09300 L0.08000 -0.08600 L0.22000 -0.10400 L0.27939 -0.10355 L0.33000 -0.09800 L0.36924 -0.08769 L0.43528 -0.06157 L0.45267 -0.02596 L0.44547 0.03976 L0.43765 0.05824 L0.41733 0.07662 L0.38000 0.09200 L0.33739 0.10015 L0.28000 0.10200 L0.10000 0.09400 L-0.05000 0.10400 L-0.17000 0.09800 Z"
+            },
+            {
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.4,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.36000 0.08800 L0.36772 0.09725 L0.40193 0.11745 L0.43739 0.13032 L0.47401 0.13593 L0.49724 0.13324 L0.51783 0.12315 L0.53242 0.10951 L0.53630 0.10034 L0.53406 0.08437 L0.52000 0.06500 L0.49281 0.05156 L0.44484 0.04361 L0.37250 0.07263 L0.36251 0.08006 Z"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0.0107 0.0718 C 0.0204 0.08135 0.0325 0.0954 0.0485 0.1009 C 0.0645 0.1064 0.08957 0.1105 0.1067 0.1048 C 0.1238 0.09913 0.1413 0.08437 0.1513 0.0669 C 0.1613 0.04943 0.1696 0.02102 0.1668 0 C 0.1641 -0.02102 0.1464 -0.04658 0.1348 -0.0592 C 0.1232 -0.07182 0.1061 -0.0728 0.097 -0.0757 C 0.08795 -0.0786 0.08617 -0.07563 0.0805 -0.0766 C 0.07483 -0.07757 0.06785 -0.0794 0.063 -0.0815 C 0.05815 -0.0836 0.0564 -0.08645 0.0514 -0.0892 C 0.0464 -0.09195 0.03802 -0.09783 0.033 -0.098 C 0.02798 -0.09817 0.0255 -0.09328 0.0213 -0.0902 C 0.0171 -0.08712 0.01248 -0.08225 0.0078 -0.0795 C 0.003117 -0.07675 0.0008 -0.07628 -0.0068 -0.0737 C -0.0144 -0.07112 -0.03085 -0.06982 -0.0378 -0.064 C -0.04475 -0.05818 -0.04785 -0.04688 -0.0485 -0.0388 C -0.04915 -0.03072 -0.04817 -0.02923 -0.0417 -0.0155 C -0.03523 -0.001767 -0.01843 0.02905 -0.0097 0.0436 C -0.0009667 0.05815 0.001 0.06225 0.0107 0.0718 Z",
+              "region": "face-skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.1348 -0.0563 C 0.1424 -0.066 0.1597 -0.05368 0.1668 -0.0388 C 0.1739 -0.02392 0.1778 0.01442 0.1775 0.033 C 0.1772 0.05158 0.1735 0.05912 0.1649 0.0727 C 0.1563 0.08628 0.1423 0.1063 0.1261 0.1145 C 0.1099 0.1227 0.08568 0.1251 0.0679 0.1222 C 0.05012 0.1193 0.03072 0.1061 0.0194 0.097 C 0.008083 0.08795 -0.00485 0.07275 0 0.0679 C 0.00485 0.06305 0.03233 0.06952 0.0485 0.0679 C 0.06467 0.06628 0.08488 0.06628 0.097 0.0582 C 0.1091 0.05012 0.1149 0.03848 0.1212 0.0194 C 0.1275 0.0003167 0.1272 -0.0466 0.1348 -0.0563 Z",
+              "region": "hair"
+            },
+            {
+              "id": "ponytail",
+              "bone": "head",
+              "role": "body",
+              "z": 5.4,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.097 0.097 C 0.1002 0.1051 0.0776 0.1309 0.0582 0.1455 C 0.0388 0.16 0.01293 0.1762 -0.0194 0.1843 C -0.05173 0.1924 -0.1067 0.1972 -0.1358 0.194 C -0.1649 0.1908 -0.1972 0.1762 -0.194 0.1649 C -0.1908 0.1536 -0.1439 0.1358 -0.1164 0.1261 C -0.08892 0.1164 -0.05497 0.1115 -0.0291 0.1067 C -0.003233 0.1019 0.01778 0.09862 0.0388 0.097 C 0.05982 0.09538 0.09377 0.08892 0.097 0.097 Z",
+              "region": "hair"
+            },
+            {
+              "id": "ear",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.0446,
+              "cy": 0.0252,
+              "rx": 0.012,
+              "ry": 0.02,
+              "region": "face-skin"
+            },
+            {
+              "id": "cuff-rib-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 0.53,
+              "filled": true,
+              "tone": 0.35,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.21200 -0.04300 L0.25000 -0.04300 L0.25000 0.03518 L0.26058 0.04005 L0.22588 0.04216 L0.22133 0.03950 L0.21200 0.04300 L0.21552 0.03350 L0.21200 0.02736 Z"
+            },
+            {
+              "id": "finger-l-0",
+              "bone": "hand-l",
+              "role": "texture",
+              "z": 0.75,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M0.11400 0.01900 L0.17860 0.02470"
+            },
+            {
+              "id": "finger-l-1",
+              "bone": "hand-l",
+              "role": "texture",
+              "z": 0.75,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M0.11400 0.00380 L0.16424 0.00823 L0.17109 0.01122 L0.17964 0.00736"
+            },
+            {
+              "id": "finger-l-2",
+              "bone": "hand-l",
+              "role": "texture",
+              "z": 0.75,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.114,
+                  -0.0114
+                ],
+                [
+                  0.1786,
+                  -0.0057
+                ]
+              ],
+              "closed": false,
+              "region": "hand-skin"
+            },
+            {
+              "id": "cuff-rib-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 6.03,
+              "filled": true,
+              "tone": 0.35,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.21200 -0.04300 L0.25000 -0.04300 L0.25000 0.03518 L0.26029 0.04014 L0.21200 0.04300 Z"
+            },
+            {
+              "id": "finger-r-0",
+              "bone": "hand-r",
+              "role": "texture",
+              "z": 6.25,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M0.11400 0.01900 L0.17860 0.02470"
+            },
+            {
+              "id": "finger-r-1",
+              "bone": "hand-r",
+              "role": "texture",
+              "z": 6.25,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M0.11400 0.00380 L0.16424 0.00823 L0.17109 0.01122 L0.17964 0.00736"
+            },
+            {
+              "id": "finger-r-2",
+              "bone": "hand-r",
+              "role": "texture",
+              "z": 6.25,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.114,
+                  -0.0114
+                ],
+                [
+                  0.1786,
+                  -0.0057
+                ]
+              ],
+              "closed": false,
+              "region": "hand-skin"
+            },
+            {
+              "id": "sole-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.15,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M -0.0378 -0.0651 C -0.04117 -0.06787 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1909 0.01667 0.1654 0.007 C 0.1399 -0.002667 0.04447 -0.04778 0.0106 -0.0598 C -0.02327 -0.07182 -0.03443 -0.06233 -0.0378 -0.0651 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "toe-sole-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.15,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0.009683 -0.003567 0.0474 -0.003267 0.0581 -0.0018 C 0.0688 -0.0003333 0.07388 0.005233 0.0642 0.007 C 0.05452 0.008767 0.0107 0.01027 0 0.0088 C -0.0107 0.007333 -0.009683 -3.333e-05 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-l-0",
+              "bone": "foot-l",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0396,
+                  0.0264
+                ],
+                [
+                  0.0519,
+                  0.0598
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-l-1",
+              "bone": "foot-l",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0748,
+                  0.0282
+                ],
+                [
+                  0.0871,
+                  0.0493
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-l-2",
+              "bone": "foot-l",
+              "role": "texture",
+              "z": 1.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1074,
+                  0.0246
+                ],
+                [
+                  0.1197,
+                  0.044
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "jeans-side-seam-l",
+              "bone": "thigh-l",
+              "role": "detail",
+              "z": 1.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0 0.05 C 0.03333 0.04833 0.1333 0.04333 0.2 0.04 C 0.2667 0.03667 0.3667 0.03167 0.4 0.03",
+              "region": "jeans"
+            },
+            {
+              "id": "jeans-knee-l",
+              "bone": "thigh-l",
+              "role": "texture",
+              "z": 1.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.36 -0.03 C 0.365 -0.025 0.3883 -0.01 0.39 0 C 0.3917 0.01 0.3733 0.025 0.37 0.03",
+              "region": "jeans"
+            },
+            {
+              "id": "jeans-hem-l",
+              "bone": "shank-l",
+              "role": "detail",
+              "z": 1.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.375,
+                  -0.041
+                ],
+                [
+                  0.375,
+                  0.04
+                ]
+              ],
+              "closed": false,
+              "region": "jeans"
+            },
+            {
+              "id": "sole-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M -0.0378 -0.0651 C -0.04117 -0.06787 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1909 0.01667 0.1654 0.007 C 0.1399 -0.002667 0.04447 -0.04778 0.0106 -0.0598 C -0.02327 -0.07182 -0.03443 -0.06233 -0.0378 -0.0651 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "toe-sole-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 3.15,
+              "filled": true,
+              "tone": 0.88,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0.009683 -0.003567 0.0474 -0.003267 0.0581 -0.0018 C 0.0688 -0.0003333 0.07388 0.005233 0.0642 0.007 C 0.05452 0.008767 0.0107 0.01027 0 0.0088 C -0.0107 0.007333 -0.009683 -3.333e-05 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-r-0",
+              "bone": "foot-r",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0396,
+                  0.0264
+                ],
+                [
+                  0.0519,
+                  0.0598
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-r-1",
+              "bone": "foot-r",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0748,
+                  0.0282
+                ],
+                [
+                  0.0871,
+                  0.0493
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "lace-r-2",
+              "bone": "foot-r",
+              "role": "texture",
+              "z": 3.2,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1074,
+                  0.0246
+                ],
+                [
+                  0.1197,
+                  0.044
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "jeans-side-seam-r",
+              "bone": "thigh-r",
+              "role": "detail",
+              "z": 3.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0 0.05 C 0.03333 0.04833 0.1333 0.04333 0.2 0.04 C 0.2667 0.03667 0.3667 0.03167 0.4 0.03",
+              "region": "jeans"
+            },
+            {
+              "id": "jeans-knee-r",
+              "bone": "thigh-r",
+              "role": "texture",
+              "z": 3.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.36 -0.03 C 0.365 -0.025 0.3883 -0.01 0.39 0 C 0.3917 0.01 0.3733 0.025 0.37 0.03",
+              "region": "jeans"
+            },
+            {
+              "id": "jeans-hem-r",
+              "bone": "shank-r",
+              "role": "detail",
+              "z": 3.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.375,
+                  -0.041
+                ],
+                [
+                  0.375,
+                  0.04
+                ]
+              ],
+              "closed": false,
+              "region": "jeans"
+            },
+            {
+              "id": "hem-rib",
+              "bone": "torso",
+              "role": "body",
+              "z": 4.1,
+              "filled": true,
+              "tone": 0.35,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.17,
+                  -0.088
+                ],
+                [
+                  -0.13,
+                  -0.091
+                ],
+                [
+                  -0.13,
+                  0.102
+                ],
+                [
+                  -0.17,
+                  0.098
+                ]
+              ],
+              "closed": true,
+              "region": "hoodie"
+            },
+            {
+              "id": "kangaroo-pocket",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.00000 -0.08800 L-0.11438 -0.09573 L-0.13000 -0.08997 L-0.12000 0.09800 L0.00000 0.09500 L0.03000 0.00000 Z"
+            },
+            {
+              "id": "drawstring-0",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.4 -0.03 C 0.3833 -0.031 0.33 -0.0355 0.3 -0.036 C 0.27 -0.0365 0.2333 -0.0335 0.22 -0.033",
+              "region": "hoodie"
+            },
+            {
+              "id": "drawstring-1",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.15,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.4 -0.06 C 0.3833 -0.061 0.33 -0.0655 0.3 -0.066 C 0.27 -0.0665 0.2333 -0.0635 0.22 -0.063",
+              "region": "hoodie"
+            },
+            {
+              "id": "collar-rib",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.4 -0.075 C 0.405 -0.06917 0.423 -0.0525 0.43 -0.04 C 0.437 -0.0275 0.4402 -0.006667 0.4422 0",
+              "region": "hoodie"
+            },
+            {
+              "id": "hood-fold",
+              "bone": "torso",
+              "role": "texture",
+              "z": 4,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.4 0.09 C 0.41 0.09167 0.4433 0.1 0.46 0.1 C 0.4767 0.1 0.4933 0.09167 0.5 0.09",
+              "region": "hoodie"
+            },
+            {
+              "id": "headphone-band",
+              "bone": "neck",
+              "role": "detail",
+              "z": 4.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 0.05 C 0.006667 0.052 0.02583 0.06367 0.04 0.062 C 0.05417 0.06033 0.0775 0.04367 0.085 0.04",
+              "region": "headphones",
+              "penMm": 0.2
+            },
+            {
+              "id": "headphone-cup",
+              "bone": "neck",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.012 0.012 C 0.012 0.02 0.03133 0.026 0.04 0.024 C 0.04867 0.022 0.064 0.008 0.064 0 C 0.064 -0.008 0.04867 -0.026 0.04 -0.024 C 0.03133 -0.022 0.012 0.004 0.012 0.012 Z",
+              "region": "headphones"
+            },
+            {
+              "id": "headphone-cushion",
+              "bone": "neck",
+              "role": "detail",
+              "z": 4.45,
+              "filled": false,
+              "tone": 0.4,
+              "region": "headphones",
+              "kind": "path",
+              "d": "M0.01905 -0.01850 L0.04400 -0.02600 L0.05800 -0.01000"
+            },
+            {
+              "id": "eye",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.3,
+              "filled": true,
+              "tone": 0.9,
+              "kind": "ellipse",
+              "cx": 0.0825,
+              "cy": -0.066,
+              "rx": 0.008,
+              "ry": 0.005,
+              "region": "face-skin"
+            },
+            {
+              "id": "brow",
+              "bone": "head",
+              "role": "texture",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.0951 -0.0679 C 0.09542 -0.06597 0.09765 -0.06018 0.097 -0.0563 C 0.09635 -0.05242 0.09217 -0.04655 0.0912 -0.0446",
+              "region": "face-skin"
+            },
+            {
+              "id": "mouth",
+              "bone": "head",
+              "role": "texture",
+              "z": 5.3,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0136,
+                  -0.0757
+                ],
+                [
+                  0.0107,
+                  -0.0601
+                ]
+              ],
+              "closed": false,
+              "region": "face-skin"
+            },
+            {
+              "id": "hair-strand-0",
+              "bone": "head",
+              "role": "texture",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1455,
+                  -0.0097
+                ],
+                [
+                  0.1164,
+                  0.0388
+                ]
+              ],
+              "closed": false,
+              "region": "hair"
+            },
+            {
+              "id": "hair-strand-1",
+              "bone": "head",
+              "role": "texture",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.1261,
+                  0.0291
+                ],
+                [
+                  0.097,
+                  0.0776
+                ]
+              ],
+              "closed": false,
+              "region": "hair"
+            },
+            {
+              "id": "hair-strand-2",
+              "bone": "head",
+              "role": "texture",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0873,
+                  0.0582
+                ],
+                [
+                  0.0582,
+                  0.1067
+                ]
+              ],
+              "closed": false,
+              "region": "hair"
+            },
+            {
+              "id": "pony-tie",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.6,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0727,
+                  0.097
+                ],
+                [
+                  0.0825,
+                  0.1358
+                ]
+              ],
+              "closed": false,
+              "region": "hair"
+            },
+            {
+              "id": "phone",
+              "bone": "phone",
+              "role": "body",
+              "z": 6.5,
+              "filled": true,
+              "tone": 0.92,
+              "kind": "rect",
+              "x": -0.074,
+              "y": -0.005,
+              "w": 0.148,
+              "h": 0.01,
+              "r": 0.003,
+              "region": "phone"
+            },
+            {
+              "id": "phone-screen",
+              "bone": "phone",
+              "role": "detail",
+              "z": 6.6,
+              "filled": false,
+              "tone": 0.1,
+              "region": "phone",
+              "kind": "path",
+              "d": "M-0.06600 0.00550 L-0.01165 0.00550 L-0.00272 0.01050 L0.05153 0.00062 L0.06471 0.00287"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Fully articulated drawing: rib cuffs and hem, kangaroo pocket, drawstrings, collar rib, hood fold, jeans with side seams, knee fold and hems, sneakers with sole, toe sole and three lace crossings, finger separations, face with eye, brow and mouth; 33.4 mm tall.",
+            "de": "Voll gegliederte Zeichnung: Bündchen und Saumbund, Känguru-Tasche, Kordeln, Kragenbund, Kapuzenfalte, Jeans mit Seitennähten, Knie-Falte und Säumen, Sneaker mit Sohle, Zehensohle und drei Schnürkreuzungen, Fingertrennungen, Gesicht mit Auge, Braue und Mund; 33,4 mm hoch."
+          },
+          "retained": {
+            "en": "Everything of the 1:100 drawing plus the small construction details that are still wider than 0.1 mm at this scale.",
+            "de": "Alles aus der Zeichnung 1:100 und die kleinen Konstruktionsdetails, die bei diesem Maßstab noch breiter als 0,1 mm sind."
+          },
+          "merged": {
+            "en": "Eyelets merge into the lace strokes; hair strands are four strokes instead of single hairs.",
+            "de": "Ösen gehen in den Schnürstrichen auf; Haarsträhnen sind vier Striche statt einzelner Haare."
+          },
+          "omitted": {
+            "en": "Pores, individual hairs, stitching holes, fabric fibres, camera lens of the phone.",
+            "de": "Poren, einzelne Haare, Stichlöcher, Gewebefasern, die Kameralinse des Telefons."
+          },
+          "thinElements": {
+            "en": "Finger separations, laces and seams are 0.10 mm texture lines; the 10 mm phone is a real 0.2 mm rounded slab with a 0.13 mm screen line.",
+            "de": "Fingertrennungen, Schnürsenkel und Nähte sind 0,10-mm-Texturlinien; das 10 mm dicke Telefon ist eine echte, gerundete Platte von 0,2 mm mit einer 0,13-mm-Bildschirmlinie."
+          },
+          "hatching": {
+            "en": "Hoodie and sleeves: vertical knit lines at 0.6 mm; jeans: twill lines at 62 degrees, 0.5 mm.",
+            "de": "Sweatshirt und Ärmel: senkrechte Strickstriche mit 0,6 mm; Jeans: Köperlinien im Winkel 62 Grad, 0,5 mm."
+          },
+          "styles": {
+            "en": "Body 0.25 mm, detail 0.13 mm, texture 0.10 mm; tones as at 1:100, sneaker soles darker.",
+            "de": "Körper 0,25 mm, Detail 0,13 mm, Textur 0,10 mm; Töne wie bei 1:100, Sneakersohlen dunkler."
+          },
+          "overlays": {
+            "en": "One region per shape; details inherit the region of the garment they sit on, the phone slab carries the phone value.",
+            "de": "Eine Region je Form; Details erben die Region des Kleidungsstücks, auf dem sie sitzen, die Telefonplatte trägt den Telefonwert."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.2,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [
+          {
+            "id": "denim",
+            "title": {
+              "en": "Denim twill lines",
+              "de": "Denim-Köperlinien"
+            },
+            "pattern": "lines",
+            "angleDeg": 62,
+            "spacingMm": 0.7,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sleeve-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L-0.01829 0.06370 L0.01614 0.06675 L0.10118 0.05824 L0.25000 0.05000 L0.31350 0.04700 L0.33212 0.05166 L0.33702 0.02663 L0.33500 -0.04500 L0.33036 -0.05215 L0.31350 -0.04700 L0.30954 -0.05188 L0.28969 -0.04813 L0.25000 -0.05000 L0.10118 -0.05954 L0.01614 -0.06976 L-0.01829 -0.06746 L-0.03000 -0.06200 L-0.03820 -0.05211 L-0.04758 -0.02077 L-0.04758 0.01641 L-0.04406 0.03360 L-0.03820 0.04794 Z"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03500 -0.04600 L-0.02253 -0.05035 L0.01507 -0.05257 L0.12000 -0.04500 L0.26500 -0.04000 L0.26069 -0.00169 L0.26500 0.00000 L0.26500 0.02400 L0.27429 0.02312 L0.26445 0.04694 L0.22561 0.04231 L0.22250 0.03704 L0.22427 0.03274 L0.20727 0.04109 L0.01507 0.05257 L-0.02943 0.04850 L-0.03954 0.04263 L-0.04953 0.02736 L-0.05437 0.00000 L-0.04953 -0.02736 Z"
+            },
+            {
+              "id": "cuff-l",
+              "bone": "forearm-l",
+              "role": "detail",
+              "z": 0.52,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.21500 0.04300 L0.21500 -0.02736 L0.22935 -0.02395 L0.23129 -0.02632 L0.21500 -0.04300"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 0.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.0142 -0.0285 C -0.00075 -0.03973 0.04038 -0.0323 0.0665 -0.0323 C 0.09262 -0.0323 0.1243 -0.03198 0.1425 -0.0285 C 0.1607 -0.02502 0.1694 -0.01742 0.1757 -0.0114 C 0.182 -0.005383 0.1829 0.002217 0.1805 0.0076 C 0.1781 0.01298 0.1637 0.01693 0.1615 0.0209 C 0.1593 0.02487 0.1751 0.02918 0.1672 0.0314 C 0.1593 0.03362 0.1324 0.0331 0.114 0.0342 C 0.09563 0.0353 0.07837 0.03785 0.057 0.038 C 0.03563 0.03815 -0.002333 0.04618 -0.0142 0.0351 C -0.02607 0.02402 -0.02765 -0.01727 -0.0142 -0.0285 Z",
+              "region": "hand-skin"
+            },
+            {
+              "id": "thumb-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 0.72,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.00380 0.02280 L0.00908 0.03147 L0.01302 0.03824 L0.03800 0.04270 L0.09310 0.07790 L0.10007 0.07937 L0.10618 0.07427 L0.10494 0.06576 L0.09630 0.05382 L0.05590 0.02564 L0.02986 0.01895 Z"
+            },
+            {
+              "id": "sleeve-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L-0.01829 0.06370 L0.00870 0.06810 L0.10118 0.05824 L0.25000 0.05000 L0.31350 0.04700 L0.33212 0.05166 L0.33703 0.02663 L0.33500 -0.04500 L0.33036 -0.05215 L0.31350 -0.04700 L0.30970 -0.05198 L0.29028 -0.04832 L0.12000 -0.05800 L0.01614 -0.06976 L-0.01829 -0.06746 L-0.03000 -0.06200 L-0.03820 -0.05211 L-0.04758 -0.02077 L-0.04523 0.02787 L-0.04817 0.03472 L-0.04105 0.04025 L-0.03200 0.06018 Z"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03500 -0.04600 L-0.02253 -0.05035 L0.01507 -0.05257 L0.12000 -0.04500 L0.26500 -0.04000 L0.25886 -0.00259 L0.26495 -0.00058 L0.26492 0.02308 L0.27046 0.02283 L0.26489 0.04673 L0.24303 0.04179 L0.20000 0.04100 L0.01507 0.05257 L-0.02943 0.04850 L-0.03954 0.04263 L-0.04953 0.02736 L-0.05437 0.00000 L-0.04953 -0.02736 Z"
+            },
+            {
+              "id": "cuff-r",
+              "bone": "forearm-r",
+              "role": "detail",
+              "z": 6.02,
+              "filled": false,
+              "tone": 0.1,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M0.21500 0.04300 L0.21500 -0.02736 L0.23051 -0.02481 L0.21500 -0.04300"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.0142 -0.0285 C -0.00075 -0.03973 0.04038 -0.0323 0.0665 -0.0323 C 0.09262 -0.0323 0.1243 -0.03198 0.1425 -0.0285 C 0.1607 -0.02502 0.1694 -0.01742 0.1757 -0.0114 C 0.182 -0.005383 0.1829 0.002217 0.1805 0.0076 C 0.1781 0.01298 0.1637 0.01693 0.1615 0.0209 C 0.1593 0.02487 0.1751 0.02918 0.1672 0.0314 C 0.1593 0.03362 0.1324 0.0331 0.114 0.0342 C 0.09563 0.0353 0.07837 0.03785 0.057 0.038 C 0.03563 0.03815 -0.002333 0.04618 -0.0142 0.0351 C -0.02607 0.02402 -0.02765 -0.01727 -0.0142 -0.0285 Z",
+              "region": "hand-skin"
+            },
+            {
+              "id": "thumb-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.22,
+              "filled": true,
+              "tone": 0.3,
+              "region": "hand-skin",
+              "kind": "path",
+              "d": "M-0.00380 0.02280 L0.00908 0.03147 L0.01302 0.03824 L0.03800 0.04270 L0.09310 0.07790 L0.10007 0.07937 L0.10618 0.07427 L0.10494 0.06576 L0.09630 0.05382 L0.05590 0.02564 L0.02986 0.01895 Z"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.03 0.078 C -0.008333 0.106 0.05167 0.082 0.1 0.08 C 0.1483 0.078 0.2078 0.07067 0.26 0.066 C 0.3122 0.06133 0.3825 0.055 0.4133 0.052 C 0.4441 0.049 0.4397 0.06433 0.445 0.048 C 0.4503 0.03167 0.4503 -0.02967 0.445 -0.046 C 0.4397 -0.06233 0.4441 -0.04667 0.4133 -0.05 C 0.3825 -0.05333 0.3122 -0.05967 0.26 -0.066 C 0.2078 -0.07233 0.1483 -0.08433 0.1 -0.088 C 0.05167 -0.09167 -0.008333 -0.1157 -0.03 -0.088 C -0.05167 -0.06033 -0.05167 0.05 -0.03 0.078 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.035 0.052 C -0.009167 0.07017 0.0675 0.05617 0.12 0.055 C 0.1725 0.05383 0.2327 0.0475 0.28 0.045 C 0.3273 0.0425 0.4038 0.04 0.4038 0.04 C 0.4038 0.04 0.425 0.038 0.425 0.038 C 0.425 0.038 0.4285 -0.025 0.425 -0.038 C 0.4215 -0.051 0.428 -0.03867 0.4038 -0.04 C 0.3796 -0.04133 0.3273 -0.042 0.28 -0.046 C 0.2327 -0.05 0.1725 -0.06267 0.12 -0.064 C 0.0675 -0.06533 -0.009167 -0.07333 -0.035 -0.054 C -0.06083 -0.03467 -0.06083 0.03383 -0.035 0.052 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "jeans-seam-l",
+              "bone": "thigh-l",
+              "role": "detail",
+              "z": 1.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.06 0 C 0.08333 0.0003333 0.1433 0.002 0.2 0.002 C 0.2567 0.002 0.3667 0.0003333 0.4 0",
+              "region": "jeans"
+            },
+            {
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.12,
+              "region": "sneakers",
+              "kind": "path",
+              "d": "M-0.04580 0.01940 L-0.04991 -0.01852 L-0.04508 -0.05235 L-0.03392 -0.07112 L-0.00960 -0.07640 L0.16350 -0.00180 L0.17008 0.00581 L0.16720 0.01060 L0.16342 -0.00030 L0.15818 0.01705 L0.11440 0.03870 L0.05280 0.04400 L0.04393 0.04994 L0.03247 0.06546 L0.02460 0.06860 L-0.00145 0.05937 L-0.02640 0.04400 L-0.03907 0.03330 Z"
+            },
+            {
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "sole-l",
+              "bone": "foot-l",
+              "role": "detail",
+              "z": 1.15,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0096,
+                  -0.0764
+                ],
+                [
+                  0.1635,
+                  -0.0018
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.03 0.078 C -0.008333 0.106 0.05167 0.082 0.1 0.08 C 0.1483 0.078 0.2078 0.07067 0.26 0.066 C 0.3122 0.06133 0.3825 0.055 0.4133 0.052 C 0.4441 0.049 0.4397 0.06433 0.445 0.048 C 0.4503 0.03167 0.4503 -0.02967 0.445 -0.046 C 0.4397 -0.06233 0.4441 -0.04667 0.4133 -0.05 C 0.3825 -0.05333 0.3122 -0.05967 0.26 -0.066 C 0.2078 -0.07233 0.1483 -0.08433 0.1 -0.088 C 0.05167 -0.09167 -0.008333 -0.1157 -0.03 -0.088 C -0.05167 -0.06033 -0.05167 0.05 -0.03 0.078 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.62,
+              "kind": "path",
+              "d": "M -0.035 0.052 C -0.009167 0.07017 0.0675 0.05617 0.12 0.055 C 0.1725 0.05383 0.2327 0.0475 0.28 0.045 C 0.3273 0.0425 0.4038 0.04 0.4038 0.04 C 0.4038 0.04 0.425 0.038 0.425 0.038 C 0.425 0.038 0.4285 -0.025 0.425 -0.038 C 0.4215 -0.051 0.428 -0.03867 0.4038 -0.04 C 0.3796 -0.04133 0.3273 -0.042 0.28 -0.046 C 0.2327 -0.05 0.1725 -0.06267 0.12 -0.064 C 0.0675 -0.06533 -0.009167 -0.07333 -0.035 -0.054 C -0.06083 -0.03467 -0.06083 0.03383 -0.035 0.052 Z",
+              "region": "jeans",
+              "hatch": "denim"
+            },
+            {
+              "id": "jeans-seam-r",
+              "bone": "thigh-r",
+              "role": "detail",
+              "z": 3.03,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.06 0 C 0.08333 0.0003333 0.1433 0.002 0.2 0.002 C 0.2567 0.002 0.3667 0.0003333 0.4 0",
+              "region": "jeans"
+            },
+            {
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.12,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "sole-r",
+              "bone": "foot-r",
+              "role": "detail",
+              "z": 3.15,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.0096,
+                  -0.0764
+                ],
+                [
+                  0.1635,
+                  -0.0018
+                ]
+              ],
+              "closed": false,
+              "region": "sneakers"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.02 -0.05 C -0.0008333 -0.06567 0.07583 -0.05533 0.095 -0.04 C 0.1142 -0.02467 0.1142 0.02633 0.095 0.042 C 0.07583 0.05767 -0.0008333 0.06933 -0.02 0.054 C -0.03917 0.03867 -0.03917 -0.03433 -0.02 -0.05 Z",
+              "region": "face-skin"
+            },
+            {
+              "id": "hoodie",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.17000 -0.08800 L-0.06000 -0.09300 L0.08000 -0.08600 L0.22000 -0.10400 L0.27939 -0.10355 L0.33000 -0.09800 L0.36924 -0.08769 L0.43528 -0.06157 L0.44464 -0.04069 L0.44862 0.01345 L0.45955 0.01456 L0.44578 0.03488 L0.44220 0.05000 L0.42507 0.07140 L0.38000 0.09200 L0.33739 0.10015 L0.28000 0.10200 L0.10000 0.09400 L-0.05000 0.10400 L-0.17000 0.09800 Z"
+            },
+            {
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M 0.36 0.088 C 0.3633 0.09883 0.3983 0.1172 0.42 0.125 C 0.4417 0.1328 0.4708 0.1383 0.49 0.135 C 0.5092 0.1317 0.53 0.1167 0.535 0.105 C 0.54 0.09333 0.5325 0.075 0.52 0.065 C 0.5075 0.055 0.48 0.04583 0.46 0.045 C 0.44 0.04417 0.4167 0.05283 0.4 0.06 C 0.3833 0.06717 0.3567 0.07717 0.36 0.088 Z",
+              "region": "hoodie"
+            },
+            {
+              "id": "hem-rib",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.135,
+                  0.098
+                ],
+                [
+                  -0.135,
+                  -0.088
+                ]
+              ],
+              "closed": false,
+              "region": "hoodie"
+            },
+            {
+              "id": "pocket",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.092
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.02,
+                  0.092
+                ]
+              ],
+              "closed": false,
+              "region": "hoodie"
+            },
+            {
+              "id": "collar",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "path",
+              "d": "M 0.4 -0.075 C 0.405 -0.06917 0.423 -0.0525 0.43 -0.04 C 0.437 -0.0275 0.4402 -0.006667 0.4422 0",
+              "region": "hoodie"
+            },
+            {
+              "id": "headphone-band",
+              "bone": "neck",
+              "role": "detail",
+              "z": 4.3,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M 0 0.05 C 0.006667 0.052 0.02583 0.06367 0.04 0.062 C 0.05417 0.06033 0.0775 0.04367 0.085 0.04",
+              "region": "headphones"
+            },
+            {
+              "id": "headphone-cup",
+              "bone": "neck",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0.015 0.01 C 0.015 0.01667 0.0325 0.02167 0.04 0.02 C 0.0475 0.01833 0.06 0.006667 0.06 0 C 0.06 -0.006667 0.0475 -0.02167 0.04 -0.02 C 0.0325 -0.01833 0.015 0.003333 0.015 0.01 Z",
+              "region": "headphones"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0.0107 0.0718 C 0.0204 0.08135 0.0325 0.0954 0.0485 0.1009 C 0.0645 0.1064 0.08957 0.1105 0.1067 0.1048 C 0.1238 0.09913 0.1413 0.08437 0.1513 0.0669 C 0.1613 0.04943 0.1696 0.02102 0.1668 0 C 0.1641 -0.02102 0.1464 -0.04658 0.1348 -0.0592 C 0.1232 -0.07182 0.1061 -0.0728 0.097 -0.0757 C 0.08795 -0.0786 0.08617 -0.07563 0.0805 -0.0766 C 0.07483 -0.07757 0.06785 -0.0794 0.063 -0.0815 C 0.05815 -0.0836 0.0564 -0.08645 0.0514 -0.0892 C 0.0464 -0.09195 0.03802 -0.09783 0.033 -0.098 C 0.02798 -0.09817 0.0255 -0.09328 0.0213 -0.0902 C 0.0171 -0.08712 0.01248 -0.08225 0.0078 -0.0795 C 0.003117 -0.07675 0.0008 -0.07628 -0.0068 -0.0737 C -0.0144 -0.07112 -0.03085 -0.06982 -0.0378 -0.064 C -0.04475 -0.05818 -0.04785 -0.04688 -0.0485 -0.0388 C -0.04915 -0.03072 -0.04817 -0.02923 -0.0417 -0.0155 C -0.03523 -0.001767 -0.01843 0.02905 -0.0097 0.0436 C -0.0009667 0.05815 0.001 0.06225 0.0107 0.0718 Z",
+              "region": "face-skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.1348 -0.0563 C 0.1424 -0.066 0.1597 -0.05368 0.1668 -0.0388 C 0.1739 -0.02392 0.1778 0.01442 0.1775 0.033 C 0.1772 0.05158 0.1735 0.05912 0.1649 0.0727 C 0.1563 0.08628 0.1423 0.1063 0.1261 0.1145 C 0.1099 0.1227 0.08568 0.1251 0.0679 0.1222 C 0.05012 0.1193 0.03072 0.1061 0.0194 0.097 C 0.008083 0.08795 -0.00485 0.07275 0 0.0679 C 0.00485 0.06305 0.03233 0.06952 0.0485 0.0679 C 0.06467 0.06628 0.08488 0.06628 0.097 0.0582 C 0.1091 0.05012 0.1149 0.03848 0.1212 0.0194 C 0.1275 0.0003167 0.1272 -0.0466 0.1348 -0.0563 Z",
+              "region": "hair"
+            },
+            {
+              "id": "ponytail",
+              "bone": "head",
+              "role": "body",
+              "z": 5.4,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.097 0.097 C 0.1002 0.1051 0.0776 0.1309 0.0582 0.1455 C 0.0388 0.16 0.01293 0.1762 -0.0194 0.1843 C -0.05173 0.1924 -0.1067 0.1972 -0.1358 0.194 C -0.1649 0.1908 -0.1972 0.1762 -0.194 0.1649 C -0.1908 0.1536 -0.1439 0.1358 -0.1164 0.1261 C -0.08892 0.1164 -0.05497 0.1115 -0.0291 0.1067 C -0.003233 0.1019 0.01778 0.09862 0.0388 0.097 C 0.05982 0.09538 0.09377 0.08892 0.097 0.097 Z",
+              "region": "hair"
+            },
+            {
+              "id": "ear",
+              "bone": "head",
+              "role": "detail",
+              "z": 5.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "ellipse",
+              "cx": 0.0446,
+              "cy": 0.0252,
+              "rx": 0.012,
+              "ry": 0.02,
+              "region": "face-skin"
+            },
+            {
+              "id": "phone",
+              "bone": "phone",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.074,
+                  0
+                ],
+                [
+                  0.074,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "phone",
+              "penMm": 0.2
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Articulated clothing: sleeves with cuff lines, hoodie with hem rib, front pocket and bunched hood, jeans with a side seam, sneakers with sole lines and toe boxes, mitten hands with thumb; 16.7 mm tall.",
+            "de": "Gegliederte Kleidung: Ärmel mit Bündchenlinien, Sweatshirt mit Saumbund, Vordertasche und gebauschter Kapuze, Jeans mit Seitennaht, Sneaker mit Sohlenlinien und Zehenkappen, Fäustlingshände mit Daumen; 16,7 mm hoch."
+          },
+          "retained": {
+            "en": "Hair mass with ponytail and ear, face profile with nose and chin, headphone cup and band at the neck, mitten hand with thumb, the phone as a stroke between the hands.",
+            "de": "Haarmasse mit Pferdeschwanz und Ohr, Gesichtsprofil mit Nase und Kinn, Kopfhörerschale und Bügel am Hals, Fäustlingshand mit Daumen, das Telefon als Strich zwischen den Händen."
+          },
+          "merged": {
+            "en": "Eye, brow and mouth are not drawn; laces and eyelets merge into the sneaker; the three finger groups form one mitten.",
+            "de": "Auge, Braue und Mund werden nicht gezeichnet; Schnürung und Ösen gehen im Sneaker auf; die drei Fingergruppen bilden einen Fäustling."
+          },
+          "omitted": {
+            "en": "Eye (0.16 mm), laces, knee folds, drawstrings, stitching.",
+            "de": "Auge (0,16 mm), Schnürsenkel, Knie-Falten, Kordeln, Nähte."
+          },
+          "thinElements": {
+            "en": "The phone stroke (0.2 mm, true length 148 mm) replaces the 10 mm slab; the headphone band is a 0.1 mm line.",
+            "de": "Der Telefonstrich (0,2 mm, wahre Länge 148 mm) ersetzt die 10 mm dicke Platte; der Kopfhörerbügel ist eine 0,1-mm-Linie."
+          },
+          "hatching": {
+            "en": "Jeans only: fine parallel twill lines at 62 degrees, 0.7 mm spacing, 0.10 mm pen; the fleece stays plain tone.",
+            "de": "Nur die Jeans: feine Köperlinien im Winkel 62 Grad, 0,7 mm Abstand, 0,10 mm Stift; das Fleece bleibt flächig."
+          },
+          "styles": {
+            "en": "Body pen 0.20 mm, detail 0.10 mm; hoodie mid-grey, jeans darker with twill, sneakers light, skin light.",
+            "de": "Körperstift 0,20 mm, Detail 0,10 mm; Sweatshirt mittelgrau, Jeans dunkler mit Köper, Sneaker hell, Haut hell."
+          },
+          "overlays": {
+            "en": "Regions as at 1:200; headphone cup and band carry the headphone value, hood and hoodie share the hoodie value.",
+            "de": "Regionen wie bei 1:200; Kopfhörerschale und Bügel tragen den Kopfhörerwert, Kapuze und Sweatshirt den Sweatshirt-Wert."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.2
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sleeve-l",
+              "bone": "arm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L0.00065 0.06375 L0.09619 0.06842 L0.20883 0.06536 L0.30436 0.05628 L0.33500 0.05000 L0.36279 0.03569 L0.37775 0.01537 L0.37989 -0.00739 L0.36920 -0.02903 L0.35495 -0.04108 L0.30872 -0.05519 L0.31610 -0.05469 L0.30838 -0.05457 L0.31506 -0.05284 L0.30858 -0.05561 L0.31568 -0.05595 L0.30756 -0.05554 L0.31176 -0.05427 L0.20883 -0.06675 L0.09619 -0.07104 L0.06655 -0.07875 L0.07385 -0.07584 L0.06640 -0.07744 L0.07388 -0.07074 L-0.01654 -0.06504 L-0.04069 -0.05789 L-0.05780 -0.04584 L-0.06921 -0.02995 L-0.07491 -0.01175 L-0.07277 0.01657 L-0.06422 0.03390 L-0.04996 0.04822 Z"
+            },
+            {
+              "id": "forearm-l",
+              "bone": "forearm-l",
+              "role": "body",
+              "z": 0.5,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03500 -0.05000 L-0.00266 -0.05625 L-0.00651 -0.05590 L-0.00980 -0.05548 L0.06871 -0.06172 L0.16129 -0.06172 L0.23980 -0.05547 L0.26500 -0.05000 L0.28785 -0.03601 L0.30016 -0.01543 L0.30191 0.00779 L0.29312 0.02969 L0.28141 0.04160 L0.26500 0.05000 L0.23775 0.05479 L0.14811 0.05733 L-0.03500 0.05000 L-0.05375 0.00625 L-0.05716 -0.01942 L-0.04936 -0.04092 Z"
+            },
+            {
+              "id": "hand-l",
+              "bone": "hand-l",
+              "role": "body",
+              "z": 0.7,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.0142 -0.0285 C -0.00075 -0.03973 0.04038 -0.0323 0.0665 -0.0323 C 0.09262 -0.0323 0.1243 -0.03198 0.1425 -0.0285 C 0.1607 -0.02502 0.1694 -0.01742 0.1757 -0.0114 C 0.182 -0.005383 0.1829 0.002217 0.1805 0.0076 C 0.1781 0.01298 0.1637 0.01693 0.1615 0.0209 C 0.1593 0.02487 0.1751 0.02918 0.1672 0.0314 C 0.1593 0.03362 0.1324 0.0331 0.114 0.0342 C 0.09563 0.0353 0.07837 0.03785 0.057 0.038 C 0.03563 0.03815 -0.002333 0.04618 -0.0142 0.0351 C -0.02607 0.02402 -0.02765 -0.01727 -0.0142 -0.0285 Z",
+              "region": "hand-skin"
+            },
+            {
+              "id": "sleeve-r",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L0.00065 0.06375 L0.09619 0.06842 L0.20883 0.06536 L0.30436 0.05628 L0.33500 0.05000 L0.36279 0.03569 L0.37775 0.01537 L0.37989 -0.00739 L0.36920 -0.02903 L0.35495 -0.04108 L0.31571 -0.05561 L0.32045 -0.05342 L0.15251 -0.06975 L0.04414 -0.07034 L-0.01654 -0.06504 L-0.04069 -0.05789 L-0.05780 -0.04584 L-0.06921 -0.02995 L-0.07491 -0.01175 L-0.07277 0.01657 L-0.06422 0.03390 L-0.04996 0.04822 Z"
+            },
+            {
+              "id": "forearm-r",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.45,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.04578 -0.04669 L-0.04941 -0.04512 L-0.02391 -0.05424 L0.06871 -0.06172 L0.16129 -0.06172 L0.23980 -0.05547 L0.26500 -0.05000 L0.28785 -0.03601 L0.30016 -0.01543 L0.30191 0.00779 L0.29312 0.02969 L0.28141 0.04160 L0.26500 0.05000 L0.23775 0.05479 L0.14811 0.05733 L-0.03500 0.05000 L-0.04818 0.02275 L-0.05697 -0.01103 L-0.05609 -0.02734 L-0.04936 -0.04092 L-0.04324 -0.04613 L-0.04990 -0.04475 Z"
+            },
+            {
+              "id": "hand-r",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.2,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.0142 -0.0285 C -0.00075 -0.03973 0.04038 -0.0323 0.0665 -0.0323 C 0.09262 -0.0323 0.1243 -0.03198 0.1425 -0.0285 C 0.1607 -0.02502 0.1694 -0.01742 0.1757 -0.0114 C 0.182 -0.005383 0.1829 0.002217 0.1805 0.0076 C 0.1781 0.01298 0.1637 0.01693 0.1615 0.0209 C 0.1593 0.02487 0.1751 0.02918 0.1672 0.0314 C 0.1593 0.03362 0.1324 0.0331 0.114 0.0342 C 0.09563 0.0353 0.07837 0.03785 0.057 0.038 C 0.03563 0.03815 -0.002333 0.04618 -0.0142 0.0351 C -0.02607 0.02402 -0.02765 -0.01727 -0.0142 -0.0285 Z",
+              "region": "hand-skin"
+            },
+            {
+              "id": "thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M-0.03000 0.07800 L0.00792 0.08710 L0.06211 0.08740 L0.26000 0.06800 L0.41288 0.06233 L0.43872 0.05537 L0.45511 0.04279 L0.46666 0.01636 L0.46666 -0.01412 L0.45908 -0.03485 L0.45041 -0.04577 L0.43872 -0.05343 L0.41424 -0.06036 L0.26000 -0.06800 L0.06211 -0.09402 L-0.00691 -0.09438 L-0.03000 -0.08800 L-0.04586 -0.07495 L-0.05719 -0.05545 L-0.06398 -0.03164 L-0.06568 0.00754 L-0.06115 0.03288 L-0.04586 0.06440 Z"
+            },
+            {
+              "id": "shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M-0.03500 0.05400 L-0.01074 0.05987 L0.03634 0.06195 L0.20000 0.05200 L0.38481 0.04989 L0.41714 0.04467 L0.43118 0.03847 L0.43893 0.02843 L0.44148 0.00854 L0.43489 -0.01955 L0.42500 -0.04200 L0.09719 -0.06500 L0.01824 -0.06588 L-0.01366 -0.06336 L-0.03500 -0.05800 L-0.04785 -0.04858 L-0.05703 -0.03520 L-0.06254 -0.01919 L-0.06392 0.00686 L-0.06025 0.02366 L-0.04785 0.04469 Z"
+            },
+            {
+              "id": "shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "shoe-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M-0.03000 0.07800 L0.00792 0.08710 L0.06211 0.08740 L0.26000 0.06800 L0.41288 0.06233 L0.43872 0.05537 L0.45511 0.04279 L0.46666 0.01636 L0.46666 -0.01412 L0.45908 -0.03485 L0.45041 -0.04577 L0.43872 -0.05343 L0.41424 -0.06036 L0.26000 -0.06800 L0.06211 -0.09402 L-0.00691 -0.09438 L-0.03000 -0.08800 L-0.04586 -0.07495 L-0.05719 -0.05545 L-0.06398 -0.03164 L-0.06568 0.00754 L-0.06115 0.03288 L-0.04586 0.06440 Z"
+            },
+            {
+              "id": "shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.62,
+              "region": "jeans",
+              "kind": "path",
+              "d": "M-0.03500 0.05400 L-0.01074 0.05987 L0.03634 0.06195 L0.20000 0.05200 L0.38481 0.04989 L0.41714 0.04467 L0.43118 0.03847 L0.43893 0.02843 L0.44148 0.00854 L0.43489 -0.01955 L0.42500 -0.04200 L0.09719 -0.06500 L0.01824 -0.06588 L-0.01366 -0.06336 L-0.03500 -0.05800 L-0.04785 -0.04858 L-0.05703 -0.03520 L-0.06254 -0.01919 L-0.06392 0.00686 L-0.06025 0.02366 L-0.04785 0.04469 Z"
+            },
+            {
+              "id": "shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "shoe-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.15,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0 -0.0018 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0 0.044 0 0.044 C 0 0.044 0 -0.0018 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "neck",
+              "bone": "neck",
+              "role": "body",
+              "z": 3.8,
+              "filled": true,
+              "tone": 0.25,
+              "region": "face-skin",
+              "kind": "path",
+              "d": "M-0.02000 -0.05000 L0.00336 -0.05720 L0.02567 -0.05738 L0.07164 -0.05023 L0.09500 -0.04000 L0.10130 -0.03272 L0.10850 -0.01145 L0.10850 0.01321 L0.10130 0.03461 L0.08534 0.04764 L0.03750 0.05962 L0.00336 0.06080 L-0.02000 0.05400 L-0.03078 0.03349 L-0.03438 0.00213 L-0.03078 -0.02929 Z"
+            },
+            {
+              "id": "hoodie",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.45,
+              "kind": "path",
+              "d": "M -0.17 -0.088 C -0.17 -0.088 -0.003333 -0.08433 0.08 -0.086 C 0.1633 -0.08767 0.2696 -0.104 0.33 -0.098 C 0.3904 -0.092 0.4235 -0.058 0.4422 -0.05 C 0.4609 -0.042 0.4422 -0.06667 0.4422 -0.05 C 0.4422 -0.03333 0.4526 0.02633 0.4422 0.05 C 0.4318 0.07367 0.437 0.08467 0.38 0.092 C 0.323 0.09933 0.1917 0.093 0.1 0.094 C 0.008333 0.095 -0.17 0.098 -0.17 0.098 C -0.17 0.098 -0.17 -0.088 -0.17 -0.088 Z",
+              "region": "hoodie"
+            },
+            {
+              "id": "hood",
+              "bone": "torso",
+              "role": "body",
+              "z": 3.9,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M 0.36 0.088 C 0.3633 0.09883 0.3983 0.1172 0.42 0.125 C 0.4417 0.1328 0.4708 0.1383 0.49 0.135 C 0.5092 0.1317 0.53 0.1167 0.535 0.105 C 0.54 0.09333 0.5325 0.075 0.52 0.065 C 0.5075 0.055 0.48 0.04583 0.46 0.045 C 0.44 0.04417 0.4167 0.05283 0.4 0.06 C 0.3833 0.06717 0.3567 0.07717 0.36 0.088 Z",
+              "region": "hoodie"
+            },
+            {
+              "id": "pocket",
+              "bone": "torso",
+              "role": "detail",
+              "z": 4.1,
+              "filled": false,
+              "tone": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.092
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.02,
+                  0.092
+                ]
+              ],
+              "closed": false,
+              "region": "hoodie"
+            },
+            {
+              "id": "headphones",
+              "bone": "neck",
+              "role": "body",
+              "z": 4.4,
+              "filled": true,
+              "tone": 0.85,
+              "kind": "path",
+              "d": "M 0 0.02 C 0.0125 0.03167 0.0625 0.03167 0.075 0.02 C 0.0875 0.008333 0.0875 -0.03833 0.075 -0.05 C 0.0625 -0.06167 0.0125 -0.06167 0 -0.05 C -0.0125 -0.03833 -0.0125 0.008333 0 0.02 Z",
+              "region": "headphones"
+            },
+            {
+              "id": "head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0.0107 0.0718 C 0.03543 0.09185 0.08068 0.1168 0.1067 0.1048 C 0.1327 0.09283 0.1684 0.03008 0.1668 0 C 0.1652 -0.03008 0.1143 -0.06212 0.097 -0.0757 C 0.0797 -0.08928 0.07367 -0.07778 0.063 -0.0815 C 0.05233 -0.08522 0.0422 -0.09833 0.033 -0.098 C 0.0238 -0.09767 0.0196 -0.08517 0.0078 -0.0795 C -0.004 -0.07383 -0.02955 -0.07467 -0.0378 -0.064 C -0.04605 -0.05333 -0.04978 -0.03813 -0.0417 -0.0155 C -0.03362 0.007133 -0.01403 0.05175 0.0107 0.0718 Z",
+              "region": "face-skin"
+            },
+            {
+              "id": "hair",
+              "bone": "head",
+              "role": "body",
+              "z": 5.5,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.1348 -0.0563 C 0.1424 -0.066 0.1597 -0.05368 0.1668 -0.0388 C 0.1739 -0.02392 0.1778 0.01442 0.1775 0.033 C 0.1772 0.05158 0.1735 0.05912 0.1649 0.0727 C 0.1563 0.08628 0.1423 0.1063 0.1261 0.1145 C 0.1099 0.1227 0.08568 0.1251 0.0679 0.1222 C 0.05012 0.1193 0.03072 0.1061 0.0194 0.097 C 0.008083 0.08795 -0.00485 0.07275 0 0.0679 C 0.00485 0.06305 0.03233 0.06952 0.0485 0.0679 C 0.06467 0.06628 0.08488 0.06628 0.097 0.0582 C 0.1091 0.05012 0.1149 0.03848 0.1212 0.0194 C 0.1275 0.0003167 0.1272 -0.0466 0.1348 -0.0563 Z",
+              "region": "hair"
+            },
+            {
+              "id": "ponytail",
+              "bone": "head",
+              "role": "body",
+              "z": 5.4,
+              "filled": true,
+              "tone": 0.75,
+              "kind": "path",
+              "d": "M 0.097 0.097 C 0.1002 0.1051 0.0776 0.1309 0.0582 0.1455 C 0.0388 0.16 0.01293 0.1762 -0.0194 0.1843 C -0.05173 0.1924 -0.1067 0.1972 -0.1358 0.194 C -0.1649 0.1908 -0.1972 0.1762 -0.194 0.1649 C -0.1908 0.1536 -0.1439 0.1358 -0.1164 0.1261 C -0.08892 0.1164 -0.05497 0.1115 -0.0291 0.1067 C -0.003233 0.1019 0.01778 0.09862 0.0388 0.097 C 0.05982 0.09538 0.09377 0.08892 0.097 0.097 Z",
+              "region": "hair"
+            },
+            {
+              "id": "phone",
+              "bone": "phone",
+              "role": "detail",
+              "z": 6.5,
+              "filled": false,
+              "tone": 0.9,
+              "kind": "poly",
+              "points": [
+                [
+                  -0.074,
+                  0
+                ],
+                [
+                  0.074,
+                  0
+                ]
+              ],
+              "closed": false,
+              "region": "phone",
+              "penMm": 0.18
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Main masses separated: face, hair cap and ponytail, neck, hoodie with the bunched hood, both arms as sleeve, forearm and hand, both legs as jeans plus sneaker; 8.4 mm tall.",
+            "de": "Hauptmassen getrennt: Gesicht, Haarkappe und Pferdeschwanz, Hals, Sweatshirt mit der gebauschten Kapuze, beide Arme als Ärmel, Unterarm und Hand, beide Beine als Jeans mit Sneaker; 8,4 mm hoch."
+          },
+          "retained": {
+            "en": "Elbows and knees as separate masses so the pose changes read, the hood bump behind the neck, the headphones as a dark spot at the neck, the kangaroo pocket as the only inner line.",
+            "de": "Ellbogen und Knie als getrennte Massen, damit die Posenwechsel lesbar bleiben, der Kapuzenwulst hinter dem Nacken, die Kopfhörer als dunkler Fleck am Hals, die Känguru-Tasche als einzige Innenlinie."
+          },
+          "merged": {
+            "en": "Thumb into the hand, hem rib into the hoodie, sock into the sneaker, hair tie into the ponytail.",
+            "de": "Daumen in die Hand, Saumbund in das Sweatshirt, Socke in den Sneaker, Haargummi in den Pferdeschwanz."
+          },
+          "omitted": {
+            "en": "Fingers, ear, eye, cuffs, laces, seams, knee folds.",
+            "de": "Finger, Ohr, Auge, Bündchen, Schnürung, Nähte, Knie-Falten."
+          },
+          "thinElements": {
+            "en": "The phone is one 0.18 mm stroke over its true 148 mm length instead of a 0.05 mm slab; fingers dropped.",
+            "de": "Das Telefon ist ein Strich von 0,18 mm über seine wahre Länge von 148 mm statt einer 0,05 mm dicken Platte; Finger entfallen."
+          },
+          "hatching": {
+            "en": "None; fill tones carry the materials.",
+            "de": "Keine; die Füllungstöne tragen die Materialien."
+          },
+          "styles": {
+            "en": "Body pen 0.18 mm, detail pen 0.10 mm for the pocket; light tones for skin and shoes, mid for hoodie, dark for jeans, hair and headphones.",
+            "de": "Körperstift 0,18 mm, Detailstift 0,10 mm für die Tasche; helle Töne für Haut und Schuhe, mittlere für das Sweatshirt, dunkle für Jeans, Haar und Kopfhörer."
+          },
+          "overlays": {
+            "en": "One region per mass; both sleeves share the hoodie value, the ponytail and the hair cap share the hair value, the stroke carries the phone value.",
+            "de": "Eine Region je Masse; beide Ärmel teilen den Sweatshirt-Wert, Pferdeschwanz und Haarkappe den Haarwert, der Strich trägt den Telefonwert."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "sil-pony",
+              "bone": "head",
+              "role": "body",
+              "z": 5.4,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.097 0.097 C 0.1002 0.1051 0.0776 0.1309 0.0582 0.1455 C 0.0388 0.16 0.01293 0.1762 -0.0194 0.1843 C -0.05173 0.1924 -0.1067 0.1972 -0.1358 0.194 C -0.1649 0.1908 -0.1972 0.1762 -0.194 0.1649 C -0.1908 0.1536 -0.1439 0.1358 -0.1164 0.1261 C -0.08892 0.1164 -0.05497 0.1115 -0.0291 0.1067 C -0.003233 0.1019 0.01778 0.09862 0.0388 0.097 C 0.05982 0.09538 0.09377 0.08892 0.097 0.097 Z",
+              "region": "hair"
+            },
+            {
+              "id": "sil-head",
+              "bone": "head",
+              "role": "body",
+              "z": 5,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M 0 0.0727 C 0.0097 0.09178 0.0291 0.1059 0.0485 0.1145 C 0.0679 0.1231 0.09668 0.1303 0.1164 0.1242 C 0.1361 0.1181 0.1561 0.0983 0.1668 0.0776 C 0.1775 0.0569 0.1856 0.02295 0.1804 0 C 0.1752 -0.02295 0.1497 -0.04748 0.1358 -0.0601 C 0.1219 -0.07272 0.1091 -0.07213 0.097 -0.0757 C 0.08487 -0.07927 0.07367 -0.07795 0.063 -0.0815 C 0.05233 -0.08505 0.04188 -0.09765 0.033 -0.097 C 0.02412 -0.09635 0.02167 -0.0831 0.0097 -0.0776 C -0.002267 -0.0721 -0.0291 -0.07208 -0.0388 -0.064 C -0.0485 -0.05592 -0.05335 -0.03977 -0.0485 -0.0291 C -0.04365 -0.01843 -0.01778 -0.01697 -0.0097 0 C -0.001617 0.01697 -0.0097 0.05362 0 0.0727 Z",
+              "regions": [
+                "face-skin",
+                "hair"
+              ]
+            },
+            {
+              "id": "sil-body",
+              "bone": "torso",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.4,
+              "regions": [
+                "hoodie",
+                "headphones",
+                "phone"
+              ],
+              "kind": "path",
+              "d": "M-0.17000 -0.08800 L-0.15663 -0.10030 L-0.13815 -0.10364 L-0.07595 -0.09418 L0.04430 -0.08628 L0.09771 -0.08722 L0.07186 -0.09645 L0.07460 -0.09802 L0.15005 -0.08668 L0.12294 -0.09043 L0.22000 -0.10400 L0.27939 -0.10355 L0.33000 -0.09800 L0.36999 -0.08706 L0.41864 -0.06794 L0.43000 -0.06000 L0.43798 -0.04781 L0.44220 -0.03000 L0.44370 0.00000 L0.44091 0.03956 L0.43601 0.05306 L0.43000 0.06000 L0.39690 0.08550 L0.38000 0.09200 L0.33814 0.09951 L0.28000 0.10200 L0.10000 0.09400 L-0.06726 0.10526 L-0.11938 0.11326 L-0.14914 0.11254 L-0.16095 0.10747 L-0.17000 0.09800 L-0.18101 0.05991 L-0.18332 -0.02360 L-0.17607 -0.07218 Z"
+            },
+            {
+              "id": "sil-arm",
+              "bone": "arm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.4,
+              "region": "hoodie",
+              "kind": "path",
+              "d": "M-0.03000 0.05800 L0.00065 0.06375 L0.09619 0.06842 L0.20883 0.06536 L0.28261 0.05887 L0.25331 0.06883 L0.33526 0.05282 L0.30436 0.05628 L0.33500 0.05000 L0.35495 0.04130 L0.37419 0.02259 L0.37989 0.00788 L0.37989 -0.00739 L0.36920 -0.02903 L0.35495 -0.04108 L0.33500 -0.05000 L0.30436 -0.05661 L0.15251 -0.06975 L0.04414 -0.07034 L-0.01654 -0.06504 L-0.04069 -0.05789 L-0.05780 -0.04584 L-0.06921 -0.02995 L-0.07491 -0.01175 L-0.07277 0.01657 L-0.06422 0.03390 L-0.04996 0.04822 Z"
+            },
+            {
+              "id": "sil-forearm",
+              "bone": "forearm-r",
+              "role": "body",
+              "z": 6,
+              "filled": true,
+              "tone": 0.4,
+              "kind": "path",
+              "d": "M -0.035 -0.05 C 0.015 -0.06667 0.215 -0.06667 0.265 -0.05 C 0.315 -0.03333 0.315 0.03333 0.265 0.05 C 0.215 0.06667 0.015 0.06667 -0.035 0.05 C -0.085 0.03333 -0.085 -0.03333 -0.035 -0.05 Z",
+              "region": "hoodie"
+            },
+            {
+              "id": "sil-hand",
+              "bone": "hand-r",
+              "role": "body",
+              "z": 6.3,
+              "filled": true,
+              "tone": 0.3,
+              "kind": "path",
+              "d": "M -0.0142 -0.0285 C -0.00075 -0.03973 0.04038 -0.0323 0.0665 -0.0323 C 0.09262 -0.0323 0.1243 -0.03198 0.1425 -0.0285 C 0.1607 -0.02502 0.1694 -0.01742 0.1757 -0.0114 C 0.182 -0.005383 0.1829 0.002217 0.1805 0.0076 C 0.1781 0.01298 0.1637 0.01693 0.1615 0.0209 C 0.1593 0.02487 0.1751 0.02918 0.1672 0.0314 C 0.1593 0.03362 0.1324 0.0331 0.114 0.0342 C 0.09563 0.0353 0.07837 0.03785 0.057 0.038 C 0.03563 0.03815 -0.002333 0.04618 -0.0142 0.0351 C -0.02607 0.02402 -0.02765 -0.01727 -0.0142 -0.0285 Z",
+              "region": "hand-skin"
+            },
+            {
+              "id": "sil-thigh-l",
+              "bone": "thigh-l",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.03 0.078 C 0.01833 0.104 0.1808 0.07233 0.26 0.068 C 0.3392 0.06367 0.4142 0.07167 0.445 0.052 C 0.4758 0.03233 0.4758 -0.03 0.445 -0.05 C 0.4142 -0.07 0.3392 -0.06167 0.26 -0.068 C 0.1808 -0.07433 0.01833 -0.1123 -0.03 -0.088 C -0.07833 -0.06367 -0.07833 0.052 -0.03 0.078 Z",
+              "region": "jeans"
+            },
+            {
+              "id": "sil-shank-l",
+              "bone": "shank-l",
+              "role": "body",
+              "z": 1.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.035 0.054 C 0.004167 0.07233 0.1233 0.054 0.2 0.052 C 0.2767 0.05 0.3875 0.05767 0.425 0.042 C 0.4625 0.02633 0.4625 -0.02533 0.425 -0.042 C 0.3875 -0.05867 0.2767 -0.05533 0.2 -0.058 C 0.1233 -0.06067 0.004167 -0.07667 -0.035 -0.058 C -0.07417 -0.03933 -0.07417 0.03567 -0.035 0.054 Z",
+              "region": "jeans"
+            },
+            {
+              "id": "sil-shoe-l",
+              "bone": "foot-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "sil-toe-l",
+              "bone": "toe-l",
+              "role": "body",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0.0066 -0.009433 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0.0044 0.05047 0 0.044 C -0.0044 0.03753 -0.0066 0.005833 0 -0.0018 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "sil-thigh-r",
+              "bone": "thigh-r",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.03 0.078 C 0.01833 0.104 0.1808 0.07233 0.26 0.068 C 0.3392 0.06367 0.4142 0.07167 0.445 0.052 C 0.4758 0.03233 0.4758 -0.03 0.445 -0.05 C 0.4142 -0.07 0.3392 -0.06167 0.26 -0.068 C 0.1808 -0.07433 0.01833 -0.1123 -0.03 -0.088 C -0.07833 -0.06367 -0.07833 0.052 -0.03 0.078 Z",
+              "region": "jeans"
+            },
+            {
+              "id": "sil-shank-r",
+              "bone": "shank-r",
+              "role": "body",
+              "z": 3.02,
+              "filled": true,
+              "tone": 0.6,
+              "kind": "path",
+              "d": "M -0.035 0.054 C 0.004167 0.07233 0.1233 0.054 0.2 0.052 C 0.2767 0.05 0.3875 0.05767 0.425 0.042 C 0.4625 0.02633 0.4625 -0.02533 0.425 -0.042 C 0.3875 -0.05867 0.2767 -0.05533 0.2 -0.058 C 0.1233 -0.06067 0.004167 -0.07667 -0.035 -0.058 C -0.07417 -0.03933 -0.07417 0.03567 -0.035 0.054 Z",
+              "region": "jeans"
+            },
+            {
+              "id": "sil-shoe-r",
+              "bone": "foot-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M -0.0458 0.0194 C -0.04962 0.006933 -0.05077 -0.01613 -0.0493 -0.0308 C -0.04783 -0.04547 -0.04362 -0.061 -0.037 -0.0686 C -0.03038 -0.0762 -0.0096 -0.0764 -0.0096 -0.0764 C -0.0096 -0.0764 0.1635 -0.0018 0.1635 -0.0018 C 0.1635 -0.0018 0.1754 0.00385 0.1672 0.0106 C 0.159 0.01735 0.1335 0.03313 0.1144 0.0387 C 0.09533 0.04427 0.06777 0.03902 0.0528 0.044 C 0.03783 0.04898 0.0378 0.0686 0.0246 0.0686 C 0.0114 0.0686 -0.01467 0.0522 -0.0264 0.044 C -0.03813 0.0358 -0.04198 0.03187 -0.0458 0.0194 Z",
+              "region": "sneakers"
+            },
+            {
+              "id": "sil-toe-r",
+              "bone": "toe-r",
+              "role": "body",
+              "z": 3.1,
+              "filled": true,
+              "tone": 0.25,
+              "kind": "path",
+              "d": "M 0 -0.0018 C 0.0066 -0.009433 0.02992 -0.002683 0.0396 -0.0018 C 0.04928 -0.0009167 0.054 0.0005667 0.0581 0.0035 C 0.0622 0.006433 0.06478 0.0114 0.0642 0.0158 C 0.06362 0.0202 0.0609 0.02637 0.0546 0.0299 C 0.0483 0.03343 0.0355 0.03465 0.0264 0.037 C 0.0173 0.03935 0.0044 0.05047 0 0.044 C -0.0044 0.03753 -0.0066 0.005833 0 -0.0018 Z",
+              "region": "sneakers"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "A slightly stooped profile of 1.67 m (3.3 mm): head with hair and ponytail as one mass, torso with hood and headphones as one mass, the near arm as three tapered links reaching forward, two leg columns with shoes.",
+            "de": "Ein leicht gebeugtes Profil von 1,67 m (3,3 mm): Kopf mit Haar und Pferdeschwanz als eine Masse, Rumpf mit Kapuze und Kopfhörern als eine Masse, der nahe Arm als drei verjüngte Glieder nach vorn, zwei Beinsäulen mit Schuhen."
+          },
+          "retained": {
+            "en": "The bowed head, the forward-reaching arm that carries the pose, the ponytail that sets the back extent, the step of the feet and the exact stature and extent.",
+            "de": "Der gesenkte Kopf, der nach vorn greifende Arm, der die Pose trägt, der Pferdeschwanz, der die hintere Ausdehnung bestimmt, die Schrittstellung der Füße sowie genaue Körpergröße und Ausdehnung."
+          },
+          "merged": {
+            "en": "Face and hair; hoodie, headphones and phone in one torso shape listing all three regions; hand and phone remain in the hand blob.",
+            "de": "Gesicht und Haar; Sweatshirt, Kopfhörer und Telefon in einer Rumpfform mit allen drei Regionen; Hand und Telefon bleiben im Handfleck."
+          },
+          "omitted": {
+            "en": "The far arm (it hides behind the near arm in profile), neck, sleeve cuffs, hood fold, laces, sole line.",
+            "de": "Der ferne Arm (er verschwindet im Profil hinter dem nahen), Hals, Ärmelbündchen, Kapuzenfalte, Schnürung, Sohlenlinie."
+          },
+          "thinElements": {
+            "en": "The 10 mm phone and the 4 mm headphone band are not drawn, never thickened; the 60 mm ponytail is kept because it sets the back extent.",
+            "de": "Das 10 mm dicke Telefon und der 4 mm breite Kopfhörerbügel werden nicht gezeichnet, nie verdickt; der 60 mm lange Pferdeschwanz bleibt, weil er die hintere Ausdehnung bestimmt."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Mid-grey torso, darker legs, light shoes; line pen 0.13 mm only, no detail pen; light mode dark lines on white, dark mode inverted.",
+            "de": "Mittelgrauer Rumpf, dunklere Beine, helle Schuhe; nur Strichstärke 0,13 mm, kein Detailstift; hell: dunkle Linien auf Weiß, dunkel: invertiert."
+          },
+          "overlays": {
+            "en": "Thermal and structural overlays paint the torso shape with the area-weighted value of hoodie, headphones and phone (labelled merged); head, hand, legs and shoes keep their own value.",
+            "de": "Thermische und statische Überlagerungen färben die Rumpfform mit dem flächengewichteten Wert von Sweatshirt, Kopfhörern und Telefon (als verschmolzen gekennzeichnet); Kopf, Hand, Beine und Schuhe behalten ihren eigenen Wert."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "texting",
+        "title": {
+          "en": "Texting, head bowed",
+          "de": "Tippen mit gesenktem Kopf"
+        },
+        "description": {
+          "en": "Feet together, weight on both legs, head tilted 40 degrees down, both hands holding the phone at chest height.",
+          "de": "Füße eng beieinander, Gewicht auf beiden Beinen, Kopf 40 Grad nach unten geneigt, beide Hände halten das Telefon auf Brusthöhe."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": -4
+          },
+          "neck": {
+            "angleDeg": -16
+          },
+          "head": {
+            "angleDeg": -24
+          },
+          "thigh-l": {
+            "angleDeg": 9.1083
+          },
+          "shank-l": {
+            "angleDeg": -19.8741
+          },
+          "foot-l": {
+            "angleDeg": 10.7658
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 9.1083
+          },
+          "shank-r": {
+            "angleDeg": -19.8741
+          },
+          "foot-r": {
+            "angleDeg": 10.7658
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-l": {
+            "angleDeg": 6.1034
+          },
+          "forearm-l": {
+            "angleDeg": 105.347
+          },
+          "hand-l": {
+            "angleDeg": -5.4504
+          },
+          "arm-r": {
+            "angleDeg": 6.1034
+          },
+          "forearm-r": {
+            "angleDeg": 105.347
+          },
+          "hand-r": {
+            "angleDeg": -5.4504
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.2,
+          "breathing": "typing",
+          "regions": {
+            "face-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hoodie": {
+              "exposedFraction": 0.92,
+              "sunlitFraction": 0
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sneakers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 12
+              }
+            },
+            "headphones": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "phone": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "body-plume": 0.6
+          },
+          "operating": {
+            "phone": 0.6
+          }
+        },
+        "loads": [
+          {
+            "id": "phone-weight",
+            "kind": "carried",
+            "title": {
+              "en": "Smartphone weight",
+              "de": "Gewicht des Smartphones"
+            },
+            "anchor": "phone-cog",
+            "fxN": 0,
+            "fyN": -1.863,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "phone-call",
+        "title": {
+          "en": "Phone call at the ear",
+          "de": "Telefonat am Ohr"
+        },
+        "description": {
+          "en": "Both feet flat and close, the far arm folded across the waist, the near hand holding the phone to the ear with the elbow forward.",
+          "de": "Beide Füße flach und eng, der ferne Arm vor dem Bauch verschränkt, die nahe Hand hält das Telefon am Ohr, der Ellbogen zeigt nach vorn."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 0
+          },
+          "neck": {
+            "angleDeg": -2
+          },
+          "head": {
+            "angleDeg": 4
+          },
+          "thigh-l": {
+            "angleDeg": 12.6876
+          },
+          "shank-l": {
+            "angleDeg": -25.6789
+          },
+          "foot-l": {
+            "angleDeg": 12.9913
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 12.6876
+          },
+          "shank-r": {
+            "angleDeg": -25.6789
+          },
+          "foot-r": {
+            "angleDeg": 12.9913
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-l": {
+            "angleDeg": -13.81
+          },
+          "forearm-l": {
+            "angleDeg": 96.215
+          },
+          "hand-l": {
+            "angleDeg": -2.405
+          },
+          "arm-r": {
+            "angleDeg": 35.5823
+          },
+          "forearm-r": {
+            "angleDeg": 148.4744
+          },
+          "hand-r": {
+            "angleDeg": -6.0567
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.3,
+          "breathing": "talking",
+          "regions": {
+            "face-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hoodie": {
+              "exposedFraction": 0.92,
+              "sunlitFraction": 0
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sneakers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 12
+              }
+            },
+            "headphones": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "phone": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "body-plume": 0.6
+          },
+          "operating": {
+            "phone": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "phone-weight",
+            "kind": "carried",
+            "title": {
+              "en": "Smartphone weight",
+              "de": "Gewicht des Smartphones"
+            },
+            "anchor": "phone-cog",
+            "fxN": 0,
+            "fyN": -1.863,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "photo-pose",
+        "title": {
+          "en": "Holding the phone up for a photo",
+          "de": "Telefon für ein Foto hochhalten"
+        },
+        "description": {
+          "en": "Narrow stance, both arms nearly straight in front, phone upright at eye height.",
+          "de": "Enge Standposition, beide Arme fast gestreckt nach vorn, Telefon aufrecht auf Augenhöhe."
+        },
+        "bones": {
+          "torso": {
+            "angleDeg": 1
+          },
+          "neck": {
+            "angleDeg": 0
+          },
+          "head": {
+            "angleDeg": 2
+          },
+          "thigh-l": {
+            "angleDeg": 8.3962
+          },
+          "shank-l": {
+            "angleDeg": -19.8741
+          },
+          "foot-l": {
+            "angleDeg": 11.4779
+          },
+          "toe-l": {
+            "angleDeg": 0
+          },
+          "thigh-r": {
+            "angleDeg": 8.3962
+          },
+          "shank-r": {
+            "angleDeg": -19.8741
+          },
+          "foot-r": {
+            "angleDeg": 11.4779
+          },
+          "toe-r": {
+            "angleDeg": 0
+          },
+          "arm-l": {
+            "angleDeg": 77.3704
+          },
+          "forearm-l": {
+            "angleDeg": 61.2842
+          },
+          "hand-l": {
+            "angleDeg": 16.3454
+          },
+          "arm-r": {
+            "angleDeg": 77.3704
+          },
+          "forearm-r": {
+            "angleDeg": 61.2842
+          },
+          "hand-r": {
+            "angleDeg": 16.3454
+          }
+        },
+        "ground": "auto",
+        "contacts": [
+          "heel-l",
+          "ball-l",
+          "heel-r",
+          "ball-r"
+        ],
+        "thermal": {
+          "activityMet": 1.4,
+          "breathing": "quiet-standing",
+          "regions": {
+            "face-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hair": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hand-skin": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "hoodie": {
+              "exposedFraction": 0.92,
+              "sunlitFraction": 0
+            },
+            "jeans": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "sneakers": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0,
+              "contact": {
+                "fraction": 0.3,
+                "tempC": 12
+              }
+            },
+            "headphones": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            },
+            "phone": {
+              "exposedFraction": 1,
+              "sunlitFraction": 0
+            }
+          },
+          "emitters": {
+            "body-plume": 0.7
+          },
+          "operating": {
+            "phone": 1
+          }
+        },
+        "loads": [
+          {
+            "id": "phone-weight",
+            "kind": "carried",
+            "title": {
+              "en": "Smartphone weight",
+              "de": "Gewicht des Smartphones"
+            },
+            "anchor": "phone-cog",
+            "fxN": 0,
+            "fyN": -1.863,
+            "source": "authored-estimate"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "scroll-and-sway",
+        "title": {
+          "en": "Scrolling and swaying",
+          "de": "Scrollen und Wiegen"
+        },
+        "description": {
+          "en": "A six-second loop: the head dips and lifts with the text, the thumb scrolls, the torso shifts slightly; feet stay planted.",
+          "de": "Eine Schleife von sechs Sekunden: Der Kopf senkt und hebt sich mit dem Text, der Daumen scrollt, der Oberkörper wiegt leicht; die Füße bleiben stehen."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "texting",
+            "ease": "smooth"
+          },
+          {
+            "t": 1.5,
+            "pose": "texting",
+            "ease": "smooth",
+            "bones": {
+              "head": {
+                "angleDeg": -27
+              },
+              "neck": {
+                "angleDeg": -18
+              },
+              "hand-l": {
+                "angleDeg": -0.4504
+              },
+              "torso": {
+                "angleDeg": -5
+              }
+            }
+          },
+          {
+            "t": 3,
+            "pose": "texting",
+            "ease": "smooth",
+            "bones": {
+              "head": {
+                "angleDeg": -21
+              },
+              "neck": {
+                "angleDeg": -15
+              },
+              "torso": {
+                "angleDeg": -2
+              },
+              "hand-l": {
+                "angleDeg": -7.4504
+              }
+            }
+          },
+          {
+            "t": 4.5,
+            "pose": "texting",
+            "ease": "smooth",
+            "bones": {
+              "head": {
+                "angleDeg": -26
+              },
+              "neck": {
+                "angleDeg": -17
+              },
+              "hand-l": {
+                "angleDeg": -1.4504
+              },
+              "torso": {
+                "angleDeg": -4.5
+              }
+            }
+          },
+          {
+            "t": 6,
+            "pose": "texting",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 6
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 6
+          }
+        ],
+        "phases": [
+          {
+            "id": "reading",
+            "fromS": 0,
+            "toS": 3,
+            "title": {
+              "en": "Reading and scrolling",
+              "de": "Lesen und Scrollen"
+            }
+          },
+          {
+            "id": "typing",
+            "fromS": 3,
+            "toS": 6,
+            "title": {
+              "en": "Typing a reply",
+              "de": "Antwort tippen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 3,
+            "kind": "operating",
+            "title": {
+              "en": "Screen brightens while typing",
+              "de": "Bildschirm wird beim Tippen heller"
+            },
+            "target": "phone"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 3,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "operating:phone",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 3,
+                "v": 0.8
+              },
+              {
+                "t": 6,
+                "v": 0.6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "answer-call",
+        "title": {
+          "en": "Answering a call",
+          "de": "Anruf annehmen"
+        },
+        "description": {
+          "en": "Non-looping, four seconds: the head lifts, the near arm raises the phone from chest height to the ear while the far arm folds across the waist; the stance of the legs is held.",
+          "de": "Ohne Wiederholung, vier Sekunden: Der Kopf hebt sich, der nahe Arm führt das Telefon von der Brust zum Ohr, während der ferne Arm vor dem Bauch ruht; die Beinstellung bleibt."
+        },
+        "durationS": 4,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "texting",
+            "ease": "smooth"
+          },
+          {
+            "t": 0.8,
+            "pose": "texting",
+            "ease": "smooth",
+            "bones": {
+              "neck": {
+                "angleDeg": -6
+              },
+              "head": {
+                "angleDeg": -8
+              },
+              "torso": {
+                "angleDeg": -1
+              }
+            }
+          },
+          {
+            "t": 2.2,
+            "pose": "phone-call",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 9.1083
+              },
+              "shank-l": {
+                "angleDeg": -19.8741
+              },
+              "foot-l": {
+                "angleDeg": 10.7658
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 9.1083
+              },
+              "shank-r": {
+                "angleDeg": -19.8741
+              },
+              "foot-r": {
+                "angleDeg": 10.7658
+              },
+              "toe-r": {
+                "angleDeg": 0
+              },
+              "arm-r": {
+                "angleDeg": 20.8428
+              },
+              "forearm-r": {
+                "angleDeg": 126.9107
+              },
+              "hand-r": {
+                "angleDeg": -5.7536
+              },
+              "arm-l": {
+                "angleDeg": -3.8533
+              },
+              "forearm-l": {
+                "angleDeg": 100.781
+              },
+              "hand-l": {
+                "angleDeg": -3.9277
+              },
+              "neck": {
+                "angleDeg": -4
+              },
+              "head": {
+                "angleDeg": 0
+              },
+              "torso": {
+                "angleDeg": -1
+              }
+            }
+          },
+          {
+            "t": 3.2,
+            "pose": "phone-call",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 9.1083
+              },
+              "shank-l": {
+                "angleDeg": -19.8741
+              },
+              "foot-l": {
+                "angleDeg": 10.7658
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 9.1083
+              },
+              "shank-r": {
+                "angleDeg": -19.8741
+              },
+              "foot-r": {
+                "angleDeg": 10.7658
+              },
+              "toe-r": {
+                "angleDeg": 0
+              }
+            }
+          },
+          {
+            "t": 4,
+            "pose": "phone-call",
+            "ease": "smooth",
+            "bones": {
+              "thigh-l": {
+                "angleDeg": 9.1083
+              },
+              "shank-l": {
+                "angleDeg": -19.8741
+              },
+              "foot-l": {
+                "angleDeg": 10.7658
+              },
+              "toe-l": {
+                "angleDeg": 0
+              },
+              "thigh-r": {
+                "angleDeg": 9.1083
+              },
+              "shank-r": {
+                "angleDeg": -19.8741
+              },
+              "foot-r": {
+                "angleDeg": 10.7658
+              },
+              "toe-r": {
+                "angleDeg": 0
+              }
+            }
+          }
+        ],
+        "contacts": [
+          {
+            "anchor": "heel-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "ball-l",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "heel-r",
+            "fromS": 0,
+            "toS": 4
+          },
+          {
+            "anchor": "ball-r",
+            "fromS": 0,
+            "toS": 4
+          }
+        ],
+        "phases": [
+          {
+            "id": "ring",
+            "fromS": 0,
+            "toS": 0.8,
+            "title": {
+              "en": "Phone rings",
+              "de": "Telefon klingelt"
+            }
+          },
+          {
+            "id": "raise",
+            "fromS": 0.8,
+            "toS": 3.2,
+            "title": {
+              "en": "Raising the phone to the ear",
+              "de": "Telefon zum Ohr führen"
+            }
+          },
+          {
+            "id": "talk",
+            "fromS": 3.2,
+            "toS": 4,
+            "title": {
+              "en": "Talking",
+              "de": "Sprechen"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0.8,
+            "kind": "operating",
+            "title": {
+              "en": "Phone starts ringing",
+              "de": "Telefon beginnt zu klingeln"
+            },
+            "target": "phone"
+          },
+          {
+            "t": 3.2,
+            "kind": "thermal",
+            "title": {
+              "en": "Phone against the ear",
+              "de": "Telefon am Ohr"
+            },
+            "target": "phone"
+          }
+        ],
+        "tracks": [
+          {
+            "target": "breathing",
+            "ease": "step",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1
+              },
+              {
+                "t": 3.2,
+                "v": 2
+              },
+              {
+                "t": 4,
+                "v": 2
+              }
+            ]
+          },
+          {
+            "target": "operating:phone",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.6
+              },
+              {
+                "t": 2.2,
+                "v": 1
+              },
+              {
+                "t": 4,
+                "v": 1
+              }
+            ]
+          },
+          {
+            "target": "activityMet",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.2
+              },
+              {
+                "t": 4,
+                "v": 1.3
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 12,
+        "meanRadiantTempC": 12,
+        "skyTempC": 0,
+        "groundTempC": 12,
+        "relativeHumidity": 0.7,
+        "windMS": 0.8,
+        "windDirectionDeg": 180,
+        "solarWM2": 0,
+        "diffuseFraction": 1,
+        "pressurePa": 101325
+      },
+      "baseMet": 1.2,
+      "body": {
+        "species": "human",
+        "massKg": 58,
+        "skinAreaM2": 1.675,
+        "basalMetabolismW": 65.6,
+        "metWM2": 58.15,
+        "coreSetPointC": 36.8,
+        "skinSetPointC": 34.1,
+        "sweating": true,
+        "panting": false,
+        "maxSkinBloodFlowLM2H": 90,
+        "minSkinBloodFlowLM2H": 1,
+        "source": "authored-estimate",
+        "reference": "mifflin-1990"
+      },
+      "respiration": {
+        "noseEmitter": "nose-breath",
+        "mouthEmitter": "mouth-breath",
+        "exhaledTempC": 34,
+        "exhaledRelativeHumidity": 0.95,
+        "patterns": [
+          {
+            "id": "quiet-standing",
+            "title": {
+              "en": "Quiet standing",
+              "de": "Ruhiges Stehen"
+            },
+            "rateBpm": 14,
+            "tidalVolumeL": 0.4,
+            "inhaleFraction": 0.38,
+            "pauseAfterInhaleFraction": 0.04,
+            "exhaleFraction": 0.45,
+            "pauseAfterExhaleFraction": 0.13,
+            "route": "nose",
+            "source": "authored-estimate",
+            "reference": "icrp-66-1994"
+          },
+          {
+            "id": "typing",
+            "title": {
+              "en": "Concentrated texting, slightly shallow",
+              "de": "Konzentriertes Tippen, leicht flach"
+            },
+            "rateBpm": 15,
+            "tidalVolumeL": 0.38,
+            "inhaleFraction": 0.4,
+            "pauseAfterInhaleFraction": 0.05,
+            "exhaleFraction": 0.45,
+            "pauseAfterExhaleFraction": 0.1,
+            "route": "nose",
+            "source": "authored-estimate",
+            "reference": "icrp-66-1994"
+          },
+          {
+            "id": "talking",
+            "title": {
+              "en": "Talking on the phone",
+              "de": "Telefonieren"
+            },
+            "rateBpm": 17,
+            "tidalVolumeL": 0.55,
+            "inhaleFraction": 0.25,
+            "pauseAfterInhaleFraction": 0.02,
+            "exhaleFraction": 0.68,
+            "pauseAfterExhaleFraction": 0.05,
+            "route": "nose-and-mouth",
+            "source": "authored-estimate",
+            "reference": "gupta-2010"
+          }
+        ],
+        "motion": [
+          {
+            "bone": "torso",
+            "angleDeg": 0.5,
+            "dy": 0.003
+          }
+        ],
+        "source": "authored-estimate",
+        "reference": "gupta-2010"
+      },
+      "operating": [
+        {
+          "id": "phone",
+          "title": {
+            "en": "Smartphone state",
+            "de": "Zustand des Smartphones"
+          },
+          "levels": [
+            {
+              "v": 0,
+              "title": {
+                "en": "Off",
+                "de": "Aus"
+              }
+            },
+            {
+              "v": 0.3,
+              "title": {
+                "en": "Standby",
+                "de": "Bereitschaft"
+              }
+            },
+            {
+              "v": 0.6,
+              "title": {
+                "en": "Screen on, reading and typing",
+                "de": "Bildschirm an, Lesen und Tippen"
+              }
+            },
+            {
+              "v": 1,
+              "title": {
+                "en": "Call or camera in use",
+                "de": "Anruf oder Kamera aktiv"
+              }
+            }
+          ]
+        }
+      ],
+      "passengers": [],
+      "regions": [
+        {
+          "id": "face-skin",
+          "title": {
+            "en": "Face and neck skin",
+            "de": "Haut von Gesicht und Hals"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.1173,
+          "characteristicLengthM": 0.2,
+          "geometry": "sphere",
+          "skyViewFactor": 0.5,
+          "layers": [],
+          "heatCapacityJM2K": 13000,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.07,
+            "skinFraction": 0.07
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hair",
+          "title": {
+            "en": "Hair",
+            "de": "Haar"
+          },
+          "kind": "hair",
+          "model": "body",
+          "material": "hair",
+          "areaM2": 0.0502,
+          "characteristicLengthM": 0.2,
+          "geometry": "sphere",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "hair",
+              "title": {
+                "en": "Long hair in a ponytail",
+                "de": "Langes Haar im Pferdeschwanz"
+              },
+              "kind": "hair",
+              "material": "hair",
+              "thicknessM": 0.03,
+              "resistanceM2KW": 0.08,
+              "vapourResistanceM2PaW": 12.8,
+              "heatCapacityJM2K": 400,
+              "source": "authored-estimate"
+            }
+          ],
+          "heatCapacityJM2K": 8400,
+          "body": {
+            "segment": "head",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.03
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "hand-skin",
+          "title": {
+            "en": "Bare hands",
+            "de": "Unbedeckte Hände"
+          },
+          "kind": "skin",
+          "model": "body",
+          "material": "skin",
+          "areaM2": 0.0838,
+          "characteristicLengthM": 0.1,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.2,
+          "layers": [],
+          "heatCapacityJM2K": 13000,
+          "body": {
+            "segment": "hand",
+            "metabolicShare": 0.04,
+            "skinFraction": 0.05
+          },
+          "source": "authored-estimate",
+          "reference": "dubois-1916"
+        },
+        {
+          "id": "hoodie",
+          "title": {
+            "en": "T-shirt and fleece sweatshirt on trunk and arms",
+            "de": "T-Shirt und Fleece-Sweatshirt an Rumpf und Armen"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "fleece-sweatshirt",
+          "areaM2": 0.9283,
+          "characteristicLengthM": 0.3,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.45,
+          "layers": [
+            {
+              "id": "tee",
+              "title": {
+                "en": "Cotton T-shirt",
+                "de": "Baumwoll-T-Shirt"
+              },
+              "kind": "clothing",
+              "material": "cotton-underwear",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.01578,
+              "vapourResistanceM2PaW": 2.5,
+              "heatCapacityJM2K": 150,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sweatshirt",
+              "title": {
+                "en": "Fleece sweatshirt, hood down",
+                "de": "Fleece-Sweatshirt, Kapuze unten"
+              },
+              "kind": "clothing",
+              "material": "fleece-sweatshirt",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.0596,
+              "vapourResistanceM2PaW": 9.5,
+              "heatCapacityJM2K": 450,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 13600,
+          "body": {
+            "segment": "trunk",
+            "metabolicShare": 0.55,
+            "skinFraction": 0.49
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "jeans",
+          "title": {
+            "en": "Jeans over the legs",
+            "de": "Jeans über den Beinen"
+          },
+          "kind": "clothing",
+          "model": "body",
+          "material": "denim",
+          "areaM2": 0.5452,
+          "characteristicLengthM": 0.13,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.1,
+          "layers": [
+            {
+              "id": "briefs",
+              "title": {
+                "en": "Cotton briefs",
+                "de": "Baumwollslip"
+              },
+              "kind": "clothing",
+              "material": "cotton-underwear",
+              "thicknessM": 0.0008,
+              "resistanceM2KW": 0.00505,
+              "vapourResistanceM2PaW": 0.8,
+              "heatCapacityJM2K": 100,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "jeans",
+              "title": {
+                "en": "Slim denim jeans",
+                "de": "Enge Jeans"
+              },
+              "kind": "clothing",
+              "material": "denim",
+              "thicknessM": 0.0012,
+              "resistanceM2KW": 0.04204,
+              "vapourResistanceM2PaW": 6.7,
+              "heatCapacityJM2K": 440,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 13540,
+          "body": {
+            "segment": "leg",
+            "metabolicShare": 0.27,
+            "skinFraction": 0.3
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "sneakers",
+          "title": {
+            "en": "Socks and sneakers",
+            "de": "Socken und Sneaker"
+          },
+          "kind": "surface",
+          "model": "body",
+          "material": "canvas-sneaker",
+          "areaM2": 0.1005,
+          "characteristicLengthM": 0.09,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 0.1,
+          "layers": [
+            {
+              "id": "socks",
+              "title": {
+                "en": "Ankle socks",
+                "de": "Sneakersocken"
+              },
+              "kind": "clothing",
+              "material": "cotton-sock",
+              "thicknessM": 0.002,
+              "resistanceM2KW": 0.0031,
+              "vapourResistanceM2PaW": 0.5,
+              "heatCapacityJM2K": 100,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            },
+            {
+              "id": "sneaker",
+              "title": {
+                "en": "Canvas sneaker",
+                "de": "Stoffsneaker"
+              },
+              "kind": "clothing",
+              "material": "canvas-sneaker",
+              "thicknessM": 0.004,
+              "resistanceM2KW": 0.0062,
+              "vapourResistanceM2PaW": 1,
+              "heatCapacityJM2K": 600,
+              "source": "authored-estimate",
+              "reference": "iso-9920-2007"
+            }
+          ],
+          "heatCapacityJM2K": 13700,
+          "body": {
+            "segment": "foot",
+            "metabolicShare": 0.03,
+            "skinFraction": 0.06
+          },
+          "source": "authored-estimate",
+          "reference": "iso-9920-2007"
+        },
+        {
+          "id": "headphones",
+          "title": {
+            "en": "Over-ear headphones worn around the neck",
+            "de": "Über dem Ohr getragene Kopfhörer um den Hals"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "headphone-polymer",
+          "areaM2": 0.03,
+          "characteristicLengthM": 0.1,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.4,
+          "layers": [],
+          "heatCapacityJM2K": 11000,
+          "source": "authored-estimate"
+        },
+        {
+          "id": "phone",
+          "title": {
+            "en": "Smartphone, heated by its electronics",
+            "de": "Smartphone, von der Elektronik erwärmt"
+          },
+          "kind": "surface",
+          "model": "operating",
+          "material": "phone-glass-metal",
+          "areaM2": 0.022,
+          "characteristicLengthM": 0.147,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.3,
+          "layers": [],
+          "heatCapacityJM2K": 6900,
+          "operating": {
+            "key": "phone",
+            "heatW": 2.5
+          },
+          "source": "authored-estimate"
+        }
+      ],
+      "emitters": [
+        {
+          "id": "nose-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Breath from the nostrils",
+            "de": "Atem aus den Nasenöffnungen"
+          },
+          "anchor": "nostrils",
+          "directionDeg": -150,
+          "diameterM": 0.0095,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "mouth-breath",
+          "kind": "breath",
+          "title": {
+            "en": "Breath from the mouth",
+            "de": "Atem aus dem Mund"
+          },
+          "anchor": "mouth",
+          "directionDeg": -105,
+          "diameterM": 0.0124,
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        },
+        {
+          "id": "body-plume",
+          "kind": "plume",
+          "title": {
+            "en": "Thermal plume above the body",
+            "de": "Thermische Fahne über dem Körper"
+          },
+          "anchor": "crown",
+          "directionDeg": 0,
+          "diameterM": 0.25,
+          "region": "hoodie",
+          "source": "authored-estimate",
+          "reference": "gupta-2010"
+        }
+      ],
+      "assumptions": [
+        {
+          "en": "Skin area 1.675 m2 after DuBois and DuBois (1916) for 58 kg and 1.69 m; regions carry skin fractions 0.07 face and neck, 0.03 scalp, 0.05 hands, 0.49 trunk and arms, 0.30 legs, 0.06 feet (rule-of-nines proportions, authored).",
+          "de": "Hautfläche 1.675 m2 nach DuBois und DuBois (1916) für 58 kg und 1,69 m; die Regionen tragen die Hautanteile 0,07 Gesicht und Hals, 0,03 Kopfhaut, 0,05 Hände, 0,49 Rumpf und Arme, 0,30 Beine, 0,06 Füße (Neunerregel-Proportionen, geschätzt)."
+        },
+        {
+          "en": "Basal metabolism from the Mifflin-St Jeor equation for a 24-year-old woman of 58 kg and 169 cm; clothing in clo after the ISO 9920 tables (1 clo = 0.155 m2K/W), digits authored; vapour resistance R/(0.0165 K/Pa x 0.38).",
+          "de": "Grundumsatz aus der Mifflin-St-Jeor-Gleichung für eine 24-jährige Frau mit 58 kg und 169 cm; Kleidung in clo nach den Tabellen von ISO 9920 (1 clo = 0,155 m2K/W), Werte geschätzt; Dampfwiderstand R/(0,0165 K/Pa x 0,38)."
+        },
+        {
+          "en": "The smartphone releases about 2.5 W at full use (call or camera) and about 1.5 W with the screen on; both are authored estimates, not measurements. It is held in the hands, whose skin contact is not modelled.",
+          "de": "Das Smartphone gibt bei voller Nutzung (Anruf oder Kamera) etwa 2,5 W ab, bei eingeschaltetem Bildschirm etwa 1,5 W; beides sind geschätzte Werte, keine Messungen. Es liegt in den Händen, deren Hautkontakt nicht modelliert wird."
+        },
+        {
+          "en": "Standing at ease is about 1.2 met (ISO 7730 Annex A), phone use adds hardly any load; breathing patterns are authored and only guided by quiet adult values and Gupta et al. (2010) for talking.",
+          "de": "Entspanntes Stehen entspricht etwa 1,2 met (ISO 7730 Anhang A), das Telefonieren erhöht die Last kaum; die Atemmuster sind geschätzt und nur an ruhigen Erwachsenenwerten und Gupta et al. (2010) für das Sprechen orientiert."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.80665,
+      "dynamics": "inertial",
+      "supports": [],
+      "assumptions": [
+        {
+          "en": "Segments are point masses at the de Leva centres (female table); the 190 g phone is a load at its own centre.",
+          "de": "Segmente sind Punktmassen in den Schwerpunkten nach de Leva (Frauentabelle); das 190 g schwere Telefon ist eine Last in seinem eigenen Schwerpunkt."
+        },
+        {
+          "en": "Contacts are heel and ball of each foot; both feet stand flat and close together in every named pose.",
+          "de": "Kontakte sind Ferse und Ballen jedes Fußes; beide Füße stehen in jeder benannten Pose flach und eng beieinander."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "texting",
+      "defaultClip": "scroll-and-sway",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

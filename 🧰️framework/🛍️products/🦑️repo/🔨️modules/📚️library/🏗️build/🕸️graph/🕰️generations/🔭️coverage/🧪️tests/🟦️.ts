@@ -1,6 +1,6 @@
 /** 🔭️ Contract: the verified stamp of a graph generation pointer is a bitmap over the owners of its manifest; encoding, decoding, merging with the reused part of the parent and the coverage of a later request equal the independent Python model on closed vectors, and every malformed stamp is refused by both. */
 import{expect,test}from"bun:test";
-import Ajv2020 from"ajv/dist/2020";
+import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";

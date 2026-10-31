@@ -8,7 +8,7 @@ import {crateKeyV1,enterLaneV1,laneIdsV1,laneLiveV1,lanePathsV1,readLaneSizeV1,r
 
 const rules=UNIT_CACHE_POLICY_V1.pool,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🏊️ One lane as the pool sees it: whether a live process holds it, when it was last used, the crate set it was last built for (`""` when unknown) and its recorded size without its Cargo incremental sessions (`null` until the collector measured it): the sessions are bounded by the collector's own incremental share, so a lane that keeps a crate's incremental state warm is not evicted for holding it. */
-export type PoolLaneV1=Readonly<{id:string;claimed:boolean;lastUsedMs:number;crateKey:string;bytes:number|null}>;
+export type PoolLaneV1=Readonly<{id:string;claimed:boolean;lastUsedMs:number;crateKey:string;bytes:number|null;product?:boolean}>;
 /** 📐️ The bounds of the pool: the idle lanes are trimmed to `maximumLanes` lanes and `quotaBytes` recorded bytes, live lanes may exceed them up to `maximumLiveLanes`. */
 export type PoolBoundsV1=Readonly<{maximumLanes:number;maximumLiveLanes:number;quotaBytes:number}>;
 /** 🎯️ What an acquisition does: take the newest free lane of the same crate set (`warm`), start a lane (`new`), take the least recently used free lane (`lru`) or wait (`busy`). */
@@ -26,7 +26,7 @@ export function poolBoundsV1(quotaBytes:number):PoolBoundsV1{return Object.freez
 
 /** 🧭️ Chooses the lane of one acquisition. Pure and deterministic. The newest free lane built for the same crate set keeps its incremental state warm; otherwise the pool grows while it is inside its bounds, else the least recently used free lane is reused, else (every lane live) the pool grows beyond its bounds up to the live maximum and only then waits. Waiting holds nothing, so no wait chain exists. */
 export function planPoolAcquireV1(lanes:readonly PoolLaneV1[],request:Readonly<{crateKey:string}>,bounds:PoolBoundsV1):PoolChoiceV1{
- const free=lanes.filter(lane=>!lane.claimed),warm=free.filter(lane=>lane.crateKey===request.crateKey).sort(newest)[0];
+ const free=lanes.filter(lane=>!lane.claimed&&!lane.product),warm=free.filter(lane=>lane.crateKey===request.crateKey).sort(newest)[0];
  if(warm)return{kind:"warm",id:warm.id};
  if(lanes.length<bounds.maximumLanes&&recorded(lanes)<=bounds.quotaBytes)return{kind:"new"};
  const cold=[...free].sort(oldest)[0];
@@ -49,7 +49,7 @@ export function readPoolV1(root:string,nowMs:number):PoolLaneV1[]{
  const locks=join(root,layout.locks);
  return laneIdsV1(root).filter(id=>!rules.reserved.includes(id)).map(id=>{
   const paths=lanePathsV1(root,id);let lastUsedMs=0;try{lastUsedMs=Math.floor(statSync(paths.metadata).mtimeMs);}catch{}
-  return Object.freeze({id,claimed:claimHeldV1(locks,"lane-"+id)||laneLiveV1(paths,nowMs),lastUsedMs,crateKey:readLaneV1(root,id)?.crateKey??"",bytes:(size=>size?size.bytes-size.incrementalBytes:null)(readLaneSizeV1(root,id))});
+  return Object.freeze({id,product:id.startsWith(rules.product.prefix),claimed:claimHeldV1(locks,"lane-"+id)||laneLiveV1(paths,nowMs),lastUsedMs,crateKey:readLaneV1(root,id)?.crateKey??"",bytes:(size=>size?size.bytes-size.incrementalBytes:null)(readLaneSizeV1(root,id))});
  });
 }
 
@@ -74,16 +74,23 @@ export async function acquirePooledLaneV1(root:string,request:Readonly<{crates:r
  let poll=rules.pollMilliseconds,reported=false;
  for(;;){
   options.signal?.throwIfAborted();
+  const catalog=tryClaimV1(locks,rules.catalogClaim);
+  if(!catalog){await sleepV1(poll,options.signal);continue;}
+  let acquired:PooledLaneV1|undefined;
+  try{acquired=(()=>{
   const lanes=readPoolV1(root,now()),choice=planPoolAcquireV1(lanes,{crateKey:key},bounds);
   if(choice.kind==="busy"){
    if(!reported){reported=true;options.report?.("poolBusy",{live:lanes.length,maximum:bounds.maximumLiveLanes});}
-   await sleepV1(poll,options.signal);poll=Math.min(rules.pollMaximumMilliseconds,Math.ceil(poll*rules.pollBackoffBasisPoints/10000));continue;
+   return undefined;
   }
   const id=choice.id??"p"+randomBytes(3).toString("hex"),claim=tryClaimV1(locks,"lane-"+id);
-  if(!claim){await sleepV1(0,options.signal);continue;}
-  const entered=enterLaneV1(root,id,request.owner,request.crates);
+  if(!claim)return undefined;
+  let entered:ReturnType<typeof enterLaneV1>;try{entered=enterLaneV1(root,id,request.owner,request.crates);}catch(error){claim.release();throw error;}
   if(choice.kind==="new"&&lanes.length>=bounds.maximumLanes)options.report?.("overflow",{busy:lanes.filter(lane=>lane.claimed).length,total:lanes.length,lane:id});
   try{const trimmed=trimPoolV1(root,bounds,now(),options.report);if(trimmed.removed>0)options.report?.("trimmed",{count:laneIdsV1(root).length,quotaMib:Math.round(bounds.quotaBytes/1048576),removed:trimmed.removed});}catch{}
   return Object.freeze({paths:entered.paths,choice:choice.kind,release(){try{entered.release();}finally{claim.release();}}});
+  })();}finally{catalog.release();}
+  if(acquired)return acquired;
+  await sleepV1(poll,options.signal);poll=Math.min(rules.pollMaximumMilliseconds,Math.ceil(poll*rules.pollBackoffBasisPoints/10000));
  }
 }

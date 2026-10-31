@@ -1,0 +1,2428 @@
+{
+  "$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument",
+  "version": "semio.staffage/v2",
+  "asset": {
+    "id": "wheelchair-ramp",
+    "category": "components",
+    "title": {
+      "en": "Wheelchair Ramp 1:12 with Landings",
+      "de": "Rollstuhlrampe 1:12 mit Podesten"
+    },
+    "summary": {
+      "en": "A 1.4 m wide reinforced concrete access ramp rising 0.60 m in two 3.6 m runs at 1:12 (8.3 %), with an at-grade landing, a middle landing and a top landing of 1.5 m, 0.10 m wheel-guard kerbs and continuous steel handrails at 0.85 m on both sides with 0.30 m extensions. 1:12 is the ADA maximum; DIN 18040-1 asks for at most 6 %.",
+      "de": "Eine 1,4 m breite Stahlbeton-Zugangsrampe, die in zwei 3,6 m langen Läufen mit 1:12 (8,3 %) um 0,60 m ansteigt, mit ebenerdigem Podest, Zwischenpodest und oberem Podest von je 1,5 m, 0,10 m hohen Radabweisern und durchgehenden Stahlhandläufen in 0,85 m Höhe auf beiden Seiten mit 0,30 m Verlängerung. 1:12 ist das ADA-Maximum; DIN 18040-1 verlangt höchstens 6 %."
+    },
+    "tags": [
+      "component",
+      "structural",
+      "ramp",
+      "accessibility",
+      "handrail",
+      "concrete"
+    ],
+    "provenance": {
+      "author": "Semio staffage component authors (NW-C)",
+      "method": "handcrafted",
+      "created": "2026-10-29",
+      "references": [
+        {
+          "id": "ada-2010",
+          "citation": "2010 ADA Standards for Accessible Design, section 405 Ramps: running slope not steeper than 1:12, rise per run at most 30 in (760 mm), landings at least 60 in (1525 mm) long, handrails 34 to 38 in high on both sides, 12 in extensions, 4 in edge protection."
+        },
+        {
+          "id": "din-18040-1",
+          "citation": "DIN 18040-1:2010-10 Barrier-free building, public buildings, section 4.3.8 / 4.3.3: ramps with clear width 1.20 m, landings 1.50 m, run at most 6 m, handrails at 0.85 m on both sides extending 0.30 m, wheel guard 0.10 m. DIN recommends at most 6 % slope; the 1:12 (8.3 %) of this asset is the ADA maximum and exceeds the DIN limit, it is an authored ADA-style ramp."
+        },
+        {
+          "id": "en-1991-1-1",
+          "citation": "EN 1991-1-1:2002 Eurocode 1, actions on structures, part 1-1: Table A.1 reinforced concrete 25 kN/m3; Table 6.2 imposed loads, category C3 (areas without obstacles for moving people) 5 kN/m2; Table 6.12 line load on barriers, 1.0 kN/m chosen within the recommended 0.5 to 1.0 range (National Annex governs)."
+        },
+        {
+          "id": "en-10219",
+          "citation": "EN 10219-2:2019 Cold formed welded structural hollow sections: CHS 42.4 x 2.6 (2.55 kg/m, A 3.54 cm2, I 7.6 cm4) and CHS 48.3 x 3.2 (3.56 kg/m)."
+        },
+        {
+          "id": "en-iso-10456",
+          "citation": "EN ISO 10456:2007 Building materials, hygrothermal properties: reinforced concrete 1 % steel rho 2300, lambda 2.3 W/mK, 1000 J/kgK; steel 50 W/mK, 450 J/kgK; emissivity of concrete 0.9."
+        },
+        {
+          "id": "en-1992-1-1",
+          "citation": "EN 1992-1-1:2004 Eurocode 2, design of concrete structures: E_cm 31 GPa (C25/30), f_ck 25 MPa."
+        },
+        {
+          "id": "din-iso-128-50",
+          "citation": "DIN ISO 128-50:2002 Technical drawings, basic conventions for areas on sections and cuts."
+        },
+        {
+          "id": "din-1356-1",
+          "citation": "DIN 1356-1:1995 Building drawings, types of drawings, scales and symbols."
+        },
+        {
+          "id": "asce-solar",
+          "citation": "Typical solar absorptivity of weathered grey concrete 0.6 to 0.7 and of galvanised steel 0.5 to 0.6 (ASHRAE Handbook Fundamentals 2021, ch. 25, rounded)."
+        }
+      ],
+      "notes": {
+        "en": "Gradient 1:12 and 1.5 m landings follow ADA 405; DIN 18040-1 demands at most 6 %, so this ramp is an ADA-style ramp. Concrete is solid (earth-retained) with 25 kN/m3.",
+        "de": "Gefälle 1:12 und 1,5-m-Podeste folgen ADA 405; DIN 18040-1 fordert höchstens 6 %, diese Rampe ist daher eine ADA-Rampe. Der Beton ist massiv (erdangefüllt) mit 25 kN/m3."
+      }
+    },
+    "dimensions": {
+      "heightM": 1.471,
+      "widthM": 10.5,
+      "depthM": 1.4,
+      "massKg": 12813.253
+    },
+    "materials": [
+      {
+        "id": "concrete",
+        "title": {
+          "en": "Reinforced concrete C25/30, broom finish",
+          "de": "Stahlbeton C25/30, Besenstrich"
+        },
+        "emissivity": 0.9,
+        "solarAbsorptivity": 0.65,
+        "densityKgM3": 2500,
+        "conductivityWmK": 2.3,
+        "specificHeatJKgK": 1000,
+        "elasticModulusPa": 31000000000.0,
+        "strengthPa": 25000000.0,
+        "source": "literature",
+        "reference": "en-1992-1-1"
+      },
+      {
+        "id": "steel",
+        "title": {
+          "en": "Hot-dip galvanised steel tube",
+          "de": "Feuerverzinktes Stahlrohr"
+        },
+        "emissivity": 0.3,
+        "solarAbsorptivity": 0.55,
+        "densityKgM3": 7850,
+        "conductivityWmK": 50,
+        "specificHeatJKgK": 450,
+        "elasticModulusPa": 210000000000.0,
+        "strengthPa": 235000000.0,
+        "source": "literature",
+        "reference": "en-10219"
+      }
+    ],
+    "rig": {
+      "kind": "structural",
+      "root": "body",
+      "bones": [
+        {
+          "id": "body",
+          "parent": null,
+          "title": {
+            "en": "Reinforced concrete ramp body with landings (rigid root on the ground)",
+            "de": "Stahlbeton-Rampenkörper mit Podesten (starre Wurzel auf dem Boden)"
+          },
+          "x": 0.0,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 11.7,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 12721.24784,
+            "comX": 8.12692,
+            "comY": 0.21923,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          },
+          "section": {
+            "areaM2": 0.2,
+            "secondMomentM4": 0.00039374999999999995,
+            "extremeFibreM": 0.075,
+            "material": "concrete",
+            "title": {
+              "en": "1.4 m wide, 150 mm minimum thickness",
+              "de": "1,4 m breit, 150 mm Mindestdicke"
+            }
+          }
+        },
+        {
+          "id": "handrail",
+          "parent": "body",
+          "title": {
+            "en": "Handrails, posts and brackets of both sides",
+            "de": "Handläufe, Pfosten und Halter beider Seiten"
+          },
+          "x": 1.2,
+          "y": 0.0,
+          "angleDeg": 0.0,
+          "lengthM": 9.3,
+          "joint": {
+            "type": "fixed"
+          },
+          "mass": {
+            "kg": 92.0055,
+            "comX": 4.65,
+            "comY": 1.0,
+            "distribution": "point",
+            "source": "literature",
+            "reference": "en-10219"
+          },
+          "section": {
+            "areaM2": 0.000354,
+            "secondMomentM4": 7.6e-08,
+            "extremeFibreM": 0.0212,
+            "material": "steel",
+            "title": {
+              "en": "CHS 42.4 x 2.6 handrail tube",
+              "de": "Rohr 42,4 x 2,6 Handlauf"
+            }
+          }
+        },
+        {
+          "id": "chair-carrier",
+          "parent": "body",
+          "title": {
+            "en": "Wheelchair carrier on the second run (massless)",
+            "de": "Rollstuhlträger auf dem zweiten Lauf (masselos)"
+          },
+          "x": 6.6,
+          "y": 0.3,
+          "angleDeg": 4.76364,
+          "lengthM": 0.0,
+          "joint": {
+            "type": "prismatic",
+            "axisDeg": 0,
+            "minM": 0,
+            "maxM": 3.6124783736376886
+          }
+        }
+      ]
+    },
+    "anchors": [
+      {
+        "id": "ground-0",
+        "bone": "body",
+        "x": 2.5,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Ground bearing 1",
+          "de": "Auflager auf dem Boden 1"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 2.0,
+        "footprintWidthM": 1.4,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "ground-1",
+        "bone": "body",
+        "x": 5.0,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Ground bearing 2",
+          "de": "Auflager auf dem Boden 2"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 2.0,
+        "footprintWidthM": 1.4,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "ground-2",
+        "bone": "body",
+        "x": 8.0,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Ground bearing 3",
+          "de": "Auflager auf dem Boden 3"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 2.0,
+        "footprintWidthM": 1.4,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "ground-3",
+        "bone": "body",
+        "x": 11.0,
+        "y": 0.0,
+        "kind": "support",
+        "title": {
+          "en": "Ground bearing 4",
+          "de": "Auflager auf dem Boden 4"
+        },
+        "support": "contact",
+        "normalDeg": 90,
+        "footprintLengthM": 2.0,
+        "footprintWidthM": 1.4,
+        "frictionCoefficient": 0.6
+      },
+      {
+        "id": "chair-point",
+        "bone": "chair-carrier",
+        "x": 0.0,
+        "y": 0.0,
+        "kind": "load",
+        "title": {
+          "en": "Wheelchair wheel base",
+          "de": "Rollstuhlaufstandsfläche"
+        }
+      },
+      {
+        "id": "rail-mid",
+        "bone": "handrail",
+        "x": 4.65,
+        "y": 1.0,
+        "kind": "load",
+        "title": {
+          "en": "Handrail centre",
+          "de": "Handlaufmitte"
+        }
+      }
+    ],
+    "representations": {
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.13,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "body",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "ramp",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "ramp-surface",
+                "ramp-side",
+                "kerb"
+              ],
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  2.4,
+                  0.0
+                ],
+                [
+                  2.4,
+                  0.075
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handrail",
+              "bone": "handrail",
+              "role": "body",
+              "z": 2,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.85
+                ],
+                [
+                  0.3,
+                  0.85
+                ],
+                [
+                  3.9,
+                  1.15
+                ],
+                [
+                  5.4,
+                  1.15
+                ],
+                [
+                  9.0,
+                  1.45
+                ],
+                [
+                  9.3,
+                  1.45
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One poche silhouette of the stepped ramp (at-grade landing, run, middle landing, run, top landing) and one rail line.",
+            "de": "Eine Pochésilhouette der gestuften Rampe (ebenerdiges Podest, Lauf, Zwischenpodest, Lauf, oberes Podest) und eine Handlauflinie."
+          },
+          "retained": {
+            "en": "Ramp body 11.7 m long and 0.6 m high at the real 1:12 slope, the handrail polyline at 0.85 m above the surface with its horizontal extensions.",
+            "de": "Rampenkörper 11,7 m lang und 0,6 m hoch mit der echten Steigung 1:12, die Handlaufpolylinie 0,85 m über der Oberfläche mit ihren waagerechten Verlängerungen."
+          },
+          "merged": {
+            "en": "Surface, side faces and the wheel-guard kerb are one filled mass listing all three regions; the 0.10 m kerb would be 0.2 mm.",
+            "de": "Oberfläche, Seitenflächen und Radabweiser sind eine gefüllte Masse mit allen drei Regionen; der 0,10 m hohe Radabweiser wäre 0,2 mm."
+          },
+          "omitted": {
+            "en": "Posts, slab joints, rail ends, stipple, and the first 0.9 m of the ramp wedge (thinner than 0.1 m = 0.2 mm), which would print as a sliver; the drawn body starts with a 0.075 m toe step.",
+            "de": "Pfosten, Plattenfugen, Handlaufenden, Punktierung und die ersten 0,9 m des Rampenkeils (dünner als 0,1 m = 0,2 mm), die als Sliver druckten; der gezeichnete Körper beginnt mit einer 0,075 m hohen Fußstufe."
+          },
+          "thinElements": {
+            "en": "The 0.042 m handrail tube is one 0.13 mm line (0.065 m at this scale, about 0.025 m wider than real).",
+            "de": "Das 0,042 m dicke Handlaufrohr ist eine 0,13-mm-Linie (0,065 m bei diesem Maßstab, etwa 0,025 m breiter als real)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Filled mid-grey mass, 0.13 mm outline.",
+            "de": "Gefüllte mittelgraue Masse, 0,13-mm-Kontur."
+          },
+          "overlays": {
+            "en": "Thermal cells: the ramp mass (merged concrete surfaces) and the handrail line.",
+            "de": "Thermische Zellen: die Rampenmasse (zusammengefasste Betonflächen) und die Handlauflinie."
+          }
+        }
+      },
+      "200": {
+        "status": "authored",
+        "denominator": 200,
+        "validRange": {
+          "minDenominator": 150,
+          "maxDenominator": 350
+        },
+        "pens": {
+          "body": 0.18,
+          "detail": 0.1,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.25
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "body",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "ramp",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.5,
+              "regions": [
+                "ramp-surface",
+                "ramp-side"
+              ],
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "kerb",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "kerb",
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  10.2,
+                  0.7
+                ],
+                [
+                  6.6,
+                  0.4
+                ],
+                [
+                  5.1,
+                  0.4
+                ],
+                [
+                  1.5,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handrail",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.85
+                ],
+                [
+                  0.3,
+                  0.85
+                ],
+                [
+                  3.9,
+                  1.15
+                ],
+                [
+                  5.4,
+                  1.15
+                ],
+                [
+                  9.0,
+                  1.45
+                ],
+                [
+                  9.3,
+                  1.45
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-0",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.3,
+                  0.1
+                ],
+                [
+                  0.3,
+                  0.85
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-1",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  2.1,
+                  0.25
+                ],
+                [
+                  2.1,
+                  1.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-2",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  3.9,
+                  0.4
+                ],
+                [
+                  3.9,
+                  1.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-3",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  5.4,
+                  0.4
+                ],
+                [
+                  5.4,
+                  1.15
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-4",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  7.2,
+                  0.55
+                ],
+                [
+                  7.2,
+                  1.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "post-5",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": false,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  9.0,
+                  0.7
+                ],
+                [
+                  9.0,
+                  1.45
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "Stepped ramp body with the wheel-guard kerb as a separate band, a handrail line and six post lines.",
+            "de": "Gestufter Rampenkörper mit dem Radabweiser als eigenem Band, eine Handlauflinie und sechs Pfostenlinien."
+          },
+          "retained": {
+            "en": "Body, kerb band (0.10 m = 0.5 mm), handrail polyline with extensions, six posts.",
+            "de": "Körper, Radabweiserband (0,10 m = 0,5 mm), Handlaufpolylinie mit Verlängerungen, sechs Pfosten."
+          },
+          "merged": {
+            "en": "Surface and side face stay one mass (regions merged).",
+            "de": "Oberfläche und Seitenfläche bleiben eine Masse (Regionen zusammengefasst)."
+          },
+          "omitted": {
+            "en": "Slab joints, post base plates, rail returns, stipple.",
+            "de": "Plattenfugen, Pfostenfußplatten, Handlaufrücklenkungen, Punktierung."
+          },
+          "thinElements": {
+            "en": "Handrail tube and posts are 0.18 mm lines (rail 0.042 m real = 0.21 mm, post 0.05 m = 0.25 mm).",
+            "de": "Handlaufrohr und Pfosten sind 0,18-mm-Linien (Rohr real 0,042 m = 0,21 mm, Pfosten 0,05 m = 0,25 mm)."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Filled mass 0.18 mm, rail lines 0.18 mm.",
+            "de": "Gefüllte Masse 0,18 mm, Handlauflinien 0,18 mm."
+          },
+          "overlays": {
+            "en": "Cells: ramp mass, kerb band, rail and posts.",
+            "de": "Zellen: Rampenmasse, Radabweiserband, Handlauf und Pfosten."
+          }
+        }
+      },
+      "100": {
+        "status": "authored",
+        "denominator": 100,
+        "validRange": {
+          "minDenominator": 75,
+          "maxDenominator": 150
+        },
+        "pens": {
+          "body": 0.25,
+          "detail": 0.13,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.35
+        },
+        "hatches": [
+          {
+            "id": "concrete-stipple",
+            "title": {
+              "en": "Concrete texture",
+              "de": "Betonstruktur"
+            },
+            "pattern": "stipple",
+            "angleDeg": 0,
+            "spacingMm": 0.8,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "body",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "ramp",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.55,
+              "regions": [
+                "ramp-surface",
+                "ramp-side"
+              ],
+              "material": "concrete",
+              "hatch": "concrete-stipple",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "joint-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  5.1,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  6.6,
+                  0.0
+                ],
+                [
+                  6.6,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  10.2,
+                  0.0
+                ],
+                [
+                  10.2,
+                  0.6
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "kerb",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.4,
+              "region": "kerb",
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  10.2,
+                  0.7
+                ],
+                [
+                  6.6,
+                  0.4
+                ],
+                [
+                  5.1,
+                  0.4
+                ],
+                [
+                  1.5,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handrail",
+              "bone": "handrail",
+              "role": "body",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.13,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.8288
+                ],
+                [
+                  0.3,
+                  0.8288
+                ],
+                [
+                  3.9,
+                  1.1288
+                ],
+                [
+                  5.4,
+                  1.1288
+                ],
+                [
+                  9.0,
+                  1.4288
+                ],
+                [
+                  9.3,
+                  1.4288
+                ],
+                [
+                  9.3,
+                  1.4712
+                ],
+                [
+                  9.0,
+                  1.4712
+                ],
+                [
+                  5.4,
+                  1.1712
+                ],
+                [
+                  3.9,
+                  1.1712
+                ],
+                [
+                  0.3,
+                  0.8712
+                ],
+                [
+                  0.0,
+                  0.8712
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "post-0",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.275,
+              "y": 0.1,
+              "w": 0.05,
+              "h": 0.75
+            },
+            {
+              "id": "post-1",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.075,
+              "y": 0.25,
+              "w": 0.05,
+              "h": 0.75
+            },
+            {
+              "id": "post-2",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 3.875,
+              "y": 0.4,
+              "w": 0.05,
+              "h": 0.75
+            },
+            {
+              "id": "post-3",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 5.375,
+              "y": 0.4,
+              "w": 0.05,
+              "h": 0.75
+            },
+            {
+              "id": "post-4",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 7.175,
+              "y": 0.55,
+              "w": 0.05,
+              "h": 0.75
+            },
+            {
+              "id": "post-5",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 8.975,
+              "y": 0.7,
+              "w": 0.05,
+              "h": 0.75
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The ramp body with stipple, slab joints at the landing transitions, the kerb band, a filled handrail band and filled posts.",
+            "de": "Der Rampenkörper mit Punktierung, Plattenfugen an den Podestübergängen, das Radabweiserband, ein gefülltes Handlaufband und gefüllte Pfosten."
+          },
+          "retained": {
+            "en": "Handrail tube drawn at its real 0.042 m width (0.42 mm), posts at 0.05 m (0.5 mm), three joints.",
+            "de": "Handlaufrohr in seiner echten Breite 0,042 m (0,42 mm), Pfosten mit 0,05 m (0,5 mm), drei Fugen."
+          },
+          "merged": {
+            "en": "Surface and side face remain one body.",
+            "de": "Oberfläche und Seitenfläche bleiben ein Körper."
+          },
+          "omitted": {
+            "en": "Post base plates (0.12 x 0.01 m), rail returns.",
+            "de": "Pfostenfußplatten (0,12 x 0,01 m), Handlaufrücklenkungen."
+          },
+          "thinElements": {
+            "en": "None thickened: tube and posts are filled at real width.",
+            "de": "Nichts verdickt: Rohr und Pfosten sind in echter Breite gefüllt."
+          },
+          "hatching": {
+            "en": "Concrete texture as stipple at 0.8 mm.",
+            "de": "Betonstruktur als Punktierung mit 0,8 mm."
+          },
+          "styles": {
+            "en": "Outline 0.25 mm for the body, 0.13 mm for rail and posts.",
+            "de": "Kontur 0,25 mm für den Körper, 0,13 mm für Handlauf und Pfosten."
+          },
+          "overlays": {
+            "en": "Cells: body, kerb, rail band, posts.",
+            "de": "Zellen: Körper, Radabweiser, Handlaufband, Pfosten."
+          }
+        }
+      },
+      "50": {
+        "status": "authored",
+        "denominator": 50,
+        "validRange": {
+          "minDenominator": 20,
+          "maxDenominator": 75
+        },
+        "pens": {
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.1,
+          "glazing": null,
+          "ground": 0.5
+        },
+        "hatches": [
+          {
+            "id": "concrete-stipple",
+            "title": {
+              "en": "Concrete texture",
+              "de": "Betonstruktur"
+            },
+            "pattern": "stipple",
+            "angleDeg": 0,
+            "spacingMm": 1.0,
+            "penMm": 0.1
+          }
+        ],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "ground",
+              "bone": "body",
+              "role": "ground",
+              "z": 0,
+              "filled": false,
+              "tone": 0.5,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "ramp",
+              "bone": "body",
+              "role": "body",
+              "z": 1,
+              "filled": true,
+              "tone": 0.6,
+              "regions": [
+                "ramp-surface",
+                "ramp-side"
+              ],
+              "material": "concrete",
+              "hatch": "concrete-stipple",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.6
+                ],
+                [
+                  11.7,
+                  0.0
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "joint-0",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  5.1,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-1",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  6.6,
+                  0.0
+                ],
+                [
+                  6.6,
+                  0.3
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "joint-2",
+              "bone": "body",
+              "role": "detail",
+              "z": 2,
+              "filled": false,
+              "tone": 0.4,
+              "region": "ramp-side",
+              "kind": "poly",
+              "points": [
+                [
+                  10.2,
+                  0.0
+                ],
+                [
+                  10.2,
+                  0.6
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "kerb",
+              "bone": "body",
+              "role": "body",
+              "z": 2,
+              "filled": true,
+              "tone": 0.45,
+              "region": "kerb",
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  1.5,
+                  0.0
+                ],
+                [
+                  5.1,
+                  0.3
+                ],
+                [
+                  6.6,
+                  0.3
+                ],
+                [
+                  10.2,
+                  0.6
+                ],
+                [
+                  10.2,
+                  0.7
+                ],
+                [
+                  6.6,
+                  0.4
+                ],
+                [
+                  5.1,
+                  0.4
+                ],
+                [
+                  1.5,
+                  0.1
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "handrail",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 5,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.8288
+                ],
+                [
+                  0.3,
+                  0.8288
+                ],
+                [
+                  3.9,
+                  1.1288
+                ],
+                [
+                  5.4,
+                  1.1288
+                ],
+                [
+                  9.0,
+                  1.4288
+                ],
+                [
+                  9.3,
+                  1.4288
+                ],
+                [
+                  9.3,
+                  1.4712
+                ],
+                [
+                  9.0,
+                  1.4712
+                ],
+                [
+                  5.4,
+                  1.1712
+                ],
+                [
+                  3.9,
+                  1.1712
+                ],
+                [
+                  0.3,
+                  0.8712
+                ],
+                [
+                  0.0,
+                  0.8712
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "post-0",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.275,
+              "y": 0.1,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-0",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 0.24,
+              "y": 0.1,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "post-1",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.075,
+              "y": 0.25,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-1",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 2.04,
+              "y": 0.25,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "post-2",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 3.875,
+              "y": 0.4,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-2",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 3.84,
+              "y": 0.4,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "post-3",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 5.375,
+              "y": 0.4,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-3",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 5.34,
+              "y": 0.4,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "post-4",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 7.175,
+              "y": 0.55,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-4",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 7.14,
+              "y": 0.55,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "post-5",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 3,
+              "filled": true,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 8.975,
+              "y": 0.7,
+              "w": 0.05,
+              "h": 0.729
+            },
+            {
+              "id": "plate-5",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 4,
+              "filled": true,
+              "tone": 0.3,
+              "region": "handrail-steel",
+              "material": "steel",
+              "kind": "rect",
+              "x": 8.94,
+              "y": 0.7,
+              "w": 0.12,
+              "h": 0.02
+            },
+            {
+              "id": "rail-return-0",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.829
+                ],
+                [
+                  0.0,
+                  0.73
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rail-return-1",
+              "bone": "handrail",
+              "role": "detail",
+              "z": 5,
+              "filled": false,
+              "tone": 0.35,
+              "region": "handrail-steel",
+              "material": "steel",
+              "penMm": 0.18,
+              "kind": "poly",
+              "points": [
+                [
+                  9.3,
+                  1.429
+                ],
+                [
+                  9.3,
+                  1.33
+                ]
+              ],
+              "closed": false
+            },
+            {
+              "id": "rail-axis",
+              "bone": "handrail",
+              "role": "texture",
+              "z": 6,
+              "filled": false,
+              "tone": 0.2,
+              "region": "handrail-steel",
+              "penMm": 0.1,
+              "kind": "poly",
+              "points": [
+                [
+                  0.0,
+                  0.85
+                ],
+                [
+                  0.3,
+                  0.85
+                ],
+                [
+                  3.9,
+                  1.15
+                ],
+                [
+                  5.4,
+                  1.15
+                ],
+                [
+                  9.0,
+                  1.45
+                ],
+                [
+                  9.3,
+                  1.45
+                ]
+              ],
+              "closed": false
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "The full side elevation of the ramp: body with stipple and three pour joints, the wheel-guard kerb, rail tube as outlined band with its centre axis, six posts with base plates and the downturned rail ends.",
+            "de": "Die vollständige Seitenansicht der Rampe: Körper mit Punktierung und drei Betonierfugen, der Radabweiser, das Handlaufrohr als Konturband mit Mittelachse, sechs Pfosten mit Fußplatten und die abgebogenen Handlaufenden."
+          },
+          "retained": {
+            "en": "Everything of the 1:100 sheet plus base plates (0.12 m), 0.12 m rail returns (DIN 18040-1, rail ends must not protrude), rail axis.",
+            "de": "Alles des 1:100-Blattes plus Fußplatten (0,12 m), 0,12 m lange Handlaufrücklenkungen (DIN 18040-1: Handlaufenden dürfen nicht abstehen), Handlaufachse."
+          },
+          "merged": {
+            "en": "The far-side handrail and posts coincide exactly with the near side and are one region (both sides).",
+            "de": "Der Handlauf und die Pfosten der Gegenseite fallen genau mit der Nahseite zusammen und sind eine Region (beide Seiten)."
+          },
+          "omitted": {
+            "en": "Tube bends at the landings, anchors, slab reinforcement.",
+            "de": "Rohrkrümmungen an den Podesten, Verankerungen, Plattenbewehrung."
+          },
+          "thinElements": {
+            "en": "Rail tube 0.042 m (0.84 mm) and posts 0.05 m (1.0 mm) drawn at real width; the base plates are 0.02 m thick (0.4 mm, thicker than the real 8 mm) so that they print.",
+            "de": "Handlaufrohr 0,042 m (0,84 mm) und Pfosten 0,05 m (1,0 mm) in echter Breite; die Fußplatten sind 0,02 m dick (0,4 mm, dicker als die realen 8 mm), damit sie drucken."
+          },
+          "hatching": {
+            "en": "Concrete texture as stipple at 1.0 mm.",
+            "de": "Betonstruktur als Punktierung mit 1,0 mm."
+          },
+          "styles": {
+            "en": "Body 0.35 mm, rail band 0.18 mm, axis 0.1 mm.",
+            "de": "Körper 0,35 mm, Handlaufband 0,18 mm, Achse 0,1 mm."
+          },
+          "overlays": {
+            "en": "One cell per region: body, kerb, steel handrail with posts.",
+            "de": "Eine Zelle je Region: Körper, Radabweiser, Stahlhandlauf mit Pfosten."
+          }
+        }
+      }
+    },
+    "symbols": [],
+    "poses": [
+      {
+        "id": "self-weight",
+        "title": {
+          "en": "Self-weight",
+          "de": "Eigengewicht"
+        },
+        "description": {
+          "en": "The ramp unloaded, in full sun.",
+          "de": "Die unbelastete Rampe in voller Sonne."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "ramp-surface": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "ramp-side": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.45
+            },
+            "kerb": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "handrail-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.9
+            }
+          },
+          "emitters": {}
+        },
+        "loads": []
+      },
+      {
+        "id": "crowd-live-load",
+        "title": {
+          "en": "Crowded, category C3",
+          "de": "Belegt, Kategorie C3"
+        },
+        "description": {
+          "en": "Uniform imposed load 5 kN/m2 over the runs and landings.",
+          "de": "Gleichmäßige Nutzlast 5 kN/m2 über Läufe und Podeste."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "ramp-surface": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "ramp-side": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.45
+            },
+            "kerb": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "handrail-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.9
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "imposed-c3",
+            "kind": "imposed",
+            "title": {
+              "en": "Imposed load category C3, 5 kN/m2 on 1.2 m clear width (6 kN/m)",
+              "de": "Nutzlast Kategorie C3, 5 kN/m2 auf 1,2 m lichter Breite (6 kN/m)"
+            },
+            "bone": "body",
+            "x": 0,
+            "y": 0,
+            "fxN": 0.0,
+            "fyN": 0.0,
+            "distributed": {
+              "bone": "body",
+              "fromM": 1.5,
+              "toM": 11.7,
+              "wxNPerM": 0,
+              "wyNPerM": -6000
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      },
+      {
+        "id": "wheelchair-on-run-2",
+        "title": {
+          "en": "Wheelchair on the second run",
+          "de": "Rollstuhl auf dem zweiten Lauf"
+        },
+        "description": {
+          "en": "A 200 kg power wheelchair at the middle of the upper run.",
+          "de": "Ein 200 kg schwerer Elektrorollstuhl in der Mitte des oberen Laufs."
+        },
+        "bones": {
+          "chair-carrier": {
+            "dx": 1.8
+          }
+        },
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "ramp-surface": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 1.0
+            },
+            "ramp-side": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.45
+            },
+            "kerb": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "handrail-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.9
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "wheelchair",
+            "kind": "occupant",
+            "title": {
+              "en": "Power wheelchair and user, 200 kg",
+              "de": "Elektrorollstuhl mit Nutzer, 200 kg"
+            },
+            "anchor": "chair-point",
+            "fxN": 0.0,
+            "fyN": -1962,
+            "source": "authored-estimate"
+          }
+        ]
+      },
+      {
+        "id": "handrail-push",
+        "title": {
+          "en": "Pushing on the handrails",
+          "de": "Druck auf die Handläufe"
+        },
+        "description": {
+          "en": "Horizontal handrail line load of 1 kN/m (handrail in partial shade).",
+          "de": "Waagerechte Handlauflinienlast von 1 kN/m (Handlauf teilweise im Schatten)."
+        },
+        "bones": {},
+        "ground": "authored",
+        "contacts": [],
+        "thermal": {
+          "regions": {
+            "ramp-surface": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.6
+            },
+            "ramp-side": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.45
+            },
+            "kerb": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.7
+            },
+            "handrail-steel": {
+              "exposedFraction": 1.0,
+              "sunlitFraction": 0.3
+            }
+          },
+          "emitters": {}
+        },
+        "loads": [
+          {
+            "id": "rail-push",
+            "kind": "imposed",
+            "title": {
+              "en": "Handrail line load 1.0 kN/m, horizontal",
+              "de": "Handlauflinienlast 1,0 kN/m, waagerecht"
+            },
+            "bone": "handrail",
+            "x": 0,
+            "y": 0,
+            "fxN": 0.0,
+            "fyN": 0.0,
+            "distributed": {
+              "bone": "handrail",
+              "fromM": 0,
+              "toM": 9.3,
+              "wxNPerM": 1000,
+              "wyNPerM": 0
+            },
+            "source": "literature",
+            "reference": "en-1991-1-1"
+          }
+        ]
+      }
+    ],
+    "clips": [
+      {
+        "id": "wheelchair-ascent",
+        "title": {
+          "en": "Wheelchair climbs the second run",
+          "de": "Rollstuhl befährt den zweiten Lauf"
+        },
+        "description": {
+          "en": "The wheelchair load moves up the 1:12 run from the middle landing to the top landing.",
+          "de": "Die Rollstuhllast fährt den Lauf 1:12 vom Zwischenpodest zum oberen Podest hinauf."
+        },
+        "durationS": 10,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "wheelchair-on-run-2",
+            "ease": "smooth",
+            "bones": {
+              "chair-carrier": {
+                "dx": 0.0
+              }
+            }
+          },
+          {
+            "t": 10,
+            "pose": "wheelchair-on-run-2",
+            "ease": "smooth",
+            "bones": {
+              "chair-carrier": {
+                "dx": 3.6124783736376886
+              }
+            }
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "climb",
+            "fromS": 0,
+            "toS": 10,
+            "title": {
+              "en": "Climb at 0.36 m/s",
+              "de": "Auffahrt mit 0,36 m/s"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 0,
+            "kind": "motion",
+            "title": {
+              "en": "Wheelchair at the middle landing",
+              "de": "Rollstuhl am Zwischenpodest"
+            }
+          },
+          {
+            "t": 10,
+            "kind": "motion",
+            "title": {
+              "en": "Wheelchair at the top landing",
+              "de": "Rollstuhl am oberen Podest"
+            }
+          }
+        ],
+        "tracks": []
+      },
+      {
+        "id": "live-load-ramp",
+        "title": {
+          "en": "Crowd loading builds up",
+          "de": "Personenbelastung baut sich auf"
+        },
+        "description": {
+          "en": "The category C3 live load rises from nothing to full value over the ramp.",
+          "de": "Die Nutzlast Kategorie C3 steigt von null auf den vollen Wert über die Rampe."
+        },
+        "durationS": 6,
+        "fps": 30,
+        "loop": false,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          },
+          {
+            "t": 6,
+            "pose": "crowd-live-load",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "ramp",
+            "fromS": 0,
+            "toS": 4,
+            "title": {
+              "en": "Ramp",
+              "de": "Aufbau"
+            }
+          },
+          {
+            "id": "hold",
+            "fromS": 4,
+            "toS": 6,
+            "title": {
+              "en": "Hold",
+              "de": "Halten"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "load-on",
+            "title": {
+              "en": "Imposed load at full value",
+              "de": "Nutzlast vollständig"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "load:imposed-c3",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0
+              },
+              {
+                "t": 4,
+                "v": 1
+              },
+              {
+                "t": 6,
+                "v": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "sun-and-shade",
+        "title": {
+          "en": "Cloud shadow crosses the ramp",
+          "de": "Wolkenschatten zieht über die Rampe"
+        },
+        "description": {
+          "en": "A cloud shadow passes: the sunlit fractions of the surface, side, kerb and handrail drop and recover.",
+          "de": "Ein Wolkenschatten zieht durch: die Besonnungsanteile von Fläche, Seite, Radabweiser und Handlauf fallen und erholen sich."
+        },
+        "durationS": 8,
+        "fps": 30,
+        "loop": true,
+        "rootMotion": "none",
+        "keys": [
+          {
+            "t": 0,
+            "pose": "self-weight",
+            "ease": "smooth"
+          },
+          {
+            "t": 8,
+            "pose": "self-weight",
+            "ease": "smooth"
+          }
+        ],
+        "contacts": [],
+        "phases": [
+          {
+            "id": "shadow",
+            "fromS": 0,
+            "toS": 8,
+            "title": {
+              "en": "Shadow passes",
+              "de": "Schatten zieht durch"
+            }
+          }
+        ],
+        "events": [
+          {
+            "t": 4,
+            "kind": "thermal",
+            "title": {
+              "en": "Deepest shade",
+              "de": "Tiefster Schatten"
+            }
+          }
+        ],
+        "tracks": [
+          {
+            "target": "region:ramp-surface:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 1.0
+              },
+              {
+                "t": 4,
+                "v": 0.1
+              },
+              {
+                "t": 8,
+                "v": 1.0
+              }
+            ]
+          },
+          {
+            "target": "region:ramp-side:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.45
+              },
+              {
+                "t": 4,
+                "v": 0.05
+              },
+              {
+                "t": 8,
+                "v": 0.45
+              }
+            ]
+          },
+          {
+            "target": "region:kerb:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.7
+              },
+              {
+                "t": 4,
+                "v": 0.07
+              },
+              {
+                "t": 8,
+                "v": 0.7
+              }
+            ]
+          },
+          {
+            "target": "region:handrail-steel:sunlitFraction",
+            "ease": "smooth",
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.9
+              },
+              {
+                "t": 4,
+                "v": 0.09
+              },
+              {
+                "t": 8,
+                "v": 0.9
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "thermal": {
+      "environment": {
+        "airTempC": 15,
+        "meanRadiantTempC": 15,
+        "skyTempC": -3,
+        "groundTempC": 18,
+        "relativeHumidity": 0.55,
+        "windMS": 2,
+        "windDirectionDeg": 0,
+        "solarWM2": 600,
+        "diffuseFraction": 0.2,
+        "pressurePa": 101325
+      },
+      "operating": [],
+      "regions": [
+        {
+          "id": "ramp-surface",
+          "title": {
+            "en": "Walking surface of runs and landings",
+            "de": "Gehfläche von Läufen und Podesten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "concrete",
+          "areaM2": 12.26995,
+          "characteristicLengthM": 1.2,
+          "geometry": "horizontal-plate-up",
+          "skyViewFactor": 1.0,
+          "layers": [
+            {
+              "id": "slab-top",
+              "title": {
+                "en": "Concrete, effective storage depth 0.10 m",
+                "de": "Beton, wirksame Speichertiefe 0,10 m"
+              },
+              "kind": "masonry",
+              "material": "concrete",
+              "resistanceM2KW": 0.0435,
+              "source": "literature",
+              "thicknessM": 0.1,
+              "heatCapacityJM2K": 230000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 230000,
+          "source": "literature",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "ramp-side",
+          "title": {
+            "en": "Concrete side faces",
+            "de": "Betonseitenflächen"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "concrete",
+          "areaM2": 7.02,
+          "characteristicLengthM": 0.45,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "side-concrete",
+              "title": {
+                "en": "Concrete, effective storage depth 0.10 m",
+                "de": "Beton, wirksame Speichertiefe 0,10 m"
+              },
+              "kind": "masonry",
+              "material": "concrete",
+              "resistanceM2KW": 0.0435,
+              "source": "literature",
+              "thicknessM": 0.1,
+              "heatCapacityJM2K": 230000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 230000,
+          "source": "literature",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "kerb",
+          "title": {
+            "en": "Wheel-guard kerbs",
+            "de": "Radabweiser"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "concrete",
+          "areaM2": 3.48998,
+          "characteristicLengthM": 0.1,
+          "geometry": "vertical-plate",
+          "skyViewFactor": 0.5,
+          "layers": [
+            {
+              "id": "kerb-concrete",
+              "title": {
+                "en": "Concrete, effective storage depth 0.05 m",
+                "de": "Beton, wirksame Speichertiefe 0,05 m"
+              },
+              "kind": "masonry",
+              "material": "concrete",
+              "resistanceM2KW": 0.0217,
+              "source": "literature",
+              "thicknessM": 0.05,
+              "heatCapacityJM2K": 115000,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 115000,
+          "source": "literature",
+          "reference": "en-iso-10456"
+        },
+        {
+          "id": "handrail-steel",
+          "title": {
+            "en": "Handrails and posts, both sides",
+            "de": "Handläufe und Pfosten beider Seiten"
+          },
+          "kind": "surface",
+          "model": "passive",
+          "material": "steel",
+          "areaM2": 4.2,
+          "characteristicLengthM": 0.0424,
+          "geometry": "cylinder",
+          "skyViewFactor": 0.8,
+          "layers": [
+            {
+              "id": "tube-wall",
+              "title": {
+                "en": "Steel tube wall 2.6 mm",
+                "de": "Stahlrohrwand 2,6 mm"
+              },
+              "kind": "metal",
+              "material": "steel",
+              "resistanceM2KW": 5e-05,
+              "source": "literature",
+              "thicknessM": 0.0026,
+              "heatCapacityJM2K": 9184,
+              "reference": "en-iso-10456"
+            }
+          ],
+          "heatCapacityJM2K": 9200,
+          "source": "literature",
+          "reference": "en-10219"
+        }
+      ],
+      "emitters": [],
+      "passengers": [],
+      "assumptions": [
+        {
+          "en": "Reference case: mild sunny spring day (air 15 degC, 600 W/m2 normal irradiance, wind 2 m/s); all regions are passive and respond with their concrete storage depth.",
+          "de": "Referenzfall: milder sonniger Frühlingstag (Luft 15 °C, 600 W/m2 Normalstrahlung, Wind 2 m/s); alle Regionen sind passiv und reagieren mit ihrer Betonspeichertiefe."
+        },
+        {
+          "en": "Sun and shade come from the pose sunlit fractions: the surface and rails are sunlit, the side face is partly shaded by the kerb and the near-side wall geometry.",
+          "de": "Sonne und Schatten kommen aus den Besonnungsanteilen der Posen: Fläche und Handläufe sind besonnt, die Seitenfläche ist teilweise durch Radabweiser und Umgebung verschattet."
+        },
+        {
+          "en": "The far-side handrail and posts coincide with the near side in elevation; one region carries both (areas doubled).",
+          "de": "Handlauf und Pfosten der Gegenseite fallen in der Ansicht mit der Nahseite zusammen; eine Region trägt beide (Flächen verdoppelt)."
+        }
+      ]
+    },
+    "structure": {
+      "gravityMS2": 9.81,
+      "dynamics": "quasi-static",
+      "supports": [
+        "ground-0",
+        "ground-1",
+        "ground-2",
+        "ground-3"
+      ],
+      "assumptions": [
+        {
+          "en": "The earth-retained concrete body bears on the ground as a rigid block (unilateral contacts with friction 0.6); loads are per 1.4 m width; handrail posts are rigidly attached.",
+          "de": "Der erdangefüllte Betonkörper liegt als starrer Block auf dem Boden (einseitige Kontakte, Reibung 0,6); Lasten gelten für 1,4 m Breite; die Handlaufpfosten sind starr befestigt."
+        },
+        {
+          "en": "Category C3 (5 kN/m2) is used for a public ramp; a dwelling ramp (category A, 2 kN/m2) would be lighter. The wheelchair load is an authored estimate.",
+          "de": "Kategorie C3 (5 kN/m2) gilt für eine öffentliche Rampe; eine Wohnungsrampe (Kategorie A, 2 kN/m2) wäre leichter. Die Rollstuhllast ist ein Schätzwert."
+        }
+      ],
+      "clinical": false
+    },
+    "presentation": {
+      "defaultPose": "self-weight",
+      "defaultClip": "wheelchair-ascent",
+      "defaultScale": 100,
+      "viewpoints": [
+        "elevation"
+      ]
+    },
+    "exports": [
+      "svg",
+      "pdf",
+      "dxf",
+      "dwg",
+      "png-sequence",
+      "mp4",
+      "webm",
+      "component"
+    ],
+    "completion": "authored"
+  }
+}

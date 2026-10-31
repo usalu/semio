@@ -32993,9 +32993,34 @@
         "pathPatterns": [
           "**/✏️editor/🎚️config",
           "**/✏️editor/👥️presence",
-          "**/✏️editor/🫧️transient"
+          "**/✏️editor/🫧️transient",
+          "**/👁️viewer/🎚️config",
+          "**/👁️viewer/👥️presence",
+          "**/👁️viewer/🫧️transient"
         ],
         "reason": "Persisted local-only, ephemeral shared and ephemeral local-only surface state each own their own contract."
+      },
+      "mode-state-lane": {
+        "pathPatterns": [
+          "**/✏️editor/🎭️modes/*/🎚️config",
+          "**/✏️editor/🎭️modes/*/👥️presence",
+          "**/✏️editor/🎭️modes/*/🫧️transient",
+          "**/👁️viewer/🎭️modes/*/🎚️config",
+          "**/👁️viewer/🎭️modes/*/👥️presence",
+          "**/👁️viewer/🎭️modes/*/🫧️transient"
+        ],
+        "reason": "Each declared editor or viewer mode owns the persisted local-only, ephemeral shared and ephemeral local-only state lanes required by modeChildDirs."
+      },
+      "window-state-lane": {
+        "pathPatterns": [
+          "**/✏️editor/🎭️modes/*/🪟️windows/*/🎚️config",
+          "**/✏️editor/🎭️modes/*/🪟️windows/*/👥️presence",
+          "**/✏️editor/🎭️modes/*/🪟️windows/*/🫧️transient",
+          "**/👁️viewer/🎭️modes/*/🪟️windows/*/🎚️config",
+          "**/👁️viewer/🎭️modes/*/🪟️windows/*/👥️presence",
+          "**/👁️viewer/🎭️modes/*/🪟️windows/*/🫧️transient"
+        ],
+        "reason": "Each declared mode window owns the persisted local-only, ephemeral shared and ephemeral local-only state lanes required by windowChildDirs."
       },
       "framework-module": {
         "pathPatterns": [

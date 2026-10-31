@@ -1,15 +1,15 @@
 /** 📚️ Category files load lazily, are validated asset by asset with progress, and a bad or missing asset never stops the rest.
  * @see ./🥒️.feature — the scenarios */
 import { describe, expect, it } from "vitest";
-import type { Asset, CategoryDocument, Issue, Manifest, ManifestEntry } from "@teaching/staffage";
+import type { Asset, Issue, Manifest, ManifestEntry } from "@teaching/staffage";
 import walkerDocument from "../../../../🧫️fixtures/🚶️reference-walker/🔣️.json";
-import { CatalogStore, type CatalogSource } from "../../🔨️modules/📚️catalog/🟦️.ts";
+import { bundledCatalog, CatalogStore, type CatalogSource, type CategoryDocument } from "../../🔨️modules/📚️catalog/🟦️.ts";
 
 const walker = walkerDocument as unknown as Asset;
-const entry = (id: string): ManifestEntry => ({ id, category: "humans", title: walker.title, heightM: 1.7, widthM: 0.5, poses: [], clips: [], analytics: ["thermal"], viewpoints: ["elevation"], exports: ["svg"], distinction: walker.summary, completion: "planned" });
-const categoryEntry = (id: "humans" | "objects") => ({ id, emoji: "x", title: { en: id, de: id }, description: { en: id, de: id }, file: `${id}/🔣️.json` });
-const manifest = { $schema: "", version: "semio.staffage/v1", categories: [categoryEntry("humans"), categoryEntry("objects")], collections: [], entries: [entry("good-one"), entry("bad-one"), entry("never-authored")] } as unknown as Manifest;
-const document = (assets: Asset[]): CategoryDocument => ({ $schema: "", version: "semio.staffage/v1", category: "humans", assets }) as unknown as CategoryDocument;
+const entry = (id: string): ManifestEntry => ({ id, category: "humans", title: walker.title, heightM: 1.7, widthM: 0.5, poses: [], clips: [], representations: { "500": "unavailable", "200": "unavailable", "100": "authored", "50": "unavailable" }, symbols: [], analytics: ["thermal"], viewpoints: ["elevation"], exports: ["svg"], distinction: walker.summary, completion: "planned" });
+const categoryEntry = (id: "humans" | "objects") => ({ id, emoji: "x", title: { en: id, de: id }, description: { en: id, de: id }, folder: id });
+const manifest = { $schema: "", version: "semio.staffage/v2", categories: [categoryEntry("humans"), categoryEntry("objects")], collections: [], entries: [entry("good-one"), entry("bad-one"), entry("never-authored")] } as unknown as Manifest;
+const document = (assets: Asset[]): CategoryDocument => ({ assets });
 const source = (reads: string[], gate?: Promise<void>): CatalogSource => ({
   manifest: async () => manifest,
   category: async (category, signal) => {
@@ -67,6 +67,24 @@ describe("catalog store", () => {
     await store.loadCategory("humans");
     expect(store.getSnapshot().categories.humans.state).toBe("ready");
   });
+
+  it("still shows an invalid asset document to the manifest check", async () => {
+    const store = new CatalogStore(source([]), reasons);
+    await store.loadAll();
+    const missing = (store.getSnapshot().manifestIssues ?? []).filter((issue) => issue.code === "manifest-asset-missing").map((issue) => issue.message.en);
+    expect(missing).toEqual(['Manifest entry "never-authored" has no asset document.']);
+  });
+
+  it("loads the authored archive as one hundred seven ready rows with an empty manifest check", async () => {
+    const store = new CatalogStore(bundledCatalog);
+    await store.loadAll();
+    const snapshot = store.getSnapshot();
+    const counts = snapshot.rows.reduce<Record<string, number>>((tally, row) => ({ ...tally, [row.status]: (tally[row.status] ?? 0) + 1 }), {});
+    expect(snapshot.rows).toHaveLength(107);
+    expect(counts).toEqual({ ready: 107 });
+    expect(snapshot.manifestIssues).toEqual([]);
+    for (const id of ["cantilever-balcony", "glulam-beam", "steel-column"]) expect(snapshot.rows.find((row) => row.entry.id === id)?.status).toBe("ready");
+  }, 120_000);
 
   it("reports a failing file and a validator that throws without stopping", async () => {
     const failing = new CatalogStore({ manifest: async () => manifest, category: async () => { throw new Error("offline"); } }, reasons);

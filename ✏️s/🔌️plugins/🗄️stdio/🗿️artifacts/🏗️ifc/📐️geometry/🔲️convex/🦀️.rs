@@ -48,6 +48,7 @@ pub fn convex_profile_point(source: ConvexProfileBoundary, mut index: u64) -> Op
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_value::serde_json;
 
     #[test]
     fn shared_neutral_convex_profile_cases() {

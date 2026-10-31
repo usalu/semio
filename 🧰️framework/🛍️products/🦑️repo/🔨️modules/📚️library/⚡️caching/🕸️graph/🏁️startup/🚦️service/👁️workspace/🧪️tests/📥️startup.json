@@ -1,0 +1,9 @@
+[
+  { "remaining": null, "parentRemaining": null, "cancelled": false, "budget": 60000 },
+  { "remaining": 20000, "parentRemaining": null, "cancelled": false, "budget": 20000 },
+  { "remaining": null, "parentRemaining": 30000, "cancelled": false, "budget": 30000 },
+  { "remaining": 50000, "parentRemaining": 15000, "cancelled": false, "budget": 15000 },
+  { "remaining": 0, "parentRemaining": null, "cancelled": false, "budget": null },
+  { "remaining": null, "parentRemaining": -1, "cancelled": false, "budget": null },
+  { "remaining": 20000, "parentRemaining": 30000, "cancelled": true, "budget": null }
+]

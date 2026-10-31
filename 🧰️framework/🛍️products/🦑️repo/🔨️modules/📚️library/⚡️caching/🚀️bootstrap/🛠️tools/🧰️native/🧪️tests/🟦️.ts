@@ -6,8 +6,8 @@ import {chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, 
 import {tmpdir} from "node:os";
 import {delimiter, join} from "node:path";
 import {testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {NATIVE_TOOLCHAINS_V1, nativeToolBinaryDirectoryV1, nativeToolDirectoryV1, type NativeToolV1, type ToolchainHostV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
-import {pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, prepareNativeToolV1, preparedNativeToolV1, verifyExtractedTreeV1, withPinnedNativePathV1, type NativeToolPortV1} from "../🟦️.ts";
+import {NATIVE_TOOLCHAINS_V1, nativeToolSpecV1, nativeToolBinaryDirectoryV1, nativeToolDirectoryV1, type NativeToolV1, type ToolchainHostV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🧰️toolchains/🟦️.ts";
+import {pinnedCargoToolsEnvironmentV1, pinnedGoEnvironmentV1, pinnedUvEnvironmentV1, prepareNativeToolV1, preparedNativeToolV1, verifyExtractedTreeV1, withPinnedNativePathV1, type NativeToolPortV1} from "../🟦️.ts";
 
 setDefaultTimeout(120000);
 const python = testPythonV1(), sandbox = mkdtempSync(join(tmpdir(), "native-tools-")), windows = process.platform === "win32";
@@ -40,8 +40,8 @@ const write = (spec: Record<string, unknown>) => {
   return {bytes, sha256: createHash("sha256").update(bytes).digest("hex")};
 };
 const shell = (version: string) => `#!/bin/sh\necho '${version}'\n`;
-const spec = (tool: NativeToolV1) => (tool === "go" ? NATIVE_TOOLCHAINS_V1.go.tool : tool === "uv" ? NATIVE_TOOLCHAINS_V1.python.tool : NATIVE_TOOLCHAINS_V1.cmake[tool]);
-const host = "linux-x64" as ToolchainHostV1, original = {go: structuredClone(NATIVE_TOOLCHAINS_V1.go.tool.distributions), cmake: structuredClone(NATIVE_TOOLCHAINS_V1.cmake.cmake.distributions), ninja: structuredClone(NATIVE_TOOLCHAINS_V1.cmake.ninja.distributions), uv: structuredClone(NATIVE_TOOLCHAINS_V1.python.tool.distributions)};
+const spec = nativeToolSpecV1;
+const host = "linux-x64" as ToolchainHostV1, original = {go: structuredClone(NATIVE_TOOLCHAINS_V1.go.tool.distributions), cmake: structuredClone(NATIVE_TOOLCHAINS_V1.cmake.cmake.distributions), ninja: structuredClone(NATIVE_TOOLCHAINS_V1.cmake.ninja.distributions), uv: structuredClone(NATIVE_TOOLCHAINS_V1.python.tool.distributions), "cargo-nextest": structuredClone(NATIVE_TOOLCHAINS_V1.cargo["cargo-nextest"].distributions), "cargo-llvm-cov": structuredClone(NATIVE_TOOLCHAINS_V1.cargo["cargo-llvm-cov"].distributions)};
 type Variant = {cmake?: {members?: unknown[]; version?: string}; ninja?: {version?: string; members?: unknown[]}};
 const pin = (tool: NativeToolV1, variant: Variant): Buffer => {
   const row = spec(tool).distributions.find(candidate => candidate.host === host)!, version = spec(tool).version, output = join(sandbox, tool + "-" + Math.random().toString(16).slice(2) + (row.format === "zip" ? ".zip" : ".tar.gz"));
@@ -51,6 +51,8 @@ const pin = (tool: NativeToolV1, variant: Variant): Buffer => {
     ? [{path: row.prefix + "/bin/go", text: shell("go version go" + version + " linux/amd64"), executable: true}, {path: row.prefix + "/bin/gofmt", text: shell("gofmt"), executable: true}, {path: row.prefix + "/VERSION", text: "go" + version}]
     : tool === "uv"
     ? [{path: row.prefix + "/uv", text: shell("uv " + version + " (0000000 2026-01-01 aarch64-apple-darwin)"), executable: true}, {path: row.prefix + "/uvx", text: shell("uvx"), executable: true}]
+    : tool === "cargo-nextest" || tool === "cargo-llvm-cov"
+    ? [{path: tool, text: shell(tool + " " + version), executable: true}]
     : [{path: "ninja", text: shell(variant.ninja?.version ?? version), executable: true}];
   const made = write({format: row.format, output, members: (tool === "cmake" ? variant.cmake?.members : variant.ninja?.members) ?? defaults});
   Object.assign(row, {bytes: made.bytes.length, sha256: made.sha256});
@@ -76,6 +78,7 @@ afterAll(() => {
   NATIVE_TOOLCHAINS_V1.cmake.cmake.distributions.splice(0, Infinity, ...original.cmake);
   NATIVE_TOOLCHAINS_V1.cmake.ninja.distributions.splice(0, Infinity, ...original.ninja);
   NATIVE_TOOLCHAINS_V1.python.tool.distributions.splice(0, Infinity, ...original.uv);
+  for(const tool of ["cargo-nextest", "cargo-llvm-cov"] as const)NATIVE_TOOLCHAINS_V1.cargo[tool].distributions.splice(0,Infinity,...original[tool]);
   rmSync(sandbox, {recursive: true, force: true});
 });
 
@@ -123,6 +126,14 @@ describe.skipIf(python === null || windows)("the provisioning of a pinned archiv
     expect(spawnSync(join(nativeToolBinaryDirectoryV1("uv", host, root), "uv"), ["--version"], {encoding: "utf8"}).stdout).toContain("uv " + NATIVE_TOOLCHAINS_V1.python.uv);
     expect(lines[0]).toContain("uv " + NATIVE_TOOLCHAINS_V1.python.uv);
     await expect(pinnedUvEnvironmentV1({PATH: "/usr/bin"}, fresh(), portOf(new Map(), "linux"), AbortSignal.timeout(60000), false, host)).rejects.toThrow(/repo tools setup toolchains/u);
+  });
+
+  test("Cargo tools retain the actual compiler environment, verify receipts and need no network once retained", async()=>{
+    const root=fresh(),tools=["cargo-nextest","cargo-llvm-cov"] as const,served=new Map(tools.map(tool=>[url(tool),pin(tool,{})])),fetches:string[]=[],input={Path:["/compiler/bin","/system/bin"].join(delimiter),CARGO_HOME:join(root,"cargo-home"),CARGO_TARGET_DIR:join(root,"target"),SEMIO_CARGO_STORE_OWNER:"held-owner",RUSTUP_TOOLCHAIN:"pinned-toolchain"},environment=await pinnedCargoToolsEnvironmentV1(input,root,portOf(served,"linux",{fetches}),AbortSignal.timeout(60000),true,host);
+    expect(environment.CARGO_HOME).toBe(input.CARGO_HOME);expect(environment.CARGO_TARGET_DIR).toBe(input.CARGO_TARGET_DIR);expect(environment.SEMIO_CARGO_STORE_OWNER).toBe(input.SEMIO_CARGO_STORE_OWNER);expect(environment.RUSTUP_TOOLCHAIN).toBe(input.RUSTUP_TOOLCHAIN);expect(environment.PATH).toBeUndefined();expect(environment.Path!.split(delimiter)).toEqual([...tools.map(tool=>nativeToolBinaryDirectoryV1(tool,host,root)),"/compiler/bin","/system/bin"]);
+    for(const tool of tools){const variable="SEMIO_TOOL_"+tool.toUpperCase().replaceAll("-","_");expect(environment[variable]).toBe(join(preparedNativeToolV1(tool,host,root),tool));}
+    const offline=await pinnedCargoToolsEnvironmentV1(input,root,portOf(new Map(),"linux",{offline:true,fetches}),AbortSignal.timeout(60000),false,host);expect(offline).toEqual(environment);expect(fetches.length).toBe(tools.length);
+    writeFileSync(environment.SEMIO_TOOL_CARGO_NEXTEST!,"tampered");await expect(pinnedCargoToolsEnvironmentV1(input,root,portOf(new Map(),"linux",{offline:true}),AbortSignal.timeout(60000),false,host)).rejects.toThrow(/differs from its receipt/u);
   });
 
   test("lets concurrent agents provision the same pin: every call succeeds and exactly one directory is published", async () => {

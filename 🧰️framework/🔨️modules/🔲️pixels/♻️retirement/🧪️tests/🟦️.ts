@@ -1,7 +1,7 @@
 /** 🧪️ Neutral lease conservation uses independent JSON Schema and RFC6902 ownership witnesses. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import Ajv2020 from "ajv/dist/2020";
+import Ajv2020 from "ajv";
 import {applyPatch} from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";

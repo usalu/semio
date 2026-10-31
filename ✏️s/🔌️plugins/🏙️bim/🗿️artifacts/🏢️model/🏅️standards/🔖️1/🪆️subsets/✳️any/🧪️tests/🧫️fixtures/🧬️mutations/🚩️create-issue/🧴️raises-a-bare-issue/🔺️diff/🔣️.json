@@ -1,16 +1,18 @@
 {
   "issues": {
     "i-1": {
-      "assignee": "",
-      "author": "UG",
-      "created": "2026-10-09",
-      "description": "",
-      "elements": [],
       "entry": "Created",
-      "labels": [],
-      "priority": "Normal",
-      "status": "Open",
-      "title": "Beam hits the south wall"
+      "value": {
+        "assignee": "",
+        "author": "UG",
+        "created": "2026-10-09",
+        "description": "",
+        "elements": [],
+        "labels": [],
+        "priority": "Normal",
+        "status": "Open",
+        "title": "Beam hits the south wall"
+      }
     }
   }
 }

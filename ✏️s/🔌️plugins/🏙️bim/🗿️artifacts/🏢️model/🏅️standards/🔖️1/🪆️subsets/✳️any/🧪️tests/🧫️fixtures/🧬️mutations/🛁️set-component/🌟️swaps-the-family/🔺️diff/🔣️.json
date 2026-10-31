@@ -2,7 +2,9 @@
   "components": {
     "cmp-basin": {
       "entry": "Patched",
-      "family": "fam-table"
+      "value": {
+        "family": "fam-table"
+      }
     }
   }
 }
